@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选择工作空间 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../shared/style.css">
+</head>
+<body class="workspace-select-page">
+  <header class="workspace-topbar">
+    <div class="workspace-brand">凯撒旅游</div>
+    <div class="workspace-user">
+      <span class="topbar-user-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M5 21a7 7 0 0 1 14 0"></path>
+        </svg>
+      </span>
+      <span class="workspace-username">张三</span>
+      <button class="btn btn-secondary btn-sm" type="button">退出登录</button>
+    </div>
+  </header>
+
+  <main class="workspace-main">
+    <h1 class="workspace-title">请选择工作空间</h1>
+    <p class="workspace-subtitle">您在以下公司/部门拥有访问权限，请选择本次工作环境</p>
+
+    <section class="workspace-list" aria-label="工作空间列表">
+      <article class="workspace-card active expanded" data-company="凯撒旅游集团（北京总部）">
+        <button class="workspace-card-head" type="button" aria-expanded="true">
+          <span class="workspace-card-left">
+            <span class="workspace-logo workspace-logo-blue">凯</span>
+            <span class="workspace-company">凯撒旅游集团（北京总部）</span>
+          </span>
+          <span class="tag tag-green">旗舰版</span>
+        </button>
+        <div class="workspace-depts">
+          <button class="dept-pill selected" type="button" data-dept="出境游事业部">出境游事业部</button>
+          <button class="dept-pill" type="button" data-dept="国内游事业部">国内游事业部</button>
+          <button class="dept-pill" type="button" data-dept="MICE事业部">MICE事业部</button>
+          <button class="dept-pill" type="button" data-dept="财务中心">财务中心</button>
+        </div>
+      </article>
+
+      <article class="workspace-card" data-company="凯撒亿步旅行社（上海）">
+        <button class="workspace-card-head" type="button" aria-expanded="false">
+          <span class="workspace-card-left">
+            <span class="workspace-logo workspace-logo-green">亿</span>
+            <span class="workspace-company">凯撒亿步旅行社（上海）</span>
+          </span>
+          <span class="tag tag-blue">专业版</span>
+        </button>
+        <div class="workspace-depts" hidden>
+          <button class="dept-pill" type="button" data-dept="散客业务部">散客业务部</button>
+          <button class="dept-pill" type="button" data-dept="团队业务部">团队业务部</button>
+        </div>
+      </article>
+
+      <article class="workspace-card" data-company="体坛旅游（产品公司）">
+        <button class="workspace-card-head" type="button" aria-expanded="false">
+          <span class="workspace-card-left">
+            <span class="workspace-logo workspace-logo-orange">体</span>
+            <span class="workspace-company">体坛旅游（产品公司）</span>
+          </span>
+          <span class="tag tag-blue">专业版</span>
+        </button>
+        <div class="workspace-depts" hidden>
+          <button class="dept-pill" type="button" data-dept="产品研发部">产品研发部</button>
+          <button class="dept-pill" type="button" data-dept="资源采购部">资源采购部</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="workspace-actionbar">
+    <div id="selectedWorkspace" class="workspace-selected">已选：凯撒旅游集团（北京总部）- 出境游事业部</div>
+    <button id="enterDashboard" class="btn btn-primary btn-lg" type="button">进入工作台</button>
+  </footer>
+
+  <script>
+    (function () {
+      var cards = document.querySelectorAll('.workspace-card');
+      var selectedText = document.getElementById('selectedWorkspace');
+      var enterDashboard = document.getElementById('enterDashboard');
+      var currentCompany = '凯撒旅游集团（北京总部）';
+      var currentDept = '出境游事业部';
+
+      function updateSelected(company, dept) {
+        currentCompany = company;
+        currentDept = dept;
+        selectedText.textContent = '已选：' + currentCompany + ' - ' + currentDept;
+      }
+
+      function setCardExpanded(card, expanded) {
+        var depts = card.querySelector('.workspace-depts');
+        var head = card.querySelector('.workspace-card-head');
+        card.classList.toggle('expanded', expanded);
+        head.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        depts.hidden = !expanded;
+      }
+
+      function expandCard(card) {
+        setCardExpanded(card, true);
+      }
+
+      cards.forEach(function (card) {
+        var head = card.querySelector('.workspace-card-head');
+        var deptButtons = card.querySelectorAll('.dept-pill');
+
+        head.addEventListener('click', function () {
+          setCardExpanded(card, !card.classList.contains('expanded'));
+        });
+
+        deptButtons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            document.querySelectorAll('.workspace-card').forEach(function (item) {
+              item.classList.remove('active');
+            });
+            document.querySelectorAll('.dept-pill').forEach(function (pill) {
+              pill.classList.remove('selected');
+            });
+
+            expandCard(card);
+            card.classList.add('active');
+            button.classList.add('selected');
+            updateSelected(card.getAttribute('data-company'), button.getAttribute('data-dept'));
+          });
+        });
+      });
+
+      enterDashboard.addEventListener('click', function () {
+        window.location.href = 'dashboard.html';
+      });
+    })();
+  </script>
+</body>
+</html>
