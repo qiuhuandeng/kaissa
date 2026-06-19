@@ -35,9 +35,9 @@
         <div class="filter-item filter-item-wide filter-item-date-range">
           <label class="sr-only">出发日期范围</label>
           <div class="date-range">
-            <input type="date" aria-label="出发开始日期">
+            <input id="departStartDate" type="date" aria-label="出发开始日期">
             <span>至</span>
-            <input type="date" aria-label="出发结束日期">
+            <input id="departEndDate" type="date" aria-label="出发结束日期">
           </div>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
@@ -54,8 +54,8 @@
           </select>
         </div>
         <div class="filter-actions">
-          <button class="btn btn-secondary" type="button">搜索</button>
-          <button class="btn btn-secondary" type="button">重置</button>
+          <button id="searchSchedules" class="btn btn-secondary" type="button">搜索</button>
+          <button id="resetSchedules" class="btn btn-secondary" type="button">重置</button>
         </div>
       </div>
     </section>
@@ -259,7 +259,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-create>取消</button>
-        <button class="btn btn-primary" type="button">确认创建</button>
+        <button id="saveSchedule" class="btn btn-primary" type="button">确认创建</button>
       </div>
     </div>
   </div>
@@ -348,14 +348,93 @@
     </div>
   </div>
 
+  <div id="copyScheduleModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="copyScheduleTitle">
+      <div class="modal-header">
+        <div id="copyScheduleTitle" class="modal-title">复制团期</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-copy>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="copyScheduleText" class="modal-center-text">确认复制当前团期？复制后将在列表顶部新增待售团期。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-copy>取消</button>
+        <button id="confirmCopySchedule" class="btn btn-primary" type="button">确认复制</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cancelScheduleModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="cancelScheduleTitle">
+      <div class="modal-header">
+        <div id="cancelScheduleTitle" class="modal-title">取消团期</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-cancel>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="cancelScheduleText" class="modal-center-text">确认取消当前团期？</p>
+        <div class="alert alert-orange">已有订单需手动处理退款，请先核对订单收款和退款状态。</div>
+        <div class="form-group">
+          <label class="form-label" for="cancelReason">取消原因 <span class="req">*</span></label>
+          <textarea id="cancelReason" class="form-control" rows="4" placeholder="请输入取消原因" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-cancel>取消</button>
+        <button id="confirmCancelSchedule" class="btn btn-danger" type="button">确认取消</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var createModal = document.getElementById('createScheduleModal');
       var costModal = document.getElementById('costModal');
+      var copyModal = document.getElementById('copyScheduleModal');
+      var cancelModal = document.getElementById('cancelScheduleModal');
+      var scheduleRows = document.getElementById('scheduleRows');
+      var scheduleProduct = document.getElementById('scheduleProduct');
       var departDate = document.getElementById('departDate');
       var returnDate = document.getElementById('returnDate');
+      var totalStock = document.getElementById('totalStock');
+      var deadlineDate = document.getElementById('deadlineDate');
+      var adultPrice = document.getElementById('adultPrice');
+      var scheduleRemark = document.getElementById('scheduleRemark');
       var durationHint = document.getElementById('durationHint');
+      var saveSchedule = document.getElementById('saveSchedule');
       var costRows = document.getElementById('costRows');
+      var productNameFilter = document.getElementById('productName');
+      var scheduleCodeFilter = document.getElementById('scheduleCode');
+      var departStartDate = document.getElementById('departStartDate');
+      var departEndDate = document.getElementById('departEndDate');
+      var scheduleStatusFilter = document.getElementById('scheduleStatus');
+      var copyScheduleText = document.getElementById('copyScheduleText');
+      var cancelScheduleText = document.getElementById('cancelScheduleText');
+      var cancelReason = document.getElementById('cancelReason');
+      var currentMode = 'create';
+      var currentSchedule = null;
+      var sequence = 9001;
+      var activeTabValue = '全部';
+      var deadlineTouched = false;
+
+      var productDays = {
+        '欧洲十国经典游': 12,
+        '日本关西深度游': 7,
+        '理想号地中海邮轮': 14,
+        '三亚亲子5日游': 5,
+        '泰国曼谷清迈8日': 8,
+        '马来西亚自由行': 6,
+        '北京故宫定制游': 3
+      };
+
+      var productCodes = {
+        '欧洲十国经典游': 'EU',
+        '日本关西深度游': 'JP',
+        '理想号地中海邮轮': 'CZ',
+        '三亚亲子5日游': 'HN',
+        '泰国曼谷清迈8日': 'TH',
+        '马来西亚自由行': 'MY',
+        '北京故宫定制游': 'BJ'
+      };
 
       function openModal(modal) {
         modal.classList.add('show');
@@ -367,53 +446,329 @@
         modal.setAttribute('aria-hidden', 'true');
       }
 
-      function updateDuration() {
-        if (!departDate.value || !returnDate.value) {
-          durationHint.textContent = '自动计算天数：-';
-          return;
-        }
-        var start = new Date(departDate.value);
-        var end = new Date(returnDate.value);
-        var days = Math.floor((end - start) / 86400000) + 1;
-        durationHint.textContent = days > 0 ? '自动计算天数：' + days + '天' : '回团日期需晚于出发日期';
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
       }
 
-      document.getElementById('openCreateSchedule').addEventListener('click', function () {
-        openModal(createModal);
-      });
+      function addDays(value, days) {
+        if (!value) return '';
+        var date = new Date(value + 'T00:00:00');
+        date.setDate(date.getDate() + days);
+        return date.toISOString().slice(0, 10);
+      }
 
-      document.querySelectorAll('[data-open-cost]').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-          event.stopPropagation();
-          openModal(costModal);
+      function daysBetween(startValue, endValue) {
+        if (!startValue || !endValue) return 0;
+        var start = new Date(startValue + 'T00:00:00');
+        var end = new Date(endValue + 'T00:00:00');
+        return Math.floor((end - start) / 86400000) + 1;
+      }
+
+      function statusClass(status) {
+        if (status === '销售中') return 'tag tag-blue';
+        if (status === '售罄') return 'tag tag-red';
+        if (status === '出团中') return 'tag tag-purple';
+        if (status === '已取消') return 'tag tag-red';
+        return 'tag tag-gray';
+      }
+
+      function readRow(row) {
+        var cells = row.children;
+        return {
+          code: cells[0].textContent.trim(),
+          product: cells[1].textContent.trim(),
+          depart: cells[2].textContent.trim(),
+          back: cells[3].textContent.trim(),
+          stock: cells[4].textContent.trim(),
+          sold: cells[5].textContent.trim(),
+          left: cells[6].textContent.trim(),
+          price: cells[7].textContent.trim(),
+          status: cells[8].textContent.trim(),
+          costStatus: cells[9].textContent.trim(),
+          costClass: cells[9].querySelector('.tag') ? cells[9].querySelector('.tag').className : 'tag tag-orange',
+          tabStatus: row.dataset.tabStatus || cells[8].textContent.trim(),
+          remark: row.dataset.remark || '',
+          deadline: row.dataset.deadline || addDays(cells[2].textContent.trim(), -5)
+        };
+      }
+
+      var schedules = Array.from(scheduleRows.querySelectorAll('tr')).map(readRow);
+
+      function actionHtml() {
+        return '<div class="table-action"><a href="schedules-detail.html">详情</a><button type="button" data-open-cost>成本</button><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more" data-action-menu><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-edit-schedule>编辑团期</button><button class="dropdown-item" type="button" data-copy-schedule>复制团期</button><button class="dropdown-item danger" type="button" data-cancel-schedule>取消团期</button></span></span></div>';
+      }
+
+      function rowHtml(item, index) {
+        return '<tr data-index="' + index + '" data-href="schedules-detail.html" data-tab-status="' + escapeHtml(item.tabStatus) + '" data-deadline="' + escapeHtml(item.deadline || '') + '" data-remark="' + escapeHtml(item.remark || '') + '">' +
+          '<td><a class="link-primary table-main-link" href="schedules-detail.html">' + escapeHtml(item.code) + '</a></td>' +
+          '<td>' + escapeHtml(item.product) + '</td>' +
+          '<td>' + escapeHtml(item.depart) + '</td>' +
+          '<td>' + escapeHtml(item.back) + '</td>' +
+          '<td>' + escapeHtml(item.stock) + '</td>' +
+          '<td>' + escapeHtml(item.sold) + '</td>' +
+          '<td>' + escapeHtml(item.left) + '</td>' +
+          '<td>' + escapeHtml(item.price) + '</td>' +
+          '<td><span class="' + statusClass(item.status) + '">' + escapeHtml(item.status) + '</span></td>' +
+          '<td><span class="' + escapeHtml(item.costClass || 'tag tag-orange') + '">' + escapeHtml(item.costStatus || '未维护') + '</span></td>' +
+          '<td>' + actionHtml() + '</td>' +
+          '</tr>';
+      }
+
+      function renderRows() {
+        scheduleRows.innerHTML = schedules.map(rowHtml).join('');
+        applyFilters();
+      }
+
+      function rowMatches(item) {
+        var productQuery = productNameFilter.value.trim();
+        var codeQuery = scheduleCodeFilter.value.trim().toUpperCase();
+        var status = scheduleStatusFilter.value;
+        if (productQuery && item.product.indexOf(productQuery) === -1) return false;
+        if (codeQuery && item.code.toUpperCase().indexOf(codeQuery) === -1) return false;
+        if (departStartDate.value && item.depart < departStartDate.value) return false;
+        if (departEndDate.value && item.depart > departEndDate.value) return false;
+        if (status && status !== '全部' && item.status !== status && item.tabStatus.split(/\s+/).indexOf(status) === -1) return false;
+        if (activeTabValue && activeTabValue !== '全部' && item.tabStatus.split(/\s+/).indexOf(activeTabValue) === -1) return false;
+        return true;
+      }
+
+      function applyFilters() {
+        Array.from(scheduleRows.querySelectorAll('tr')).forEach(function (row) {
+          var item = schedules[Number(row.dataset.index)];
+          row.hidden = !item || !rowMatches(item);
         });
+      }
+
+      function closeMenus() {
+        scheduleRows.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
+          menu.classList.remove('show');
+        });
+        scheduleRows.querySelectorAll('[data-schedule-more]').forEach(function (button) {
+          button.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      function resetForm() {
+        scheduleProduct.value = '';
+        departDate.value = '';
+        returnDate.value = '';
+        totalStock.value = '';
+        deadlineDate.value = '';
+        deadlineTouched = false;
+        adultPrice.value = '¥12,800';
+        scheduleRemark.value = '';
+        updateDuration();
+      }
+
+      function fillForm(item) {
+        scheduleProduct.value = item.product;
+        departDate.value = item.depart;
+        returnDate.value = item.back;
+        totalStock.value = item.stock;
+        deadlineDate.value = item.deadline || addDays(item.depart, -5);
+        deadlineTouched = false;
+        adultPrice.value = item.price;
+        scheduleRemark.value = item.remark || '';
+        updateDuration();
+      }
+
+      function formData() {
+        var stock = Number(totalStock.value || 0);
+        var sold = currentMode === 'edit' && currentSchedule ? Number(currentSchedule.sold || 0) : 0;
+        return {
+          code: currentMode === 'edit' && currentSchedule ? currentSchedule.code : createScheduleCode(scheduleProduct.value, departDate.value),
+          product: scheduleProduct.value.trim() || '欧洲十国经典游',
+          depart: departDate.value,
+          back: returnDate.value,
+          stock: String(stock || 0),
+          sold: String(sold),
+          left: String(Math.max((stock || 0) - sold, 0)),
+          price: adultPrice.value.trim() || '¥0',
+          status: currentMode === 'edit' && currentSchedule ? currentSchedule.status : '待售',
+          costStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.costStatus : '未维护',
+          costClass: currentMode === 'edit' && currentSchedule ? currentSchedule.costClass : 'tag tag-orange',
+          tabStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.tabStatus : '待售',
+          remark: scheduleRemark.value.trim(),
+          deadline: deadlineDate.value || addDays(departDate.value, -5)
+        };
+      }
+
+      function createScheduleCode(product, depart) {
+        var prefix = productCodes[product] || 'KS';
+        var datePart = (depart || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+        sequence += 1;
+        return prefix + datePart + String(sequence).slice(-4);
+      }
+
+      function updateDuration(autoFill) {
+        if (autoFill && departDate.value) {
+          var days = productDays[scheduleProduct.value] || 1;
+          returnDate.value = addDays(departDate.value, days - 1);
+          if (!deadlineTouched) {
+            deadlineDate.value = addDays(departDate.value, -5);
+          }
+        }
+        if (!departDate.value || !returnDate.value) {
+          durationHint.textContent = '天数差：-';
+          return;
+        }
+        var daysBetweenValue = daysBetween(departDate.value, returnDate.value);
+        durationHint.textContent = daysBetweenValue > 0 ? '天数差：' + daysBetweenValue + '天' : '回团日期需晚于出发日期';
+      }
+
+      function openCreate() {
+        currentMode = 'create';
+        currentSchedule = null;
+        document.getElementById('createScheduleTitle').textContent = '新建团期';
+        saveSchedule.textContent = '确认创建';
+        resetForm();
+        openModal(createModal);
+      }
+
+      function openEdit(item) {
+        currentMode = 'edit';
+        currentSchedule = item;
+        document.getElementById('createScheduleTitle').textContent = '编辑团期';
+        saveSchedule.textContent = '确认保存';
+        fillForm(item);
+        openModal(createModal);
+      }
+
+      document.getElementById('openCreateSchedule').addEventListener('click', openCreate);
+
+      saveSchedule.addEventListener('click', function () {
+        if (!scheduleProduct.value.trim() || !departDate.value || !returnDate.value || !totalStock.value) return;
+        if (daysBetween(departDate.value, returnDate.value) <= 0) return;
+        var next = formData();
+        if (currentMode === 'edit' && currentSchedule) {
+          var editIndex = schedules.indexOf(currentSchedule);
+          if (editIndex > -1) schedules.splice(editIndex, 1, next);
+        } else {
+          schedules.unshift(next);
+        }
+        closeModal(createModal);
+        renderRows();
       });
 
       document.querySelectorAll('[data-close-create]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeModal(createModal);
-        });
+        button.addEventListener('click', function () { closeModal(createModal); });
       });
-
       document.querySelectorAll('[data-close-cost]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeModal(costModal);
-        });
+        button.addEventListener('click', function () { closeModal(costModal); });
+      });
+      document.querySelectorAll('[data-close-copy]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(copyModal); });
+      });
+      document.querySelectorAll('[data-close-cancel]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(cancelModal); });
       });
 
-      [createModal, costModal].forEach(function (modal) {
+      [createModal, costModal, copyModal, cancelModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) {
-            closeModal(modal);
-          }
+          if (event.target === modal) closeModal(modal);
         });
       });
 
-      document.querySelectorAll('tr[data-href]').forEach(function (row) {
-        row.addEventListener('click', function (event) {
-          if (event.target.closest('a, button, [data-action-menu]')) return;
+      scheduleRows.addEventListener('click', function (event) {
+        var row = event.target.closest('tr');
+        var item = row ? schedules[Number(row.dataset.index)] : null;
+        var moreButton = event.target.closest('[data-schedule-more]');
+        var editButton = event.target.closest('[data-edit-schedule]');
+        var copyButton = event.target.closest('[data-copy-schedule]');
+        var cancelButton = event.target.closest('[data-cancel-schedule]');
+        var costButton = event.target.closest('[data-open-cost]');
+
+        if (moreButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          var menu = moreButton.nextElementSibling;
+          var willShow = !menu.classList.contains('show');
+          closeMenus();
+          menu.classList.toggle('show', willShow);
+          moreButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+          return;
+        }
+        if (editButton && item) {
+          currentSchedule = item;
+          closeMenus();
+          openEdit(item);
+          return;
+        }
+        if (copyButton && item) {
+          currentSchedule = item;
+          copyScheduleText.textContent = '确认复制团期 ' + item.code + '？复制后将在列表顶部新增待售团期。';
+          closeMenus();
+          openModal(copyModal);
+          return;
+        }
+        if (cancelButton && item) {
+          currentSchedule = item;
+          cancelReason.value = '';
+          cancelScheduleText.textContent = '确认取消团期 ' + item.code + '？';
+          closeMenus();
+          openModal(cancelModal);
+          return;
+        }
+        if (costButton) {
+          event.stopPropagation();
+          openModal(costModal);
+          return;
+        }
+        if (row && !event.target.closest('a, button, [data-action-menu]')) {
           window.location.href = row.dataset.href;
+        }
+      });
+
+      document.addEventListener('click', closeMenus);
+
+      document.getElementById('confirmCopySchedule').addEventListener('click', function () {
+        if (!currentSchedule) return;
+        var clone = Object.assign({}, currentSchedule, {
+          code: currentSchedule.code + '-COPY',
+          status: '待售',
+          tabStatus: '待售'
         });
+        schedules.unshift(clone);
+        currentSchedule = null;
+        closeModal(copyModal);
+        renderRows();
+      });
+
+      document.getElementById('confirmCancelSchedule').addEventListener('click', function () {
+        if (!currentSchedule || !cancelReason.value.trim()) return;
+        currentSchedule.status = '已取消';
+        currentSchedule.tabStatus = '已取消';
+        currentSchedule.remark = cancelReason.value.trim();
+        currentSchedule = null;
+        closeModal(cancelModal);
+        renderRows();
+      });
+
+      document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.stopImmediatePropagation();
+          document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
+            item.classList.toggle('active', item === button);
+          });
+          activeTabValue = button.dataset.filterValue || button.textContent.replace(/\(.*/, '').trim();
+          applyFilters();
+        });
+      });
+
+      document.getElementById('searchSchedules').addEventListener('click', applyFilters);
+      document.getElementById('resetSchedules').addEventListener('click', function () {
+        productNameFilter.value = '';
+        scheduleCodeFilter.value = '';
+        departStartDate.value = '';
+        departEndDate.value = '';
+        scheduleStatusFilter.selectedIndex = 0;
+        activeTabValue = '全部';
+        document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
+          item.classList.toggle('active', item.dataset.filterValue === '全部');
+        });
+        applyFilters();
       });
 
       document.getElementById('addCostRow').addEventListener('click', function () {
@@ -423,13 +778,15 @@
       });
 
       costRows.addEventListener('click', function (event) {
-        if (event.target.matches('[data-delete-cost]')) {
-          event.target.closest('tr').remove();
-        }
+        if (event.target.matches('[data-delete-cost]')) event.target.closest('tr').remove();
       });
 
-      departDate.addEventListener('change', updateDuration);
-      returnDate.addEventListener('change', updateDuration);
+      scheduleProduct.addEventListener('change', function () { updateDuration(true); });
+      departDate.addEventListener('change', function () { updateDuration(true); });
+      deadlineDate.addEventListener('input', function () { deadlineTouched = true; });
+      returnDate.addEventListener('change', function () { updateDuration(false); });
+
+      renderRows();
     })();
   </script>
 </body>

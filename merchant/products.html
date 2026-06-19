@@ -59,15 +59,8 @@
           <input id="destination" type="text" placeholder="请输入目的地">
         </div>
         <div class="filter-item filter-item-sm">
-          <label class="sr-only" for="departureCity">出发地</label>
-          <select id="departureCity">
-            <option>全部出发地</option>
-            <option>北京</option>
-            <option>上海</option>
-            <option>广州</option>
-            <option>成都</option>
-            <option>深圳</option>
-          </select>
+          <label class="sr-only">出发地</label>
+          <button id="openCityFilterModal" class="filter-select-button" type="button"><span id="departureCityFilter">全部出发地</span></button>
         </div>
         <div class="filter-item filter-item-sm">
           <label class="sr-only" for="productStatus">产品状态</label>
@@ -343,6 +336,37 @@
     </div>
   </div>
 
+  <div id="cityFilterModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="cityFilterTitle">
+      <div class="modal-header">
+        <div id="cityFilterTitle" class="modal-title">选择出发城市</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-city-filter>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <input id="cityFilterSearch" class="form-control" type="text" placeholder="搜索城市名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">热门城市</label>
+          <div class="city-tags">
+            <button class="city-tag" type="button" data-city-option>北京</button>
+            <button class="city-tag" type="button" data-city-option>上海</button>
+            <button class="city-tag" type="button" data-city-option>广州</button>
+            <button class="city-tag" type="button" data-city-option>深圳</button>
+            <button class="city-tag" type="button" data-city-option>成都</button>
+            <button class="city-tag" type="button" data-city-option>杭州</button>
+            <button class="city-tag" type="button" data-city-option>西安</button>
+          </div>
+        </div>
+        <div id="cityFilterList" class="city-filter-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="resetCityFilter" class="btn btn-secondary" type="button">重置</button>
+        <button id="confirmCityFilter" class="btn btn-primary" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var createModal = document.getElementById('createProductModal');
@@ -351,6 +375,10 @@
       var noticeModal = document.getElementById('noticeModal');
       var bulkModal = document.getElementById('bulkProductModal');
       var shelfModal = document.getElementById('shelfProductModal');
+      var cityFilterModal = document.getElementById('cityFilterModal');
+      var cityFilterList = document.getElementById('cityFilterList');
+      var cityFilterSearch = document.getElementById('cityFilterSearch');
+      var departureCityFilter = document.getElementById('departureCityFilter');
       var productRows = document.getElementById('productRows');
       var checkAll = document.getElementById('checkAllProducts');
       var deleteConfirmInput = document.getElementById('deleteConfirmInput');
@@ -363,6 +391,18 @@
       var currentRow = null;
       var currentBulkAction = 'up';
       var currentShelfStatus = '已下架';
+      var selectedFilterCity = '';
+      var cityGroups = {
+        A: ['安庆', '澳门'],
+        B: ['北京', '保定', '包头'],
+        C: ['成都', '重庆', '长沙', '长春'],
+        G: ['广州', '贵阳', '桂林'],
+        H: ['杭州', '哈尔滨', '合肥', '海口'],
+        N: ['南京', '宁波', '南宁'],
+        S: ['上海', '深圳', '沈阳', '苏州'],
+        X: ['西安', '厦门', '西宁'],
+        Z: ['郑州', '珠海']
+      };
 
       function openModal(modal) {
         modal.classList.add('show');
@@ -454,6 +494,30 @@
         productRows.insertBefore(clone, productRows.firstElementChild);
       }
 
+      function renderCityFilterList(keyword) {
+        var query = (keyword || '').trim();
+        cityFilterList.innerHTML = Object.keys(cityGroups).map(function (letter) {
+          var cities = cityGroups[letter].filter(function (city) {
+            return !query || city.indexOf(query) !== -1;
+          });
+          if (!cities.length) return '';
+          return '<div class="city-group"><div class="city-letter">' + letter + '</div><div class="city-list">' + cities.map(function (city) {
+            return '<button class="city-tag' + (city === selectedFilterCity ? ' active' : '') + '" type="button" data-city-option>' + city + '</button>';
+          }).join('') + '</div></div>';
+        }).join('') || '<p class="text-muted">暂无匹配城市</p>';
+      }
+
+      function syncCityActive() {
+        document.querySelectorAll('[data-city-option]').forEach(function (button) {
+          button.classList.toggle('active', button.textContent.trim() === selectedFilterCity);
+        });
+      }
+
+      function applyCityFilter() {
+        departureCityFilter.textContent = selectedFilterCity || '全部出发地';
+        closeModal(cityFilterModal);
+      }
+
       document.querySelector('[data-open-modal]').addEventListener('click', function () {
         openModal(createModal);
       });
@@ -488,8 +552,38 @@
       document.querySelectorAll('[data-close-shelf]').forEach(function (button) {
         button.addEventListener('click', function () { closeModal(shelfModal); });
       });
+      document.querySelectorAll('[data-close-city-filter]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(cityFilterModal); });
+      });
 
-      [createModal, copyModal, deleteModal, noticeModal, bulkModal, shelfModal].forEach(closeByOverlay);
+      [createModal, copyModal, deleteModal, noticeModal, bulkModal, shelfModal, cityFilterModal].forEach(closeByOverlay);
+
+      document.getElementById('openCityFilterModal').addEventListener('click', function () {
+        cityFilterSearch.value = '';
+        renderCityFilterList('');
+        syncCityActive();
+        openModal(cityFilterModal);
+      });
+
+      cityFilterSearch.addEventListener('input', function () {
+        renderCityFilterList(cityFilterSearch.value);
+      });
+
+      cityFilterModal.addEventListener('click', function (event) {
+        var cityButton = event.target.closest('[data-city-option]');
+        if (!cityButton) return;
+        selectedFilterCity = cityButton.textContent.trim();
+        syncCityActive();
+      });
+
+      document.getElementById('resetCityFilter').addEventListener('click', function () {
+        selectedFilterCity = '';
+        cityFilterSearch.value = '';
+        renderCityFilterList('');
+        syncCityActive();
+      });
+
+      document.getElementById('confirmCityFilter').addEventListener('click', applyCityFilter);
 
       productRows.addEventListener('click', function (event) {
         var moreButton = event.target.closest('[data-product-more]');
@@ -606,9 +700,13 @@
         document.querySelectorAll('.filter-card select').forEach(function (select) {
           select.selectedIndex = 0;
         });
+        selectedFilterCity = '';
+        departureCityFilter.textContent = '全部出发地';
         var allTab = document.querySelector('.tab-bar[data-filter-tabs] .tab-item[data-filter-value="全部"]');
         if (allTab) allTab.click();
       });
+
+      renderCityFilterList('');
     })();
   </script>
 </body>
