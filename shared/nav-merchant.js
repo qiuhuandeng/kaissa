@@ -123,6 +123,12 @@
     return (window.location.pathname.split("/").pop() || "dashboard.html").split("?")[0];
   }
 
+  const pageOwners = {
+    "products-create.html": { href: "products.html", title: "新建跟团游产品" },
+    "products-detail.html": { href: "products.html", title: "产品详情" },
+    "schedules-detail.html": { href: "schedules.html", title: "团期详情" },
+  };
+
   function findActive(items, file, parent) {
     for (const item of items) {
       if (item.href === file) {
@@ -134,6 +140,18 @@
       }
     }
     return null;
+  }
+
+  function resolveActive(file) {
+    const direct = findActive(menu, file);
+    if (direct) return direct;
+
+    const owner = pageOwners[file];
+    if (!owner) return null;
+
+    const active = findActive(menu, owner.href);
+    if (!active) return null;
+    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href });
   }
 
   function createLink(item, activeFile) {
@@ -169,7 +187,7 @@
 
   function createPageTabs(active, file) {
     const storageKey = "caesar-merchant-tabs";
-    const title = active ? active.item.title : file;
+    const title = active ? active.currentTitle || active.item.title : file;
     const current = { title, href: file };
     const tabs = readTabs(storageKey).filter((tab) => tab.href !== file);
     tabs.push(current);
@@ -236,7 +254,6 @@
     item.children.forEach((child) => sub.appendChild(createLink(child, activeFile)));
     if (item.children.some((child) => child.href === activeFile)) {
       wrap.classList.add("open");
-      head.classList.add("active");
     }
 
     head.addEventListener("click", () => wrap.classList.toggle("open"));
@@ -248,23 +265,27 @@
   function createBreadcrumb(active) {
     const breadcrumb = document.createElement("div");
     breadcrumb.className = "breadcrumb";
-    const home = document.createElement("span");
-    home.textContent = "商户端";
-    breadcrumb.appendChild(home);
 
     const parts = active
       ? active.parent
         ? [active.parent.title, active.item.title]
         : [active.item.title]
-      : ["工作台"];
+      : ["未归属页面"];
+
+    if (active && active.currentTitle && active.currentTitle !== active.item.title) {
+      parts.push(active.currentTitle);
+    }
 
     parts.forEach((part, index) => {
-      const sep = document.createElement("span");
-      sep.textContent = "/";
       const node = document.createElement("span");
       node.textContent = part;
       if (index === parts.length - 1) node.className = "current";
-      breadcrumb.append(sep, node);
+      if (index > 0) {
+        const sep = document.createElement("span");
+        sep.textContent = "/";
+        breadcrumb.appendChild(sep);
+      }
+      breadcrumb.appendChild(node);
     });
 
     return breadcrumb;
@@ -285,7 +306,8 @@
 
   function initNav() {
     const file = currentFile();
-    const active = findActive(menu, file);
+    const active = resolveActive(file);
+    const activeHref = active ? active.ownerHref || active.item.href : file;
 
     const oldNodes = Array.from(document.body.childNodes).filter((node) => node !== bootScript);
 
@@ -301,7 +323,7 @@
 
     const navScroll = document.createElement("nav");
     navScroll.className = "nav-scroll";
-    menu.forEach((item) => navScroll.appendChild(item.children ? createParent(item, file) : createLink(item, file)));
+    menu.forEach((item) => navScroll.appendChild(item.children ? createParent(item, activeHref) : createLink(item, activeHref)));
     sidebar.append(logo, navScroll);
 
     const main = document.createElement("main");
@@ -357,6 +379,71 @@
 
     toggle.addEventListener("click", () => {
       layout.classList.toggle("nav-collapsed");
+    });
+
+    initFilterTabs(content);
+    initActionMenus(content);
+  }
+
+  function tabValue(button) {
+    return button.dataset.filterValue || button.textContent.replace(/\(.*/, "").trim();
+  }
+
+  function rowValues(row) {
+    if (row.dataset.tabStatus) {
+      return row.dataset.tabStatus.split(/[\s,，|/]+/).filter(Boolean);
+    }
+    return Array.from(row.querySelectorAll(".tag")).map((tag) => tag.textContent.trim()).filter(Boolean);
+  }
+
+  function initFilterTabs(scope) {
+    scope.querySelectorAll(".tab-bar[data-filter-tabs]").forEach((tabBar) => {
+      const targetSelector = tabBar.dataset.filterTarget;
+      const target = targetSelector ? scope.querySelector(targetSelector) : tabBar.nextElementSibling;
+      const rows = target ? Array.from(target.matches("tbody") ? target.querySelectorAll("tr") : target.querySelectorAll("tbody tr")) : [];
+      const buttons = Array.from(tabBar.querySelectorAll(".tab-item"));
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const value = tabValue(button);
+
+          buttons.forEach((item) => item.classList.toggle("active", item === button));
+          rows.forEach((row) => {
+            const matched = value === "全部" || rowValues(row).includes(value);
+            row.hidden = !matched;
+          });
+        });
+      });
+    });
+  }
+
+  function initActionMenus(scope) {
+    scope.querySelectorAll("[data-action-menu]").forEach((wrap) => {
+      const toggle = wrap.querySelector("[data-action-menu-toggle]");
+      if (!toggle) return;
+
+      toggle.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        scope.querySelectorAll("[data-action-menu].open").forEach((item) => {
+          if (item !== wrap) {
+            item.classList.remove("open");
+            const itemToggle = item.querySelector("[data-action-menu-toggle]");
+            if (itemToggle) itemToggle.setAttribute("aria-expanded", "false");
+          }
+        });
+        wrap.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", wrap.classList.contains("open") ? "true" : "false");
+      });
+    });
+
+    document.addEventListener("click", () => {
+      scope.querySelectorAll("[data-action-menu].open").forEach((wrap) => {
+        wrap.classList.remove("open");
+        const toggle = wrap.querySelector("[data-action-menu-toggle]");
+        if (toggle) toggle.setAttribute("aria-expanded", "false");
+      });
     });
   }
 
