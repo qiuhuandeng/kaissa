@@ -123,10 +123,17 @@
     return (window.location.pathname.split("/").pop() || "dashboard.html").split("?")[0];
   }
 
+  function fileFromUrl(url) {
+    return (url.pathname.split("/").pop() || "dashboard.html").split("?")[0];
+  }
+
   const pageOwners = {
     "products-create.html": { href: "products.html", title: "新建跟团游产品" },
     "products-detail.html": { href: "products.html", title: "产品详情" },
     "schedules-detail.html": { href: "schedules.html", title: "团期详情" },
+    "orders-detail.html": { href: "orders.html", title: "订单详情" },
+    "projects-detail.html": { href: "projects.html", title: "项目详情" },
+    "finance-settlement-detail.html": { href: "finance-settlement.html", title: "对账单详情" },
   };
 
   function findActive(items, file, parent) {
@@ -218,7 +225,7 @@
         const nextTabs = readTabs(storageKey).filter((itemTab) => itemTab.href !== tab.href);
         saveTabs(storageKey, nextTabs);
         if (tab.href === file && nextTabs.length > 0) {
-          window.location.href = nextTabs[nextTabs.length - 1].href;
+          navigateTo(nextTabs[nextTabs.length - 1].href);
           return;
         }
         item.remove();
@@ -229,6 +236,63 @@
     });
 
     return tabsBar;
+  }
+
+  function replaceBreadcrumb(active) {
+    const left = document.querySelector(".topbar-left");
+    const oldBreadcrumb = left ? left.querySelector(".breadcrumb") : null;
+    if (left && oldBreadcrumb) {
+      oldBreadcrumb.replaceWith(createBreadcrumb(active));
+    }
+  }
+
+  function replacePageTabs(active, file) {
+    const oldTabs = document.querySelector(".page-tabs");
+    if (oldTabs) oldTabs.replaceWith(createPageTabs(active, file));
+  }
+
+  function syncNavActive(file) {
+    const active = resolveActive(file);
+    const activeHref = active ? active.ownerHref || active.item.href : file;
+
+    document.querySelectorAll(".nav-scroll .nav-item.active").forEach((item) => item.classList.remove("active"));
+    document.querySelectorAll(".nav-scroll .nav-parent").forEach((parent) => parent.classList.remove("open"));
+
+    const activeLink = Array.from(document.querySelectorAll(".nav-scroll a.nav-item")).find((link) => link.getAttribute("href") === activeHref);
+    if (activeLink) {
+      activeLink.classList.add("active");
+      const parent = activeLink.closest(".nav-parent");
+      if (parent) parent.classList.add("open");
+    }
+
+    replaceBreadcrumb(active);
+    replacePageTabs(active, file);
+  }
+
+  function collectPageNodes(doc) {
+    const nodes = [];
+    const scripts = [];
+
+    Array.from(doc.body.childNodes).forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "SCRIPT") {
+        const src = node.getAttribute("src") || "";
+        if (!src.includes("nav-merchant.js")) scripts.push(node);
+        return;
+      }
+      nodes.push(document.importNode(node, true));
+    });
+
+    return { nodes, scripts };
+  }
+
+  function runPageScripts(scripts) {
+    scripts.forEach((oldScript) => {
+      const script = document.createElement("script");
+      Array.from(oldScript.attributes).forEach((attr) => script.setAttribute(attr.name, attr.value));
+      script.textContent = oldScript.textContent;
+      document.body.appendChild(script);
+      script.remove();
+    });
   }
 
   function createParent(item, activeFile) {
@@ -383,6 +447,110 @@
 
     initFilterTabs(content);
     initActionMenus(content);
+    initPjaxNavigation();
+  }
+
+  function isPjaxLink(link) {
+    if (!link || link.target === "_blank" || link.hasAttribute("download")) return false;
+
+    const url = new URL(link.getAttribute("href"), window.location.href);
+    if (url.origin !== window.location.origin) return false;
+    if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
+    if (!url.pathname.endsWith(".html")) return false;
+
+    const currentDir = window.location.pathname.replace(/[^/]*$/, "");
+    return url.pathname.replace(/[^/]*$/, "") === currentDir;
+  }
+
+  function navigateTo(href) {
+    const target = new URL(href, window.location.href);
+    loadPage(target, { push: true });
+  }
+
+  window.caesarNavigateTo = navigateTo;
+  window.caesarLoadPage = loadPage;
+
+  async function loadPage(target, options) {
+    const url = target instanceof URL ? target : new URL(target, window.location.href);
+    const content = document.querySelector(".content");
+
+    if (!content) {
+      window.location.href = url.href;
+      return;
+    }
+
+    content.classList.add("caesar-content-loading");
+
+    try {
+      const response = await fetch(url.href, {
+        headers: { "X-Requested-With": "caesar-pjax" },
+      });
+
+      if (!response.ok) throw new Error("页面加载失败");
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const nextFile = fileFromUrl(url);
+      const { nodes, scripts } = collectPageNodes(doc);
+
+      content.replaceChildren(...nodes);
+      if (doc.title) document.title = doc.title;
+      if (options && options.push) {
+        history.pushState({ caesarPjax: true }, "", url.href);
+      }
+
+      syncNavActive(nextFile);
+      initFilterTabs(content);
+      initActionMenus(content);
+      runPageScripts(scripts);
+      content.scrollTop = 0;
+    } catch (error) {
+      window.location.href = url.href;
+    } finally {
+      content.classList.remove("caesar-content-loading");
+    }
+  }
+
+  function initPjaxNavigation() {
+    if (document.documentElement.dataset.pjaxReady === "true") return;
+    document.documentElement.dataset.pjaxReady = "true";
+
+    history.replaceState({ caesarPjax: true }, "", window.location.href);
+
+    document.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      const link = event.target.closest("a[href]");
+      if (!isPjaxLink(link)) return;
+
+      event.preventDefault();
+      navigateTo(link.href);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.target.closest("a, button, input, select, textarea, label")) return;
+
+      const trigger = event.target.closest("[data-nav-href], [data-href]");
+      if (!trigger) return;
+
+      const href = trigger.dataset.navHref || trigger.dataset.href;
+      const url = new URL(href, window.location.href);
+      const currentDir = window.location.pathname.replace(/[^/]*$/, "");
+      const isSamePageTarget = url.origin === window.location.origin
+        && url.pathname.endsWith(".html")
+        && url.pathname.replace(/[^/]*$/, "") === currentDir;
+
+      if (!isSamePageTarget) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigateTo(url.href);
+    }, true);
+
+    window.addEventListener("popstate", () => {
+      loadPage(new URL(window.location.href), { push: false });
+    });
   }
 
   function tabValue(button) {
@@ -400,7 +568,11 @@
     scope.querySelectorAll(".tab-bar[data-filter-tabs]").forEach((tabBar) => {
       const targetSelector = tabBar.dataset.filterTarget;
       const target = targetSelector ? scope.querySelector(targetSelector) : tabBar.nextElementSibling;
-      const rows = target ? Array.from(target.matches("tbody") ? target.querySelectorAll("tr") : target.querySelectorAll("tbody tr")) : [];
+      const rows = target
+        ? Array.from(target.matches("tbody")
+          ? target.querySelectorAll("tr")
+          : target.querySelectorAll("tbody tr, [data-tab-status]"))
+        : [];
       const buttons = Array.from(tabBar.querySelectorAll(".tab-item"));
 
       buttons.forEach((button) => {
@@ -438,13 +610,16 @@
       });
     });
 
-    document.addEventListener("click", () => {
-      scope.querySelectorAll("[data-action-menu].open").forEach((wrap) => {
-        wrap.classList.remove("open");
-        const toggle = wrap.querySelector("[data-action-menu-toggle]");
-        if (toggle) toggle.setAttribute("aria-expanded", "false");
+    if (document.documentElement.dataset.actionMenuReady !== "true") {
+      document.documentElement.dataset.actionMenuReady = "true";
+      document.addEventListener("click", () => {
+        document.querySelectorAll("[data-action-menu].open").forEach((wrap) => {
+          wrap.classList.remove("open");
+          const toggle = wrap.querySelector("[data-action-menu-toggle]");
+          if (toggle) toggle.setAttribute("aria-expanded", "false");
+        });
       });
-    });
+    }
   }
 
   if (document.readyState === "loading") {

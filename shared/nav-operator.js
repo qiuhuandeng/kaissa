@@ -55,7 +55,9 @@
     return (window.location.pathname.split("/").pop() || "dashboard.html").split("?")[0];
   }
 
-  const pageOwners = {};
+  const pageOwners = {
+    "merchants-detail.html": { href: "merchants.html", title: "商户详情" },
+  };
 
   function findActive(items, file, parent) {
     for (const item of items) {
