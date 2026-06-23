@@ -6,9 +6,28 @@
       title: "产品中心",
       icon: "map",
       children: [
-        { title: "产品管理", href: "products.html" },
+        {
+          title: "产品管理",
+          children: [
+            { title: "产品列表", href: "products.html" },
+            { title: "外采产品", href: "product-outsource-list.html" },
+          ],
+        },
         { title: "团期团控", href: "schedules.html" },
         { title: "供应商管理", href: "suppliers.html" },
+      ],
+    },
+    {
+      title: "资源模块",
+      icon: "plane",
+      children: [
+        {
+          title: "航空资源",
+          children: [
+            { title: "航线库", href: "resource-flight-routes.html" },
+            { title: "锁位管理", href: "resource-flight-block.html" },
+          ],
+        },
       ],
     },
     {
@@ -33,7 +52,7 @@
       title: "项目业务",
       icon: "target",
       children: [
-        { title: "MICE项目", href: "projects.html" },
+        { title: "MICE", href: "projects.html" },
       ],
     },
     { title: "合同合规", icon: "file", href: "contracts.html" },
@@ -112,12 +131,40 @@
     user: '<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
   };
 
+  const primaryLabels = {
+    工作台: "概况",
+    产品中心: "产品",
+    资源模块: "资源",
+    销售订单: "订单",
+    履约操作: "履约",
+    项目业务: "项目",
+    合同合规: "合同",
+    财务对账: "财务",
+    分销运营: "分销",
+    营销内容: "营销",
+    客户会员: "客户",
+    AI计调助手: "AI",
+    C端装修: "装修",
+    数据统计: "数据",
+    系统设置: "设置",
+  };
+
   function createIcon(name) {
     const icon = document.createElement("span");
     icon.className = "nav-icon";
     icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons[name] + "</svg>";
     return icon;
   }
+
+  function primaryLabel(item) {
+    return primaryLabels[item.title] || item.title.slice(0, 2);
+  }
+
+  let primaryScroll = null;
+  let secondaryTitle = null;
+  let secondaryNav = null;
+  let currentPrimaryIndex = 0;
+  let primaryTooltip = null;
 
   function currentFile() {
     return (window.location.pathname.split("/").pop() || "dashboard.html").split("?")[0];
@@ -128,21 +175,100 @@
   }
 
   const pageOwners = {
+    "dashboard-group.html": { href: "dashboard.html", title: "集团管理层工作台" },
+    "dashboard-store.html": { href: "dashboard.html", title: "门店店长工作台" },
     "products-create.html": { href: "products.html", title: "新建跟团游产品" },
     "products-detail.html": { href: "products.html", title: "产品详情" },
+    "product-outsource-list.html": { href: "products.html", title: "外采产品" },
     "schedules-detail.html": { href: "schedules.html", title: "团期详情" },
     "orders-detail.html": { href: "orders.html", title: "订单详情" },
     "projects-detail.html": { href: "projects.html", title: "项目详情" },
     "finance-settlement-detail.html": { href: "finance-settlement.html", title: "对账单详情" },
   };
 
-  function findActive(items, file, parent) {
+  const organizationTree = [
+    {
+      id: "group-caesar",
+      type: "group",
+      typeLabel: "集团",
+      name: "凯撒旅游集团股份有限公司",
+      children: [
+        {
+          id: "sub-caesar-travel",
+          type: "subsidiary",
+          typeLabel: "子公司",
+          name: "北京凯撒旅游集团有限公司",
+          children: [
+            {
+              id: "center-outbound",
+              type: "center",
+              typeLabel: "中心",
+              name: "出境游事业部",
+              children: [
+                { id: "dept-west-eu", type: "department", typeLabel: "部门", name: "西欧产品部" },
+                { id: "dept-eu", type: "department", typeLabel: "部门", name: "欧洲事业部" },
+                { id: "store-bj-chaoyang", type: "store", typeLabel: "门店", name: "北京朝阳门店" },
+                { id: "store-sh-xuhui", type: "store", typeLabel: "门店", name: "上海徐汇门店" },
+              ],
+            },
+            {
+              id: "center-cruise",
+              type: "center",
+              typeLabel: "中心",
+              name: "邮轮中心",
+              children: [
+                { id: "dept-ideal", type: "department", typeLabel: "部门", name: "理想号运营部" },
+                { id: "store-gz-tianhe", type: "store", typeLabel: "门店", name: "广州天河门店" },
+              ],
+            },
+          ],
+        },
+        {
+          id: "sub-yibu",
+          type: "subsidiary",
+          typeLabel: "子公司",
+          name: "凯撒亿步旅行社有限公司",
+          children: [
+            {
+              id: "center-mice",
+              type: "center",
+              typeLabel: "中心",
+              name: "MICE会展中心",
+              children: [
+                { id: "dept-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
+                { id: "store-sh-mice", type: "store", typeLabel: "门店", name: "上海会展门店" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const workspaceExpandedIds = new Set([
+    "sub-caesar-travel",
+    "center-outbound",
+    "center-cruise",
+    "sub-yibu",
+    "center-mice",
+  ]);
+  let currentWorkspaceId = "center-outbound";
+
+  function workspaceRoots() {
+    return organizationTree.flatMap((node) => {
+      if (node.type === "group" && node.children) return node.children;
+      return [node];
+    });
+  }
+
+  function findActive(items, file, ancestors) {
+    const path = ancestors || [];
     for (const item of items) {
       if (item.href === file) {
-        return { item, parent };
+        return { item, parent: path[path.length - 1] || null, ancestors: path };
       }
       if (item.children) {
-        const found = findActive(item.children, file, item);
+        const found = findActive(item.children, file, path.concat(item));
         if (found) return found;
       }
     }
@@ -161,12 +287,161 @@
     return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href });
   }
 
-  function createLink(item, activeFile) {
+  function activeHrefFrom(active, file) {
+    return active ? active.ownerHref || active.item.href : file;
+  }
+
+  function rootIndexFromActive(active) {
+    if (!active) return 0;
+    const root = active.ancestors && active.ancestors.length > 0 ? active.ancestors[0] : active.item;
+    const index = menu.indexOf(root);
+    return index >= 0 ? index : 0;
+  }
+
+  function currentActiveState() {
+    const file = currentFile();
+    const active = resolveActive(file);
+    return { active, activeHref: activeHrefFrom(active, file) };
+  }
+
+  function clearPrimaryPreview() {
+    if (!primaryScroll) return;
+    primaryScroll.querySelectorAll(".nav-primary-item.preview").forEach((item) => item.classList.remove("preview"));
+  }
+
+  function isNavCollapsed() {
+    const layout = document.querySelector(".layout");
+    return Boolean(layout && layout.classList.contains("nav-collapsed"));
+  }
+
+  function ensurePrimaryTooltip() {
+    if (primaryTooltip) return primaryTooltip;
+    primaryTooltip = document.createElement("div");
+    primaryTooltip.className = "nav-primary-tooltip";
+    primaryTooltip.setAttribute("role", "tooltip");
+    document.body.appendChild(primaryTooltip);
+    return primaryTooltip;
+  }
+
+  function showPrimaryTooltip(control) {
+    if (!isNavCollapsed()) return false;
+    const tooltip = ensurePrimaryTooltip();
+    const rect = control.getBoundingClientRect();
+    tooltip.textContent = control.dataset.title || control.title || "";
+    tooltip.style.left = rect.right + 8 + "px";
+    tooltip.style.top = rect.top + rect.height / 2 + "px";
+    tooltip.classList.add("show");
+    return true;
+  }
+
+  function hidePrimaryTooltip() {
+    if (primaryTooltip) primaryTooltip.classList.remove("show");
+  }
+
+  function previewPrimary(index, control) {
+    const item = menu[index];
+    if (showPrimaryTooltip(control)) return;
+    if (!item || !item.children) return;
+    if (index === currentPrimaryIndex) {
+      restorePinnedPrimary();
+      return;
+    }
+
+    clearPrimaryPreview();
+    control.classList.add("preview");
+
+    const state = currentActiveState();
+    renderSecondary(state.activeHref, index);
+  }
+
+  function restorePinnedPrimary() {
+    clearPrimaryPreview();
+    const state = currentActiveState();
+    renderSecondary(state.activeHref, currentPrimaryIndex);
+  }
+
+  function createPrimaryItem(item, index, pageRootIndex) {
+    const control = item.children ? document.createElement("button") : document.createElement("a");
+    control.className = "nav-primary-item";
+    control.dataset.title = item.title;
+    control.title = item.title;
+
+    if (item.children) {
+      control.type = "button";
+      control.setAttribute("aria-expanded", String(index === currentPrimaryIndex));
+      control.addEventListener("mouseenter", () => {
+        previewPrimary(index, control);
+      });
+      control.addEventListener("mouseleave", hidePrimaryTooltip);
+      control.addEventListener("click", () => {
+        currentPrimaryIndex = index;
+        const state = currentActiveState();
+        renderPrimary(state.active);
+        renderSecondary(state.activeHref);
+
+        const layout = document.querySelector(".layout");
+        if (layout && layout.classList.contains("nav-collapsed")) {
+          layout.classList.remove("nav-collapsed");
+        }
+        hidePrimaryTooltip();
+      });
+    } else {
+      control.href = item.href;
+      control.addEventListener("mouseenter", () => {
+        previewPrimary(index, control);
+      });
+      control.addEventListener("mouseleave", hidePrimaryTooltip);
+    }
+
+    if (index === currentPrimaryIndex) control.classList.add("active");
+    if (index === pageRootIndex) {
+      control.classList.add("current");
+      control.setAttribute("aria-current", "page");
+    }
+
+    const text = document.createElement("span");
+    text.className = item.ai ? "nav-label nav-label-ai" : "nav-label";
+    text.textContent = primaryLabel(item);
+
+    if (item.icon) control.appendChild(createIcon(item.icon));
+    control.appendChild(text);
+    return control;
+  }
+
+  function renderPrimary(active) {
+    if (!primaryScroll) return;
+
+    const pageRootIndex = rootIndexFromActive(active);
+    primaryScroll.replaceChildren();
+    menu.forEach((item, index) => {
+      primaryScroll.appendChild(createPrimaryItem(item, index, pageRootIndex));
+    });
+  }
+
+  function renderSecondary(activeHref, primaryIndex) {
+    if (!secondaryTitle || !secondaryNav) return;
+
+    const root = menu[typeof primaryIndex === "number" ? primaryIndex : currentPrimaryIndex] || menu[0];
+    const items = root.children && root.children.length > 0 ? root.children : [root];
+    const hasActiveInRoot = hasActive(root, activeHref);
+    let openedDefault = false;
+
+    secondaryTitle.textContent = root.title;
+    secondaryNav.replaceChildren();
+    items.forEach((item) => {
+      const openByDefault = !hasActiveInRoot && !openedDefault && Boolean(item.children);
+      if (openByDefault) openedDefault = true;
+      secondaryNav.appendChild(item.children ? createSecondaryParent(item, activeHref, 0, openByDefault) : createSecondaryLink(item, activeHref, 0));
+    });
+  }
+
+  function createSecondaryLink(item, activeFile, depth) {
     const link = document.createElement("a");
     link.className = "nav-item";
     link.dataset.title = item.title;
+    link.dataset.depth = String(depth || 0);
     link.title = item.title;
-    if (!item.icon) link.classList.add("nav-child");
+    if (!item.icon || depth > 0) link.classList.add("nav-child");
     link.href = item.href;
     if (item.href === activeFile) link.classList.add("active");
 
@@ -175,6 +450,12 @@
     text.textContent = item.title;
 
     if (item.icon) link.appendChild(createIcon(item.icon));
+    if ((depth || 0) === 0) {
+      const arrowPlaceholder = document.createElement("span");
+      arrowPlaceholder.className = "nav-arrow nav-arrow-placeholder";
+      arrowPlaceholder.setAttribute("aria-hidden", "true");
+      link.appendChild(arrowPlaceholder);
+    }
     link.appendChild(text);
     return link;
   }
@@ -253,18 +534,11 @@
 
   function syncNavActive(file) {
     const active = resolveActive(file);
-    const activeHref = active ? active.ownerHref || active.item.href : file;
+    const activeHref = activeHrefFrom(active, file);
+    currentPrimaryIndex = rootIndexFromActive(active);
 
-    document.querySelectorAll(".nav-scroll .nav-item.active").forEach((item) => item.classList.remove("active"));
-    document.querySelectorAll(".nav-scroll .nav-parent").forEach((parent) => parent.classList.remove("open"));
-
-    const activeLink = Array.from(document.querySelectorAll(".nav-scroll a.nav-item")).find((link) => link.getAttribute("href") === activeHref);
-    if (activeLink) {
-      activeLink.classList.add("active");
-      const parent = activeLink.closest(".nav-parent");
-      if (parent) parent.classList.add("open");
-    }
-
+    renderPrimary(active);
+    renderSecondary(activeHref);
     replaceBreadcrumb(active);
     replacePageTabs(active, file);
   }
@@ -295,14 +569,22 @@
     });
   }
 
-  function createParent(item, activeFile) {
+  function hasActive(item, activeFile) {
+    if (item.href === activeFile) return true;
+    return item.children ? item.children.some((child) => hasActive(child, activeFile)) : false;
+  }
+
+  function createSecondaryParent(item, activeFile, depth, openByDefault) {
     const wrap = document.createElement("div");
     wrap.className = "nav-parent";
+    wrap.dataset.depth = String(depth || 0);
 
     const head = document.createElement("div");
     head.className = "nav-item";
     head.dataset.title = item.title;
+    head.dataset.depth = String(depth || 0);
     head.title = item.title;
+    if (depth > 0) head.classList.add("nav-child");
 
     const text = document.createElement("span");
     text.className = "nav-label";
@@ -315,13 +597,16 @@
     const sub = document.createElement("div");
     sub.className = "nav-sub";
 
-    item.children.forEach((child) => sub.appendChild(createLink(child, activeFile)));
-    if (item.children.some((child) => child.href === activeFile)) {
+    item.children.forEach((child) => {
+      sub.appendChild(child.children ? createSecondaryParent(child, activeFile, (depth || 0) + 1, false) : createSecondaryLink(child, activeFile, (depth || 0) + 1));
+    });
+    if (openByDefault || item.children.some((child) => hasActive(child, activeFile))) {
       wrap.classList.add("open");
     }
 
     head.addEventListener("click", () => wrap.classList.toggle("open"));
-    head.append(createIcon(item.icon), text, arrow);
+    if (item.icon) head.appendChild(createIcon(item.icon));
+    head.append(text, arrow);
     wrap.append(head, sub);
     return wrap;
   }
@@ -331,9 +616,7 @@
     breadcrumb.className = "breadcrumb";
 
     const parts = active
-      ? active.parent
-        ? [active.parent.title, active.item.title]
-        : [active.item.title]
+      ? (active.ancestors || []).map((item) => item.title).concat(active.item.title)
       : ["未归属页面"];
 
     if (active && active.currentTitle && active.currentTitle !== active.item.title) {
@@ -368,10 +651,180 @@
     return notify;
   }
 
+  function findOrgNode(nodes, id) {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children) {
+        const found = findOrgNode(node.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function orgNodeMatches(node, keyword) {
+    if (!keyword) return true;
+    const haystack = [node.typeLabel, node.name].join(" ").toLowerCase();
+    if (haystack.includes(keyword)) return true;
+    return node.children ? node.children.some((child) => orgNodeMatches(child, keyword)) : false;
+  }
+
+  function createOrgNode(node, depth, state) {
+    if (!orgNodeMatches(node, state.keyword)) return null;
+
+    const wrap = document.createElement("div");
+    wrap.className = "org-tree-node";
+
+    const row = document.createElement("div");
+    row.className = "org-tree-row depth-" + Math.min(depth, 4);
+    if (node.id === currentWorkspaceId) row.classList.add("active");
+
+    const hasChildren = Boolean(node.children && node.children.length);
+    const caret = document.createElement("button");
+    caret.className = hasChildren ? "org-tree-caret" : "org-tree-caret placeholder";
+    caret.type = "button";
+    caret.setAttribute("aria-label", hasChildren ? "展开或收起" : "");
+    if (hasChildren && (workspaceExpandedIds.has(node.id) || state.keyword)) caret.classList.add("open");
+    caret.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevron + "</svg>";
+    caret.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (!hasChildren) return;
+      if (workspaceExpandedIds.has(node.id)) {
+        workspaceExpandedIds.delete(node.id);
+      } else {
+        workspaceExpandedIds.add(node.id);
+      }
+      state.render();
+    });
+
+    const select = document.createElement("button");
+    select.className = "org-tree-select";
+    select.type = "button";
+    select.title = node.name;
+    select.addEventListener("click", () => {
+      currentWorkspaceId = node.id;
+      state.workspaceText.textContent = node.name;
+      state.menu.classList.remove("show");
+      state.trigger.setAttribute("aria-expanded", "false");
+      state.render();
+    });
+
+    const tag = document.createElement("span");
+    tag.className = "org-type-tag " + node.type;
+    tag.textContent = node.typeLabel;
+
+    const name = document.createElement("span");
+    name.className = "org-node-name";
+    name.textContent = node.name;
+
+    select.append(tag, name);
+
+    row.append(caret, select);
+    wrap.appendChild(row);
+
+    if (hasChildren && (workspaceExpandedIds.has(node.id) || state.keyword)) {
+      const children = document.createElement("div");
+      children.className = "org-tree-children";
+      node.children.forEach((child) => {
+        const childNode = createOrgNode(child, depth + 1, state);
+        if (childNode) children.appendChild(childNode);
+      });
+      wrap.appendChild(children);
+    }
+
+    return wrap;
+  }
+
+  function createWorkspaceSwitcher() {
+    const current = findOrgNode(organizationTree, currentWorkspaceId) || organizationTree[0];
+    const wrap = document.createElement("div");
+    wrap.className = "workspace-switcher";
+
+    const trigger = document.createElement("button");
+    trigger.className = "workspace-badge";
+    trigger.type = "button";
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const workspaceText = document.createElement("span");
+    workspaceText.className = "workspace-current-text";
+    workspaceText.textContent = current.name;
+    const workspaceArrow = document.createElement("span");
+    workspaceArrow.className = "topbar-chevron";
+    workspaceArrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
+    trigger.append(workspaceText, workspaceArrow);
+
+    const menu = document.createElement("div");
+    menu.className = "workspace-menu";
+
+    const searchWrap = document.createElement("div");
+    searchWrap.className = "workspace-search";
+    searchWrap.innerHTML = '<span class="workspace-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>';
+    const search = document.createElement("input");
+    search.type = "search";
+    search.placeholder = "请输入门店/部门名称";
+    search.setAttribute("aria-label", "搜索组织节点");
+    searchWrap.appendChild(search);
+
+    const tree = document.createElement("div");
+    tree.className = "org-tree";
+
+    const empty = document.createElement("div");
+    empty.className = "org-tree-empty";
+    empty.textContent = "未找到匹配节点";
+
+    const state = {
+      keyword: "",
+      menu,
+      trigger,
+      workspaceText,
+      render: null,
+    };
+
+    state.render = () => {
+      state.keyword = search.value.trim().toLowerCase();
+      tree.replaceChildren();
+      let count = 0;
+      workspaceRoots().forEach((node) => {
+        const item = createOrgNode(node, 0, state);
+        if (item) {
+          tree.appendChild(item);
+          count += 1;
+        }
+      });
+      empty.hidden = count > 0;
+    };
+
+    search.addEventListener("input", state.render);
+    menu.append(searchWrap, tree, empty);
+    state.render();
+
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const opened = menu.classList.toggle("show");
+      trigger.setAttribute("aria-expanded", String(opened));
+      if (opened) setTimeout(() => search.focus(), 0);
+    });
+
+    menu.addEventListener("click", (event) => event.stopPropagation());
+    document.addEventListener("click", () => {
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+
+    wrap.append(trigger, menu);
+    return wrap;
+  }
+
   function initNav() {
     const file = currentFile();
     const active = resolveActive(file);
-    const activeHref = active ? active.ownerHref || active.item.href : file;
+    const activeHref = activeHrefFrom(active, file);
 
     const oldNodes = Array.from(document.body.childNodes).filter((node) => node !== bootScript);
 
@@ -381,14 +834,38 @@
     const sidebar = document.createElement("aside");
     sidebar.className = "sidebar";
 
+    const primaryRail = document.createElement("div");
+    primaryRail.className = "nav-primary-rail";
+
     const logo = document.createElement("div");
     logo.className = "sidebar-logo";
-    logo.textContent = "凯撒商户端";
+    logo.textContent = "凯撒";
 
-    const navScroll = document.createElement("nav");
-    navScroll.className = "nav-scroll";
-    menu.forEach((item) => navScroll.appendChild(item.children ? createParent(item, activeHref) : createLink(item, activeHref)));
-    sidebar.append(logo, navScroll);
+    primaryScroll = document.createElement("nav");
+    primaryScroll.className = "nav-scroll nav-primary-scroll";
+    primaryScroll.setAttribute("aria-label", "一级模块导航");
+
+    const secondaryPanel = document.createElement("div");
+    secondaryPanel.className = "nav-secondary-panel";
+
+    secondaryTitle = document.createElement("div");
+    secondaryTitle.className = "nav-secondary-title";
+
+    secondaryNav = document.createElement("nav");
+    secondaryNav.className = "nav-scroll nav-secondary-scroll";
+    secondaryNav.setAttribute("aria-label", "二三级菜单导航");
+
+    currentPrimaryIndex = rootIndexFromActive(active);
+    renderPrimary(active);
+    renderSecondary(activeHref);
+
+    primaryRail.append(logo, primaryScroll);
+    secondaryPanel.append(secondaryTitle, secondaryNav);
+    sidebar.append(primaryRail, secondaryPanel);
+    sidebar.addEventListener("mouseleave", () => {
+      restorePinnedPrimary();
+      hidePrimaryTooltip();
+    });
 
     const main = document.createElement("main");
     main.className = "main-area";
@@ -405,15 +882,6 @@
     toggle.setAttribute("aria-label", "收起或展开侧栏");
     toggle.innerHTML = '<span class="topbar-icon"><svg viewBox="0 0 24 24" aria-hidden="true">' + icons.menu + "</svg></span>";
 
-    const workspace = document.createElement("span");
-    workspace.className = "workspace-badge";
-    const workspaceText = document.createElement("span");
-    workspaceText.textContent = "出境游事业部";
-    const workspaceArrow = document.createElement("span");
-    workspaceArrow.className = "topbar-chevron";
-    workspaceArrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
-    workspace.append(workspaceText, workspaceArrow);
-
     left.append(toggle, createBreadcrumb(active));
 
     const right = document.createElement("div");
@@ -429,7 +897,7 @@
     arrow.className = "topbar-chevron";
     arrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
     user.append(userIcon, name, arrow);
-    right.append(workspace, createNotify(8), user);
+    right.append(createWorkspaceSwitcher(), createNotify(8), user);
 
     topbar.append(left, right);
 
@@ -443,6 +911,7 @@
 
     toggle.addEventListener("click", () => {
       layout.classList.toggle("nav-collapsed");
+      hidePrimaryTooltip();
     });
 
     initFilterTabs(content);
