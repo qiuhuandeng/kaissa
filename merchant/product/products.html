@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自营产品 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">自营产品</h1>
+      </div>
+      <div class="list-page-actions">
+        <div class="btn-group">
+          <button id="openAiUploadDrawer" class="btn btn-ai" type="button">🤖 AI智能上架</button>
+          <button class="btn btn-primary" type="button" data-open-modal>+ 新建</button>
+          <span class="dropdown table-action-more">
+            <button class="btn btn-secondary table-more-toggle" type="button" data-bulk-menu-toggle aria-expanded="false">批量操作</button>
+            <span class="dropdown-menu action-dropdown-menu">
+              <button class="dropdown-item" type="button" data-bulk-action="up">批量上架</button>
+              <button class="dropdown-item" type="button" data-bulk-action="down">批量下架</button>
+              <button class="dropdown-item" type="button" data-bulk-action="auth">申请渠道授权</button>
+              <button class="dropdown-item" type="button" data-bulk-action="pricing">应用定价策略</button>
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <section class="filter-card filter-card-compact" aria-label="产品筛选">
+      <div class="filter-row">
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="productType">产品类型</label>
+          <select id="productType">
+            <option>全部类型</option>
+            <option>标准跟团</option>
+            <option>自组产品</option>
+            <option>外采代理</option>
+            <option>邮轮</option>
+            <option>自由行</option>
+            <option>MICE</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="sr-only" for="productName">产品名称</label>
+          <input id="productName" type="text" placeholder="请输入产品名称">
+        </div>
+        <div class="filter-item">
+          <label class="sr-only" for="productCode">产品编号</label>
+          <input id="productCode" type="text" placeholder="请输入产品编号">
+        </div>
+        <div class="filter-item">
+          <label class="sr-only" for="supplierName">供应商</label>
+          <input id="supplierName" type="text" placeholder="请输入供应商">
+        </div>
+        <div class="filter-item">
+          <label class="sr-only" for="destination">目的地</label>
+          <input id="destination" type="text" placeholder="请输入目的地">
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only">出发地</label>
+          <button id="openCityFilterModal" class="filter-select-button" type="button"><span id="departureCityFilter">全部出发地</span></button>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="productStatus">产品状态</label>
+          <select id="productStatus">
+            <option>全部状态</option>
+            <option>草稿</option>
+            <option>审核中</option>
+            <option>已上架</option>
+            <option>已下架</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-wide">
+          <label class="sr-only">创建时间</label>
+          <div class="date-range">
+            <input type="date" aria-label="创建开始日期">
+            <span>至</span>
+            <input type="date" aria-label="创建结束日期">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button">搜索</button>
+          <button id="resetFilters" class="btn btn-secondary" type="button">重置</button>
+          <button class="btn btn-ghost" type="button">导出</button>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <nav class="tab-bar" aria-label="产品状态筛选" data-filter-tabs data-filter-target="#productRows">
+    <button class="tab-item active" type="button" data-filter-value="全部">全部(186)</button>
+    <button class="tab-item" type="button" data-filter-value="已上架">已上架(142)</button>
+    <button class="tab-item" type="button" data-filter-value="已下架">已下架(28)</button>
+    <button class="tab-item" type="button" data-filter-value="草稿">草稿(12)</button>
+    <button class="tab-item" type="button" data-filter-value="审核中">审核中(4)</button>
+  </nav>
+
+  <section class="table-wrap" aria-label="产品列表">
+    <table>
+      <thead>
+        <tr>
+          <th><input id="checkAllProducts" type="checkbox" aria-label="全选产品"></th>
+          <th>产品图</th>
+          <th>产品名称/编号</th>
+          <th>类型</th>
+          <th>供应商</th>
+          <th>出发→目的地</th>
+          <th>天数</th>
+          <th>零售价</th>
+          <th>团期数</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="productRows">
+        <tr data-tab-status="已上架">
+          <td><input type="checkbox" aria-label="选择欧洲十国经典游"></td>
+          <td><span class="product-thumb thumb-blue"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">欧洲十国经典游</a><br><span class="text-muted">KS-EU-001</span></td>
+          <td>跟团游</td>
+          <td>北京凯撒旅游</td>
+          <td>北京→法德意</td>
+          <td>12天</td>
+          <td>¥12,800</td>
+          <td>8个</td>
+          <td><span class="tag tag-green">已上架</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="已上架">
+          <td><input type="checkbox" aria-label="选择日本关西深度游"></td>
+          <td><span class="product-thumb thumb-green"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">日本关西深度游</a><br><span class="text-muted">KS-JP-002</span></td>
+          <td>跟团游</td>
+          <td>日本地接XYZ</td>
+          <td>上海→大阪京都</td>
+          <td>7天</td>
+          <td>¥8,980</td>
+          <td>5个</td>
+          <td><span class="tag tag-green">已上架</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="草稿">
+          <td><input type="checkbox" aria-label="选择三亚亲子5日游"></td>
+          <td><span class="product-thumb thumb-orange"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">三亚亲子5日游</a><br><span class="text-muted">KS-HN-003</span></td>
+          <td>自组产品</td>
+          <td>内部</td>
+          <td>全国→三亚</td>
+          <td>5天</td>
+          <td>¥6,800</td>
+          <td>3个</td>
+          <td><span class="tag tag-gray">草稿</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="已上架">
+          <td><input type="checkbox" aria-label="选择理想号地中海邮轮12晚"></td>
+          <td><span class="product-thumb thumb-purple"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">理想号地中海邮轮12晚</a><br><span class="text-muted">KS-CZ-004</span></td>
+          <td>邮轮</td>
+          <td>MSC地中海</td>
+          <td>上海→地中海</td>
+          <td>14天</td>
+          <td>¥28,800</td>
+          <td>2个</td>
+          <td><span class="tag tag-green">已上架</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="已下架">
+          <td><input type="checkbox" aria-label="选择马来西亚自由行6天"></td>
+          <td><span class="product-thumb thumb-red"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">马来西亚自由行6天</a><br><span class="text-muted">KS-MY-005</span></td>
+          <td>自由行</td>
+          <td>马来地接</td>
+          <td>广州→吉隆坡</td>
+          <td>6天</td>
+          <td>¥4,200</td>
+          <td>12个</td>
+          <td><span class="tag tag-orange">已下架</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="已上架">
+          <td><input type="checkbox" aria-label="选择北京故宫定制3日"></td>
+          <td><span class="product-thumb thumb-cyan"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">北京故宫定制3日</a><br><span class="text-muted">KS-BJ-006</span></td>
+          <td>自组产品</td>
+          <td>内部</td>
+          <td>全国→北京</td>
+          <td>3天</td>
+          <td>¥3,800</td>
+          <td>6个</td>
+          <td><span class="tag tag-green">已上架</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="审核中">
+          <td><input type="checkbox" aria-label="选择泰国曼谷清迈8日"></td>
+          <td><span class="product-thumb thumb-yellow"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">泰国曼谷清迈8日</a><br><span class="text-muted">KS-TH-007</span></td>
+          <td>外采代理</td>
+          <td>泰国地接DEF</td>
+          <td>上海→曼谷</td>
+          <td>8天</td>
+          <td>¥5,980</td>
+          <td>4个</td>
+          <td><span class="tag tag-blue">审核中</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+        <tr data-tab-status="已上架">
+          <td><input type="checkbox" aria-label="选择2026企业年会方案"></td>
+          <td><span class="product-thumb thumb-pink"></span></td>
+          <td><a class="link-primary table-main-link" href="products-detail.html">2026企业年会方案</a><br><span class="text-muted">KS-MI-008</span></td>
+          <td>MICE</td>
+          <td>内部</td>
+          <td>定制</td>
+          <td>-</td>
+          <td>面议</td>
+          <td>1个</td>
+          <td><span class="tag tag-green">已上架</span></td>
+          <td><div class="table-action"><a href="product-self-edit.html">编辑</a><button type="button" data-toggle-shelf>上下架</button><a href="../tour/schedules.html">团期</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-product-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-copy-product>复制产品</button><button class="dropdown-item danger" type="button" data-delete-product>删除产品</button><button class="dropdown-item" type="button" data-sales-product>查看销售数据</button></span></span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="pagination">
+    <span>第1-8条/共186条</span>
+    <div class="pager" aria-label="分页">
+      <button class="pager-btn" type="button" disabled>上一页</button>
+      <button class="pager-btn active" type="button">1</button>
+      <button class="pager-btn" type="button">2</button>
+      <button class="pager-btn" type="button">3</button>
+      <button class="pager-btn" type="button">下一页</button>
+    </div>
+  </div>
+
+  <div id="createProductModal" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal modal-md drawer-modal" role="dialog" aria-modal="true" aria-labelledby="createProductTitle">
+      <div class="modal-header">
+        <div id="createProductTitle" class="modal-title">请选择产品类型</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-create>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="product-type-grid">
+          <a class="product-type-card" href="product-self-edit.html?type=group_tour"><span class="product-type-icon">🗺</span><span><strong>跟团游</strong><small>标准行程多团期销售</small></span></a>
+          <a class="product-type-card" href="product-self-edit.html?type=free_tour"><span class="product-type-icon">🏨</span><span><strong>自由行</strong><small>酒店机票自由组合</small></span></a>
+          <a class="product-type-card" href="product-self-edit.html?type=cruise"><span class="product-type-icon">🚢</span><span><strong>邮轮</strong><small>舱型管理邮轮专属</small></span></a>
+          <a class="product-type-card" href="product-self-edit.html?type=mice"><span class="product-type-icon">🎯</span><span><strong>MICE/单团</strong><small>企业定制项目制管理</small></span></a>
+          <a class="product-type-card" href="product-self-edit.html?type=agency"><span class="product-type-icon">🤝</span><span><strong>代理产品</strong><small>引入供应商产品代理</small></span></a>
+          <a class="product-type-card" href="product-self-edit.html?type=visa"><span class="product-type-icon">✈</span><span><strong>签证/机票</strong><small>独立签证机票服务</small></span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="aiUploadDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal ai-upload-drawer" role="dialog" aria-modal="true" aria-labelledby="aiUploadDrawerTitle">
+      <div class="modal-header">
+        <div id="aiUploadDrawerTitle" class="modal-title">AI智能上架</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-ai-upload>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-upload-drawer-body">
+          <section class="ai-upload-card">
+            <div class="ai-upload-section-head">
+              <h2>选择产品类型</h2>
+            </div>
+            <div class="ai-product-type-grid" aria-label="产品类型选择">
+              <button class="ai-product-type active" type="button"><strong>自营产品</strong><span>自有线路模板与成本配置</span></button>
+              <button class="ai-product-type" type="button"><strong>外采产品</strong><span>供应商产品包装与定价</span></button>
+              <button class="ai-product-type" type="button"><strong>邮轮产品</strong><span>航线、船只与舱型解析</span></button>
+              <button class="ai-product-type" type="button"><strong>专列产品</strong><span>线路、车厢与席别配置</span></button>
+              <button class="ai-product-type" type="button"><strong>自由行</strong><span>机酒套餐与可选服务</span></button>
+              <button class="ai-product-type" type="button"><strong>单项委托</strong><span>签证、机票、酒店等单项</span></button>
+              <button class="ai-product-type" type="button"><strong>研学产品</strong><span>课程、学校与实名制信息</span></button>
+              <button class="ai-product-type" type="button"><strong>单团自组MICE</strong><span>会奖定制与方案报价</span></button>
+            </div>
+          </section>
+
+          <section class="ai-upload-card">
+            <div class="ai-upload-section-head">
+              <h2>上传解析来源</h2>
+            </div>
+            <nav class="tab-bar ai-source-tabs" aria-label="上传方式">
+              <button class="tab-item active" type="button" data-source-tab="file">上传文件</button>
+              <button class="tab-item" type="button" data-source-tab="ota">输入OTA链接</button>
+              <button class="tab-item" type="button" data-source-tab="competitor">输入竞品链接</button>
+              <button class="tab-item" type="button" data-source-tab="text">粘贴文本内容</button>
+            </nav>
+
+            <section class="ai-source-panel active" data-source-panel="file">
+              <div class="ai-upload-dropzone">
+                <div class="ai-upload-icon" aria-hidden="true">↑</div>
+                <strong>拖拽文件到此处</strong>
+                <button class="link-button" type="button">或点击选择文件</button>
+                <span>支持格式：PDF、Word、JPG、PNG，单文件最大20MB</span>
+              </div>
+              <div class="ai-upload-files" aria-label="已上传文件">
+                <div><span>法瑞意经典15日行程.pdf</span><em>8.6MB</em><button type="button">删除</button></div>
+                <div><span>酒店与景点图片.zip</span><em>12.4MB</em><button type="button">删除</button></div>
+              </div>
+              <div class="ai-upload-actions">
+                <button class="btn btn-ai" type="button" data-start-ai-parse>开始AI解析</button>
+              </div>
+            </section>
+
+            <section class="ai-source-panel" data-source-panel="ota">
+              <div class="ai-link-parse-row">
+                <input class="form-control" type="url" placeholder="粘贴携程/飞猪/同程产品页面URL">
+                <button class="btn btn-primary" type="button" data-start-ai-parse>解析</button>
+              </div>
+            </section>
+
+            <section class="ai-source-panel" data-source-panel="competitor">
+              <div class="ai-link-parse-row">
+                <input class="form-control" type="url" placeholder="粘贴竞品产品页面URL">
+                <button class="btn btn-primary" type="button" data-start-ai-parse>解析</button>
+              </div>
+            </section>
+
+            <section class="ai-source-panel" data-source-panel="text">
+              <textarea class="form-control ai-text-source" rows="8" placeholder="粘贴行程、费用、亮点、价格等原始文本内容"></textarea>
+              <div class="ai-upload-actions">
+                <button class="btn btn-primary" type="button" data-start-ai-parse>解析文本</button>
+              </div>
+            </section>
+          </section>
+
+          <section id="productAiParseProgress" class="ai-upload-card ai-parse-progress hidden">
+            <div class="ai-upload-section-head">
+              <h2>AI解析进度</h2>
+              <span id="productAiProgressPercent">0%</span>
+            </div>
+            <div class="ai-progress-track" aria-label="解析进度">
+              <div id="productAiProgressBar" class="ai-progress-bar"></div>
+            </div>
+            <div class="ai-field-status-list">
+              <div><strong>线路名称</strong><span class="status-done">✓</span><em>法瑞意经典15日游</em></div>
+              <div><strong>出发地/目的地</strong><span class="status-done">✓</span><em>北京出发，法国/瑞士/意大利</em></div>
+              <div><strong>行程天数</strong><span class="status-done">✓</span><em>15天14晚</em></div>
+              <div><strong>行程详情（Day1-DayN）</strong><span class="status-loading"></span><em>正在抽取每日景点、餐食与住宿</em></div>
+              <div><strong>费用包含/不包含</strong><span class="status-loading"></span><em>正在识别费用边界</em></div>
+              <div><strong>基础价格</strong><span class="status-failed">×</span><em>原文价格区间不完整，需人工确认</em></div>
+              <div><strong>推荐渠道</strong><span class="status-done">✓</span><em>门市 / 小程序 / 外部顾问</em></div>
+            </div>
+          </section>
+
+          <section id="productAiParseResult" class="ai-upload-card ai-parse-result hidden">
+            <div class="ai-upload-section-head">
+              <h2>解析结果校正</h2>
+            </div>
+            <div class="ai-result-layout">
+              <aside class="ai-original-preview">
+                <div class="ai-pdf-preview">
+                  <strong>PDF预览</strong>
+                  <span>法瑞意经典15日行程.pdf</span>
+                </div>
+              </aside>
+              <section class="ai-result-form">
+                <div class="form-grid">
+                  <div class="form-group form-group-full"><label>产品名称 <span class="confidence high">96%</span></label><input class="form-control" type="text" value="法瑞意经典15日游"></div>
+                  <div class="form-group"><label>出发地 <span class="confidence high">92%</span></label><input class="form-control" type="text" value="北京"></div>
+                  <div class="form-group"><label>目的地 <span class="confidence high">94%</span></label><input class="form-control" type="text" value="法国/瑞士/意大利"></div>
+                  <div class="form-group"><label>行程天数 <span class="confidence high">98%</span></label><input class="form-control" type="text" value="15天14晚"></div>
+                  <div class="form-group needs-review"><label>基础价格 <span class="confidence low">61%</span></label><input class="form-control" type="text" value="¥12,800起"></div>
+                  <div class="form-group form-group-full"><label>行程详情 <span class="confidence high">89%</span></label><textarea class="form-control" rows="5">Day1 北京集合出发；Day2 抵达巴黎，市区游览；Day3 卢浮宫与塞纳河；Day4 前往瑞士...</textarea></div>
+                  <div class="form-group form-group-full"><label>费用包含/不包含 <span class="confidence low">68%</span></label><textarea class="form-control" rows="4">包含：国际机票、酒店、团队餐、景点首道门票、领队服务。不含：个人消费、单房差、签证加急费。</textarea></div>
+                  <div class="form-group form-group-full"><label>推荐渠道 <span class="confidence high">91%</span></label><input class="form-control" type="text" value="门市、小程序、外部顾问"></div>
+                </div>
+                <div class="ai-result-actions">
+                  <a class="btn btn-primary" href="product-self-edit.html">确认并进入产品编辑</a>
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="channelPublishDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal channel-publish-drawer" role="dialog" aria-modal="true" aria-labelledby="channelPublishTitle">
+      <div class="modal-header">
+        <div id="channelPublishTitle" class="modal-title">渠道发布</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-channel-publish>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary channel-publish-target">
+          <strong id="channelPublishProductName">欧洲十国经典游</strong>
+          <span id="channelPublishProductMeta">KS-EU-001 | 跟团游 | 当前零售价 ¥12,800 | 已上架</span>
+          <span id="channelPublishAuthSummary">有效授权：携程、官网、小程序、北京研学联盟；待审批：飞猪；未授权：同程、张慧独立顾问</span>
+        </div>
+        <div class="channel-publish-grid">
+          <section class="channel-publish-section">
+            <h3>OTA渠道发布</h3>
+            <div class="channel-publish-row channel-publish-row-ota">
+              <div class="channel-name">携程</div>
+              <span class="tag tag-green channel-auth-state">有效</span>
+              <label class="channel-switch"><input type="checkbox" checked> 上架</label>
+              <label class="channel-field"><span>OTA展示价</span><input class="form-control" type="number" min="0" value="13200"></label>
+              <span class="price-check tag tag-green">合规</span>
+              <label class="channel-field"><span>库存分配名额</span><input class="form-control" type="number" min="0" value="12"></label>
+              <button class="btn btn-secondary" type="button">素材上传</button>
+            </div>
+            <div class="channel-publish-row channel-publish-row-ota">
+              <div class="channel-name">飞猪</div>
+              <span class="tag tag-orange channel-auth-state">待审批</span>
+              <label class="channel-switch channel-disabled"><input type="checkbox" disabled> 上架</label>
+              <label class="channel-field channel-disabled"><span>OTA展示价</span><input class="form-control" type="number" min="0" value="12400" disabled></label>
+              <span class="price-check tag tag-gray">待授权</span>
+              <label class="channel-field channel-disabled"><span>库存分配名额</span><input class="form-control" type="number" min="0" value="8" disabled></label>
+              <button class="btn btn-secondary" type="button" disabled>待审批</button>
+            </div>
+            <div class="channel-publish-row channel-publish-row-ota">
+              <div class="channel-name">同程</div>
+              <span class="tag tag-gray channel-auth-state">未授权</span>
+              <label class="channel-switch channel-disabled"><input type="checkbox" disabled> 上架</label>
+              <label class="channel-field channel-disabled"><span>OTA展示价</span><input class="form-control" type="number" min="0" value="13000" disabled></label>
+              <span class="price-check tag tag-gray">不可发布</span>
+              <label class="channel-field channel-disabled"><span>库存分配名额</span><input class="form-control" type="number" min="0" value="6" disabled></label>
+              <button class="btn btn-secondary" type="button" data-request-channel-auth>申请授权</button>
+            </div>
+          </section>
+
+          <section class="channel-publish-section">
+            <h3>直客渠道</h3>
+            <div class="channel-publish-row">
+              <div class="channel-name">官网</div>
+              <span class="tag tag-green channel-auth-state">有效</span>
+              <label class="channel-switch"><input type="checkbox" checked> 上架</label>
+              <label class="channel-field"><span>展示价</span><input class="form-control" type="number" min="0" value="12800"></label>
+              <label class="channel-field"><span>SEO标签</span><input class="form-control" type="text" value="欧洲十国,法意瑞,纯玩"></label>
+            </div>
+            <div class="channel-publish-row">
+              <div class="channel-name">小程序</div>
+              <span class="tag tag-green channel-auth-state">有效</span>
+              <label class="channel-switch"><input type="checkbox" checked> 上架</label>
+              <label class="channel-field"><span>专享价</span><input class="form-control" type="number" min="0" value="12500"></label>
+              <label class="channel-switch"><input type="checkbox" checked> 首页推荐</label>
+            </div>
+          </section>
+
+          <section class="channel-publish-section">
+            <h3>代理商发布</h3>
+            <div class="channel-publish-row channel-agent-row">
+              <div class="channel-name">北京研学联盟</div>
+              <span class="tag tag-green channel-auth-state">有效</span>
+              <label class="channel-switch"><input type="checkbox" checked> 可售</label>
+              <label class="channel-field"><span>代理底价</span><input class="form-control" type="number" min="0" value="11800"></label>
+              <label class="channel-field"><span>建议零售价</span><input class="form-control" type="number" min="0" value="12800"></label>
+            </div>
+            <div class="channel-publish-row channel-agent-row">
+              <div class="channel-name">王磊旅行社</div>
+              <span class="tag tag-orange channel-auth-state">待审批</span>
+              <label class="channel-switch channel-disabled"><input type="checkbox" disabled> 可售</label>
+              <label class="channel-field channel-disabled"><span>代理底价</span><input class="form-control" type="number" min="0" value="11600" disabled></label>
+              <label class="channel-field channel-disabled"><span>建议零售价</span><input class="form-control" type="number" min="0" value="12600" disabled></label>
+            </div>
+            <div class="channel-publish-row channel-agent-row">
+              <div class="channel-name">张慧独立顾问</div>
+              <span class="tag tag-gray channel-auth-state">未授权</span>
+              <label class="channel-switch channel-disabled"><input type="checkbox" disabled> 可售</label>
+              <label class="channel-field channel-disabled"><span>代理底价</span><input class="form-control" type="number" min="0" value="11600" disabled></label>
+              <button class="btn btn-secondary" type="button" data-request-channel-auth>申请授权</button>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-channel-publish>取消</button>
+        <button class="btn btn-secondary" type="button" data-save-channel-draft>保存草稿</button>
+        <button id="syncChannelPublish" class="btn btn-primary" type="button">保存并同步渠道</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="copyProductModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="copyProductTitle">
+      <div class="modal-header">
+        <div id="copyProductTitle" class="modal-title">复制产品</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-copy>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-center-text">确认复制此产品为草稿？新产品将命名为原产品名-副本</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-copy>取消</button>
+        <button id="confirmCopyProduct" class="btn btn-primary" type="button">确认复制</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteProductModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="deleteProductTitle">
+      <div class="modal-header">
+        <div id="deleteProductTitle" class="modal-title">删除产品</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-delete>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-center-text">删除后该产品将不可恢复。请输入“确认删除”激活删除按钮。</p>
+        <div class="form-group">
+          <label class="form-label" for="deleteConfirmInput">确认文字</label>
+          <input id="deleteConfirmInput" class="form-control" type="text" placeholder="请输入确认删除">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-delete>取消</button>
+        <button id="confirmDeleteProduct" class="btn btn-danger" type="button" disabled>删除产品</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="noticeModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="noticeTitle">
+      <div class="modal-header">
+        <div id="noticeTitle" class="modal-title">提示</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-notice>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="noticeText" class="modal-center-text">请先勾选要操作的产品</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-notice>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bulkProductModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="bulkProductTitle">
+      <div class="modal-header">
+        <div id="bulkProductTitle" class="modal-title">批量操作确认</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-bulk>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="bulkConfirmText" class="modal-center-text">已选 0 个产品，确认批量操作？</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-bulk>取消</button>
+        <button id="confirmBulkProduct" class="btn btn-primary" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bulkPricingDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal bulk-pricing-drawer" role="dialog" aria-modal="true" aria-labelledby="bulkPricingTitle">
+      <div class="modal-header">
+        <div id="bulkPricingTitle" class="modal-title">批量应用定价策略</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-bulk-pricing>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary bulk-pricing-summary">
+          <strong id="bulkPricingSelectedCount">已选择 0 个产品</strong>
+          <span>策略将关联到选中产品，最终价格按团期、渠道和触发条件自动计算。</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label class="form-label">选择定价策略</label>
+            <div class="bulk-pricing-options">
+              <label class="bulk-pricing-option">
+                <input type="radio" name="bulkPricingStrategy" checked>
+                <span><strong>欧洲长线早鸟30天</strong><em>出发前30天，9折，适用门市/小程序</em></span>
+              </label>
+              <label class="bulk-pricing-option">
+                <input type="radio" name="bulkPricingStrategy">
+                <span><strong>春节欧洲线加价</strong><em>春节团期，+12%，适用门市/小程序</em></span>
+              </label>
+              <label class="bulk-pricing-option">
+                <input type="radio" name="bulkPricingStrategy">
+                <span><strong>欧洲长线尾单清仓</strong><em>余位低于6个，-8%，保护价¥10,800</em></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">应用方式</label>
+            <div class="radio-row">
+              <label><input type="radio" name="bulkPricingMode" checked> 追加到已有策略</label>
+              <label><input type="radio" name="bulkPricingMode"> 替换已有定价策略</label>
+            </div>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">生效范围</label>
+            <div class="radio-row">
+              <label><input type="radio" name="bulkPricingScope" checked> 全部团期</label>
+              <label><input type="radio" name="bulkPricingScope"> 仅未售团期</label>
+              <label><input type="radio" name="bulkPricingScope"> 指定日期范围</label>
+            </div>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">日期范围</label>
+            <div class="date-range">
+              <input class="form-control" type="date" value="2026-07-01" aria-label="策略开始日期">
+              <span>至</span>
+              <input class="form-control" type="date" value="2026-12-31" aria-label="策略结束日期">
+            </div>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">适用渠道</label>
+            <div class="pricing-check-grid">
+              <label><input type="checkbox" checked>门市</label>
+              <label><input type="checkbox" checked>官网</label>
+              <label><input type="checkbox" checked>小程序</label>
+              <label><input type="checkbox">OTA</label>
+              <label><input type="checkbox">代理渠道</label>
+              <label><input type="checkbox">学校直签</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-bulk-pricing>取消</button>
+        <button id="applyBulkPricing" class="btn btn-primary" type="button">应用策略</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bulkChannelAuthDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal bulk-channel-auth-drawer" role="dialog" aria-modal="true" aria-labelledby="bulkChannelAuthTitle">
+      <div class="modal-header">
+        <div id="bulkChannelAuthTitle" class="modal-title">申请渠道授权</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-bulk-auth>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary bulk-pricing-summary">
+          <strong id="bulkAuthSelectedCount">已选择 0 个产品</strong>
+          <span>提交后进入审批中心的渠道授权审批，通过后才可在渠道发布中配置价格、库存和同步上架。</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label class="form-label" for="bulkAuthType">授权渠道类型</label>
+            <select id="bulkAuthType" class="form-control">
+              <option value="ota">OTA平台</option>
+              <option value="agent">代理商</option>
+            </select>
+          </div>
+          <div id="bulkAuthOtaPanel" class="form-group form-group-full">
+            <label class="form-label">平台多选</label>
+            <div class="pricing-check-grid">
+              <label><input type="checkbox" checked>携程</label>
+              <label><input type="checkbox">飞猪</label>
+              <label><input type="checkbox">同程</label>
+              <label><input type="checkbox">官网</label>
+              <label><input type="checkbox">小程序</label>
+            </div>
+          </div>
+          <div id="bulkAuthAgentPanel" class="form-group form-group-full" hidden>
+            <label class="form-label" for="bulkAuthAgentSearch">代理商搜索多选</label>
+            <input id="bulkAuthAgentSearch" class="form-control" type="search" placeholder="搜索代理商名称">
+            <div class="channel-auth-agent-options">
+              <label><input type="checkbox" checked>王磊旅行社</label>
+              <label><input type="checkbox">北京研学联盟</label>
+              <label><input type="checkbox">华北会奖服务</label>
+              <label><input type="checkbox">张慧独立顾问</label>
+              <label><input type="checkbox">上海同业分销中心</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bulkAuthStart">授权起始日期</label>
+            <input id="bulkAuthStart" class="form-control" type="date" value="2026-07-01">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bulkAuthEnd">授权截止日期</label>
+            <input id="bulkAuthEnd" class="form-control" type="date" value="2026-12-31">
+          </div>
+          <div class="form-group form-group-full">
+            <label class="study-switch-line"><span>永久有效</span><input id="bulkAuthPermanent" type="checkbox"></label>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="bulkAuthRemark">授权说明备注</label>
+            <textarea id="bulkAuthRemark" class="form-control" rows="4" placeholder="填写授权范围、价格保护要求、渠道素材同步说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-bulk-auth>取消</button>
+        <button id="submitBulkChannelAuth" class="btn btn-primary" type="button">提交申请（待产品总监审批）</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shelfProductModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="shelfProductTitle">
+      <div class="modal-header">
+        <div id="shelfProductTitle" class="modal-title">上下架确认</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-shelf>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="shelfConfirmText" class="modal-center-text">确认更新当前产品状态？</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-shelf>取消</button>
+        <button id="confirmShelfProduct" class="btn btn-primary" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cityFilterModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="cityFilterTitle">
+      <div class="modal-header">
+        <div id="cityFilterTitle" class="modal-title">选择出发城市</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-city-filter>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <input id="cityFilterSearch" class="form-control" type="text" placeholder="搜索城市名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">热门城市</label>
+          <div class="city-tags">
+            <button class="city-tag" type="button" data-city-option>北京</button>
+            <button class="city-tag" type="button" data-city-option>上海</button>
+            <button class="city-tag" type="button" data-city-option>广州</button>
+            <button class="city-tag" type="button" data-city-option>深圳</button>
+            <button class="city-tag" type="button" data-city-option>成都</button>
+            <button class="city-tag" type="button" data-city-option>杭州</button>
+            <button class="city-tag" type="button" data-city-option>西安</button>
+          </div>
+        </div>
+        <div id="cityFilterList" class="city-filter-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="resetCityFilter" class="btn btn-secondary" type="button">重置</button>
+        <button id="confirmCityFilter" class="btn btn-primary" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var createModal = document.getElementById('createProductModal');
+      var aiUploadDrawer = document.getElementById('aiUploadDrawer');
+      var channelPublishDrawer = document.getElementById('channelPublishDrawer');
+      var copyModal = document.getElementById('copyProductModal');
+      var deleteModal = document.getElementById('deleteProductModal');
+      var noticeModal = document.getElementById('noticeModal');
+      var bulkModal = document.getElementById('bulkProductModal');
+      var bulkPricingDrawer = document.getElementById('bulkPricingDrawer');
+      var bulkChannelAuthDrawer = document.getElementById('bulkChannelAuthDrawer');
+      var shelfModal = document.getElementById('shelfProductModal');
+      var cityFilterModal = document.getElementById('cityFilterModal');
+      var cityFilterList = document.getElementById('cityFilterList');
+      var cityFilterSearch = document.getElementById('cityFilterSearch');
+      var departureCityFilter = document.getElementById('departureCityFilter');
+      var productRows = document.getElementById('productRows');
+      var checkAll = document.getElementById('checkAllProducts');
+      var deleteConfirmInput = document.getElementById('deleteConfirmInput');
+      var confirmDeleteProduct = document.getElementById('confirmDeleteProduct');
+      var confirmCopyProduct = document.getElementById('confirmCopyProduct');
+      var confirmBulkProduct = document.getElementById('confirmBulkProduct');
+      var confirmShelfProduct = document.getElementById('confirmShelfProduct');
+      var applyBulkPricing = document.getElementById('applyBulkPricing');
+      var submitBulkChannelAuth = document.getElementById('submitBulkChannelAuth');
+      var bulkConfirmText = document.getElementById('bulkConfirmText');
+      var noticeText = document.getElementById('noticeText');
+      var bulkPricingSelectedCount = document.getElementById('bulkPricingSelectedCount');
+      var bulkAuthSelectedCount = document.getElementById('bulkAuthSelectedCount');
+      var bulkAuthType = document.getElementById('bulkAuthType');
+      var bulkAuthPermanent = document.getElementById('bulkAuthPermanent');
+      var bulkAuthEnd = document.getElementById('bulkAuthEnd');
+      var shelfConfirmText = document.getElementById('shelfConfirmText');
+      var currentRow = null;
+      var currentBulkAction = 'up';
+      var currentShelfStatus = '已下架';
+      var selectedFilterCity = '';
+      var productAiProgress = document.getElementById('productAiParseProgress');
+      var productAiResult = document.getElementById('productAiParseResult');
+      var productAiProgressBar = document.getElementById('productAiProgressBar');
+      var productAiProgressPercent = document.getElementById('productAiProgressPercent');
+      var channelPublishProductName = document.getElementById('channelPublishProductName');
+      var channelPublishProductMeta = document.getElementById('channelPublishProductMeta');
+      var syncChannelPublish = document.getElementById('syncChannelPublish');
+      var cityGroups = {
+        A: ['安庆', '澳门'],
+        B: ['北京', '保定', '包头'],
+        C: ['成都', '重庆', '长沙', '长春'],
+        G: ['广州', '贵阳', '桂林'],
+        H: ['杭州', '哈尔滨', '合肥', '海口'],
+        N: ['南京', '宁波', '南宁'],
+        S: ['上海', '深圳', '沈阳', '苏州'],
+        X: ['西安', '厦门', '西宁'],
+        Z: ['郑州', '珠海']
+      };
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      function closeByOverlay(modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      }
+
+      function showNotice(message) {
+        noticeText.textContent = message;
+        openModal(noticeModal);
+      }
+
+      function closeMenus() {
+        document.querySelectorAll('.action-dropdown-menu.show').forEach(function (menu) {
+          menu.classList.remove('show');
+        });
+        document.querySelectorAll('[data-product-more]').forEach(function (button) {
+          button.setAttribute('aria-expanded', 'false');
+        });
+        document.querySelectorAll('[data-bulk-menu-toggle]').forEach(function (button) {
+          button.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      function getRows() {
+        return Array.from(productRows.querySelectorAll('tr'));
+      }
+
+      function getSelectedRows() {
+        return getRows().filter(function (row) {
+          var checkbox = row.querySelector('input[type="checkbox"]');
+          return checkbox && checkbox.checked;
+        });
+      }
+
+      function setRowStatus(row, status) {
+        var tag = row.querySelector('td:nth-child(10) .tag');
+        if (!tag) return;
+
+        tag.className = status === '已上架' ? 'tag tag-green' : status === '草稿' ? 'tag tag-gray' : 'tag tag-orange';
+        tag.textContent = status;
+        row.dataset.tabStatus = status;
+        syncRowVisibility(row);
+      }
+
+      function syncRowVisibility(row) {
+        var activeTab = document.querySelector('.tab-bar[data-filter-tabs] .tab-item.active');
+        var filterValue = activeTab ? activeTab.dataset.filterValue : '全部';
+        row.hidden = filterValue && filterValue !== '全部' && row.dataset.tabStatus !== filterValue;
+      }
+
+      function rowStatus(row) {
+        var tag = row.querySelector('td:nth-child(10) .tag');
+        return tag ? tag.textContent.trim() : '';
+      }
+
+      function resetCheckAll() {
+        if (!checkAll) return;
+        var checkboxes = Array.from(productRows.querySelectorAll('input[type="checkbox"]'));
+        checkAll.checked = checkboxes.length > 0 && checkboxes.every(function (checkbox) {
+          return checkbox.checked;
+        });
+      }
+
+      function injectChannelPublishButtons() {
+        productRows.querySelectorAll('.table-action').forEach(function (action) {
+          if (action.querySelector('[data-open-channel-publish]')) return;
+          var scheduleLink = action.querySelector('a[href="../tour/schedules.html"]');
+          if (!scheduleLink) return;
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = '渠道发布';
+          button.setAttribute('data-open-channel-publish', '');
+          scheduleLink.insertAdjacentElement('afterend', button);
+        });
+      }
+
+      function openChannelPublish(row) {
+        var name = row.querySelector('.table-main-link') ? row.querySelector('.table-main-link').textContent.trim() : '产品';
+        var code = row.querySelector('.text-muted') ? row.querySelector('.text-muted').textContent.trim() : '-';
+        var type = row.children[3] ? row.children[3].textContent.trim() : '-';
+        var price = row.children[7] ? row.children[7].textContent.trim() : '-';
+        var status = rowStatus(row) || '-';
+
+        channelPublishProductName.textContent = name;
+        channelPublishProductMeta.textContent = code + ' | ' + type + ' | 当前零售价 ' + price + ' | ' + status;
+        syncChannelPublish.textContent = '保存并同步渠道';
+        openModal(channelPublishDrawer);
+      }
+
+      function openChannelAuthDrawer(rows) {
+        var selectedRows = rows && rows.length ? rows : getSelectedRows();
+        bulkAuthSelectedCount.textContent = '已选择 ' + selectedRows.length + ' 个产品';
+        openModal(bulkChannelAuthDrawer);
+      }
+
+      function syncBulkAuthType() {
+        var type = bulkAuthType.value;
+        document.getElementById('bulkAuthOtaPanel').hidden = type !== 'ota';
+        document.getElementById('bulkAuthAgentPanel').hidden = type !== 'agent';
+      }
+
+      function syncBulkAuthPermanent() {
+        bulkAuthEnd.disabled = bulkAuthPermanent.checked;
+        if (bulkAuthPermanent.checked) bulkAuthEnd.value = '';
+        if (!bulkAuthPermanent.checked && !bulkAuthEnd.value) bulkAuthEnd.value = '2026-12-31';
+      }
+
+      function filterBulkAuthAgents() {
+        var keyword = document.getElementById('bulkAuthAgentSearch').value.trim();
+        document.querySelectorAll('#bulkAuthAgentPanel .channel-auth-agent-options label').forEach(function (label) {
+          label.hidden = keyword && label.textContent.indexOf(keyword) === -1;
+        });
+      }
+
+      function cloneAsDraft(row) {
+        var clone = row.cloneNode(true);
+        var checkbox = clone.querySelector('input[type="checkbox"]');
+        var nameLink = clone.querySelector('.table-main-link');
+        var codeText = clone.querySelector('.text-muted');
+        var productName = nameLink ? nameLink.textContent.trim() : '产品';
+
+        if (checkbox) {
+          checkbox.checked = false;
+          checkbox.setAttribute('aria-label', '选择' + productName + '-副本');
+        }
+        if (nameLink) {
+          nameLink.textContent = productName + '-副本';
+          nameLink.href = 'products-detail.html';
+        }
+        if (codeText) {
+          codeText.textContent = codeText.textContent.trim() + '-COPY';
+        }
+        setRowStatus(clone, '草稿');
+        productRows.insertBefore(clone, productRows.firstElementChild);
+      }
+
+      function renderCityFilterList(keyword) {
+        var query = (keyword || '').trim();
+        cityFilterList.innerHTML = Object.keys(cityGroups).map(function (letter) {
+          var cities = cityGroups[letter].filter(function (city) {
+            return !query || city.indexOf(query) !== -1;
+          });
+          if (!cities.length) return '';
+          return '<div class="city-group"><div class="city-letter">' + letter + '</div><div class="city-list">' + cities.map(function (city) {
+            return '<button class="city-tag' + (city === selectedFilterCity ? ' active' : '') + '" type="button" data-city-option>' + city + '</button>';
+          }).join('') + '</div></div>';
+        }).join('') || '<p class="text-muted">暂无匹配城市</p>';
+      }
+
+      function syncCityActive() {
+        document.querySelectorAll('[data-city-option]').forEach(function (button) {
+          button.classList.toggle('active', button.textContent.trim() === selectedFilterCity);
+        });
+      }
+
+      function applyCityFilter() {
+        departureCityFilter.textContent = selectedFilterCity || '全部出发地';
+        closeModal(cityFilterModal);
+      }
+
+      document.querySelector('[data-open-modal]').addEventListener('click', function () {
+        openModal(createModal);
+      });
+
+      document.getElementById('openAiUploadDrawer').addEventListener('click', function () {
+        openModal(aiUploadDrawer);
+      });
+
+      document.querySelectorAll('[data-bulk-menu-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          var menu = button.nextElementSibling;
+          var willShow = !menu.classList.contains('show');
+          closeMenus();
+          menu.classList.toggle('show', willShow);
+          button.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+        });
+      });
+
+      document.querySelectorAll('[data-close-create]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(createModal); });
+      });
+      document.querySelectorAll('[data-close-ai-upload]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(aiUploadDrawer); });
+      });
+      document.querySelectorAll('[data-close-channel-publish]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(channelPublishDrawer); });
+      });
+      document.querySelectorAll('[data-close-copy]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(copyModal); });
+      });
+      document.querySelectorAll('[data-close-delete]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(deleteModal); });
+      });
+      document.querySelectorAll('[data-close-notice]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(noticeModal); });
+      });
+      document.querySelectorAll('[data-close-bulk]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(bulkModal); });
+      });
+      document.querySelectorAll('[data-close-bulk-pricing]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(bulkPricingDrawer); });
+      });
+      document.querySelectorAll('[data-close-bulk-auth]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(bulkChannelAuthDrawer); });
+      });
+      document.querySelectorAll('[data-close-shelf]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(shelfModal); });
+      });
+      document.querySelectorAll('[data-close-city-filter]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(cityFilterModal); });
+      });
+
+      [createModal, aiUploadDrawer, channelPublishDrawer, copyModal, deleteModal, noticeModal, bulkModal, bulkPricingDrawer, bulkChannelAuthDrawer, shelfModal, cityFilterModal].forEach(closeByOverlay);
+
+      document.querySelectorAll('#aiUploadDrawer [data-source-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var key = tab.dataset.sourceTab;
+          aiUploadDrawer.querySelectorAll('[data-source-tab]').forEach(function (item) {
+            item.classList.toggle('active', item === tab);
+          });
+          aiUploadDrawer.querySelectorAll('[data-source-panel]').forEach(function (panel) {
+            panel.classList.toggle('active', panel.dataset.sourcePanel === key);
+          });
+        });
+      });
+
+      document.querySelectorAll('#aiUploadDrawer [data-start-ai-parse]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          productAiProgress.classList.remove('hidden');
+          productAiResult.classList.add('hidden');
+          productAiProgressBar.style.width = '0%';
+          productAiProgressPercent.textContent = '0%';
+          window.setTimeout(function () {
+            productAiProgressBar.style.width = '100%';
+            productAiProgressPercent.textContent = '100%';
+          }, 80);
+          window.setTimeout(function () {
+            productAiResult.classList.remove('hidden');
+          }, 900);
+        });
+      });
+
+      document.getElementById('openCityFilterModal').addEventListener('click', function () {
+        cityFilterSearch.value = '';
+        renderCityFilterList('');
+        syncCityActive();
+        openModal(cityFilterModal);
+      });
+
+      cityFilterSearch.addEventListener('input', function () {
+        renderCityFilterList(cityFilterSearch.value);
+      });
+
+      cityFilterModal.addEventListener('click', function (event) {
+        var cityButton = event.target.closest('[data-city-option]');
+        if (!cityButton) return;
+        selectedFilterCity = cityButton.textContent.trim();
+        syncCityActive();
+      });
+
+      document.getElementById('resetCityFilter').addEventListener('click', function () {
+        selectedFilterCity = '';
+        cityFilterSearch.value = '';
+        renderCityFilterList('');
+        syncCityActive();
+      });
+
+      document.getElementById('confirmCityFilter').addEventListener('click', applyCityFilter);
+
+      productRows.addEventListener('click', function (event) {
+        var moreButton = event.target.closest('[data-product-more]');
+        var channelButton = event.target.closest('[data-open-channel-publish]');
+        var copyButton = event.target.closest('[data-copy-product]');
+        var deleteButton = event.target.closest('[data-delete-product]');
+        var salesButton = event.target.closest('[data-sales-product]');
+        var shelfButton = event.target.closest('[data-toggle-shelf]');
+
+        if (moreButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          var menu = moreButton.nextElementSibling;
+          var willShow = !menu.classList.contains('show');
+          closeMenus();
+          menu.classList.toggle('show', willShow);
+          moreButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+          return;
+        }
+
+        if (channelButton) {
+          currentRow = channelButton.closest('tr');
+          openChannelPublish(currentRow);
+          return;
+        }
+
+        if (copyButton) {
+          currentRow = copyButton.closest('tr');
+          closeMenus();
+          openModal(copyModal);
+          return;
+        }
+
+        if (deleteButton) {
+          currentRow = deleteButton.closest('tr');
+          deleteConfirmInput.value = '';
+          confirmDeleteProduct.disabled = true;
+          closeMenus();
+          openModal(deleteModal);
+          return;
+        }
+
+        if (salesButton) {
+          window.location.href = 'products-detail.html?tab=sales';
+          return;
+        }
+
+        if (shelfButton) {
+          currentRow = shelfButton.closest('tr');
+          currentShelfStatus = rowStatus(currentRow) === '已上架' ? '已下架' : '已上架';
+          shelfConfirmText.textContent = '确认将当前产品更新为' + currentShelfStatus + '？';
+          openModal(shelfModal);
+        }
+      });
+
+      document.addEventListener('click', closeMenus);
+
+      bulkAuthType.addEventListener('change', syncBulkAuthType);
+      bulkAuthPermanent.addEventListener('change', syncBulkAuthPermanent);
+      document.getElementById('bulkAuthAgentSearch').addEventListener('input', filterBulkAuthAgents);
+
+      document.querySelectorAll('[data-request-channel-auth]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeModal(channelPublishDrawer);
+          openChannelAuthDrawer(currentRow ? [currentRow] : getSelectedRows());
+        });
+      });
+
+      document.querySelector('[data-save-channel-draft]').addEventListener('click', function () {
+        closeModal(channelPublishDrawer);
+      });
+
+      syncChannelPublish.addEventListener('click', function () {
+        syncChannelPublish.textContent = '已同步';
+        window.setTimeout(function () {
+          closeModal(channelPublishDrawer);
+        }, 500);
+      });
+
+      confirmCopyProduct.addEventListener('click', function () {
+        if (currentRow) cloneAsDraft(currentRow);
+        closeModal(copyModal);
+      });
+
+      deleteConfirmInput.addEventListener('input', function () {
+        confirmDeleteProduct.disabled = deleteConfirmInput.value.trim() !== '确认删除';
+      });
+
+      confirmDeleteProduct.addEventListener('click', function () {
+        if (confirmDeleteProduct.disabled || !currentRow) return;
+        currentRow.remove();
+        currentRow = null;
+        resetCheckAll();
+        closeModal(deleteModal);
+      });
+
+      document.querySelectorAll('[data-bulk-action]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var rows = getSelectedRows();
+          closeMenus();
+          if (!rows.length) {
+            showNotice('请先勾选要操作的产品');
+            return;
+          }
+
+          currentBulkAction = button.dataset.bulkAction;
+          if (currentBulkAction === 'auth') {
+            openChannelAuthDrawer(rows);
+            return;
+          }
+
+          if (currentBulkAction === 'pricing') {
+            bulkPricingSelectedCount.textContent = '已选择 ' + rows.length + ' 个产品';
+            openModal(bulkPricingDrawer);
+            return;
+          }
+
+          bulkConfirmText.textContent = '已选 ' + rows.length + ' 个产品，确认批量操作？';
+          openModal(bulkModal);
+        });
+      });
+
+      confirmBulkProduct.addEventListener('click', function () {
+        var targetStatus = currentBulkAction === 'up' ? '已上架' : '已下架';
+        getSelectedRows().forEach(function (row) {
+          setRowStatus(row, targetStatus);
+        });
+        closeModal(bulkModal);
+      });
+
+      applyBulkPricing.addEventListener('click', function () {
+        var rows = getSelectedRows();
+        closeModal(bulkPricingDrawer);
+        showNotice('已为 ' + rows.length + ' 个产品应用定价策略');
+      });
+
+      submitBulkChannelAuth.addEventListener('click', function () {
+        closeModal(bulkChannelAuthDrawer);
+        showNotice(bulkAuthSelectedCount.textContent + '，渠道授权申请已提交，等待产品总监审批');
+      });
+
+      confirmShelfProduct.addEventListener('click', function () {
+        if (currentRow) setRowStatus(currentRow, currentShelfStatus);
+        closeModal(shelfModal);
+      });
+
+      if (checkAll) {
+        checkAll.addEventListener('change', function () {
+          productRows.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
+            checkbox.checked = checkAll.checked;
+          });
+        });
+      }
+
+      productRows.addEventListener('change', function (event) {
+        if (event.target.matches('input[type="checkbox"]')) {
+          resetCheckAll();
+        }
+      });
+
+      document.getElementById('resetFilters').addEventListener('click', function () {
+        document.querySelectorAll('.filter-card input').forEach(function (input) {
+          input.value = '';
+        });
+        document.querySelectorAll('.filter-card select').forEach(function (select) {
+          select.selectedIndex = 0;
+        });
+        selectedFilterCity = '';
+        departureCityFilter.textContent = '全部出发地';
+        var allTab = document.querySelector('.tab-bar[data-filter-tabs] .tab-item[data-filter-value="全部"]');
+        if (allTab) allTab.click();
+      });
+
+      injectChannelPublishButtons();
+      syncBulkAuthType();
+      syncBulkAuthPermanent();
+      renderCityFilterList('');
+    })();
+  </script>
+</body>
+</html>

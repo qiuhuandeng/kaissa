@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>待我审批 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="product-review-page">
+    <section class="list-page-panel product-review-head">
+      <div class="list-page-head">
+        <div>
+          <h1 class="page-title">待我审批</h1>
+        </div>
+      </div>
+      <section class="kpi-grid kpi-grid-4 product-review-kpis" aria-label="审批统计">
+        <div class="kpi-card orange">
+          <div class="kpi-num">8件</div>
+          <div class="kpi-label">今日待审批</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-num">47件</div>
+          <div class="kpi-label">本周已审批</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-num">12%</div>
+          <div class="kpi-label">本周驳回率</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-num">2.3小时</div>
+          <div class="kpi-label">平均审批时长</div>
+        </div>
+      </section>
+    </section>
+
+    <nav class="tab-bar product-review-tabs" aria-label="审批类型筛选">
+      <button class="tab-item active" type="button" data-review-tab="pending">产品发布</button>
+      <button class="tab-item" type="button" data-review-tab="price">价格调整</button>
+      <button class="tab-item" type="button" data-review-tab="channel">渠道授权</button>
+    </nav>
+
+    <section id="pendingPanel" class="review-tab-panel active" data-review-panel="pending">
+      <section class="filter-card filter-card-compact review-filter" aria-label="待审批筛选">
+        <div class="filter-row">
+          <div class="filter-item filter-item-wide">
+            <label class="sr-only">产品类型</label>
+            <div class="multi-select" data-multi-select>
+              <button class="multi-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span data-multi-label>全部产品类型</span>
+              </button>
+              <div class="multi-select-menu" role="listbox" aria-label="产品类型多选">
+                <label><input type="checkbox" value="自营产品">自营产品</label>
+                <label><input type="checkbox" value="外采产品">外采产品</label>
+                <label><input type="checkbox" value="邮轮产品">邮轮产品</label>
+                <label><input type="checkbox" value="自由行">自由行</label>
+                <label><input type="checkbox" value="研学产品">研学产品</label>
+              </div>
+            </div>
+          </div>
+          <div class="filter-item filter-item-sm">
+            <label class="sr-only" for="submitterFilter">提交人</label>
+            <select id="submitterFilter">
+              <option value="">全部提交人</option>
+              <option value="王珊">王珊</option>
+              <option value="李明">李明</option>
+              <option value="赵宇">赵宇</option>
+              <option value="陈琳">陈琳</option>
+            </select>
+          </div>
+          <div class="filter-item filter-item-sm">
+            <label class="sr-only" for="destinationFilter">目的地</label>
+            <select id="destinationFilter">
+              <option value="">全部目的地</option>
+              <option value="欧洲">欧洲</option>
+              <option value="日本">日本</option>
+              <option value="地中海">地中海</option>
+              <option value="新加坡">新加坡</option>
+            </select>
+          </div>
+          <div class="filter-item filter-item-wide filter-item-date-range">
+            <label class="sr-only">提交时间范围</label>
+            <div class="date-range">
+              <input type="date" aria-label="提交开始日期">
+              <span>至</span>
+              <input type="date" aria-label="提交结束日期">
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button id="queryPendingReviews" class="btn btn-secondary" type="button">查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="table-wrap review-pending-table" aria-label="产品发布待审批队列">
+        <table>
+          <thead>
+            <tr>
+              <th>产品名称</th>
+              <th>产品类型标签</th>
+              <th>提交计调姓名</th>
+              <th>提交时间</th>
+              <th>等待时长</th>
+              <th>AI竞品参考价摘要</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="pendingReviewRows">
+            <tr data-type="自营产品" data-submitter="王珊" data-destination="欧洲">
+              <td><a class="link-primary table-main-link" href="#" data-preview-review>欧洲十国经典游</a><br><span class="text-muted">KS-EU-001</span></td>
+              <td><span class="tag tag-blue">自营产品</span></td>
+              <td>王珊</td>
+              <td>2026-06-24 09:12</td>
+              <td><span class="review-wait-time">5.5小时</span></td>
+              <td>最低竞品价 ¥12,100</td>
+              <td><div class="table-action"><button type="button" data-open-review>审批</button><button type="button" data-preview-review>预览</button></div></td>
+            </tr>
+            <tr data-type="外采产品" data-submitter="李明" data-destination="日本">
+              <td><a class="link-primary table-main-link" href="#" data-preview-review>日本关西深度游</a><br><span class="text-muted">KS-JP-002</span></td>
+              <td><span class="tag tag-purple">外采产品</span></td>
+              <td>李明</td>
+              <td>2026-06-23 10:40</td>
+              <td><span class="review-wait-time danger">27小时</span></td>
+              <td>最低竞品价 ¥8,480</td>
+              <td><div class="table-action"><button type="button" data-open-review>审批</button><button type="button" data-preview-review>预览</button></div></td>
+            </tr>
+            <tr data-type="邮轮产品" data-submitter="赵宇" data-destination="地中海">
+              <td><a class="link-primary table-main-link" href="#" data-preview-review>理想号地中海邮轮12晚</a><br><span class="text-muted">KS-CZ-004</span></td>
+              <td><span class="tag tag-green">邮轮产品</span></td>
+              <td>赵宇</td>
+              <td>2026-06-23 16:25</td>
+              <td><span class="review-wait-time">21小时</span></td>
+              <td>最低竞品价 ¥27,600</td>
+              <td><div class="table-action"><button type="button" data-open-review>审批</button><button type="button" data-preview-review>预览</button></div></td>
+            </tr>
+            <tr data-type="研学产品" data-submitter="陈琳" data-destination="新加坡">
+              <td><a class="link-primary table-main-link" href="#" data-preview-review>新加坡科技创新研学6日</a><br><span class="text-muted">ST2026-SG-003</span></td>
+              <td><span class="tag tag-orange">研学产品</span></td>
+              <td>陈琳</td>
+              <td>2026-06-22 18:08</td>
+              <td><span class="review-wait-time danger">44小时</span></td>
+              <td>最低竞品价 ¥9,380</td>
+              <td><div class="table-action"><button type="button" data-open-review>审批</button><button type="button" data-preview-review>预览</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section id="pricePanel" class="review-tab-panel" data-review-panel="price" hidden>
+      <section class="table-wrap review-price-table" aria-label="价格调整待审批队列">
+        <table>
+          <thead>
+            <tr>
+              <th>产品名称</th>
+              <th>调整渠道标签组</th>
+              <th>调整幅度</th>
+              <th>调整原因摘要</th>
+              <th>影响团期数</th>
+              <th>预计收入影响金额</th>
+              <th>申请人</th>
+              <th>申请时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>欧洲十国经典游</td>
+              <td><div class="tag-row"><span class="tag tag-blue">门市</span><span class="tag tag-purple">代理</span></div></td>
+              <td><span class="amount-up">+6.5%</span></td>
+              <td>旺季酒店成本上涨，需同步调整零售价</td>
+              <td>8个</td>
+              <td>¥186,400</td>
+              <td>王珊</td>
+              <td>2026-06-24 10:15</td>
+              <td><div class="table-action"><button type="button" data-price-approve>通过</button><button class="danger" type="button">驳回</button></div></td>
+            </tr>
+            <tr>
+              <td>日本关西深度游</td>
+              <td><div class="tag-row"><span class="tag tag-green">小程序</span><span class="tag tag-blue">官网</span></div></td>
+              <td><span class="amount-down">-4.0%</span></td>
+              <td>竞品临时促销，申请小程序限时降价</td>
+              <td>5个</td>
+              <td>-¥42,000</td>
+              <td>李明</td>
+              <td>2026-06-24 09:35</td>
+              <td><div class="table-action"><button type="button" data-price-approve>通过</button><button class="danger" type="button">驳回</button></div></td>
+            </tr>
+            <tr>
+              <td>三亚亲子5日游</td>
+              <td><div class="tag-row"><span class="tag tag-orange">OTA</span><span class="tag tag-blue">门市</span></div></td>
+              <td><span class="amount-up">+3.2%</span></td>
+              <td>暑期亲子房型库存紧张，调整保护价</td>
+              <td>6个</td>
+              <td>¥58,800</td>
+              <td>赵宇</td>
+              <td>2026-06-23 17:20</td>
+              <td><div class="table-action"><button type="button" data-price-approve>通过</button><button class="danger" type="button">驳回</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section id="channelPanel" class="review-tab-panel" data-review-panel="channel" hidden>
+      <section class="table-wrap review-channel-table" aria-label="渠道授权待审批队列">
+        <table>
+          <thead>
+            <tr>
+              <th>申请类型</th>
+              <th>产品名称</th>
+              <th>授权渠道/代理商</th>
+              <th>申请人</th>
+              <th>申请时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="tag tag-green">新增授权</span></td><td>英国名校语言研学12日</td><td>北京四季研学服务中心</td><td>陈琳</td><td>2026-06-24 11:08</td><td><div class="table-action"><button type="button">通过</button><button class="danger" type="button">驳回</button></div></td></tr>
+            <tr><td><span class="tag tag-red">撤销授权</span></td><td>日本关西深度游</td><td>王磊旅行社</td><td>李明</td><td>2026-06-23 15:42</td><td><div class="table-action"><button type="button">通过</button><button class="danger" type="button">驳回</button></div></td></tr>
+            <tr><td><span class="tag tag-green">新增授权</span></td><td>理想号地中海邮轮12晚</td><td>华东邮轮代理联盟</td><td>赵宇</td><td>2026-06-23 13:10</td><td><div class="table-action"><button type="button">通过</button><button class="danger" type="button">驳回</button></div></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section id="recordsPanel" class="review-records-section">
+      <section class="filter-card filter-card-compact review-record-filter" aria-label="已审批记录筛选">
+        <div class="filter-row">
+          <div class="filter-item filter-item-wide filter-item-date-range">
+            <label class="sr-only">审批时间范围</label>
+            <div class="date-range">
+              <input type="date" aria-label="审批开始日期">
+              <span>至</span>
+              <input type="date" aria-label="审批结束日期">
+            </div>
+          </div>
+          <div class="filter-item filter-item-status">
+            <label class="sr-only" for="recordResultFilter">审批结果</label>
+            <select id="recordResultFilter">
+              <option>全部结果</option>
+              <option>通过</option>
+              <option>驳回</option>
+              <option>要求修改</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-secondary" type="button">查询</button>
+            <button class="btn btn-secondary" type="button">重置</button>
+          </div>
+          <div class="review-record-export">
+            <button class="btn btn-secondary" type="button">导出审批记录</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="table-wrap review-record-table" aria-label="已审批记录">
+        <table>
+          <thead>
+            <tr>
+              <th>产品名称</th>
+              <th>产品类型</th>
+              <th>审批类型</th>
+              <th>审批结果</th>
+              <th>审批人</th>
+              <th>审批意见摘要</th>
+              <th>审批时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>欧洲十国经典游</td><td>自营产品</td><td>产品发布</td><td><span class="tag tag-green">通过</span></td><td>周伟</td><td>价格与渠道配置合规，准予发布</td><td>2026-06-24 11:32</td></tr>
+            <tr><td>马来西亚自由行6天</td><td>自由行</td><td>价格调整</td><td><span class="tag tag-orange">要求修改</span></td><td>吴芳</td><td>小程序展示价需同步保护价说明</td><td>2026-06-23 17:18</td></tr>
+            <tr><td>泰国曼谷清迈8日</td><td>外采产品</td><td>产品发布</td><td><span class="tag tag-red">驳回</span></td><td>郑华</td><td>供应商资质附件缺失，需补充合同扫描件</td><td>2026-06-23 15:06</td></tr>
+            <tr><td>青少年自然科学营6日</td><td>研学产品</td><td>渠道授权</td><td><span class="tag tag-green">通过</span></td><td>周伟</td><td>学校直签渠道授权范围清晰</td><td>2026-06-22 18:44</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+
+  <div id="reviewDetailModal" class="modal-overlay product-review-overlay" aria-hidden="true">
+    <div class="modal product-review-modal" role="dialog" aria-modal="true" aria-labelledby="reviewDetailTitle">
+      <div class="modal-header">
+        <div id="reviewDetailTitle" class="modal-title">产品审批详情</div>
+        <button class="modal-close" type="button" aria-label="关闭审批详情" data-close-review>×</button>
+      </div>
+      <div class="modal-body product-review-modal-body">
+        <section class="review-product-readonly" aria-label="产品完整信息">
+          <section class="review-readonly-section">
+            <h2>基础信息</h2>
+            <div class="description-grid review-description-grid">
+              <div class="description-item"><div class="description-label">产品名称</div><div class="description-value">欧洲十国经典游</div></div>
+              <div class="description-item"><div class="description-label">产品类型</div><div class="description-value">自营产品</div></div>
+              <div class="description-item"><div class="description-label">出发地</div><div class="description-value">北京</div></div>
+              <div class="description-item"><div class="description-label">目的地</div><div class="description-value">法国 / 德国 / 意大利</div></div>
+              <div class="description-item"><div class="description-label">行程天数</div><div class="description-value">12天11晚</div></div>
+              <div class="description-item"><div class="description-label">提交计调</div><div class="description-value">王珊</div></div>
+            </div>
+          </section>
+          <section class="review-readonly-section">
+            <h2>行程</h2>
+            <div class="review-itinerary-list">
+              <div><strong>Day1 北京 - 巴黎</strong><span>集合后乘国际航班前往巴黎，抵达后入住酒店。</span></div>
+              <div><strong>Day2 巴黎城市精华</strong><span>卢浮宫外观、凯旋门与香榭丽舍大道城市游览。</span></div>
+              <div><strong>Day3 瑞士湖区</strong><span>前往瑞士湖区小镇，安排湖畔漫步与团队晚餐。</span></div>
+            </div>
+          </section>
+          <section class="review-readonly-section">
+            <h2>费用</h2>
+            <div class="table-wrap compact-table">
+              <table>
+                <thead><tr><th>价格类型</th><th>成本价</th><th>零售价</th><th>结算价</th><th>分销价</th></tr></thead>
+                <tbody>
+                  <tr><td>成人标准</td><td>¥9,800</td><td>¥12,800</td><td>¥11,800</td><td>¥12,200</td></tr>
+                  <tr><td>儿童占床</td><td>¥8,600</td><td>¥11,200</td><td>¥10,400</td><td>¥10,800</td></tr>
+                  <tr><td>单房差</td><td>¥2,400</td><td>¥3,200</td><td>¥2,800</td><td>¥3,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section class="review-readonly-section">
+            <h2>价格</h2>
+            <div class="review-price-strip">
+              <div><span>门市价</span><strong>¥12,800</strong></div>
+              <div><span>小程序价</span><strong>¥12,500</strong></div>
+              <div><span>代理底价</span><strong>¥11,800</strong></div>
+              <div><span>保护价</span><strong>¥12,300</strong></div>
+            </div>
+          </section>
+          <section class="review-readonly-section">
+            <h2>渠道配置</h2>
+            <div class="review-channel-list">
+              <div><span class="tag tag-green">门市渠道</span><strong>可售，库存24</strong></div>
+              <div><span class="tag tag-green">小程序</span><strong>已上架，首页推荐</strong></div>
+              <div><span class="tag tag-orange">携程</span><strong>待同步，库存12</strong></div>
+              <div><span class="tag tag-blue">代理渠道</span><strong>全部代理商授权</strong></div>
+            </div>
+          </section>
+        </section>
+
+        <aside class="review-approval-panel" aria-label="审批操作区">
+          <section class="review-side-card">
+            <h2>AI竞品参考价</h2>
+            <div class="competitor-price-list">
+              <div><strong>携程 法瑞意12日</strong><span>¥12,100</span></div>
+              <div><strong>飞猪 欧洲经典连线</strong><span>¥12,480</span></div>
+              <div><strong>同程 欧洲十国游</strong><span>¥11,980</span></div>
+            </div>
+          </section>
+          <section class="review-side-card">
+            <h2>渠道价格合规检查</h2>
+            <div class="compliance-list">
+              <div><span class="status-dot status-dot-green"></span><strong>门市价高于保护价</strong><em>合规</em></div>
+              <div><span class="status-dot status-dot-green"></span><strong>小程序价未低于代理底价</strong><em>合规</em></div>
+              <div><span class="status-dot status-dot-red"></span><strong>飞猪展示价低于保护价</strong><em>需调整</em></div>
+            </div>
+          </section>
+          <section class="review-side-card">
+            <h2>审批操作</h2>
+            <div class="radio-row review-decision-row">
+              <label><input type="radio" name="reviewDecision" value="通过" checked> 通过</label>
+              <label><input type="radio" name="reviewDecision" value="驳回"> 驳回</label>
+              <label><input type="radio" name="reviewDecision" value="要求修改"> 要求修改</label>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reviewOpinion">审批意见</label>
+              <textarea id="reviewOpinion" class="form-control" rows="5" placeholder="驳回和要求修改时必填"></textarea>
+              <div id="reviewOpinionError" class="form-hint danger" hidden>请填写审批意见</div>
+            </div>
+            <button id="submitReviewResult" class="btn btn-primary review-submit-btn" type="button">提交审批结果</button>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div id="priceConfirmModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="priceConfirmTitle">
+      <div class="modal-header">
+        <div id="priceConfirmTitle" class="modal-title">确认通过价格调整</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-price-confirm>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-center-text">确认通过后，系统将自动同步对应渠道价格。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-price-confirm>取消</button>
+        <button id="confirmPriceApprove" class="btn btn-primary" type="button">确认通过</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewToast" class="toast-notice" hidden>操作已完成</div>
+
+  <script>
+    (function () {
+      var tabButtons = Array.from(document.querySelectorAll('[data-review-tab]'));
+      var tabPanels = Array.from(document.querySelectorAll('[data-review-panel]'));
+      var reviewModal = document.getElementById('reviewDetailModal');
+      var priceConfirmModal = document.getElementById('priceConfirmModal');
+      var toast = document.getElementById('reviewToast');
+      var activePriceRow = null;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.hidden = false;
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(function () {
+          toast.hidden = true;
+        }, 2600);
+      }
+
+      function showTab(name) {
+        tabButtons.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.reviewTab === name);
+        });
+        tabPanels.forEach(function (panel) {
+          var visible = panel.dataset.reviewPanel === name;
+          panel.classList.toggle('active', visible);
+          panel.hidden = !visible;
+        });
+      }
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      function selectedTypes() {
+        return Array.from(document.querySelectorAll('[data-multi-select] input[type="checkbox"]:checked')).map(function (input) {
+          return input.value;
+        });
+      }
+
+      function filterPendingRows() {
+        var types = selectedTypes();
+        var submitter = document.getElementById('submitterFilter').value;
+        var destination = document.getElementById('destinationFilter').value;
+        document.querySelectorAll('#pendingReviewRows tr').forEach(function (row) {
+          var matched = true;
+          if (types.length && types.indexOf(row.dataset.type) === -1) matched = false;
+          if (submitter && row.dataset.submitter !== submitter) matched = false;
+          if (destination && row.dataset.destination !== destination) matched = false;
+          row.hidden = !matched;
+        });
+      }
+
+      document.querySelectorAll('[data-multi-select]').forEach(function (multiSelect) {
+        var trigger = multiSelect.querySelector('.multi-select-trigger');
+        var label = multiSelect.querySelector('[data-multi-label]');
+        var checkboxes = Array.from(multiSelect.querySelectorAll('input[type="checkbox"]'));
+
+        function updateLabel() {
+          var values = checkboxes.filter(function (item) {
+            return item.checked;
+          }).map(function (item) {
+            return item.value;
+          });
+          label.textContent = values.length ? values.join('、') : '全部产品类型';
+        }
+
+        trigger.addEventListener('click', function (event) {
+          event.stopPropagation();
+          var opened = multiSelect.classList.toggle('open');
+          trigger.setAttribute('aria-expanded', String(opened));
+        });
+        multiSelect.querySelector('.multi-select-menu').addEventListener('click', function (event) {
+          event.stopPropagation();
+        });
+        checkboxes.forEach(function (checkbox) {
+          checkbox.addEventListener('change', updateLabel);
+        });
+      });
+
+      document.addEventListener('click', function () {
+        document.querySelectorAll('[data-multi-select]').forEach(function (multiSelect) {
+          multiSelect.classList.remove('open');
+          multiSelect.querySelector('.multi-select-trigger').setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          showTab(button.dataset.reviewTab);
+        });
+      });
+
+      document.getElementById('queryPendingReviews').addEventListener('click', filterPendingRows);
+
+      document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-open-review], [data-preview-review]')) {
+          event.preventDefault();
+          openModal(reviewModal);
+        }
+        if (event.target.closest('[data-close-review]') || event.target === reviewModal) {
+          closeModal(reviewModal);
+        }
+        if (event.target.closest('[data-price-approve]')) {
+          activePriceRow = event.target.closest('tr');
+          openModal(priceConfirmModal);
+        }
+        if (event.target.closest('[data-close-price-confirm]') || event.target === priceConfirmModal) {
+          closeModal(priceConfirmModal);
+        }
+      });
+
+      document.getElementById('submitReviewResult').addEventListener('click', function () {
+        var decision = document.querySelector('input[name="reviewDecision"]:checked').value;
+        var opinion = document.getElementById('reviewOpinion');
+        var error = document.getElementById('reviewOpinionError');
+        var needOpinion = decision === '驳回' || decision === '要求修改';
+        if (needOpinion && !opinion.value.trim()) {
+          error.hidden = false;
+          opinion.focus();
+          return;
+        }
+        error.hidden = true;
+        opinion.value = '';
+        closeModal(reviewModal);
+        showToast('审批结果已提交');
+      });
+
+      document.getElementById('confirmPriceApprove').addEventListener('click', function () {
+        if (activePriceRow) {
+          activePriceRow.remove();
+          activePriceRow = null;
+        }
+        closeModal(priceConfirmModal);
+        showToast('已通过，渠道价格同步中');
+      });
+    })();
+  </script>
+</body>
+</html>

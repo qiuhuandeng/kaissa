@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>认款管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">认款管理</h1>
+      </div>
+      <div class="list-page-actions">
+        <button id="openImportStatement" class="btn btn-primary" type="button">导入银行流水</button>
+        <button class="btn btn-secondary" type="button" data-open-manual-match>手工认款</button>
+      </div>
+    </div>
+
+    <section class="filter-card filter-card-compact matching-filter" aria-label="认款复核筛选">
+      <div class="filter-row">
+        <div class="filter-item"><label class="sr-only" for="matchingKeyword">流水号/订单号/付款方</label><input id="matchingKeyword" type="search" placeholder="流水号/订单号/付款方"></div>
+        <div class="filter-item-sm"><label class="sr-only" for="matchingApplicant">销售顾问</label><select id="matchingApplicant"><option>全部顾问</option><option>林悦</option><option>赵明</option><option>孙丽</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="matchingResult">复核结果</label><select id="matchingResult"><option>全部结果</option><option>待复核</option><option>已入账</option><option>退回补充</option><option>异常</option></select></div>
+        <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button class="btn btn-secondary" type="button">重置</button></div>
+      </div>
+    </section>
+  </section>
+
+  <nav class="tab-bar" aria-label="认款复核状态" data-filter-tabs data-filter-target="#matchingRows">
+    <button class="tab-item active" type="button" data-filter-value="全部">全部(24)</button>
+    <button class="tab-item" type="button" data-filter-value="待复核">待复核申请(8)</button>
+    <button class="tab-item" type="button" data-filter-value="未认领">未认领流水(9)</button>
+    <button class="tab-item" type="button" data-filter-value="异常">异常流水(3)</button>
+    <button class="tab-item" type="button" data-filter-value="已入账">已入账记录(4)</button>
+  </nav>
+
+  <section class="table-wrap matching-review-table" aria-label="认款复核列表">
+    <table>
+      <thead>
+        <tr>
+          <th>认款申请/流水号</th>
+          <th>到账金额</th>
+          <th>付款方</th>
+          <th>销售认领订单</th>
+          <th>应收单</th>
+          <th>销售说明</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="matchingRows">
+        <tr data-tab-status="待复核"><td>RK20260625001<br><span class="text-muted">CMBC20260625001</span></td><td class="amount-strong">¥25,600</td><td>张建国</td><td>KS2024061801</td><td>SK20240618001</td><td>客户本人转账，金额一致</td><td><span class="tag tag-blue">待复核</span></td><td><div class="table-action"><button type="button" data-open-review>复核</button><button type="button" data-open-return>退回</button></div></td></tr>
+        <tr data-tab-status="待复核"><td>RK20260624013<br><span class="text-muted">CMBC20260624013</span></td><td class="amount-strong">¥49,900</td><td>上海徐汇门店POS</td><td>KS2024061802</td><td>SK20240618002</td><td>门店POS收款，关联日本关西订单</td><td><span class="tag tag-blue">待复核</span></td><td><div class="table-action"><button type="button" data-open-review>复核</button><button type="button" data-open-return>退回</button></div></td></tr>
+        <tr data-tab-status="未认领"><td>-<br><span class="text-muted">CMBC20260625002</span></td><td class="amount-strong">¥12,800</td><td>李梅</td><td>-</td><td>-</td><td>-</td><td><span class="tag tag-orange">未认领</span></td><td><div class="table-action"><button type="button" data-open-manual-match>手工认款</button></div></td></tr>
+        <tr data-tab-status="异常"><td>RK20260622016<br><span class="text-muted">CMBC20260622016</span></td><td class="amount-strong">¥38,400</td><td>未识别</td><td>KS2024061807</td><td>SK20240618007</td><td>客户称代付</td><td><span class="tag tag-red">异常</span></td><td><div class="table-action"><button type="button" data-open-return>退回销售</button><button type="button" data-open-split>拆分</button></div></td></tr>
+        <tr data-tab-status="已入账"><td>RK20260623021<br><span class="text-muted">CMBC20260623021</span></td><td class="amount-strong">¥15,600</td><td>陈红</td><td>KS2024061805</td><td>SK20240618005</td><td>已核对到账</td><td><span class="tag tag-green">已入账</span></td><td><div class="table-action"><button type="button" data-open-review>查看</button></div></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div id="importStatementDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal statement-import-drawer" role="dialog" aria-modal="true" aria-labelledby="importStatementTitle">
+      <div class="modal-header">
+        <div id="importStatementTitle" class="modal-title">导入银行流水</div>
+        <button class="modal-close" type="button" aria-label="关闭导入银行流水" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="importAccount">收款账户</label>
+            <select id="importAccount" class="form-control">
+              <option>民生银行北京分行 6214****0038</option>
+              <option>招商银行上海分行 6225****1188</option>
+              <option>工商银行广州分行 6222****7710</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="importDate">流水日期</label>
+            <input id="importDate" class="form-control" type="date" value="2026-06-25">
+          </div>
+        </div>
+        <div class="upload-box statement-upload-box">上传银行流水Excel/CSV文件</div>
+        <section class="finance-link-box">
+          导入后新流水进入“未认领流水”，销售可在“销售 > 收款认领”提交匹配；财务也可在本页手工认款、拆分或标记异常。
+        </section>
+        <div class="table-wrap statement-import-preview">
+          <table>
+            <thead><tr><th>到账时间</th><th>到账金额</th><th>付款方</th><th>摘要</th><th>导入状态</th></tr></thead>
+            <tbody>
+              <tr><td>2026-06-25 09:12</td><td class="amount-strong">¥25,600</td><td>张建国</td><td>欧洲十国旅游款</td><td><span class="tag tag-orange">未认领</span></td></tr>
+              <tr><td>2026-06-25 10:28</td><td class="amount-strong">¥12,800</td><td>李梅</td><td>尾款</td><td><span class="tag tag-orange">未认领</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
+        <button class="btn btn-primary" type="button" data-close-drawer>确认导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal matching-review-drawer" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+      <div class="modal-header">
+        <div id="reviewTitle" class="modal-title">认款复核</div>
+        <button class="modal-close" type="button" aria-label="关闭认款复核" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="matching-review-compare">
+          <div>
+            <h2>银行流水</h2>
+            <div class="description-grid">
+              <div class="description-item"><div class="description-label">流水号</div><div class="description-value">CMBC20260625001</div></div>
+              <div class="description-item"><div class="description-label">到账金额</div><div class="description-value amount-strong">¥25,600</div></div>
+              <div class="description-item"><div class="description-label">付款方</div><div class="description-value">张建国</div></div>
+              <div class="description-item"><div class="description-label">收款账户</div><div class="description-value">民生银行北京分行</div></div>
+            </div>
+          </div>
+          <div>
+            <h2>销售认领</h2>
+            <div class="description-grid">
+              <div class="description-item"><div class="description-label">订单号</div><div class="description-value">KS2024061801</div></div>
+              <div class="description-item"><div class="description-label">应收单</div><div class="description-value">SK20240618001</div></div>
+              <div class="description-item"><div class="description-label">订单应收</div><div class="description-value amount-strong">¥25,600</div></div>
+              <div class="description-item"><div class="description-label">客户</div><div class="description-value">张建国</div></div>
+            </div>
+          </div>
+        </section>
+        <section class="finance-link-box">确认入账后：应收单变为已收，订单收款状态更新为已支付，并生成NC收款凭证。</section>
+        <div class="form-group">
+          <label class="form-label" for="reviewRemark">复核意见</label>
+          <textarea id="reviewRemark" class="form-control" rows="4">流水金额、付款方、订单应收一致，同意入账。</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-open-return>退回销售补充</button>
+        <button class="btn btn-primary" type="button" data-confirm-match>确认入账</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="manualMatchDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal matching-review-drawer" role="dialog" aria-modal="true" aria-labelledby="manualMatchTitle">
+      <div class="modal-header">
+        <div id="manualMatchTitle" class="modal-title">手工认款</div>
+        <button class="modal-close" type="button" aria-label="关闭手工认款" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="readonly-summary"><strong>CMBC20260625002 ｜ ¥12,800 ｜ 李梅</strong><span>未认领流水，可由财务手工关联订单或退回销售认领。</span></section>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label" for="manualOrder">关联订单</label><input id="manualOrder" class="form-control" type="search" value="KS2024061802 李梅 日本关西深度游"></div>
+          <div class="form-group"><label class="form-label" for="manualReceivable">关联应收单</label><select id="manualReceivable" class="form-control"><option>SK20240618002 尾款 ¥12,800</option><option>SK20240618002 定金 ¥24,950</option></select></div>
+          <div class="form-group form-group-full"><label class="form-label" for="manualRemark">手工认款说明</label><textarea id="manualRemark" class="form-control" rows="4"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-match>确认手工入账</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="returnModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="returnTitle">
+      <div class="modal-header">
+        <div id="returnTitle" class="modal-title">退回销售补充</div>
+        <button class="modal-close" type="button" aria-label="关闭退回销售补充" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="returnReason">退回原因</label>
+          <textarea id="returnReason" class="form-control" rows="4" placeholder="例如：付款方不清，需补充客户付款截图"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-warning" type="button" data-close-modal>确认退回</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="splitModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="splitTitle">
+      <div class="modal-header">
+        <div id="splitTitle" class="modal-title">拆分认款</div>
+        <button class="modal-close" type="button" aria-label="关闭拆分认款" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary">流水 CMBC20260622016，到账金额 ¥38,400，可拆分至多张订单应收单。</div>
+        <div class="matching-split-list">
+          <div><input class="form-control" type="text" value="KS2024061807 / SK20240618007"><input class="form-control" type="number" value="25600"></div>
+          <div><input class="form-control" type="text" placeholder="订单号 / 应收单"><input class="form-control" type="number" value="12800"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-match>确认拆分入账</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="matchingToast" class="toast-notice" hidden>认款已确认入账，应收和订单状态已更新</div>
+
+  <script>
+    (function () {
+      var importDrawer = document.getElementById('importStatementDrawer');
+      var reviewDrawer = document.getElementById('reviewDrawer');
+      var manualDrawer = document.getElementById('manualMatchDrawer');
+      var returnModal = document.getElementById('returnModal');
+      var splitModal = document.getElementById('splitModal');
+      var toast = document.getElementById('matchingToast');
+
+      function openOverlay(overlay) {
+        overlay.hidden = false;
+        overlay.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(function () { overlay.classList.add('show'); });
+      }
+
+      function closeOverlay(overlay) {
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        setTimeout(function () { overlay.hidden = true; }, 240);
+      }
+
+      document.querySelectorAll('[data-open-review]').forEach(function (button) {
+        button.addEventListener('click', function () { openOverlay(reviewDrawer); });
+      });
+
+      document.getElementById('openImportStatement').addEventListener('click', function () {
+        openOverlay(importDrawer);
+      });
+
+      document.querySelectorAll('[data-open-manual-match]').forEach(function (button) {
+        button.addEventListener('click', function () { openOverlay(manualDrawer); });
+      });
+
+      document.querySelectorAll('[data-open-return]').forEach(function (button) {
+        button.addEventListener('click', function () { openOverlay(returnModal); });
+      });
+
+      document.querySelectorAll('[data-open-split]').forEach(function (button) {
+        button.addEventListener('click', function () { openOverlay(splitModal); });
+      });
+
+      document.querySelectorAll('[data-close-drawer], [data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () { closeOverlay(button.closest('.modal-overlay')); });
+      });
+
+      document.querySelectorAll('[data-confirm-match]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeOverlay(button.closest('.modal-overlay'));
+          toast.hidden = false;
+          setTimeout(function () { toast.hidden = true; }, 1800);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

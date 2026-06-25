@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汇率与币种管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">汇率与币种管理</h1>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tab-bar currency-tabs" aria-label="汇率与币种管理标签">
+    <button class="tab-item active" type="button" data-currency-tab="rates">汇率维护</button>
+    <button class="tab-item" type="button" data-currency-tab="locks">外币订单汇率锁定记录</button>
+    <button class="tab-item" type="button" data-currency-tab="pnl">汇率差异损益</button>
+  </nav>
+
+  <section id="currency-rates" class="currency-panel active">
+    <section class="currency-toolbar">
+      <div class="currency-api-state">
+        <label class="currency-api-switch">
+          <input type="checkbox" checked>
+          <span>央行API自动更新</span>
+        </label>
+        <div class="currency-api-time">上次自动更新：今天08:00 | 下次更新：明天08:00</div>
+      </div>
+      <button class="btn btn-primary" type="button" data-open-rate-entry>手动录入汇率</button>
+    </section>
+
+    <section class="table-wrap currency-rate-table" aria-label="支持币种列表">
+      <table>
+        <thead>
+          <tr>
+            <th>币种代码</th>
+            <th>币种名称</th>
+            <th>对CNY汇率（卖出价）</th>
+            <th>最后更新时间</th>
+            <th>更新方式</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>USD</td><td>美元</td><td class="amount-strong">7.2450</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>EUR</td><td>欧元</td><td class="amount-strong">7.8632</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>HKD</td><td>港元</td><td class="amount-strong">0.9284</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>JPY</td><td>日元</td><td class="amount-strong">0.0461</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>GBP</td><td>英镑</td><td class="amount-strong">9.1250</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>CHF</td><td>瑞士法郎</td><td class="amount-strong">8.1430</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>AUD</td><td>澳元</td><td class="amount-strong">4.6820</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+          <tr><td>CAD</td><td>加元</td><td class="amount-strong">5.3640</td><td>今天08:00</td><td><span class="tag tag-green">API自动</span></td><td><div class="table-action"><button type="button" data-open-rate-entry>手动修正</button><button type="button" data-open-rate-history>历史</button></div></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <section id="currency-locks" class="currency-panel">
+    <section class="filter-card filter-card-compact currency-filter" aria-label="外币订单汇率锁定记录筛选">
+      <div class="filter-row">
+        <div class="filter-item"><label class="sr-only" for="currencyOrderKeyword">订单号</label><input id="currencyOrderKeyword" type="search" placeholder="订单号搜索"></div>
+        <div class="filter-item filter-item-sm"><label class="sr-only" for="currencyCodeFilter">币种</label><select id="currencyCodeFilter"><option>全部币种</option><option>EUR</option><option>USD</option><option>GBP</option></select></div>
+        <div class="filter-item filter-item-wide">
+          <label class="sr-only">时间范围</label>
+          <div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button">搜索</button>
+          <button class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrap currency-lock-table" aria-label="外币订单汇率锁定记录">
+      <table>
+        <thead>
+          <tr>
+            <th>订单号</th>
+            <th>外币金额</th>
+            <th>外币种类</th>
+            <th>锁定汇率</th>
+            <th>锁定时间</th>
+            <th>当前汇率</th>
+            <th>潜在差异金额</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ORD-20250623-01058</td><td>EUR 3,200</td><td>欧元</td><td>7.8450（锁定时）</td><td>2025-06-23 09:15</td><td>7.8632（今日）</td><td class="amount-green">+¥58（潜在收益）</td><td><span class="tag tag-green">已锁定</span></td></tr>
+          <tr><td>ORD-20250620-01045</td><td>EUR 2,000</td><td>欧元</td><td>7.8380（锁定时）</td><td>2025-06-20 14:00</td><td>7.8632（今日）</td><td class="amount-green">+¥50（潜在收益）</td><td><span class="tag tag-green">已锁定</span></td></tr>
+          <tr><td>ORD-20250615-01030</td><td>EUR 4,500</td><td>欧元</td><td>7.9200（锁定时）</td><td>2025-06-15 10:00</td><td>7.8632（今日）</td><td class="amount-orange">-¥256（潜在损失）</td><td><span class="tag tag-green">已锁定</span></td></tr>
+          <tr><td>ORD-20250610-01018</td><td>EUR 2,400</td><td>欧元</td><td>7.8800（锁定时）</td><td>2025-06-10 09:00</td><td>结算已完成</td><td class="amount-red">-¥40（实际损失）</td><td><span class="tag tag-gray">已结算</span></td></tr>
+          <tr><td>ORD-20250601-00988</td><td>EUR 3,200</td><td>欧元</td><td>7.8200（锁定时）</td><td>2025-06-01 11:00</td><td>结算已完成</td><td class="amount-green">+¥136（实际收益）</td><td><span class="tag tag-gray">已结算</span></td></tr>
+          <tr><td>CR-MED-20250720-001</td><td>USD 1,200</td><td>美元</td><td>7.2300（锁定时）</td><td>2025-05-20 14:00</td><td>7.2450（今日）</td><td class="amount-green">+¥18（潜在收益）</td><td><span class="tag tag-green">已锁定</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <section id="currency-pnl" class="currency-panel">
+    <section class="currency-pnl-summary" aria-label="本期汇率差异损益汇总">
+      <article><span>汇率差异收益</span><strong class="amount-green">¥1,248</strong></article>
+      <article><span>汇率差异损失</span><strong class="amount-red">¥626</strong></article>
+      <article><span>净差异损益</span><strong class="amount-green">+¥622</strong></article>
+    </section>
+
+    <section class="table-wrap currency-pnl-table" aria-label="汇率差异损益明细">
+      <table>
+        <thead>
+          <tr>
+            <th>结算时间</th>
+            <th>订单号</th>
+            <th>外币金额</th>
+            <th>锁定汇率</th>
+            <th>结算汇率</th>
+            <th>差异金额</th>
+            <th>损益类型</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>2025-06-24 15:30</td><td>ORD-20250610-01018</td><td>EUR 2,400</td><td>7.8800</td><td>7.8632</td><td class="amount-red">-¥40</td><td><span class="tag tag-red">汇率损失</span></td></tr>
+          <tr><td>2025-06-23 16:20</td><td>ORD-20250601-00988</td><td>EUR 3,200</td><td>7.8200</td><td>7.8625</td><td class="amount-green">+¥136</td><td><span class="tag tag-green">汇率收益</span></td></tr>
+          <tr><td>2025-06-22 14:10</td><td>CR-MED-20250615-001</td><td>USD 2,800</td><td>7.2100</td><td>7.2440</td><td class="amount-green">+¥95</td><td><span class="tag tag-green">汇率收益</span></td></tr>
+          <tr><td>2025-06-21 11:40</td><td>ORD-20250528-00916</td><td>GBP 1,600</td><td>9.1800</td><td>9.1260</td><td class="amount-red">-¥86</td><td><span class="tag tag-red">汇率损失</span></td></tr>
+          <tr><td>2025-06-20 17:05</td><td>ORD-20250522-00874</td><td>EUR 5,000</td><td>7.7900</td><td>7.8380</td><td class="amount-green">+¥240</td><td><span class="tag tag-green">汇率收益</span></td></tr>
+          <tr><td>2025-06-19 13:20</td><td>ORD-20250518-00852</td><td>CHF 1,200</td><td>8.2200</td><td>8.1460</td><td class="amount-red">-¥89</td><td><span class="tag tag-red">汇率损失</span></td></tr>
+          <tr><td>2025-06-18 10:15</td><td>ORD-20250510-00801</td><td>EUR 3,600</td><td>7.8100</td><td>7.8720</td><td class="amount-green">+¥223</td><td><span class="tag tag-green">汇率收益</span></td></tr>
+          <tr><td>2025-06-17 16:45</td><td>CR-MED-20250530-001</td><td>USD 1,900</td><td>7.2600</td><td>7.2310</td><td class="amount-red">-¥55</td><td><span class="tag tag-red">汇率损失</span></td></tr>
+          <tr><td>2025-06-16 15:05</td><td>ORD-20250506-00782</td><td>AUD 4,000</td><td>4.6100</td><td>4.6820</td><td class="amount-green">+¥288</td><td><span class="tag tag-green">汇率收益</span></td></tr>
+          <tr><td>2025-06-15 09:35</td><td>ORD-20250501-00760</td><td>EUR 4,200</td><td>7.9200</td><td>7.8610</td><td class="amount-red">-¥248</td><td><span class="tag tag-red">汇率损失</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <div id="rateEntryModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm currency-rate-entry-modal" role="dialog" aria-modal="true" aria-labelledby="rateEntryTitle">
+      <div class="modal-header">
+        <div id="rateEntryTitle" class="modal-title">手动录入汇率</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="entryCurrency">币种 <span class="req">*</span></label>
+          <select id="entryCurrency" class="form-control" required>
+            <option>EUR 欧元</option>
+            <option>USD 美元</option>
+            <option>GBP 英镑</option>
+            <option>JPY 日元</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="entryRate">汇率值 <span class="req">*</span></label>
+          <input id="entryRate" class="form-control" type="number" step="0.0001" placeholder="如 7.8632" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="entryEffectiveTime">生效时间</label>
+          <input id="entryEffectiveTime" class="form-control" type="datetime-local" value="2025-06-23T00:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="entryReason">录入原因说明</label>
+          <textarea id="entryReason" class="form-control" rows="3" placeholder="选填"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">确认录入</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rateHistoryModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md currency-rate-history-modal" role="dialog" aria-modal="true" aria-labelledby="rateHistoryTitle">
+      <div class="modal-header">
+        <div id="rateHistoryTitle" class="modal-title">欧元（EUR）历史汇率记录</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrap currency-history-table">
+          <table>
+            <thead><tr><th>日期</th><th>汇率（对CNY）</th><th>更新方式</th><th>来源</th></tr></thead>
+            <tbody>
+              <tr><td>2025-06-23</td><td>7.8632</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-22</td><td>7.8586</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-21</td><td>7.8610</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-20</td><td>7.8380</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-19</td><td>7.8720</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-18</td><td>7.8805</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-17</td><td>7.9012</td><td>手动修正</td><td>财务录入</td></tr>
+              <tr><td>2025-06-16</td><td>7.8860</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-15</td><td>7.9200</td><td>API自动</td><td>央行API</td></tr>
+              <tr><td>2025-06-14</td><td>7.9045</td><td>API自动</td><td>央行API</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="currency-history-trend">近30天欧元对人民币汇率最高7.9200（6月15日），最低7.8380（6月20日）。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button">导出历史数据</button>
+        <button class="btn btn-primary" type="button" data-close-modal>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tabButtons = Array.from(document.querySelectorAll('[data-currency-tab]'));
+      var panels = Array.from(document.querySelectorAll('.currency-panel'));
+      var rateEntryModal = document.getElementById('rateEntryModal');
+      var rateHistoryModal = document.getElementById('rateHistoryModal');
+
+      function setTab(id) {
+        tabButtons.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.currencyTab === id);
+        });
+        panels.forEach(function (panel) {
+          panel.classList.toggle('active', panel.id === 'currency-' + id);
+        });
+      }
+
+      function openModal(modal) {
+        if (!modal) return;
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setTab(button.dataset.currencyTab);
+        });
+      });
+
+      document.querySelectorAll('[data-open-rate-entry]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(rateEntryModal); });
+      });
+
+      document.querySelectorAll('[data-open-rate-history]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(rateHistoryModal); });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeModal(button.closest('.modal-overlay'));
+        });
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

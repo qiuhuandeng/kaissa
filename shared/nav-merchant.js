@@ -1,110 +1,191 @@
 (function () {
   const bootScript = document.currentScript;
   const menu = [
-    { title: "工作台", icon: "chart", href: "dashboard.html" },
     {
-      title: "产品中心",
-      icon: "map",
+      title: "工作",
+      icon: "chart",
       children: [
-        {
-          title: "产品管理",
-          children: [
-            { title: "产品列表", href: "products.html" },
-            { title: "外采产品", href: "product-outsource-list.html" },
-          ],
-        },
-        { title: "团期团控", href: "schedules.html" },
-        { title: "供应商管理", href: "suppliers.html" },
+        { title: "首页工作台", href: "dashboard.html" },
       ],
     },
     {
-      title: "资源模块",
+      title: "资源",
       icon: "plane",
       children: [
+        {
+          title: "基础资源",
+          children: [
+            { title: "景点", href: "resource/resource-masterdata.html?type=poi" },
+            { title: "酒店", href: "resource/resource-masterdata.html?type=hotel" },
+            { title: "餐厅", href: "resource/resource-masterdata.html?type=restaurant" },
+            { title: "车型", href: "resource/resource-masterdata.html?type=vehicle" },
+            { title: "邮轮", href: "resource/resource-masterdata.html?type=cruise" },
+            { title: "专列", href: "resource/resource-masterdata.html?type=train" },
+            { title: "供应", href: "resource/resource-masterdata.html?type=supplier" },
+            { title: "别名", href: "resource/resource-masterdata.html?type=alias" },
+          ],
+        },
         {
           title: "航空资源",
           children: [
-            { title: "航线库", href: "resource-flight-routes.html" },
-            { title: "锁位管理", href: "resource-flight-block.html" },
+            { title: "航线库", href: "resource/resource-flight-routes.html" },
+            { title: "锁位管理", href: "resource/resource-flight-block.html" },
+          ],
+        },
+        {
+          title: "邮轮资源",
+          children: [
+            { title: "船公司", href: "resource/resource-cruise-companies.html" },
+            { title: "船只档案", href: "resource/resource-cruise-ships.html" },
+            { title: "邮轮航线", href: "resource/resource-cruise-routes.html" },
+          ],
+        },
+        {
+          title: "专列资源",
+          children: [
+            { title: "运营商", href: "resource/resource-train-operators.html" },
+            { title: "专列线路", href: "resource/resource-train-routes.html" },
+          ],
+        },
+        { title: "领队资源", href: "resource/resource-tour-leaders.html" },
+        { title: "供应商管理", href: "resource/suppliers.html" },
+      ],
+    },
+    {
+      title: "产品",
+      icon: "map",
+      children: [
+        { title: "产品市场", href: "product/product-market.html" },
+        {
+          title: "产品管理",
+          children: [
+            { title: "自营产品", href: "product/products.html" },
+            { title: "外采产品", href: "product/product-outsource-list.html" },
+            { title: "邮轮产品", href: "product/product-cruise-routes.html" },
+            { title: "专列产品", href: "product/product-train-routes.html" },
+            { title: "自由行", href: "product/product-free-travel-list.html" },
+            { title: "单项委托", href: "product/product-single-orders.html" },
+            { title: "研学产品", href: "product/product-study-products.html" },
+          ],
+        },
+        { title: "定价策略", href: "product/product-pricing.html" },
+        { title: "渠道授权", href: "product/product-channel-auth.html" },
+        { title: "竞品价格", href: "product/product-competitor-price.html" },
+      ],
+    },
+    {
+      title: "出团",
+      icon: "plane",
+      children: [
+        { title: "单团自组", href: "tour/product-custom-list.html" },
+        {
+          title: "团期团控",
+          children: [
+            { title: "团期列表", href: "tour/schedules.html" },
+            { title: "团期日历", href: "tour/schedules-calendar.html" },
+          ],
+        },
+        {
+          title: "团期成本",
+          children: [
+            { title: "成本确认", href: "tour/fulfillment-cost.html" },
+            { title: "供应商费用", href: "tour/fulfillment-supplier-fees.html" },
+            { title: "付款申请", href: "tour/fulfillment-payment-apply.html" },
+          ],
+        },
+        {
+          title: "出团执行",
+          children: [
+            { title: "执行总览", href: "tour/fulfillment-outbound.html" },
+            { title: "名单管理", href: "tour/fulfillment-roster.html" },
+            { title: "证件资料", href: "tour/fulfillment-documents.html" },
+            { title: "签证进度", href: "tour/fulfillment-visa.html" },
+            { title: "出团通知", href: "tour/fulfillment-notice.html" },
+          ],
+        },
+        { title: "回团处理", href: "tour/fulfillment-return.html" },
+      ],
+    },
+    {
+      title: "销售",
+      icon: "clipboard",
+      children: [
+        { title: "产品报价", href: "sales/sales-product-quote.html" },
+        { title: "意向订单", href: "sales/orders-intent.html" },
+        { title: "订单管理", href: "sales/orders.html" },
+        { title: "收款认领", href: "sales/payment-claim.html" },
+        { title: "合同管理", href: "sales/contracts.html" },
+        { title: "售后处理", href: "sales/orders-after-sales.html" },
+        { title: "门店管理", href: "sales/store/index.html" },
+        { title: "销售顾问", href: "sales/consultant/index.html" },
+      ],
+    },
+    {
+      title: "渠道",
+      icon: "handshake",
+      children: [
+        { title: "渠道来源", href: "channel/channel-config.html" },
+        { title: "佣金规则", href: "channel/channel-commission.html" },
+      ],
+    },
+    {
+      title: "客户",
+      icon: "users",
+      children: [
+        { title: "客户列表", href: "customer/customers.html" },
+      ],
+    },
+    {
+      title: "财务",
+      icon: "wallet",
+      children: [
+        { title: "收款管理", href: "finance/receipts.html" },
+        { title: "认款管理", href: "finance/finance-matching.html" },
+        { title: "应收管理", href: "finance/finance-receivable.html" },
+        { title: "应付管理", href: "finance/finance-payable.html" },
+        { title: "付款执行", href: "finance/finance-payment.html" },
+        { title: "退款执行", href: "finance/finance-refund-execute.html" },
+        { title: "对账结算", href: "finance/finance-settlement.html" },
+        { title: "发票管理", href: "finance/finance-invoice.html" },
+        { title: "回单管理", href: "finance/finance-remittance.html" },
+        { title: "汇率币种", href: "finance/finance-currency.html" },
+        { title: "NC推送", href: "finance/finance-nc.html" },
+        {
+          title: "财务报表",
+          children: [
+            { title: "团期盈亏", href: "finance/finance-reports.html?report=profit" },
+            { title: "收款统计", href: "finance/finance-reports.html?report=receipt" },
+            { title: "付款统计", href: "finance/finance-reports.html?report=payment" },
+            { title: "应收应付", href: "finance/finance-reports.html?report=ar-ap" },
+            { title: "预付款", href: "finance/finance-reports.html?report=prepay" },
+            { title: "资金池", href: "finance/finance-reports.html?report=fund" },
           ],
         },
       ],
     },
     {
-      title: "销售订单",
-      icon: "clipboard",
+      title: "审批",
+      icon: "bell",
       children: [
-        { title: "预订中心", href: "booking.html" },
-        { title: "订单管理", href: "orders.html" },
-        { title: "退款管理", href: "orders-refund.html" },
-        { title: "意向单", href: "orders-intent.html" },
+        { title: "待我审批", href: "approval/approvals.html?view=todo" },
+        { title: "我发起的", href: "approval/approvals.html?view=mine" },
+        { title: "审批总览", href: "approval/approvals.html?view=overview" },
+        { title: "审批配置", href: "approval/approvals.html?view=config" },
       ],
     },
     {
-      title: "履约操作",
-      icon: "plane",
+      title: "AI",
+      icon: "sparkles",
       children: [
-        { title: "名单管理", href: "fulfillment-roster.html" },
-        { title: "出团管理", href: "fulfillment-outbound.html" },
+        { title: "线路拆解", href: "ai/route_parser.html", ai: true },
+        { title: "AI助手", href: "ai/ai-assistant.html", ai: true },
       ],
     },
     {
-      title: "项目业务",
-      icon: "target",
-      children: [
-        { title: "MICE", href: "projects.html" },
-      ],
-    },
-    { title: "合同合规", icon: "file", href: "contracts.html" },
-    {
-      title: "财务对账",
-      icon: "wallet",
-      children: [
-        { title: "应收管理", href: "finance-receivable.html" },
-        { title: "收款管理", href: "finance-receipt.html" },
-        { title: "应付管理", href: "finance-payable.html" },
-        { title: "付款管理", href: "finance-payment.html" },
-        { title: "对账结算", href: "finance-settlement.html" },
-        { title: "发票管理", href: "finance-invoice.html" },
-        { title: "财务报表", href: "finance-reports.html" },
-      ],
-    },
-    {
-      title: "分销运营",
-      icon: "handshake",
-      children: [
-        { title: "分销商管理", href: "dist-merchants.html" },
-        { title: "分销员管理", href: "dist-members.html" },
-        { title: "佣金管理", href: "dist-commission.html" },
-      ],
-    },
-    {
-      title: "营销内容",
-      icon: "gift",
-      children: [
-        { title: "优惠券", href: "marketing-coupons.html" },
-        { title: "活动专题", href: "marketing-activities.html" },
-      ],
-    },
-    { title: "客户会员", icon: "users", href: "customers.html" },
-    { title: "AI计调助手", icon: "sparkles", href: "ai-assistant.html", ai: true },
-    { title: "C端装修", icon: "palette", href: "design-pages.html" },
-    {
-      title: "数据统计",
-      icon: "trend",
-      children: [
-        { title: "商户报表", href: "stats-merchant.html" },
-        { title: "部门报表", href: "stats-department.html" },
-        { title: "门店报表", href: "stats-store.html" },
-      ],
-    },
-    {
-      title: "系统设置",
+      title: "系统",
       icon: "settings",
       children: [
-        { title: "角色权限", href: "settings-roles.html" },
-        { title: "门店管理", href: "stores.html" },
-        { title: "系统配置", href: "settings.html" },
+        { title: "角色权限", href: "system/settings-roles.html" },
       ],
     },
   ];
@@ -132,21 +213,17 @@
   };
 
   const primaryLabels = {
-    工作台: "概况",
-    产品中心: "产品",
-    资源模块: "资源",
-    销售订单: "订单",
-    履约操作: "履约",
-    项目业务: "项目",
-    合同合规: "合同",
-    财务对账: "财务",
-    分销运营: "分销",
-    营销内容: "营销",
-    客户会员: "客户",
-    AI计调助手: "AI",
-    C端装修: "装修",
-    数据统计: "数据",
-    系统设置: "设置",
+    工作: "工作",
+    资源: "资源",
+    产品: "产品",
+    出团: "出团",
+    销售: "销售",
+    渠道: "渠道",
+    客户: "客户",
+    财务: "财务",
+    审批: "审批",
+    AI: "AI",
+    系统: "系统",
   };
 
   function createIcon(name) {
@@ -165,25 +242,88 @@
   let secondaryNav = null;
   let currentPrimaryIndex = 0;
   let primaryTooltip = null;
+  const secondaryOpenStorageKey = "caesar-merchant-secondary-open";
+  const secondaryOpenKeys = new Set(readSecondaryOpenKeys());
+
+  const reportRouteKeys = new Set(["profit", "receipt", "payment", "ar-ap", "prepay", "fund"]);
+  const approvalViewKeys = new Set(["todo", "mine", "overview", "config"]);
+  const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "cruise", "train", "supplier", "alias"]);
+  const merchantBaseUrl = new URL("../merchant/", new URL(bootScript.src || "../../shared/nav-merchant.js", window.location.href));
+
+  function routeKeyFromUrl(url) {
+    const normalizedPath = url.pathname.replace(/\/+/g, "/");
+    const merchantMarker = "/merchant/";
+    const markerIndex = normalizedPath.lastIndexOf(merchantMarker);
+    let file = markerIndex >= 0 ? normalizedPath.slice(markerIndex + merchantMarker.length) : (normalizedPath.split("/").pop() || "dashboard.html");
+    file = (file || "dashboard.html").split("?")[0];
+    if (file.endsWith("/")) file += "dashboard.html";
+    if (file === "resource/resource-masterdata.html") {
+      const type = url.searchParams.get("type") || "poi";
+      return "resource/resource-masterdata.html?type=" + (masterdataRouteKeys.has(type) ? type : "poi");
+    }
+    if (file === "finance/finance-reports.html") {
+      const report = url.searchParams.get("report") || "profit";
+      return "finance/finance-reports.html?report=" + (reportRouteKeys.has(report) ? report : "profit");
+    }
+    if (file === "approval/approvals.html") {
+      const view = url.searchParams.get("view") || "todo";
+      return "approval/approvals.html?view=" + (approvalViewKeys.has(view) ? view : "todo");
+    }
+    return file;
+  }
 
   function currentFile() {
-    return (window.location.pathname.split("/").pop() || "dashboard.html").split("?")[0];
+    return routeKeyFromUrl(new URL(window.location.href));
+  }
+
+  function readSecondaryOpenKeys() {
+    try {
+      const keys = JSON.parse(localStorage.getItem(secondaryOpenStorageKey) || "[]");
+      return Array.isArray(keys) ? keys : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveSecondaryOpenKeys() {
+    localStorage.setItem(secondaryOpenStorageKey, JSON.stringify(Array.from(secondaryOpenKeys)));
   }
 
   function fileFromUrl(url) {
-    return (url.pathname.split("/").pop() || "dashboard.html").split("?")[0];
+    return routeKeyFromUrl(url);
+  }
+
+  function resolvedAppHref(href) {
+    if (!href || href.startsWith("#")) return href || "#";
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("/")) return href;
+    return new URL(href, merchantBaseUrl).href;
   }
 
   const pageOwners = {
     "dashboard-group.html": { href: "dashboard.html", title: "集团管理层工作台" },
     "dashboard-store.html": { href: "dashboard.html", title: "门店店长工作台" },
-    "products-create.html": { href: "products.html", title: "新建跟团游产品" },
-    "products-detail.html": { href: "products.html", title: "产品详情" },
-    "product-outsource-list.html": { href: "products.html", title: "外采产品" },
-    "schedules-detail.html": { href: "schedules.html", title: "团期详情" },
-    "orders-detail.html": { href: "orders.html", title: "订单详情" },
-    "projects-detail.html": { href: "projects.html", title: "项目详情" },
-    "finance-settlement-detail.html": { href: "finance-settlement.html", title: "对账单详情" },
+    "product/product-self-edit.html": { href: "product/products.html", title: "自营产品编辑" },
+    "product/products-detail.html": { href: "product/products.html", title: "产品详情" },
+    "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
+    "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采产品包装" },
+    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期配额" },
+    "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "产品类待审批" },
+    "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学产品编辑" },
+    "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
+    "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
+    "sales/booking.html": { href: "sales/orders.html", title: "新建订单" },
+    "sales/orders-transfer.html": { href: "sales/orders-after-sales.html", title: "转团申请" },
+    "sales/orders-refund.html": { href: "sales/orders-after-sales.html", title: "退款申请" },
+    "sales/store/detail.html": { href: "sales/store/index.html", title: "门店详情" },
+    "sales/consultant/detail.html": { href: "sales/consultant/index.html", title: "销售顾问详情" },
+    "tour/projects.html": { href: "tour/product-custom-list.html", title: "MICE项目" },
+    "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "项目详情" },
+    "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
+    "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
+    "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队排班" },
+    "customer/customers-detail.html": { href: "customer/customers.html", title: "客户详情" },
+    "system/design-pages.html": { href: "system/settings-roles.html", title: "C端页面管理" },
+    "system/design-editor.html": { href: "system/design-pages.html", title: "C端页面编辑" },
   };
 
   const organizationTree = [
@@ -386,7 +526,7 @@
         hidePrimaryTooltip();
       });
     } else {
-      control.href = item.href;
+      control.href = resolvedAppHref(item.href);
       control.addEventListener("mouseenter", () => {
         previewPrimary(index, control);
       });
@@ -421,17 +561,19 @@
   function renderSecondary(activeHref, primaryIndex) {
     if (!secondaryTitle || !secondaryNav) return;
 
-    const root = menu[typeof primaryIndex === "number" ? primaryIndex : currentPrimaryIndex] || menu[0];
+    const rootIndex = typeof primaryIndex === "number" ? primaryIndex : currentPrimaryIndex;
+    const root = menu[rootIndex] || menu[0];
     const items = root.children && root.children.length > 0 ? root.children : [root];
     const hasActiveInRoot = hasActive(root, activeHref);
     let openedDefault = false;
 
+    rememberRenderedSecondaryOpenKeys();
     secondaryTitle.textContent = root.title;
     secondaryNav.replaceChildren();
     items.forEach((item) => {
       const openByDefault = !hasActiveInRoot && !openedDefault && Boolean(item.children);
       if (openByDefault) openedDefault = true;
-      secondaryNav.appendChild(item.children ? createSecondaryParent(item, activeHref, 0, openByDefault) : createSecondaryLink(item, activeHref, 0));
+      secondaryNav.appendChild(item.children ? createSecondaryParent(item, activeHref, 0, openByDefault, rootIndex, [item.title]) : createSecondaryLink(item, activeHref, 0));
     });
   }
 
@@ -442,7 +584,7 @@
     link.dataset.depth = String(depth || 0);
     link.title = item.title;
     if (!item.icon || depth > 0) link.classList.add("nav-child");
-    link.href = item.href;
+    link.href = resolvedAppHref(item.href);
     if (item.href === activeFile) link.classList.add("active");
 
     const text = document.createElement("span");
@@ -489,7 +631,7 @@
       const item = document.createElement("a");
       item.className = "page-tab";
       if (tab.href === file) item.classList.add("active");
-      item.href = tab.href;
+      item.href = resolvedAppHref(tab.href);
 
       const label = document.createElement("span");
       label.className = "page-tab-label";
@@ -574,10 +716,30 @@
     return item.children ? item.children.some((child) => hasActive(child, activeFile)) : false;
   }
 
-  function createSecondaryParent(item, activeFile, depth, openByDefault) {
+  function secondaryOpenKey(rootIndex, path) {
+    return String(rootIndex) + ":" + path.join(">");
+  }
+
+  function rememberRenderedSecondaryOpenKeys() {
+    if (!secondaryNav) return;
+    secondaryNav.querySelectorAll(".nav-parent").forEach((wrap) => {
+      const key = wrap.dataset.openKey;
+      if (!key) return;
+      if (wrap.classList.contains("open")) {
+        secondaryOpenKeys.add(key);
+      } else {
+        secondaryOpenKeys.delete(key);
+      }
+    });
+    saveSecondaryOpenKeys();
+  }
+
+  function createSecondaryParent(item, activeFile, depth, openByDefault, rootIndex, path) {
     const wrap = document.createElement("div");
     wrap.className = "nav-parent";
     wrap.dataset.depth = String(depth || 0);
+    const openKey = secondaryOpenKey(rootIndex, path || [item.title]);
+    wrap.dataset.openKey = openKey;
 
     const head = document.createElement("div");
     head.className = "nav-item";
@@ -598,13 +760,24 @@
     sub.className = "nav-sub";
 
     item.children.forEach((child) => {
-      sub.appendChild(child.children ? createSecondaryParent(child, activeFile, (depth || 0) + 1, false) : createSecondaryLink(child, activeFile, (depth || 0) + 1));
+      const childPath = (path || [item.title]).concat(child.title);
+      sub.appendChild(child.children ? createSecondaryParent(child, activeFile, (depth || 0) + 1, false, rootIndex, childPath) : createSecondaryLink(child, activeFile, (depth || 0) + 1));
     });
-    if (openByDefault || item.children.some((child) => hasActive(child, activeFile))) {
+    if (secondaryOpenKeys.has(openKey) || openByDefault || item.children.some((child) => hasActive(child, activeFile))) {
       wrap.classList.add("open");
+      secondaryOpenKeys.add(openKey);
+      saveSecondaryOpenKeys();
     }
 
-    head.addEventListener("click", () => wrap.classList.toggle("open"));
+    head.addEventListener("click", () => {
+      wrap.classList.toggle("open");
+      if (wrap.classList.contains("open")) {
+        secondaryOpenKeys.add(openKey);
+      } else {
+        secondaryOpenKeys.delete(openKey);
+      }
+      saveSecondaryOpenKeys();
+    });
     if (item.icon) head.appendChild(createIcon(item.icon));
     head.append(text, arrow);
     wrap.append(head, sub);
@@ -926,13 +1099,11 @@
     if (url.origin !== window.location.origin) return false;
     if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
     if (!url.pathname.endsWith(".html")) return false;
-
-    const currentDir = window.location.pathname.replace(/[^/]*$/, "");
-    return url.pathname.replace(/[^/]*$/, "") === currentDir;
+    return true;
   }
 
   function navigateTo(href) {
-    const target = new URL(href, window.location.href);
+    const target = new URL(resolvedAppHref(href), window.location.href);
     loadPage(target, { push: true });
   }
 
@@ -1005,10 +1176,8 @@
 
       const href = trigger.dataset.navHref || trigger.dataset.href;
       const url = new URL(href, window.location.href);
-      const currentDir = window.location.pathname.replace(/[^/]*$/, "");
       const isSamePageTarget = url.origin === window.location.origin
-        && url.pathname.endsWith(".html")
-        && url.pathname.replace(/[^/]*$/, "") === currentDir;
+        && url.pathname.endsWith(".html");
 
       if (!isSamePageTarget) return;
 

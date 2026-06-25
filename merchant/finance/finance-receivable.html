@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应收管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">应收管理</h1>
+      </div>
+    </div>
+
+    <section class="filter-card filter-card-compact receivable-filter" aria-label="应收结算筛选">
+      <div class="filter-row">
+        <div class="filter-item"><label class="sr-only" for="receivableKeyword">团号/产品名</label><input id="receivableKeyword" type="search" placeholder="团号/产品名搜索"></div>
+        <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">出发日期范围</label><div class="date-range"><input type="date" aria-label="出发开始日期"><span>至</span><input type="date" aria-label="出发结束日期"></div></div>
+        <div class="filter-item filter-item-sm"><label class="sr-only" for="receivableStatus">结算状态</label><select id="receivableStatus"><option>全部</option><option>可结算</option><option>结算中</option><option>已完成</option><option>有坏账</option></select></div>
+        <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button id="resetReceivables" class="btn btn-secondary" type="button">重置</button></div>
+      </div>
+    </section>
+  </section>
+
+  <nav class="tab-bar receivable-tabs" aria-label="结算状态筛选" data-filter-tabs data-filter-target="#receivableRows">
+    <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
+    <button class="tab-item" type="button" data-filter-value="可结算">可结算</button>
+    <button class="tab-item" type="button" data-filter-value="结算中">结算中</button>
+    <button class="tab-item" type="button" data-filter-value="已完成">已完成</button>
+    <button class="tab-item" type="button" data-filter-value="有坏账">有坏账</button>
+  </nav>
+
+  <section class="table-wrap receivable-table-wrap" aria-label="应收结算列表">
+    <table>
+      <thead>
+        <tr>
+          <th>团号</th>
+          <th>产品名</th>
+          <th>出发日期</th>
+          <th>回团日期</th>
+          <th>总人数</th>
+          <th>应收总额</th>
+          <th>已收金额</th>
+          <th>待收金额</th>
+          <th>收款完成率</th>
+          <th>结算状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="receivableRows">
+        <tr data-tab-status="可结算"><td>EU-FRA-20250610-001</td><td>法瑞意经典15日游</td><td>2025-06-10</td><td>2025-06-24</td><td>35人</td><td class="amount-strong">¥448,000</td><td>¥448,000</td><td>¥0</td><td>100%</td><td><span class="tag tag-green">可结算</span></td><td><div class="table-action"><button type="button" data-open-receivable-detail>查看明细</button><button type="button" data-open-confirm-receivable>确认应收</button></div></td></tr>
+        <tr data-tab-status="结算中"><td>EU-DEU-20250608-001</td><td>德捷奥深度10日</td><td>2025-06-08</td><td>2025-06-17</td><td>28人</td><td class="amount-strong">¥268,800</td><td>¥268,800</td><td>¥0</td><td>100%</td><td><span class="tag tag-blue">结算中</span></td><td><div class="table-action"><button type="button" data-open-receivable-detail>查看明细</button></div></td></tr>
+        <tr data-tab-status="可结算"><td>CN-BJG-20250605-001</td><td>北京印象5日游</td><td>2025-06-05</td><td>2025-06-09</td><td>42人</td><td class="amount-strong">¥189,000</td><td>¥175,400</td><td>¥13,600</td><td>92.8%</td><td><span class="tag tag-orange">可结算</span></td><td><div class="table-action"><button type="button" data-open-receivable-detail>查看明细</button><button type="button">催款后确认</button></div></td></tr>
+        <tr data-tab-status="已完成"><td>EU-GRC-20250601-001</td><td>希腊爱琴海8日</td><td>2025-06-01</td><td>2025-06-08</td><td>24人</td><td class="amount-strong">¥230,400</td><td>¥230,400</td><td>¥0</td><td>100%</td><td><span class="tag tag-gray">已完成</span></td><td><div class="table-action"><button type="button" data-open-receivable-detail>查看明细</button></div></td></tr>
+        <tr data-tab-status="有坏账"><td>EU-ITA-20250525-001</td><td>意大利全境12日</td><td>2025-05-25</td><td>2025-06-05</td><td>30人</td><td class="amount-strong">¥336,000</td><td>¥329,600</td><td>¥6,400</td><td>98.1%</td><td><span class="tag tag-red">有坏账</span></td><td><div class="table-action"><button type="button" data-open-receivable-detail>查看明细</button><button type="button" data-open-bad-debt>处理坏账</button></div></td></tr>
+        <tr data-tab-status="已完成"><td>ST-EUR-20250520-001</td><td>研学欧洲文化14日</td><td>2025-05-20</td><td>2025-06-02</td><td>38人</td><td class="amount-strong">¥427,400</td><td>¥427,400</td><td>¥0</td><td>100%</td><td><span class="tag tag-gray">已完成</span></td><td><div class="table-action"><button type="button" data-open-receivable-detail>查看明细</button></div></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div id="receivableDetailModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal receivable-detail-modal" role="dialog" aria-modal="true" aria-labelledby="receivableDetailTitle">
+      <div class="modal-header">
+        <div id="receivableDetailTitle" class="modal-title">EU-FRA-20250610-001 应收明细</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="receivable-detail-summary">
+          <div><span>产品名</span><strong>法瑞意经典15日游</strong></div>
+          <div><span>出发日</span><strong>2025-06-10</strong></div>
+          <div><span>人数</span><strong>35人</strong></div>
+          <div><span>总应收</span><strong>¥448,000</strong></div>
+          <div><span>已收</span><strong>¥448,000</strong></div>
+          <div><span>待收</span><strong>¥0</strong></div>
+          <div><span>收款率</span><strong>100%</strong></div>
+        </div>
+        <section class="table-wrap receivable-order-table" aria-label="订单明细">
+          <table>
+            <thead><tr><th>订单号</th><th>客人姓名</th><th>人数</th><th>应收金额</th><th>已收金额</th><th>待收</th><th>收款状态</th></tr></thead>
+            <tbody>
+              <tr><td>ORD-20250510-0001</td><td>张建国</td><td>2人</td><td>¥25,600</td><td>¥25,600</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250511-0002</td><td>李梅</td><td>4人</td><td>¥51,200</td><td>¥51,200</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250512-0003</td><td>王强</td><td>3人</td><td>¥38,400</td><td>¥38,400</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250513-0004</td><td>刘洋</td><td>2人</td><td>¥25,600</td><td>¥25,600</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250514-0005</td><td>陈红</td><td>5人</td><td>¥64,000</td><td>¥64,000</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250515-0006</td><td>赵明</td><td>4人</td><td>¥51,200</td><td>¥51,200</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250516-0007</td><td>孙丽</td><td>3人</td><td>¥38,400</td><td>¥38,400</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250517-0008</td><td>周伟</td><td>4人</td><td>¥51,200</td><td>¥51,200</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250518-0009</td><td>吴芳</td><td>4人</td><td>¥51,200</td><td>¥51,200</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr><td>ORD-20250519-0010</td><td>郑华</td><td>4人</td><td>¥51,200</td><td>¥51,200</td><td>¥0</td><td><span class="tag tag-green">已收清</span></td></tr>
+              <tr class="table-total-row"><td colspan="2">合计</td><td>35人</td><td>¥448,000</td><td>¥448,000</td><td>¥0</td><td>全部收清</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" disabled>批量催款</button>
+        <button class="btn btn-primary" type="button" data-open-confirm-receivable>确认应收已清</button>
+        <button class="link-button danger" type="button" data-open-bad-debt>标记坏账</button>
+        <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmReceivableModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="confirmReceivableTitle">
+      <div class="modal-header">
+        <div id="confirmReceivableTitle" class="modal-title">确认应收</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-center-text">确认 EU-FRA-20250610-001 应收已全部收清，共¥448,000？</p>
+        <div class="alert alert-blue">确认后：应收状态锁定，触发盈亏核算，结算进入“已完成”状态。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">确认应收</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="badDebtModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal receivable-bad-debt-modal" role="dialog" aria-modal="true" aria-labelledby="badDebtTitle">
+      <div class="modal-header">
+        <div id="badDebtTitle" class="modal-title">标记坏账</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary">EU-ITA-20250525-001 待收¥6,400，确认标记为坏账？</div>
+        <div class="form-group">
+          <label class="form-label" for="badDebtReason">坏账原因 <span class="req">*</span></label>
+          <select id="badDebtReason" class="form-control" required>
+            <option value="">请选择</option>
+            <option>客人失联</option>
+            <option>客人拒付</option>
+            <option>金额争议</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="badDebtRecord">处理记录 <span class="req">*</span></label>
+          <textarea id="badDebtRecord" class="form-control" rows="4" required></textarea>
+        </div>
+        <div class="alert alert-orange">坏账金额将计入本期损益</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-danger" type="button">确认标记坏账</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var detailModal = document.getElementById('receivableDetailModal');
+      var confirmModal = document.getElementById('confirmReceivableModal');
+      var badDebtModal = document.getElementById('badDebtModal');
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      document.querySelectorAll('[data-open-receivable-detail]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(detailModal); });
+      });
+
+      document.querySelectorAll('[data-open-confirm-receivable]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var currentModal = button.closest('.modal-overlay');
+          if (currentModal && currentModal !== confirmModal) closeModal(currentModal);
+          openModal(confirmModal);
+        });
+      });
+
+      document.querySelectorAll('[data-open-bad-debt]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var currentModal = button.closest('.modal-overlay');
+          if (currentModal && currentModal !== badDebtModal) closeModal(currentModal);
+          openModal(badDebtModal);
+        });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeModal(button.closest('.modal-overlay'));
+        });
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+
+      document.getElementById('resetReceivables').addEventListener('click', function () {
+        document.querySelectorAll('.receivable-filter input').forEach(function (input) {
+          input.value = '';
+        });
+        document.querySelectorAll('.receivable-filter select').forEach(function (select) {
+          select.selectedIndex = 0;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

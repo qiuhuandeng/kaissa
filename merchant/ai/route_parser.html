@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>线路拆解 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="route-parser-page">
+    <section class="page-workbar route-parser-workbar">
+      <div>
+        <h1 class="page-title">线路拆解</h1>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-ai" type="button" data-open-upload-drawer>🤖 AI上传解析</button>
+      </div>
+    </section>
+
+    <section class="route-status-grid" aria-label="线路拆解状态">
+      <article class="route-status-card">
+        <span>今日解析任务数</span>
+        <strong>128</strong>
+        <em>较昨日 +18</em>
+      </article>
+      <article class="route-status-card">
+        <span>平均准确率</span>
+        <strong>91.6%</strong>
+        <em>近7日稳定提升</em>
+      </article>
+      <article class="route-status-card warning">
+        <span>低置信度待处理</span>
+        <strong>17</strong>
+        <em>建议今日完成校正</em>
+      </article>
+    </section>
+
+    <nav class="tab-bar route-main-tabs" aria-label="线路拆解功能切换">
+      <button class="tab-item active" type="button" data-route-tab="tasks">解析任务列表</button>
+      <button class="tab-item" type="button" data-route-tab="params">模型参数配置</button>
+      <button class="tab-item" type="button" data-route-tab="reports">准确率报告</button>
+      <button class="tab-item" type="button" data-route-tab="knowledge">知识库维护</button>
+    </nav>
+
+    <section class="route-tab-panel active" data-route-panel="tasks">
+      <div class="route-list-toolbar">
+        <section class="filter-card filter-card-compact route-task-filter" aria-label="解析任务筛选">
+          <div class="filter-row">
+            <div class="filter-item filter-item-sm">
+              <label class="sr-only" for="taskStatusFilter">任务状态</label>
+              <select id="taskStatusFilter">
+                <option value="全部">全部状态</option>
+                <option value="解析中">解析中</option>
+                <option value="已完成">已完成</option>
+                <option value="解析失败">解析失败</option>
+                <option value="待校正">待校正</option>
+              </select>
+            </div>
+            <div class="filter-item filter-item-sm">
+              <label class="sr-only" for="productTypeFilter">产品类型</label>
+              <select id="productTypeFilter">
+                <option value="全部">全部类型</option>
+                <option value="跟团游">跟团游</option>
+                <option value="邮轮">邮轮</option>
+                <option value="自由行">自由行</option>
+                <option value="MICE">MICE</option>
+                <option value="研学">研学</option>
+              </select>
+            </div>
+            <div class="filter-item filter-item-wide filter-item-date-range">
+              <label class="sr-only">提交时间范围</label>
+              <div class="date-range">
+                <input type="date" value="2026-06-18" aria-label="提交开始日期">
+                <span>至</span>
+                <input type="date" value="2026-06-25" aria-label="提交结束日期">
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button id="queryTasks" class="btn btn-secondary" type="button">查询</button>
+            </div>
+          </div>
+        </section>
+        <div class="route-task-actions">
+          <button class="btn btn-secondary" type="button" data-bulk-reparse>批量重解析</button>
+          <button class="btn btn-secondary" type="button" data-bulk-archive>批量归档</button>
+        </div>
+      </div>
+
+      <section class="table-wrap route-task-table" aria-label="解析任务列表">
+        <table>
+          <thead>
+            <tr>
+              <th>任务ID</th>
+              <th>来源文件名</th>
+              <th>产品类型标签</th>
+              <th>提交时间</th>
+              <th>解析耗时</th>
+              <th>状态标签</th>
+              <th>准确率评分</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="routeTaskRows">
+            <tr data-status="已完成" data-type="跟团游">
+              <td>RP20260625001</td>
+              <td><button class="link-button route-file-link" type="button" data-open-result data-file-name="欧洲十国经典游行程.pdf">欧洲十国经典游行程.pdf</button></td>
+              <td><span class="tag tag-blue">跟团游</span></td>
+              <td>2026-06-25 09:18</td>
+              <td>1分42秒</td>
+              <td><span class="tag tag-green">已完成</span></td>
+              <td><strong class="route-score high">94%</strong></td>
+              <td>
+                <div class="table-action">
+                  <button type="button" data-open-result>查看结果</button>
+                  <button type="button" data-reparse-row>重新解析</button>
+                  <a href="../product/product-self-edit.html">人工校正</a>
+                  <button type="button" data-archive-row>归档</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="待校正" data-type="邮轮">
+              <td>RP20260625002</td>
+              <td><button class="link-button route-file-link" type="button" data-open-result data-file-name="理想号地中海邮轮产品手册.docx">理想号地中海邮轮产品手册.docx</button></td>
+              <td><span class="tag tag-purple">邮轮</span></td>
+              <td>2026-06-25 10:05</td>
+              <td>2分16秒</td>
+              <td><span class="tag tag-orange">待校正</span></td>
+              <td><strong class="route-score warning">73%</strong></td>
+              <td>
+                <div class="table-action">
+                  <button type="button" data-open-result>查看结果</button>
+                  <button type="button" data-reparse-row>重新解析</button>
+                  <a href="../product/product-self-edit.html">人工校正</a>
+                  <button type="button" data-archive-row>归档</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="解析中" data-type="自由行">
+              <td>RP20260625003</td>
+              <td><button class="link-button route-file-link" type="button" data-open-result data-file-name="马来西亚自由行机酒套餐.xlsx">马来西亚自由行机酒套餐.xlsx</button></td>
+              <td><span class="tag tag-green">自由行</span></td>
+              <td>2026-06-25 11:21</td>
+              <td>进行中</td>
+              <td><span class="tag tag-blue">解析中</span></td>
+              <td><span class="text-muted">--</span></td>
+              <td>
+                <div class="table-action">
+                  <button type="button" data-open-result>查看结果</button>
+                  <button type="button" data-reparse-row>重新解析</button>
+                  <a href="../product/product-self-edit.html">人工校正</a>
+                  <button type="button" data-archive-row>归档</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="解析失败" data-type="MICE">
+              <td>RP20260624019</td>
+              <td><button class="link-button route-file-link" type="button" data-open-result data-file-name="欧洲会奖考察报价单.pdf">欧洲会奖考察报价单.pdf</button></td>
+              <td><span class="tag tag-orange">MICE</span></td>
+              <td>2026-06-24 17:40</td>
+              <td>58秒</td>
+              <td><span class="tag tag-red">解析失败</span></td>
+              <td><span class="text-muted">--</span></td>
+              <td>
+                <div class="table-action">
+                  <button type="button" data-open-result>查看结果</button>
+                  <button type="button" data-reparse-row>重新解析</button>
+                  <a href="../product/product-self-edit.html">人工校正</a>
+                  <button type="button" data-archive-row>归档</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="已完成" data-type="研学">
+              <td>RP20260624018</td>
+              <td><button class="link-button route-file-link" type="button" data-open-result data-file-name="北京故宫研学营资料包.pdf">北京故宫研学营资料包.pdf</button></td>
+              <td><span class="tag tag-gray">研学</span></td>
+              <td>2026-06-24 16:12</td>
+              <td>1分09秒</td>
+              <td><span class="tag tag-green">已完成</span></td>
+              <td><strong class="route-score high">88%</strong></td>
+              <td>
+                <div class="table-action">
+                  <button type="button" data-open-result>查看结果</button>
+                  <button type="button" data-reparse-row>重新解析</button>
+                  <a href="../product/product-self-edit.html">人工校正</a>
+                  <button type="button" data-archive-row>归档</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="route-tab-panel" data-route-panel="params">
+      <section class="route-config-grid">
+        <section class="card">
+          <div class="card-header">
+            <div class="card-title">模型基础参数</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="llmProvider">LLM提供商</label>
+              <select id="llmProvider" class="form-control">
+                <option>OpenAI</option>
+                <option>Anthropic</option>
+                <option>Azure OpenAI</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modelVersion">模型版本</label>
+              <select id="modelVersion" class="form-control">
+                <option>gpt-4.1</option>
+                <option>gpt-4.1-mini</option>
+                <option>claude-3-7-sonnet</option>
+                <option>azure-gpt-4.1</option>
+              </select>
+            </div>
+            <div class="form-group form-group-full">
+              <label class="form-label" for="temperatureRange">Temperature <output id="temperatureValue">0.20</output></label>
+              <input id="temperatureRange" class="route-range" type="range" min="0" max="1" step="0.01" value="0.2" data-range-output="temperatureValue">
+            </div>
+            <div class="form-group form-group-full">
+              <label class="form-label" for="topPRange">Top-P <output id="topPValue">0.86</output></label>
+              <input id="topPRange" class="route-range" type="range" min="0" max="1" step="0.01" value="0.86" data-range-output="topPValue">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="maxTokens">最大Token数</label>
+              <input id="maxTokens" class="form-control" type="number" min="512" step="256" value="8192">
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div class="card-title">Fallback策略配置</div>
+          </div>
+          <div class="form-grid route-fallback-form">
+            <div class="form-group">
+              <label class="form-label" for="confidenceThreshold">低置信度阈值</label>
+              <input id="confidenceThreshold" class="form-control" type="number" min="0" max="100" value="80">
+            </div>
+            <div class="form-group form-group-full">
+              <div class="form-label">失败处理方式</div>
+              <div class="radio-row">
+                <label><input type="radio" name="fallbackMode"> 留空</label>
+                <label><input type="radio" name="fallbackMode" checked> 使用备用模型</label>
+                <label><input type="radio" name="fallbackMode"> 标记错误</label>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="card route-rule-card">
+        <div class="card-header">
+          <div class="card-title">各产品类型字段抽取规则</div>
+        </div>
+        <div class="route-accordion">
+          <details open>
+            <summary>跟团游</summary>
+            <div class="route-rule-list">
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="产品名称" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="欧洲十国经典游" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="行程天数" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>数字</option><option>文本</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="12天11晚" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" type="button" data-add-rule>新增字段</button>
+          </details>
+          <details>
+            <summary>邮轮产品</summary>
+            <div class="route-rule-list">
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="船只名称" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="理想号" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="舱型" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>多选</option><option>文本</option><option>数字</option><option>日期</option></select>
+                <input class="form-control" type="text" value="阳台房/套房" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" type="button" data-add-rule>新增字段</button>
+          </details>
+          <details>
+            <summary>自由行</summary>
+            <div class="route-rule-list">
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="酒店名称" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="三亚亚特兰蒂斯酒店" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" type="button" data-add-rule>新增字段</button>
+          </details>
+          <details>
+            <summary>MICE</summary>
+            <div class="route-rule-list">
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="会议规模" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>数字</option><option>文本</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="120人" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="会议场地" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="巴黎会议中心" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>中</option><option>高</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox"><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" type="button" data-add-rule>新增字段</button>
+          </details>
+          <details>
+            <summary>研学</summary>
+            <div class="route-rule-list">
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="课程主题" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="故宫建筑文化" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>高</option><option>中</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+              <div class="route-rule-row">
+                <input class="form-control" type="text" value="适龄范围" aria-label="字段名">
+                <select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select>
+                <input class="form-control" type="text" value="10-15岁" aria-label="示例值">
+                <select class="form-control" aria-label="抽取优先级"><option>中</option><option>高</option><option>低</option></select>
+                <label class="route-switch"><input type="checkbox" checked><span>必填</span></label>
+                <button class="route-row-remove" type="button" data-remove-rule>删除</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" type="button" data-add-rule>新增字段</button>
+          </details>
+        </div>
+      </section>
+
+      <div class="route-panel-actions">
+        <button class="btn btn-primary" type="button" data-save-params>保存参数</button>
+      </div>
+    </section>
+
+    <section class="route-tab-panel" data-route-panel="reports">
+      <section class="route-report-grid">
+        <section class="card route-chart-card route-chart-wide">
+          <div class="card-header">
+            <div class="card-title">整体准确率近12周趋势</div>
+          </div>
+          <div class="route-chart-wrap"><canvas id="accuracyTrendChart" aria-label="整体准确率近12周趋势折线图"></canvas></div>
+        </section>
+        <section class="card route-chart-card">
+          <div class="card-header">
+            <div class="card-title">各字段准确率拆解</div>
+          </div>
+          <div class="route-chart-wrap"><canvas id="fieldAccuracyChart" aria-label="各字段准确率横向条形图"></canvas></div>
+        </section>
+        <section class="card route-chart-card">
+          <div class="card-header">
+            <div class="card-title">各产品类型准确率对比</div>
+          </div>
+          <div class="route-chart-wrap"><canvas id="typeAccuracyChart" aria-label="各产品类型准确率柱状图"></canvas></div>
+        </section>
+        <section class="card route-error-sample-card">
+          <div class="card-header">
+            <div class="card-title">错误样本分析</div>
+          </div>
+          <div class="table-wrap route-error-table">
+            <table>
+              <thead>
+                <tr><th>错误类型</th><th>出现次数</th><th>示例</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>酒店名称别名未匹配</td><td>28</td><td>亚特兰蒂斯酒店被识别为三亚酒店集团</td></tr>
+                <tr><td>费用包含边界不清</td><td>21</td><td>签证加急费在原文中被写入补充说明</td></tr>
+                <tr><td>邮轮舱型缩写未展开</td><td>16</td><td>BA舱未映射为阳台房</td></tr>
+                <tr><td>跨天交通日期识别偏移</td><td>9</td><td>欧洲夜航到达日被记为出发日</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+      <section class="data-footnote">
+        <div class="data-footnote-title">数据口径说明</div>
+        <div class="data-footnote-content">统计口径：以人工校正后的字段为准确样本基准；数据更新频率：每小时刷新；数据范围：本商户近12周AI线路拆解任务。</div>
+      </section>
+    </section>
+
+    <section class="route-tab-panel" data-route-panel="knowledge">
+      <div class="route-knowledge-toolbar">
+        <button class="btn btn-primary" type="button" data-open-upload-drawer>上传文档</button>
+      </div>
+      <section class="table-wrap route-knowledge-table" aria-label="知识库文档列表">
+        <table>
+          <thead>
+            <tr>
+              <th>文档名称</th>
+              <th>文档类型</th>
+              <th>上传时间</th>
+              <th>文件大小</th>
+              <th>向量状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="knowledgeRows">
+            <tr>
+              <td>欧洲长线产品规范.pdf</td>
+              <td>产品规范</td>
+              <td>2026-06-22 14:18</td>
+              <td>3.8MB</td>
+              <td><span class="tag tag-green">已索引</span></td>
+              <td><div class="table-action"><button class="danger" type="button" data-delete-doc>删除</button><button type="button" data-reindex-doc>重建索引</button></div></td>
+            </tr>
+            <tr>
+              <td>酒店别名词典.xlsx</td>
+              <td>词典</td>
+              <td>2026-06-20 09:30</td>
+              <td>726KB</td>
+              <td><span class="tag tag-orange">待索引</span></td>
+              <td><div class="table-action"><button class="danger" type="button" data-delete-doc>删除</button><button type="button" data-reindex-doc>重建索引</button></div></td>
+            </tr>
+            <tr>
+              <td>邮轮舱型示例库.docx</td>
+              <td>示例库</td>
+              <td>2026-06-18 16:45</td>
+              <td>1.4MB</td>
+              <td><span class="tag tag-red">索引失败</span></td>
+              <td><div class="table-action"><button class="danger" type="button" data-delete-doc>删除</button><button type="button" data-reindex-doc>重建索引</button></div></td>
+            </tr>
+            <tr>
+              <td>MICE会奖字段样例.csv</td>
+              <td>示例库</td>
+              <td>2026-06-15 11:06</td>
+              <td>412KB</td>
+              <td><span class="tag tag-green">已索引</span></td>
+              <td><div class="table-action"><button class="danger" type="button" data-delete-doc>删除</button><button type="button" data-reindex-doc>重建索引</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <div class="route-danger-footer">
+        <button class="btn btn-danger" type="button" data-open-vector-confirm>触发全量向量索引重建</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="routeResultDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal route-result-drawer" role="dialog" aria-modal="true" aria-labelledby="routeResultTitle">
+      <div class="modal-header">
+        <div id="routeResultTitle" class="modal-title">解析结果</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-modal>×</button>
+      </div>
+      <div class="modal-body route-result-body">
+        <aside class="route-original-panel" aria-label="原始文件预览">
+          <div class="route-preview-head">
+            <strong id="previewFileName">欧洲十国经典游行程.pdf</strong>
+            <span>原始文件预览</span>
+          </div>
+          <div class="route-document-preview">
+            <h2>欧洲十国经典游 12天11晚</h2>
+            <p>北京出发，覆盖法国、德国、意大利、瑞士等核心目的地，全程四星酒店，巴黎安排塞纳河游船。</p>
+            <p>第1天 北京 / 巴黎；第2天 巴黎市区游览；第3天 巴黎 - 布鲁塞尔 - 阿姆斯特丹。</p>
+            <p>成人价12800元起，儿童不占床9200元起；不含签证加急费及个人消费。</p>
+            <p>备注：部分酒店名称以当地供应商确认单为准。</p>
+          </div>
+        </aside>
+        <section class="route-result-fields" aria-label="抽取结果字段">
+          <article class="route-field-card">
+            <div class="route-field-head">
+              <strong>产品名称</strong>
+              <span class="confidence high">96%</span>
+              <button class="route-field-error" type="button" title="标记错误" aria-label="标记错误">!</button>
+            </div>
+            <div class="route-field-value">欧洲十国经典游 12天11晚</div>
+            <p>来源文本：<mark>欧洲十国经典游 12天11晚</mark>，覆盖法国、德国、意大利、瑞士等核心目的地。</p>
+          </article>
+          <article class="route-field-card">
+            <div class="route-field-head">
+              <strong>目的地</strong>
+              <span class="confidence high">92%</span>
+              <button class="route-field-error" type="button" title="标记错误" aria-label="标记错误">!</button>
+            </div>
+            <div class="route-field-value">法国 / 德国 / 意大利 / 瑞士</div>
+            <p>来源文本：覆盖<mark>法国、德国、意大利、瑞士</mark>等核心目的地。</p>
+          </article>
+          <article class="route-field-card low-confidence">
+            <div class="route-field-head">
+              <strong>基础价格</strong>
+              <span class="confidence low">61%</span>
+              <button class="route-field-error" type="button" title="标记错误" aria-label="标记错误">!</button>
+            </div>
+            <div class="route-field-value">¥12,800起</div>
+            <p>来源文本：<mark>成人价12800元起</mark>，儿童不占床9200元起。</p>
+          </article>
+          <article class="route-field-card low-confidence">
+            <div class="route-field-head">
+              <strong>费用不含</strong>
+              <span class="confidence low">68%</span>
+              <button class="route-field-error" type="button" title="标记错误" aria-label="标记错误">!</button>
+            </div>
+            <div class="route-field-value">签证加急费、个人消费</div>
+            <p>来源文本：不含<mark>签证加急费及个人消费</mark>。</p>
+          </article>
+          <article class="route-field-card">
+            <div class="route-field-head">
+              <strong>行程天数</strong>
+              <span class="confidence high">98%</span>
+              <button class="route-field-error" type="button" title="标记错误" aria-label="标记错误">!</button>
+            </div>
+            <div class="route-field-value">12天11晚</div>
+            <p>来源文本：欧洲十国经典游 <mark>12天11晚</mark>。</p>
+          </article>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
+        <a class="btn btn-primary" href="../product/product-self-edit.html">前往人工校正</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="routeUploadDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal route-upload-drawer" role="dialog" aria-modal="true" aria-labelledby="routeUploadTitle">
+      <div class="modal-header">
+        <div id="routeUploadTitle" class="modal-title">上传文档</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="uploadDocType">文档类型</label>
+            <select id="uploadDocType" class="form-control">
+              <option>产品规范</option>
+              <option>词典</option>
+              <option>示例库</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="uploadDocName">文档名称</label>
+            <input id="uploadDocName" class="form-control" type="text" value="签证材料字段样例.docx">
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">上传文件</label>
+            <div class="upload-box route-upload-box">点击或拖拽上传 PDF、Word、Excel、CSV</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-upload>确认上传</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vectorConfirmModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="vectorConfirmTitle">
+      <div class="modal-header">
+        <div id="vectorConfirmTitle" class="modal-title">全量向量索引重建</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-center-text">预计耗时约45分钟。重建期间新增文档会进入等待队列，已索引知识仍可被模型检索。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-danger" type="button" data-confirm-vector>确认重建</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="routeNoticeModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="routeNoticeTitle">
+      <div class="modal-header">
+        <div id="routeNoticeTitle" class="modal-title">提示</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="routeNoticeText" class="modal-center-text">操作已完成</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function () {
+      var routeTabs = Array.from(document.querySelectorAll('[data-route-tab]'));
+      var routePanels = Array.from(document.querySelectorAll('[data-route-panel]'));
+      var resultDrawer = document.getElementById('routeResultDrawer');
+      var uploadDrawer = document.getElementById('routeUploadDrawer');
+      var vectorConfirmModal = document.getElementById('vectorConfirmModal');
+      var noticeModal = document.getElementById('routeNoticeModal');
+      var noticeText = document.getElementById('routeNoticeText');
+      var previewFileName = document.getElementById('previewFileName');
+      var taskRows = Array.from(document.querySelectorAll('#routeTaskRows tr'));
+      var chartsReady = false;
+
+      function openModal(modal) {
+        modal.classList.remove('closing');
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        if (!modal) return;
+        modal.setAttribute('aria-hidden', 'true');
+        if (modal.classList.contains('drawer-overlay') && modal.classList.contains('show')) {
+          modal.classList.add('closing');
+          modal.classList.remove('show');
+          window.setTimeout(function () {
+            modal.classList.remove('closing');
+          }, 240);
+          return;
+        }
+        modal.classList.remove('show');
+      }
+
+      function showNotice(message) {
+        noticeText.textContent = message;
+        openModal(noticeModal);
+      }
+
+      routeTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var key = tab.dataset.routeTab;
+          routeTabs.forEach(function (item) {
+            item.classList.toggle('active', item === tab);
+          });
+          routePanels.forEach(function (panel) {
+            panel.classList.toggle('active', panel.dataset.routePanel === key);
+          });
+          if (key === 'reports' && !chartsReady) {
+            chartsReady = true;
+            window.setTimeout(initCharts, 60);
+          }
+        });
+      });
+
+      document.querySelectorAll('[data-open-result]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var fileButton = button.closest('tr') ? button.closest('tr').querySelector('[data-file-name]') : button;
+          previewFileName.textContent = fileButton && fileButton.dataset.fileName ? fileButton.dataset.fileName : '欧洲十国经典游行程.pdf';
+          openModal(resultDrawer);
+        });
+      });
+
+      document.querySelectorAll('[data-open-upload-drawer]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(uploadDrawer); });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(button.closest('.modal-overlay')); });
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+
+      document.getElementById('queryTasks').addEventListener('click', function () {
+        var status = document.getElementById('taskStatusFilter').value;
+        var type = document.getElementById('productTypeFilter').value;
+        var visibleCount = 0;
+        taskRows.forEach(function (row) {
+          var matched = row.dataset.archived !== 'true' && (status === '全部' || row.dataset.status === status) && (type === '全部' || row.dataset.type === type);
+          row.hidden = !matched;
+          if (matched) visibleCount += 1;
+        });
+        showNotice('已查询到 ' + visibleCount + ' 个解析任务');
+      });
+
+      document.querySelectorAll('[data-reparse-row]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var row = button.closest('tr');
+          var statusTag = row.querySelector('td:nth-child(6) .tag');
+          var scoreCell = row.querySelector('td:nth-child(7)');
+          row.dataset.status = '解析中';
+          statusTag.className = 'tag tag-blue';
+          statusTag.textContent = '解析中';
+          scoreCell.innerHTML = '<span class="text-muted">--</span>';
+          showNotice('已提交重新解析任务');
+        });
+      });
+
+      document.querySelectorAll('[data-archive-row]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var row = button.closest('tr');
+          row.dataset.archived = 'true';
+          row.hidden = true;
+          showNotice('任务已归档');
+        });
+      });
+
+      document.querySelector('[data-bulk-reparse]').addEventListener('click', function () {
+        var visibleRows = taskRows.filter(function (row) {
+          return !row.hidden && row.dataset.archived !== 'true';
+        });
+        visibleRows.forEach(function (row) {
+          var statusTag = row.querySelector('td:nth-child(6) .tag');
+          var scoreCell = row.querySelector('td:nth-child(7)');
+          row.dataset.status = '解析中';
+          statusTag.className = 'tag tag-blue';
+          statusTag.textContent = '解析中';
+          scoreCell.innerHTML = '<span class="text-muted">--</span>';
+        });
+        showNotice('已提交 ' + visibleRows.length + ' 个任务批量重解析');
+      });
+
+      document.querySelector('[data-bulk-archive]').addEventListener('click', function () {
+        var visibleRows = taskRows.filter(function (row) {
+          return !row.hidden && row.dataset.archived !== 'true';
+        });
+        visibleRows.forEach(function (row) {
+          row.dataset.archived = 'true';
+          row.hidden = true;
+        });
+        showNotice('已批量归档 ' + visibleRows.length + ' 个任务');
+      });
+
+      document.querySelectorAll('.route-field-error').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var card = button.closest('.route-field-card');
+          card.classList.toggle('marked-error');
+          button.textContent = card.classList.contains('marked-error') ? '✓' : '!';
+        });
+      });
+
+      document.querySelectorAll('[data-range-output]').forEach(function (range) {
+        range.addEventListener('input', function () {
+          document.getElementById(range.dataset.rangeOutput).textContent = Number(range.value).toFixed(2);
+        });
+      });
+
+      document.querySelectorAll('[data-add-rule]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var list = button.closest('details').querySelector('.route-rule-list');
+          var row = document.createElement('div');
+          row.className = 'route-rule-row';
+          row.innerHTML = '<input class="form-control" type="text" value="新增字段" aria-label="字段名"><select class="form-control" aria-label="字段类型"><option>文本</option><option>数字</option><option>日期</option><option>多选</option></select><input class="form-control" type="text" value="示例值" aria-label="示例值"><select class="form-control" aria-label="抽取优先级"><option>中</option><option>高</option><option>低</option></select><label class="route-switch"><input type="checkbox"><span>必填</span></label><button class="route-row-remove" type="button" data-remove-rule>删除</button>';
+          list.appendChild(row);
+        });
+      });
+
+      document.addEventListener('click', function (event) {
+        var removeButton = event.target.closest('[data-remove-rule]');
+        if (removeButton) {
+          removeButton.closest('.route-rule-row').remove();
+        }
+      });
+
+      document.querySelector('[data-save-params]').addEventListener('click', function () {
+        showNotice('模型参数已保存');
+      });
+
+      document.querySelector('[data-open-vector-confirm]').addEventListener('click', function () {
+        openModal(vectorConfirmModal);
+      });
+
+      document.querySelector('[data-confirm-vector]').addEventListener('click', function () {
+        closeModal(vectorConfirmModal);
+        showNotice('全量向量索引重建已触发');
+      });
+
+      document.querySelector('[data-confirm-upload]').addEventListener('click', function () {
+        closeModal(uploadDrawer);
+        showNotice('文档已上传，等待向量索引');
+      });
+
+      document.querySelectorAll('[data-reindex-doc]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var tag = button.closest('tr').querySelector('.tag');
+          tag.className = 'tag tag-orange';
+          tag.textContent = '待索引';
+          showNotice('已提交重建索引任务');
+        });
+      });
+
+      document.querySelectorAll('[data-delete-doc]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.closest('tr').remove();
+          showNotice('文档已删除');
+        });
+      });
+
+      function drawFallback(canvas, kind, labels, values, colors) {
+        if (!canvas) return;
+        var dpr = window.devicePixelRatio || 1;
+        var rect = canvas.getBoundingClientRect();
+        var width = Math.max(320, rect.width || 640);
+        var height = Math.max(240, rect.height || 280);
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, width, height);
+        ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
+        ctx.fillStyle = '#667085';
+        ctx.strokeStyle = '#e6eaf2';
+        ctx.lineWidth = 1;
+        for (var i = 0; i < 5; i += 1) {
+          var y = 28 + i * ((height - 58) / 4);
+          ctx.beginPath();
+          ctx.moveTo(44, y);
+          ctx.lineTo(width - 16, y);
+          ctx.stroke();
+        }
+        if (kind === 'line') {
+          var min = 78;
+          var max = 96;
+          ctx.strokeStyle = '#2f6fed';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          values.forEach(function (value, index) {
+            var x = 44 + index * ((width - 72) / (values.length - 1));
+            var y = height - 30 - ((value - min) / (max - min)) * (height - 64);
+            if (index === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+          values.forEach(function (value, index) {
+            var x = 44 + index * ((width - 72) / (values.length - 1));
+            var y = height - 30 - ((value - min) / (max - min)) * (height - 64);
+            ctx.fillStyle = '#2f6fed';
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          return;
+        }
+        values.forEach(function (value, index) {
+          var barHeight = kind === 'horizontal' ? 16 : Math.max(24, (height - 82) / values.length - 10);
+          if (kind === 'horizontal') {
+            var y = 34 + index * 34;
+            var x = 104;
+            ctx.fillStyle = '#667085';
+            ctx.fillText(labels[index], 12, y + 12);
+            ctx.fillStyle = colors[index] || '#2f6fed';
+            ctx.fillRect(x, y, (width - x - 58) * value / 100, barHeight);
+            ctx.fillStyle = '#1d2430';
+            ctx.fillText(value + '%', width - 44, y + 12);
+          } else {
+            var barWidth = (width - 84) / values.length - 16;
+            var bx = 48 + index * ((width - 84) / values.length) + 8;
+            var bh = (height - 82) * value / 100;
+            ctx.fillStyle = colors[index] || '#2f6fed';
+            ctx.fillRect(bx, height - 34 - bh, barWidth, bh);
+            ctx.fillStyle = '#667085';
+            ctx.fillText(labels[index], bx - 4, height - 12);
+          }
+        });
+      }
+
+      function initCharts() {
+        var weeks = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12'];
+        var trend = [84, 86, 87, 85, 88, 89, 90, 91, 90, 92, 91, 93];
+        var fields = ['产品名', '目的地', '价格', '酒店', '费用', '行程'];
+        var fieldValues = [96, 92, 76, 74, 79, 88];
+        var types = ['跟团游', '邮轮', '自由行', 'MICE', '研学'];
+        var typeValues = [93, 87, 89, 82, 86];
+        var fieldColors = fieldValues.map(function (value) { return value < 80 ? '#C2413A' : '#2F6FED'; });
+
+        if (!window.Chart) {
+          drawFallback(document.getElementById('accuracyTrendChart'), 'line', weeks, trend, []);
+          drawFallback(document.getElementById('fieldAccuracyChart'), 'horizontal', fields, fieldValues, fieldColors);
+          drawFallback(document.getElementById('typeAccuracyChart'), 'bar', types, typeValues, ['#2F6FED', '#7156D9', '#1F8F63', '#B7791F', '#53657D']);
+          return;
+        }
+
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+        Chart.defaults.color = '#667085';
+        new Chart(document.getElementById('accuracyTrendChart'), {
+          type: 'line',
+          data: {
+            labels: weeks,
+            datasets: [{ label: '整体准确率', data: trend, borderColor: '#2F6FED', backgroundColor: 'rgba(47,111,237,0.10)', tension: 0.35, fill: true, pointRadius: 3 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 78, max: 96, ticks: { callback: function (value) { return value + '%'; } } } }, plugins: { legend: { display: false } } }
+        });
+        new Chart(document.getElementById('fieldAccuracyChart'), {
+          type: 'bar',
+          data: { labels: fields, datasets: [{ label: '字段准确率', data: fieldValues, backgroundColor: fieldColors, borderRadius: 4 }] },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { min: 0, max: 100, ticks: { callback: function (value) { return value + '%'; } } } }, plugins: { legend: { display: false } } }
+        });
+        new Chart(document.getElementById('typeAccuracyChart'), {
+          type: 'bar',
+          data: { labels: types, datasets: [{ label: '产品类型准确率', data: typeValues, backgroundColor: ['#2F6FED', '#7156D9', '#1F8F63', '#B7791F', '#53657D'], borderRadius: 4 }] },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100, ticks: { callback: function (value) { return value + '%'; } } } }, plugins: { legend: { display: false } } }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

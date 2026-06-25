@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应付管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">应付管理</h1>
+      </div>
+    </div>
+
+    <section class="filter-card filter-card-compact payable-filter" aria-label="应付结算筛选">
+      <div class="filter-row">
+        <div class="filter-item"><label class="sr-only" for="payableKeyword">团号/供应商名称</label><input id="payableKeyword" type="search" placeholder="团号/供应商名称搜索"></div>
+        <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">出发日期范围</label><div class="date-range"><input type="date" aria-label="出发开始日期"><span>至</span><input type="date" aria-label="出发结束日期"></div></div>
+        <div class="filter-item filter-item-sm"><label class="sr-only" for="payableReconcileStatus">对账状态</label><select id="payableReconcileStatus"><option>全部</option><option>待对账</option><option>对账中</option><option>有差异</option><option>已确认</option><option>已付款</option></select></div>
+        <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button id="resetPayables" class="btn btn-secondary" type="button">重置</button></div>
+      </div>
+    </section>
+  </section>
+
+  <nav class="tab-bar payable-tabs" aria-label="对账状态筛选" data-filter-tabs data-filter-target="#payableRows">
+    <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
+    <button class="tab-item" type="button" data-filter-value="待对账">待对账</button>
+    <button class="tab-item" type="button" data-filter-value="对账中">对账中</button>
+    <button class="tab-item" type="button" data-filter-value="有差异">有差异</button>
+    <button class="tab-item" type="button" data-filter-value="已确认">已确认</button>
+    <button class="tab-item" type="button" data-filter-value="已付款">已付款</button>
+  </nav>
+
+  <section class="table-wrap payable-table-wrap" aria-label="应付结算列表">
+    <table>
+      <thead>
+        <tr>
+          <th>团号</th>
+          <th>供应商名称</th>
+          <th>费用类别</th>
+          <th>系统应付金额</th>
+          <th>供应商账单金额</th>
+          <th>差异</th>
+          <th>对账状态</th>
+          <th>发票状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="payableRows">
+        <tr data-tab-status="已确认"><td>EU-FRA-20250610-001</td><td>欧洲联合地接社</td><td>地接综合费</td><td class="amount-strong">¥112,000</td><td>¥112,000</td><td>¥0</td><td><span class="tag tag-green">已确认</span></td><td><span class="tag tag-green">已收票</span></td><td><div class="table-action"><button type="button" data-open-payment-apply>申请付款</button></div></td></tr>
+        <tr data-tab-status="已确认"><td>EU-FRA-20250610-001</td><td>国航（北京-巴黎）</td><td>国际机票</td><td class="amount-strong">¥98,000</td><td>¥98,000</td><td>¥0</td><td><span class="tag tag-green">已确认</span></td><td><span class="tag tag-green">已收票</span></td><td><div class="table-action"><button type="button" data-open-payment-apply>申请付款</button></div></td></tr>
+        <tr data-tab-status="有差异"><td>EU-FRA-20250610-001</td><td>维也纳酒店集团</td><td>酒店住宿</td><td class="amount-strong">¥28,000</td><td>¥29,400</td><td><span class="amount-red">+¥1,400</span></td><td><span class="tag tag-red">有差异</span></td><td><span class="tag tag-orange">未收票</span></td><td><div class="table-action"><button type="button" data-open-diff>处理差异</button></div></td></tr>
+        <tr data-tab-status="待对账"><td>EU-DEU-20250608-001</td><td>柏林本地地接社</td><td>地接综合费</td><td class="amount-strong">¥86,400</td><td>¥86,400</td><td>¥0</td><td><span class="tag tag-orange">待对账</span></td><td><span class="tag tag-orange">未收票</span></td><td><div class="table-action"><button type="button" data-open-reconcile>发起对账</button></div></td></tr>
+        <tr data-tab-status="待对账 待收账单"><td>EU-DEU-20250608-001</td><td>汉莎航空</td><td>国际机票</td><td class="amount-strong">¥78,400</td><td>-</td><td>-</td><td><span class="tag tag-orange">待收账单</span></td><td><span class="tag tag-orange">未收票</span></td><td><div class="table-action"><button type="button">催收账单</button></div></td></tr>
+        <tr data-tab-status="已付款"><td>CN-BJG-20250605-001</td><td>北京优选车队</td><td>用车服务</td><td class="amount-strong">¥18,900</td><td>¥18,900</td><td>¥0</td><td><span class="tag tag-green">已付款</span></td><td><span class="tag tag-green">已收票</span></td><td><div class="table-action"><button type="button">查看回单</button></div></td></tr>
+        <tr data-tab-status="已付款"><td>EU-GRC-20250601-001</td><td>雅典本地地接社</td><td>地接综合费</td><td class="amount-strong">¥76,800</td><td>¥76,800</td><td>¥0</td><td><span class="tag tag-green">已付款</span></td><td><span class="tag tag-green">已收票</span></td><td><div class="table-action"><button type="button">查看回单</button></div></td></tr>
+        <tr data-tab-status="有差异"><td>ST-EUR-20250520-001</td><td>欧洲联合地接社</td><td>研学地接费</td><td class="amount-strong">¥124,600</td><td>¥126,000</td><td><span class="amount-red">+¥1,400</span></td><td><span class="tag tag-red">有差异</span></td><td><span class="tag tag-green">已收票</span></td><td><div class="table-action"><button type="button" data-open-diff>处理差异</button></div></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div id="reconcileModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal payable-reconcile-modal" role="dialog" aria-modal="true" aria-labelledby="reconcileTitle">
+      <div class="modal-header">
+        <div id="reconcileTitle" class="modal-title">发起对账</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary">EU-DEU-20250608-001 | 柏林本地地接社 | 系统应付¥86,400</div>
+        <div class="form-group">
+          <label class="form-label">对账方式</label>
+          <div class="orders-radio-row">
+            <label><input type="radio" name="reconcileMode" value="letter" checked> 发送对账函（邮件/企微）</label>
+            <label><input type="radio" name="reconcileMode" value="direct"> 直接确认（双方已线下核实）</label>
+          </div>
+        </div>
+        <section id="reconcileLetterFields" class="payable-letter-fields">
+          <div class="form-group">
+            <label class="form-label" for="reconcileEmail">收件邮箱</label>
+            <input id="reconcileEmail" class="form-control" type="email" value="billing@berlin-local.example">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reconcilePreview">对账函内容预览</label>
+            <textarea id="reconcilePreview" class="form-control" rows="5">请核对EU-DEU-20250608-001团期地接综合费，系统应付金额为¥86,400。请确认账单金额、发票信息及付款账户。</textarea>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">确认发起对账</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="diffModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal payable-diff-modal" role="dialog" aria-modal="true" aria-labelledby="diffTitle">
+      <div class="modal-header">
+        <div id="diffTitle" class="modal-title">EU-FRA-20250610-001 | 维也纳酒店集团 | 差异处理</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="description-grid payable-diff-grid">
+          <div class="description-item"><div class="description-label">系统应付</div><div class="description-value">¥28,000（基于实际人数35人×4晚×¥200/间）</div></div>
+          <div class="description-item"><div class="description-label">供应商账单</div><div class="description-value">¥29,400（对方显示36人×4晚×¥204/间）</div></div>
+          <div class="description-item full"><div class="description-label">差异金额</div><div class="description-value"><span class="amount-red">+¥1,400（供应商多收）</span></div></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">处理方式</label>
+          <div class="radio-stack">
+            <label><input type="radio" name="diffMode" value="accept" checked> 接受供应商金额，调整应付为¥29,400</label>
+            <label><input type="radio" name="diffMode" value="system"> 坚持系统计算¥28,000，联系供应商修改账单</label>
+            <label><input type="radio" name="diffMode" value="negotiated"> 协商处理</label>
+          </div>
+        </div>
+        <div id="negotiatedAmountWrap" class="form-group" hidden>
+          <label class="form-label" for="negotiatedAmount">最终协商金额</label>
+          <input id="negotiatedAmount" class="form-control" type="number" value="28600">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="diffReason">处理原因说明 <span class="req">*</span></label>
+          <textarea id="diffReason" class="form-control" rows="4" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">确认处理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="paymentApplyModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal payable-payment-modal" role="dialog" aria-modal="true" aria-labelledby="paymentApplyTitle">
+      <div class="modal-header">
+        <div id="paymentApplyTitle" class="modal-title">申请付款</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="readonly-summary payable-payment-readonly">
+          <div>付款对象：欧洲联合地接社 | 应付金额：¥112,000</div>
+          <div>关联团期：EU-FRA-20250610-001 | 费用类别：地接综合费</div>
+          <div>发票状态：<span class="tag tag-green">已收票</span></div>
+        </section>
+        <div class="form-group">
+          <label class="form-label">付款方式</label>
+          <div class="orders-radio-row">
+            <label><input type="radio" name="paymentMode" value="online" checked> 银企直联在线付款</label>
+            <label><input type="radio" name="paymentMode" value="offline"> 线下付款</label>
+          </div>
+        </div>
+        <section id="paymentOnlineFields" class="payable-payment-extra">
+          <div class="form-group">
+            <label class="form-label" for="supplierAccount">收款账号信息</label>
+            <input id="supplierAccount" class="form-control" type="text" value="欧洲联合地接社 | Deutsche Bank | DE89 3704 **** 0532" readonly>
+          </div>
+        </section>
+        <section id="paymentOfflineFields" class="payable-payment-extra" hidden>
+          <div class="form-group">
+            <label class="form-label" for="expectedPayDate">预计付款时间</label>
+            <input id="expectedPayDate" class="form-control" type="date">
+          </div>
+        </section>
+        <div class="form-group">
+          <label class="form-label" for="paymentAmount">付款金额确认</label>
+          <input id="paymentAmount" class="form-control" type="number" value="112000">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="paymentRemark">付款备注</label>
+          <textarea id="paymentRemark" class="form-control" rows="3" placeholder="选填"></textarea>
+        </div>
+        <div class="alert alert-orange">¥112,000超过付款审批阈值¥50,000，提交后将自动推送企微审批</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">提交付款申请</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var reconcileModal = document.getElementById('reconcileModal');
+      var diffModal = document.getElementById('diffModal');
+      var paymentApplyModal = document.getElementById('paymentApplyModal');
+      var reconcileLetterFields = document.getElementById('reconcileLetterFields');
+      var negotiatedAmountWrap = document.getElementById('negotiatedAmountWrap');
+      var paymentOnlineFields = document.getElementById('paymentOnlineFields');
+      var paymentOfflineFields = document.getElementById('paymentOfflineFields');
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      document.querySelectorAll('[data-open-reconcile]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(reconcileModal); });
+      });
+      document.querySelectorAll('[data-open-diff]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(diffModal); });
+      });
+      document.querySelectorAll('[data-open-payment-apply]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(paymentApplyModal); });
+      });
+
+      document.querySelectorAll('input[name="reconcileMode"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          reconcileLetterFields.hidden = radio.value !== 'letter';
+        });
+      });
+      document.querySelectorAll('input[name="diffMode"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          negotiatedAmountWrap.hidden = radio.value !== 'negotiated';
+        });
+      });
+      document.querySelectorAll('input[name="paymentMode"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          paymentOnlineFields.hidden = radio.value !== 'online';
+          paymentOfflineFields.hidden = radio.value !== 'offline';
+        });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeModal(button.closest('.modal-overlay'));
+        });
+      });
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+
+      document.getElementById('resetPayables').addEventListener('click', function () {
+        document.querySelectorAll('.payable-filter input').forEach(function (input) {
+          input.value = '';
+        });
+        document.querySelectorAll('.payable-filter select').forEach(function (select) {
+          select.selectedIndex = 0;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

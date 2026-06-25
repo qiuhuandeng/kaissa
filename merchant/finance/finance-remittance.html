@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>回单管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">回单管理</h1>
+      </div>
+    </div>
+  </section>
+
+  <section class="alert alert-red remittance-overdue-alert">
+    以下付款已执行超过7天，仍未收到回单：PAY-20250615-002（欧洲联合地接社，¥112,000）等4笔，请催收
+  </section>
+
+  <nav class="tab-bar remittance-tabs" aria-label="回单管理标签">
+    <button class="tab-item active" type="button" data-remittance-tab="upload">回单上传</button>
+    <button class="tab-item" type="button" data-remittance-tab="match">回单匹配</button>
+    <button class="tab-item" type="button" data-remittance-tab="warning">未回单预警</button>
+  </nav>
+
+  <section id="remittance-upload" class="remittance-panel active">
+    <section class="remittance-upload-area" aria-label="回单上传区">
+      <div class="remittance-upload-main">
+        <strong>支持PDF/JPG/PNG，最大文件大小10MB，支持批量上传</strong>
+        <span>或拖拽文件到此区域</span>
+      </div>
+      <button class="btn btn-primary" type="button">上传回单</button>
+    </section>
+
+    <section class="table-wrap remittance-upload-table" aria-label="已上传待确认列表">
+      <table>
+        <thead>
+          <tr>
+            <th>文件名</th>
+            <th>解析状态</th>
+            <th>交易日期</th>
+            <th>金额</th>
+            <th>收款方</th>
+            <th>流水号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>回单_柏林地接_20250622.pdf</td><td><span class="tag tag-green">解析完成</span></td><td>2025-06-22</td><td class="amount-strong">¥86,400</td><td>Berlin Local Tours GmbH</td><td>DE8937040...</td><td><div class="table-action"><button type="button">确认</button><button type="button">重新解析</button></div></td></tr>
+          <tr><td>回单_汉莎航空_20250622.pdf</td><td><span class="tag tag-green">解析完成</span></td><td>2025-06-22</td><td class="amount-strong">¥78,400</td><td>Lufthansa AG</td><td>DE1234567...</td><td><div class="table-action"><button type="button">确认</button><button type="button">重新解析</button></div></td></tr>
+          <tr><td>回单_模糊扫描件.jpg</td><td><span class="tag tag-orange">解析部分失败</span></td><td>2025-06-20</td><td>¥?</td><td>未识别</td><td>未识别</td><td><div class="table-action"><button type="button" data-open-manual-fill>手动填写</button><button type="button">重新解析</button></div></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <section id="remittance-match" class="remittance-panel">
+    <section class="table-wrap remittance-match-table" aria-label="回单匹配">
+      <table>
+        <thead>
+          <tr>
+            <th>回单流水号</th>
+            <th>交易日期</th>
+            <th>金额</th>
+            <th>收款方</th>
+            <th>匹配付款单</th>
+            <th>匹配状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>DE8937040...</td><td>2025-06-22</td><td class="amount-strong">¥86,400</td><td>Berlin Local Tours GmbH</td><td>PAY-20250622-003（柏林地接¥86,400）</td><td><span class="tag tag-green">自动匹配成功</span></td><td><div class="table-action"><button type="button" data-open-writeoff>确认核销</button></div></td></tr>
+          <tr><td>DE1234567...</td><td>2025-06-22</td><td class="amount-strong">¥78,400</td><td>Lufthansa AG</td><td>PAY-20250622-004（汉莎¥78,400）</td><td><span class="tag tag-green">自动匹配成功</span></td><td><div class="table-action"><button type="button" data-open-writeoff>确认核销</button></div></td></tr>
+          <tr><td>CMBC202506XX</td><td>2025-06-20</td><td class="amount-strong">¥18,900</td><td>北京优选车队</td><td>PAY-20250620-005（车队¥18,900）</td><td><span class="tag tag-gray">已核销</span></td><td><div class="table-action"><button type="button">查看</button></div></td></tr>
+          <tr><td>CMBC202506YY</td><td>2025-06-18</td><td class="amount-strong">¥76,800</td><td>雅典本地地接社</td><td>PAY-20250618-006（¥76,800）</td><td><span class="tag tag-gray">已核销</span></td><td><div class="table-action"><button type="button">查看</button></div></td></tr>
+          <tr><td>未知流水号</td><td>2025-06-21</td><td class="amount-strong">¥45,000</td><td>未能识别</td><td>无法自动匹配</td><td><span class="tag tag-red">无法自动匹配</span></td><td><div class="table-action"><button type="button">手动关联</button></div></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <section id="remittance-warning" class="remittance-panel">
+    <section class="remittance-warning-head">
+      <div></div>
+      <label>超过 <input class="form-control" type="number" value="7" aria-label="预警阈值天数"> 天未收回单触发预警</label>
+    </section>
+    <section class="table-wrap remittance-warning-table" aria-label="未回单预警">
+      <table>
+        <thead>
+          <tr>
+            <th>付款单号</th>
+            <th>付款时间</th>
+            <th>付款对象</th>
+            <th>付款金额</th>
+            <th>超期天数</th>
+            <th>催回单记录</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>PAY-20250615-002</td><td>2025-06-15</td><td>欧洲联合地接社</td><td class="amount-strong">¥112,000</td><td><span class="tag tag-red">8天</span></td><td>已发送1次（2025-06-20）</td><td><div class="table-action"><button type="button">再次催收</button></div></td></tr>
+          <tr><td>PAY-20250614-001</td><td>2025-06-14</td><td>国航（北京-巴黎）</td><td class="amount-strong">¥98,000</td><td><span class="tag tag-red">9天</span></td><td>未发送</td><td><div class="table-action"><button type="button">发送催收</button></div></td></tr>
+          <tr><td>PAY-20250616-003</td><td>2025-06-16</td><td>北欧专线旅游</td><td class="amount-strong">¥46,400</td><td><span class="tag tag-orange">7天</span></td><td>未发送</td><td><div class="table-action"><button type="button">发送催收</button></div></td></tr>
+          <tr><td>PAY-20250617-004</td><td>2025-06-17</td><td>研学基地联盟</td><td class="amount-strong">¥20,000</td><td><span class="tag tag-orange">6天</span></td><td>未发送</td><td><div class="table-action"><button type="button">发送催收</button></div></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <div id="manualFillModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal remittance-manual-modal" role="dialog" aria-modal="true" aria-labelledby="manualFillTitle">
+      <div class="modal-header">
+        <div id="manualFillTitle" class="modal-title">手动填写回单信息</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="manualFileName">文件</label>
+          <input id="manualFileName" class="form-control" type="text" value="回单_模糊扫描件.jpg" readonly>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="manualTradeDate">交易日期 <span class="req">*</span></label>
+            <input id="manualTradeDate" class="form-control" type="date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="manualAmount">交易金额 <span class="req">*</span></label>
+            <input id="manualAmount" class="form-control" type="number" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="manualPayee">收款方名称 <span class="req">*</span></label>
+          <input id="manualPayee" class="form-control" type="text" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="manualSerialNo">银行流水号</label>
+          <input id="manualSerialNo" class="form-control" type="text" placeholder="选填">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="manualRemark">备注</label>
+          <textarea id="manualRemark" class="form-control" rows="3" placeholder="选填"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="writeoffModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="writeoffTitle">
+      <div class="modal-header">
+        <div id="writeoffTitle" class="modal-title">确认核销</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-center-text">确认将回单（DE8937040，¥86,400）与付款单PAY-20250622-003（柏林本地地接社）核销匹配？</p>
+        <div class="alert alert-blue">核销后付款单状态将更新为“已回单”。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button">确认核销</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tabButtons = Array.from(document.querySelectorAll('[data-remittance-tab]'));
+      var panels = Array.from(document.querySelectorAll('.remittance-panel'));
+      var manualFillModal = document.getElementById('manualFillModal');
+      var writeoffModal = document.getElementById('writeoffModal');
+
+      function setTab(id) {
+        tabButtons.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.remittanceTab === id);
+        });
+        panels.forEach(function (panel) {
+          panel.classList.toggle('active', panel.id === 'remittance-' + id);
+        });
+      }
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setTab(button.dataset.remittanceTab);
+        });
+      });
+
+      document.querySelectorAll('[data-open-manual-fill]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(manualFillModal); });
+      });
+
+      document.querySelectorAll('[data-open-writeoff]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(writeoffModal); });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeModal(button.closest('.modal-overlay'));
+        });
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
