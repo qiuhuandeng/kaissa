@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模型路由 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="model-routing-page">
+    <section class="list-page-panel">
+      <div class="list-page-head">
+        <div>
+          <h1 class="page-title">模型路由</h1>
+        </div>
+      </div>
+    </section>
+
+    <section class="card model-routing-card">
+      <div class="card-header">
+        <div class="card-title">场景模型分配</div>
+      </div>
+      <section class="table-wrap model-route-table" aria-label="场景模型分配表">
+        <table>
+          <thead>
+            <tr>
+              <th>业务场景名称</th>
+              <th>当前分配模型</th>
+              <th>模型类型</th>
+              <th>平均响应时间</th>
+              <th>单次费用</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="routeRows">
+            <tr data-scene="快速问答"><td>快速问答</td><td data-current-model>gpt-4.1-mini</td><td><span class="tag tag-green">轻量快速</span></td><td>680ms</td><td>约 1.2K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="文案生成"><td>文案生成</td><td data-current-model>gpt-4.1</td><td><span class="tag tag-blue">标准</span></td><td>1,240ms</td><td>约 4.8K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="行程生成"><td>行程生成</td><td data-current-model>gpt-4.1</td><td><span class="tag tag-blue">标准</span></td><td>1,560ms</td><td>约 6.2K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="财务分析"><td>财务分析</td><td data-current-model>o3</td><td><span class="tag tag-purple">高级推理</span></td><td>2,830ms</td><td>约 9.6K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="竞品分析"><td>竞品分析</td><td data-current-model>gpt-4.1</td><td><span class="tag tag-blue">标准</span></td><td>1,780ms</td><td>约 7.1K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="签证审查"><td>签证审查</td><td data-current-model>o3</td><td><span class="tag tag-purple">高级推理</span></td><td>2,420ms</td><td>约 8.3K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="客户洞察"><td>客户洞察</td><td data-current-model>gpt-4.1-mini</td><td><span class="tag tag-green">轻量快速</span></td><td>920ms</td><td>约 2.6K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="话术建议"><td>话术建议</td><td data-current-model>gpt-4.1-mini</td><td><span class="tag tag-green">轻量快速</span></td><td>760ms</td><td>约 1.9K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="AI拆解"><td>AI拆解</td><td data-current-model>gpt-4.1</td><td><span class="tag tag-blue">标准</span></td><td>1,960ms</td><td>约 7.8K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+            <tr data-scene="报告生成"><td>报告生成</td><td data-current-model>o3</td><td><span class="tag tag-purple">高级推理</span></td><td>3,180ms</td><td>约 11.4K Token</td><td><button class="btn-text" type="button" data-change-model>修改模型</button></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="card model-routing-card">
+      <div class="card-header">
+        <div class="card-title">降级策略配置</div>
+      </div>
+      <div class="model-routing-form">
+        <div class="model-setting-block">
+          <div class="model-setting-title">主模型故障检测机制</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="healthInterval">健康检查间隔秒数</label>
+              <input id="healthInterval" class="form-control" type="number" min="5" value="30">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="failureThreshold">失败次数阈值</label>
+              <input id="failureThreshold" class="form-control" type="number" min="1" value="3">
+            </div>
+          </div>
+        </div>
+        <div class="model-setting-block">
+          <div class="model-setting-title">降级备用模型配置</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="backupModel">备用模型</label>
+              <select id="backupModel" class="form-control">
+                <option>gpt-4.1-mini</option>
+                <option>gpt-4o-mini</option>
+                <option>claude-3.5-haiku</option>
+                <option>azure-gpt-4.1-mini</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <div class="form-label">自动切换通知</div>
+              <label class="channel-switch"><input type="checkbox" checked> 触发降级时通知系统管理员</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card model-routing-card">
+      <div class="card-header">
+        <div class="card-title">成本控制阈值</div>
+      </div>
+      <div class="form-grid model-cost-form">
+        <div class="form-group">
+          <label class="form-label" for="monthlyBudget">月度总费用预算上限</label>
+          <div class="model-input-with-unit">
+            <input id="monthlyBudget" class="form-control" type="number" min="1" value="100000">
+            <span>元</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="maxTokenLimit">单次请求最大Token限制</label>
+          <input id="maxTokenLimit" class="form-control" type="number" min="1000" step="500" value="16000">
+        </div>
+        <div class="form-group form-group-full">
+          <div class="form-label">超出预算处理方式</div>
+          <div class="model-radio-row">
+            <label><input type="radio" name="budgetAction" checked> 暂停高级模型降级到轻量模型</label>
+            <label><input type="radio" name="budgetAction"> 仅通知管理员</label>
+            <label><input type="radio" name="budgetAction"> 自动提高预算</label>
+          </div>
+        </div>
+        <div class="form-group form-group-full">
+          <div class="model-budget-head">
+            <span>当前月度消耗 vs 预算</span>
+            <strong id="budgetProgressText">¥82,600 / ¥100,000，82.6%</strong>
+          </div>
+          <div class="progress-bar model-budget-progress" aria-label="当前月度消耗进度">
+            <div id="budgetProgressFill" class="progress-fill orange"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="model-routing-footer">
+      <button id="saveRoutingConfig" class="btn btn-primary" type="button">保存所有路由配置</button>
+    </div>
+  </main>
+
+  <div id="modelSelectModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md model-select-modal" role="dialog" aria-modal="true" aria-labelledby="modelSelectTitle">
+      <div class="modal-header">
+        <div id="modelSelectTitle" class="modal-title">修改模型</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="table-wrap model-option-table" aria-label="可用模型列表">
+          <table>
+            <thead>
+              <tr><th>选择</th><th>模型名称</th><th>速度</th><th>费用</th><th>适用场景说明</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><input type="radio" name="selectedModel" value="gpt-4.1-mini" checked></td><td>gpt-4.1-mini</td><td><span class="tag tag-green">快</span></td><td>低</td><td>快速问答、话术建议、客户轻量洞察</td></tr>
+              <tr><td><input type="radio" name="selectedModel" value="gpt-4.1"></td><td>gpt-4.1</td><td><span class="tag tag-blue">中</span></td><td>中</td><td>文案生成、行程生成、AI拆解</td></tr>
+              <tr><td><input type="radio" name="selectedModel" value="o3"></td><td>o3</td><td><span class="tag tag-purple">慢</span></td><td>高</td><td>财务分析、签证审查、复杂报告生成</td></tr>
+              <tr><td><input type="radio" name="selectedModel" value="azure-gpt-4.1"></td><td>azure-gpt-4.1</td><td><span class="tag tag-blue">中</span></td><td>中</td><td>企业合规场景和稳定性优先场景</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button id="confirmModelChange" class="btn btn-primary" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="noticeModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="noticeTitle">
+      <div class="modal-header">
+        <div id="noticeTitle" class="modal-title">提示</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="noticeText" class="modal-center-text">操作已完成</p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary" type="button" data-close-modal>确认</button></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var activeRow = null;
+      var monthlyConsumed = 82600;
+      var modelSelectModal = document.getElementById('modelSelectModal');
+      var noticeModal = document.getElementById('noticeModal');
+      var noticeText = document.getElementById('noticeText');
+      var monthlyBudget = document.getElementById('monthlyBudget');
+      var budgetProgressText = document.getElementById('budgetProgressText');
+      var budgetProgressFill = document.getElementById('budgetProgressFill');
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      function showNotice(message) {
+        noticeText.textContent = message;
+        openModal(noticeModal);
+      }
+
+      function formatMoney(value) {
+        return '¥' + Number(value).toLocaleString('zh-CN');
+      }
+
+      function updateBudgetProgress() {
+        var budget = Number(monthlyBudget.value) || 1;
+        var percent = Math.round((monthlyConsumed / budget) * 1000) / 10;
+        budgetProgressText.textContent = formatMoney(monthlyConsumed) + ' / ' + formatMoney(budget) + '，' + percent + '%';
+        budgetProgressFill.style.width = Math.min(percent, 100) + '%';
+        budgetProgressFill.classList.remove('green', 'orange', 'red');
+        if (percent > 100) {
+          budgetProgressFill.classList.add('red');
+        } else if (percent >= 80) {
+          budgetProgressFill.classList.add('orange');
+        } else {
+          budgetProgressFill.classList.add('green');
+        }
+      }
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(button.closest('.modal-overlay')); });
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+
+      document.querySelectorAll('[data-change-model]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          activeRow = button.closest('tr');
+          document.getElementById('modelSelectTitle').textContent = '修改模型 - ' + activeRow.dataset.scene;
+          var current = activeRow.querySelector('[data-current-model]').textContent;
+          var radio = modelSelectModal.querySelector('input[value="' + current + '"]');
+          if (radio) radio.checked = true;
+          openModal(modelSelectModal);
+        });
+      });
+
+      document.getElementById('confirmModelChange').addEventListener('click', function () {
+        var selected = modelSelectModal.querySelector('input[name="selectedModel"]:checked');
+        if (activeRow && selected) {
+          activeRow.querySelector('[data-current-model]').textContent = selected.value;
+        }
+        closeModal(modelSelectModal);
+        showNotice('模型分配已更新');
+      });
+
+      monthlyBudget.addEventListener('input', updateBudgetProgress);
+
+      document.getElementById('saveRoutingConfig').addEventListener('click', function () {
+        showNotice('所有路由配置已保存');
+      });
+
+      updateBudgetProgress();
+    })();
+  </script>
+</body>
+</html>

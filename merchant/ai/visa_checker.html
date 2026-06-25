@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>签证审查 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="visa-checker-page">
+    <section class="page-workbar">
+      <div>
+        <h1 class="page-title">签证审查</h1>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-ai" type="button" data-open-ai-check>🤖 AI批量审查</button>
+      </div>
+    </section>
+
+    <section class="ai-page-context" aria-label="页面定位">
+      <span><strong>页面定位</strong>规则与批量审查运营台</span>
+      <span><strong>使用角色</strong>签证主管 / AI运营 / 计调主管</span>
+      <span><strong>业务边界</strong>订单游客现场审查在出团执行页面处理</span>
+    </section>
+
+    <nav class="tab-bar visa-main-tabs" aria-label="签证审查功能">
+      <button class="tab-item active" type="button" data-visa-tab="policy">签证政策库</button>
+      <button class="tab-item" type="button" data-visa-tab="rules">证件审查规则</button>
+      <button class="tab-item" type="button" data-visa-tab="tasks">审查任务管理</button>
+      <button class="tab-item" type="button" data-visa-tab="alerts">政策变更预警</button>
+    </nav>
+
+    <section class="visa-tab-panel active" data-visa-panel="policy">
+      <div class="visa-toolbar">
+        <section class="filter-card filter-card-compact visa-filter" aria-label="签证政策筛选">
+          <div class="filter-row">
+            <div class="filter-item">
+              <label class="sr-only" for="policyCountrySearch">目的地国</label>
+              <input id="policyCountrySearch" type="search" placeholder="目的地国搜索">
+            </div>
+            <div class="filter-item filter-item-sm">
+              <label class="sr-only" for="policyVisaType">签证类型</label>
+              <select id="policyVisaType">
+                <option value="">全部类型</option>
+                <option value="旅游签">旅游签</option>
+                <option value="商务签">商务签</option>
+                <option value="免签">免签</option>
+                <option value="落地签">落地签</option>
+              </select>
+            </div>
+            <div class="filter-item filter-item-wide filter-item-date-range">
+              <label class="sr-only">更新时间范围</label>
+              <div class="date-range">
+                <input type="date" value="2026-06-01" aria-label="更新开始日期">
+                <span>至</span>
+                <input type="date" value="2026-06-25" aria-label="更新结束日期">
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button id="queryPolicy" class="btn btn-secondary" type="button">查询</button>
+            </div>
+          </div>
+        </section>
+        <button class="btn btn-primary" type="button" data-open-policy-drawer>新增政策</button>
+      </div>
+
+      <section class="table-wrap visa-policy-table" aria-label="签证政策库">
+        <table>
+          <thead>
+            <tr>
+              <th>目的地国</th>
+              <th>出发国</th>
+              <th>签证类型</th>
+              <th>签证有效期</th>
+              <th>最低护照有效期要求</th>
+              <th>更新时间</th>
+              <th>来源链接</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="policyRows">
+            <tr data-country="法国" data-type="旅游签">
+              <td>法国</td>
+              <td>中国</td>
+              <td><span class="tag tag-blue">旅游签</span></td>
+              <td>90天</td>
+              <td>回程后至少6个月</td>
+              <td>2026-06-21</td>
+              <td><a class="link-button visa-link" href="https://france-visas.gouv.fr/" target="_blank" rel="noopener">官方网站</a></td>
+              <td><div class="table-action"><button type="button" data-open-policy-drawer data-policy-country="法国">编辑</button><button type="button" data-version-history>查看版本历史</button></div></td>
+            </tr>
+            <tr data-country="日本" data-type="旅游签">
+              <td>日本</td>
+              <td>中国</td>
+              <td><span class="tag tag-blue">旅游签</span></td>
+              <td>单次90天</td>
+              <td>行程结束后至少6个月</td>
+              <td>2026-06-18</td>
+              <td><a class="link-button visa-link" href="https://www.cn.emb-japan.go.jp/" target="_blank" rel="noopener">官方网站</a></td>
+              <td><div class="table-action"><button type="button" data-open-policy-drawer data-policy-country="日本">编辑</button><button type="button" data-version-history>查看版本历史</button></div></td>
+            </tr>
+            <tr data-country="泰国" data-type="免签">
+              <td>泰国</td>
+              <td>中国</td>
+              <td><span class="tag tag-green">免签</span></td>
+              <td>30天停留</td>
+              <td>入境时至少6个月</td>
+              <td>2026-06-14</td>
+              <td><a class="link-button visa-link" href="https://www.thaiembassy.com/" target="_blank" rel="noopener">官方网站</a></td>
+              <td><div class="table-action"><button type="button" data-open-policy-drawer data-policy-country="泰国">编辑</button><button type="button" data-version-history>查看版本历史</button></div></td>
+            </tr>
+            <tr data-country="新加坡" data-type="商务签">
+              <td>新加坡</td>
+              <td>中国</td>
+              <td><span class="tag tag-purple">商务签</span></td>
+              <td>35天至2年</td>
+              <td>入境时至少6个月</td>
+              <td>2026-06-10</td>
+              <td><a class="link-button visa-link" href="https://www.ica.gov.sg/" target="_blank" rel="noopener">官方网站</a></td>
+              <td><div class="table-action"><button type="button" data-open-policy-drawer data-policy-country="新加坡">编辑</button><button type="button" data-version-history>查看版本历史</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="visa-tab-panel" data-visa-panel="rules" hidden>
+      <section class="table-wrap visa-rule-table" aria-label="证件审查规则列表">
+        <table>
+          <thead>
+            <tr>
+              <th>规则名称</th>
+              <th>证件类型标签</th>
+              <th>有效期要求</th>
+              <th>签注要求</th>
+              <th>适用场景</th>
+              <th>优先级数字</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>申根旅游签护照有效期</td>
+              <td><span class="tag tag-blue">护照</span></td>
+              <td>回程后至少6个月</td>
+              <td>至少2页空白签证页</td>
+              <td>欧洲跟团游、MICE</td>
+              <td>10</td>
+              <td><div class="table-action"><button type="button" data-edit-rule>编辑</button><button class="warning" type="button" data-disable-rule>停用</button></div></td>
+            </tr>
+            <tr>
+              <td>港澳通行证签注校验</td>
+              <td><span class="tag tag-green">港澳通行证</span></td>
+              <td>证件有效期覆盖回程日</td>
+              <td>签注次数大于出入境次数</td>
+              <td>港澳短线、会奖活动</td>
+              <td>20</td>
+              <td><div class="table-action"><button type="button" data-edit-rule>编辑</button><button class="warning" type="button" data-disable-rule>停用</button></div></td>
+            </tr>
+            <tr>
+              <td>儿童证件同行人规则</td>
+              <td><span class="tag tag-orange">护照</span></td>
+              <td>同成人目的地规则</td>
+              <td>需补充亲属关系材料</td>
+              <td>亲子团、研学团</td>
+              <td>30</td>
+              <td><div class="table-action"><button type="button" data-edit-rule>编辑</button><button class="warning" type="button" data-disable-rule>停用</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card visa-special-card">
+        <div class="card-header">
+          <div class="card-title">特殊情形配置</div>
+        </div>
+        <div class="visa-special-grid">
+          <article class="visa-special-item">
+            <strong>港澳台证件规则</strong>
+            <span>覆盖港澳通行证、台湾通行证、入台证签注次数与有效期校验。</span>
+            <button class="btn btn-secondary btn-sm" type="button" data-edit-special>编辑规则</button>
+          </article>
+          <article class="visa-special-item">
+            <strong>多国籍处理规则</strong>
+            <span>按出发国、护照签发国、目的地组合匹配免签和签证要求。</span>
+            <button class="btn btn-secondary btn-sm" type="button" data-edit-special>编辑规则</button>
+          </article>
+          <article class="visa-special-item">
+            <strong>儿童证件规则</strong>
+            <span>识别出生证明、监护人授权书、亲属关系材料等补充要求。</span>
+            <button class="btn btn-secondary btn-sm" type="button" data-edit-special>编辑规则</button>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section class="visa-tab-panel" data-visa-panel="tasks" hidden>
+      <section class="filter-card filter-card-compact visa-filter" aria-label="审查任务筛选">
+        <div class="filter-row">
+          <div class="filter-item">
+            <label class="sr-only" for="taskKeyword">团号</label>
+            <input id="taskKeyword" type="search" placeholder="团号搜索">
+          </div>
+          <div class="filter-item filter-item-sm">
+            <label class="sr-only" for="taskStatus">审查状态</label>
+            <select id="taskStatus">
+              <option value="">全部状态</option>
+              <option value="通过">通过</option>
+              <option value="警告">警告</option>
+              <option value="拒绝">拒绝</option>
+              <option value="待人工">待人工</option>
+            </select>
+          </div>
+          <div class="filter-item filter-item-wide filter-item-date-range">
+            <label class="sr-only">审查时间范围</label>
+            <div class="date-range">
+              <input type="date" value="2026-06-18" aria-label="审查开始日期">
+              <span>至</span>
+              <input type="date" value="2026-06-25" aria-label="审查结束日期">
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button id="queryTasks" class="btn btn-secondary" type="button">查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="table-wrap visa-task-table" aria-label="审查任务管理">
+        <table>
+          <thead>
+            <tr>
+              <th>任务编号</th>
+              <th>关联订单号</th>
+              <th>团号</th>
+              <th>游客姓名</th>
+              <th>证件类型</th>
+              <th>证件有效期</th>
+              <th>目的地</th>
+              <th>AI审查结果标签</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="visaTaskRows">
+            <tr data-status="通过" data-tour="EU-FRA-20260701-001">
+              <td>VC20260625001</td>
+              <td>KS202406250001</td>
+              <td>EU-FRA-20260701-001</td>
+              <td>张建国</td>
+              <td>护照</td>
+              <td>2031-04-12</td>
+              <td>法国</td>
+              <td><span class="tag tag-green">通过</span></td>
+              <td><div class="table-action"><button type="button" data-ai-detail data-result="通过" data-reason="护照有效期满足回程后6个月要求，签证页数量充足。">查看AI判断详情</button><button type="button" data-review-task>人工复核</button></div></td>
+            </tr>
+            <tr data-status="警告" data-tour="JP-KIX-20260705-002">
+              <td>VC20260625002</td>
+              <td>KS202406250002</td>
+              <td>JP-KIX-20260705-002</td>
+              <td>李梅</td>
+              <td>护照</td>
+              <td>2027-01-02</td>
+              <td>日本</td>
+              <td><span class="tag tag-orange">警告</span></td>
+              <td><div class="table-action"><button type="button" data-ai-detail data-result="警告" data-reason="护照有效期临近阈值，建议出发前复核返程日期和签证申请材料。">查看AI判断详情</button><button type="button" data-review-task>人工复核</button></div></td>
+            </tr>
+            <tr data-status="拒绝" data-tour="EU-ITA-20260710-003">
+              <td>VC20260625003</td>
+              <td>KS202406250003</td>
+              <td>EU-ITA-20260710-003</td>
+              <td>王强</td>
+              <td>护照</td>
+              <td>2026-09-18</td>
+              <td>意大利</td>
+              <td><span class="tag tag-red">拒绝</span></td>
+              <td><div class="table-action"><button type="button" data-ai-detail data-result="拒绝" data-reason="护照有效期不足，无法满足申根回程后至少6个月要求。">查看AI判断详情</button><button type="button" data-review-task>人工复核</button></div></td>
+            </tr>
+            <tr data-status="待人工" data-tour="HK-MFM-20260712-001">
+              <td>VC20260625004</td>
+              <td>KS202406250004</td>
+              <td>HK-MFM-20260712-001</td>
+              <td>刘洋</td>
+              <td>港澳通行证</td>
+              <td>2028-02-20</td>
+              <td>香港/澳门</td>
+              <td><span class="tag tag-gray">待人工</span></td>
+              <td><div class="table-action"><button type="button" data-ai-detail data-result="待人工" data-reason="系统未识别到有效签注次数截图，需要人工确认签注类型和剩余次数。">查看AI判断详情</button><button type="button" data-review-task>人工复核</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="visa-tab-panel" data-visa-panel="alerts" hidden>
+      <section class="table-wrap visa-alert-table" aria-label="政策变更预警列表">
+        <table>
+          <thead>
+            <tr>
+              <th>目的地国</th>
+              <th>变更类型标签</th>
+              <th>变更摘要</th>
+              <th>生效日期</th>
+              <th>影响产品数</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>法国</td>
+              <td><span class="tag tag-red">收紧</span></td>
+              <td>申根旅游签需补充近6个月工资流水，未成年人材料要求同步更新。</td>
+              <td><span class="tag tag-orange">2026-07-15 未来生效</span></td>
+              <td><button class="link-button visa-impact-link" type="button" data-open-impact>18个产品</button></td>
+              <td><div class="table-action"><button type="button" data-open-impact>查看影响订单</button><button type="button" data-push-alert>推送通知</button></div></td>
+            </tr>
+            <tr>
+              <td>泰国</td>
+              <td><span class="tag tag-green">放宽</span></td>
+              <td>免签停留期限调整为45天，团队游可减少签证材料收集。</td>
+              <td>2026-06-20</td>
+              <td><button class="link-button visa-impact-link" type="button" data-open-impact>12个产品</button></td>
+              <td><div class="table-action"><button type="button" data-open-impact>查看影响订单</button><button type="button" data-push-alert>推送通知</button></div></td>
+            </tr>
+            <tr>
+              <td>沙特阿拉伯</td>
+              <td><span class="tag tag-blue">新增政策</span></td>
+              <td>新增会奖团电子签批量申请入口，需提前7个工作日提交名单。</td>
+              <td><span class="tag tag-orange">2026-08-01 未来生效</span></td>
+              <td><button class="link-button visa-impact-link" type="button" data-open-impact>5个产品</button></td>
+              <td><div class="table-action"><button type="button" data-open-impact>查看影响订单</button><button type="button" data-push-alert>推送通知</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card visa-push-card">
+        <div class="card-header">
+          <div class="card-title">预警推送配置</div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label class="form-label">接收人角色</label>
+            <div class="visa-check-grid">
+              <label><input type="checkbox" checked> 产品总监</label>
+              <label><input type="checkbox" checked> 产品经理</label>
+              <label><input type="checkbox"> 签证专员</label>
+              <label><input type="checkbox"> 计调主管</label>
+            </div>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">推送方式</label>
+            <div class="radio-row">
+              <label><input type="radio" name="alertPushMode" checked> 站内消息</label>
+              <label><input type="radio" name="alertPushMode"> 邮件</label>
+              <label><input type="radio" name="alertPushMode"> 企业微信</label>
+            </div>
+          </div>
+        </div>
+        <div class="competitor-push-actions">
+          <button id="saveAlertPush" class="btn btn-primary" type="button">保存</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="policyDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal visa-policy-drawer" role="dialog" aria-modal="true" aria-labelledby="policyDrawerTitle">
+      <div class="modal-header">
+        <div id="policyDrawerTitle" class="modal-title">新增政策</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="drawerDestination">目的地国</label>
+            <input id="drawerDestination" class="form-control" type="text" value="法国">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="drawerDeparture">出发国</label>
+            <input id="drawerDeparture" class="form-control" type="text" value="中国">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="drawerVisaType">签证类型</label>
+            <select id="drawerVisaType" class="form-control">
+              <option>旅游签</option>
+              <option>商务签</option>
+              <option>免签</option>
+              <option>落地签</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="drawerVisaValid">签证有效期</label>
+            <input id="drawerVisaValid" class="form-control" type="text" value="90天">
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="drawerPassportValid">护照最低有效期要求</label>
+            <input id="drawerPassportValid" class="form-control" type="text" value="回程后至少6个月">
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="drawerEndorsement">签注说明</label>
+            <textarea id="drawerEndorsement" class="form-control" rows="5">需提供至少2页空白签证页，团队旅游签材料需按目的地使领馆最新要求提交。</textarea>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="drawerSource">政策来源链接</label>
+            <input id="drawerSource" class="form-control" type="url" value="https://france-visas.gouv.fr/">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="drawerEffectiveDate">生效日期</label>
+            <input id="drawerEffectiveDate" class="form-control" type="date" value="2026-07-01">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-save-policy>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="aiDetailModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="aiDetailTitle">
+      <div class="modal-header">
+        <div id="aiDetailTitle" class="modal-title">AI判断详情</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="visa-ai-result-card">
+          <span id="aiResultTag" class="tag tag-green">通过</span>
+          <div>
+            <strong>原因说明</strong>
+            <p id="aiReasonText">护照有效期满足要求。</p>
+          </div>
+          <div>
+            <strong>建议处理方式</strong>
+            <p id="aiSuggestionText">系统建议自动通过，并保留审查记录供出团前复核。</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-modal>知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="impactModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="impactTitle">
+      <div class="modal-header">
+        <div id="impactTitle" class="modal-title">受影响产品和订单</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="table-wrap visa-impact-table" aria-label="受影响产品和订单列表">
+          <table>
+            <thead>
+              <tr><th>产品名称</th><th>团号</th><th>订单号</th><th>出发日期</th><th>影响说明</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>欧洲十国经典游</td><td>EU-FRA-20260701-001</td><td>KS202406250001</td><td>2026-07-01</td><td>需补充工资流水</td><td><a class="link-button" href="../sales/orders-detail.html">快速跳转</a></td></tr>
+              <tr><td>法瑞意经典15日游</td><td>EU-ITA-20260710-003</td><td>KS202406250003</td><td>2026-07-10</td><td>儿童材料要求变更</td><td><a class="link-button" href="../tour/schedules-detail.html">快速跳转</a></td></tr>
+              <tr><td>MICE巴黎会奖考察</td><td>MICE-PAR-20260818-001</td><td>KS202406250018</td><td>2026-08-18</td><td>商务邀请函需更新模板</td><td><a class="link-button" href="../tour/projects-detail.html">快速跳转</a></td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-modal>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="noticeModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="noticeTitle">
+      <div class="modal-header">
+        <div id="noticeTitle" class="modal-title">提示</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="noticeText" class="modal-center-text">操作已完成</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = Array.from(document.querySelectorAll('[data-visa-tab]'));
+      var panels = Array.from(document.querySelectorAll('[data-visa-panel]'));
+      var policyDrawer = document.getElementById('policyDrawer');
+      var policyDrawerTitle = document.getElementById('policyDrawerTitle');
+      var drawerDestination = document.getElementById('drawerDestination');
+      var aiDetailModal = document.getElementById('aiDetailModal');
+      var impactModal = document.getElementById('impactModal');
+      var noticeModal = document.getElementById('noticeModal');
+      var noticeText = document.getElementById('noticeText');
+      var aiResultTag = document.getElementById('aiResultTag');
+      var aiReasonText = document.getElementById('aiReasonText');
+      var aiSuggestionText = document.getElementById('aiSuggestionText');
+
+      function openModal(modal) {
+        modal.classList.remove('closing');
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        if (!modal) return;
+        modal.setAttribute('aria-hidden', 'true');
+        if (modal.classList.contains('drawer-overlay') && modal.classList.contains('show')) {
+          modal.classList.add('closing');
+          modal.classList.remove('show');
+          window.setTimeout(function () { modal.classList.remove('closing'); }, 240);
+          return;
+        }
+        modal.classList.remove('show');
+      }
+
+      function showNotice(message) {
+        noticeText.textContent = message;
+        openModal(noticeModal);
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var key = tab.dataset.visaTab;
+          tabs.forEach(function (item) { item.classList.toggle('active', item === tab); });
+          panels.forEach(function (panel) {
+            var active = panel.dataset.visaPanel === key;
+            panel.classList.toggle('active', active);
+            panel.hidden = !active;
+          });
+        });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(button.closest('.modal-overlay')); });
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+
+      document.querySelectorAll('[data-open-policy-drawer]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var country = button.dataset.policyCountry || '法国';
+          policyDrawerTitle.textContent = button.dataset.policyCountry ? '编辑政策' : '新增政策';
+          drawerDestination.value = country;
+          openModal(policyDrawer);
+        });
+      });
+
+      document.getElementById('queryPolicy').addEventListener('click', function () {
+        var keyword = document.getElementById('policyCountrySearch').value.trim();
+        var type = document.getElementById('policyVisaType').value;
+        var count = 0;
+        document.querySelectorAll('#policyRows tr').forEach(function (row) {
+          var matched = (!keyword || row.dataset.country.indexOf(keyword) !== -1) && (!type || row.dataset.type === type);
+          row.hidden = !matched;
+          if (matched) count += 1;
+        });
+        showNotice('已查询到 ' + count + ' 条签证政策');
+      });
+
+      document.querySelector('[data-save-policy]').addEventListener('click', function () {
+        closeModal(policyDrawer);
+        showNotice('签证政策已保存');
+      });
+
+      document.querySelectorAll('[data-version-history]').forEach(function (button) {
+        button.addEventListener('click', function () { showNotice('已打开版本历史记录'); });
+      });
+
+      document.querySelectorAll('[data-edit-rule], [data-edit-special]').forEach(function (button) {
+        button.addEventListener('click', function () { showNotice('规则编辑已打开'); });
+      });
+
+      document.querySelectorAll('[data-disable-rule]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.textContent = '已停用';
+          button.disabled = true;
+          showNotice('规则已停用');
+        });
+      });
+
+      document.getElementById('queryTasks').addEventListener('click', function () {
+        var keyword = document.getElementById('taskKeyword').value.trim();
+        var status = document.getElementById('taskStatus').value;
+        var count = 0;
+        document.querySelectorAll('#visaTaskRows tr').forEach(function (row) {
+          var matched = (!keyword || row.dataset.tour.indexOf(keyword) !== -1) && (!status || row.dataset.status === status);
+          row.hidden = !matched;
+          if (matched) count += 1;
+        });
+        showNotice('已查询到 ' + count + ' 条审查任务');
+      });
+
+      document.querySelectorAll('[data-ai-detail]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var result = button.dataset.result;
+          aiResultTag.textContent = result;
+          aiResultTag.className = result === '通过' ? 'tag tag-green' : result === '警告' ? 'tag tag-orange' : result === '拒绝' ? 'tag tag-red' : 'tag tag-gray';
+          aiReasonText.textContent = button.dataset.reason;
+          aiSuggestionText.textContent = result === '拒绝'
+            ? '建议通知销售与游客尽快更换证件或调整出行方案，并暂停送签。'
+            : result === '警告'
+              ? '建议签证专员人工复核材料完整性，必要时提前联系游客补件。'
+              : result === '待人工'
+                ? '建议进入人工复核队列，由签证专员确认签注材料。'
+                : '建议自动通过，并保留审查记录供出团前复核。';
+          openModal(aiDetailModal);
+        });
+      });
+
+      document.querySelectorAll('[data-review-task]').forEach(function (button) {
+        button.addEventListener('click', function () { showNotice('已进入人工复核流程'); });
+      });
+
+      document.querySelectorAll('[data-open-impact]').forEach(function (button) {
+        button.addEventListener('click', function () { openModal(impactModal); });
+      });
+
+      document.querySelectorAll('[data-push-alert]').forEach(function (button) {
+        button.addEventListener('click', function () { showNotice('政策变更通知已推送'); });
+      });
+
+      document.getElementById('saveAlertPush').addEventListener('click', function () {
+        showNotice('预警推送配置已保存');
+      });
+
+      document.querySelector('[data-open-ai-check]').addEventListener('click', function () {
+        tabs.find(function (tab) { return tab.dataset.visaTab === 'tasks'; }).click();
+        showNotice('AI批量审查任务已创建');
+      });
+    })();
+  </script>
+</body>
+</html>

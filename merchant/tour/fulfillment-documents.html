@@ -13,6 +13,7 @@
     <div class="list-page-head">
       <div><h1 class="page-title">证件资料</h1></div>
       <div class="list-page-actions">
+        <button id="openAiDocumentCheck" class="btn btn-ai" type="button">🤖 AI证件审查</button>
         <button class="btn btn-secondary" type="button">批量导出</button>
         <button class="btn btn-primary" type="button" data-open-document-remind>批量催补资料</button>
       </div>
@@ -38,14 +39,14 @@
 
   <section class="table-wrap fulfillment-table" aria-label="证件资料列表">
     <table>
-      <thead><tr><th>团号</th><th>游客姓名</th><th>产品名称</th><th>出发日期</th><th>证件类型</th><th>证件号码</th><th>有效期</th><th>资料状态</th><th>异常说明</th><th>操作</th></tr></thead>
+      <thead><tr><th>团号</th><th>游客姓名</th><th>产品名称</th><th>出发日期</th><th>证件类型</th><th>证件号码</th><th>有效期</th><th>资料状态</th><th>AI审查</th><th>异常说明</th><th>操作</th></tr></thead>
       <tbody id="documentRows">
-        <tr data-tab-status="缺失"><td>EU-FRA-20250625-001</td><td>李大明</td><td>法瑞意经典15日游</td><td>2025-06-25</td><td>护照</td><td>-</td><td>-</td><td><span class="tag tag-red">缺失</span></td><td>未提交护照首页</td><td><div class="table-action"><button type="button" data-open-document-remind>催补</button><button type="button" data-open-document-edit>编辑</button></div></td></tr>
-        <tr data-tab-status="异常"><td>EU-FRA-20250625-001</td><td>张明远</td><td>法瑞意经典15日游</td><td>2025-06-25</td><td>护照</td><td>E****8621</td><td>2025-11-20</td><td><span class="tag tag-red">异常</span></td><td>护照空白页不足</td><td><div class="table-action"><button type="button" data-open-document-edit>处理</button></div></td></tr>
-        <tr data-tab-status="待审核"><td>EU-DEU-20250628-002</td><td>陈晓明</td><td>德捷奥深度10日</td><td>2025-06-28</td><td>护照</td><td>E****1234</td><td>2030-05-12</td><td><span class="tag tag-blue">待审核</span></td><td>新上传证件照</td><td><div class="table-action"><button type="button" data-open-document-edit>审核</button></div></td></tr>
-        <tr data-tab-status="完整"><td>EU-GRC-20250710-001</td><td>王建军</td><td>希腊爱琴海8日</td><td>2025-07-10</td><td>护照</td><td>E****8899</td><td>2031-02-18</td><td><span class="tag tag-green">完整</span></td><td>-</td><td><div class="table-action"><button type="button" data-open-document-edit>查看</button></div></td></tr>
-        <tr data-tab-status="缺失"><td>ST-EUR-20250801-001</td><td>刘雅婷</td><td>研学欧洲文化14日</td><td>2025-08-01</td><td>身份证</td><td>110101****0922</td><td>长期</td><td><span class="tag tag-orange">缺失</span></td><td>缺监护人授权书</td><td><div class="table-action"><button type="button" data-open-document-remind>催补</button></div></td></tr>
-        <tr data-tab-status="完整"><td>CR-MED-20250720-001</td><td>高梦婷</td><td>地中海邮轮12晚</td><td>2025-07-20</td><td>护照</td><td>E****7766</td><td>2032-08-01</td><td><span class="tag tag-green">完整</span></td><td>-</td><td><div class="table-action"><button type="button" data-open-document-edit>查看</button></div></td></tr>
+        <tr data-tab-status="缺失"><td>EU-FRA-20250625-001</td><td>李大明</td><td>法瑞意经典15日游</td><td>2025-06-25</td><td>护照</td><td>-</td><td>-</td><td><span class="tag tag-red">缺失</span></td><td><button class="link-button" type="button" data-ai-doc-detail data-result="拒绝" data-reason="未识别到护照首页，无法判断姓名、证件号和有效期。">拒绝 96%</button></td><td>未提交护照首页</td><td><div class="table-action"><button type="button" data-open-document-remind>催补</button><button type="button" data-open-document-edit>编辑</button></div></td></tr>
+        <tr data-tab-status="异常"><td>EU-FRA-20250625-001</td><td>张明远</td><td>法瑞意经典15日游</td><td>2025-06-25</td><td>护照</td><td>E****8621</td><td>2025-11-20</td><td><span class="tag tag-red">异常</span></td><td><button class="link-button" type="button" data-ai-doc-detail data-result="警告" data-reason="护照有效期距回团日期不足6个月，且空白页数量不足。">警告 88%</button></td><td>护照空白页不足</td><td><div class="table-action"><button type="button" data-open-document-edit>处理</button></div></td></tr>
+        <tr data-tab-status="待审核"><td>EU-DEU-20250628-002</td><td>陈晓明</td><td>德捷奥深度10日</td><td>2025-06-28</td><td>护照</td><td>E****1234</td><td>2030-05-12</td><td><span class="tag tag-blue">待审核</span></td><td><button class="link-button" type="button" data-ai-doc-detail data-result="待人工" data-reason="证件照可识别，但边缘反光影响签发地字段置信度。">待人工 74%</button></td><td>新上传证件照</td><td><div class="table-action"><button type="button" data-open-document-edit>审核</button></div></td></tr>
+        <tr data-tab-status="完整"><td>EU-GRC-20250710-001</td><td>王建军</td><td>希腊爱琴海8日</td><td>2025-07-10</td><td>护照</td><td>E****8899</td><td>2031-02-18</td><td><span class="tag tag-green">完整</span></td><td><button class="link-button" type="button" data-ai-doc-detail data-result="通过" data-reason="证件号、姓名、有效期和目的地签证规则均匹配。">通过 97%</button></td><td>-</td><td><div class="table-action"><button type="button" data-open-document-edit>查看</button></div></td></tr>
+        <tr data-tab-status="缺失"><td>ST-EUR-20250801-001</td><td>刘雅婷</td><td>研学欧洲文化14日</td><td>2025-08-01</td><td>身份证</td><td>110101****0922</td><td>长期</td><td><span class="tag tag-orange">缺失</span></td><td><button class="link-button" type="button" data-ai-doc-detail data-result="警告" data-reason="未成年人研学场景缺少监护人授权书。">警告 91%</button></td><td>缺监护人授权书</td><td><div class="table-action"><button type="button" data-open-document-remind>催补</button></div></td></tr>
+        <tr data-tab-status="完整"><td>CR-MED-20250720-001</td><td>高梦婷</td><td>地中海邮轮12晚</td><td>2025-07-20</td><td>护照</td><td>E****7766</td><td>2032-08-01</td><td><span class="tag tag-green">完整</span></td><td><button class="link-button" type="button" data-ai-doc-detail data-result="通过" data-reason="护照有效期满足邮轮入境要求，字段识别置信度高。">通过 98%</button></td><td>-</td><td><div class="table-action"><button type="button" data-open-document-edit>查看</button></div></td></tr>
       </tbody>
     </table>
   </section>
@@ -71,6 +72,71 @@
     </div>
   </div>
 
+  <div id="aiDocumentModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="aiDocumentTitle">
+      <div class="modal-header"><div id="aiDocumentTitle" class="modal-title">AI证件审查详情</div><button class="modal-close" type="button" aria-label="关闭弹窗" data-close-ai-document>×</button></div>
+      <div class="modal-body">
+        <div class="ai-embedded-summary">
+          <span id="aiDocumentResult" class="tag tag-orange">警告</span>
+          <strong id="aiDocumentReason">护照有效期距回团日期不足6个月，且空白页数量不足。</strong>
+        </div>
+        <div class="ai-embedded-list">
+          <div><strong>来源规则</strong><span>AI > 签证审查 / 证件审查规则 / 申根护照有效期</span></div>
+          <div><strong>建议处理</strong><span>补充证件材料后重新触发 AI 审查，警告项进入人工复核队列。</span></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-ai-document>关闭</button><button id="rerunAiDocumentCheck" class="btn btn-primary" type="button">重新审查</button></div>
+    </div>
+  </div>
+
   <script src="../../shared/fulfillment-common.js"></script>
+  <script>
+    (function () {
+      var aiDocumentModal = document.getElementById('aiDocumentModal');
+      var aiDocumentResult = document.getElementById('aiDocumentResult');
+      var aiDocumentReason = document.getElementById('aiDocumentReason');
+
+      function openModal(modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      document.getElementById('openAiDocumentCheck').addEventListener('click', function () {
+        aiDocumentResult.textContent = '批量审查';
+        aiDocumentResult.className = 'tag tag-blue';
+        aiDocumentReason.textContent = '已完成当前列表6条证件资料审查，发现2条警告、1条拒绝、1条待人工。';
+        openModal(aiDocumentModal);
+      });
+
+      document.querySelectorAll('[data-ai-doc-detail]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var result = button.dataset.result;
+          aiDocumentResult.textContent = result;
+          aiDocumentResult.className = 'tag ' + (result === '通过' ? 'tag-green' : result === '拒绝' ? 'tag-red' : result === '待人工' ? 'tag-gray' : 'tag-orange');
+          aiDocumentReason.textContent = button.dataset.reason;
+          openModal(aiDocumentModal);
+        });
+      });
+
+      document.getElementById('rerunAiDocumentCheck').addEventListener('click', function () {
+        aiDocumentResult.textContent = '已重审';
+        aiDocumentResult.className = 'tag tag-green';
+        aiDocumentReason.textContent = 'AI证件审查任务已重新提交，结果将同步刷新到当前列表。';
+      });
+
+      document.querySelectorAll('[data-close-ai-document]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(aiDocumentModal); });
+      });
+
+      aiDocumentModal.addEventListener('click', function (event) {
+        if (event.target === aiDocumentModal) closeModal(aiDocumentModal);
+      });
+    })();
+  </script>
 </body>
 </html>

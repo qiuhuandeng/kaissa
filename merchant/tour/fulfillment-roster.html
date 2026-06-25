@@ -16,6 +16,7 @@
       </div>
       <div class="list-page-actions">
         <div class="btn-group">
+          <button id="openAiRosterCheck" class="btn btn-ai" type="button">🤖 AI名单核验</button>
           <button id="openImportRoster" class="btn btn-primary" type="button">导入名单</button>
           <button class="btn btn-secondary" type="button">导出名单</button>
           <button id="batchRemind" class="btn btn-secondary" type="button">批量发补资料提醒</button>
@@ -290,11 +291,44 @@
     </div>
   </div>
 
+  <div id="aiRosterModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="aiRosterTitle">
+      <div class="modal-header">
+        <div id="aiRosterTitle" class="modal-title">AI名单核验结果</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-ai-roster>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-embedded-summary">
+          <span class="tag tag-orange">需处理 4 项</span>
+          <strong>已核验 52 名游客，发现缺证件、证件格式异常、重复游客、手机号缺失和特殊需求风险。</strong>
+        </div>
+        <section class="table-wrap ai-embedded-table" aria-label="AI名单核验明细">
+          <table>
+            <thead><tr><th>游客</th><th>核验项</th><th>AI结论</th><th>建议处理</th></tr></thead>
+            <tbody>
+              <tr><td>李大明</td><td>证件完整性</td><td><span class="tag tag-red">缺证件</span></td><td>发送护照首页补传提醒</td></tr>
+              <tr><td>王强</td><td>证件格式</td><td><span class="tag tag-red">格式异常</span></td><td>身份证校验位不通过，需重新确认</td></tr>
+              <tr><td>张建国</td><td>重复游客</td><td><span class="tag tag-orange">疑似重复</span></td><td>与张晓红同手机号同订单，建议人工确认</td></tr>
+              <tr><td>李梅</td><td>联系信息</td><td><span class="tag tag-orange">缺手机号</span></td><td>从订单联系人补齐或发起确认</td></tr>
+              <tr><td>张晓红</td><td>特殊需求</td><td><span class="tag tag-orange">素食备注</span></td><td>同步给领队和地接餐厅</td></tr>
+              <tr><td>陈红</td><td>资料状态</td><td><span class="tag tag-blue">待审核</span></td><td>复核新上传证件照清晰度</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-ai-roster>关闭</button>
+        <button id="applyAiRosterSuggestion" class="btn btn-primary" type="button">生成处理任务</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var editModal = document.getElementById('editGuestModal');
       var importModal = document.getElementById('importRosterModal');
       var noticeModal = document.getElementById('noticeModal');
+      var aiRosterModal = document.getElementById('aiRosterModal');
       var currentRow = null;
       var currentImportStep = 1;
 
@@ -454,6 +488,15 @@
         openModal(importModal);
       });
 
+      document.getElementById('openAiRosterCheck').addEventListener('click', function () {
+        openModal(aiRosterModal);
+      });
+
+      document.getElementById('applyAiRosterSuggestion').addEventListener('click', function () {
+        closeModal(aiRosterModal);
+        showNotice('AI已生成4条名单处理任务');
+      });
+
       document.getElementById('downloadTemplate').addEventListener('click', function () {
         setImportStep(2);
       });
@@ -484,8 +527,11 @@
       document.querySelectorAll('[data-close-notice]').forEach(function (button) {
         button.addEventListener('click', function () { closeModal(noticeModal); });
       });
+      document.querySelectorAll('[data-close-ai-roster]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(aiRosterModal); });
+      });
 
-      [editModal, importModal, noticeModal].forEach(function (modal) {
+      [editModal, importModal, noticeModal, aiRosterModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) closeModal(modal);
         });

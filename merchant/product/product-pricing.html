@@ -16,6 +16,7 @@
           <h1 class="page-title">定价策略</h1>
         </div>
         <div class="list-page-actions">
+          <button id="openAiPricingAdvice" class="btn btn-ai" type="button">🤖 AI定价建议</button>
           <button id="addPricingStrategy" class="btn btn-primary" type="button">新增早鸟策略</button>
         </div>
       </div>
@@ -244,6 +245,35 @@
     </div>
   </div>
 
+  <div id="aiPricingModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="aiPricingTitle">
+      <div class="modal-header">
+        <div id="aiPricingTitle" class="modal-title">AI定价建议</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-ai-pricing>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-embedded-summary">
+          <span class="tag tag-blue">策略建议 3 条</span>
+          <strong>结合竞品价格、余位、毛利率和历史转化，建议调整以下定价策略。</strong>
+        </div>
+        <section class="table-wrap ai-embedded-table" aria-label="AI定价建议列表">
+          <table>
+            <thead><tr><th>产品/策略</th><th>判断依据</th><th>建议动作</th><th>影响预估</th></tr></thead>
+            <tbody>
+              <tr><td>欧洲十国经典游</td><td>竞品低于我方¥820，余位6个</td><td>尾单策略由-8%调整为-6%</td><td>保毛利，预计转化提升12%</td></tr>
+              <tr><td>理想号地中海邮轮</td><td>阳台舱库存充足，竞品价差明显</td><td>新增舱型阶梯优惠</td><td>预计增加4间舱销售</td></tr>
+              <tr><td>英国名校语言研学</td><td>代理渠道咨询高，历史成单周期长</td><td>延长早鸟优惠至出发前45天</td><td>预计提前锁单8人</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-ai-pricing>关闭</button>
+        <button id="applyAiPricingAdvice" class="btn btn-primary" type="button">应用建议草稿</button>
+      </div>
+    </div>
+  </div>
+
   <div id="pricingToast" class="toast-notice" hidden>策略已保存</div>
 
   <script>
@@ -256,6 +286,7 @@
       var drawer = document.getElementById('pricingDrawer');
       var drawerTitle = document.getElementById('pricingDrawerTitle');
       var deleteModal = document.getElementById('pricingDeleteModal');
+      var aiPricingModal = document.getElementById('aiPricingModal');
       var toast = document.getElementById('pricingToast');
 
       var config = {
@@ -308,6 +339,16 @@
         deleteModal.setAttribute('aria-hidden', 'true');
       }
 
+      function openAiPricingModal() {
+        aiPricingModal.classList.add('show');
+        aiPricingModal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeAiPricingModal() {
+        aiPricingModal.classList.remove('show');
+        aiPricingModal.setAttribute('aria-hidden', 'true');
+      }
+
       tabButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           setTab(button.dataset.pricingTab);
@@ -317,6 +358,8 @@
       addButton.addEventListener('click', function () {
         setDrawerMode(activeType, false);
       });
+
+      document.getElementById('openAiPricingAdvice').addEventListener('click', openAiPricingModal);
 
       document.addEventListener('click', function (event) {
         if (event.target.closest('[data-edit-pricing]')) {
@@ -335,6 +378,10 @@
         }
         if (event.target.closest('[data-close-delete]') || event.target === deleteModal) {
           closeDeleteModal();
+          return;
+        }
+        if (event.target.closest('[data-close-ai-pricing]') || event.target === aiPricingModal) {
+          closeAiPricingModal();
         }
       });
 
@@ -348,6 +395,11 @@
         activeDeleteRow = null;
         closeDeleteModal();
         showToast('策略已删除');
+      });
+
+      document.getElementById('applyAiPricingAdvice').addEventListener('click', function () {
+        closeAiPricingModal();
+        showToast('AI定价建议已生成策略草稿');
       });
 
       setTab(activeType);

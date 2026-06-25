@@ -15,6 +15,7 @@
         <h1 class="page-title">执行总览</h1>
       </div>
       <div class="list-page-actions">
+        <button id="openAiOutboundRisk" class="btn btn-ai" type="button">🤖 AI出团风险扫描</button>
         <button class="btn btn-secondary" type="button">导出执行计划</button>
       </div>
     </div>
@@ -267,11 +268,43 @@
     </div>
   </div>
 
+  <div id="aiOutboundRiskModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="aiOutboundRiskTitle">
+      <div class="modal-header">
+        <div id="aiOutboundRiskTitle" class="modal-title">AI出团风险扫描</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-ai-outbound>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-embedded-summary">
+          <span class="tag tag-orange">5项风险</span>
+          <strong>已扫描本周出团5个团期，发现通知、名单、资源和领队安排风险。</strong>
+        </div>
+        <section class="table-wrap ai-embedded-table" aria-label="AI出团风险明细">
+          <table>
+            <thead><tr><th>团号</th><th>风险类型</th><th>AI判断</th><th>建议动作</th></tr></thead>
+            <tbody>
+              <tr><td>EU20240715001</td><td>出团通知</td><td><span class="tag tag-red">未发送</span></td><td>立即生成并发送通知</td></tr>
+              <tr><td>JP20240716001</td><td>名单资料</td><td><span class="tag tag-orange">缺2人</span></td><td>发起补资料提醒</td></tr>
+              <tr><td>JP20240716001</td><td>资源确认</td><td><span class="tag tag-orange">部分确认</span></td><td>催促酒店尾房确认</td></tr>
+              <tr><td>TH20240718001</td><td>领队安排</td><td><span class="tag tag-red">待安排</span></td><td>按语言能力推荐领队</td></tr>
+              <tr><td>HN20240714001</td><td>出发时效</td><td><span class="tag tag-red">明天出发</span></td><td>复核游客通知确认状态</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-ai-outbound>关闭</button>
+        <button id="createOutboundRiskTasks" class="btn btn-primary" type="button">生成待办任务</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var noticeModal = document.getElementById('noticeModal');
       var resourceDrawer = document.getElementById('resourceDrawer');
       var leaderDrawer = document.getElementById('leaderDrawer');
+      var aiOutboundRiskModal = document.getElementById('aiOutboundRiskModal');
       var checkAllGuests = document.getElementById('checkAllGuests');
       var guestList = document.querySelector('.outbound-guest-list');
       var currentResourceRow = null;
@@ -309,6 +342,10 @@
           document.getElementById('leaderReadonly').textContent = row.children[0].textContent.trim() + ' | ' + row.children[1].textContent.trim() + ' | ' + row.children[3].textContent.trim() + ' | ' + row.children[2].textContent.trim() + '出发';
           openModal(leaderDrawer);
         });
+      });
+
+      document.getElementById('openAiOutboundRisk').addEventListener('click', function () {
+        openModal(aiOutboundRiskModal);
       });
 
       document.querySelectorAll('input[name="leaderOption"]').forEach(function (radio) {
@@ -353,6 +390,16 @@
         });
       });
 
+      document.querySelectorAll('[data-close-ai-outbound]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeModal(aiOutboundRiskModal);
+        });
+      });
+
+      document.getElementById('createOutboundRiskTasks').addEventListener('click', function () {
+        closeModal(aiOutboundRiskModal);
+      });
+
       noticeModal.addEventListener('click', function (event) {
         if (event.target === noticeModal) closeModal(noticeModal);
       });
@@ -363,6 +410,10 @@
 
       leaderDrawer.addEventListener('click', function (event) {
         if (event.target === leaderDrawer) closeModal(leaderDrawer);
+      });
+
+      aiOutboundRiskModal.addEventListener('click', function (event) {
+        if (event.target === aiOutboundRiskModal) closeModal(aiOutboundRiskModal);
       });
 
       checkAllGuests.addEventListener('change', function () {

@@ -177,8 +177,13 @@
       title: "AI",
       icon: "sparkles",
       children: [
-        { title: "线路拆解", href: "ai/route_parser.html", ai: true },
         { title: "AI助手", href: "ai/ai-assistant.html", ai: true },
+        { title: "线路拆解", href: "ai/route_parser.html", ai: true },
+        { title: "竞品分析", href: "ai/competitor.html", ai: true },
+        { title: "签证审查", href: "ai/visa_checker.html", ai: true },
+        { title: "出行助理", href: "ai/travel_assistant.html", ai: true },
+        { title: "Prompt模板", href: "ai/prompts.html", ai: true },
+        { title: "模型路由", href: "ai/model_routing.html", ai: true },
       ],
     },
     {
