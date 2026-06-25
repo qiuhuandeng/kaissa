@@ -9,325 +9,671 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <main class="ai-command-page">
-    <section class="list-page-panel">
-      <div class="list-page-head">
-        <div>
-          <h1 class="page-title">AI助手</h1>
-        </div>
+  <main id="assistantPage" class="ai-assistant-v2-page">
+    <section class="page-workbar ai-assistant-v2-workbar">
+      <div class="page-title-row">
+        <h1 class="page-title">AI助手</h1>
+      </div>
+      <div class="btn-group">
+        <span id="currentRoleTag" class="tag tag-purple">产品总监</span>
+        <a class="link-button" href="../dashboard.html">返回工作台</a>
       </div>
     </section>
 
-    <section class="card ai-assistant-workbench" aria-label="AI助手">
-      <div class="ai-assistant-toolbar">
-        <div>
-          <div class="card-title">工作台助手</div>
-          <span id="roleSceneText" class="text-muted">计调工作台常用：出团文件、名单导出、证件风险、通知生成</span>
+    <section class="ai-assistant-v2-shell" aria-label="AI助手工作区">
+      <aside class="ai-command-panel" aria-label="快捷指令面板">
+        <div class="ai-command-panel-head">
+          <div>
+            <h2>快捷指令</h2>
+            <p>点击即可发送，快速完成操作</p>
+          </div>
+          <button id="toggleEditModeTop" class="link-button" type="button">管理指令</button>
         </div>
-        <label class="ai-role-picker">
-          <span>使用角色</span>
-          <select id="roleSelect" class="form-control">
-            <option value="计调">计调</option>
-            <option value="产品">产品</option>
-            <option value="销售">销售</option>
-            <option value="客服">客服</option>
-            <option value="财务">财务</option>
-            <option value="管理层">管理层</option>
+
+        <label class="ai-role-select">
+          <span>当前角色</span>
+          <select id="roleSelect" class="form-control" aria-label="切换角色">
+            <option>产品总监</option>
+            <option>产品经理/计调</option>
+            <option>运营专员</option>
+            <option>财务主管</option>
+            <option>财务专员</option>
+            <option>销售总监</option>
+            <option>门店店长</option>
+            <option>销售顾问</option>
+            <option>呼叫中心坐席</option>
+            <option>OTA渠道运营</option>
+            <option>客服专员</option>
+            <option>超管</option>
           </select>
         </label>
-      </div>
 
-      <div class="ai-assistant-compose">
-        <div class="ai-section-title">常用指令</div>
-        <div id="shortcutList" class="ai-shortcut-grid ai-shortcut-grid-compact" aria-label="常用指令"></div>
-        <div class="ai-command-input ai-command-input-inline">
-          <textarea id="assistantInput" class="form-control" rows="2" placeholder="输入指令，例如：帮我导出明天出发团的游客名单">帮我生成 EU20240715001 的出团文件</textarea>
-          <div class="ai-command-actions">
-            <button id="clearAssistantInput" class="btn btn-secondary" type="button">清空</button>
-            <button id="sendAssistantCommand" class="btn btn-ai" type="button">🤖 AI执行</button>
+        <section id="commandEditBox" class="ai-command-edit-box" hidden>
+          <div class="ai-command-edit-title">新增指令</div>
+          <input id="newCommandTitle" class="form-control" type="text" placeholder="指令标题">
+          <input id="newCommandContent" class="form-control" type="text" placeholder="指令内容">
+          <button id="saveNewCommand" class="btn btn-secondary" type="button">保存指令</button>
+        </section>
+
+        <div id="commandGroups" class="ai-command-groups" aria-live="polite"></div>
+
+        <div class="ai-command-panel-foot">
+          <button id="toggleEditModeBottom" class="btn btn-secondary" type="button">编辑我的快捷指令</button>
+        </div>
+      </aside>
+
+      <section class="ai-chat-main" aria-label="AI助手对话">
+        <header class="ai-chat-header">
+          <div class="ai-chat-title">
+            <strong>AI助手对话</strong>
+            <span id="chatContextText">产品总监视角</span>
           </div>
-        </div>
-      </div>
-    </section>
+          <div class="btn-group">
+            <button id="newChatButton" class="btn btn-secondary" type="button">新建对话</button>
+            <button id="openHistoryDrawer" class="btn btn-secondary" type="button">历史对话</button>
+          </div>
+        </header>
 
-    <section class="ai-assistant-dashboard">
-      <section class="card ai-assistant-panel" aria-label="最近聊天记录">
-        <div class="card-header">
-          <div class="card-title">最近聊天记录</div>
-        </div>
-        <div id="recentList" class="ai-recent-chat-list" aria-live="polite"></div>
-      </section>
+        <div id="messageList" class="ai-message-list" aria-live="polite"></div>
 
-      <section class="card ai-assistant-panel" aria-label="当前角色可用能力">
-        <div class="card-header">
-          <div class="card-title">当前角色可用能力</div>
-        </div>
-        <div id="abilityList" class="ai-ability-list"></div>
+        <footer class="ai-chat-input-area">
+          <div class="ai-input-tools" aria-label="输入工具">
+            <button class="ai-tool-button" type="button" data-upload-file><span class="ai-tool-icon ai-tool-icon-upload">↥</span><span>上传文档</span></button>
+            <button class="ai-tool-button" type="button" data-open-picker="schedule"><span class="ai-tool-icon ai-tool-icon-date">▦</span><span>选择团期</span></button>
+            <button class="ai-tool-button" type="button" data-open-picker="product"><span class="ai-tool-icon ai-tool-icon-product">◆</span><span>选择产品</span></button>
+            <button class="ai-tool-button" type="button" data-open-picker="customer"><span class="ai-tool-icon ai-tool-icon-customer">●</span><span>选择客户</span></button>
+            <button id="clearInputButton" class="ai-tool-button" type="button" hidden><span class="ai-tool-icon ai-tool-icon-clear">×</span><span>清除</span></button>
+            <input id="assistantFileInput" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden>
+          </div>
+          <div class="ai-input-compose">
+            <textarea id="assistantInput" class="form-control" rows="3" placeholder="输入问题或指令，例如：帮我导出 ZY-202506-0028 的游客名单"></textarea>
+            <div class="ai-input-meta">
+              <span>Enter 发送，Shift+Enter 换行，Ctrl+K 聚焦</span>
+              <button id="sendButton" class="ai-send-button" type="button" aria-label="发送" disabled>›</button>
+            </div>
+          </div>
+          <div id="suggestionTags" class="ai-suggestion-tags" aria-label="快捷建议"></div>
+        </footer>
       </section>
     </section>
   </main>
 
-  <div id="assistantNoticeModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="assistantNoticeTitle">
+  <button id="minimizeAssistant" class="ai-minimize-button" type="button" aria-label="最小化AI助手">−</button>
+  <button id="restoreAssistant" class="ai-restore-bubble" type="button" hidden>AI助手</button>
+
+  <div id="historyDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal ai-history-drawer" role="dialog" aria-modal="true" aria-labelledby="historyDrawerTitle">
       <div class="modal-header">
-        <div id="assistantNoticeTitle" class="modal-title">提示</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-assistant-modal>×</button>
+        <div id="historyDrawerTitle" class="modal-title">历史对话</div>
+        <button class="modal-close" type="button" aria-label="关闭历史对话" data-close-history>×</button>
       </div>
       <div class="modal-body">
-        <p id="assistantNoticeText" class="modal-center-text">操作已完成</p>
+        <div id="historyList" class="ai-history-list"></div>
       </div>
-      <div class="modal-footer"><button class="btn btn-primary" type="button" data-close-assistant-modal>确认</button></div>
+    </div>
+  </div>
+
+  <div id="pickerModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+      <div class="modal-header">
+        <div id="pickerTitle" class="modal-title">选择</div>
+        <button class="modal-close" type="button" aria-label="关闭选择器" data-close-picker>×</button>
+      </div>
+      <div class="modal-body">
+        <input id="pickerSearch" class="form-control" type="search" placeholder="搜索关键词">
+        <div id="pickerList" class="ai-picker-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="actionConfirmModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="actionConfirmTitle">
+      <div class="modal-header">
+        <div id="actionConfirmTitle" class="modal-title">确认执行操作</div>
+        <button class="modal-close" type="button" aria-label="关闭确认弹窗" data-close-action-confirm>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="actionConfirmText" class="modal-center-text">确认执行此操作？</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-action-confirm>取消</button>
+        <button id="confirmActionButton" class="btn btn-primary" type="button">确认执行</button>
+      </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var assistantInput = document.getElementById('assistantInput');
-      var recentList = document.getElementById('recentList');
-      var abilityList = document.getElementById('abilityList');
-      var shortcutList = document.getElementById('shortcutList');
       var roleSelect = document.getElementById('roleSelect');
-      var roleSceneText = document.getElementById('roleSceneText');
-      var noticeModal = document.getElementById('assistantNoticeModal');
-      var noticeText = document.getElementById('assistantNoticeText');
-      var activeRole = '计调';
+      var currentRoleTag = document.getElementById('currentRoleTag');
+      var chatContextText = document.getElementById('chatContextText');
+      var commandGroups = document.getElementById('commandGroups');
+      var commandEditBox = document.getElementById('commandEditBox');
+      var toggleEditModeTop = document.getElementById('toggleEditModeTop');
+      var toggleEditModeBottom = document.getElementById('toggleEditModeBottom');
+      var newCommandTitle = document.getElementById('newCommandTitle');
+      var newCommandContent = document.getElementById('newCommandContent');
+      var assistantInput = document.getElementById('assistantInput');
+      var sendButton = document.getElementById('sendButton');
+      var clearInputButton = document.getElementById('clearInputButton');
+      var messageList = document.getElementById('messageList');
+      var suggestionTags = document.getElementById('suggestionTags');
+      var historyDrawer = document.getElementById('historyDrawer');
+      var historyList = document.getElementById('historyList');
+      var pickerModal = document.getElementById('pickerModal');
+      var pickerTitle = document.getElementById('pickerTitle');
+      var pickerSearch = document.getElementById('pickerSearch');
+      var pickerList = document.getElementById('pickerList');
+      var actionConfirmModal = document.getElementById('actionConfirmModal');
+      var actionConfirmText = document.getElementById('actionConfirmText');
+      var pendingAction = '';
+      var editMode = false;
+      var activeRole = '产品总监';
+      var draggedCommand = null;
 
-      var roleData = {
-        '计调': {
-          sample: '帮我生成 EU20240715001 的出团文件',
-          scene: '计调工作台常用：出团文件、名单导出、证件风险、通知生成',
-          abilities: [
-            { title: '出团文件生成', text: '按团号生成通知书、游客名单、保险清单和领队交接单' },
-            { title: '名单核验', text: '检查缺证件、重复游客、手机号缺失和特殊需求风险' },
-            { title: '执行风险扫描', text: '汇总未发通知、资源未确认、签证未完成等风险' },
-            { title: '业务导出', text: '按团期导出游客名单、证件清单、房间分配和领队资料' }
-          ],
-          commands: [
-            '帮我生成 EU20240715001 的出团文件',
-            '帮我导出明天出发团的游客名单',
-            '帮我检查欧洲十国经典游的证件和签证风险',
-            '帮我生成 EU20240715001 的出团通知',
-            '帮我汇总本周资源未确认的团期'
-          ],
-          records: [
-            { time: '09:14', title: '明日出发团证件风险检查', summary: '发现2名游客护照有效期不足6个月，1名游客签证状态待补件', status: '待复核', tag: 'tag-orange' },
-            { time: '09:12', title: 'EU20240715001 出团文件生成', summary: '已生成游客名单、保险清单、领队交接单和出团通知', status: '已完成', tag: 'tag-green' },
-            { time: '昨天 17:40', title: '欧洲十国经典游资源确认扫描', summary: '酒店资源已确认，巴黎段用车合同待补传', status: '有风险', tag: 'tag-red' }
-          ]
-        },
-        '产品': {
-          sample: '帮我根据上传文件生成欧洲十国经典游产品草稿',
-          scene: '产品工作台常用：产品草稿、行程优化、竞品价差、拆解校正',
-          abilities: [
-            { title: '产品草稿生成', text: '从线路文件生成产品基础信息、行程、费用包含和预订须知' },
-            { title: '行程内容优化', text: '生成卖点、亮点、短标题、长文案和渠道展示文案' },
-            { title: '竞品价差分析', text: '读取竞品价格池，提示价差、舱型权益和调价建议' },
-            { title: '低置信校正', text: '汇总线路拆解中待人工确认的字段和来源文本' }
-          ],
-          commands: [
-            '帮我根据上传文件生成欧洲十国经典游产品草稿',
-            '帮我优化日本关西深度游的产品卖点',
-            '帮我检查今天低置信度线路拆解任务',
-            '帮我对比理想号地中海邮轮的竞品价格',
-            '帮我生成泰国曼谷清迈8日的行程亮点'
-          ],
-          records: [
-            { time: '10:08', title: '理想号地中海邮轮竞品价差', summary: '较同平台同航线低3.6%，建议复核舱型权益和儿童价策略', status: '已完成', tag: 'tag-green' },
-            { time: '10:05', title: '欧洲十国经典游产品草稿', summary: '酒店等级和自费项目说明为低置信字段，待产品运营校正', status: '待校正', tag: 'tag-orange' },
-            { time: '昨天 15:20', title: '日本关西深度游卖点优化', summary: '已生成渠道标题、产品亮点和小红书风格短文案', status: '已完成', tag: 'tag-green' }
-          ]
-        },
-        '销售': {
-          sample: '帮我给意向客户李梅生成今天的跟进话术',
-          scene: '销售工作台常用：客户跟进、报价说明、产品推荐、催付提醒',
-          abilities: [
-            { title: '跟进话术', text: '按客户偏好、预算、意向产品生成微信、电话和短信话术' },
-            { title: '产品推荐', text: '基于历史咨询和客户标签推荐合适线路' },
-            { title: '报价说明', text: '把价格、名额、签证、取消规则整理成顾问可发送话术' },
-            { title: '成交风险', text: '识别临近锁位、价格敏感、二次咨询和未付款客户' }
-          ],
-          commands: [
-            '帮我给意向客户李梅生成今天的跟进话术',
-            '帮我为欧洲十国经典游生成报价说明',
-            '帮我根据张建国的偏好推荐合适产品',
-            '帮我总结本周高意向未成交订单',
-            '帮我生成三亚亲子5日游的催付话术'
-          ],
-          records: [
-            { time: '11:24', title: '今日优先跟进客户汇总', summary: '5位客户需优先跟进，其中2位临近锁位截止，1位价格敏感', status: '已完成', tag: 'tag-green' },
-            { time: '11:20', title: '李梅跟进话术', summary: '突出亲子房型、签证协助和早鸟优惠，已生成微信话术', status: '已完成', tag: 'tag-green' },
-            { time: '昨天 18:10', title: '三亚亲子5日游催付提醒', summary: '3个订单出发临近未完成尾款，建议今日跟进', status: '待处理', tag: 'tag-orange' }
-          ]
-        },
-        '客服': {
-          sample: '帮我查张建国的签证材料还缺什么',
-          scene: '客服工作台常用：材料查询、补件提醒、会话总结、转人工判断',
-          abilities: [
-            { title: '材料缺失查询', text: '按订单和游客汇总签证、证件、合同、保险材料缺口' },
-            { title: '补件话术', text: '根据缺失材料和截止时间生成提醒话术' },
-            { title: '未解决问题汇总', text: '从对话记录中沉淀高频问题和知识库补充项' },
-            { title: '转人工判断', text: '按置信度、关键词和情绪识别判断是否需要人工接管' }
-          ],
-          commands: [
-            '帮我查张建国的签证材料还缺什么',
-            '帮我生成签证补件提醒话术',
-            '帮我汇总今天AI未解决的问题',
-            '帮我判断这个会话是否需要转人工',
-            '帮我把高频问题加入知识库待维护清单'
-          ],
-          records: [
-            { time: '13:09', title: '今日未解决问题汇总', summary: '高频问题为签证补件、集合地点变更和邮轮登船证件说明', status: '待入库', tag: 'tag-orange' },
-            { time: '13:02', title: '张建国签证材料查询', summary: '缺少在职证明原件和近6个月银行流水，护照有效期符合要求', status: '已完成', tag: 'tag-green' },
-            { time: '昨天 16:50', title: '投诉会话转人工判断', summary: '识别到负面情绪和退款关键词，建议转人工处理', status: '已转人工', tag: 'tag-blue' }
-          ]
-        },
-        '财务': {
-          sample: '帮我汇总本周毛利异常的团期',
-          scene: '财务工作台常用：毛利异常、认款差异、付款风险、NC推送',
-          abilities: [
-            { title: '毛利异常分析', text: '扫描团期收入、成本、汇率和供应商费用变化' },
-            { title: '认款辅助', text: '匹配流水、订单、客户和金额，提示疑似归属' },
-            { title: '付款风险提醒', text: '识别重复付款、超预算付款和资料缺失付款申请' },
-            { title: 'NC推送检查', text: '汇总待推送、推送失败和字段缺失的财务单据' }
-          ],
-          commands: [
-            '帮我汇总本周毛利异常的团期',
-            '帮我检查应收应付差异超过5000元的订单',
-            '帮我分析今天未认款流水',
-            '帮我生成付款风险提醒',
-            '帮我汇总待推送NC的财务单据'
-          ],
-          records: [
-            { time: '14:36', title: '今日未认款流水分析', summary: '未认款流水8笔，建议优先处理3笔金额超过¥20,000的记录', status: '待处理', tag: 'tag-orange' },
-            { time: '14:30', title: '本周毛利异常团期', summary: '4个团期低于预警线，主要原因是酒店确认价上涨和汇率波动', status: '已完成', tag: 'tag-green' },
-            { time: '昨天 19:05', title: 'NC推送失败单据检查', summary: '2张应付单缺供应商税号，1张退款单缺退款原因', status: '失败', tag: 'tag-red' }
-          ]
-        },
-        '管理层': {
-          sample: '帮我生成今天的经营异常摘要',
-          scene: '管理层工作台常用：经营异常、AI待处理、竞品异动、服务风险',
-          abilities: [
-            { title: '经营异常摘要', text: '汇总销售、毛利、履约、服务和财务异常' },
-            { title: 'AI运营总览', text: '查看低置信任务、人工复核量、自动化节省时长' },
-            { title: '竞品异动', text: '按目的地和产品类型汇总竞品价格变化' },
-            { title: '服务风险', text: '聚合客诉、转人工、未解决问题和满意度变化' }
-          ],
-          commands: [
-            '帮我生成今天的经营异常摘要',
-            '帮我汇总AI低置信任务和待人工处理量',
-            '帮我看本周竞品价格异动',
-            '帮我汇总客诉风险和转人工趋势',
-            '帮我生成本月AI使用效果摘要'
-          ],
-          records: [
-            { time: '16:06', title: '本月AI使用效果摘要', summary: 'AI处理1,286次任务，产品拆解节省约42小时，签证审查待复核率8.4%', status: '已完成', tag: 'tag-green' },
-            { time: '16:00', title: '今日经营异常摘要', summary: '异常集中在欧洲长线毛利波动、2个团期签证风险和3条竞品低价预警', status: '已完成', tag: 'tag-green' },
-            { time: '昨天 20:12', title: '客诉风险和转人工趋势', summary: '邮轮登船证件说明导致咨询上升，建议补充出行助理知识库', status: '待跟进', tag: 'tag-orange' }
-          ]
-        }
+      var roles = {
+        '产品总监': [
+          { group: '产品审批', items: ['查看今日待审批产品列表', '查看本周已审批产品汇总', '查看被驳回产品详情', '查看各渠道价格合规异常'] },
+          { group: '竞品与定价', items: ['查看今日竞品价格预警', '查看携程近7天同类产品价格对比', '生成本周竞品分析摘要', '查看我方各渠道价格一致性检查结果'] },
+          { group: '产品健康度', items: ['查看9类产品本月健康度总览', '查看出单率低于阈值的产品列表', '查看毛利率异常产品', '生成本月产品经营分析报告'] },
+          { group: '文案与素材', items: ['为当前草稿产品优化OTA标题关键词', '生成欧洲经典线路卖点文案', '生成小程序推送版本文案', '生成携程详情页文案'] }
+        ],
+        '产品经理/计调': [
+          { group: '产品录入', items: ['AI解析上传的行程PDF', '根据目的地和天数生成行程草案', '优化当前产品的行程文案', '检查当前产品纯玩合规性'] },
+          { group: '团期管理', items: ['查看本月团期日历', '查看余位低于5人的近期团期', '生成下季度批量开排建议', '查看OTA各平台库存同步状态'] },
+          { group: '成本录入', items: ['查看待录入成本的团期列表', '查看某团期的预估成本明细', '查看本月成本超支团期', '生成供应商付款提醒清单'] },
+          { group: '出团文件', items: ['生成指定团期的旅游通知书', '生成指定团期的签证材料清单', '生成指定团期的行程单', '导出指定团期的游客名单'] }
+        ],
+        '运营专员': [
+          { group: '出团执行', items: ['查看本周出发团期列表', '查看今日待发出团通知', '查看领队排班缺口预警', '查看近期无领队团期'] },
+          { group: '名单与证件', items: ['导出指定团期全量游客名单', '导出指定团期地接名单', '查看证件即将到期的游客', '查看签证未获签游客列表'] },
+          { group: '成本更新', items: ['查看回团待更新实际成本的团期', '提醒我录入某团期的实际成本', '查看预估成本与实际成本差异超10%的团期'] },
+          { group: '异常与投诉', items: ['新建一条团期运营异常记录', '查看本月运营异常汇总', '查看本月投诉升级记录'] }
+        ],
+        '财务主管': [
+          { group: '收款认款', items: ['查看今日收款总金额（按渠道分拆）', '查看今日待认款流水笔数', '查看本周自动认款失败记录', '查看大额待确认流水列表'] },
+          { group: '付款审批', items: ['查看今日待我审批付款申请', '查看本月已付款汇总（按供应商）', '查看即将逾期的应付账款', '查看预付款未核销明细'] },
+          { group: '结算对账', items: ['查看本月待生成结算单的团期', '查看本月已完成结算单毛利汇总', '查看OTA本月净收账款', '查看代理商待结算佣金总额'] },
+          { group: '财务报表', items: ['生成本月团期盈亏报表', '生成本月各渠道收款报表', '查看应收账款账龄分析', '查看本月NC推送失败记录'] }
+        ],
+        '财务专员': [
+          { group: '日常收款', items: ['查看今日各渠道到账流水', '查看今日待手动认款流水', '发起携程本月批量认款对账单导入', '查看资金池各子账户余额'] },
+          { group: '付款申请', items: ['查看本周待发起付款申请的成本项', '新建一笔供应商付款申请', '查看今日到期的应付账款', '查看预付款待核销列表'] },
+          { group: '退款执行', items: ['查看今日待执行退款列表', '查看本周已执行退款汇总', '查看退款回单待上传记录'] },
+          { group: '发票管理', items: ['查看待验真的进项发票列表', '查看本月已开销项发票汇总', '查看金税接口当前状态'] }
+        ],
+        '销售总监': [
+          { group: '渠道业绩', items: ['查看今日全渠道GMV进度（对比目标）', '查看4大渠道本月业绩进度条', '查看各门店今日GMV排名', '查看顾问业绩实时排名Top10'] },
+          { group: '审批与折扣', items: ['查看今日待我审批的折扣申请', '查看本月超阈值折扣使用情况', '查看本月特殊佣金申请记录'] },
+          { group: '渠道分析', items: ['查看各渠道转化率异常预警', '生成本月渠道业绩对比分析', '查看OTA渠道本月净利贡献'] }
+        ],
+        '门店店长': [
+          { group: '门店日常', items: ['查看门店今日业绩（GMV/收款/订单）', '查看顾问今日实时排名', '查看资金池余额是否低于预警阈值', '查看今日到店客户数'] },
+          { group: '审批操作', items: ['查看今日待我初审的退款申请', '查看待我审批的折扣申请', '批量确认今日折扣初审'] },
+          { group: '顾问管理', items: ['查看本月各顾问目标完成率', '查看意向单到期未跟进的顾问列表', '查看本月顾问佣金待结算明细'] }
+        ],
+        '销售顾问': [
+          { group: '我的业绩', items: ['查看我今日业绩进度', '查看我本月GMV完成率', '查看我的待结算佣金明细'] },
+          { group: '客户跟进', items: ['查看今日需跟进的客户列表', '查看意向单即将到期的客户', '查看我的客户近期出发倒计时', '生成一条客户跟进话术建议'] },
+          { group: '下单报价', items: ['快速生成欧洲产品报价单', '查看当前可售欧洲线路及余位', '查看今日OTA平台热销产品', '为客户推荐最适合的险种'] }
+        ],
+        '呼叫中心坐席': [
+          { group: '坐席任务', items: ['查看我今日外呼任务列表', '查看今日外呼接通率和转化率', '查看待回拨客户列表'] },
+          { group: '通话辅助', items: ['根据客户兴趣生成推荐话术', '查询某产品当前余位和价格', '查看客户历史购买记录摘要'] },
+          { group: '下单协助', items: ['代客创建报价单并发送链接', '查看今日已成交订单汇总', '快速新建客户意向单'] }
+        ],
+        'OTA渠道运营': [
+          { group: '平台监控', items: ['查看各平台今日GMV对比', '查看OTA接口同步异常列表', '查看各平台待确认订单数量', '查看平台活动报名截止提醒'] },
+          { group: '产品运营', items: ['查看携程排名下降超5位的产品', '查看飞猪库存低于5个的产品', '查看同程近7天转化率低于均值的产品', '生成AI优化标题建议'] },
+          { group: '对账结算', items: ['查看携程本月应收账款金额', '生成飞猪本月对账单', '查看同程本月佣金扣点明细'] }
+        ],
+        '客服专员': [
+          { group: '工单处理', items: ['查看我的今日待处理工单', '查看AI转人工等待队列', '查看超SLA时限工单列表', '查看今日投诉升级记录'] },
+          { group: '退款协助', items: ['代客发起退款申请', '查看某订单当前退款进度', '查看今日退款执行状态汇总'] },
+          { group: '工单统计', items: ['查看今日各渠道工单量对比', '查看本周平均首次响应时长', '查看本月客户满意度统计'] }
+        ],
+        '超管': [
+          { group: '系统监控', items: ['查看所有接口实时健康状态', '查看今日操作审计摘要', '查看AI服务当前状态', '查看系统队列积压情况'] },
+          { group: '组织权限', items: ['查看待审批的跨主体调拨申请', '查看本月新增员工账号列表', '查看异常登录IP记录'] },
+          { group: '配置管理', items: ['查看企微审批回调异常记录', '查看NC推送失败待处理列表', '查看本月系统告警汇总'] }
+        ]
+      };
+
+      var pickerData = {
+        schedule: ['ZY-202506-0028｜欧洲经典12日｜2025-06-28', 'EU20240715001｜欧洲十国经典游｜2025-07-15', 'TR-SILK-20250805-001｜东方丝路专列｜2025-08-05'],
+        product: ['欧洲经典12日｜自营产品｜已上架', '理想号地中海邮轮｜邮轮产品｜航次4个', '日本签证代办｜单项委托｜服务项3个'],
+        customer: ['张建国｜KS20240618001｜欧洲十国经典游', '李梅｜意向订单待跟进｜日本关西深度游', '王强｜高价值客户｜邮轮偏好']
       };
 
       function escapeHtml(text) {
-        return text.replace(/[&<>"']/g, function (char) {
+        return String(text || '').replace(/[&<>"']/g, function (char) {
           return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
         });
       }
 
-      function renderShortcuts(role) {
-        shortcutList.innerHTML = roleData[role].commands.map(function (command) {
-          return '<button type="button" data-command="' + escapeHtml(command) + '">' + escapeHtml(command) + '</button>';
-        }).join('');
+      function commandDesc(text) {
+        if (text.indexOf('生成') >= 0) return '生成业务内容并可继续确认执行';
+        if (text.indexOf('导出') >= 0) return '读取业务数据后生成可下载文件';
+        if (text.indexOf('查看') >= 0) return '快速查询相关列表和异常明细';
+        if (text.indexOf('新建') >= 0 || text.indexOf('发起') >= 0) return '进入创建流程并补齐必要字段';
+        if (text.indexOf('优化') >= 0) return '按渠道规范优化文案与关键词';
+        return '发送后由AI读取当前业务上下文处理';
       }
 
-      function renderRecords(role) {
-        recentList.innerHTML = roleData[role].records.map(function (item) {
+      function normalizeCommand(item) {
+        if (typeof item === 'string') {
+          return { title: item, content: item, desc: commandDesc(item) };
+        }
+        return {
+          title: item.title || item.content,
+          content: item.content || item.title,
+          desc: item.desc || item.content || commandDesc(item.title || '')
+        };
+      }
+
+      function renderCommands() {
+        var groups = roles[activeRole] || [];
+        commandGroups.innerHTML = groups.map(function (group, groupIndex) {
+          var items = group.items.map(function (item, itemIndex) {
+            var command = normalizeCommand(item);
+            return [
+              '<button class="ai-command-card" type="button" draggable="' + (editMode ? 'true' : 'false') + '" data-group-index="' + groupIndex + '" data-item-index="' + itemIndex + '" data-command="' + escapeHtml(command.content) + '">',
+              '<span class="ai-command-drag" aria-hidden="true">☰</span>',
+              '<span class="ai-command-delete" aria-hidden="true">×</span>',
+              '<strong>' + escapeHtml(command.title) + '</strong>',
+              '<em>' + escapeHtml(command.desc) + '</em>',
+              '</button>'
+            ].join('');
+          }).join('');
           return [
-            '<button class="ai-recent-chat-item" type="button" data-command="' + escapeHtml(item.title) + '">',
-            '<span class="ai-recent-chat-time">' + escapeHtml(item.time) + '</span>',
-            '<strong>' + escapeHtml(item.title) + '</strong>',
-            '<span>' + escapeHtml(item.summary) + '</span>',
-            '<em class="tag ' + item.tag + '">' + escapeHtml(item.status) + '</em>',
-            '</button>'
+            '<details class="ai-command-group" open>',
+            '<summary>' + escapeHtml(group.group) + '</summary>',
+            '<div class="ai-command-card-list">',
+            items,
+            '</div>',
+            '</details>'
           ].join('');
         }).join('');
-      }
-
-      function renderAbilities(role) {
-        abilityList.innerHTML = roleData[role].abilities.map(function (item) {
-          return '<div><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.text) + '</span></div>';
-        }).join('');
+        commandGroups.classList.toggle('editing', editMode);
+        commandEditBox.hidden = !editMode;
+        toggleEditModeTop.textContent = editMode ? '完成编辑' : '管理指令';
+        toggleEditModeBottom.textContent = editMode ? '完成编辑' : '编辑我的快捷指令';
       }
 
       function setRole(role) {
         activeRole = role;
-        roleSelect.value = role;
-        roleSceneText.textContent = roleData[role].scene;
-        assistantInput.value = roleData[role].sample;
-        renderShortcuts(role);
-        renderRecords(role);
-        renderAbilities(role);
+        currentRoleTag.textContent = role;
+        chatContextText.textContent = role + '视角';
+        renderCommands();
       }
 
-      function showNotice(text) {
-        noticeText.textContent = text;
-        noticeModal.classList.add('show');
-        noticeModal.setAttribute('aria-hidden', 'false');
+      function addUserMessage(text) {
+        messageList.insertAdjacentHTML('beforeend', '<div class="ai-message-row user"><div class="ai-message-bubble">' + escapeHtml(text) + '</div></div>');
+        scrollMessages();
+      }
+
+      function addAiMessage(html, options) {
+        var action = options && options.action ? '<button class="btn btn-primary btn-sm" type="button" data-execute-action="' + escapeHtml(options.action) + '">执行此操作</button>' : '';
+        var label = options && options.actionLabel ? '<span class="ai-action-label">执行此操作：' + escapeHtml(options.actionLabel) + '</span>' : '';
+        messageList.insertAdjacentHTML('beforeend', [
+          '<div class="ai-message-row ai">',
+          '<div class="ai-avatar">AI</div>',
+          '<div class="ai-message-bubble">',
+          '<div class="ai-rich-text">' + html + '</div>',
+          '<div class="ai-message-actions">',
+          '<button type="button" data-copy-message>复制</button>',
+          '<button type="button" data-rate-message="up">满意</button>',
+          '<button type="button" data-rate-message="down">不满意</button>',
+          label,
+          action,
+          '</div>',
+          '</div>',
+          '</div>'
+        ].join(''));
+        scrollMessages();
+      }
+
+      function addTypingMessage() {
+        var id = 'typing-' + Date.now();
+        messageList.insertAdjacentHTML('beforeend', '<div id="' + id + '" class="ai-message-row ai"><div class="ai-avatar">AI</div><div class="ai-message-bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div></div>');
+        scrollMessages();
+        return id;
+      }
+
+      function removeTyping(id) {
+        var node = document.getElementById(id);
+        if (node) node.remove();
+      }
+
+      function tableToolbar() {
+        return '<div class="ai-table-tools"><button type="button" data-copy-table>复制表格</button><button type="button" data-export-table>导出为Excel</button></div>';
+      }
+
+      function approvalReply() {
+        return [
+          '<p>今日共有 <strong>3 个产品</strong> 等待您审批。</p>',
+          tableToolbar(),
+          '<div class="table-wrap ai-data-table"><table><thead><tr><th data-sortable>序号</th><th data-sortable>产品名称</th><th data-sortable>提交人</th><th data-sortable>提交时间</th><th data-sortable>产品类型</th></tr></thead><tbody>',
+          '<tr><td>1</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">欧洲经典12日</a></td><td>计调张明</td><td>10:23</td><td>自营产品</td></tr>',
+          '<tr><td>2</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">理想号地中海邮轮</a></td><td>产品经理李梅</td><td>09:48</td><td>邮轮产品</td></tr>',
+          '<tr><td>3</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">东方丝路专列9日</a></td><td>计调王强</td><td>09:12</td><td>专列产品</td></tr>',
+          '</tbody></table></div>',
+          '<p><a class="ai-inline-link" href="../approval/approval-product-review.html">前往审批中心查看全部</a></p>'
+        ].join('');
+      }
+
+      function noticeReply() {
+        return [
+          '<p>正在为您生成 <a class="ai-entity-link" href="../tour/schedules-detail.html">ZY-202506-0028</a> 的旅游通知书...</p>',
+          '<div class="ai-progress-box"><span class="ai-spinner"></span><span>正在读取游客名单 → 正在填充模板 → 生成完成</span></div>',
+          '<div class="ai-success-box">旅游通知书已生成</div>',
+          '<div class="ai-file-preview"><strong>旅游通知书.pdf</strong><span>PDF预览缩略图</span></div>',
+          '<div class="ai-file-actions"><button class="btn btn-secondary btn-sm" type="button">下载PDF</button><button class="btn btn-primary btn-sm" type="button" data-execute-action="发送给游客">发送给游客</button></div>'
+        ].join('');
+      }
+
+      function financeReply() {
+        return [
+          '<div class="ai-finance-card">',
+          '<h3>今日待收款汇总</h3>',
+          '<p>门市渠道待收款 <a class="ai-entity-link" href="../finance/finance-receivable.html">¥128,000</a>（3笔）</p>',
+          '<p>OTA渠道待收款 <a class="ai-entity-link" href="../finance/finance-receivable.html">¥86,500</a>（携程2笔/飞猪1笔）</p>',
+          '<p>直客渠道待收款 <a class="ai-entity-link" href="../finance/finance-receivable.html">¥42,000</a>（2笔）</p>',
+          '<strong>合计待收款 ¥256,500 共8笔</strong>',
+          '</div>',
+          '<p><a class="ai-inline-link" href="../finance/finance-matching.html">前往认款管理处理</a></p>',
+          '<button class="btn btn-primary btn-sm" type="button" data-execute-action="一键催款">一键催款</button>'
+        ].join('');
+      }
+
+      function genericReply(text) {
+        return [
+          '<p>已收到指令：<strong>' + escapeHtml(text) + '</strong></p>',
+          '<ul><li>已读取当前角色：' + escapeHtml(activeRole) + '</li><li>已匹配相关业务对象和权限范围</li><li>涉及写入、导出、发送的动作会在执行前再次确认</li></ul>',
+          '<pre><code>下一步：确认数据范围 → 生成结果 → 执行业务操作</code></pre>'
+        ].join('');
+      }
+
+      function sendMessage(text) {
+        var content = String(text || assistantInput.value || '').trim();
+        if (!content) return;
+        assistantInput.value = '';
+        syncInputState();
+        addUserMessage(content);
+        var typingId = addTypingMessage();
+        window.setTimeout(function () {
+          removeTyping(typingId);
+          if (content.indexOf('待审批产品') >= 0 || content.indexOf('今日有哪些待审批产品') >= 0) {
+            addAiMessage(approvalReply(), { action: '跳转审批页面', actionLabel: '跳转审批页面' });
+          } else if (content.indexOf('旅游通知书') >= 0 || content.indexOf('出团通知') >= 0) {
+            addAiMessage(noticeReply(), { action: '发送给游客', actionLabel: '发送给游客' });
+          } else if (content.indexOf('待收款') >= 0 || content.indexOf('收款') >= 0) {
+            addAiMessage(financeReply(), { action: '一键催款', actionLabel: '一键催款' });
+          } else {
+            addAiMessage(genericReply(content), { action: '继续执行', actionLabel: '继续执行' });
+          }
+          renderSuggestions(['导出游客名单', '查看成本明细', '生成行程文案', '跳转审批页面']);
+        }, 700);
+      }
+
+      function renderDefaultMessages() {
+        messageList.innerHTML = '';
+        addUserMessage('今日有哪些待审批产品？');
+        addAiMessage(approvalReply(), { action: '跳转审批页面', actionLabel: '跳转审批页面' });
+        addUserMessage('帮我生成ZY-202506-0028团期的旅游通知书');
+        addAiMessage(noticeReply(), { action: '发送给游客', actionLabel: '发送给游客' });
+        addUserMessage('今日待收款是多少？');
+        addAiMessage(financeReply(), { action: '一键催款', actionLabel: '一键催款' });
+        renderSuggestions(['导出游客名单', '查看成本明细', '生成行程文案', '跳转审批页面']);
+      }
+
+      function renderSuggestions(items) {
+        suggestionTags.innerHTML = items.map(function (item) {
+          return '<button type="button" data-suggestion="' + escapeHtml(item) + '">' + escapeHtml(item) + '</button>';
+        }).join('');
+      }
+
+      function syncInputState() {
+        var hasValue = assistantInput.value.trim().length > 0;
+        sendButton.disabled = !hasValue;
+        clearInputButton.hidden = !hasValue;
+      }
+
+      function scrollMessages() {
+        messageList.scrollTop = messageList.scrollHeight;
+      }
+
+      function setEditMode(next) {
+        editMode = next;
+        renderCommands();
+      }
+
+      function openOverlay(overlay) {
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeOverlay(overlay) {
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+
+      function renderHistory() {
+        var base = ['今日待审批产品查询', '旅游通知书生成', '今日待收款汇总', '竞品价格预警', '出团风险扫描', '游客名单导出'];
+        var rows = [];
+        for (var i = 0; i < 30; i += 1) {
+          var title = base[i % base.length] + ' #' + String(i + 1).padStart(2, '0');
+          rows.push('<button type="button" data-history-title="' + escapeHtml(title) + '"><strong>' + escapeHtml(title) + '</strong><span>最近会话 · ' + (i + 1) + '小时前</span></button>');
+        }
+        historyList.innerHTML = rows.join('');
+      }
+
+      function renderPicker(type) {
+        var titleMap = { schedule: '选择团期', product: '选择产品', customer: '选择客户' };
+        pickerTitle.textContent = titleMap[type] || '选择';
+        pickerSearch.value = '';
+        pickerList.innerHTML = (pickerData[type] || []).map(function (item) {
+          return '<button type="button" data-picker-value="' + escapeHtml(item.split('｜')[0]) + '">' + escapeHtml(item) + '</button>';
+        }).join('');
+        openOverlay(pickerModal);
       }
 
       roleSelect.addEventListener('change', function () {
         setRole(roleSelect.value);
       });
 
-      shortcutList.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-command]');
-        if (!button) return;
-        assistantInput.value = button.dataset.command;
-        assistantInput.focus();
+      [toggleEditModeTop, toggleEditModeBottom].forEach(function (button) {
+        button.addEventListener('click', function () {
+          setEditMode(!editMode);
+        });
       });
 
-      recentList.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-command]');
-        if (!button) return;
-        assistantInput.value = '继续处理：' + button.dataset.command;
-        assistantInput.focus();
+      document.getElementById('saveNewCommand').addEventListener('click', function () {
+        var title = newCommandTitle.value.trim();
+        var content = newCommandContent.value.trim();
+        if (!title || !content) return;
+        roles[activeRole][0].items.push({ title: title, content: content, desc: content });
+        newCommandTitle.value = '';
+        newCommandContent.value = '';
+        renderCommands();
       });
 
-      document.getElementById('sendAssistantCommand').addEventListener('click', function () {
-        var command = assistantInput.value.trim();
-        if (!command) {
-          showNotice('请输入需要AI助手执行的指令');
+      commandGroups.addEventListener('click', function (event) {
+        var card = event.target.closest('.ai-command-card');
+        if (!card) return;
+        var groupIndex = Number(card.dataset.groupIndex);
+        var itemIndex = Number(card.dataset.itemIndex);
+        if (editMode && event.target.closest('.ai-command-delete')) {
+          roles[activeRole][groupIndex].items.splice(itemIndex, 1);
+          renderCommands();
           return;
         }
-        roleData[activeRole].records.unshift({
-          time: '刚刚',
-          title: command,
-          summary: '已按' + activeRole + '角色读取相关业务上下文，执行前会提示确认涉及写入、发送或导出的动作',
-          status: '处理中',
-          tag: 'tag-blue'
-        });
-        renderRecords(activeRole);
+        if (editMode) return;
+        assistantInput.value = card.dataset.command;
+        syncInputState();
+        sendMessage(card.dataset.command);
       });
 
-      document.getElementById('clearAssistantInput').addEventListener('click', function () {
+      commandGroups.addEventListener('dragstart', function (event) {
+        var card = event.target.closest('.ai-command-card');
+        if (!card || !editMode) return;
+        draggedCommand = { groupIndex: Number(card.dataset.groupIndex), itemIndex: Number(card.dataset.itemIndex) };
+      });
+
+      commandGroups.addEventListener('dragover', function (event) {
+        if (editMode) event.preventDefault();
+      });
+
+      commandGroups.addEventListener('drop', function (event) {
+        var card = event.target.closest('.ai-command-card');
+        if (!card || !draggedCommand || !editMode) return;
+        var target = { groupIndex: Number(card.dataset.groupIndex), itemIndex: Number(card.dataset.itemIndex) };
+        if (target.groupIndex !== draggedCommand.groupIndex) return;
+        var list = roles[activeRole][target.groupIndex].items;
+        var moved = list.splice(draggedCommand.itemIndex, 1)[0];
+        list.splice(target.itemIndex, 0, moved);
+        draggedCommand = null;
+        renderCommands();
+      });
+
+      assistantInput.addEventListener('input', syncInputState);
+      assistantInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+      document.addEventListener('keydown', function (event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault();
+          assistantInput.focus();
+        }
+      });
+
+      sendButton.addEventListener('click', function () { sendMessage(); });
+      clearInputButton.addEventListener('click', function () {
         assistantInput.value = '';
+        syncInputState();
         assistantInput.focus();
       });
 
-      document.querySelectorAll('[data-close-assistant-modal]').forEach(function (button) {
+      document.getElementById('assistantFileInput').addEventListener('change', function (event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        assistantInput.value = '请分析上传文件：' + file.name;
+        syncInputState();
+        assistantInput.focus();
+      });
+
+      document.querySelector('[data-upload-file]').addEventListener('click', function () {
+        document.getElementById('assistantFileInput').click();
+      });
+
+      document.querySelectorAll('[data-open-picker]').forEach(function (button) {
         button.addEventListener('click', function () {
-          noticeModal.classList.remove('show');
-          noticeModal.setAttribute('aria-hidden', 'true');
+          renderPicker(button.dataset.openPicker);
         });
       });
 
-      noticeModal.addEventListener('click', function (event) {
-        if (event.target === noticeModal) {
-          noticeModal.classList.remove('show');
-          noticeModal.setAttribute('aria-hidden', 'true');
+      pickerList.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-picker-value]');
+        if (!button) return;
+        assistantInput.value = (assistantInput.value ? assistantInput.value + ' ' : '') + button.dataset.pickerValue;
+        syncInputState();
+        closeOverlay(pickerModal);
+        assistantInput.focus();
+      });
+
+      document.querySelectorAll('[data-close-picker]').forEach(function (button) {
+        button.addEventListener('click', function () { closeOverlay(pickerModal); });
+      });
+
+      suggestionTags.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-suggestion]');
+        if (button) sendMessage(button.dataset.suggestion);
+      });
+
+      document.getElementById('newChatButton').addEventListener('click', function () {
+        messageList.innerHTML = '';
+        assistantInput.value = '';
+        syncInputState();
+        renderSuggestions(['导出游客名单', '查看成本明细', '生成行程文案', '跳转审批页面']);
+      });
+
+      document.getElementById('openHistoryDrawer').addEventListener('click', function () {
+        renderHistory();
+        openOverlay(historyDrawer);
+      });
+      document.querySelectorAll('[data-close-history]').forEach(function (button) {
+        button.addEventListener('click', function () { closeOverlay(historyDrawer); });
+      });
+      historyList.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-history-title]');
+        if (!button) return;
+        messageList.innerHTML = '';
+        addUserMessage('恢复历史会话：' + button.dataset.historyTitle);
+        addAiMessage('<p>已恢复历史会话上下文，可继续追问或执行后续操作。</p>', null);
+        closeOverlay(historyDrawer);
+      });
+
+      messageList.addEventListener('click', function (event) {
+        var actionButton = event.target.closest('[data-execute-action]');
+        if (actionButton) {
+          pendingAction = actionButton.dataset.executeAction;
+          actionConfirmText.textContent = '即将执行「' + pendingAction + '」。系统会根据当前权限触发对应业务操作。';
+          openOverlay(actionConfirmModal);
+          return;
         }
+        if (event.target.closest('[data-copy-message]')) {
+          window.alert('消息内容已复制');
+        }
+        if (event.target.closest('[data-rate-message]')) {
+          window.alert('感谢反馈，已记录本次评价');
+        }
+        if (event.target.closest('[data-copy-table]')) {
+          window.alert('表格已复制');
+        }
+        if (event.target.closest('[data-export-table]')) {
+          window.alert('已生成Excel导出任务');
+        }
+        var sortable = event.target.closest('[data-sortable]');
+        if (sortable) {
+          var table = sortable.closest('table');
+          var index = Array.from(sortable.parentElement.children).indexOf(sortable);
+          var rows = Array.from(table.tBodies[0].rows);
+          rows.reverse().forEach(function (row) { table.tBodies[0].appendChild(row); });
+          sortable.dataset.sorted = index;
+        }
+      });
+
+      document.getElementById('confirmActionButton').addEventListener('click', function () {
+        closeOverlay(actionConfirmModal);
+        addAiMessage('<p><strong>操作已执行：</strong>' + escapeHtml(pendingAction) + '</p><p>系统已生成对应任务记录，可在相关业务页面继续查看。</p>', null);
+      });
+      document.querySelectorAll('[data-close-action-confirm]').forEach(function (button) {
+        button.addEventListener('click', function () { closeOverlay(actionConfirmModal); });
+      });
+
+      [historyDrawer, pickerModal, actionConfirmModal].forEach(function (overlay) {
+        overlay.addEventListener('click', function (event) {
+          if (event.target === overlay) closeOverlay(overlay);
+        });
+      });
+
+      document.getElementById('minimizeAssistant').addEventListener('click', function () {
+        document.getElementById('assistantPage').hidden = true;
+        document.getElementById('minimizeAssistant').hidden = true;
+        document.getElementById('restoreAssistant').hidden = false;
+      });
+      document.getElementById('restoreAssistant').addEventListener('click', function () {
+        document.getElementById('assistantPage').hidden = false;
+        document.getElementById('minimizeAssistant').hidden = false;
+        document.getElementById('restoreAssistant').hidden = true;
       });
 
       setRole(activeRole);
+      renderDefaultMessages();
+      syncInputState();
     })();
   </script>
 </body>

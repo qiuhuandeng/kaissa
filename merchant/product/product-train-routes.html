@@ -15,14 +15,13 @@
         <h1 class="page-title">专列产品</h1>
       </div>
       <div class="page-actions">
-        <button id="openTrainRouteModal" class="btn btn-primary" type="button">新增专列线路</button>
+        <button id="openTrainRouteModal" class="btn btn-primary" type="button">新增专列产品</button>
       </div>
     </div>
-
   </section>
 
   <nav class="tab-bar train-main-tabs" aria-label="专列产品配置">
-    <button class="tab-item active" type="button" data-train-tab="routes">专列线路库</button>
+    <button class="tab-item active" type="button" data-train-tab="routes">班期产品库</button>
     <button class="tab-item" type="button" data-train-tab="carriages">车厢铺位配置</button>
   </nav>
 
@@ -38,8 +37,9 @@
             <th>出发地</th>
             <th>沿途主要站点</th>
             <th>终点站</th>
-            <th>行程天数</th>
-            <th>最近出发日</th>
+            <th>班期</th>
+            <th>铺位库存</th>
+            <th>班期状态</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -52,9 +52,10 @@
             <td>西安</td>
             <td>兰州/嘉峪关/敦煌/吐鲁番/乌鲁木齐</td>
             <td>乌鲁木齐</td>
-            <td>12天</td>
-            <td>2025-08-15</td>
-            <td><div class="table-action"><button type="button" data-view-train>查看</button><button type="button" data-edit-train>编辑</button><button type="button" data-open-carriages>车厢配置</button></div></td>
+            <td>2025-08-15 至 2025-08-26</td>
+            <td><span class="tag tag-green">剩余100铺</span></td>
+            <td><span class="tag tag-blue">已生成班期</span></td>
+            <td><div class="table-action"><button type="button" data-view-train>查看</button><button type="button" data-edit-train>编辑</button><button type="button" data-open-carriages>车厢配置</button><button type="button" data-open-train-tour>生成班期</button></div></td>
           </tr>
           <tr>
             <td>TR-002</td>
@@ -64,9 +65,10 @@
             <td>成都</td>
             <td>雅安/康定/巴塘/德钦/大理</td>
             <td>昆明</td>
-            <td>10天</td>
-            <td>2025-09-10</td>
-            <td><div class="table-action"><button type="button" data-view-train>查看</button><button type="button" data-edit-train>编辑</button><button type="button" data-open-carriages>车厢配置</button></div></td>
+            <td>2025-09-10 至 2025-09-19</td>
+            <td><span class="tag tag-orange">剩余38铺</span></td>
+            <td><span class="tag tag-gray">未生成</span></td>
+            <td><div class="table-action"><button type="button" data-view-train>查看</button><button type="button" data-edit-train>编辑</button><button type="button" data-open-carriages>车厢配置</button><button type="button" data-open-train-tour>生成班期</button></div></td>
           </tr>
           <tr>
             <td>TR-003</td>
@@ -76,9 +78,10 @@
             <td>哈尔滨</td>
             <td>亚布力/雪乡/长白山/延吉</td>
             <td>长春</td>
-            <td>8天</td>
-            <td>2025-12-20</td>
-            <td><div class="table-action"><button type="button" data-view-train>查看</button><button type="button" data-edit-train>编辑</button><button type="button" data-open-carriages>车厢配置</button></div></td>
+            <td>2025-12-20 至 2025-12-27</td>
+            <td><span class="tag tag-green">剩余142铺</span></td>
+            <td><span class="tag tag-gray">未生成</span></td>
+            <td><div class="table-action"><button type="button" data-view-train>查看</button><button type="button" data-edit-train>编辑</button><button type="button" data-open-carriages>车厢配置</button><button type="button" data-open-train-tour>生成班期</button></div></td>
           </tr>
         </tbody>
       </table>
@@ -185,9 +188,25 @@
             <label class="form-label" for="trainTripDays">行程天数</label>
             <input id="trainTripDays" class="form-control" type="text" value="12天" readonly>
           </div>
+          <div class="form-group">
+            <label class="form-label" for="trainCharterScope">包乘范围</label>
+            <select id="trainCharterScope" class="form-control">
+              <option selected>整列包乘</option>
+              <option>部分车厢包乘</option>
+              <option>铺位切位</option>
+            </select>
+          </div>
           <div class="form-group form-group-full">
             <label class="form-label" for="trainSupportNote">行程配套说明</label>
             <textarea id="trainSupportNote" class="form-control" rows="4" placeholder="沿途住宿安排/餐饮安排/景区游览安排">沿途安排当地四星酒店轮换住宿，列车段提供专列餐饮服务，敦煌、吐鲁番、乌鲁木齐安排核心景区游览。</textarea>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">保存后动作</label>
+            <div class="radio-row">
+              <label><input type="radio" name="trainAfterSave" checked> 仅保存班期产品</label>
+              <label><input type="radio" name="trainAfterSave"> 保存并生成班期</label>
+              <label><input type="radio" name="trainAfterSave"> 保存并配置车厢铺位</label>
+            </div>
           </div>
         </div>
       </div>
@@ -242,12 +261,51 @@
     </div>
   </div>
 
+  <div id="trainTourModal" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal train-route-modal" role="dialog" aria-modal="true" aria-labelledby="trainTourTitle">
+      <div class="modal-header">
+        <div id="trainTourTitle" class="modal-title">生成专列班期</div>
+        <button class="modal-close" type="button" data-close-train-tour aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <section class="single-progress-summary">
+          <strong>丝绸之路专列12日 | Z653次 | 2025-08-15 发车</strong>
+          <span>生成后将进入 出团 > 团期列表，以班期履约对象承接并按车厢同步铺位库存。</span>
+        </section>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="trainTourCode">班期编号</label>
+            <input id="trainTourCode" class="form-control" type="text" value="TR-SILK-20250815-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="trainTourMin">最低成团人数</label>
+            <input id="trainTourMin" class="form-control" type="number" value="120">
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">同步铺位</label>
+            <div class="cruise-date-options">
+              <label><input type="checkbox" checked> 软卧 64铺</label>
+              <label><input type="checkbox" checked> 硬卧 144铺</label>
+              <label><input type="checkbox" checked> 商务座 40座</label>
+              <label><input type="checkbox" checked> 豪华包厢 16铺</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-train-tour>取消</button>
+        <button class="btn btn-primary" type="button" data-close-train-tour>生成班期</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var tabs = document.querySelectorAll('[data-train-tab]');
       var panels = document.querySelectorAll('[data-train-panel]');
       var routeModal = document.getElementById('trainRouteModal');
       var carriageModal = document.getElementById('trainCarriageModal');
+      var tourModal = document.getElementById('trainTourModal');
       var startInput = document.getElementById('trainStartDate');
       var endInput = document.getElementById('trainEndDate');
       var daysInput = document.getElementById('trainTripDays');
@@ -311,6 +369,12 @@
         });
       });
 
+      document.querySelectorAll('[data-open-train-tour]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          openDrawer(tourModal);
+        });
+      });
+
       document.querySelectorAll('[data-close-train-route]').forEach(function (button) {
         button.addEventListener('click', function () {
           closeDrawer(routeModal);
@@ -323,7 +387,13 @@
         });
       });
 
-      [routeModal, carriageModal].forEach(function (modal) {
+      document.querySelectorAll('[data-close-train-tour]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeDrawer(tourModal);
+        });
+      });
+
+      [routeModal, carriageModal, tourModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) closeDrawer(modal);
         });

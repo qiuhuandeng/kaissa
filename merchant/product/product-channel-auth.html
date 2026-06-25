@@ -34,6 +34,19 @@
             <option value="代理商">代理商</option>
           </select>
         </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="authProductType">产品类型</label>
+          <select id="authProductType">
+            <option value="">全部类型</option>
+            <option value="自营产品">自营产品</option>
+            <option value="外采产品">外采产品</option>
+            <option value="邮轮产品">邮轮产品</option>
+            <option value="专列产品">专列产品</option>
+            <option value="自由行">自由行</option>
+            <option value="单项委托">单项委托</option>
+            <option value="研学产品">研学产品</option>
+          </select>
+        </div>
         <div class="filter-item filter-item-status">
           <label class="sr-only" for="authStatus">授权状态</label>
           <select id="authStatus">
@@ -91,6 +104,15 @@
           <td>王强</td>
           <td><div class="table-action"><button type="button" data-revoke-auth>撤销申请</button><button type="button" data-view-auth>查看详情</button></div></td>
         </tr>
+        <tr data-product="东方丝路专列9日" data-channel="代理商" data-status="有效" data-approver="郑华">
+          <td><span class="table-main-link">东方丝路专列9日</span><br><span class="text-muted">KS-TR-005</span></td>
+          <td><span class="tag tag-orange">专列产品</span></td>
+          <td>代理商：华北专列分销联盟</td>
+          <td>2026-08-01 至 2026-10-31</td>
+          <td><span class="tag tag-green">有效</span></td>
+          <td>郑华</td>
+          <td><div class="table-action"><button type="button" data-revoke-auth>撤销申请</button><button type="button" data-view-auth>查看详情</button></div></td>
+        </tr>
         <tr data-product="三亚亲子5日游" data-channel="小程序" data-status="有效" data-approver="赵明">
           <td><span class="table-main-link">三亚亲子5日游</span><br><span class="text-muted">KS-HN-003</span></td>
           <td><span class="tag tag-blue">自营产品</span></td>
@@ -116,6 +138,15 @@
           <td>2026-06-15 至 2026-12-31</td>
           <td><span class="tag tag-green">有效</span></td>
           <td>郑华</td>
+          <td><div class="table-action"><button type="button" data-revoke-auth>撤销申请</button><button type="button" data-view-auth>查看详情</button></div></td>
+        </tr>
+        <tr data-product="日本签证代办" data-channel="小程序" data-status="有效" data-approver="吴芳">
+          <td><span class="table-main-link">日本签证代办</span><br><span class="text-muted">KS-WT-009</span></td>
+          <td><span class="tag tag-gray">单项委托</span></td>
+          <td>小程序</td>
+          <td>2026-06-01 至 永久有效</td>
+          <td><span class="tag tag-green">有效</span></td>
+          <td>吴芳</td>
           <td><div class="table-action"><button type="button" data-revoke-auth>撤销申请</button><button type="button" data-view-auth>查看详情</button></div></td>
         </tr>
         <tr data-product="北京故宫定制3日" data-channel="代理商" data-status="待审批" data-approver="陈红">
@@ -260,13 +291,15 @@
       function filterRows() {
         var keyword = document.getElementById('authProductName').value.trim();
         var channel = document.getElementById('authChannel').value;
+        var productType = document.getElementById('authProductType').value;
         var status = document.getElementById('authStatus').value;
 
         rows.forEach(function (row) {
           var matchesKeyword = !keyword || row.dataset.product.indexOf(keyword) !== -1;
           var matchesChannel = !channel || row.dataset.channel === channel;
+          var matchesType = !productType || rowTypeText(row) === productType;
           var matchesStatus = !status || row.dataset.status === status;
-          row.hidden = !(matchesKeyword && matchesChannel && matchesStatus);
+          row.hidden = !(matchesKeyword && matchesChannel && matchesType && matchesStatus);
         });
       }
 

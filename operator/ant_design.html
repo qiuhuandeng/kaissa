@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ant Design 风格双栏菜单与订单管理系统</title>
+  <!-- 引入 Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Lucide 图标库 CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    /* 隐藏滚动条但保留滚动能力 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#f5f7fa] text-neutral-800 antialiased overflow-hidden h-screen w-full flex relative select-none">
+
+  <!-- 1. 最左侧：极窄暗色一级菜单 (宽度: 严格 64px / w-16) -->
+  <aside class="hidden md:flex flex-col items-center w-16 bg-[#001529] text-white shrink-0 z-30 shadow-lg">
+    <!-- Ant Design 经典 LOGO 缩影 -->
+    <div class="flex items-center justify-center h-16 w-full border-b border-white/10 bg-[#002140]">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/30">
+        <span class="font-bold text-white text-base">A</span>
+      </div>
+    </div>
+
+    <!-- 一级菜单项容器 -->
+    <nav id="primary-nav-container" class="flex-1 w-full py-4 space-y-1">
+      <!-- 动态通过 JS 渲染 -->
+    </nav>
+
+    <!-- 底部辅助区 -->
+    <div class="w-full border-t border-white/10 p-3 space-y-3 flex flex-col items-center">
+      <button class="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors" title="帮助文档">
+        <i data-lucide="help-circle" class="w-5 h-5"></i>
+      </button>
+      <div class="relative group cursor-pointer">
+        <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500 flex items-center justify-center text-xs text-blue-300 font-bold overflow-hidden">
+          <i data-lucide="user" class="w-4 h-4 text-blue-200"></i>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2. 次级侧边栏：白色长条 (宽度: 严格 160px) + 整体收纳过渡 -->
+  <aside 
+    id="secondary-sidebar"
+    class="hidden md:flex flex-col bg-white border-r border-neutral-200/80 shrink-0 z-20 transition-all duration-300 ease-in-out relative w-[160px] opacity-100"
+  >
+    <!-- 二级菜单模块头部 -->
+    <div class="h-16 flex flex-col justify-center px-4 border-b border-neutral-100 overflow-hidden whitespace-nowrap">
+      <div class="flex items-center justify-between">
+        <h2 id="secondary-title" class="text-xs font-bold text-neutral-800 tracking-wider">
+          <!-- 动态二级名 -->
+        </h2>
+        <span id="secondary-badge" class="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium scale-90">
+          <!-- 动态分组数 -->
+        </span>
+      </div>
+    </div>
+
+    <!-- 搜索框：快速检索当前模块的二三级功能 -->
+    <div class="p-2 border-b border-neutral-100/50 overflow-hidden">
+      <div class="relative flex items-center">
+        <i data-lucide="search" class="absolute left-2 w-3.5 h-3.5 text-neutral-400"></i>
+        <input
+          type="text"
+          id="menu-search"
+          placeholder="过滤当前功能..."
+          class="w-full text-[11px] pl-6 pr-2 py-1 bg-neutral-50 border border-neutral-200 rounded focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-neutral-700 placeholder:text-neutral-400"
+        />
+      </div>
+    </div>
+
+    <!-- 二三级折叠列表容器 -->
+    <div id="secondary-list-container" class="flex-1 overflow-y-auto py-2 space-y-3 px-1.5 no-scrollbar">
+      <!-- 动态通过 JS 渲染 -->
+    </div>
+
+    <!-- 侧边栏底部版本标识 -->
+    <div class="p-2 border-t border-neutral-100 text-center overflow-hidden whitespace-nowrap">
+      <p class="text-[9px] text-neutral-400 font-mono tracking-tight scale-90">Ant Menu v4.5</p>
+    </div>
+  </aside>
+
+  <!-- 🌟 核心：二级整栏收纳折叠悬浮按钮 (Ant Design 经典悬浮小边翼) -->
+  <div 
+    id="sidebar-toggle-btn-container"
+    class="hidden md:flex absolute top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ease-in-out"
+    style="left: 214px;" 
+  >
+    <button
+      onclick="toggleSecondarySidebar()"
+      class="w-5 h-8 bg-white border border-neutral-200 rounded-r-md shadow-md flex items-center justify-center text-neutral-500 hover:text-blue-600 active:scale-95 transition-all focus:outline-none"
+    >
+      <i id="sidebar-toggle-icon" data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+    </button>
+  </div>
+
+  <!-- 3. 移动端自适应抽屉式导航 -->
+  <div id="mobile-drawer" class="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 md:hidden transition-opacity hidden" onclick="toggleMobileDrawer(false)">
+    <div class="w-[260px] h-full bg-white flex" onclick="event.stopPropagation()">
+      <!-- 移动端一级暗色栏 -->
+      <div id="mobile-primary-container" class="w-14 bg-[#001529] text-white flex flex-col items-center py-4 space-y-3">
+        <!-- JS 渲染 -->
+      </div>
+      <!-- 移动端二级白色列表 -->
+      <div class="flex-1 flex flex-col bg-white">
+        <div class="p-3 border-b border-neutral-100 flex items-center justify-between">
+          <span id="mobile-secondary-title" class="font-bold text-xs text-neutral-800">服务菜单</span>
+          <button class="text-[11px] text-neutral-400" onclick="toggleMobileDrawer(false)">关闭</button>
+        </div>
+        <div id="mobile-secondary-container" class="p-2 overflow-y-auto flex-1 space-y-3">
+          <!-- JS 渲染 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 右侧内容主画布 -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    
+    <!-- 顶部全局导航栏 -->
+    <header class="h-16 bg-white border-b border-neutral-200/80 flex items-center justify-between px-6 shrink-0 z-10">
+      <div class="flex items-center space-x-4">
+        <!-- 移动端菜单激活器 -->
+        <button 
+          onclick="toggleMobileDrawer(true)"
+          class="md:hidden p-1.5 rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors"
+        >
+          <i data-lucide="menu" class="w-4 h-4"></i>
+        </button>
+
+        <!-- 面包屑路径导航 -->
+        <div id="breadcrumb-container" class="hidden sm:flex items-center space-x-1.5 text-xs text-neutral-400 select-none">
+          <!-- JS 渲染 -->
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <!-- 极简双栏折叠提示 -->
+        <div class="hidden lg:flex items-center space-x-1 text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded border border-blue-200/60">
+          <span class="font-semibold">极简双栏：</span>
+          <span>一级 64px，二级 160px。点击边界浮动按钮，可以折叠整栏。</span>
+        </div>
+
+        <div class="hidden sm:flex items-center text-xs text-neutral-600 bg-neutral-100 px-2.5 py-1.5 rounded border border-neutral-200">
+          <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+          <span>生产集群-A区</span>
+        </div>
+
+        <hr class="h-4 w-[1px] bg-neutral-200" />
+
+        <!-- 个人资料 -->
+        <div class="flex items-center space-x-2 cursor-pointer group">
+          <div class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-xs shadow-sm">
+            李
+          </div>
+          <span class="text-xs text-neutral-600 font-medium group-hover:text-blue-600 transition-colors">李经理</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主画布滚动区 -->
+    <main id="main-content" class="flex-1 overflow-y-auto p-6 space-y-6">
+      <!-- 动态画布内容由 JS 替换渲染 -->
+    </main>
+
+  </div>
+
+  <script>
+    // 菜单全局数据配置
+    const MENU_DATA = [
+      {
+        id: 'dashboard',
+        label: '仪表',
+        icon: 'layout-dashboard',
+        groups: [
+          {
+            id: 'data-analysis',
+            label: '数据分析',
+            items: [
+              { id: 'realtime-monitor', label: '实时监控', desc: '实时系统流量及并发数据指标' },
+              { id: 'user-retention', label: '用户留存', desc: '新老用户次周/月度留存漏斗' },
+              { id: 'behavior-analysis', label: '行为轨迹', desc: '全链路行为路径监测与归因' }
+            ]
+          },
+          {
+            id: 'business-board',
+            label: '业务大盘',
+            items: [
+              { id: 'sales-stats', label: '销售统计', desc: '各品类及渠道销售数据汇总' },
+              { id: 'cost-control', label: '成本核算', desc: '研发、运营与营销费用边际曲线' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'orders',
+        label: '订单',
+        icon: 'shopping-cart',
+        groups: [
+          {
+            id: 'order-management',
+            label: '订单管理',
+            items: [
+              { id: 'all-orders', label: '全部订单', desc: '查询及处理系统所有全渠道订单数据' },
+              { id: 'after-sales', label: '售后退款', desc: '处理用户退货、换货及退款申请' }
+            ]
+          },
+          {
+            id: 'logistics',
+            label: '物流履约',
+            items: [
+              { id: 'pending-deliver', label: '待发货列表', desc: '待同步仓储与分配物流单号的订单' },
+              { id: 'logistic-tracking', label: '物流轨迹', desc: '全网快递实时路由节点状态跟踪' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'develop',
+        label: '研发',
+        icon: 'code-2',
+        groups: [
+          {
+            id: 'project-management',
+            label: '项目管理',
+            items: [
+              { id: 'sprint-plan', label: '迭代计划', desc: '双周敏捷迭代看板与里程碑' },
+              { id: 'task-board', label: '任务看板', desc: '协同任务拖拽及状态跟踪流' },
+              { id: 'bug-tracking', label: '缺陷跟踪', desc: '线上故障与研发工单快速流转' }
+            ]
+          },
+          {
+            id: 'ci-cd',
+            label: '持续集成',
+            items: [
+              { id: 'pipelines', label: '流水线', desc: '云原生自动化构建与部署流' },
+              { id: 'container-service', label: '容器服务', desc: 'K8s集群资源监视与Pod调度' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'marketing',
+        label: '营销',
+        icon: 'megaphone',
+        groups: [
+          {
+            id: 'channels',
+            label: '渠道推广',
+            items: [
+              { id: 'ad-delivery', label: '广告投放', desc: '多源广告平台投资回报率ROI分析' },
+              { id: 'sms-marketing', label: '短信通知', desc: '个性化场景营销短信批量群发' }
+            ]
+          },
+          {
+            id: 'benefits',
+            label: '权益管理',
+            items: [
+              { id: 'coupons', label: '优惠券发放', desc: '立减券、折扣券生命周期策略' },
+              { id: 'points-mall', label: '积分商城', desc: '用户成长激励与实体/虚拟兑换' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'system',
+        label: '系统',
+        icon: 'settings',
+        groups: [
+          {
+            id: 'security',
+            label: '安全与权限',
+            items: [
+              { id: 'role-acl', label: '权限控制', desc: 'RBAC精细化菜单与按钮级授权' },
+              { id: 'user-roles', label: '分配角色', desc: '企业组织架构及员工职位分配' }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // 仿真订单数据
+    const MOCK_ORDERS = [
+      { id: 'ORD-20260625-8831', time: '2026-06-25 15:30:22', price: '￥1,280.00', user: '陈先生', phone: '139****1223', channel: '淘宝旗舰店', status: '待发货', statusColor: 'amber' },
+      { id: 'ORD-20260625-7729', time: '2026-06-25 14:15:00', price: '￥328.50', user: '林女士', phone: '186****9928', channel: '京东自营', status: '已发货', statusColor: 'blue' },
+      { id: 'ORD-20260625-4412', time: '2026-06-25 11:02:45', price: '￥5,999.00', user: '高先生', phone: '155****3301', channel: '抖音直播', status: '已完成', statusColor: 'green' },
+      { id: 'ORD-20260625-1029', time: '2026-06-25 09:44:12', price: '￥88.00', user: '周女士', phone: '130****7762', channel: '微信小程序', status: '待付款', statusColor: 'neutral' },
+      { id: 'ORD-20260624-9981', time: '2026-06-24 18:22:10', price: '￥450.00', user: '马先生', phone: '189****0012', channel: '线下收银', status: '已完成', statusColor: 'green' },
+      { id: 'ORD-20260624-8842', time: '2026-06-24 16:05:33', price: '￥2,100.00', user: '王先生', phone: '173****5541', channel: '官网商城', status: '退款中', statusColor: 'red' },
+    ];
+
+    // 响应式状态管理 state
+    const state = {
+      activePrimary: 'dashboard',
+      activeTertiary: 'realtime-monitor',
+      isSecondaryCollapsed: false,
+      searchQuery: '',
+      collapsedGroups: {},
+      orderFilterStatus: '全部',
+      orderSearchText: ''
+    };
+
+    // 页面初次载入
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+      
+      // 菜单搜索过滤联动绑定
+      const searchInput = document.getElementById('menu-search');
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        renderSecondaryMenu();
+        lucide.createIcons();
+      });
+    });
+
+    // 统一渲染引擎
+    function renderAll() {
+      renderPrimaryMenu();
+      renderSecondaryMenu();
+      renderBreadcrumbs();
+      renderWorkspace();
+      lucide.createIcons();
+    }
+
+    // 1. 渲染一级极窄暗栏
+    function renderPrimaryMenu() {
+      const container = document.getElementById('primary-nav-container');
+      const mobileContainer = document.getElementById('mobile-primary-container');
+      let pcHtml = '';
+      let mobHtml = '';
+
+      MENU_DATA.forEach(menu => {
+        const isActive = menu.id === state.activePrimary;
+        
+        pcHtml += `
+          <button
+            onclick="handlePrimaryClick('${menu.id}')"
+            class="relative flex flex-col items-center justify-center w-full py-3 group transition-all duration-200 ${
+              isActive 
+                ? 'text-white bg-blue-600/95' 
+                : 'text-neutral-400 hover:text-white hover:bg-white/5'
+            }"
+          >
+            ${isActive ? `<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-blue-400 rounded-r-sm animate-pulse"></div>` : ''}
+            <i data-lucide="${menu.icon}" class="w-5 h-5 transition-transform duration-200 group-hover:scale-105 ${isActive ? 'scale-105' : ''}"></i>
+            <span class="text-[11px] mt-1 font-medium tracking-wider scale-90">${menu.label}</span>
+            <div class="absolute left-16 px-2.5 py-1.5 bg-neutral-900 text-neutral-100 text-xs rounded shadow-md opacity-0 translate-x-2 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 whitespace-nowrap z-50">
+              ${menu.label}中心
+            </div>
+          </button>
+        `;
+
+        mobHtml += `
+          <button
+            onclick="handlePrimaryClick('${menu.id}')"
+            class="p-2.5 rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white' : 'text-neutral-400'}"
+          >
+            <i data-lucide="${menu.icon}" class="w-4 h-4"></i>
+          </button>
+        `;
+      });
+
+      container.innerHTML = pcHtml;
+      mobileContainer.innerHTML = mobHtml;
+    }
+
+    // 2. 渲染二级 160px 白色长条 (含三级菜单项)
+    function renderSecondaryMenu() {
+      const currentPrimary = MENU_DATA.find(m => m.id === state.activePrimary) || MENU_DATA[0];
+      
+      document.getElementById('secondary-title').innerText = `${currentPrimary.label}服务`;
+      document.getElementById('secondary-badge').innerText = `${currentPrimary.groups.length}大类`;
+      document.getElementById('mobile-secondary-title').innerText = `${currentPrimary.label}中心`;
+
+      const container = document.getElementById('secondary-list-container');
+      const mobContainer = document.getElementById('mobile-secondary-container');
+      let pcHtml = '';
+      let mobHtml = '';
+
+      // 关键词菜单本地模糊搜索过滤
+      const query = state.searchQuery.toLowerCase().trim();
+
+      currentPrimary.groups.forEach(group => {
+        const isGroupCollapsed = state.collapsedGroups[group.id] || false;
+        
+        // 过滤子项
+        const filteredItems = group.items.filter(item => 
+          item.label.toLowerCase().includes(query) || 
+          item.desc.toLowerCase().includes(query)
+        );
+
+        const hasVisibleItems = filteredItems.length > 0 || group.label.toLowerCase().includes(query);
+
+        if (hasVisibleItems) {
+          const renderList = query ? filteredItems : group.items;
+
+          // PC 端渲染
+          pcHtml += `
+            <div class="space-y-1">
+              <button
+                onclick="toggleGroupCollapse('${group.id}')"
+                class="flex items-center justify-between w-full px-2 py-1 rounded text-neutral-400 hover:text-neutral-800 hover:bg-neutral-50 transition-all text-[10px] font-bold tracking-wider uppercase"
+              >
+                <span class="truncate">${group.label}</span>
+                <i id="chevron-${group.id}" data-lucide="${isGroupCollapsed ? 'chevron-right' : 'chevron-down'}" class="w-2.5 h-2.5"></i>
+              </button>
+              
+              ${!isGroupCollapsed ? `
+                <div class="space-y-[1px] transition-all">
+                  ${renderList.map(item => {
+                    const isActive = item.id === state.activeTertiary;
+                    return `
+                      <button
+                        onclick="handleTertiaryClick('${item.id}')"
+                        class="group/item flex items-center justify-between w-full text-left px-2 py-1.5 rounded transition-all duration-100 text-[12px] ${
+                          isActive
+                            ? 'bg-blue-50/80 text-blue-600 font-semibold'
+                            : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        }"
+                      >
+                        <span class="truncate">${item.label}</span>
+                        <span class="w-1 h-1 rounded-full shrink-0 ml-1 transition-all ${
+                          isActive ? 'bg-blue-500 scale-100' : 'bg-neutral-300 opacity-0 scale-50 group-hover/item:opacity-60 group-hover/item:scale-100'
+                        }"></span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+
+          // 移动端侧边抽屉渲染
+          mobHtml += `
+            <div class="space-y-1">
+              <div class="text-[10px] font-bold text-neutral-400 px-2 uppercase">${group.label}</div>
+              <div class="space-y-[1px]">
+                ${renderList.map(item => {
+                  const isActive = item.id === state.activeTertiary;
+                  return `
+                    <button
+                      onclick="handleTertiaryClick('${item.id}'); toggleMobileDrawer(false);"
+                      class="w-full text-left px-3 py-1.5 rounded text-xs ${
+                        isActive ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-neutral-600'
+                      }"
+                    >
+                      ${item.label}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      if (pcHtml === '') {
+        pcHtml = `<div class="text-center py-6"><p class="text-[11px] text-neutral-400">无匹配结果</p></div>`;
+      }
+
+      container.innerHTML = pcHtml;
+      mobContainer.innerHTML = mobHtml;
+    }
+
+    // 3. 渲染面包屑
+    function renderBreadcrumbs() {
+      const activeObj = getActiveObjects();
+      const container = document.getElementById('breadcrumb-container');
+      container.innerHTML = `
+        <span class="hover:text-neutral-600 cursor-pointer">控制台</span>
+        <span>/</span>
+        <span class="hover:text-neutral-600 cursor-pointer">${activeObj.primary.label}中心</span>
+        <span>/</span>
+        <span class="text-neutral-500 font-medium">${activeObj.group.label}</span>
+        <span>/</span>
+        <span class="text-blue-600 font-medium">${activeObj.item.label}</span>
+      `;
+    }
+
+    // 4. 渲染核心功能主工作区
+    function renderWorkspace() {
+      const activeObj = getActiveObjects();
+      const mainContent = document.getElementById('main-content');
+
+      // 🌟 重新优化美化后的标题部分：不再包含蓝色路径小字面包屑，也不再包含灰色英文字 ID 标识徽章和副标题说明
+      let titleHeaderHtml = `
+        <div class="bg-white p-5 rounded-lg border border-neutral-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-lg font-bold text-neutral-900 tracking-tight">
+              ${activeObj.item.label}
+            </h1>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="simulateRefresh()" class="flex items-center text-xs bg-white text-neutral-600 px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 active:scale-95 transition-all">
+              <i data-lucide="refresh-cw" class="w-3 h-3 mr-1.5"></i>
+              刷新视图
+            </button>
+          </div>
+        </div>
+      `;
+
+      // 根据选中的一级大类进行渲染分流
+      if (state.activePrimary === 'orders') {
+        // 分流到：专业的【订单管理】工作区
+        const filteredOrders = MOCK_ORDERS.filter(order => {
+          const matchStatus = state.orderFilterStatus === '全部' || order.status === state.orderFilterStatus;
+          const matchText = state.orderSearchText.trim() === '' || 
+            order.id.toLowerCase().includes(state.orderSearchText.toLowerCase()) ||
+            order.user.toLowerCase().includes(state.orderSearchText.toLowerCase()) ||
+            order.phone.includes(state.orderSearchText);
+          return matchStatus && matchText;
+        });
+
+        mainContent.innerHTML = `
+          ${titleHeaderHtml}
+          
+          <div class="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden animate-fadeIn">
+            <!-- 订单搜索和批量过滤条件 -->
+            <div class="p-5 border-b border-neutral-100 space-y-4">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center space-x-2">
+                  <span class="w-1 h-3.5 bg-blue-600 rounded"></span>
+                  <h3 class="text-sm font-bold text-neutral-800">全网订单动态追踪</h3>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                  <button onclick="alert('对账单数据已开始后台准备，稍后自动下载...')" class="flex items-center text-xs text-neutral-600 bg-white border border-neutral-200 px-3 py-1.5 rounded hover:bg-neutral-50">
+                    <i data-lucide="download" class="w-3.5 h-3.5 mr-1"></i>
+                    导出对账单
+                  </button>
+                  <button onclick="alert('即将拉起创建订单侧边栏页面')" class="flex items-center text-xs text-white bg-blue-600 px-3 py-1.5 rounded hover:bg-blue-700 font-semibold shadow-sm shadow-blue-500/10">
+                    <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i>
+                    创建新订单
+                  </button>
+                </div>
+              </div>
+
+              <!-- 输入筛选网格 -->
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
+                <div class="relative flex items-center">
+                  <i data-lucide="search" class="absolute left-2.5 w-3.5 h-3.5 text-neutral-400"></i>
+                  <input 
+                    type="text" 
+                    id="order-search-input"
+                    placeholder="搜索单号/买家/手机" 
+                    value="${state.orderSearchText}"
+                    oninput="handleOrderSearch(this.value)"
+                    class="w-full text-xs pl-8 pr-2 py-1.5 bg-neutral-50 border border-neutral-200 rounded focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-neutral-700"
+                  />
+                </div>
+                <div>
+                  <select class="w-full text-xs p-1.5 bg-neutral-50 border border-neutral-200 rounded text-neutral-600 focus:outline-none focus:border-blue-500">
+                    <option>所有下单渠道</option>
+                    <option>淘宝旗舰店</option>
+                    <option>京东自营</option>
+                    <option>抖音直播</option>
+                    <option>官网商城</option>
+                  </select>
+                </div>
+                <div>
+                  <input type="date" class="w-full text-xs p-1.5 bg-neutral-50 border border-neutral-200 rounded text-neutral-500 focus:outline-none focus:border-blue-500" />
+                </div>
+                <div class="flex items-center justify-end">
+                  <button 
+                    onclick="resetOrderFilters()"
+                    class="text-xs text-neutral-400 hover:text-blue-600 transition-colors"
+                  >
+                    清空筛选条件
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 标签状态分流页签 -->
+            <div class="flex space-x-6 px-5 border-b border-neutral-100 text-xs">
+              ${['全部', '待付款', '待发货', '已发货', '已完成', '退款中'].map((status) => {
+                const isActive = state.orderFilterStatus === status;
+                return `
+                  <button
+                    onclick="changeOrderTabStatus('${status}')"
+                    class="py-3 relative font-medium transition-all ${
+                      isActive ? 'text-blue-600 font-semibold' : 'text-neutral-500 hover:text-neutral-900'
+                    }"
+                  >
+                    ${status}
+                    ${isActive ? `<span class="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-full"></span>` : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- 订单核心动态明细表 -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-neutral-600 border-collapse">
+                <thead>
+                  <tr class="bg-neutral-50 border-b border-neutral-200 text-neutral-500 font-semibold select-none">
+                    <th class="py-3 px-5">订单编号</th>
+                    <th class="py-3 px-4">下单时间</th>
+                    <th class="py-3 px-4">买家主体信息</th>
+                    <th class="py-3 px-4">交易源渠道</th>
+                    <th class="py-3 px-4">实付总金额</th>
+                    <th class="py-3 px-4">当前履约状态</th>
+                    <th class="py-3 px-5 text-right">行为操作</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body" class="divide-y divide-neutral-100 bg-white">
+                  <!-- 局部列表行由 JS 渲染更新以防输入框失去焦点 -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="p-4 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between text-neutral-500 text-[11px]">
+              <span id="order-count-text">共显示 0 个订单项</span>
+              <div class="flex space-x-1">
+                <button class="px-2 py-0.5 border border-neutral-200 rounded bg-white text-neutral-400 cursor-not-allowed">上页</button>
+                <button class="px-2 py-0.5 border border-neutral-200 rounded bg-blue-600 text-white font-medium">1</button>
+                <button class="px-2 py-0.5 border border-neutral-200 rounded bg-white hover:bg-neutral-50 text-neutral-700">下页</button>
+              </div>
+            </div>
+          </div>
+        `;
+        renderOrderTableRows(filteredOrders);
+      } else {
+        // 渲染：默认【控制台与链路监测】工作区
+        mainContent.innerHTML = `
+          ${titleHeaderHtml}
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-fadeIn">
+            
+            <div class="xl:col-span-2 space-y-6">
+              <!-- 大盘统计微卡片 -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p class="text-xs text-neutral-400 font-medium">总日活跃用户 (UV)</p>
+                    <p class="text-xl font-bold font-mono text-neutral-900 mt-1">142,830</p>
+                    <span class="text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-medium mt-1 inline-flex items-center">
+                      <i data-lucide="arrow-up-right" class="w-3 h-3 mr-0.5"></i> +12.5% 周环比
+                    </span>
+                  </div>
+                  <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                  </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p class="text-xs text-neutral-400 font-medium">并发吞吐负载 (QPS)</p>
+                    <p class="text-xl font-bold font-mono text-neutral-900 mt-1">1,248 /s</p>
+                    <span class="text-[10px] text-red-500 bg-red-50 px-1.5 py-0.5 rounded font-medium mt-1 inline-flex items-center">
+                      <i data-lucide="arrow-down-right" class="w-3 h-3 mr-0.5"></i> -3.2% 异常波动
+                    </span>
+                  </div>
+                  <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                  </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p class="text-xs text-neutral-400 font-medium">核心营销转化率</p>
+                    <p class="text-xl font-bold font-mono text-neutral-900 mt-1">14.82%</p>
+                    <span class="text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-medium mt-1 inline-flex items-center">
+                      <i data-lucide="arrow-up-right" class="w-3 h-3 mr-0.5"></i> +2.1% 运营提升
+                    </span>
+                  </div>
+                  <div class="p-3 bg-teal-50 text-teal-600 rounded-lg">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 物理承载链路表 -->
+              <div class="bg-white rounded-lg border border-neutral-200/80 shadow-sm overflow-hidden">
+                <div class="px-4 py-3.5 border-b border-neutral-100 flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-1 h-3.5 bg-blue-600 rounded"></span>
+                    <h3 class="text-xs font-bold text-neutral-800">当前监控链路节点</h3>
+                  </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs text-neutral-600 border-collapse">
+                    <thead>
+                      <tr class="bg-neutral-50 border-b border-neutral-150 text-neutral-500 font-semibold select-none">
+                        <th class="py-2.5 px-4">关联对象</th>
+                        <th class="py-2.5 px-4">模块物理路径</th>
+                        <th class="py-2.5 px-4">实时运行状态</th>
+                        <th class="py-2.5 px-4">上次操作时间</th>
+                        <th class="py-2.5 px-4 text-right">操作行为</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-100">
+                      <tr class="hover:bg-neutral-50/50 transition-colors">
+                        <td class="py-3 px-4 font-semibold text-neutral-800 flex items-center space-x-1.5">
+                          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500 shrink-0"></i>
+                          <span>核心主数据网格_v1</span>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-neutral-500">${activeObj.primary.id} / ${activeObj.item.id}</td>
+                        <td class="py-3 px-4">
+                          <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium text-[10px]">Healthy 运行中</span>
+                        </td>
+                        <td class="py-3 px-4 text-neutral-400">10分钟前</td>
+                        <td class="py-3 px-4 text-right text-blue-600 space-x-3">
+                          <button onclick="alert('配置面板加载成功')" class="hover:underline">配置</button>
+                          <button onclick="alert('系统运行日志：一切指标稳定。')" class="hover:underline text-neutral-400">日志</button>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-neutral-50/50 transition-colors">
+                        <td class="py-3 px-4 font-semibold text-neutral-800 flex items-center space-x-1.5">
+                          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500 shrink-0"></i>
+                          <span>异步计算流通道_7</span>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-neutral-500">${activeObj.primary.id} / ${activeObj.group.id}</td>
+                        <td class="py-3 px-4">
+                          <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium text-[10px]">Healthy 运行中</span>
+                        </td>
+                        <td class="py-3 px-4 text-neutral-400">1小时前</td>
+                        <td class="py-3 px-4 text-right text-blue-600 space-x-3">
+                          <button onclick="alert('配置面板加载成功')" class="hover:underline">配置</button>
+                          <button onclick="alert('系统运行日志：一切指标稳定。')" class="hover:underline text-neutral-400">日志</button>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-neutral-50/50 transition-colors">
+                        <td class="py-3 px-4 font-semibold text-neutral-800 flex items-center space-x-1.5">
+                          <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+                          <span>多可用区部署负载均衡</span>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-neutral-500">infrastructure / k8s</td>
+                        <td class="py-3 px-4">
+                          <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-medium text-[10px]">Warning 延迟偏高</span>
+                        </td>
+                        <td class="py-3 px-4 text-neutral-400">3小时前</td>
+                        <td class="py-3 px-4 text-right text-blue-600 space-x-3">
+                          <button onclick="alert('正在调配节点权重...')" class="hover:underline">调配</button>
+                          <button onclick="alert('深度自愈分析完成')" class="hover:underline text-neutral-400">分析</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右侧设计详解卡片 -->
+            <div class="space-y-6">
+              <div class="bg-white p-5 rounded-lg border border-neutral-200/80 shadow-sm space-y-4">
+                <div class="flex items-center space-x-2 text-indigo-600">
+                  <i data-lucide="folder-tree" class="w-4 h-4"></i>
+                  <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wider">Ant Style 尺寸规范</h3>
+                </div>
+                
+                <p class="text-xs text-neutral-500 leading-relaxed">
+                  为了在有限的高信息负荷工作区中提供更沉浸的使用体验，我们严格限制了双栏的占用尺寸：
+                </p>
+
+                <div class="space-y-3 pt-1">
+                  <div class="flex items-start space-x-2">
+                    <div class="w-4 h-4 bg-[#001529] text-white text-[9px] font-bold rounded flex items-center justify-center shrink-0 mt-0.5">1</div>
+                    <div>
+                      <h4 class="text-xs font-semibold text-neutral-800">一级窄暗栏 (64px)</h4>
+                      <p class="text-[11px] text-neutral-400">微缩的宽度搭配二字小标题，极大节省横向视网膜扫视距离。</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-2">
+                    <div class="w-4 h-4 bg-neutral-100 text-neutral-600 text-[9px] font-bold rounded flex items-center justify-center shrink-0 mt-0.5 border border-neutral-200">2</div>
+                    <div>
+                      <h4 class="text-xs font-semibold text-neutral-800">二级柔白长条 (160px)</h4>
+                      <p class="text-[11px] text-neutral-400">紧凑干练，支持局部小类折叠展开和整栏收纳。</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-2">
+                    <div class="w-4 h-4 bg-blue-50 text-blue-600 text-[9px] font-bold rounded flex items-center justify-center shrink-0 mt-0.5 border border-blue-100">3</div>
+                    <div>
+                      <h4 class="text-xs font-semibold text-neutral-800">一键整栏折叠 (收放自如)</h4>
+                      <p class="text-[11px] text-neutral-400">通过边缘悬浮的 Chevron 钮将二级整体折叠为 0，释放宽广的表格画布。</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-1">
+                  <div class="bg-neutral-50 p-2.5 rounded border border-neutral-100 text-[10px] text-neutral-500 font-mono space-y-0.5">
+                    <div class="flex justify-between">
+                      <span>二级菜单宽度:</span>
+                      <span class="font-semibold text-neutral-700">160 px (精简)</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>当前整栏折叠:</span>
+                      <span id="debug-collapsed-text" class="font-semibold text-blue-600">展开中 (w-160px)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-[#001529] to-[#002140] p-5 rounded-lg text-white shadow-md relative overflow-hidden">
+                <h3 class="text-xs font-bold mb-2 flex items-center uppercase tracking-wide">
+                  <i data-lucide="sliders" class="w-3.5 h-3.5 mr-1.5 text-blue-400"></i>
+                  高保真交互模拟
+                </h3>
+                <p class="text-[11px] text-neutral-300 leading-relaxed">
+                  您可以放心使用本组件进行线上汇报或直接嵌入前端项目中。支持完整的二级折叠逻辑、实时多条件订单检索分流、一键过滤，已排除所有高负载视觉杂音。
+                </p>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }
+    }
+
+    // 单独渲染订单表格的行（以防止因为 innerHTML 重绘导致整个 main 区域输入框失去焦点）
+    function renderOrderTableRows(filteredOrders) {
+      const tbody = document.getElementById('orders-table-body');
+      const countText = document.getElementById('order-count-text');
+      if (!tbody) return;
+
+      countText.innerText = `共显示 ${filteredOrders.length} 个订单项`;
+
+      if (filteredOrders.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colSpan="7" class="py-12 text-center text-neutral-400">
+              暂无符合当前过滤状态的订单数据
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filteredOrders.map(order => `
+        <tr class="hover:bg-neutral-50/40 transition-colors">
+          <td class="py-3.5 px-5 font-semibold text-neutral-800 font-mono">${order.id}</td>
+          <td class="py-3.5 px-4 text-neutral-400 text-[11px]">${order.time}</td>
+          <td class="py-3.5 px-4">
+            <div class="font-medium text-neutral-800">${order.user}</div>
+            <div class="text-[10px] text-neutral-400">${order.phone}</div>
+          </td>
+          <td class="py-3.5 px-4 text-neutral-500 font-medium">${order.channel}</td>
+          <td class="py-3.5 px-4 font-semibold font-mono text-neutral-900 text-[13px]">${order.price}</td>
+          <td class="py-3.5 px-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+              order.statusColor === 'green' ? 'bg-green-50 text-green-700 border-green-100' :
+              order.statusColor === 'amber' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+              order.statusColor === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+              order.statusColor === 'red' ? 'bg-red-50 text-red-700 border-red-100' :
+              'bg-neutral-100 text-neutral-600 border-neutral-200'
+            }">
+              <span class="w-1.5 h-1.5 rounded-full mr-1.5 ${
+                order.statusColor === 'green' ? 'bg-green-500' :
+                order.statusColor === 'amber' ? 'bg-amber-500' :
+                order.statusColor === 'blue' ? 'bg-blue-500' :
+                order.statusColor === 'red' ? 'bg-red-500' :
+                'bg-neutral-500'
+              }"></span>
+              ${order.status}
+            </span>
+          </td>
+          <td class="py-3.5 px-5 text-right text-blue-600 font-medium space-x-3">
+            <button onclick="alert('订单[${order.id}]处理成功')" class="hover:underline hover:text-blue-700">处理</button>
+            <button onclick="alert('暂无更多操作日志')" class="hover:underline text-neutral-400">日志</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 辅助状态定位器
+    function getActiveObjects() {
+      for (const p of MENU_DATA) {
+        for (const g of p.groups) {
+          const item = g.items.find(i => i.id === state.activeTertiary);
+          if (item) {
+            return { primary: p, group: g, item: item };
+          }
+        }
+      }
+      return {
+        primary: MENU_DATA[0],
+        group: MENU_DATA[0].groups[0],
+        item: MENU_DATA[0].groups[0].items[0]
+      };
+    }
+
+    // 交互行为：点击一级大栏图标
+    function handlePrimaryClick(id) {
+      state.activePrimary = id;
+      state.searchQuery = '';
+      
+      // 清空本地菜单过滤框内容
+      document.getElementById('menu-search').value = '';
+
+      // 默认选中新一级模块下的第一个三级功能项
+      const nextPrimary = MENU_DATA.find(m => m.id === id);
+      if (nextPrimary && nextPrimary.groups.length > 0 && nextPrimary.groups[0].items.length > 0) {
+        state.activeTertiary = nextPrimary.groups[0].items[0].id;
+      }
+
+      // 重设大模块时默认拉开二级侧边栏以显示列表
+      state.isSecondaryCollapsed = false;
+      updateSidebarCollapseUI();
+
+      renderAll();
+    }
+
+    // 交互行为：点击三级节点
+    function handleTertiaryClick(itemId) {
+      state.activeTertiary = itemId;
+      renderAll();
+    }
+
+    // 交互行为：局部折叠/展开大组
+    function toggleGroupCollapse(groupId) {
+      state.collapsedGroups[groupId] = !state.collapsedGroups[groupId];
+      renderSecondaryMenu();
+      lucide.createIcons();
+    }
+
+    // 🌟 交互行为：一键折叠二级侧边栏 (160px -> 0px)
+    function toggleSecondarySidebar() {
+      state.isSecondaryCollapsed = !state.isSecondaryCollapsed;
+      updateSidebarCollapseUI();
+      
+      // 同步更新设计详解卡片处的调试说明
+      const debugText = document.getElementById('debug-collapsed-text');
+      if (debugText) {
+        debugText.innerText = state.isSecondaryCollapsed ? '已折叠 (w-0)' : '展开中 (w-160px)';
+      }
+    }
+
+    // 控制二级折叠的 UI 渲染样式
+    function updateSidebarCollapseUI() {
+      const sidebar = document.getElementById('secondary-sidebar');
+      const toggleContainer = document.getElementById('sidebar-toggle-btn-container');
+      const toggleIcon = document.getElementById('sidebar-toggle-icon');
+
+      if (state.isSecondaryCollapsed) {
+        // 折叠态：宽度0，透明度0，去掉右边框，禁止点击事件
+        sidebar.className = "hidden md:flex flex-col bg-white shrink-0 z-20 transition-all duration-300 ease-in-out relative w-0 opacity-0 pointer-events-none border-r-0";
+        // 按钮平滑移动到一级菜单右边缘 64px - 10px = 54px
+        toggleContainer.style.left = "54px";
+        toggleIcon.setAttribute('data-lucide', 'chevron-right');
+      } else {
+        // 展开态：宽度160px，透明度100%
+        sidebar.className = "hidden md:flex flex-col bg-white border-r border-neutral-200/80 shrink-0 z-20 transition-all duration-300 ease-in-out relative w-[160px] opacity-100";
+        // 按钮平滑移动到二级菜单右边缘 64px + 160px - 10px = 214px
+        toggleContainer.style.left = "214px";
+        toggleIcon.setAttribute('data-lucide', 'chevron-left');
+      }
+      lucide.createIcons();
+    }
+
+    // 移动端侧边抽屉开关
+    function toggleMobileDrawer(open) {
+      const drawer = document.getElementById('mobile-drawer');
+      if (open) {
+        drawer.classList.remove('hidden');
+      } else {
+        drawer.classList.add('hidden');
+      }
+    }
+
+    // 订单模块：输入过滤监听 (局部刷新，不重置聚焦输入框)
+    function handleOrderSearch(val) {
+      state.orderSearchText = val;
+      const filteredOrders = MOCK_ORDERS.filter(order => {
+        const matchStatus = state.orderFilterStatus === '全部' || order.status === state.orderFilterStatus;
+        const matchText = state.orderSearchText.trim() === '' || 
+          order.id.toLowerCase().includes(state.orderSearchText.toLowerCase()) ||
+          order.user.toLowerCase().includes(state.orderSearchText.toLowerCase()) ||
+          order.phone.includes(state.orderSearchText);
+        return matchStatus && matchText;
+      });
+      renderOrderTableRows(filteredOrders);
+    }
+
+    // 订单模块：页签切换
+    function changeOrderTabStatus(status) {
+      state.orderFilterStatus = status;
+      renderWorkspace();
+      lucide.createIcons();
+    }
+
+    // 订单模块：重置筛选
+    function resetOrderFilters() {
+      state.orderSearchText = '';
+      state.orderFilterStatus = '全部';
+      renderWorkspace();
+      lucide.createIcons();
+    }
+
+    // 模拟刷新仪表大盘
+    function simulateRefresh() {
+      alert("全网业务指标重新校验校准成功！");
+    }
+  </script>
+</body>
+</html>
