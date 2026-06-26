@@ -1,5 +1,25 @@
 # 凯撒后台 UI 规范补充
 
+## 内容路由 Navigation
+
+后台 merchant/operator 页面必须由共享导航脚本统一注入外壳和接管跳转。页面本身只写内容区 HTML，不写 `layout/sidebar/topbar/main-area/content` 外壳。
+
+页面跳转规范：
+- 普通链接直接写相对 `.html` 地址，例如 `<a href="orders-detail.html">查看</a>`；共享导航会自动拦截。
+- 表格行、卡片行跳转使用 `data-href` / `data-nav-href` / `data-row-link`，不手写整页跳转。
+- JS 主动跳转只允许调用 `window.caesarNavigateTo(href)`。
+- 后台内容页禁止写 `window.location.href`、`location.assign()`、`location.replace()`、`document.createElement('a') + click()` 作为跳转或兜底。
+- 不需要为 `caesarNavigateTo` 写 fallback。merchant/operator 页面如果没有共享导航脚本，本身就是页面结构错误，应由 `shared/audit-pages.js` 报出，而不是在页面内降级整页刷新。
+- 本地 `file://` 预览和 HTTP 预览都必须走同一套路由；点击左侧菜单、顶部标签、表格行、按钮跳转时，只允许右侧内容区变化，后台外壳不能重建。
+
+新增或调整后台页面后必须运行：
+
+```bash
+node shared/audit-pages.js
+```
+
+审计结果必须保持阻断/高风险/中风险为 0，才能认为页面符合共享路由和共享 UI 规范。
+
 ## 列表页 List Surface
 
 一级列表页统一使用 `list-surface` 规范。目标是让筛选、状态 Tab、表格和分页成为一个整体，减少页面标题卡片和列表主体分离造成的割裂感。

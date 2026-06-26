@@ -438,8 +438,10 @@
     if (!link || link.target === "_blank" || link.hasAttribute("download")) return false;
 
     const url = new URL(link.getAttribute("href"), currentRouteUrl || window.location.href);
-    if (url.origin !== window.location.origin) return false;
-    if (url.protocol === "file:") return false;
+    const isSameAppOrigin = window.location.protocol === "file:"
+      ? url.protocol === "file:"
+      : url.origin === window.location.origin;
+    if (!isSameAppOrigin) return false;
     if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
     if (!url.pathname.endsWith(".html")) return false;
     return true;
@@ -448,7 +450,7 @@
   function navigateTo(href) {
     const target = new URL(href, currentRouteUrl || window.location.href);
     if (target.protocol === "file:") {
-      window.location.href = target.href;
+      loadFilePageFrame(target);
       return;
     }
     loadPage(target, { push: true });
@@ -480,6 +482,7 @@
       const nextFile = fileFromUrl(url);
       const { nodes, scripts } = collectPageNodes(doc, url);
 
+      content.classList.remove("content-route-frame");
       content.replaceChildren(...nodes);
       if (doc.title) document.title = doc.title;
       if (options && options.push && url.protocol !== "file:") {
@@ -499,6 +502,32 @@
     } finally {
       content.classList.remove("caesar-content-loading");
     }
+  }
+
+  function embeddedUrl(url) {
+    const next = new URL(url.href);
+    next.searchParams.set("caesarEmbed", "1");
+    return next;
+  }
+
+  function loadFilePageFrame(url) {
+    const content = document.querySelector(".content");
+    if (!content) {
+      window.location.href = url.href;
+      return;
+    }
+
+    currentRouteUrl = url;
+    syncNavActive(fileFromUrl(url));
+    content.classList.add("content-route-frame");
+    content.replaceChildren();
+
+    const frame = document.createElement("iframe");
+    frame.className = "route-content-frame";
+    frame.title = "页面内容";
+    frame.src = embeddedUrl(url).href;
+    content.appendChild(frame);
+    content.scrollTop = 0;
   }
 
   function showPageLoadError(content, url, error) {
@@ -535,7 +564,7 @@
       if (!isPjaxLink(link)) return;
 
       event.preventDefault();
-      navigateTo(link.href);
+      navigateTo(link.getAttribute("href"));
     });
 
     document.addEventListener("click", (event) => {
@@ -547,7 +576,10 @@
 
       const href = trigger.dataset.navHref || trigger.dataset.href || trigger.dataset.rowLink;
       const url = new URL(href, currentRouteUrl || window.location.href);
-      const isSamePageTarget = url.origin === window.location.origin
+      const isSameAppOrigin = window.location.protocol === "file:"
+        ? url.protocol === "file:"
+        : url.origin === window.location.origin;
+      const isSamePageTarget = isSameAppOrigin
         && url.pathname.endsWith(".html");
 
       if (!isSamePageTarget) return;
@@ -1175,9 +1207,31 @@
     }
   }
 
+  function isEmbeddedRoute() {
+    try {
+      return new URL(window.location.href).searchParams.get("caesarEmbed") === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function initEmbeddedPage() {
+    document.documentElement.classList.add("caesar-embedded-root");
+    document.body.classList.add("caesar-embedded-page");
+    initListSurfaces(document.body);
+    initFilterTabs(document.body);
+    initActionMenus(document.body);
+    requestAnimationFrame(() => {
+      initListSurfaces(document.body);
+      initFilterTabs(document.body);
+      initActionMenus(document.body);
+    });
+  }
+
+  const boot = isEmbeddedRoute() ? initEmbeddedPage : initNav;
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initNav);
+    document.addEventListener("DOMContentLoaded", boot);
   } else {
-    initNav();
+    boot();
   }
 })();

@@ -136,6 +136,16 @@ function auditFile(file) {
     addIssue(issues, "high", "页面存在硬跳转，需要改为 window.caesarNavigateTo 或声明为外部跳转", match.index, html);
   }
 
+  const syntheticLinkNavPattern = /document\.createElement\s*\(\s*["']a["']\s*\)[\s\S]{0,360}\.click\s*\(/gi;
+  while ((match = syntheticLinkNavPattern.exec(html))) {
+    addIssue(issues, "high", "页面存在模拟 a 标签点击跳转，会绕过 file/http 统一内容路由", match.index, html);
+  }
+
+  const routerFallbackPattern = /if\s*\(\s*window\.caesarNavigateTo\s*\)[\s\S]{0,360}(?:document\.createElement\s*\(\s*["']a["']\s*\)|(?:window\.)?location\.)/gi;
+  while ((match = routerFallbackPattern.exec(html))) {
+    addIssue(issues, "high", "页面存在 caesarNavigateTo 后备硬跳转，后台页面必须依赖共享导航脚本统一路由", match.index, html);
+  }
+
   const rowClickHardNav = /addEventListener\s*\(\s*["']click["'][\s\S]{0,240}(?:window\.)?location\.(?:href|assign|replace)/gi;
   if (rowClickHardNav.test(html)) {
     addIssue(issues, "medium", "存在点击事件内硬跳转，表格行/卡片跳转应交给统一路由器", html.search(rowClickHardNav), html);
