@@ -231,6 +231,20 @@
     系统: "系统",
   };
 
+  const primaryFullLabels = {
+    工作: "工作台",
+    资源: "资源中心",
+    产品: "产品中心",
+    出团: "出团管理",
+    销售: "销售管理",
+    渠道: "渠道管理",
+    客户: "客户管理",
+    财务: "财务管理",
+    审批: "审批中心",
+    AI: "AI中心",
+    系统: "系统设置",
+  };
+
   function createIcon(name) {
     const icon = document.createElement("span");
     icon.className = "nav-icon";
@@ -242,11 +256,16 @@
     return primaryLabels[item.title] || item.title.slice(0, 2);
   }
 
+  function primaryFullLabel(item) {
+    return primaryFullLabels[item.title] || item.title;
+  }
+
   let primaryScroll = null;
   let secondaryTitle = null;
   let secondaryNav = null;
   let currentPrimaryIndex = 0;
   let primaryTooltip = null;
+  let currentRouteUrl = new URL(window.location.href);
   const secondaryOpenStorageKey = "caesar-merchant-secondary-open";
   const secondaryOpenKeys = new Set(readSecondaryOpenKeys());
 
@@ -449,11 +468,6 @@
     return { active, activeHref: activeHrefFrom(active, file) };
   }
 
-  function clearPrimaryPreview() {
-    if (!primaryScroll) return;
-    primaryScroll.querySelectorAll(".nav-primary-item.preview").forEach((item) => item.classList.remove("preview"));
-  }
-
   function isNavCollapsed() {
     const layout = document.querySelector(".layout");
     return Boolean(layout && layout.classList.contains("nav-collapsed"));
@@ -483,40 +497,16 @@
     if (primaryTooltip) primaryTooltip.classList.remove("show");
   }
 
-  function previewPrimary(index, control) {
-    const item = menu[index];
-    if (showPrimaryTooltip(control)) return;
-    if (!item || !item.children) return;
-    if (index === currentPrimaryIndex) {
-      restorePinnedPrimary();
-      return;
-    }
-
-    clearPrimaryPreview();
-    control.classList.add("preview");
-
-    const state = currentActiveState();
-    renderSecondary(state.activeHref, index);
-  }
-
-  function restorePinnedPrimary() {
-    clearPrimaryPreview();
-    const state = currentActiveState();
-    renderSecondary(state.activeHref, currentPrimaryIndex);
-  }
-
   function createPrimaryItem(item, index, pageRootIndex) {
     const control = item.children ? document.createElement("button") : document.createElement("a");
     control.className = "nav-primary-item";
-    control.dataset.title = item.title;
-    control.title = item.title;
+    control.dataset.title = primaryFullLabel(item);
+    control.title = primaryFullLabel(item);
 
     if (item.children) {
       control.type = "button";
       control.setAttribute("aria-expanded", String(index === currentPrimaryIndex));
-      control.addEventListener("mouseenter", () => {
-        previewPrimary(index, control);
-      });
+      control.addEventListener("mouseenter", () => showPrimaryTooltip(control));
       control.addEventListener("mouseleave", hidePrimaryTooltip);
       control.addEventListener("click", () => {
         currentPrimaryIndex = index;
@@ -532,9 +522,7 @@
       });
     } else {
       control.href = resolvedAppHref(item.href);
-      control.addEventListener("mouseenter", () => {
-        previewPrimary(index, control);
-      });
+      control.addEventListener("mouseenter", () => showPrimaryTooltip(control));
       control.addEventListener("mouseleave", hidePrimaryTooltip);
     }
 
@@ -563,6 +551,24 @@
     });
   }
 
+  function updatePrimaryActive(active) {
+    if (!primaryScroll) return;
+
+    const pageRootIndex = rootIndexFromActive(active);
+    Array.from(primaryScroll.querySelectorAll(".nav-primary-item")).forEach((item, index) => {
+      const isActive = index === currentPrimaryIndex;
+      const isCurrent = index === pageRootIndex;
+      item.classList.toggle("active", isActive);
+      item.classList.toggle("current", isCurrent);
+      if (item.tagName === "BUTTON") item.setAttribute("aria-expanded", String(isActive));
+      if (isCurrent) {
+        item.setAttribute("aria-current", "page");
+      } else {
+        item.removeAttribute("aria-current");
+      }
+    });
+  }
+
   function renderSecondary(activeHref, primaryIndex) {
     if (!secondaryTitle || !secondaryNav) return;
 
@@ -573,7 +579,7 @@
     let openedDefault = false;
 
     rememberRenderedSecondaryOpenKeys();
-    secondaryTitle.textContent = root.title;
+    secondaryTitle.textContent = primaryFullLabel(root);
     secondaryNav.replaceChildren();
     items.forEach((item) => {
       const openByDefault = !hasActiveInRoot && !openedDefault && Boolean(item.children);
@@ -587,6 +593,7 @@
     link.className = "nav-item";
     link.dataset.title = item.title;
     link.dataset.depth = String(depth || 0);
+    link.dataset.routeHref = item.href;
     link.title = item.title;
     if (!item.icon || depth > 0) link.classList.add("nav-child");
     link.href = resolvedAppHref(item.href);
@@ -607,6 +614,30 @@
     return link;
   }
 
+  function openSecondaryParents(link) {
+    let parent = link ? link.closest(".nav-parent") : null;
+    while (parent) {
+      parent.classList.add("open");
+      const head = parent.querySelector(":scope > .nav-item");
+      if (head) head.setAttribute("aria-expanded", "true");
+      parent = parent.parentElement ? parent.parentElement.closest(".nav-parent") : null;
+    }
+  }
+
+  function updateSecondaryActive(activeHref) {
+    if (!secondaryNav) return false;
+
+    secondaryNav.querySelectorAll("a.nav-item.active").forEach((link) => link.classList.remove("active"));
+    const activeLink = Array.from(secondaryNav.querySelectorAll("a.nav-item")).find((link) => {
+      return link.dataset.routeHref === activeHref;
+    });
+    if (!activeLink) return false;
+
+    activeLink.classList.add("active");
+    openSecondaryParents(activeLink);
+    return true;
+  }
+
   function readTabs(storageKey) {
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
@@ -624,8 +655,13 @@
     const storageKey = "caesar-merchant-tabs";
     const title = active ? active.currentTitle || active.item.title : file;
     const current = { title, href: file };
-    const tabs = readTabs(storageKey).filter((tab) => tab.href !== file);
-    tabs.push(current);
+    const tabs = readTabs(storageKey);
+    const existingIndex = tabs.findIndex((tab) => tab.href === file);
+    if (existingIndex >= 0) {
+      tabs[existingIndex] = current;
+    } else {
+      tabs.push(current);
+    }
     const recentTabs = tabs.slice(-10);
     saveTabs(storageKey, recentTabs);
 
@@ -676,34 +712,101 @@
 
   function replacePageTabs(active, file) {
     const oldTabs = document.querySelector(".page-tabs");
-    if (oldTabs) oldTabs.replaceWith(createPageTabs(active, file));
+    if (!oldTabs) return;
+    const nextTabs = createPageTabs(active, file);
+    oldTabs.replaceChildren(...Array.from(nextTabs.childNodes));
   }
 
   function syncNavActive(file) {
     const active = resolveActive(file);
     const activeHref = activeHrefFrom(active, file);
-    currentPrimaryIndex = rootIndexFromActive(active);
+    const nextPrimaryIndex = rootIndexFromActive(active);
 
-    renderPrimary(active);
-    renderSecondary(activeHref);
+    if (nextPrimaryIndex !== currentPrimaryIndex) {
+      currentPrimaryIndex = nextPrimaryIndex;
+      updatePrimaryActive(active);
+      renderSecondary(activeHref);
+    } else {
+      currentPrimaryIndex = nextPrimaryIndex;
+      updatePrimaryActive(active);
+      if (!updateSecondaryActive(activeHref)) renderSecondary(activeHref);
+    }
     replaceBreadcrumb(active);
     replacePageTabs(active, file);
   }
 
-  function collectPageNodes(doc) {
+  function collectPageNodes(doc, pageUrl) {
     const nodes = [];
     const scripts = [];
+    const sourceRoot = doc.querySelector(".content") || doc.body;
 
-    Array.from(doc.body.childNodes).forEach((node) => {
+    Array.from(sourceRoot.childNodes).forEach((node) => {
       if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "SCRIPT") {
         const src = node.getAttribute("src") || "";
-        if (!src.includes("nav-merchant.js")) scripts.push(node);
+        if (!src.includes("nav-merchant.js")) {
+          const script = document.importNode(node, true);
+          if (src && pageUrl) script.setAttribute("src", new URL(src, pageUrl).href);
+          scripts.push(script);
+        }
         return;
       }
       nodes.push(document.importNode(node, true));
     });
 
     return { nodes, scripts };
+  }
+
+  function loadDocumentWithIframe(url) {
+    return new Promise((resolve, reject) => {
+      const iframe = document.createElement("iframe");
+      iframe.hidden = true;
+      iframe.sandbox = "allow-same-origin";
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.style.position = "fixed";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+
+      const cleanup = () => {
+        setTimeout(() => iframe.remove(), 0);
+      };
+
+      iframe.addEventListener("load", () => {
+        try {
+          const doc = iframe.contentDocument;
+          if (!doc || !doc.body) throw new Error("无法读取目标页面内容");
+          const html = doc.documentElement ? doc.documentElement.outerHTML : "";
+          resolve(new DOMParser().parseFromString(html, "text/html"));
+        } catch (error) {
+          reject(error);
+        } finally {
+          cleanup();
+        }
+      }, { once: true });
+
+      iframe.addEventListener("error", () => {
+        cleanup();
+        reject(new Error("目标页面加载失败"));
+      }, { once: true });
+
+      document.body.appendChild(iframe);
+      iframe.src = url.href;
+    });
+  }
+
+  async function loadRouteDocument(url) {
+    if (url.protocol === "file:") {
+      return loadDocumentWithIframe(url);
+    }
+
+    const response = await fetch(url.href, {
+      headers: { "X-Requested-With": "caesar-pjax" },
+    });
+
+    if (!response.ok) throw new Error("页面加载失败");
+
+    const html = await response.text();
+    return new DOMParser().parseFromString(html, "text/html");
   }
 
   function runPageScripts(scripts) {
@@ -1041,7 +1144,6 @@
     secondaryPanel.append(secondaryTitle, secondaryNav);
     sidebar.append(primaryRail, secondaryPanel);
     sidebar.addEventListener("mouseleave", () => {
-      restorePinnedPrimary();
       hidePrimaryTooltip();
     });
 
@@ -1092,68 +1194,111 @@
       hidePrimaryTooltip();
     });
 
+    initListSurfaces(content);
     initFilterTabs(content);
     initActionMenus(content);
     initPjaxNavigation();
+    requestAnimationFrame(() => window.caesarRefreshListSurfaces && window.caesarRefreshListSurfaces());
   }
 
   function isPjaxLink(link) {
     if (!link || link.target === "_blank" || link.hasAttribute("download")) return false;
 
-    const url = new URL(link.getAttribute("href"), window.location.href);
+    const url = new URL(link.getAttribute("href"), currentRouteUrl || window.location.href);
     if (url.origin !== window.location.origin) return false;
+    if (url.protocol === "file:") return false;
     if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
     if (!url.pathname.endsWith(".html")) return false;
     return true;
   }
 
+  function resolveNavigationTarget(href) {
+    const baseUrl = currentRouteUrl || new URL(window.location.href);
+    if (!href) return new URL(window.location.href);
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("/")) {
+      return new URL(href, baseUrl);
+    }
+    if (href.startsWith("./") || href.startsWith("../") || !href.includes("/")) {
+      return new URL(href, baseUrl);
+    }
+    return new URL(href, merchantBaseUrl);
+  }
+
   function navigateTo(href) {
-    const target = new URL(resolvedAppHref(href), window.location.href);
+    const target = resolveNavigationTarget(href);
+    if (target.protocol === "file:") {
+      window.location.href = target.href;
+      return;
+    }
     loadPage(target, { push: true });
   }
 
-  window.caesarNavigateTo = navigateTo;
-  window.caesarLoadPage = loadPage;
+    window.caesarNavigateTo = navigateTo;
+    window.caesarLoadPage = loadPage;
+    window.caesarRefreshListSurfaces = () => {
+      const currentContent = document.querySelector(".content");
+      if (!currentContent) return;
+      initListSurfaces(currentContent);
+      initFilterTabs(currentContent);
+      initActionMenus(currentContent);
+    };
 
   async function loadPage(target, options) {
     const url = target instanceof URL ? target : new URL(target, window.location.href);
     const content = document.querySelector(".content");
 
     if (!content) {
-      window.location.href = url.href;
+      showPageLoadError(null, url, new Error("页面外壳未初始化"));
       return;
     }
 
     content.classList.add("caesar-content-loading");
 
     try {
-      const response = await fetch(url.href, {
-        headers: { "X-Requested-With": "caesar-pjax" },
-      });
-
-      if (!response.ok) throw new Error("页面加载失败");
-
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, "text/html");
+      const doc = await loadRouteDocument(url);
       const nextFile = fileFromUrl(url);
-      const { nodes, scripts } = collectPageNodes(doc);
+      const { nodes, scripts } = collectPageNodes(doc, url);
 
       content.replaceChildren(...nodes);
       if (doc.title) document.title = doc.title;
-      if (options && options.push) {
+      if (options && options.push && url.protocol !== "file:") {
         history.pushState({ caesarPjax: true }, "", url.href);
       }
+      currentRouteUrl = url;
 
       syncNavActive(nextFile);
+      initListSurfaces(content);
       initFilterTabs(content);
       initActionMenus(content);
       runPageScripts(scripts);
+      window.caesarRefreshListSurfaces();
       content.scrollTop = 0;
     } catch (error) {
-      window.location.href = url.href;
+      showPageLoadError(content, url, error);
     } finally {
       content.classList.remove("caesar-content-loading");
     }
+  }
+
+  function showPageLoadError(content, url, error) {
+    const target = content || document.querySelector(".content");
+    const message = error && error.message ? error.message : "未知错误";
+    if (!target) {
+      window.alert("页面加载失败：" + message);
+      return;
+    }
+    target.replaceChildren();
+    const panel = document.createElement("section");
+    panel.className = "route-error-panel";
+    panel.innerHTML = [
+      '<div class="route-error-title">页面加载失败</div>',
+      '<div class="route-error-desc">无法通过内容路由加载目标页面，请检查页面规范或稍后重试。</div>',
+      '<div class="route-error-meta"></div>',
+      '<div class="route-error-actions"><a class="btn btn-secondary" target="_blank" rel="noopener">在新窗口打开</a></div>'
+    ].join("");
+    panel.querySelector(".route-error-meta").textContent = url.href + " ｜ " + message;
+    panel.querySelector("a").href = url.href;
+    target.appendChild(panel);
   }
 
   function initPjaxNavigation() {
@@ -1176,11 +1321,11 @@
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       if (event.target.closest("a, button, input, select, textarea, label")) return;
 
-      const trigger = event.target.closest("[data-nav-href], [data-href]");
+      const trigger = event.target.closest("[data-nav-href], [data-href], [data-row-link]");
       if (!trigger) return;
 
-      const href = trigger.dataset.navHref || trigger.dataset.href;
-      const url = new URL(href, window.location.href);
+      const href = trigger.dataset.navHref || trigger.dataset.href || trigger.dataset.rowLink;
+      const url = new URL(href, currentRouteUrl || window.location.href);
       const isSamePageTarget = url.origin === window.location.origin
         && url.pathname.endsWith(".html");
 
@@ -1196,8 +1341,536 @@
     });
   }
 
+  function isListSurfacePart(node) {
+    return node && node.matches && node.matches(".alert, [class$='-warning'], [class*='-warning '], .tab-bar, .table-wrap, .pagination");
+  }
+
+  function isExcludedListSurfaceNode(node) {
+    return !node || Boolean(node.closest(".modal, .modal-overlay, .drawer-modal, .mobile-frame"));
+  }
+
+  function hasDirectListPart(container, selector) {
+    return Array.from(container.children).some((child) => child.matches(selector));
+  }
+
+  function isEmptyListPageShell(panel) {
+    if (!panel || !panel.matches(".list-page-panel")) return false;
+    return Boolean(panel.querySelector(":scope > .list-page-head"))
+      && !panel.querySelector(":scope > .filter-card, :scope > .table-wrap");
+  }
+
+  function hideEmptyListPageShellBefore(surface) {
+    const previous = surface ? surface.previousElementSibling : null;
+    if (isEmptyListPageShell(previous)) {
+      previous.classList.add("list-page-panel-empty");
+    }
+  }
+
+  function isTabbedListPanel(node) {
+    if (!node || !node.matches || isExcludedListSurfaceNode(node)) return false;
+    if (node.matches(".modal-overlay, .list-page-panel")) return false;
+    if (!node.matches("section, div, main")) return false;
+    if (!/(^|\s|-)panel(\s|$)|(^|\s|-)pane(\s|$)|(^|\s|-)content(\s|$)/.test(node.className)) return false;
+    return Boolean(node.querySelector(".filter-card, .table-wrap"));
+  }
+
+  function moveChildren(from, to) {
+    while (from.firstChild) {
+      to.appendChild(from.firstChild);
+    }
+  }
+
+  function hasChildren(node) {
+    return Array.from(node.childNodes).some((child) => {
+      return child.nodeType !== Node.TEXT_NODE || child.textContent.trim();
+    });
+  }
+
+  function normalizeListTabButton(button) {
+    if (button.dataset.listTabNormalized === "true") return;
+    const badgeSelector = ".list-tab-count, .intent-tab-count, .tab-badge, .tab-corner-badge";
+    const badge = button.querySelector(badgeSelector);
+    const existingLabel = Array.from(button.children).find((child) => {
+      return child.matches(".tab-label, .list-tab-label") || !child.matches(badgeSelector);
+    });
+
+    if (existingLabel && existingLabel.matches("span")) {
+      existingLabel.classList.add("tab-label", "list-tab-label");
+      button.dataset.listTabNormalized = "true";
+      return;
+    }
+
+    const textNodes = Array.from(button.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE);
+    const text = textNodes.map((node) => node.textContent).join("").trim();
+    const match = text.match(/^(.+?)\s*[（(]([^()（）]+)[）)]\s*(.*)$/);
+    const labelText = match ? match[1].trim() : text;
+    if (!labelText && badge) {
+      button.dataset.listTabNormalized = "true";
+      return;
+    }
+
+    const label = document.createElement("span");
+    label.className = "tab-label list-tab-label";
+    label.textContent = labelText;
+
+    textNodes.forEach((node) => node.remove());
+
+    if (badge) {
+      button.insertBefore(label, badge);
+      button.dataset.listTabNormalized = "true";
+      return;
+    }
+
+    button.textContent = "";
+    button.appendChild(label);
+
+    if (match) {
+      const count = document.createElement("span");
+      count.className = "list-tab-count";
+      count.textContent = match[2].trim();
+      button.appendChild(count);
+    }
+
+    if (match && match[3].trim()) {
+      const suffix = document.createElement("span");
+      suffix.className = "list-tab-suffix";
+      suffix.textContent = match[3].trim();
+      button.appendChild(suffix);
+    }
+    button.dataset.listTabNormalized = "true";
+  }
+
+  function collectFilterControls(source, target) {
+    Array.from(source.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.textContent.trim()) target.appendChild(node);
+        return;
+      }
+
+      if (!(node instanceof HTMLElement)) {
+        target.appendChild(node);
+        return;
+      }
+
+      if (node.matches(".filter-row")) {
+        collectFilterControls(node, target);
+        node.remove();
+        return;
+      }
+
+      if (!node.hidden && node.querySelector(":scope > .filter-row")) {
+        collectFilterControls(node, target);
+        node.remove();
+        return;
+      }
+
+      target.appendChild(node);
+    });
+  }
+
+  function insertActionBar(fields, actionBar) {
+    if (!hasChildren(actionBar)) return;
+
+    actionBar.classList.add("list-filter-pinned-actions");
+    fields.prepend(actionBar);
+  }
+
+  function normalizePrimarySearchField(fields) {
+    if (fields.querySelector(".filter-item-search, .filter-item-long, .orders-quick-search")) return;
+
+    const searchInput = fields.querySelector(
+      ":scope > .filter-item input[type='search'], :scope > .filter-item input[placeholder*='搜索'], :scope > .filter-item input[placeholder*='关键词']"
+    );
+    const searchField = searchInput ? searchInput.closest(".filter-item, .filter-item-sm, .filter-item-wide, .filter-item-status") : null;
+    if (searchField) searchField.classList.add("filter-item-search");
+  }
+
+  const metaTagTexts = new Set([
+    "普通团期", "邮轮航次", "专列班期", "研学营期", "自由行", "单项委托",
+    "自营", "自营产品", "外采", "外采产品", "外采团期", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "国内游",
+    "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算",
+    "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
+    "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量",
+    "欧洲", "国内", "MICE", "出境跟团", "跟团游", "普通报价", "团队报价"
+  ]);
+
+  function compactText(text) {
+    return String(text || "").replace(/\s+/g, "");
+  }
+
+  function isStatusColumnTitle(title) {
+    return /状态|进度|结果|风险|预警|审批|审核|是否|操作/.test(compactText(title));
+  }
+
+  function isMetaColumnTitle(title) {
+    const text = compactText(title);
+    if (!text || isStatusColumnTitle(text)) return false;
+    return /产品类型|业务类型|合同类型|客户类型|团期类型|类型|渠道|来源|平台|分类|标签|履约|对象|适用|付款方|认款方式/.test(text);
+  }
+
+  function shouldUseMetaTag(tag, columnTitle) {
+    if (isStatusColumnTitle(columnTitle)) return false;
+    const text = compactText(tag.textContent);
+    return isMetaColumnTitle(columnTitle) || metaTagTexts.has(text);
+  }
+
+  function normalizeListSurfaceTags(surface) {
+    surface.querySelectorAll(".list-surface-table table, :scope > .table-wrap table").forEach((table) => {
+      const headerRows = table.tHead ? Array.from(table.tHead.rows) : [];
+      const headerCells = headerRows.length ? Array.from(headerRows[headerRows.length - 1].cells) : [];
+      const headers = headerCells.map((cell) => cell.textContent.trim());
+
+      table.querySelectorAll("tbody tr").forEach((row) => {
+        Array.from(row.cells).forEach((cell, index) => {
+          const columnTitle = headers[index] || "";
+          cell.querySelectorAll(".tag").forEach((tag) => {
+            if (shouldUseMetaTag(tag, columnTitle)) {
+              tag.classList.add("tag-meta-runtime");
+            }
+          });
+        });
+      });
+    });
+
+    normalizeStandaloneMetaTags(surface);
+  }
+
+  function normalizeStandaloneMetaTags(scope) {
+    scope.querySelectorAll(".tag").forEach((tag) => {
+      if (metaTagTexts.has(compactText(tag.textContent))) {
+        tag.classList.add("tag-meta-runtime");
+      }
+    });
+  }
+
+  function normalizeListAlert(alert) {
+    if (!alert || alert.dataset.listAlertNormalized === "true") return;
+
+    const children = Array.from(alert.children).filter((child) => child instanceof HTMLElement);
+    children.forEach((child, index) => {
+      child.classList.add(index === 0 ? "list-alert-main" : "list-alert-meta");
+    });
+    alert.querySelectorAll("button, .link-button").forEach((button) => {
+      button.classList.add("list-alert-action");
+    });
+    alert.dataset.listAlertNormalized = "true";
+  }
+
+  function enhanceListFilter(panel, filter) {
+    if (!filter || filter.dataset.listFilterEnhanced === "true") return;
+
+    const pageHead = panel.querySelector(":scope > .list-page-head");
+    const pageTitle = pageHead ? pageHead.querySelector(".page-title") : null;
+    const pageActions = pageHead ? pageHead.querySelector(".list-page-actions") : null;
+    const panelHead = filter.parentElement
+      ? filter.parentElement.querySelector(":scope > .masterdata-panel-head, :scope > .panel-head")
+      : null;
+    const panelActions = !pageActions && panelHead ? panelHead.querySelector(".panel-actions") : null;
+
+    if (pageTitle) pageTitle.classList.add("sr-only");
+
+    const actionBar = document.createElement("div");
+    actionBar.className = "filter-actions list-surface-filter-actions";
+
+    filter.querySelectorAll(".filter-actions").forEach((actions) => {
+      moveChildren(actions, actionBar);
+      actions.remove();
+    });
+
+    if (pageActions) {
+      moveChildren(pageActions, actionBar);
+      pageActions.remove();
+    }
+
+    if (panelActions) {
+      moveChildren(panelActions, actionBar);
+      panelActions.remove();
+      if (!panelHead.textContent.trim()) panelHead.remove();
+    }
+
+    const layout = document.createElement("div");
+    layout.className = "list-surface-filter-layout";
+
+    const fields = document.createElement("div");
+    fields.className = "list-surface-filter-fields";
+    collectFilterControls(filter, fields);
+    normalizePrimarySearchField(fields);
+    insertActionBar(fields, actionBar);
+
+    layout.appendChild(fields);
+
+    filter.classList.add("list-surface-filter");
+    filter.appendChild(layout);
+    filter.dataset.listFilterEnhanced = "true";
+  }
+
+  function ensureListEmptyState(surface) {
+    if (surface.querySelector(".list-empty-state, [data-list-empty]")) return;
+
+    const table = surface.querySelector(".list-surface-table, :scope > .table-wrap");
+    if (!table) return;
+
+    const empty = document.createElement("div");
+    empty.className = "list-empty-state";
+    empty.hidden = true;
+    empty.dataset.listEmpty = "true";
+    empty.textContent = "暂无符合条件的数据";
+    table.insertAdjacentElement("afterend", empty);
+  }
+
+  function updateListSurfaceState(surface) {
+    if (!surface) return;
+
+    const rows = Array.from(surface.querySelectorAll("tbody tr"));
+    const empty = surface.querySelector(".list-empty-state, [data-list-empty]");
+    if (!empty) return;
+
+    const visibleRows = rows.filter((row) => !row.hidden);
+    empty.hidden = rows.length > 0 && visibleRows.length > 0;
+  }
+
+  function prepareListSurface(surface) {
+    if (!surface) return;
+
+    surface.classList.add("list-surface");
+
+    surface.querySelectorAll(".filter-card").forEach((filter) => {
+      enhanceListFilter(surface, filter);
+    });
+
+    surface.querySelectorAll(":scope > .alert, :scope > [class$='-warning'], :scope > [class*='-warning ']").forEach((alert) => {
+      alert.classList.add("list-surface-alert");
+      normalizeListAlert(alert);
+    });
+
+    surface.querySelectorAll(".tab-bar").forEach((tabBar) => {
+      tabBar.classList.add("list-surface-tabs");
+      tabBar.classList.toggle("list-filter-tabs", tabBar.hasAttribute("data-filter-tabs"));
+      tabBar.classList.toggle("list-function-tabs", !tabBar.hasAttribute("data-filter-tabs"));
+      tabBar.querySelectorAll(".tab-item").forEach(normalizeListTabButton);
+    });
+
+    surface.querySelectorAll(".table-wrap").forEach((table) => {
+      table.classList.add("list-surface-table");
+    });
+
+    normalizeListSurfaceTags(surface);
+
+    surface.querySelectorAll(".pagination").forEach((pagination) => {
+      pagination.classList.add("list-surface-pagination");
+    });
+
+    surface.querySelectorAll("tbody tr[data-href], tbody tr[data-nav-href], tbody tr[data-row-link]").forEach((row) => {
+      row.classList.add("list-clickable-row");
+      if (!row.hasAttribute("tabindex")) row.tabIndex = 0;
+    });
+
+    ensureListEmptyState(surface);
+    updateListSurfaceState(surface);
+  }
+
+  function initListSurfaces(scope) {
+    function enhanceHeaderOnlyListPanel(panel) {
+      if (panel.querySelector(":scope > .filter-card, :scope > .table-wrap")) return false;
+
+      const parts = [];
+      let cursor = panel.nextElementSibling;
+      let hasTable = false;
+
+      while (cursor && (isListSurfacePart(cursor) || isTabbedListPanel(cursor))) {
+        parts.push(cursor);
+        hasTable = hasTable || cursor.matches(".table-wrap") || Boolean(cursor.querySelector(".table-wrap"));
+        cursor = cursor.nextElementSibling;
+      }
+
+      if (!hasTable) return false;
+
+      const pageActions = panel.querySelector(":scope > .list-page-head .list-page-actions");
+      if (pageActions && hasChildren(pageActions)) {
+        const actionRow = document.createElement("div");
+        actionRow.className = "list-surface-head-actions";
+        moveChildren(pageActions, actionRow);
+        panel.appendChild(actionRow);
+      }
+
+      panel.classList.add("list-surface", "list-head-surface");
+      parts.forEach((part) => panel.appendChild(part));
+      panel.dataset.listSurfaceReady = "true";
+      prepareListSurface(panel);
+      return true;
+    }
+
+    function enhanceSplitListPagePanel(panel) {
+      const filter = panel.querySelector(":scope > .filter-card");
+      if (!filter) return false;
+
+      const next = panel.nextElementSibling;
+      const activePanel = next && next.matches(".masterdata-shell")
+        ? next.querySelector(".masterdata-panel.active")
+        : null;
+      if (!activePanel) return false;
+
+      const parts = Array.from(activePanel.children).filter(isListSurfacePart);
+      if (!parts.some((part) => part.matches(".table-wrap"))) return false;
+
+      panel.classList.add("list-surface");
+      enhanceListFilter(panel, filter);
+      parts.forEach((part) => panel.appendChild(part));
+      panel.dataset.listSurfaceReady = "true";
+      prepareListSurface(panel);
+      return true;
+    }
+
+    function enhanceTabbedListGroups() {
+      Array.from(scope.children).forEach((child) => {
+        if (!child.matches(".tab-bar:not([data-filter-tabs])")) return;
+        if (child.closest(".list-surface") || isExcludedListSurfaceNode(child)) return;
+
+        const parts = [child];
+        let cursor = child.nextElementSibling;
+        let hasTable = false;
+
+        while (isTabbedListPanel(cursor)) {
+          parts.push(cursor);
+          hasTable = hasTable || Boolean(cursor.querySelector(".table-wrap"));
+          cursor = cursor.nextElementSibling;
+        }
+
+        if (!hasTable) return;
+
+        const surface = document.createElement("section");
+        surface.className = "list-surface list-surface-tabbed";
+        child.parentNode.insertBefore(surface, child);
+        parts.forEach((part) => surface.appendChild(part));
+        surface.dataset.listSurfaceReady = "true";
+        hideEmptyListPageShellBefore(surface);
+        prepareListSurface(surface);
+      });
+    }
+
+    function enhanceTabbedListContainers() {
+      scope.querySelectorAll("section, div, main").forEach((container) => {
+        if (container.matches(".content, .layout, .main-area")) return;
+        if (container.closest(".list-surface") || isExcludedListSurfaceNode(container)) return;
+
+        const children = Array.from(container.children);
+        const tabBar = children.find((child) => child.matches(".tab-bar:not([data-filter-tabs])"));
+        if (!tabBar) return;
+
+        const panels = children.filter((child) => child !== tabBar && isTabbedListPanel(child));
+        if (!panels.some((panel) => panel.querySelector(".table-wrap"))) return;
+
+        container.classList.add("list-surface", "list-surface-tabbed");
+        container.dataset.listSurfaceReady = "true";
+        hideEmptyListPageShellBefore(container);
+        prepareListSurface(container);
+      });
+    }
+
+    function enhanceNestedListContainers() {
+      scope.querySelectorAll("section, div, main").forEach((container) => {
+        if (container.matches(".content, .layout, .main-area")) return;
+        if (container.closest(".list-surface") || isExcludedListSurfaceNode(container)) return;
+
+        const hasFilter = hasDirectListPart(container, ".filter-card");
+        const hasTable = hasDirectListPart(container, ".table-wrap");
+        const looksLikeListPanel = container.matches(".masterdata-panel, .finance-payment-panel, [class*='-panel'], [class*='-content']");
+
+        if (!(hasTable && (hasFilter || looksLikeListPanel))) return;
+
+        container.classList.add("list-surface");
+        container.dataset.listSurfaceReady = "true";
+        prepareListSurface(container);
+      });
+    }
+
+    scope.querySelectorAll(".list-page-panel").forEach((panel) => {
+      if (panel.dataset.listSurfaceReady === "true") {
+        prepareListSurface(panel);
+        return;
+      }
+
+      const filter = panel.querySelector(":scope > .filter-card");
+      const parts = [];
+      let next = panel.nextElementSibling;
+
+      while (isListSurfacePart(next)) {
+        parts.push(next);
+        next = next.nextElementSibling;
+      }
+
+      const hasTable = parts.some((part) => part.matches(".table-wrap")) || panel.querySelector(":scope > .table-wrap");
+      if (!filter || !hasTable) {
+        if (enhanceHeaderOnlyListPanel(panel)) return;
+        if (filter && !parts.length && !panel.querySelector(":scope > .table-wrap")) {
+          panel.classList.add("list-surface", "list-filter-surface");
+          enhanceListFilter(panel, filter);
+          panel.dataset.listSurfaceReady = "true";
+          prepareListSurface(panel);
+          return;
+        }
+        enhanceSplitListPagePanel(panel);
+        return;
+      }
+
+      panel.classList.add("list-surface");
+      enhanceListFilter(panel, filter);
+      parts.forEach((part) => panel.appendChild(part));
+      panel.dataset.listSurfaceReady = "true";
+      prepareListSurface(panel);
+    });
+
+    enhanceTabbedListGroups();
+    enhanceTabbedListContainers();
+
+    Array.from(scope.children).forEach((child) => {
+      if (!child.matches(".filter-card, .alert")) return;
+      if (child.closest(".list-surface, .list-page-panel")) return;
+
+      const filter = child.matches(".filter-card") ? child : child.nextElementSibling;
+      if (!filter || !filter.matches(".filter-card")) return;
+
+      const parts = [];
+      let cursor = child;
+      let hasFilter = false;
+      let hasTable = false;
+
+      while (cursor && (cursor.matches(".alert, .filter-card") || isListSurfacePart(cursor))) {
+        parts.push(cursor);
+        hasFilter = hasFilter || cursor.matches(".filter-card");
+        hasTable = hasTable || cursor.matches(".table-wrap");
+        cursor = cursor.nextElementSibling;
+      }
+
+      if (!hasFilter || !hasTable) return;
+
+      const surface = document.createElement("section");
+      surface.className = "list-surface";
+      child.parentNode.insertBefore(surface, child);
+      parts.forEach((part) => surface.appendChild(part));
+      enhanceListFilter(surface, filter);
+      surface.dataset.listSurfaceReady = "true";
+      prepareListSurface(surface);
+    });
+
+    enhanceNestedListContainers();
+
+    scope.querySelectorAll("[data-list-surface], .list-surface").forEach((surface) => {
+      prepareListSurface(surface);
+    });
+
+    scope.querySelectorAll(".list-page-panel").forEach((panel) => {
+      if (isEmptyListPageShell(panel) && panel.nextElementSibling && panel.nextElementSibling.matches(".list-surface")) {
+        panel.classList.add("list-page-panel-empty");
+      }
+    });
+
+    normalizeStandaloneMetaTags(scope);
+  }
+
   function tabValue(button) {
-    return button.dataset.filterValue || button.textContent.replace(/\(.*/, "").trim();
+    const label = button.querySelector(".list-tab-label");
+    return button.dataset.filterValue || (label ? label.textContent.trim() : button.textContent.replace(/\(.*/, "").trim());
   }
 
   function rowValues(row) {
@@ -1209,6 +1882,9 @@
 
   function initFilterTabs(scope) {
     scope.querySelectorAll(".tab-bar[data-filter-tabs]").forEach((tabBar) => {
+      if (tabBar.dataset.filterTabsReady === "true") return;
+      tabBar.dataset.filterTabsReady = "true";
+
       const targetSelector = tabBar.dataset.filterTarget;
       const target = targetSelector ? scope.querySelector(targetSelector) : tabBar.nextElementSibling;
       const rows = target
@@ -1217,23 +1893,36 @@
           : target.querySelectorAll("tbody tr, [data-tab-status]"))
         : [];
       const buttons = Array.from(tabBar.querySelectorAll(".tab-item"));
+      buttons.forEach(normalizeListTabButton);
+      const surface = tabBar.closest(".list-surface, [data-list-surface]");
+
+      function applyFilter(button) {
+        const value = tabValue(button);
+
+        buttons.forEach((item) => item.classList.toggle("active", item === button));
+        rows.forEach((row) => {
+          const matched = value === "全部" || rowValues(row).includes(value);
+          row.hidden = !matched;
+        });
+        updateListSurfaceState(surface);
+      }
 
       buttons.forEach((button) => {
         button.addEventListener("click", () => {
-          const value = tabValue(button);
-
-          buttons.forEach((item) => item.classList.toggle("active", item === button));
-          rows.forEach((row) => {
-            const matched = value === "全部" || rowValues(row).includes(value);
-            row.hidden = !matched;
-          });
+          applyFilter(button);
         });
       });
+
+      const activeButton = buttons.find((button) => button.classList.contains("active"));
+      if (activeButton) applyFilter(activeButton);
     });
   }
 
   function initActionMenus(scope) {
     scope.querySelectorAll("[data-action-menu]").forEach((wrap) => {
+      if (wrap.dataset.actionMenuReady === "true") return;
+      wrap.dataset.actionMenuReady = "true";
+
       const toggle = wrap.querySelector("[data-action-menu-toggle]");
       if (!toggle) return;
 
