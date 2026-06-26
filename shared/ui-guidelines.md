@@ -10,7 +10,8 @@
 - JS 主动跳转只允许调用 `window.caesarNavigateTo(href)`。
 - 后台内容页禁止写 `window.location.href`、`location.assign()`、`location.replace()`、`document.createElement('a') + click()` 作为跳转或兜底。
 - 不需要为 `caesarNavigateTo` 写 fallback。merchant/operator 页面如果没有共享导航脚本，本身就是页面结构错误，应由 `shared/audit-pages.js` 报出，而不是在页面内降级整页刷新。
-- 本地 `file://` 预览和 HTTP 预览都必须走同一套路由；点击左侧菜单、顶部标签、表格行、按钮跳转时，只允许右侧内容区变化，后台外壳不能重建。
+- HTTP/HTTPS 预览和正式服务器环境必须走无刷新内容路由；点击左侧菜单、顶部标签、表格行、按钮跳转时，只允许右侧内容区变化，后台外壳不能重建。
+- 本地 `file://` 直接打开 HTML 只作为静态可用性预览。由于浏览器限制本地文件读取，`file://` 下共享路由内部允许使用浏览器原生整页跳转，不使用 iframe 降级，避免弹窗遮罩、抽屉、fixed 定位和全局交互被限制在内容区域。
 
 新增或调整后台页面后必须运行：
 

@@ -450,7 +450,7 @@
   function navigateTo(href) {
     const target = new URL(href, currentRouteUrl || window.location.href);
     if (target.protocol === "file:") {
-      loadFilePageFrame(target);
+      window.location.href = target.href;
       return;
     }
     loadPage(target, { push: true });
@@ -482,7 +482,6 @@
       const nextFile = fileFromUrl(url);
       const { nodes, scripts } = collectPageNodes(doc, url);
 
-      content.classList.remove("content-route-frame");
       content.replaceChildren(...nodes);
       if (doc.title) document.title = doc.title;
       if (options && options.push && url.protocol !== "file:") {
@@ -502,32 +501,6 @@
     } finally {
       content.classList.remove("caesar-content-loading");
     }
-  }
-
-  function embeddedUrl(url) {
-    const next = new URL(url.href);
-    next.searchParams.set("caesarEmbed", "1");
-    return next;
-  }
-
-  function loadFilePageFrame(url) {
-    const content = document.querySelector(".content");
-    if (!content) {
-      window.location.href = url.href;
-      return;
-    }
-
-    currentRouteUrl = url;
-    syncNavActive(fileFromUrl(url));
-    content.classList.add("content-route-frame");
-    content.replaceChildren();
-
-    const frame = document.createElement("iframe");
-    frame.className = "route-content-frame";
-    frame.title = "页面内容";
-    frame.src = embeddedUrl(url).href;
-    content.appendChild(frame);
-    content.scrollTop = 0;
   }
 
   function showPageLoadError(content, url, error) {
@@ -705,13 +678,13 @@
         return;
       }
 
-      if (node.matches(".filter-row")) {
+      if (node.matches(".filter-row, .list-surface-filter-layout, .list-surface-filter-fields")) {
         collectFilterControls(node, target);
         node.remove();
         return;
       }
 
-      if (!node.hidden && node.querySelector(":scope > .filter-row")) {
+      if (!node.hidden && node.querySelector(":scope > .filter-row, :scope > .list-surface-filter-layout, :scope > .list-surface-filter-fields")) {
         collectFilterControls(node, target);
         node.remove();
         return;
@@ -721,11 +694,11 @@
     });
   }
 
-  function insertActionBar(fields, actionBar) {
+  function insertActionBar(layout, actionBar) {
     if (!hasChildren(actionBar)) return;
 
     actionBar.classList.add("list-filter-pinned-actions");
-    fields.prepend(actionBar);
+    layout.appendChild(actionBar);
   }
 
   function normalizePrimarySearchField(fields) {
@@ -736,6 +709,27 @@
     );
     const searchField = searchInput ? searchInput.closest(".filter-item, .filter-item-sm, .filter-item-wide, .filter-item-status") : null;
     if (searchField) searchField.classList.add("filter-item-search");
+  }
+
+  function isFilterSubmitAction(control) {
+    const text = compactText(control.textContent);
+    if (!text) return false;
+    return /^(搜索|查询|重置)$/.test(text);
+  }
+
+  function normalizeFilterSubmitActions(fields, actionBar) {
+    const submitActions = Array.from(fields.querySelectorAll(":scope > .filter-actions"));
+    submitActions.forEach((actions) => {
+      Array.from(actions.children).forEach((control) => {
+        if (!isFilterSubmitAction(control)) actionBar.appendChild(control);
+      });
+      if (hasChildren(actions)) {
+        actions.classList.remove("list-surface-filter-actions", "list-filter-pinned-actions");
+        fields.appendChild(actions);
+      } else {
+        actions.remove();
+      }
+    });
   }
 
   const metaTagTexts = new Set([
@@ -825,7 +819,7 @@
     const actionBar = document.createElement("div");
     actionBar.className = "filter-actions list-surface-filter-actions";
 
-    filter.querySelectorAll(".filter-actions").forEach((actions) => {
+    filter.querySelectorAll(":scope > .list-surface-filter-actions").forEach((actions) => {
       moveChildren(actions, actionBar);
       actions.remove();
     });
@@ -848,9 +842,10 @@
     fields.className = "list-surface-filter-fields";
     collectFilterControls(filter, fields);
     normalizePrimarySearchField(fields);
-    insertActionBar(fields, actionBar);
+    normalizeFilterSubmitActions(fields, actionBar);
 
     layout.appendChild(fields);
+    insertActionBar(layout, actionBar);
 
     filter.classList.add("list-surface-filter");
     filter.appendChild(layout);
@@ -1207,31 +1202,9 @@
     }
   }
 
-  function isEmbeddedRoute() {
-    try {
-      return new URL(window.location.href).searchParams.get("caesarEmbed") === "1";
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function initEmbeddedPage() {
-    document.documentElement.classList.add("caesar-embedded-root");
-    document.body.classList.add("caesar-embedded-page");
-    initListSurfaces(document.body);
-    initFilterTabs(document.body);
-    initActionMenus(document.body);
-    requestAnimationFrame(() => {
-      initListSurfaces(document.body);
-      initFilterTabs(document.body);
-      initActionMenus(document.body);
-    });
-  }
-
-  const boot = isEmbeddedRoute() ? initEmbeddedPage : initNav;
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
+    document.addEventListener("DOMContentLoaded", initNav);
   } else {
-    boot();
+    initNav();
   }
 })();
