@@ -376,8 +376,19 @@
     sidebar.className = "sidebar";
 
     const logo = document.createElement("div");
-    logo.className = "sidebar-logo";
-    logo.textContent = "凯撒运营平台";
+    logo.className = "sidebar-logo caesar-brand-logo";
+    logo.setAttribute("aria-label", "凯撒运营平台");
+    logo.innerHTML = [
+      '<span class="caesar-brand-mark" aria-hidden="true">',
+      '<svg viewBox="0 0 40 40" focusable="false">',
+      '<path class="caesar-brand-orbit" d="M7.5 24.8c4.7-9.7 13.8-15.1 23.7-13.9 2.1.3 3.7.9 5 1.7-2.2 1.2-4.7 2.1-7.3 2.8-7.1 1.9-12.7 5.1-16.6 11.2-1.4 2.2-3.1 1.4-4.8-1.8Z"/>',
+      '<path class="caesar-brand-sail" d="M17.4 27.6c2.4-5.5 7.2-8.9 14.1-10.7-1.1 4.2-3.7 7.6-7.4 9.8-2.2 1.4-4.4 1.7-6.7.9Z"/>',
+      '<path class="caesar-brand-star main" d="M15.6 6.4 17.3 10l3.8.7-3 2.7.5 4-3.5-2-3.7 1.7.8-4-2.7-3 4-.4 2.1-3.3Z"/>',
+      '<path class="caesar-brand-star small" d="m29.4 5.4 1 2.1 2.3.4-1.7 1.6.3 2.3-2-1.1-2.2 1 .5-2.3-1.6-1.7 2.3-.3 1.1-2Z"/>',
+      '</svg>',
+      '</span>',
+      '<span class="caesar-brand-name">凯撒</span>'
+    ].join("");
 
     const navScroll = document.createElement("nav");
     navScroll.className = "nav-scroll";

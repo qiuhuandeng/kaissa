@@ -122,21 +122,25 @@
       title: "渠道",
       icon: "handshake",
       children: [
-        { title: "渠道来源", href: "channel/channel-config.html" },
         {
           title: "OTA运营",
           children: [
             { title: "OTA产品", href: "../channel/ota_products.html" },
+            { title: "OTA订单", href: "../channel/ota_orders.html" },
+            { title: "OTA退款", href: "../channel/ota_refunds.html" },
+            { title: "OTA对账", href: "../channel/ota_reconcile.html" },
           ],
         },
-        { title: "佣金规则", href: "channel/channel-commission.html" },
+        { title: "分销渠道管理", href: "../channel/distributors.html" },
+        { title: "同行代理管理", href: "../channel/agents.html" },
+        { title: "佣金规则", href: "../channel/commission_rules.html" },
       ],
     },
     {
       title: "客户",
       icon: "users",
       children: [
-        { title: "客户列表", href: "customer/customers.html" },
+        { title: "客户列表", href: "../customer/list.html" },
       ],
     },
     {
@@ -349,10 +353,18 @@
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
     "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队排班" },
-    "customer/customers-detail.html": { href: "customer/customers.html", title: "客户详情" },
+    "customer/customers-detail.html": { href: "../customer/list.html", title: "客户详情", tabHref: "../merchant/customer/customers-detail.html" },
     "system/design-pages.html": { href: "system/settings-roles.html", title: "C端页面管理" },
     "system/design-editor.html": { href: "system/design-pages.html", title: "C端页面编辑" },
     "ota_products.html": { href: "../channel/ota_products.html", title: "OTA产品", tabHref: "../channel/ota_products.html" },
+    "ota_orders.html": { href: "../channel/ota_orders.html", title: "OTA订单", tabHref: "../channel/ota_orders.html" },
+    "ota_refunds.html": { href: "../channel/ota_refunds.html", title: "OTA退款", tabHref: "../channel/ota_refunds.html" },
+    "ota_reconcile.html": { href: "../channel/ota_reconcile.html", title: "OTA对账", tabHref: "../channel/ota_reconcile.html" },
+    "distributors.html": { href: "../channel/distributors.html", title: "分销渠道管理", tabHref: "../channel/distributors.html" },
+    "agents.html": { href: "../channel/agents.html", title: "同行代理管理", tabHref: "../channel/agents.html" },
+    "commission_rules.html": { href: "../channel/commission_rules.html", title: "佣金规则", tabHref: "../channel/commission_rules.html" },
+    "list.html": { href: "../customer/list.html", title: "客户列表", tabHref: "../customer/list.html" },
+    "detail.html": { href: "../customer/list.html", title: "客户详情", tabHref: "../customer/detail.html" },
   };
 
   const organizationTree = [
@@ -1130,8 +1142,19 @@
     primaryRail.className = "nav-primary-rail";
 
     const logo = document.createElement("div");
-    logo.className = "sidebar-logo";
-    logo.textContent = "凯撒";
+    logo.className = "sidebar-logo caesar-brand-logo";
+    logo.setAttribute("aria-label", "凯撒旅游");
+    logo.innerHTML = [
+      '<span class="caesar-brand-mark" aria-hidden="true">',
+      '<svg viewBox="0 0 40 40" focusable="false">',
+      '<path class="caesar-brand-orbit" d="M7.5 24.8c4.7-9.7 13.8-15.1 23.7-13.9 2.1.3 3.7.9 5 1.7-2.2 1.2-4.7 2.1-7.3 2.8-7.1 1.9-12.7 5.1-16.6 11.2-1.4 2.2-3.1 1.4-4.8-1.8Z"/>',
+      '<path class="caesar-brand-sail" d="M17.4 27.6c2.4-5.5 7.2-8.9 14.1-10.7-1.1 4.2-3.7 7.6-7.4 9.8-2.2 1.4-4.4 1.7-6.7.9Z"/>',
+      '<path class="caesar-brand-star main" d="M15.6 6.4 17.3 10l3.8.7-3 2.7.5 4-3.5-2-3.7 1.7.8-4-2.7-3 4-.4 2.1-3.3Z"/>',
+      '<path class="caesar-brand-star small" d="m29.4 5.4 1 2.1 2.3.4-1.7 1.6.3 2.3-2-1.1-2.2 1 .5-2.3-1.6-1.7 2.3-.3 1.1-2Z"/>',
+      '</svg>',
+      '</span>',
+      '<span class="caesar-brand-name">凯撒</span>'
+    ].join("");
 
     primaryScroll = document.createElement("nav");
     primaryScroll.className = "nav-scroll nav-primary-scroll";

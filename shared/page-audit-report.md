@@ -32,9 +32,7 @@
 | ready | merchant/approval/approval-product-review.html | 可直接纳入内容路由 |
 | ready | merchant/approval/approvals.html | 可直接纳入内容路由 |
 | ready | merchant/channel/channel-commission.html | 可直接纳入内容路由 |
-| ready | merchant/channel/channel-config.html | 可直接纳入内容路由 |
 | ready | merchant/customer/customers-detail.html | 可直接纳入内容路由 |
-| ready | merchant/customer/customers.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard-group.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard-store.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard.html | 可直接纳入内容路由 |
