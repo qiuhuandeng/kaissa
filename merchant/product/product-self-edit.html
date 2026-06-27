@@ -23,13 +23,13 @@
       </div>
     </section>
 
-    <section class="product-create-layout">
+    <section class="product-create-layout product-create-layout-horizontal">
       <aside class="product-step-panel" aria-label="产品创建步骤">
         <div class="steps">
-          <button class="product-step active" type="button" data-step-target="step1"><span class="product-step-index">Step 1</span><span>基础信息</span></button>
-          <button class="product-step" type="button" data-step-target="step2"><span class="product-step-index">Step 2</span><span>行程内容</span></button>
-          <button class="product-step" type="button" data-step-target="step3"><span class="product-step-index">Step 3</span><span>价格费用</span></button>
-          <button class="product-step" type="button" data-step-target="step4"><span class="product-step-index">Step 4</span><span>确认提交</span></button>
+          <button class="product-step active" type="button" data-step-target="step1"><span class="product-step-index">1</span><span>基础信息</span></button>
+          <button class="product-step" type="button" data-step-target="step2"><span class="product-step-index">2</span><span>线路行程</span></button>
+          <button class="product-step" type="button" data-step-target="step3"><span class="product-step-index">3</span><span>成本定价</span></button>
+          <button class="product-step" type="button" data-step-target="step4"><span class="product-step-index">4</span><span>销售发布</span></button>
         </div>
       </aside>
 
@@ -55,17 +55,31 @@
                 </div>
               </div>
               <div class="form-group">
-                <label class="form-label">产品类型</label>
-                <div class="readonly-field">跟团游</div>
+                <label class="form-label">旅游类型</label>
+                <select class="form-control">
+                  <option>出境游</option>
+                  <option>国内游</option>
+                  <option>港澳台</option>
+                  <option>入境游</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">产品形态</label>
+                <select class="form-control">
+                  <option>跟团游</option>
+                  <option>小包团</option>
+                  <option>定制团</option>
+                  <option>半自由行</option>
+                </select>
               </div>
               <div class="form-group form-group-full">
-                <label class="form-label" for="supplierInput">供应商 <span class="req">*</span></label>
+                <label class="form-label" for="supplierInput">承接组织 <span class="req">*</span></label>
                 <div id="supplierSearch" class="select-search">
-                  <input id="supplierInput" class="form-control" type="text" placeholder="输入供应商名称搜索" autocomplete="off">
+                  <input id="supplierInput" class="form-control" type="text" placeholder="输入产品部或中心搜索" autocomplete="off">
                   <div class="select-dropdown" role="listbox">
-                    <button class="select-option" type="button">北京凯撒旅游</button>
-                    <button class="select-option" type="button">日本地接XYZ</button>
-                    <button class="select-option" type="button">泰国地接DEF</button>
+                    <button class="select-option" type="button">欧洲产品中心</button>
+                    <button class="select-option" type="button">亚洲产品中心</button>
+                    <button class="select-option" type="button">国内产品中心</button>
                   </div>
                 </div>
               </div>
@@ -139,27 +153,94 @@
         </section>
 
         <section id="step2" class="product-step-content">
-          <section class="card">
+          <section class="card product-route-editor-card">
             <div class="card-header">
-              <div class="card-title">行程内容</div>
-            </div>
-            <div class="itinerary-draft-card">
-              <div class="itinerary-draft-head">
-                <div>
-                  <div class="itinerary-draft-title">行程草稿</div>
-                  <div id="pasteParseHint" class="text-muted">支持按第1天、Day1、D1或逐行自动拆分</div>
-                </div>
-                <div class="itinerary-draft-actions">
-                  <button id="aiGenerateTrip" class="ai-btn" type="button">AI生成</button>
-                </div>
-              </div>
-              <textarea id="bulkItineraryInput" class="form-control itinerary-draft-textarea" rows="8" placeholder="可粘贴完整行程，例如：&#10;Day1 北京集合，搭乘国际航班前往巴黎。&#10;Day2 巴黎市区游览，参观卢浮宫外观、凯旋门。"></textarea>
-              <div class="itinerary-draft-footer">
-                <button id="applyDraftTrip" class="btn btn-primary" type="button">采用</button>
+              <div class="card-title">线路</div>
+              <div class="btn-group">
+                <button id="addRoutePlan" class="btn btn-secondary" type="button">新增线路</button>
+                <button id="copyRoutePlan" class="btn btn-secondary" type="button">复制当前线路</button>
+                <button id="setDefaultRoute" class="btn btn-primary" type="button">设为默认</button>
               </div>
             </div>
-            <div id="itineraryEditor" class="itinerary-editor" aria-label="按天行程编辑器"></div>
-            <button id="addItineraryDay" class="btn btn-secondary" type="button">添加一天</button>
+            <div class="product-route-layout">
+              <aside id="routePlanList" class="product-route-list" aria-label="线路列表"></aside>
+              <div class="product-route-workspace">
+                <div class="route-editor-head">
+                  <div>
+                    <div id="activeRouteTitle" class="route-editor-title">A线 法德意12天</div>
+                    <div id="activeRouteMeta" class="route-editor-meta">北京出发 | 12天11晚 | 周五发团</div>
+                  </div>
+                  <div class="btn-group">
+                    <button id="disableRoutePlan" class="btn btn-secondary" type="button">停用线路</button>
+                    <button id="deleteRoutePlan" class="btn btn-danger" type="button">删除线路</button>
+                  </div>
+                </div>
+
+                <div class="form-grid route-form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="routeName">线路名称 <span class="req">*</span></label>
+                    <input id="routeName" class="form-control" type="text">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="routeCode">线路编号 <span class="req">*</span></label>
+                    <input id="routeCode" class="form-control" type="text">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="routeStatus">线路状态</label>
+                    <select id="routeStatus" class="form-control">
+                      <option>启用</option>
+                      <option>草稿</option>
+                      <option>停用</option>
+                    </select>
+                  </div>
+                  <label class="form-group switch-line inner-switch">
+                    <span>默认线路</span>
+                    <input id="routeDefault" type="checkbox">
+                  </label>
+                  <div class="form-group">
+                    <label class="form-label" for="routeDeparture">出发地</label>
+                    <input id="routeDeparture" class="form-control" type="text">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="routeDuration">行程天数</label>
+                    <div class="field-with-suffix">
+                      <input id="routeDuration" class="form-control" type="number" min="1">
+                      <span id="routeDurationNights" class="field-suffix">11晚</span>
+                    </div>
+                  </div>
+                  <div class="form-group form-group-full">
+                    <label class="form-label" for="routeDestinations">目的地</label>
+                    <input id="routeDestinations" class="form-control" type="text" placeholder="多个目的地用 / 分隔">
+                  </div>
+                  <div class="form-group form-group-full">
+                    <label class="form-label" for="routeRemark">线路备注</label>
+                    <textarea id="routeRemark" class="form-control" rows="2"></textarea>
+                  </div>
+                </div>
+
+                <div class="route-section-head">
+                  <div class="card-title">当前线路行程</div>
+                  <span id="routeItineraryCount" class="text-muted">12天行程</span>
+                </div>
+                <div class="itinerary-draft-card">
+                  <div class="itinerary-draft-head">
+                    <div>
+                      <div class="itinerary-draft-title">行程草稿</div>
+                      <div id="pasteParseHint" class="text-muted">支持按第1天、Day1、D1或逐行自动拆分</div>
+                    </div>
+                    <div class="itinerary-draft-actions">
+                      <button id="aiGenerateTrip" class="ai-btn" type="button">AI生成</button>
+                    </div>
+                  </div>
+                  <textarea id="bulkItineraryInput" class="form-control itinerary-draft-textarea" rows="8" placeholder="可粘贴完整行程，例如：&#10;Day1 北京集合，搭乘国际航班前往巴黎。&#10;Day2 巴黎市区游览，参观卢浮宫外观、凯旋门。"></textarea>
+                  <div class="itinerary-draft-footer">
+                    <button id="applyDraftTrip" class="btn btn-primary" type="button">采用到当前线路</button>
+                  </div>
+                </div>
+                <div id="itineraryEditor" class="itinerary-editor" aria-label="当前线路按天行程编辑器"></div>
+                <button id="addItineraryDay" class="btn btn-secondary" type="button">添加一天</button>
+              </div>
+            </div>
           </section>
         </section>
 
@@ -168,13 +249,18 @@
             <div class="card-header">
               <div class="card-title">价格费用</div>
             </div>
+            <div class="route-price-toolbar">
+              <label class="form-label" for="priceRouteSelect">价格适用线路</label>
+              <select id="priceRouteSelect" class="form-control"></select>
+              <button id="copyPriceToAll" class="btn btn-secondary" type="button">复制当前价格到全部线路</button>
+            </div>
             <div class="table-wrap compact-table">
               <table class="editable-price-table">
                 <thead>
                   <tr>
                     <th>价格类型</th>
                     <th>成本价</th>
-                    <th>零售价</th>
+                    <th>销售价</th>
                     <th>结算价</th>
                     <th>分销价</th>
                   </tr>
@@ -349,12 +435,363 @@
         '安排欧洲特色晚餐，整理行程亮点并预留购物时间。',
         '搭乘国际航班返回北京，结束欧洲十国经典游。'
       ];
+      var routePlanList = document.getElementById('routePlanList');
+      var activeRouteTitle = document.getElementById('activeRouteTitle');
+      var activeRouteMeta = document.getElementById('activeRouteMeta');
+      var routeItineraryCount = document.getElementById('routeItineraryCount');
+      var routeFields = {
+        name: document.getElementById('routeName'),
+        code: document.getElementById('routeCode'),
+        status: document.getElementById('routeStatus'),
+        isDefault: document.getElementById('routeDefault'),
+        departure: document.getElementById('routeDeparture'),
+        duration: document.getElementById('routeDuration'),
+        destinations: document.getElementById('routeDestinations'),
+        remark: document.getElementById('routeRemark')
+      };
+      var routeDurationNights = document.getElementById('routeDurationNights');
+      var priceRouteSelect = document.getElementById('priceRouteSelect');
+      var priceRows = Array.from(document.querySelectorAll('[data-price-row]'));
+      var routePlans = [
+        {
+          name: 'A线 法德意12天',
+          code: 'RT-EU-A',
+          status: '启用',
+          isDefault: true,
+          departure: '北京',
+          duration: 12,
+          destinations: '法国/德国/意大利',
+          remark: '明星线路，适合首次欧洲客群。',
+          schedules: 8,
+          itinerary: buildRouteDays([
+            ['北京-巴黎', '北京集合，搭乘国际航班前往巴黎，抵达后入住酒店休息。'],
+            ['巴黎城市精华', '巴黎市区游览，参观卢浮宫外观、凯旋门与香榭丽舍大道。'],
+            ['巴黎自由活动', '巴黎自由活动，午后前往法国小镇，体验欧洲慢生活。'],
+            ['瑞士湖区小镇', '前往瑞士，沿途欣赏阿尔卑斯风光，抵达湖区小镇。'],
+            ['卢塞恩湖畔漫步', '游览卢塞恩，安排卡佩尔廊桥与湖畔漫步。'],
+            ['德国巴伐利亚', '前往德国，参观新天鹅堡外观与巴伐利亚小镇。'],
+            ['维也纳城市环线', '抵达奥地利维也纳，游览城市环线与金色大厅外观。'],
+            ['威尼斯水城', '前往意大利威尼斯，体验水城街巷与贡多拉文化。'],
+            ['佛罗伦萨文艺复兴', '佛罗伦萨文艺复兴主题游览，参观圣母百花大教堂外观。'],
+            ['罗马古城', '罗马深度游，参观古罗马斗兽场外观与许愿池。'],
+            ['特色晚餐与自由活动', '安排欧洲特色晚餐，整理行程亮点并预留购物时间。'],
+            ['返回北京', '搭乘国际航班返回北京，结束欧洲十国经典游。']
+          ]),
+          prices: {
+            '成人标准': { cost: 9800, retail: 12800, settlement: 11800, distribution: 12200 },
+            '儿童占床': { cost: 8600, retail: 11200, settlement: 10400, distribution: 10800 },
+            '儿童不占床': { cost: 7200, retail: 9200, settlement: 8500, distribution: 8900 },
+            '单房差': { cost: 2400, retail: 3200, settlement: 2800, distribution: 3000 }
+          }
+        },
+        {
+          name: 'B线 荷比德法12天',
+          code: 'RT-EU-B',
+          status: '启用',
+          isDefault: false,
+          departure: '上海',
+          duration: 12,
+          destinations: '荷兰/比利时/德国/法国',
+          remark: '偏西欧城市文化，适合亲子和银发客群。',
+          schedules: 5,
+          itinerary: buildRouteDays([
+            ['上海-阿姆斯特丹', '上海集合后飞往阿姆斯特丹，抵达后入住酒店。'],
+            ['阿姆斯特丹城市游', '安排运河区步行、博物馆广场与钻石工坊参观。'],
+            ['荷兰小镇', '前往风车村与渔村，体验荷兰乡村风貌。'],
+            ['布鲁塞尔', '前往比利时布鲁塞尔，游览大广场与城市老街。'],
+            ['科隆', '进入德国科隆，外观科隆大教堂并安排莱茵河沿线游览。'],
+            ['法兰克福', '参观罗马广场与美因河畔，安排城市自由活动。'],
+            ['斯图加特', '德国工业文化主题游览，安排汽车博物馆外观。'],
+            ['巴黎', '抵达巴黎，安排塞纳河畔漫步。'],
+            ['巴黎艺术主题', '卢浮宫入内讲解，外观凯旋门和香榭丽舍大道。'],
+            ['凡尔赛', '凡尔赛宫主题游览，晚间返回巴黎。'],
+            ['巴黎自由活动', '预留巴黎自由活动和特色晚餐时间。'],
+            ['返回上海', '搭乘国际航班返回上海，结束行程。']
+          ]),
+          prices: {
+            '成人标准': { cost: 10200, retail: 13200, settlement: 12100, distribution: 12600 },
+            '儿童占床': { cost: 8900, retail: 11600, settlement: 10700, distribution: 11100 },
+            '儿童不占床': { cost: 7500, retail: 9600, settlement: 8800, distribution: 9200 },
+            '单房差': { cost: 2600, retail: 3400, settlement: 3000, distribution: 3200 }
+          }
+        }
+      ];
+      var activeRouteIndex = 0;
+      var activePriceRouteIndex = 0;
+      var syncingRoute = false;
 
       function markDirty() {
         formDirty = true;
       }
 
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+        });
+      }
+
+      function buildRouteDays(items) {
+        return items.map(function (item, index) {
+          return {
+            title: item[0] || '',
+            desc: item[1] || '',
+            breakfast: index === 0 || index === items.length - 1 ? '机上' : '酒店',
+            lunch: index % 3 === 0 ? '西餐厅' : '中餐厅',
+            dinner: index === items.length - 2 ? '西餐厅' : '中餐厅',
+            stay: index === items.length - 1 ? '机上' : '当地四星酒店'
+          };
+        });
+      }
+
+      function routeNights(route) {
+        return Math.max(Number(route.duration || 1) - 1, 0) + '晚';
+      }
+
+      function showDraftToast(message) {
+        draftToast.textContent = message;
+        draftToast.hidden = false;
+        window.clearTimeout(saveDraft.toastTimer);
+        saveDraft.toastTimer = window.setTimeout(function () {
+          draftToast.hidden = true;
+        }, 3000);
+      }
+
+      function readItineraryFromEditor() {
+        return Array.from(itineraryEditor.querySelectorAll('.itinerary-day-row')).map(function (row) {
+          return {
+            title: row.querySelector('[data-day-title]').value || '',
+            desc: row.querySelector('[data-day-desc]').value || '',
+            breakfast: row.querySelector('[data-meal="breakfast"]').value,
+            lunch: row.querySelector('[data-meal="lunch"]').value,
+            dinner: row.querySelector('[data-meal="dinner"]').value,
+            stay: row.querySelector('[data-stay]').value || ''
+          };
+        });
+      }
+
+      function saveActiveRouteItinerary() {
+        if (!routePlans[activeRouteIndex] || !itineraryEditor.children.length) return;
+        routePlans[activeRouteIndex].itinerary = readItineraryFromEditor();
+      }
+
+      function setDayRowValues(row, day) {
+        row.querySelector('[data-day-title]').value = day.title || '';
+        row.querySelector('[data-day-desc]').value = day.desc || '';
+        row.querySelector('[data-meal="breakfast"]').value = day.breakfast || '酒店';
+        row.querySelector('[data-meal="lunch"]').value = day.lunch || '中餐厅';
+        row.querySelector('[data-meal="dinner"]').value = day.dinner || '中餐厅';
+        row.querySelector('[data-stay]').value = day.stay || '当地四星酒店';
+      }
+
+      function loadRouteItinerary(route) {
+        itineraryEditor.innerHTML = '';
+        var days = route.itinerary && route.itinerary.length ? route.itinerary : buildRouteDays([[route.name, '']]);
+        days.forEach(function (day, index) {
+          var row = createItineraryDay(index + 1, day.desc || '', day.title || '');
+          itineraryEditor.appendChild(row);
+          setDayRowValues(row, day);
+        });
+        refreshDayTitles();
+      }
+
+      function updateRouteDurationText() {
+        routeDurationNights.textContent = Math.max(Number(routeFields.duration.value || 1) - 1, 0) + '晚';
+      }
+
+      function renderRoutePlans() {
+        routePlanList.innerHTML = routePlans.map(function (route, index) {
+          var statusClass = route.status === '启用' ? 'tag-green' : route.status === '草稿' ? 'tag-orange' : 'tag-gray';
+          return [
+            '<button class="product-route-card' + (index === activeRouteIndex ? ' active' : '') + '" type="button" data-route-index="' + index + '">',
+            '<span class="product-route-card-head"><strong>' + escapeHtml(route.name) + '</strong>' + (route.isDefault ? '<em>默认</em>' : '') + '</span>',
+            '<span>' + escapeHtml(route.departure) + '出发 · ' + route.duration + '天' + routeNights(route) + '</span>',
+            '<span>' + escapeHtml(route.destinations) + '</span>',
+            '<span class="product-route-card-foot"><span class="tag ' + statusClass + '">' + escapeHtml(route.status) + '</span><span>' + route.schedules + '个团期</span></span>',
+            '</button>'
+          ].join('');
+        }).join('');
+        renderPriceRouteSelect();
+      }
+
+      function renderActiveRouteHeader() {
+        var route = routePlans[activeRouteIndex];
+        activeRouteTitle.textContent = route.name;
+        activeRouteMeta.textContent = route.departure + '出发 | ' + route.duration + '天' + routeNights(route);
+        routeItineraryCount.textContent = (route.itinerary ? route.itinerary.length : 0) + '天行程';
+      }
+
+      function loadRoute(index) {
+        if (!routePlans[index]) return;
+        if (!syncingRoute) saveActiveRouteItinerary();
+        activeRouteIndex = index;
+        var route = routePlans[index];
+        syncingRoute = true;
+        routeFields.name.value = route.name;
+        routeFields.code.value = route.code;
+        routeFields.status.value = route.status;
+        routeFields.isDefault.checked = route.isDefault;
+        routeFields.departure.value = route.departure;
+        routeFields.duration.value = route.duration;
+        routeFields.destinations.value = route.destinations;
+        routeFields.remark.value = route.remark || '';
+        updateRouteDurationText();
+        loadRouteItinerary(route);
+        renderActiveRouteHeader();
+        renderRoutePlans();
+        syncingRoute = false;
+      }
+
+      function updateRouteFromFields() {
+        if (syncingRoute || !routePlans[activeRouteIndex]) return;
+        var route = routePlans[activeRouteIndex];
+        route.name = routeFields.name.value || '未命名线路';
+        route.code = routeFields.code.value || '-';
+        route.status = routeFields.status.value;
+        route.isDefault = routeFields.isDefault.checked;
+        route.departure = routeFields.departure.value || '-';
+        route.duration = Number(routeFields.duration.value || 1);
+        route.destinations = routeFields.destinations.value || '-';
+        route.remark = routeFields.remark.value;
+        if (route.isDefault) {
+          routePlans.forEach(function (item, index) {
+            if (index !== activeRouteIndex) item.isDefault = false;
+          });
+        }
+        updateRouteDurationText();
+        renderActiveRouteHeader();
+        renderRoutePlans();
+        markDirty();
+      }
+
+      function clonePrices(prices) {
+        var copy = {};
+        Object.keys(prices || {}).forEach(function (key) {
+          copy[key] = Object.assign({}, prices[key]);
+        });
+        return copy;
+      }
+
+      function createNewRouteFrom(route) {
+        var nextIndex = routePlans.length + 1;
+        return {
+          name: route ? route.name + ' 复制' : '新线路' + nextIndex,
+          code: route ? route.code + '-COPY' : 'RT-EU-' + String.fromCharCode(64 + nextIndex),
+          status: '草稿',
+          isDefault: false,
+          departure: route ? route.departure : departureCity.textContent,
+          duration: route ? route.duration : Number(durationInput.value || 12),
+          destinations: route ? route.destinations : '法国/德国/意大利',
+          remark: route ? route.remark : '',
+          schedules: 0,
+          itinerary: route ? route.itinerary.map(function (day) { return Object.assign({}, day); }) : buildRouteDays([['新线路首日', '请维护当前线路每日行程。']]),
+          prices: route ? clonePrices(route.prices) : clonePrices(routePlans[activeRouteIndex].prices)
+        };
+      }
+
+      function addRoutePlan() {
+        saveActiveRouteItinerary();
+        routePlans.push(createNewRouteFrom(null));
+        loadRoute(routePlans.length - 1);
+        showDraftToast('已新增线路，请维护线路名称和行程');
+        markDirty();
+      }
+
+      function copyRoutePlan() {
+        saveActiveRouteItinerary();
+        routePlans.push(createNewRouteFrom(routePlans[activeRouteIndex]));
+        loadRoute(routePlans.length - 1);
+        showDraftToast('已复制当前线路，复制线路默认为草稿状态');
+        markDirty();
+      }
+
+      function deleteRoutePlan() {
+        if (routePlans.length === 1) {
+          showDraftToast('至少保留一条线路');
+          return;
+        }
+        var removedDefault = routePlans[activeRouteIndex].isDefault;
+        routePlans.splice(activeRouteIndex, 1);
+        if (removedDefault && routePlans[0]) routePlans[0].isDefault = true;
+        loadRoute(Math.max(0, activeRouteIndex - 1));
+        showDraftToast('线路已删除');
+        markDirty();
+      }
+
+      function disableRoutePlan() {
+        var route = routePlans[activeRouteIndex];
+        if (route.isDefault) {
+          showDraftToast('默认线路不能停用，请先设置其他线路为默认');
+          return;
+        }
+        route.status = route.status === '停用' ? '启用' : '停用';
+        loadRoute(activeRouteIndex);
+        showDraftToast(route.status === '停用' ? '线路已停用' : '线路已启用');
+        markDirty();
+      }
+
+      function setDefaultRoute() {
+        routePlans.forEach(function (route, index) {
+          route.isDefault = index === activeRouteIndex;
+        });
+        routePlans[activeRouteIndex].status = '启用';
+        loadRoute(activeRouteIndex);
+        showDraftToast('已设置为默认线路');
+        markDirty();
+      }
+
+      function saveActiveRoutePrices() {
+        if (!routePlans[activePriceRouteIndex]) return;
+        var route = routePlans[activePriceRouteIndex];
+        route.prices = route.prices || {};
+        priceRows.forEach(function (row) {
+          var rowName = row.dataset.priceRow;
+          route.prices[rowName] = {
+            cost: Number(row.querySelector('[data-price-field="cost"]').value || 0),
+            retail: Number(row.querySelector('[data-price-field="retail"]').value || 0),
+            settlement: Number(row.querySelector('[data-price-field="settlement"]').value || 0),
+            distribution: Number(row.querySelector('[data-price-field="distribution"]').value || 0)
+          };
+        });
+      }
+
+      function loadRoutePrices(index) {
+        if (!routePlans[index]) return;
+        activePriceRouteIndex = index;
+        var route = routePlans[index];
+        priceRows.forEach(function (row) {
+          var rowName = row.dataset.priceRow;
+          var values = route.prices && route.prices[rowName];
+          if (!values) return;
+          row.querySelector('[data-price-field="cost"]').value = values.cost;
+          row.querySelector('[data-price-field="retail"]').value = values.retail;
+          row.querySelector('[data-price-field="settlement"]').value = values.settlement;
+          row.querySelector('[data-price-field="distribution"]').value = values.distribution;
+        });
+        priceRouteSelect.value = String(index);
+        calculateProfit();
+      }
+
+      function renderPriceRouteSelect() {
+        if (!priceRouteSelect) return;
+        priceRouteSelect.innerHTML = routePlans.map(function (route, index) {
+          return '<option value="' + index + '">' + escapeHtml(route.name) + '</option>';
+        }).join('');
+        priceRouteSelect.value = String(Math.min(activePriceRouteIndex, routePlans.length - 1));
+      }
+
+      function copyPriceToAllRoutes() {
+        saveActiveRoutePrices();
+        var source = clonePrices(routePlans[activePriceRouteIndex].prices);
+        routePlans.forEach(function (route) {
+          route.prices = clonePrices(source);
+        });
+        showDraftToast('当前线路价格已复制到全部线路');
+        markDirty();
+      }
+
       function setStep(index) {
+        saveActiveRouteItinerary();
+        saveActiveRoutePrices();
         currentStep = index;
         stepButtons.forEach(function (button, buttonIndex) {
           button.classList.toggle('active', buttonIndex === index);
@@ -529,6 +966,8 @@
             feedbackButton.textContent = originalText;
           }, 1200);
         }
+        saveActiveRouteItinerary();
+        renderActiveRouteHeader();
         markDirty();
       }
 
@@ -629,32 +1068,31 @@
       }
 
       function renderSubmitSummary() {
-        var priceRows = Array.from(document.querySelectorAll('[data-price-row]')).map(function (row) {
-          return row.dataset.priceRow + '：成本价 ¥' + (row.querySelector('[data-price-field="cost"]').value || 0) +
-            '，零售价 ¥' + (row.querySelector('[data-price-field="retail"]').value || 0) +
-            '，结算价 ¥' + (row.querySelector('[data-price-field="settlement"]').value || 0) +
-            '，分销价 ¥' + (row.querySelector('[data-price-field="distribution"]').value || 0);
+        saveActiveRouteItinerary();
+        saveActiveRoutePrices();
+        var routeRows = routePlans.map(function (route) {
+          return route.name + '：' + route.departure + '出发，' + route.duration + '天' + routeNights(route) + '，目的地 ' + route.destinations + (route.isDefault ? '，默认线路' : '');
         }).join('<br>');
-        var tripRows = Array.from(itineraryEditor.querySelectorAll('.itinerary-day-row')).map(function (row, index) {
-          var title = row.querySelector('[data-day-title]').value || '未填写标题';
-          var desc = row.querySelector('[data-day-desc]').value || '未填写';
-          var stay = row.querySelector('[data-stay]').value || '未填写';
-          var breakfast = row.querySelector('[data-meal="breakfast"]').value;
-          var lunch = row.querySelector('[data-meal="lunch"]').value;
-          var dinner = row.querySelector('[data-meal="dinner"]').value;
-          return 'Day' + (index + 1) + ' ' + title + '：' + desc + '｜早餐：' + breakfast + '，午餐：' + lunch + '，晚餐：' + dinner + '｜住宿：' + stay;
+        var tripRows = routePlans.map(function (route) {
+          var firstDay = route.itinerary && route.itinerary[0] ? route.itinerary[0].title || '首日行程' : '未维护';
+          return route.name + '：共' + (route.itinerary ? route.itinerary.length : 0) + '天，首日 ' + firstDay;
+        }).join('<br>');
+        var priceRows = routePlans.map(function (route) {
+          var adult = route.prices && route.prices['成人标准'] ? route.prices['成人标准'] : {};
+          return route.name + ' 成人标准：成本价 ¥' + (adult.cost || 0) + '，销售价 ¥' + (adult.retail || 0) + '，结算价 ¥' + (adult.settlement || 0) + '，分销价 ¥' + (adult.distribution || 0);
         }).join('<br>');
         document.getElementById('submitSummary').innerHTML = [
           '<section class="summary-section"><h3>基础信息</h3><dl>',
           summaryField('产品名称', nameInput.value),
           summaryField('产品编号', document.getElementById('productCode').value),
-          summaryField('供应商', supplierInput.value),
+          summaryField('承接组织', supplierInput.value),
           summaryField('出发地', departureCity.textContent),
           summaryField('行程天数', durationInput.value + '天' + durationNights.textContent),
           summaryField('产品简介', introInput.value),
           '</dl></section>',
+          '<section class="summary-section"><h3>线路</h3><p>' + routeRows + '</p></section>',
           '<section class="summary-section"><h3>行程内容</h3><p>' + tripRows + '</p></section>',
-          '<section class="summary-section"><h3>价格费用</h3><p>' + priceRows + '</p><p>综合毛利率：' + document.getElementById('profitRate').textContent + '</p></section>'
+          '<section class="summary-section"><h3>价格费用</h3><p>' + priceRows + '</p><p>当前线路综合毛利率：' + document.getElementById('profitRate').textContent + '</p></section>'
         ].join('');
       }
 
@@ -666,11 +1104,9 @@
       }
 
       function saveDraft() {
-        draftToast.hidden = false;
-        window.clearTimeout(saveDraft.toastTimer);
-        saveDraft.toastTimer = window.setTimeout(function () {
-          draftToast.hidden = true;
-        }, 3000);
+        saveActiveRouteItinerary();
+        saveActiveRoutePrices();
+        showDraftToast('草稿已保存，产品编号 KS-EU-XXX');
         formDirty = false;
       }
 
@@ -692,6 +1128,31 @@
           setStep(index);
         });
       });
+
+      routePlanList.addEventListener('click', function (event) {
+        var card = event.target.closest('[data-route-index]');
+        if (!card) return;
+        loadRoute(Number(card.dataset.routeIndex));
+      });
+
+      Object.keys(routeFields).forEach(function (key) {
+        var field = routeFields[key];
+        field.addEventListener('input', updateRouteFromFields);
+        field.addEventListener('change', updateRouteFromFields);
+      });
+
+      document.getElementById('addRoutePlan').addEventListener('click', addRoutePlan);
+      document.getElementById('copyRoutePlan').addEventListener('click', copyRoutePlan);
+      document.getElementById('setDefaultRoute').addEventListener('click', setDefaultRoute);
+      document.getElementById('disableRoutePlan').addEventListener('click', disableRoutePlan);
+      document.getElementById('deleteRoutePlan').addEventListener('click', deleteRoutePlan);
+
+      priceRouteSelect.addEventListener('change', function () {
+        saveActiveRoutePrices();
+        loadRoutePrices(Number(priceRouteSelect.value));
+      });
+
+      document.getElementById('copyPriceToAll').addEventListener('click', copyPriceToAllRoutes);
 
       nextButton.addEventListener('click', function () {
         if (currentStep < stepPanels.length - 1) {
@@ -783,6 +1244,8 @@
       document.getElementById('addItineraryDay').addEventListener('click', function () {
         itineraryEditor.appendChild(createItineraryDay(itineraryEditor.children.length + 1, ''));
         refreshDayTitles();
+        saveActiveRouteItinerary();
+        renderActiveRouteHeader();
         markDirty();
       });
 
@@ -797,6 +1260,8 @@
         if (deleteButton) {
           row.remove();
           refreshDayTitles();
+          saveActiveRouteItinerary();
+          renderActiveRouteHeader();
           markDirty();
           return;
         }
@@ -804,6 +1269,7 @@
         if (upButton && row.previousElementSibling) {
           itineraryEditor.insertBefore(row, row.previousElementSibling);
           refreshDayTitles();
+          saveActiveRouteItinerary();
           markDirty();
           return;
         }
@@ -811,14 +1277,25 @@
         if (downButton && row.nextElementSibling) {
           itineraryEditor.insertBefore(row.nextElementSibling, row);
           refreshDayTitles();
+          saveActiveRouteItinerary();
           markDirty();
         }
       });
-      itineraryEditor.addEventListener('input', markDirty);
-      itineraryEditor.addEventListener('change', markDirty);
+      itineraryEditor.addEventListener('input', function () {
+        saveActiveRouteItinerary();
+        markDirty();
+      });
+      itineraryEditor.addEventListener('change', function () {
+        saveActiveRouteItinerary();
+        markDirty();
+      });
 
       document.querySelectorAll('[data-price-field]').forEach(function (input) {
-        input.addEventListener('input', calculateProfit);
+        input.addEventListener('input', function () {
+          calculateProfit();
+          saveActiveRoutePrices();
+          markDirty();
+        });
       });
 
       document.getElementById('submitReviewTop').addEventListener('click', function () {
@@ -865,8 +1342,10 @@
 
       updateCount(nameInput, nameCount, 50);
       updateNights();
-      initItinerary();
-      calculateProfit();
+      renderRoutePlans();
+      loadRoute(0);
+      renderPriceRouteSelect();
+      loadRoutePrices(0);
     })();
   </script>
 </body>

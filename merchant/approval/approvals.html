@@ -15,15 +15,45 @@
         <h1 id="approvalPageTitle" class="page-title">待我审批</h1>
       </div>
       <div class="list-page-actions">
-        <a id="productReviewEntry" class="btn btn-primary" href="approval-product-review.html">产品类审批工作台</a>
+        <a class="btn btn-primary" href="approval-product-review.html">查看审批详情</a>
       </div>
     </div>
 
-    <section class="filter-card filter-card-compact approval-filter" aria-label="审批筛选">
+    <section id="approvalFilterPanel" class="filter-card filter-card-compact approval-filter" aria-label="审批筛选">
       <div class="filter-row">
         <div class="filter-item">
-          <label class="sr-only" for="approvalKeyword">单号/申请人/业务对象</label>
-          <input id="approvalKeyword" type="search" placeholder="单号/申请人/业务对象">
+          <label class="sr-only" for="approvalKeyword">单号/申请人/单据/产品/线路</label>
+          <input id="approvalKeyword" type="search" placeholder="单号/申请人/单据/产品/线路">
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="approvalMatter">审批事项</label>
+          <select id="approvalMatter">
+            <option value="">全部事项</option>
+            <option value="产品发布">产品发布</option>
+            <option value="价格调整">价格调整</option>
+            <option value="渠道授权">渠道授权</option>
+            <option value="成本差异">成本差异</option>
+            <option value="付款申请">付款申请</option>
+            <option value="退款申请">退款申请</option>
+            <option value="坏账处理">坏账处理</option>
+            <option value="结算确认">结算确认</option>
+            <option value="发票红冲">发票红冲</option>
+            <option value="NC异常">NC异常</option>
+            <option value="改期转团">改期转团</option>
+            <option value="合同作废">合同作废</option>
+            <option value="组织人事">组织人事</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="approvalSource">来源模块</label>
+          <select id="approvalSource">
+            <option value="">全部模块</option>
+            <option value="产品">产品</option>
+            <option value="出团">出团</option>
+            <option value="销售">销售</option>
+            <option value="财务">财务</option>
+            <option value="系统">系统</option>
+          </select>
         </div>
         <div class="filter-item filter-item-sm">
           <label class="sr-only" for="approvalStatus">审批状态</label>
@@ -33,19 +63,6 @@
             <option value="审批中">审批中</option>
             <option value="已通过">已通过</option>
             <option value="已拒绝">已拒绝</option>
-          </select>
-        </div>
-        <div class="filter-item filter-item-sm">
-          <label class="sr-only" for="approvalProductType">产品类型</label>
-          <select id="approvalProductType">
-            <option value="">全部类型</option>
-            <option>普通团期</option>
-            <option>邮轮航次</option>
-            <option>专列班期</option>
-            <option>自由行</option>
-            <option>单项委托</option>
-            <option>研学营期</option>
-            <option>企业配置</option>
           </select>
         </div>
         <div class="filter-item filter-item-wide filter-item-date-range">
@@ -64,17 +81,18 @@
     </section>
   </section>
 
-  <nav class="tab-bar approval-tabs" aria-label="审批类型筛选">
-    <button class="tab-item active" type="button" data-approval-type="全部类型">全部类型</button>
-    <button class="tab-item" type="button" data-approval-type="组织人事">组织人事</button>
+  <nav id="approvalTypeTabs" class="tab-bar approval-tabs" aria-label="审批事项筛选">
+    <button class="tab-item active" type="button" data-approval-type="全部">全部</button>
     <button class="tab-item" type="button" data-approval-type="产品发布">产品发布</button>
     <button class="tab-item" type="button" data-approval-type="价格调整">价格调整</button>
     <button class="tab-item" type="button" data-approval-type="渠道授权">渠道授权</button>
-    <button class="tab-item" type="button" data-approval-type="履约对象">履约对象</button>
-    <button class="tab-item" type="button" data-approval-type="转团审批">改期转团</button>
-    <button class="tab-item" type="button" data-approval-type="退款审批">退款审批</button>
-    <button class="tab-item" type="button" data-approval-type="付款审批">付款审批</button>
-    <button class="tab-item" type="button" data-approval-type="合同作废">合同作废</button>
+    <button class="tab-item" type="button" data-approval-type="成本差异">成本差异</button>
+    <button class="tab-item" type="button" data-approval-type="付款申请">付款申请</button>
+    <button class="tab-item" type="button" data-approval-type="退款申请">退款申请</button>
+    <button class="tab-item" type="button" data-approval-type="坏账处理">坏账处理</button>
+    <button class="tab-item" type="button" data-approval-type="结算确认">结算确认</button>
+    <button class="tab-item" type="button" data-approval-type="NC异常">NC异常</button>
+    <button class="tab-item" type="button" data-approval-type="组织人事">组织人事</button>
   </nav>
 
   <section id="approvalListArea">
@@ -83,484 +101,612 @@
         <thead>
           <tr>
             <th>审批单号</th>
-            <th>审批类型</th>
-            <th>申请摘要</th>
-            <th>申请人</th>
-            <th>当前审批人</th>
-            <th>申请时间</th>
-            <th>优先级</th>
+            <th>来源模块</th>
+            <th>审批事项</th>
+            <th>业务单据</th>
+            <th>产品/线路</th>
+            <th>金额/影响</th>
+            <th>风险提示</th>
+            <th>当前节点</th>
+            <th>超时</th>
             <th>状态</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="approvalRows">
-          <tr data-kind="product_publish" data-product-type="普通团期" data-scope="todo overview" data-approval-type="产品发布" data-status="待审批" data-keywords="欧洲十国经典游 王珊 产品发布">
+          <tr data-kind="product_publish" data-scope="todo overview" data-approval-type="产品发布" data-source="产品" data-status="待审批" data-keywords="APR-20260624-018 欧洲十国经典游 法德意A线 王珊 产品发布">
             <td>APR-20260624-018</td>
+            <td>产品</td>
             <td><span class="tag tag-blue">产品发布</span></td>
-            <td>普通团期产品：欧洲十国经典游提交发布，需确认行程、价格与渠道配置</td>
-            <td>王珊（计调）</td>
-            <td>产品负责人</td>
-            <td>今天09:12</td>
-            <td><span class="tag tag-orange">紧急</span></td>
+            <td>PRD-EU-001</td>
+            <td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td>
+            <td>发布上线</td>
+            <td><span class="tag tag-orange">渠道保护价待确认</span></td>
+            <td>产品总监</td>
+            <td>1小时后</td>
             <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看产品</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
           </tr>
-          <tr data-kind="org_staff" data-product-type="企业配置" data-scope="todo overview" data-approval-type="组织人事" data-status="待审批" data-keywords="吴芳 入职开通 产品经理 组织人事">
-            <td>APR-20260626-031</td>
-            <td><span class="tag tag-blue">组织人事</span></td>
-            <td>吴芳入职开通：邮轮中心 / 产品经理 / 本管理中心数据范围</td>
-            <td>李梅（产品总监）</td>
-            <td>租户管理员</td>
-            <td>今天10:46</td>
-            <td><span class="tag tag-gray">普通</span></td>
-            <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看申请</button></div></td>
-          </tr>
-          <tr data-kind="org_auth" data-product-type="企业配置" data-scope="todo overview" data-approval-type="组织人事" data-status="待审批" data-keywords="孙丽 角色 数据范围 组织人事">
-            <td>APR-20260626-030</td>
-            <td><span class="tag tag-blue">组织人事</span></td>
-            <td>孙丽申请临时授权：销售订单从本门店调整为本管理中心，7日后到期</td>
-            <td>王强（门店店长）</td>
-            <td>主体负责人</td>
-            <td>今天10:12</td>
-            <td><span class="tag tag-orange">紧急</span></td>
-            <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看申请</button></div></td>
-          </tr>
-          <tr data-kind="price_adjust" data-product-type="普通团期" data-scope="todo overview" data-approval-type="价格调整" data-status="待审批" data-keywords="日本关西深度游 李明 价格调整">
+          <tr data-kind="price_adjust" data-scope="todo mine overview" data-approval-type="价格调整" data-source="产品" data-status="待审批" data-keywords="APR-20260624-017 日本关西深度游 大阪京都线 李明 价格调整 小程序">
             <td>APR-20260624-017</td>
+            <td>产品</td>
             <td><span class="tag tag-purple">价格调整</span></td>
-            <td>普通团期 JP-KAN-20260722-001：小程序限时降价4%，预计影响收入 -¥42,000</td>
-            <td>李明（计调）</td>
+            <td>PRICE-20260624-003</td>
+            <td>日本关西深度游<br><span class="text-muted">大阪京都线</span></td>
+            <td>-¥42,000</td>
+            <td><span class="tag tag-green">毛利仍高于底线</span></td>
             <td>产品负责人</td>
-            <td>今天09:35</td>
-            <td><span class="tag tag-gray">普通</span></td>
+            <td>正常</td>
             <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看价格</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="progress">进度</button></div></td>
           </tr>
-          <tr data-kind="channel_auth" data-product-type="研学营期" data-scope="todo overview" data-approval-type="渠道授权" data-status="待审批" data-keywords="英国名校语言研学 陈琳 渠道授权">
+          <tr data-kind="channel_auth" data-scope="todo cc overview" data-approval-type="渠道授权" data-source="产品" data-status="待审批" data-keywords="APR-20260624-016 英国名校语言研学12日 英国名校线 陈琳 渠道授权 北京四季研学">
             <td>APR-20260624-016</td>
+            <td>产品</td>
             <td><span class="tag tag-green">渠道授权</span></td>
-            <td>研学营期产品：英国名校语言研学12日新增授权北京四季研学服务中心</td>
-            <td>陈琳（研学）</td>
+            <td>AUTH-20260624-011</td>
+            <td>英国名校语言研学12日<br><span class="text-muted">英国名校线</span></td>
+            <td>授权40人</td>
+            <td><span class="tag tag-gray">需同步保护价</span></td>
             <td>渠道主管</td>
-            <td>今天11:08</td>
-            <td><span class="tag tag-gray">普通</span></td>
+            <td>正常</td>
             <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看授权</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
           </tr>
-          <tr data-kind="fulfillment_object" data-product-type="邮轮航次" data-scope="todo overview" data-approval-type="履约对象" data-status="待审批" data-keywords="理想号地中海邮轮 赵明 邮轮航次 履约对象">
-            <td>APR-20260624-015</td>
-            <td><span class="tag tag-blue">履约对象</span></td>
-            <td>邮轮航次 CR-MED-20260801-001 生成，需确认舱型库存、岸上观光和登船港配置</td>
-            <td>赵明（邮轮产品）</td>
-            <td>邮轮产品经理</td>
-            <td>今天10:26</td>
-            <td><span class="tag tag-gray">普通</span></td>
+          <tr data-kind="cost_diff" data-scope="todo overview" data-approval-type="成本差异" data-source="出团" data-status="待审批" data-keywords="APR-20260624-029 丝路专列深度游 丝路经典线 成本差异 供应商费用">
+            <td>APR-20260624-029</td>
+            <td>出团</td>
+            <td><span class="tag tag-orange">成本差异</span></td>
+            <td>COST-20260624-008</td>
+            <td>丝路专列深度游<br><span class="text-muted">丝路经典线 / TR-SILK-20260718-001</span></td>
+            <td>+¥6,000</td>
+            <td><span class="tag tag-orange">超预算3.8%</span></td>
+            <td>运营经理</td>
+            <td>35分钟后</td>
             <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看航次</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
           </tr>
-          <tr data-kind="transfer" data-product-type="普通团期" data-scope="todo overview" data-approval-type="转团审批" data-status="待审批" data-keywords="张丽华 王芳 转团审批 普通团期">
-            <td>APR-20260623-009</td>
-            <td><span class="tag tag-blue">改期转团</span></td>
-            <td>普通团期：张丽华4人从EU-DEU-20250720-001改至EU-DEU-20260905-001，补差¥2,400</td>
-            <td>王芳（计调）</td>
-            <td>西欧产品经理</td>
-            <td>昨天14:00</td>
-            <td><span class="tag tag-orange">紧急</span></td>
-            <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看转团</button></div></td>
-          </tr>
-          <tr data-kind="payment" data-product-type="普通团期" data-scope="todo overview" data-approval-type="付款审批" data-status="待审批" data-keywords="欧洲联合地接社 刘洋 付款审批">
-            <td>APR-20260623-008</td>
-            <td><span class="tag tag-orange">付款审批</span></td>
-            <td>普通团期 EU-FRA-20250610-001：欧洲联合地接社 ¥128,600 尾款</td>
-            <td>刘洋（财务）</td>
-            <td>张总</td>
-            <td>昨天12:30</td>
-            <td><span class="tag tag-orange">紧急</span></td>
-            <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看付款</button></div></td>
-          </tr>
-          <tr data-kind="refund" data-product-type="研学营期" data-scope="todo overview" data-approval-type="退款审批" data-status="待审批" data-keywords="赵鹏飞 吴欣 退款审批">
-            <td>APR-20260623-007</td>
-            <td><span class="tag tag-red">退款审批</span></td>
-            <td>研学营期 ST-EUR-20250801-001：赵鹏飞退款¥22,400，客人主动取消</td>
-            <td>吴欣（客服）</td>
+          <tr data-kind="payment" data-scope="todo overview" data-approval-type="付款申请" data-source="财务" data-status="待审批" data-keywords="APR-20260624-028 欧洲联合地接社 付款申请 AP20260624001 PAY20260624001 欧洲十国经典游">
+            <td>APR-20260624-028</td>
+            <td>财务</td>
+            <td><span class="tag tag-orange">付款申请</span></td>
+            <td>AP20260624001<br><span class="text-muted">PAY-20260624-001</span></td>
+            <td>欧洲十国经典游<br><span class="text-muted">法德意A线 / EU-FRA-20260720-001</span></td>
+            <td>¥112,000</td>
+            <td><span class="tag tag-orange">大额付款</span></td>
             <td>财务主管</td>
-            <td>昨天10:22</td>
-            <td><span class="tag tag-gray">普通</span></td>
+            <td>20分钟后</td>
             <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看退款</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
           </tr>
-          <tr data-kind="contract_void" data-product-type="普通团期" data-scope="mine overview" data-approval-type="合同作废" data-status="审批中" data-keywords="合同作废 CTR-20260623-01058 我发起">
-            <td>APR-20260623-011</td>
-            <td><span class="tag tag-gray">合同作废</span></td>
-            <td>普通团期 EU-FRA-20250725-001：CTR-20260623-01058 合同内容有误，需重签</td>
-            <td>当前用户</td>
+          <tr data-kind="refund" data-scope="todo mine overview" data-approval-type="退款申请" data-source="销售" data-status="待审批" data-keywords="APR-20260624-021 北欧四国15日 北欧峡湾线 退款申请 RFD KS202406240012">
+            <td>APR-20260624-021</td>
+            <td>销售</td>
+            <td><span class="tag tag-red">退款申请</span></td>
+            <td>RFD-20260624-006<br><span class="text-muted">KS202406240012</span></td>
+            <td>北欧四国15日<br><span class="text-muted">北欧峡湾线</span></td>
+            <td>¥36,000</td>
+            <td><span class="tag tag-red">出发前7天内</span></td>
             <td>销售主管</td>
-            <td>今天15:10</td>
-            <td><span class="tag tag-gray">普通</span></td>
-            <td><span class="tag tag-blue">审批中</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="progress">查看进度</button><button type="button" data-approval-action="withdraw">撤回</button></div></td>
-          </tr>
-          <tr data-kind="transfer" data-product-type="普通团期" data-scope="mine overview" data-approval-type="转团审批" data-status="待审批" data-keywords="张丽华 转团审批 我发起">
-            <td>APR-20260623-009</td>
-            <td><span class="tag tag-blue">转团审批</span></td>
-            <td>张丽华4人转至EU-DEU-20260905-001</td>
-            <td>当前用户</td>
-            <td>西欧产品经理</td>
-            <td>昨天14:00</td>
-            <td><span class="tag tag-gray">普通</span></td>
+            <td>正常</td>
             <td><span class="tag tag-orange">待审批</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="detail">查看转团</button><button type="button" data-approval-action="progress">查看进度</button><button type="button" data-approval-action="remind">催办</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
           </tr>
-          <tr data-kind="org_staff" data-product-type="企业配置" data-scope="mine overview" data-approval-type="组织人事" data-status="审批中" data-keywords="吴芳 入职开通 我发起 组织人事">
-            <td>APR-20260626-031</td>
-            <td><span class="tag tag-blue">组织人事</span></td>
-            <td>吴芳入职开通：邮轮中心 / 产品经理 / 本管理中心数据范围</td>
-            <td>当前用户</td>
-            <td>租户管理员</td>
-            <td>今天10:46</td>
-            <td><span class="tag tag-gray">普通</span></td>
+          <tr data-kind="bad_debt" data-scope="todo cc overview" data-approval-type="坏账处理" data-source="财务" data-status="待审批" data-keywords="APR-20260624-025 日本关西深度游 坏账处理 AR20260601008 王磊旅行社">
+            <td>APR-20260624-025</td>
+            <td>财务</td>
+            <td><span class="tag tag-red">坏账处理</span></td>
+            <td>AR20260601008</td>
+            <td>日本关西深度游<br><span class="text-muted">大阪京都线</span></td>
+            <td>¥24,800</td>
+            <td><span class="tag tag-red">逾期28天</span></td>
+            <td>财务总监</td>
+            <td>2小时后</td>
+            <td><span class="tag tag-orange">待审批</span></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
+          </tr>
+          <tr data-kind="settlement" data-scope="todo overview" data-approval-type="结算确认" data-source="财务" data-status="待审批" data-keywords="APR-20260624-030 结算确认 欧洲十国经典游 JS20260624002 团期盈亏">
+            <td>APR-20260624-030</td>
+            <td>财务</td>
+            <td><span class="tag tag-blue">结算确认</span></td>
+            <td>JS20260624002</td>
+            <td>欧洲十国经典游<br><span class="text-muted">法德意A线 / EU-FRA-20260720-001</span></td>
+            <td>毛利¥143,800</td>
+            <td><span class="tag tag-green">差异已核对</span></td>
+            <td>财务主管</td>
+            <td>正常</td>
+            <td><span class="tag tag-orange">待审批</span></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
+          </tr>
+          <tr data-kind="invoice_red" data-scope="cc overview" data-approval-type="发票红冲" data-source="财务" data-status="审批中" data-keywords="APR-20260623-023 发票红冲 马来西亚自由行 兰卡威酒店机票套餐 INV">
+            <td>APR-20260623-023</td>
+            <td>财务</td>
+            <td><span class="tag tag-purple">发票红冲</span></td>
+            <td>INV-20260618-009</td>
+            <td>马来西亚自由行<br><span class="text-muted">兰卡威酒店机票套餐</span></td>
+            <td>-¥3,200</td>
+            <td><span class="tag tag-gray">客户抬头变更</span></td>
+            <td>税务会计</td>
+            <td>正常</td>
             <td><span class="tag tag-blue">审批中</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="progress">查看进度</button><button type="button" data-approval-action="remind">催办</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="progress">进度</button><button type="button" data-approval-action="detail">查看</button></div></td>
           </tr>
-          <tr data-kind="price_adjust" data-product-type="自由行" data-scope="mine overview" data-approval-type="价格调整" data-status="已通过" data-keywords="订单改价 优惠 我发起">
+          <tr data-kind="nc_error" data-scope="todo cc overview" data-approval-type="NC异常" data-source="财务" data-status="待审批" data-keywords="APR-20260623-026 NC异常 理想号地中海邮轮 NC-ERR-20260623-004 科目映射">
+            <td>APR-20260623-026</td>
+            <td>财务</td>
+            <td><span class="tag tag-red">NC异常</span></td>
+            <td>NC-ERR-20260623-004</td>
+            <td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td>
+            <td>¥996,000</td>
+            <td><span class="tag tag-red">科目映射错误</span></td>
+            <td>财务主管</td>
+            <td>45分钟后</td>
+            <td><span class="tag tag-orange">待审批</span></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">处理</button><button type="button" data-approval-action="detail">查看</button></div></td>
+          </tr>
+          <tr data-kind="transfer" data-scope="mine overview" data-approval-type="改期转团" data-source="销售" data-status="审批中" data-keywords="APR-20260623-011 改期转团 德捷奥深度游 奥捷线 张丽华 KS202406230049">
+            <td>APR-20260623-011</td>
+            <td>销售</td>
+            <td><span class="tag tag-blue">改期转团</span></td>
+            <td>KS202406230049</td>
+            <td>德捷奥深度游<br><span class="text-muted">奥捷线</span></td>
+            <td>补差¥2,400</td>
+            <td><span class="tag tag-gray">需同步名单</span></td>
+            <td>西欧产品经理</td>
+            <td>正常</td>
+            <td><span class="tag tag-blue">审批中</span></td>
+            <td><div class="table-action"><button type="button" data-approval-action="progress">进度</button><button type="button" data-approval-action="remind">催办</button></div></td>
+          </tr>
+          <tr data-kind="contract_void" data-scope="mine overview" data-approval-type="合同作废" data-source="销售" data-status="审批中" data-keywords="APR-20260623-010 合同作废 CTR-20260623-01058 欧洲十国经典游">
+            <td>APR-20260623-010</td>
+            <td>销售</td>
+            <td><span class="tag tag-gray">合同作废</span></td>
+            <td>CTR-20260623-01058</td>
+            <td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td>
+            <td>需重签</td>
+            <td><span class="tag tag-orange">已收款合同</span></td>
+            <td>销售主管</td>
+            <td>正常</td>
+            <td><span class="tag tag-blue">审批中</span></td>
+            <td><div class="table-action"><button type="button" data-approval-action="progress">进度</button><button type="button" data-approval-action="withdraw">撤回</button></div></td>
+          </tr>
+          <tr data-kind="org_staff" data-scope="todo mine overview" data-approval-type="组织人事" data-source="系统" data-status="待审批" data-keywords="APR-20260626-031 吴芳 员工账号 业务角色 数据权限 组织人事">
+            <td>APR-20260626-031</td>
+            <td>系统</td>
+            <td><span class="tag tag-blue">组织人事</span></td>
+            <td>EMP-20260626-006</td>
+            <td>邮轮中心<br><span class="text-muted">员工账号与业务角色</span></td>
+            <td>开通账号</td>
+            <td><span class="tag tag-orange">含数据范围</span></td>
+            <td>租户管理员</td>
+            <td>1小时后</td>
+            <td><span class="tag tag-orange">待审批</span></td>
+            <td><div class="table-action"><button type="button" data-approval-action="approve">审批</button><button type="button" data-approval-action="detail">查看</button></div></td>
+          </tr>
+          <tr data-kind="price_adjust_done" data-scope="overview" data-approval-type="价格调整" data-source="产品" data-status="已通过" data-keywords="APR-20260621-004 马来西亚自由行 订单改价 已通过">
             <td>APR-20260621-004</td>
+            <td>产品</td>
             <td><span class="tag tag-purple">价格调整</span></td>
-            <td>订单ORD-20260621-01049 申请优惠¥800</td>
-            <td>当前用户</td>
+            <td>PRICE-20260621-004</td>
+            <td>马来西亚自由行<br><span class="text-muted">兰卡威酒店机票套餐</span></td>
+            <td>-¥800</td>
+            <td><span class="tag tag-green">已联动订单</span></td>
             <td>门店店长</td>
-            <td>2天前</td>
-            <td><span class="tag tag-gray">普通</span></td>
+            <td>已完成</td>
             <td><span class="tag tag-green">已通过</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="detail">查看价格</button><button type="button" data-approval-action="progress">查看进度</button></div></td>
+            <td><div class="table-action"><button type="button" data-approval-action="detail">查看</button><button type="button" data-approval-action="progress">记录</button></div></td>
           </tr>
-          <tr data-kind="refund" data-product-type="邮轮航次" data-scope="overview" data-approval-type="退款审批" data-status="已通过" data-keywords="孙凤英 退款审批 已审批">
-            <td>APR-20260620-003</td>
-            <td><span class="tag tag-red">退款审批</span></td>
-            <td>孙凤英退差¥1,800</td>
-            <td>刘洋（财务）</td>
-            <td>财务主管</td>
-            <td>3天前</td>
-            <td><span class="tag tag-gray">普通</span></td>
-            <td><span class="tag tag-green">已通过</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="detail">查看退款</button><button type="button" data-approval-action="progress">流转记录</button></div></td>
-          </tr>
-          <tr data-kind="payment" data-product-type="普通团期" data-scope="overview" data-approval-type="付款审批" data-status="已拒绝" data-keywords="欧洲大巴运输公司 付款审批 已拒绝">
-            <td>APR-20260615-001</td>
-            <td><span class="tag tag-orange">付款审批</span></td>
-            <td>欧洲大巴运输公司 ¥28,600</td>
-            <td>王芳（计调）</td>
-            <td>财务主管</td>
-            <td>8天前</td>
-            <td><span class="tag tag-gray">普通</span></td>
-            <td><span class="tag tag-red">已拒绝</span></td>
-            <td><div class="table-action"><button type="button" data-approval-action="detail">查看付款</button><button type="button" data-approval-action="progress">流转记录</button></div></td>
+          <tr id="approvalEmptyRow" hidden>
+            <td colspan="11">暂无匹配的审批记录</td>
           </tr>
         </tbody>
       </table>
     </section>
   </section>
 
-  <section id="approvalConfigPanel" class="approval-config-panel" hidden>
-    <section class="table-wrap approval-config-table" aria-label="审批配置">
+  <section id="approvalConfigArea" hidden>
+    <section class="table-wrap approval-table" aria-label="审批配置">
       <table>
         <thead>
           <tr>
             <th>审批事项</th>
-            <th>适用范围</th>
-            <th>当前规则</th>
-            <th>节点</th>
+            <th>来源模块</th>
+            <th>触发条件</th>
+            <th>审批节点</th>
+            <th>超时规则</th>
             <th>状态</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr data-kind="product_publish"><td>产品发布</td><td>自营/外采/邮轮/专列/自由行/单项委托/研学</td><td>提交后产品负责人审核</td><td>计调提交 > 产品负责人</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-approval-action="config">编辑</button><button type="button" data-approval-action="config-log">变更记录</button></div></td></tr>
-          <tr data-kind="price_adjust"><td>价格调整</td><td>渠道价/保护价/代理底价</td><td>涨跌幅超过3%需审批</td><td>申请人 > 产品负责人 > 财务复核</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-approval-action="config">编辑</button><button type="button" data-approval-action="config-log">变更记录</button></div></td></tr>
-          <tr data-kind="channel_auth"><td>渠道授权</td><td>代理商/学校直签/OTA</td><td>新增或撤销授权均需审批</td><td>申请人 > 渠道主管</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-approval-action="config">编辑</button><button type="button" data-approval-action="config-log">变更记录</button></div></td></tr>
-          <tr data-kind="payment"><td>付款审批</td><td>团期/航次/班期/营期成本付款</td><td>超过¥50,000自动升级</td><td>业务负责人 > 财务主管 > 总经理</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-approval-action="config">编辑</button><button type="button" data-approval-action="config-log">变更记录</button></div></td></tr>
+          <tr><td>产品发布</td><td>产品</td><td>产品从草稿提交发布、线路新增后重新发布</td><td>产品负责人 → 产品总监</td><td>4小时提醒，8小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>价格调整</td><td>产品/销售</td><td>调价超过3%、低于渠道保护价、订单优惠超过授权额度</td><td>产品负责人 → 财务主管</td><td>2小时提醒，6小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>渠道授权</td><td>产品/渠道</td><td>新增分销商、调整配额、撤销渠道授权</td><td>渠道主管 → 产品负责人</td><td>4小时提醒</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>成本差异</td><td>出团</td><td>团期成本确认超预算、供应商报价变更、成本补录</td><td>运营经理 → 财务主管</td><td>2小时提醒，超时推送待办</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>付款申请</td><td>出团/财务</td><td>付款金额超过5万元、预付款、未回团付款</td><td>业务负责人 → 财务主管 → 财务总监</td><td>1小时提醒，4小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>退款申请</td><td>销售/客服/财务</td><td>出发前7天内退款、已出票退款、超授权退款</td><td>销售主管 → 财务主管</td><td>2小时提醒</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>结算确认</td><td>财务</td><td>回团后生成结算单、成本差异已确认、盈亏复核</td><td>财务主管 → 财务总监</td><td>8小时提醒，24小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>发票红冲</td><td>财务</td><td>发票已开具后作废、红字发票、抬头重开</td><td>税务会计 → 财务主管</td><td>4小时提醒</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>NC异常</td><td>财务</td><td>NC推送失败、科目映射异常、金额不一致</td><td>财务主管 → 接口管理员</td><td>30分钟提醒，2小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>组织人事</td><td>系统</td><td>员工账号开通、业务角色变更、数据范围扩大</td><td>直属负责人 → 租户管理员</td><td>4小时提醒</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
         </tbody>
       </table>
     </section>
   </section>
 
-  <div id="approvalCenterModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal approval-center-modal" role="dialog" aria-modal="true" aria-labelledby="approvalCenterTitle">
+  <div id="approvalModal" class="modal-overlay drawer-overlay approval-center-modal" hidden>
+    <section class="modal drawer-modal approval-business-modal" role="dialog" aria-modal="true" aria-labelledby="approvalModalTitle">
       <div class="modal-header">
-        <div id="approvalCenterTitle" class="modal-title">审批处理</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+        <div>
+          <h2 id="approvalModalTitle">审批详情</h2>
+          <p id="approvalModalSubtitle" class="text-muted">查看申请内容、风险校验和流转记录</p>
+        </div>
+        <button class="modal-close" type="button" data-close-approval-modal aria-label="关闭">×</button>
       </div>
-      <div id="approvalModalBody" class="modal-body"></div>
-      <div id="approvalModalFooter" class="modal-footer"></div>
-    </div>
+      <div class="modal-body approval-business-modal-body">
+        <section class="approval-business-section">
+          <h3>申请摘要</h3>
+          <div id="approvalSummaryGrid" class="approval-detail-grid"></div>
+        </section>
+        <section class="approval-business-section">
+          <h3>审批内容</h3>
+          <div id="approvalDetailContent"></div>
+        </section>
+        <section class="approval-business-section">
+          <h3>流转记录</h3>
+          <ol id="approvalFlowList" class="approval-flow-list"></ol>
+        </section>
+        <section id="approvalDecisionPanel" class="approval-business-section">
+          <h3>审批意见</h3>
+          <div class="review-decision-row">
+            <label><input type="radio" name="approvalDecision" value="通过" checked> 通过</label>
+            <label><input type="radio" name="approvalDecision" value="驳回"> 驳回</label>
+            <label><input type="radio" name="approvalDecision" value="退回补充"> 退回补充</label>
+          </div>
+          <textarea id="approvalOpinion" class="approval-opinion-textarea" placeholder="填写审批意见，驳回或退回补充时必填"></textarea>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-approval-modal>取消</button>
+        <button id="approvalSubmitBtn" class="btn btn-primary" type="button">确定</button>
+      </div>
+    </section>
   </div>
-
-  <div id="approvalToast" class="toast-notice" hidden>操作已完成</div>
 
   <script>
     (function () {
-      var view = new URLSearchParams(window.location.search).get('view') || 'todo';
-      var viewMap = {
-        todo: '待我审批',
-        mine: '我发起的',
-        overview: '审批总览',
-        config: '审批配置'
+      const viewMap = {
+        todo: "待我审批",
+        mine: "我发起的",
+        cc: "抄送我",
+        overview: "审批总览",
+        config: "审批配置"
       };
-      var modalData = {
+      const params = new URLSearchParams(window.location.search);
+      const currentView = viewMap[params.get("view")] ? params.get("view") : "todo";
+      const pageTitle = document.getElementById("approvalPageTitle");
+      const filterPanel = document.getElementById("approvalFilterPanel");
+      const typeTabs = document.getElementById("approvalTypeTabs");
+      const listArea = document.getElementById("approvalListArea");
+      const configArea = document.getElementById("approvalConfigArea");
+      const rows = Array.from(document.querySelectorAll("#approvalRows tr[data-kind]"));
+      const emptyRow = document.getElementById("approvalEmptyRow");
+      const keywordInput = document.getElementById("approvalKeyword");
+      const matterSelect = document.getElementById("approvalMatter");
+      const sourceSelect = document.getElementById("approvalSource");
+      const statusSelect = document.getElementById("approvalStatus");
+      const modal = document.getElementById("approvalModal");
+      const modalTitle = document.getElementById("approvalModalTitle");
+      const modalSubtitle = document.getElementById("approvalModalSubtitle");
+      const summaryGrid = document.getElementById("approvalSummaryGrid");
+      const detailContent = document.getElementById("approvalDetailContent");
+      const flowList = document.getElementById("approvalFlowList");
+      const decisionPanel = document.getElementById("approvalDecisionPanel");
+      const submitBtn = document.getElementById("approvalSubmitBtn");
+      let activeType = "全部";
+      let currentAction = "detail";
+
+      const detailMap = {
         product_publish: {
-          title: '产品发布审批',
-          object: '欧洲十国经典游',
-          detailTitle: '产品发布信息',
-          summary: [
-            ['产品编号', 'KS-EU-001'], ['产品类型', '自营产品'], ['出发地', '北京'], ['目的地', '法国/德国/意大利'], ['行程天数', '12天11晚'], ['提交计调', '王珊']
+          title: "产品发布审批",
+          subtitle: "欧洲十国经典游发布前复核",
+          summary: ["申请人：王珊（计调）", "业务单据：PRD-EU-001", "产品/线路：欧洲十国经典游 / 法德意A线", "当前节点：产品总监", "申请时间：今天09:12", "状态：待审批"],
+          detail: [
+            ["发布范围", "门店、官网、小程序、指定代理商"],
+            ["团期准备", "已开排6个团期，默认线路为法德意A线，团期库存与价格已同步"],
+            ["价格校验", "成人价¥16,800，渠道保护价¥15,900，低于保护价需产品负责人二次确认"],
+            ["AI风险", "竞品同类最低价¥15,780，建议审批时确认渠道底价和早鸟库存"]
           ],
-          detail: '<section class="approval-business-section"><h2>发布内容</h2><div class="approval-mini-grid"><div><span>行程</span><strong>12天覆盖法德意核心城市</strong></div><div><span>价格</span><strong>门市价 ¥12,800 / 代理底价 ¥11,800</strong></div><div><span>渠道</span><strong>门市、小程序、代理渠道</strong></div></div></section><section class="approval-business-section"><h2>AI校验</h2><div class="approval-check-list"><div><span class="tag tag-green">通过</span><strong>行程天数与费用说明匹配</strong></div><div><span class="tag tag-orange">提示</span><strong>飞猪展示价低于保护价，建议调整后发布</strong></div></div></section>',
-          approveHint: '审批通过后产品将进入上架发布流程。'
+          flow: ["王珊提交产品发布", "产品负责人已通过", "当前等待产品总监审批"]
         },
         price_adjust: {
-          title: '价格调整审批',
-          object: '日本关西深度游',
-          detailTitle: '价格调整信息',
-          summary: [
-            ['产品编号', 'KS-JP-002'], ['调整渠道', '小程序 / 官网'], ['调整幅度', '-4.0%'], ['原价', '¥8,980'], ['调整后', '¥8,620'], ['预计影响', '-¥42,000']
+          title: "价格调整审批",
+          subtitle: "日本关西深度游限时促销降价",
+          summary: ["申请人：李明（计调）", "业务单据：PRICE-20260624-003", "产品/线路：日本关西深度游 / 大阪京都线", "预计影响：-¥42,000", "当前节点：产品负责人", "状态：待审批"],
+          detail: [
+            ["调整范围", "小程序与官网，7月22日至8月5日出发团期"],
+            ["调整幅度", "成人价下调4%，儿童不占床价不变"],
+            ["毛利测算", "调整后团期毛利率18.6%，高于产品线底线15%"],
+            ["财务联动", "通过后自动生成调价记录，订单新报价按审批后价格生效"]
           ],
-          detail: '<section class="approval-business-section"><h2>调整原因</h2><p>竞品临时促销，申请小程序限时降价，计划保留门市价与代理底价不变。</p></section><section class="approval-business-section"><h2>合规检查</h2><div class="approval-check-list"><div><span class="tag tag-green">合规</span><strong>调整后价格未低于代理底价</strong></div><div><span class="tag tag-green">合规</span><strong>预计毛利率仍高于15%</strong></div></div></section>',
-          approveHint: '审批通过后系统自动同步官网和小程序价格。'
+          flow: ["李明提交限时调价", "系统完成毛利测算", "当前等待产品负责人审批"]
         },
-	        channel_auth: {
-          title: '渠道授权审批',
-          object: '英国名校语言研学12日',
-          detailTitle: '渠道授权信息',
-          summary: [
-            ['申请类型', '新增授权'], ['授权对象', '北京四季研学服务中心'], ['授权范围', '学校直签 / 代理咨询'], ['产品底价', '¥15,200'], ['授权名额', '40人'], ['申请人', '陈琳']
+        channel_auth: {
+          title: "渠道授权审批",
+          subtitle: "研学产品新增授权渠道",
+          summary: ["申请人：陈琳（研学）", "业务单据：AUTH-20260624-011", "授权渠道：北京四季研学服务中心", "授权配额：40人", "当前节点：渠道主管", "状态：待审批"],
+          detail: [
+            ["授权产品", "英国名校语言研学12日 / 英国名校线"],
+            ["授权范围", "仅B端机构报价，不开放C端小程序售卖"],
+            ["价格约束", "不得低于渠道保护价¥22,800"],
+            ["数据权限", "渠道仅可查看本授权产品、报名订单和收款状态，不可导出证件号"]
           ],
-          detail: '<section class="approval-business-section"><h2>授权条件</h2><div class="approval-check-list"><div><span class="tag tag-green">通过</span><strong>代理商资质有效期至2027-08-31</strong></div><div><span class="tag tag-blue">提示</span><strong>授权价格不得低于学校直签框架价</strong></div></div></section>',
-	          approveHint: '审批通过后渠道授权立即生效，并写入渠道可售范围。'
-	        },
-	        fulfillment_object: {
-	          title: '履约对象审批',
-	          object: '理想号地中海邮轮航次',
-	          detailTitle: '履约对象信息',
-	          summary: [
-	            ['产品类型', '邮轮航次'], ['履约对象', 'CR-MED-20260801-001'], ['登船港', '巴塞罗那'], ['航期', '2026-08-01 至 2026-08-08'], ['舱型库存', '阳台房48间 / 海景房36间'], ['申请人', '赵明']
-	          ],
-	          detail: '<section class="approval-business-section"><h2>履约配置</h2><div class="approval-mini-grid"><div><span>岸上观光</span><strong>罗马、那不勒斯、马赛三地已配置</strong></div><div><span>库存来源</span><strong>船司舱位确认单 CR-20260624</strong></div><div><span>财务联动</span><strong>审批通过后可生成舱位预付款申请</strong></div></div></section>',
-	          approveHint: '审批通过后航次进入可售对象池，并同步邮轮履约库存。'
-	        },
-	        transfer: {
-          title: '转团审批',
-          object: '张丽华4人转团',
-          detailTitle: '转团信息',
-          summary: [
-            ['原订单', 'KS2026062201055'], ['原团期', 'EU-DEU-20260720-001'], ['目标团期', 'EU-DEU-20260905-001'], ['人数', '4人'], ['补差', '¥2,400'], ['申请人', '王芳']
-          ],
-          detail: '<section class="approval-business-section"><h2>库存与费用</h2><div class="approval-mini-grid"><div><span>目标团剩余</span><strong>8席</strong></div><div><span>原团释放</span><strong>4席</strong></div><div><span>财务联动</span><strong>通过后生成补差应收单</strong></div></div></section>',
-          approveHint: '审批通过后将锁定目标团期名额，并生成补差应收。'
+          flow: ["陈琳提交授权申请", "产品负责人已确认配额", "当前等待渠道主管审批"]
         },
-        refund: {
-          title: '退款审批',
-          object: '赵鹏飞退款申请',
-          detailTitle: '退款信息',
-          summary: [
-            ['订单号', 'KS2026061801038'], ['客户', '赵鹏飞'], ['退款金额', '¥22,400'], ['退款原因', '客人主动取消'], ['可退金额', '¥22,400'], ['责任归属', '客户原因']
+        cost_diff: {
+          title: "成本差异审批",
+          subtitle: "供应商费用超预算确认",
+          summary: ["申请人：周伟（运营）", "业务单据：COST-20260624-008", "团期：TR-SILK-20260718-001", "差异金额：+¥6,000", "当前节点：运营经理", "状态：待审批"],
+          detail: [
+            ["差异来源", "敦煌段酒店从四星调整为挂牌五星，供应商报价上浮"],
+            ["成本口径", "预估成本¥158,000，确认成本¥164,000，差异率3.8%"],
+            ["影响判断", "团期毛利从¥48,600降至¥42,600，仍高于最低毛利线"],
+            ["后续联动", "通过后更新团期成本，并生成待财务复核的应付差异记录"]
           ],
-          detail: '<section class="approval-business-section"><h2>退款核算</h2><div class="approval-check-list"><div><span class="tag tag-green">通过</span><strong>已扣除酒店不可退损失 ¥1,200</strong></div><div><span class="tag tag-blue">联动</span><strong>通过后进入财务退款执行</strong></div></div></section>',
-          approveHint: '审批通过后生成退款执行单，等待财务退款。'
+          flow: ["运营提交成本差异", "AI完成毛利预测", "当前等待运营经理审批"]
         },
         payment: {
-          title: '付款审批',
-          object: '欧洲联合地接社尾款',
-          detailTitle: '付款信息',
-          summary: [
-            ['付款申请', 'PAY-20260623-008'], ['供应商', '欧洲联合地接社'], ['付款金额', '¥128,600'], ['费用类型', '团期尾款'], ['对应团期', 'EU-FRA-20260610-001'], ['申请人', '刘洋']
+          title: "付款申请审批",
+          subtitle: "欧洲联合地接社尾款付款",
+          summary: ["申请人：刘洋（财务）", "业务单据：AP20260624001 / PAY-20260624-001", "供应商：欧洲联合地接社", "付款金额：¥112,000", "当前节点：财务主管", "状态：待审批"],
+          detail: [
+            ["付款依据", "团期成本已确认，回团资料已归档，应付单状态为待付款"],
+            ["付款账户", "欧洲联合地接社尾号 8821，已通过供应商账户校验"],
+            ["风险校验", "本月累计付款¥486,000，未超过合同约定额度"],
+            ["财务联动", "通过后进入付款执行，回单上传后自动生成NC付款推送任务"]
           ],
-          detail: '<section class="approval-business-section"><h2>付款校验</h2><div class="approval-check-list"><div><span class="tag tag-green">通过</span><strong>供应商账单与应付金额一致</strong></div><div><span class="tag tag-orange">升级</span><strong>金额超过¥50,000，需总经理审批</strong></div></div></section>',
-          approveHint: '审批通过后进入付款执行，并待上传回单。'
+          flow: ["业务侧发起付款申请", "财务专员完成应付核对", "当前等待财务主管审批", "后续需财务总监审批"]
+        },
+        refund: {
+          title: "退款申请审批",
+          subtitle: "出发前7天内退款",
+          summary: ["申请人：吴欣（客服）", "业务单据：RFD-20260624-006 / KS202406240012", "客户：张建国", "退款金额：¥36,000", "当前节点：销售主管", "状态：待审批"],
+          detail: [
+            ["退款原因", "客户家庭原因主动取消，已扣除供应商不可退费用"],
+            ["订单收款", "已收款¥52,000，可退¥36,000"],
+            ["风险校验", "出发前7天内退款，需确认机票与酒店退改损失"],
+            ["财务联动", "通过后生成退款执行单，财务退款后回写订单状态"]
+          ],
+          flow: ["客服提交退款申请", "系统校验收款与退损", "当前等待销售主管审批"]
+        },
+        bad_debt: {
+          title: "坏账处理审批",
+          subtitle: "渠道应收逾期处理",
+          summary: ["申请人：刘洋（财务）", "业务单据：AR20260601008", "往来单位：王磊旅行社", "坏账金额：¥24,800", "当前节点：财务总监", "状态：待审批"],
+          detail: [
+            ["逾期情况", "应收账款逾期28天，已完成三次催收"],
+            ["处理方式", "申请转坏账观察，暂停该渠道授信额度"],
+            ["影响范围", "关联订单2笔，均已出团且客户无退款争议"],
+            ["财务联动", "通过后生成坏账处理记录，并同步渠道授信状态"]
+          ],
+          flow: ["财务专员提交坏账申请", "财务主管复核通过", "当前等待财务总监审批"]
+        },
+        settlement: {
+          title: "结算确认审批",
+          subtitle: "回团后团期结算复核",
+          summary: ["申请人：刘洋（财务）", "业务单据：JS20260624002", "团期：EU-FRA-20260720-001", "毛利：¥143,800", "当前节点：财务主管", "状态：待审批"],
+          detail: [
+            ["收入确认", "订单收入¥856,000，收款已全部认款"],
+            ["成本确认", "确认成本¥712,200，应付已生成并完成尾款申请"],
+            ["差异处理", "酒店退房差额¥3,600已冲减成本"],
+            ["财务联动", "通过后锁定团期结算，生成NC收入与成本推送任务"]
+          ],
+          flow: ["回团处理完成", "财务专员生成结算单", "当前等待财务主管审批"]
+        },
+        invoice_red: {
+          title: "发票红冲审批",
+          subtitle: "客户抬头变更重开发票",
+          summary: ["申请人：郑华（财务）", "业务单据：INV-20260618-009", "产品/线路：马来西亚自由行 / 兰卡威酒店机票套餐", "红冲金额：¥3,200", "当前节点：税务会计", "状态：审批中"],
+          detail: [
+            ["原发票", "已开具电子普票，客户要求改为公司抬头"],
+            ["红冲原因", "发票抬头错误，订单金额不变"],
+            ["后续动作", "审批通过后作废原票并重新开票"],
+            ["风险校验", "订单已收款且未退款，无重复开票风险"]
+          ],
+          flow: ["门店提交发票重开申请", "财务专员复核订单收款", "当前等待税务会计审批"]
+        },
+        nc_error: {
+          title: "NC异常处理",
+          subtitle: "付款推送科目映射异常",
+          summary: ["申请人：系统自动创建", "业务单据：NC-ERR-20260623-004", "产品/线路：理想号地中海邮轮 / 地中海经典线", "影响金额：¥996,000", "当前节点：财务主管", "状态：待审批"],
+          detail: [
+            ["异常来源", "邮轮包舱预付款推送NC时，供应商科目映射缺失"],
+            ["处理建议", "选择邮轮资源预付款科目，并补全供应商辅助核算"],
+            ["风险影响", "未处理前该批付款不能进入NC凭证生成"],
+            ["后续联动", "审批通过后重试NC推送并记录接口日志"]
+          ],
+          flow: ["NC推送失败自动建单", "接口管理员确认原因", "当前等待财务主管处理"]
+        },
+        transfer: {
+          title: "改期转团审批",
+          subtitle: "客户转至新团期并补差",
+          summary: ["申请人：当前用户", "业务单据：KS202406230049", "客户：张丽华等4人", "补差金额：¥2,400", "当前节点：西欧产品经理", "状态：审批中"],
+          detail: [
+            ["原团期", "德捷奥深度游 / 2026年7月20日出发"],
+            ["新团期", "德捷奥深度游 / 2026年9月5日出发"],
+            ["名额校验", "新团期余位8个，可承接4人"],
+            ["联动事项", "通过后同步名单、合同补充协议与应收差额"]
+          ],
+          flow: ["当前用户提交转团申请", "销售主管已通过", "当前等待西欧产品经理审批"]
         },
         contract_void: {
-          title: '合同作废审批',
-          object: 'CTR-20260623-01058',
-          detailTitle: '合同作废信息',
-          summary: [
-            ['合同号', 'CTR-20260623-01058'], ['关联订单', 'KS2026062301058'], ['客户', '陈晓明'], ['作废原因', '合同内容有误需重签'], ['当前节点', '销售主管'], ['申请人', '当前用户']
+          title: "合同作废审批",
+          subtitle: "已收款合同内容有误需重签",
+          summary: ["申请人：当前用户", "业务单据：CTR-20260623-01058", "订单：KS202406230058", "处理方式：作废重签", "当前节点：销售主管", "状态：审批中"],
+          detail: [
+            ["作废原因", "游客姓名拼写错误，需重新签署电子合同"],
+            ["收款状态", "订单已收款¥25,600，无退款动作"],
+            ["控制规则", "作废后原合同不可下载，新合同生成后继承订单收款"],
+            ["后续联动", "通过后触发合同重签待办并保留审计日志"]
           ],
-          detail: '<section class="approval-business-section"><h2>处理影响</h2><div class="approval-check-list"><div><span class="tag tag-blue">提示</span><strong>作废后原合同不可再签署</strong></div><div><span class="tag tag-green">建议</span><strong>已生成新合同草稿，待审批通过后发起重签</strong></div></div></section>',
-          approveHint: '审批通过后原合同作废，新合同草稿可继续发起签署。'
+          flow: ["当前用户提交合同作废", "当前等待销售主管审批"]
+        },
+        org_staff: {
+          title: "组织人事审批",
+          subtitle: "员工账号与业务角色开通",
+          summary: ["申请人：李梅（产品总监）", "业务单据：EMP-20260626-006", "员工：吴芳", "岗位：邮轮产品经理", "当前节点：租户管理员", "状态：待审批"],
+          detail: [
+            ["账号范围", "开通商户端账号，所属邮轮中心"],
+            ["业务角色", "授予邮轮产品经理，允许维护邮轮产品、团期、舱型库存"],
+            ["数据权限", "仅可查看邮轮中心及下级数据，手机号和证件号默认脱敏"],
+            ["敏感控制", "扩大数据范围、导出订单、修改角色需二次审批"]
+          ],
+          flow: ["李梅提交入职开通申请", "直属负责人已确认", "当前等待租户管理员审批"]
         }
       };
-      var currentType = '全部类型';
-      var pageTitle = document.getElementById('approvalPageTitle');
-      var productReviewEntry = document.getElementById('productReviewEntry');
-      var headPanel = document.getElementById('approvalHeadPanel');
-      var listArea = document.getElementById('approvalListArea');
-      var configPanel = document.getElementById('approvalConfigPanel');
-      var typeTabs = Array.from(document.querySelectorAll('[data-approval-type]'));
-      var rows = Array.from(document.querySelectorAll('#approvalRows tr'));
-      var modal = document.getElementById('approvalCenterModal');
-      var modalTitle = document.getElementById('approvalCenterTitle');
-      var modalBody = document.getElementById('approvalModalBody');
-      var modalFooter = document.getElementById('approvalModalFooter');
-      var toast = document.getElementById('approvalToast');
 
-      function normalizedView() {
-        return viewMap[view] ? view : 'todo';
-      }
-
-      function rowInScope(row) {
-        var scope = normalizedView();
-        if (scope === 'overview') return true;
-        return (row.dataset.scope || '').split(/\s+/).indexOf(scope) !== -1;
-      }
-
-      function rowMatchesType(row) {
-        return currentType === '全部类型' || row.dataset.approvalType === currentType;
-      }
-
-	      function rowMatchesFilters(row) {
-	        var keyword = document.getElementById('approvalKeyword').value.trim();
-	        var status = document.getElementById('approvalStatus').value;
-	        var productType = document.getElementById('approvalProductType').value;
-	        if (keyword && (row.dataset.keywords || '').indexOf(keyword) === -1) return false;
-	        if (status && row.dataset.status !== status) return false;
-	        if (productType && row.dataset.productType !== productType) return false;
-	        return true;
-	      }
-
-      function applyFilters() {
-        rows.forEach(function (row) {
-          row.hidden = !(rowInScope(row) && rowMatchesType(row) && rowMatchesFilters(row));
-        });
-      }
-
-      function setPageMode() {
-        var scope = normalizedView();
-        pageTitle.textContent = viewMap[scope];
-        document.title = viewMap[scope] + ' - 凯撒旅游';
-        var isConfig = scope === 'config';
-        headPanel.hidden = false;
+      function setupPageByView() {
+        pageTitle.textContent = viewMap[currentView];
+        const isConfig = currentView === "config";
+        filterPanel.hidden = isConfig;
+        typeTabs.hidden = isConfig;
         listArea.hidden = isConfig;
-        document.querySelector('.approval-filter').hidden = isConfig;
-        document.querySelector('.approval-tabs').hidden = isConfig;
-        configPanel.hidden = !isConfig;
-        productReviewEntry.hidden = scope !== 'todo';
-        applyFilters();
+        configArea.hidden = !isConfig;
+        if (!isConfig) filterRows();
       }
 
-      function showToast(message) {
-        toast.textContent = message;
-        toast.hidden = false;
-        window.clearTimeout(showToast.timer);
-        showToast.timer = window.setTimeout(function () {
-          toast.hidden = true;
-        }, 2600);
+      function filterRows() {
+        const keyword = keywordInput.value.trim().toLowerCase();
+        const matter = matterSelect.value;
+        const source = sourceSelect.value;
+        const status = statusSelect.value;
+        let visibleCount = 0;
+        rows.forEach((row) => {
+          const inScope = currentView === "overview" || (row.dataset.scope || "").split(/\s+/).includes(currentView);
+          const matchType = activeType === "全部" || row.dataset.approvalType === activeType;
+          const matchMatter = !matter || row.dataset.approvalType === matter;
+          const matchSource = !source || row.dataset.source === source;
+          const matchStatus = !status || row.dataset.status === status;
+          const matchKeyword = !keyword || (row.dataset.keywords || row.textContent).toLowerCase().includes(keyword);
+          const visible = inScope && matchType && matchMatter && matchSource && matchStatus && matchKeyword;
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        emptyRow.hidden = visibleCount !== 0;
       }
 
-      function summaryHtml(items) {
-        return '<div class="description-grid approval-detail-grid">' + items.map(function (item) {
-          return '<div class="description-item"><div class="description-label">' + item[0] + '</div><div class="description-value">' + item[1] + '</div></div>';
-        }).join('') + '</div>';
+      function actionTitle(action, detail) {
+        if (action === "approve") return detail.title;
+        if (action === "progress") return "流转记录";
+        if (action === "withdraw") return "撤回申请";
+        if (action === "remind") return "催办审批";
+        return detail.title || "审批详情";
       }
 
-      function progressHtml(data) {
-        return '<section class="approval-business-section"><h2>审批流转</h2><div class="approval-flow-list"><div><strong>发起申请</strong><span>今天 09:12｜' + data.object + '</span></div><div><strong>当前节点</strong><span>等待当前审批人处理</span></div><div><strong>后续动作</strong><span>通过后自动同步业务状态和财务/渠道联动</span></div></div></section>';
+      function openApprovalModal(row, action) {
+        const detail = detailMap[row.dataset.kind] || detailMap.product_publish;
+        currentAction = action;
+        modalTitle.textContent = actionTitle(action, detail);
+        modalSubtitle.textContent = detail.subtitle;
+        summaryGrid.innerHTML = detail.summary.map((item) => {
+          const parts = item.split("：");
+          const label = parts.shift();
+          return "<div><span>" + label + "</span><strong>" + parts.join("：") + "</strong></div>";
+        }).join("");
+        detailContent.innerHTML = "<div class=\"approval-mini-grid\">" + detail.detail.map((item) => {
+          return "<div><span>" + item[0] + "</span><strong>" + item[1] + "</strong></div>";
+        }).join("") + "</div>";
+        flowList.innerHTML = detail.flow.map((item) => "<li>" + item + "</li>").join("");
+        decisionPanel.hidden = !["approve", "withdraw", "remind"].includes(action);
+        submitBtn.textContent = action === "approve" ? "提交审批意见" : action === "withdraw" ? "确认撤回" : action === "remind" ? "发送催办" : "关闭";
+        modal.hidden = false;
+        requestAnimationFrame(() => modal.classList.add("show"));
       }
 
-      function approvalFormHtml(data) {
-        return data.detail + '<section class="approval-business-section"><h2>审批操作</h2><div class="radio-row"><label><input type="radio" name="approvalDecision" checked> 通过</label><label><input type="radio" name="approvalDecision"> 驳回</label><label><input type="radio" name="approvalDecision"> 要求修改</label></div><textarea id="approvalOpinion" class="form-control approval-opinion-textarea" rows="4" placeholder="请输入审批意见">' + data.approveHint + '</textarea></section>';
+      function closeApprovalModal() {
+        modal.classList.remove("show");
+        window.setTimeout(() => {
+          modal.hidden = true;
+        }, 240);
       }
 
-      function setModal(title, body, footer) {
-        modalTitle.textContent = title;
-        modalBody.innerHTML = body;
-        modalFooter.innerHTML = footer;
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
-
-      function closeModal() {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
-
-      function openBusinessModal(kind, action) {
-        var data = modalData[kind] || modalData.product_publish;
-        if (action === 'approve') {
-          setModal(data.title, '<div class="approval-business-modal-body">' + summaryHtml(data.summary) + approvalFormHtml(data) + '</div>', '<button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-danger-outline" type="button" data-finish-approval="驳回">驳回</button><button class="btn btn-primary" type="button" data-finish-approval="通过">通过审批</button>');
-          return;
-        }
-        if (action === 'progress') {
-          setModal(data.title + '进度', '<div class="approval-business-modal-body">' + summaryHtml(data.summary) + progressHtml(data) + '</div>', '<button class="btn btn-secondary" type="button" data-close-modal>关闭</button>');
-          return;
-        }
-        if (action === 'withdraw') {
-          setModal('撤回审批', '<p class="modal-center-text">确认撤回“' + data.object + '”的审批申请？撤回后可重新编辑并再次提交。</p>', '<button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-primary" type="button" data-toast-action="审批已撤回">确认撤回</button>');
-          return;
-        }
-        if (action === 'remind') {
-          setModal('催办审批', '<p class="modal-center-text">系统将向当前审批人发送企微和站内消息提醒。</p>', '<button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-primary" type="button" data-toast-action="催办已发送">发送催办</button>');
-          return;
-        }
-        if (action === 'config' || action === 'config-log') {
-          var configBody = action === 'config-log'
-            ? '<section class="approval-business-section"><h2>变更记录</h2><div class="approval-flow-list"><div><strong>2026-06-20</strong><span>周伟调整审批阈值</span></div><div><strong>2026-06-12</strong><span>新增渠道授权审批节点</span></div></div></section>'
-            : '<section class="approval-business-section"><h2>规则编辑</h2><div class="form-grid"><div class="form-group"><label class="form-label">审批事项</label><input class="form-control" type="text" value="' + data.title.replace('审批', '') + '"></div><div class="form-group"><label class="form-label">启用状态</label><select class="form-control"><option>启用</option><option>停用</option></select></div><div class="form-group form-group-full"><label class="form-label">审批节点</label><input class="form-control" type="text" value="申请人 > 负责人 > 财务复核"></div></div></section>';
-          setModal('审批配置', configBody, '<button class="btn btn-secondary" type="button" data-close-modal>关闭</button><button class="btn btn-primary" type="button" data-toast-action="配置已保存">保存配置</button>');
-          return;
-        }
-        setModal(data.detailTitle, '<div class="approval-business-modal-body">' + summaryHtml(data.summary) + data.detail + progressHtml(data) + '</div>', '<button class="btn btn-secondary" type="button" data-close-modal>关闭</button>');
-      }
-
-      typeTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          currentType = button.dataset.approvalType;
-          typeTabs.forEach(function (item) {
-            item.classList.toggle('active', item === button);
-          });
-          applyFilters();
+      document.querySelectorAll("#approvalTypeTabs .tab-item").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll("#approvalTypeTabs .tab-item").forEach((item) => item.classList.remove("active"));
+          tab.classList.add("active");
+          activeType = tab.dataset.approvalType;
+          filterRows();
         });
       });
 
-      document.getElementById('searchApprovals').addEventListener('click', applyFilters);
-	      document.getElementById('resetApprovals').addEventListener('click', function () {
-	        document.getElementById('approvalKeyword').value = '';
-	        document.getElementById('approvalStatus').selectedIndex = 0;
-	        document.getElementById('approvalProductType').selectedIndex = 0;
-	        currentType = '全部类型';
-        typeTabs.forEach(function (item, index) {
-          item.classList.toggle('active', index === 0);
+      [keywordInput, matterSelect, sourceSelect, statusSelect].forEach((control) => {
+        control.addEventListener("input", filterRows);
+        control.addEventListener("change", filterRows);
+      });
+
+      document.getElementById("searchApprovals").addEventListener("click", filterRows);
+      document.getElementById("resetApprovals").addEventListener("click", () => {
+        keywordInput.value = "";
+        matterSelect.value = "";
+        sourceSelect.value = "";
+        statusSelect.value = "";
+        activeType = "全部";
+        document.querySelectorAll("#approvalTypeTabs .tab-item").forEach((item) => item.classList.toggle("active", item.dataset.approvalType === "全部"));
+        filterRows();
+      });
+
+      document.querySelectorAll("[data-approval-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          openApprovalModal(button.closest("tr"), button.dataset.approvalAction);
         });
-        applyFilters();
       });
 
-      document.addEventListener('click', function (event) {
-        var actionButton = event.target.closest('[data-approval-action]');
-        if (actionButton) {
-          var row = actionButton.closest('tr');
-          openBusinessModal(row ? row.dataset.kind : 'product_publish', actionButton.dataset.approvalAction);
-          return;
-        }
-        var closeButton = event.target.closest('[data-close-modal]');
-        if (closeButton || event.target === modal) {
-          closeModal();
-          return;
-        }
-        var toastButton = event.target.closest('[data-toast-action]');
-        if (toastButton) {
-          closeModal();
-          showToast(toastButton.dataset.toastAction);
-          return;
-        }
-        var finishButton = event.target.closest('[data-finish-approval]');
-        if (finishButton) {
-          closeModal();
-          showToast('审批结果已提交：' + finishButton.dataset.finishApproval);
-        }
+      document.querySelectorAll("[data-config-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const row = button.closest("tr");
+          const action = button.dataset.configAction;
+          const matter = row.cells[0].textContent;
+          currentAction = "detail";
+          modalTitle.textContent = action === "config" ? matter + "配置" : matter + "审批记录";
+          modalSubtitle.textContent = "维护触发条件、审批节点、超时提醒和升级规则";
+          summaryGrid.innerHTML = [
+            ["审批事项", matter],
+            ["来源模块", row.cells[1].textContent],
+            ["当前状态", row.cells[5].textContent.trim()],
+            ["最近更新", "2026-06-24 10:30"]
+          ].map((item) => "<div><span>" + item[0] + "</span><strong>" + item[1] + "</strong></div>").join("");
+          detailContent.innerHTML = "<div class=\"approval-mini-grid\"><div><span>触发条件</span><strong>" + row.cells[2].textContent + "</strong></div><div><span>审批节点</span><strong>" + row.cells[3].textContent + "</strong></div><div><span>超时规则</span><strong>" + row.cells[4].textContent + "</strong></div><div><span>抄送规则</span><strong>审批通过、拒绝、超时升级均通知申请人和模块负责人</strong></div></div>";
+          flowList.innerHTML = "<li>2026-06-18 系统管理员更新审批节点</li><li>2026-06-20 财务主管调整超时提醒</li><li>2026-06-24 当前配置已生效</li>";
+          decisionPanel.hidden = true;
+          submitBtn.textContent = "关闭";
+          modal.hidden = false;
+          requestAnimationFrame(() => modal.classList.add("show"));
+        });
       });
 
-      setPageMode();
+      document.querySelectorAll("[data-close-approval-modal]").forEach((button) => {
+        button.addEventListener("click", closeApprovalModal);
+      });
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeApprovalModal();
+      });
+
+      submitBtn.addEventListener("click", () => {
+        if (currentAction === "detail" || currentAction === "progress") {
+          closeApprovalModal();
+          return;
+        }
+        const decision = document.querySelector("input[name='approvalDecision']:checked");
+        const opinion = document.getElementById("approvalOpinion");
+        if (currentAction === "approve" && decision && decision.value !== "通过" && !opinion.value.trim()) {
+          opinion.focus();
+          return;
+        }
+        closeApprovalModal();
+      });
+
+      setupPageByView();
     })();
   </script>
 </body>

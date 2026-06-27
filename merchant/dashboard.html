@@ -43,8 +43,8 @@
       <div class="ops-focus-main">
         <section class="kpi-grid kpi-grid-4 ops-todo-kpis" aria-label="今日待办事项">
           <article class="kpi-card orange">
-            <div class="kpi-num">8份</div>
-            <div class="kpi-label">待签合同</div>
+            <div class="kpi-num">9项</div>
+            <div class="kpi-label">待我审批</div>
           </article>
           <article class="kpi-card orange">
             <div class="kpi-num">23人</div>
@@ -161,9 +161,23 @@
           <article class="card ops-task-card">
             <div class="card-header">
               <div class="card-title">待办事项列表</div>
-              <a class="link-primary" href="tour/fulfillment-outbound.html">查看全部</a>
+              <a class="link-primary" href="approval/approvals.html?view=todo">查看审批</a>
             </div>
             <ol class="ops-task-list">
+          <li class="ops-task-item">
+            <span class="ops-priority-dot emergency">审</span>
+            <div>
+              <div class="ops-task-desc">付款申请 APR-20260624-028 等待审批，欧洲联合地接社尾款 ¥112,000</div>
+              <div class="ops-task-meta"><span>关联单据：AP20260624001 / PAY-20260624-001</span><span>截止：20分钟后</span></div>
+            </div>
+          </li>
+          <li class="ops-task-item">
+            <span class="ops-priority-dot remind">审</span>
+            <div>
+              <div class="ops-task-desc">结算确认 APR-20260624-030 等待复核，欧洲十国经典游团期毛利 ¥143,800</div>
+              <div class="ops-task-meta"><span>关联单据：JS20260624002</span><span>截止：今日18:00</span></div>
+            </div>
+          </li>
           <li class="ops-task-item">
             <span class="ops-priority-dot emergency">急</span>
             <div>
@@ -250,6 +264,12 @@
             <button class="ops-ai-close" type="button" aria-label="关闭AI助手" data-close-ops-ai>×</button>
           </div>
         </div>
+        <div class="ops-ai-permission-strip" aria-label="AI权限范围">
+          <span class="tag tag-blue">计调角色</span>
+          <span>功能：团期、名单、证件、成本、出团通知</span>
+          <span>数据：西欧产品部授权团期</span>
+          <span>敏感字段默认脱敏</span>
+        </div>
         <div class="ops-ai-query">
           <label class="sr-only" for="opsAiInput">输入自然语言指令</label>
           <input id="opsAiInput" class="form-control" type="text" placeholder="例如：帮我检查6月25日出发团的风险">
@@ -334,15 +354,23 @@
       var deniedAiRules = [
         {
           pattern: /上架|下架|发布|提交审核|渠道授权|改价|删除产品/,
-          message: "当前账号缺少产品上架/发布权限，AI不能代为执行。可申请业务角色中的产品管理、产品编辑、提交审核和渠道上架权限。"
+          message: "已拦截：当前计调账号只能处理授权团期、名单、证件、成本和出团通知，AI不能代为上架、发布、改价或下架产品。"
         },
         {
-          pattern: /全集团|全租户|全部订单|全部客户|导出客户|导出订单/,
-          message: "当前账号只能访问授权组织内数据，AI不能查询或导出超出数据范围的订单、客户或财务信息。"
+          pattern: /全集团|全租户|全部订单|全部客户|所有门店|跨主体|全量客户|全量订单|导出客户|导出订单/,
+          message: "已拦截：当前账号只能访问西欧产品部授权团期数据，AI不能查询或导出跨主体、跨门店或全量订单客户数据。"
         },
         {
-          pattern: /执行退款|执行付款|推送NC|确认入账/,
-          message: "当前账号缺少财务高危动作权限，AI不能执行退款、付款、入账或NC推送。"
+          pattern: /执行退款|执行付款|推送NC|确认入账|生成结算单|一键催款|批量认款/,
+          message: "已拦截：当前账号缺少财务执行权限，AI不能执行退款、付款、认款、生成结算单或NC推送。"
+        },
+        {
+          pattern: /后台角色|系统配置|接口配置|操作审计|AI模型|模型路由|员工账号|组织架构/,
+          message: "已拦截：商户工作台AI不处理后台系统配置、角色、员工账号、接口或AI模型路由。"
+        },
+        {
+          pattern: /身份证|护照|手机号|联系方式|游客名单/,
+          message: "当前角色只能在指定团期内查看脱敏名单；如需导出明细，请进入名单管理页面并完成二次确认。"
         }
       ];
 

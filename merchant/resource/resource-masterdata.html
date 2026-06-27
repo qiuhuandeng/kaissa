@@ -9,600 +9,289 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <section class="list-page-panel masterdata-page" id="masterdataPagePanel">
+  <section class="list-page-panel masterdata-page">
     <div class="list-page-head">
       <div>
-        <h1 class="page-title" id="masterdataPageTitle">景区</h1>
+        <h1 id="masterdataPageTitle" class="page-title">POI库</h1>
       </div>
-      <div class="list-page-actions" id="masterdataHeaderActions"></div>
+      <div class="list-page-actions">
+        <button id="masterdataCreateBtn" class="btn btn-primary" type="button" data-open-resource-drawer>新增POI</button>
+        <button class="btn btn-secondary" type="button" data-open-import>批量导入</button>
+      </div>
     </div>
+
+    <section class="filter-card filter-card-compact" aria-label="资源筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="resourceKeyword">资源名称/编码/城市</label>
+          <input id="resourceKeyword" type="search" placeholder="资源名称/编码/城市">
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="resourceCountry">目的地</label>
+          <select id="resourceCountry">
+            <option>全部目的地</option>
+            <option>欧洲</option>
+            <option>日本</option>
+            <option>泰国</option>
+            <option>国内</option>
+            <option>地中海</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="resourceSupplier">供应商</label>
+          <select id="resourceSupplier">
+            <option>全部供应商</option>
+            <option>欧洲地接ABC</option>
+            <option>日本地接XYZ</option>
+            <option>泰国地接DEF</option>
+            <option>三亚亚特兰蒂斯酒店</option>
+            <option>欧洲大巴运输公司</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-status">
+          <label class="sr-only" for="resourceStatus">状态</label>
+          <select id="resourceStatus">
+            <option>全部状态</option>
+            <option>启用</option>
+            <option>维护中</option>
+            <option>停用</option>
+            <option>待审核</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button">查询</button>
+          <button class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
   </section>
 
-  <main class="masterdata-shell" aria-label="基础资源">
-    <section class="masterdata-content">
-      <section class="masterdata-panel active" data-master-panel="poi">
-        <section class="filter-card filter-card-compact" aria-label="景区筛选">
-          <div class="filter-row masterdata-filter-row">
-            <div class="filter-item">
-              <label class="sr-only" for="poiKeyword">名称关键词</label>
-              <input id="poiKeyword" type="text" placeholder="名称搜索">
-            </div>
-            <div class="filter-item filter-item-sm">
-              <label class="sr-only" for="poiCountry">国家</label>
-              <select id="poiCountry">
-                <option>全部国家</option>
-                <option>法国</option>
-                <option>德国</option>
-                <option>捷克</option>
-                <option>意大利</option>
-                <option>希腊</option>
-                <option>英国</option>
-                <option>西班牙</option>
-                <option>奥地利</option>
-                <option>瑞士</option>
-                <option>荷兰</option>
-              </select>
-            </div>
-            <div class="filter-item">
-              <label class="sr-only" for="poiCity">城市</label>
-              <input id="poiCity" type="text" placeholder="城市">
-            </div>
-            <div class="filter-item filter-item-sm">
-              <label class="sr-only" for="poiTags">标签</label>
-              <select id="poiTags" aria-label="标签">
-                <option>全部标签</option>
-                <option>文化</option>
-                <option>自然</option>
-                <option>主题乐园</option>
-                <option>宗教</option>
-                <option>购物</option>
-              </select>
-            </div>
-            <div class="filter-item filter-item-status">
-              <label class="sr-only" for="poiStatus">状态</label>
-              <select id="poiStatus">
-                <option>全部状态</option>
-                <option>启用</option>
-                <option>停用</option>
-              </select>
-            </div>
-            <div class="filter-actions">
-              <button class="btn btn-secondary" type="button">搜索</button>
-              <button class="btn btn-secondary" type="button">重置</button>
-            </div>
-            <div class="filter-actions masterdata-row-actions">
-              <button class="btn btn-primary" type="button" data-open-modal="poiDrawer">新增景区</button>
-              <button class="btn btn-secondary" type="button" data-open-modal="poiImportModal">批量导入</button>
-              <button class="btn btn-secondary" type="button">导出</button>
-            </div>
-          </div>
-        </section>
-        <section class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>景区名称</th>
-                <th>国家</th>
-                <th>城市</th>
-                <th>标签</th>
-                <th>状态</th>
-                <th>被引用产品数</th>
-                <th>更新时间</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>卢浮宫</td><td>法国</td><td>巴黎</td><td><div class="tag-group"><span class="tag tag-blue">文化</span><span class="tag tag-purple">世界遗产</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">18</button></td><td>2025-06-20 14:10</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>埃菲尔铁塔</td><td>法国</td><td>巴黎</td><td><div class="tag-group"><span class="tag tag-blue">文化</span><span class="tag tag-orange">购物</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">24</button></td><td>2025-06-19 09:30</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>凡尔赛宫</td><td>法国</td><td>巴黎</td><td><div class="tag-group"><span class="tag tag-blue">文化</span><span class="tag tag-purple">历史遗址</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">11</button></td><td>2025-06-18 17:42</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>科隆大教堂</td><td>德国</td><td>科隆</td><td><div class="tag-group"><span class="tag tag-red">宗教</span><span class="tag tag-purple">世界遗产</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">9</button></td><td>2025-06-17 11:26</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>新天鹅堡</td><td>德国</td><td>菲森</td><td><div class="tag-group"><span class="tag tag-blue">文化</span><span class="tag tag-green">自然</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">13</button></td><td>2025-06-16 16:02</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>布拉格城堡</td><td>捷克</td><td>布拉格</td><td><div class="tag-group"><span class="tag tag-blue">文化</span><span class="tag tag-purple">历史遗址</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">15</button></td><td>2025-06-15 10:18</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>罗马斗兽场</td><td>意大利</td><td>罗马</td><td><div class="tag-group"><span class="tag tag-purple">历史遗址</span><span class="tag tag-blue">文化</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">16</button></td><td>2025-06-14 13:55</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>梵蒂冈圣彼得大教堂</td><td>意大利</td><td>罗马</td><td><div class="tag-group"><span class="tag tag-red">宗教</span><span class="tag tag-blue">文化</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">7</button></td><td>2025-06-13 15:21</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>雅典卫城</td><td>希腊</td><td>雅典</td><td><div class="tag-group"><span class="tag tag-purple">世界遗产</span><span class="tag tag-blue">文化</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">10</button></td><td>2025-06-12 12:40</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>大英博物馆</td><td>英国</td><td>伦敦</td><td><div class="tag-group"><span class="tag tag-blue">文化</span><span class="tag tag-purple">历史遗址</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">8</button></td><td>2025-06-11 09:12</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>圣家堂</td><td>西班牙</td><td>巴塞罗那</td><td><div class="tag-group"><span class="tag tag-red">宗教</span><span class="tag tag-purple">世界遗产</span></div></td><td><span class="tag tag-green">启用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">6</button></td><td>2025-06-10 18:04</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">停用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-              <tr><td>少女峰</td><td>瑞士</td><td>因特拉肯</td><td><div class="tag-group"><span class="tag tag-green">自然</span><span class="tag tag-orange">户外活动</span></div></td><td><span class="tag tag-orange">停用</span></td><td><button class="link-button" type="button" data-open-modal="poiRefModal">5</button></td><td>2025-06-09 16:35</td><td><div class="table-action"><button type="button" data-open-modal="poiDrawer">编辑</button><button type="button">启用</button><button type="button" data-open-modal="poiRefModal">查看引用</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="hotel">
-        <div class="masterdata-panel-head">
-          <h2>酒店</h2>
-          <div class="panel-actions">
-            <button class="btn btn-primary" type="button" data-open-modal="hotelModal">新增酒店</button>
-            <button class="btn btn-secondary" type="button">批量导入</button>
-          </div>
-        </div>
-        <section class="filter-card filter-card-compact" aria-label="酒店筛选">
-          <div class="filter-row">
-            <div class="filter-item"><label class="sr-only" for="hotelName">酒店名称</label><input id="hotelName" type="text" placeholder="酒店名称"></div>
-            <div class="filter-item filter-item-sm"><label class="sr-only" for="hotelStar">星级</label><select id="hotelStar"><option>全部</option><option>二星</option><option>三星</option><option>四星</option><option>五星</option></select></div>
-            <div class="filter-item"><label class="sr-only" for="hotelCity">城市</label><input id="hotelCity" type="text" placeholder="城市"></div>
-            <div class="filter-item"><label class="sr-only" for="hotelSupplier">供应商</label><select id="hotelSupplier"><option>全部供应商</option><option>欧洲地接ABC</option><option>日本地接XYZ</option><option>泰国地接DEF</option><option>直采</option></select></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button class="btn btn-secondary" type="button">重置</button></div>
-          </div>
-        </section>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>酒店编码</th><th>酒店名称</th><th>星级</th><th>城市</th><th>国家</th><th>关联供应商</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>HTL-FR-001</td><td>巴黎索菲特大酒店</td><td>五星</td><td>巴黎</td><td>法国</td><td>欧洲地接ABC</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-modal="hotelModal">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>HTL-JP-001</td><td>东京帝国饭店</td><td>五星</td><td>东京</td><td>日本</td><td>日本地接XYZ</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-modal="hotelModal">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>HTL-TH-001</td><td>曼谷文华东方酒店</td><td>五星</td><td>曼谷</td><td>泰国</td><td>泰国地接DEF</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-modal="hotelModal">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>HTL-CN-001</td><td>北京国贸大酒店</td><td>五星</td><td>北京</td><td>中国</td><td>直采</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-modal="hotelModal">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>HTL-AU-001</td><td>悉尼港湾喜来登</td><td>五星</td><td>悉尼</td><td>澳大利亚</td><td>澳洲地接GHI</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-modal="hotelModal">编辑</button><button type="button">停用</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="restaurant">
-        <div class="masterdata-panel-head">
-          <h2>餐厅</h2>
-          <div class="panel-actions"><button class="btn btn-primary" type="button">新增餐厅</button></div>
-        </div>
-        <section class="filter-card filter-card-compact" aria-label="餐厅筛选">
-          <div class="filter-row">
-            <div class="filter-item"><label class="sr-only" for="restaurantName">餐厅名称</label><input id="restaurantName" type="text" placeholder="餐厅名称"></div>
-            <div class="filter-item filter-item-sm"><label class="sr-only" for="restaurantType">餐厅类型</label><select id="restaurantType"><option>全部</option><option>中餐</option><option>西餐</option><option>日料</option><option>东南亚</option><option>自助</option></select></div>
-            <div class="filter-item"><label class="sr-only" for="restaurantCity">城市</label><input id="restaurantCity" type="text" placeholder="城市"></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button class="btn btn-secondary" type="button">重置</button></div>
-          </div>
-        </section>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>餐厅编码</th><th>餐厅名称</th><th>类型</th><th>城市</th><th>国家</th><th>人均价格</th><th>关联供应商</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>RST-FR-001</td><td>巴黎中餐厅Le Bonheur</td><td>中餐</td><td>巴黎</td><td>法国</td><td>¥120/人</td><td>欧洲地接ABC</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>RST-JP-001</td><td>东京寿司次郎</td><td>日料</td><td>东京</td><td>日本</td><td>¥180/人</td><td>日本地接XYZ</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>RST-TH-001</td><td>曼谷泰式风味餐厅</td><td>东南亚</td><td>曼谷</td><td>泰国</td><td>¥80/人</td><td>泰国地接DEF</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>RST-IT-001</td><td>罗马比萨餐厅</td><td>西餐</td><td>罗马</td><td>意大利</td><td>¥100/人</td><td>欧洲地接ABC</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="vehicle">
-        <div class="masterdata-panel-head">
-          <h2>车型</h2>
-        </div>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>车型编码</th><th>车型名称</th><th>座位数</th><th>适用人数范围</th><th>关联供应商</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>VEH-001</td><td>丰田考斯特</td><td>19座</td><td>10-18人</td><td>欧洲大巴运输公司</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>VEH-002</td><td>奔驰Sprinter</td><td>15座</td><td>8-14人</td><td>欧洲大巴运输公司</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>VEH-003</td><td>宇通大巴</td><td>45座</td><td>30-44人</td><td>马来地接旅行社</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>VEH-004</td><td>日野中巴</td><td>28座</td><td>18-26人</td><td>泰国地接DEF</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>VEH-005</td><td>商务奔驰V级</td><td>7座</td><td>3-6人</td><td>直采</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="cruise">
-        <div class="masterdata-panel-head">
-          <h2>邮轮资源</h2>
-        </div>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>邮轮编码</th><th>邮轮名称</th><th>所属船公司</th><th>总吨位</th><th>床位数</th><th>母港</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>CRS-001</td><td>地中海荣耀号</td><td>地中海邮轮MSC</td><td>171,598吨</td><td>4,888床</td><td>上海</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>CRS-002</td><td>皇家加勒比海洋绿洲号</td><td>皇家加勒比</td><td>228,081吨</td><td>6,780床</td><td>天津</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>CRS-003</td><td>诺唯真喜悦号</td><td>诺唯真邮轮NCL</td><td>167,725吨</td><td>4,004床</td><td>上海</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="train">
-        <div class="masterdata-panel-head">
-          <h2>专列资源</h2>
-        </div>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>专列编码</th><th>专列名称</th><th>铁路局</th><th>车厢数</th><th>总床位数</th><th>主要运营线路</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>TRN-001</td><td>丝路风情号专列</td><td>西安铁路局</td><td>18节</td><td>648床</td><td>西安-乌鲁木齐-中亚</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-              <tr><td>TRN-002</td><td>冰雪北国专列</td><td>哈尔滨铁路局</td><td>14节</td><td>504床</td><td>哈尔滨-漠河-满洲里</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button">编辑</button><button type="button">停用</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="supplier">
-        <div class="masterdata-panel-head">
-          <h2>供应商</h2>
-          <div class="panel-actions"><button class="btn btn-primary" type="button" data-open-modal="supplierModal">新增供应商</button></div>
-        </div>
-        <section class="filter-card filter-card-compact" aria-label="供应商筛选">
-          <div class="filter-row">
-            <div class="filter-item"><label class="sr-only" for="supplierName">供应商名称</label><input id="supplierName" type="text" placeholder="供应商名称"></div>
-            <div class="filter-item filter-item-sm"><label class="sr-only" for="supplierType">类型</label><select id="supplierType"><option>全部</option><option>地接社</option><option>酒店</option><option>餐厅</option><option>车队</option><option>航空</option><option>签证</option><option>邮轮公司</option></select></div>
-            <div class="filter-item filter-item-status"><label class="sr-only" for="supplierStatus">合作状态</label><select id="supplierStatus"><option>全部</option><option>合作中</option><option>暂停</option><option>黑名单</option></select></div>
-            <div class="filter-item"><label class="sr-only" for="supplierCountry">国家地区</label><input id="supplierCountry" type="text" placeholder="国家地区"></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button class="btn btn-secondary" type="button">重置</button></div>
-          </div>
-        </section>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>供应商编码</th><th>供应商名称</th><th>类型</th><th>所在地</th><th>主要联系人</th><th>联系方式</th><th>合作状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>SUP-001</td><td>欧洲地接ABC旅游服务有限公司</td><td>地接社</td><td>法国巴黎</td><td>王经理</td><td>+33****8899</td><td><span class="tag tag-green">合作中</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="supplierModal">编辑</button><button type="button" data-open-modal="pauseSupplierModal">暂停</button></div></td></tr>
-              <tr><td>SUP-002</td><td>日本地接XYZ株式会社</td><td>地接社</td><td>日本东京</td><td>山田先生</td><td>+81****2234</td><td><span class="tag tag-green">合作中</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="supplierModal">编辑</button><button type="button" data-open-modal="pauseSupplierModal">暂停</button></div></td></tr>
-              <tr><td>SUP-003</td><td>泰国地接DEF公司</td><td>地接社</td><td>泰国曼谷</td><td>李先生</td><td>+66****6677</td><td><span class="tag tag-green">合作中</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="supplierModal">编辑</button><button type="button" data-open-modal="pauseSupplierModal">暂停</button></div></td></tr>
-              <tr><td>SUP-004</td><td>中国国际航空</td><td>航空公司</td><td>中国北京</td><td>商务部</td><td>010****4455</td><td><span class="tag tag-green">合作中</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="supplierModal">编辑</button></div></td></tr>
-              <tr><td>SUP-005</td><td>马来地接旅行社</td><td>地接社</td><td>马来西亚</td><td>陈经理</td><td>+60****1122</td><td><span class="tag tag-green">合作中</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="supplierModal">编辑</button><button type="button" data-open-modal="pauseSupplierModal">暂停</button></div></td></tr>
-              <tr><td>SUP-006</td><td>欧洲大巴运输公司</td><td>车队</td><td>德国法兰克福</td><td>彼得</td><td>+49****5566</td><td><span class="tag tag-orange">暂停</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="restoreSupplierModal">恢复合作</button></div></td></tr>
-              <tr><td>SUP-007</td><td>地中海邮轮MSC中国</td><td>邮轮公司</td><td>中国上海</td><td>张总监</td><td>021****8800</td><td><span class="tag tag-green">合作中</span></td><td><div class="table-action"><a href="supplier-detail.html">详情</a><button type="button" data-open-modal="supplierModal">编辑</button><button type="button" data-open-modal="pauseSupplierModal">暂停</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </section>
-
-      <section class="masterdata-panel" data-master-panel="alias">
-        <div class="masterdata-panel-head">
-          <h2>别名标准化</h2>
-          <div class="panel-actions"><button class="btn btn-secondary" type="button" data-open-modal="aiAliasModal">AI建议别名</button></div>
-        </div>
-        <section class="filter-card filter-card-compact" aria-label="别名筛选">
-          <div class="filter-row">
-            <div class="filter-item"><label class="sr-only" for="aliasName">标准名称</label><input id="aliasName" type="text" placeholder="标准名称"></div>
-            <div class="filter-item filter-item-sm"><label class="sr-only" for="aliasType">数据类型</label><select id="aliasType"><option>全部</option><option>景区</option><option>酒店</option><option>餐厅</option><option>车型</option></select></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button class="btn btn-secondary" type="button">重置</button></div>
-          </div>
-        </section>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>标准名称</th><th>别名列表</th><th>数据类型</th><th>AI使用次数</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>埃菲尔铁塔</td><td>铁塔、巴黎铁塔、Eiffel Tower</td><td>景区</td><td>234次</td><td><div class="table-action"><button type="button" data-open-modal="aliasModal">编辑别名</button></div></td></tr>
-              <tr><td>成田国际机场</td><td>成田机场、NRT、东京成田</td><td>景区</td><td>188次</td><td><div class="table-action"><button type="button" data-open-modal="aliasModal">编辑别名</button></div></td></tr>
-              <tr><td>巴黎索菲特大酒店</td><td>索菲特巴黎、Sofitel Paris</td><td>酒店</td><td>67次</td><td><div class="table-action"><button type="button" data-open-modal="aliasModal">编辑别名</button></div></td></tr>
-              <tr><td>宇通大巴</td><td>大巴、45座大巴、团队大巴</td><td>车型</td><td>312次</td><td><div class="table-action"><button type="button" data-open-modal="aliasModal">编辑别名</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
+  <section class="masterdata-shell" aria-label="基础资源列表">
+    <section class="masterdata-panel active" data-master-panel="poi">
+      <section class="table-wrap" aria-label="POI库">
+        <table>
+          <thead>
+            <tr>
+              <th>POI编码</th>
+              <th>POI名称</th>
+              <th>目的地</th>
+              <th>适用产品</th>
+              <th>门票/服务价</th>
+              <th>供应商</th>
+              <th>引用线路/团期</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>POI-FR-001</td><td>卢浮宫</td><td>法国 / 巴黎</td><td><div class="tag-group"><span class="tag tag-blue">自营</span><span class="tag tag-purple">研学</span></div></td><td>EUR 18/人</td><td>欧洲地接ABC</td><td>12条线路 / 28个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>POI-IT-003</td><td>罗马斗兽场</td><td>意大利 / 罗马</td><td><span class="tag tag-blue">自营</span></td><td>EUR 22/人</td><td>欧洲地接ABC</td><td>8条线路 / 17个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>POI-JP-008</td><td>清水寺</td><td>日本 / 京都</td><td><div class="tag-group"><span class="tag tag-blue">自营</span><span class="tag tag-orange">外采</span></div></td><td>JPY 500/人</td><td>日本地接XYZ</td><td>5条线路 / 13个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>POI-TH-011</td><td>大皇宫</td><td>泰国 / 曼谷</td><td><span class="tag tag-blue">自营</span></td><td>THB 500/人</td><td>泰国地接DEF</td><td>4条线路 / 9个团期</td><td><span class="tag tag-orange">维护中</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+          </tbody>
+        </table>
       </section>
     </section>
-  </main>
 
-  <div id="poiDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal poi-drawer" role="dialog" aria-modal="true" aria-labelledby="poiDrawerTitle">
+    <section class="masterdata-panel" data-master-panel="hotel">
+      <section class="table-wrap" aria-label="酒店库">
+        <table>
+          <thead>
+            <tr>
+              <th>酒店编码</th>
+              <th>酒店名称</th>
+              <th>城市/星级</th>
+              <th>房型资源</th>
+              <th>淡旺季价</th>
+              <th>可用周期</th>
+              <th>供应商</th>
+              <th>引用线路/团期</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>HTL-FR-001</td><td>巴黎索菲特大酒店</td><td>巴黎 / 五星</td><td>双标/大床/三人间</td><td>EUR 160-240/间夜</td><td>全年可用，7-8月需二次确认</td><td>欧洲地接ABC</td><td>9条线路 / 22个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-price>价格</button></div></td></tr>
+            <tr><td>HTL-JP-001</td><td>大阪格兰比亚酒店</td><td>大阪 / 四星</td><td>双标/大床</td><td>JPY 18,000-28,000/间夜</td><td>樱花季需锁房</td><td>日本地接XYZ</td><td>6条线路 / 14个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-price>价格</button></div></td></tr>
+            <tr><td>HTL-CN-023</td><td>三亚亚特兰蒂斯酒店</td><td>三亚 / 五星</td><td>海景/亲子/套房</td><td>¥1,280-2,680/间夜</td><td>暑期保留房20间</td><td>三亚亚特兰蒂斯酒店</td><td>3条线路 / 11个团期</td><td><span class="tag tag-orange">待审核</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-price>价格</button></div></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="masterdata-panel" data-master-panel="restaurant">
+      <section class="table-wrap" aria-label="餐厅库">
+        <table>
+          <thead>
+            <tr>
+              <th>餐厅编码</th>
+              <th>餐厅名称</th>
+              <th>城市/餐型</th>
+              <th>餐标</th>
+              <th>特殊餐</th>
+              <th>供应商</th>
+              <th>适用线路</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>RST-FR-002</td><td>巴黎中餐厅Le Bonheur</td><td>巴黎 / 中餐</td><td>EUR 22/人</td><td>素食、儿童餐</td><td>欧洲地接ABC</td><td>法德意A线、法国深度线</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>RST-JP-009</td><td>京都怀石料理花见</td><td>京都 / 日料</td><td>JPY 4,800/人</td><td>无猪肉、儿童餐</td><td>日本地接XYZ</td><td>大阪京都线</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>RST-TH-006</td><td>曼谷河畔泰式餐厅</td><td>曼谷 / 东南亚</td><td>THB 480/人</td><td>清真餐需提前48小时</td><td>泰国地接DEF</td><td>曼谷清迈线</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="masterdata-panel" data-master-panel="vehicle">
+      <section class="table-wrap" aria-label="车型库">
+        <table>
+          <thead>
+            <tr>
+              <th>车型编码</th>
+              <th>车型名称</th>
+              <th>座位数</th>
+              <th>适用人数</th>
+              <th>服务区域</th>
+              <th>日租/公里价</th>
+              <th>车队供应商</th>
+              <th>引用团期</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>VEH-EU-019</td><td>奔驰Sprinter</td><td>15座</td><td>8-14人</td><td>西欧</td><td>EUR 680/日</td><td>欧洲大巴运输公司</td><td>18个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>VEH-EU-045</td><td>Volvo 45座大巴</td><td>45座</td><td>30-42人</td><td>欧洲</td><td>EUR 980/日</td><td>欧洲大巴运输公司</td><td>27个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+            <tr><td>VEH-TH-028</td><td>日野中巴</td><td>28座</td><td>18-26人</td><td>泰国</td><td>THB 8,000/日</td><td>泰国地接DEF</td><td>9个团期</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>编辑</button><button type="button" data-open-refs>引用</button></div></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="masterdata-panel" data-master-panel="alias">
+      <section class="table-wrap" aria-label="别名标准化">
+        <table>
+          <thead>
+            <tr>
+              <th>标准名称</th>
+              <th>别名/外部名称</th>
+              <th>资源类型</th>
+              <th>来源系统</th>
+              <th>匹配规则</th>
+              <th>影响模块</th>
+              <th>审核状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>欧洲地接ABC</td><td>EU ABC DMC / ABC Europe</td><td>供应商</td><td>NC、OTA对账、Excel导入</td><td>统一社会信用代码 + 名称相似度</td><td>应付、付款、NC推送</td><td><span class="tag tag-green">已确认</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>维护</button><button type="button" data-open-refs>影响</button></div></td></tr>
+            <tr><td>巴黎索菲特大酒店</td><td>Sofitel Paris / 巴黎Sofitel</td><td>酒店</td><td>供应商报价、产品导入</td><td>城市 + 酒店英文名</td><td>产品、团期成本</td><td><span class="tag tag-green">已确认</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>维护</button><button type="button" data-open-refs>影响</button></div></td></tr>
+            <tr><td>理想号地中海邮轮</td><td>MSC Ideal Mediterranean</td><td>邮轮产品</td><td>OTA商品、供应商库存</td><td>产品编码 + 线路名称</td><td>渠道、销售、财务对账</td><td><span class="tag tag-orange">待确认</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>维护</button><button type="button" data-open-refs>影响</button></div></td></tr>
+            <tr><td>丝路专列深度游</td><td>Silk Road Train / 丝路号</td><td>专列线路</td><td>运营商回传、OTA商品</td><td>运营商 + 线路起终点</td><td>产品、团期、结算</td><td><span class="tag tag-orange">待确认</span></td><td><div class="table-action"><button type="button" data-open-resource-drawer>维护</button><button type="button" data-open-refs>影响</button></div></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </section>
+
+  <div id="resourceDrawer" class="modal-overlay drawer-overlay" hidden>
+    <section class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="resourceDrawerTitle">
       <div class="modal-header">
-        <h2 id="poiDrawerTitle" class="modal-title">新增/编辑景区</h2>
-        <button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button>
+        <h2 id="resourceDrawerTitle">资源维护</h2>
+        <button class="modal-close" type="button" data-close-resource-drawer aria-label="关闭">×</button>
       </div>
       <div class="modal-body">
-        <nav class="tab-bar compact-tab-bar" aria-label="景区表单分组">
-          <button class="tab-item active" type="button" data-inner-tab="poiBase">基础信息</button>
-          <button class="tab-item" type="button" data-inner-tab="poiOperation">运营信息</button>
-          <button class="tab-item" type="button" data-inner-tab="poiTags">标签配置</button>
-          <button class="tab-item" type="button" data-inner-tab="poiSuppliers">关联供应商</button>
-        </nav>
-
-        <section class="inner-tab-panel active" data-inner-panel="poiBase">
-          <div class="form-grid poi-form-grid">
-            <div class="form-group"><label>中文名称</label><input class="form-control" type="text" value="卢浮宫"></div>
-            <div class="form-group"><label>英文名称</label><input class="form-control" type="text" value="Louvre Museum"></div>
-            <div class="form-group"><label>所在国家</label><select class="form-control"><option>法国</option><option>德国</option><option>捷克</option><option>意大利</option><option>希腊</option><option>英国</option><option>西班牙</option><option>瑞士</option></select></div>
-            <div class="form-group"><label>所在城市</label><select class="form-control"><option>巴黎</option><option>科隆</option><option>布拉格</option><option>罗马</option><option>雅典</option><option>伦敦</option><option>巴塞罗那</option></select></div>
-            <div class="form-group"><label>纬度</label><input class="form-control" type="number" step="0.000001" value="48.860611"></div>
-            <div class="form-group"><label>经度</label><input class="form-control" type="number" step="0.000001" value="2.337644"></div>
-            <div class="form-group form-group-full"><div class="map-placeholder">地图预览</div></div>
-            <div class="form-group form-group-full"><label>中文简介</label><textarea class="form-control" rows="4" placeholder="请输入中文简介">卢浮宫位于法国巴黎市中心，是世界著名艺术博物馆，馆藏覆盖古代文明、绘画、雕塑等多个门类。</textarea></div>
-            <div class="form-group form-group-full"><label>英文简介</label><textarea class="form-control" rows="4" placeholder="请输入英文简介">The Louvre Museum is one of the world's most renowned art museums, located in central Paris.</textarea></div>
-            <div class="form-group form-group-full">
-              <label class="switch-row"><input type="checkbox" checked> <span>启用状态</span></label>
-            </div>
-          </div>
-        </section>
-
-        <section class="inner-tab-panel" data-inner-panel="poiOperation">
-          <div class="form-grid poi-form-grid">
-            <div class="form-group form-group-full"><label>开放时间</label><input class="form-control" type="text" value="09:00-18:00，周二闭馆"></div>
-            <div class="form-group"><label>门票最低价</label><input class="form-control" type="number" value="120"></div>
-            <div class="form-group"><label>门票最高价</label><input class="form-control" type="number" value="220"></div>
-            <div class="form-group form-group-full"><label>旺季月份</label><div class="month-grid"><label><input type="checkbox">1月</label><label><input type="checkbox">2月</label><label><input type="checkbox">3月</label><label><input type="checkbox" checked>4月</label><label><input type="checkbox" checked>5月</label><label><input type="checkbox" checked>6月</label><label><input type="checkbox" checked>7月</label><label><input type="checkbox" checked>8月</label><label><input type="checkbox" checked>9月</label><label><input type="checkbox">10月</label><label><input type="checkbox">11月</label><label><input type="checkbox">12月</label></div></div>
-            <div class="form-group form-group-full"><label>淡季月份</label><div class="month-grid"><label><input type="checkbox" checked>1月</label><label><input type="checkbox" checked>2月</label><label><input type="checkbox">3月</label><label><input type="checkbox">4月</label><label><input type="checkbox">5月</label><label><input type="checkbox">6月</label><label><input type="checkbox">7月</label><label><input type="checkbox">8月</label><label><input type="checkbox">9月</label><label><input type="checkbox" checked>10月</label><label><input type="checkbox" checked>11月</label><label><input type="checkbox" checked>12月</label></div></div>
-          </div>
-        </section>
-
-        <section class="inner-tab-panel" data-inner-panel="poiTags">
-          <div class="selected-tag-strip">
-            <span class="tag tag-blue">文化 <button type="button" aria-label="移除文化">×</button></span>
-            <span class="tag tag-purple">世界遗产 <button type="button" aria-label="移除世界遗产">×</button></span>
-          </div>
-          <div class="checkbox-grid">
-            <label><input type="checkbox" checked> 文化</label>
-            <label><input type="checkbox"> 自然</label>
-            <label><input type="checkbox"> 主题乐园</label>
-            <label><input type="checkbox"> 宗教</label>
-            <label><input type="checkbox"> 购物</label>
-            <label><input type="checkbox"> 历史遗址</label>
-            <label><input type="checkbox" checked> 世界遗产</label>
-            <label><input type="checkbox"> 户外活动</label>
-          </div>
-        </section>
-
-        <section class="inner-tab-panel" data-inner-panel="poiSuppliers">
-          <div class="form-group">
-            <label>供应商搜索</label>
-            <input class="form-control" type="search" placeholder="输入关键词实时搜索供应商列表">
-          </div>
-          <div class="supplier-link-list">
-            <div class="supplier-link-row"><span>欧洲地接ABC</span><span>地接社</span><span>王经理</span><button type="button">移除</button></div>
-            <div class="supplier-link-row"><span>巴黎文旅票务中心</span><span>票务</span><span>Anne</span><button type="button">移除</button></div>
-            <div class="supplier-link-row"><span>欧洲优选车队</span><span>车队</span><span>彼得</span><button type="button">移除</button></div>
-          </div>
-        </section>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">资源名称</label><input class="form-control" type="text" value="卢浮宫"></div>
+          <div class="form-group"><label class="form-label">资源编码</label><input class="form-control" type="text" value="POI-FR-001"></div>
+          <div class="form-group"><label class="form-label">目的地/城市</label><input class="form-control" type="text" value="法国 / 巴黎"></div>
+          <div class="form-group"><label class="form-label">关联供应商</label><select class="form-control"><option>欧洲地接ABC</option><option>日本地接XYZ</option><option>泰国地接DEF</option></select></div>
+          <div class="form-group"><label class="form-label">价格口径</label><input class="form-control" type="text" value="EUR 18/人"></div>
+          <div class="form-group"><label class="form-label">可用周期</label><input class="form-control" type="text" value="全年可用，旺季需二次确认"></div>
+          <div class="form-group"><label class="form-label">状态</label><select class="form-control"><option>启用</option><option>维护中</option><option>停用</option></select></div>
+          <div class="form-group"><label class="form-label">停用影响</label><input class="form-control" type="text" value="停用前需确认引用线路和团期"></div>
+          <div class="form-group form-group-full"><label class="form-label">备注</label><textarea class="form-control" rows="4">资源价格变动会同步提示产品、团期成本和供应商费用维护人。</textarea></div>
+        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button">保存</button>
+        <button class="btn btn-secondary" type="button" data-close-resource-drawer>取消</button>
+        <button class="btn btn-primary" type="button" data-close-resource-drawer>保存</button>
       </div>
-    </div>
+    </section>
   </div>
 
-  <div id="poiRefModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="poiRefTitle">
+  <div id="resourceRefsModal" class="modal-overlay" hidden>
+    <section class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="resourceRefsTitle">
       <div class="modal-header">
-        <h2 id="poiRefTitle" class="modal-title">景区引用产品</h2>
-        <button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button>
+        <h2 id="resourceRefsTitle">引用关系</h2>
+        <button class="modal-close" type="button" data-close-resource-refs aria-label="关闭">×</button>
       </div>
       <div class="modal-body">
         <section class="table-wrap">
           <table>
-            <thead><tr><th>产品名称</th><th>产品类型</th><th>所属计调</th><th>状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>引用位置</th><th>名称</th><th>当前状态</th><th>维护人</th></tr></thead>
             <tbody>
-              <tr><td>法瑞意经典15日游</td><td><span class="tag tag-blue">自营产品</span></td><td>王芳</td><td><span class="tag tag-green">销售中</span></td><td><a href="../product/products-detail.html">跳转查看</a></td></tr>
-              <tr><td>西欧精选8日</td><td><span class="tag tag-purple">外采产品</span></td><td>陈刚</td><td><span class="tag tag-green">销售中</span></td><td><a href="../product/product-outsource-list.html">跳转查看</a></td></tr>
-              <tr><td>欧洲文化探索研学14日</td><td><span class="tag tag-orange">研学产品</span></td><td>王芳</td><td><span class="tag tag-green">销售中</span></td><td><a href="../product/product-study-products.html">跳转查看</a></td></tr>
-              <tr><td>巴黎自由行5-7日</td><td><span class="tag tag-gray">自由行</span></td><td>张雪</td><td><span class="tag tag-green">在售</span></td><td><a href="../product/product-free-travel-list.html">跳转查看</a></td></tr>
+              <tr><td>产品线路</td><td>欧洲十国经典游 / 法德意A线</td><td><span class="tag tag-green">销售中</span></td><td>王珊</td></tr>
+              <tr><td>团期成本</td><td>EU-FRA-20260720-001</td><td><span class="tag tag-orange">成本确认中</span></td><td>周伟</td></tr>
+              <tr><td>供应商费用</td><td>COST-20260624-008</td><td><span class="tag tag-blue">待复核</span></td><td>刘洋</td></tr>
             </tbody>
           </table>
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
+        <button class="btn btn-primary" type="button" data-close-resource-refs>关闭</button>
       </div>
-    </div>
-  </div>
-
-  <div id="poiImportModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="poiImportTitle">
-      <div class="modal-header">
-        <h2 id="poiImportTitle" class="modal-title">批量导入景区</h2>
-        <button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <a class="link-primary" href="#" download>下载导入模板</a>
-        <div class="upload-dropzone">
-          <strong>上传文件</strong>
-          <span>点击选择或拖拽 Excel 文件到此区域</span>
-        </div>
-        <div class="import-rules">
-          <div>支持格式：.xlsx / .xls</div>
-          <div>字段要求：景区名称、国家、城市、标签、状态为必填</div>
-          <div>最大行数：单次最多导入 2,000 行</div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button">确认导入</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="hotelModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="hotelModalTitle">
-      <div class="modal-header">
-        <h2 id="hotelModalTitle" class="modal-title">新增/编辑酒店</h2>
-        <button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group"><label>酒店编码</label><input class="form-control" type="text" value="HTL-AUTO-001"></div>
-          <div class="form-group"><label>酒店名称 <span class="required">*</span></label><input class="form-control" type="text" placeholder="请输入酒店名称"></div>
-          <div class="form-group"><label>星级 <span class="required">*</span></label><select class="form-control"><option>二星</option><option>三星</option><option>四星</option><option selected>五星</option></select></div>
-          <div class="form-group"><label>城市 <span class="required">*</span></label><input class="form-control" type="text" placeholder="请输入城市"></div>
-          <div class="form-group"><label>国家/地区 <span class="required">*</span></label><select class="form-control"><option>中国</option><option>法国</option><option>日本</option><option>泰国</option><option>澳大利亚</option></select></div>
-          <div class="form-group"><label>详细地址</label><input class="form-control" type="text" placeholder="请输入详细地址"></div>
-          <div class="form-group"><label>联系人</label><input class="form-control" type="text" placeholder="联系人"></div>
-          <div class="form-group"><label>联系电话</label><input class="form-control" type="text" placeholder="联系电话"></div>
-          <div class="form-group form-group-full"><label>关联供应商</label><input class="form-control" type="search" placeholder="搜索供应商名称"></div>
-          <div class="form-group form-group-full"><label>备注</label><textarea class="form-control" rows="3" placeholder="请输入备注"></textarea></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button">保存</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="supplierModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="supplierModalTitle">
-      <div class="modal-header">
-        <h2 id="supplierModalTitle" class="modal-title">新增/编辑供应商</h2>
-        <button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <nav class="tab-bar compact-tab-bar" aria-label="供应商表单分组">
-          <button class="tab-item active" type="button" data-inner-tab="supplierBase">基础信息</button>
-          <button class="tab-item" type="button" data-inner-tab="supplierAccount">结算账户</button>
-        </nav>
-        <section class="inner-tab-panel active" data-inner-panel="supplierBase">
-          <div class="form-grid">
-            <div class="form-group"><label>供应商名称 <span class="required">*</span></label><input class="form-control" type="text" placeholder="请输入供应商名称"></div>
-            <div class="form-group"><label>供应商类型 <span class="required">*</span></label><select class="form-control"><option>地接社</option><option>酒店</option><option>餐厅</option><option>车队</option><option>航空公司</option><option>邮轮公司</option></select></div>
-            <div class="form-group"><label>所在国家地区</label><input class="form-control" type="text" placeholder="国家地区"></div>
-            <div class="form-group"><label>详细地址</label><input class="form-control" type="text" placeholder="详细地址"></div>
-            <div class="form-group"><label>主要联系人 <span class="required">*</span></label><input class="form-control" type="text" placeholder="联系人"></div>
-            <div class="form-group"><label>联系手机 <span class="required">*</span></label><input class="form-control" type="text" placeholder="联系手机"></div>
-            <div class="form-group"><label>联系邮箱</label><input class="form-control" type="email" placeholder="邮箱"></div>
-            <div class="form-group"><label>备用联系人</label><input class="form-control" type="text" placeholder="备用联系人"></div>
-            <div class="form-group"><label>确认方式</label><select class="form-control"><option>系统自动</option><option>邮件</option><option>电话</option><option>传真</option></select></div>
-            <div class="form-group"><label>确认时限小时数</label><input class="form-control" type="number" value="48"></div>
-            <div class="form-group"><label>合作开始日期</label><input class="form-control" type="date"></div>
-            <div class="form-group form-group-full"><label>资质说明</label><textarea class="form-control" rows="3" placeholder="请输入资质说明"></textarea></div>
-          </div>
-        </section>
-        <section class="inner-tab-panel" data-inner-panel="supplierAccount">
-          <div class="form-grid">
-            <div class="form-group"><label>账户户名 <span class="required">*</span></label><input class="form-control" type="text" placeholder="账户户名"></div>
-            <div class="form-group"><label>开户行 <span class="required">*</span></label><input class="form-control" type="text" placeholder="开户行"></div>
-            <div class="form-group"><label>银行账号 <span class="required">*</span></label><input class="form-control" type="text" placeholder="银行账号"></div>
-            <div class="form-group"><label>开户行地址</label><input class="form-control" type="text" placeholder="开户行地址"></div>
-            <div class="form-group"><label>币种</label><select class="form-control"><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option></select></div>
-            <div class="form-group"><label>境外银行SWIFT代码</label><input class="form-control" type="text" placeholder="SWIFT代码"></div>
-          </div>
-        </section>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button">保存</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="pauseSupplierModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="pauseSupplierTitle">
-      <div class="modal-header"><h2 id="pauseSupplierTitle" class="modal-title">暂停合作</h2><button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button></div>
-      <div class="modal-body">
-        <p class="confirm-text">暂停后该供应商关联的产品将无法新建团期</p>
-        <div class="form-group"><label>暂停原因 <span class="required">*</span></label><textarea class="form-control" rows="4" placeholder="请输入暂停原因"></textarea></div>
-      </div>
-      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-warning" type="button">确认暂停</button></div>
-    </div>
-  </div>
-
-  <div id="restoreSupplierModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="restoreSupplierTitle">
-      <div class="modal-header"><h2 id="restoreSupplierTitle" class="modal-title">恢复合作</h2><button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button></div>
-      <div class="modal-body"><p class="confirm-text">确认恢复与该供应商的合作关系？</p></div>
-      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-primary" type="button">确认恢复</button></div>
-    </div>
-  </div>
-
-  <div id="aliasModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="aliasModalTitle">
-      <div class="modal-header"><h2 id="aliasModalTitle" class="modal-title">编辑别名</h2><button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button></div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group"><label>标准名称</label><input class="form-control" type="text" value="埃菲尔铁塔" readonly></div>
-          <div class="form-group"><label>数据类型</label><input class="form-control" type="text" value="景区" readonly></div>
-          <div class="form-group form-group-full">
-            <label>别名</label>
-            <div class="alias-editor">
-              <span class="alias-chip">铁塔 <button type="button" aria-label="删除铁塔">×</button></span>
-              <span class="alias-chip">巴黎铁塔 <button type="button" aria-label="删除巴黎铁塔">×</button></span>
-              <span class="alias-chip">Eiffel Tower <button type="button" aria-label="删除Eiffel Tower">×</button></span>
-              <input type="text" placeholder="输入新别名后回车">
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-primary" type="button">保存</button></div>
-    </div>
-  </div>
-
-  <div id="aiAliasModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="aiAliasTitle">
-      <div class="modal-header"><h2 id="aiAliasTitle" class="modal-title">AI建议别名结果</h2><button class="modal-close" type="button" data-close-modal aria-label="关闭">×</button></div>
-      <div class="modal-body">
-        <p class="modal-note">AI已扫描最近解析记录，发现以下建议的新别名映射</p>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>标准名称</th><th>建议新增别名</th><th>出现次数</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>东京帝国饭店</td><td>帝国饭店、Imperial Hotel</td><td>12次</td><td><div class="table-action"><button type="button">采纳</button><button type="button">忽略</button></div></td></tr>
-              <tr><td>曼谷文华东方酒店</td><td>文华东方、Mandarin Oriental BKK</td><td>8次</td><td><div class="table-action"><button type="button">采纳</button><button type="button">忽略</button></div></td></tr>
-              <tr><td>丰田考斯特</td><td>考斯特、小考斯特</td><td>23次</td><td><div class="table-action"><button type="button">采纳</button><button type="button">忽略</button></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-      </div>
-      <div class="modal-footer"><button class="btn btn-secondary" type="button">全部采纳</button><button class="btn btn-secondary" type="button" data-close-modal>关闭</button></div>
-    </div>
+    </section>
   </div>
 
   <script>
     (function () {
-      var panels = Array.from(document.querySelectorAll('[data-master-panel]'));
-      var labels = {
-        poi: '景区',
-        hotel: '酒店',
-        restaurant: '餐厅',
-        vehicle: '车型',
-        cruise: '邮轮资源',
-        train: '专列资源',
-        supplier: '供应商',
-        alias: '别名标准化'
+      const typeMap = {
+        poi: { title: "POI库", action: "新增POI" },
+        hotel: { title: "酒店库", action: "新增酒店" },
+        restaurant: { title: "餐厅库", action: "新增餐厅" },
+        vehicle: { title: "车型库", action: "新增车型" },
+        alias: { title: "别名标准化", action: "新增别名" }
       };
-      var params = new URLSearchParams(window.location.search);
-      var type = params.get('type') || 'poi';
-      if (!labels[type]) type = 'poi';
-
-      var activePanel = null;
-      panels.forEach(function (panel) {
-        var active = panel.dataset.masterPanel === type;
-        panel.classList.toggle('active', active);
-        if (active) activePanel = panel;
+      const params = new URLSearchParams(window.location.search);
+      const currentType = typeMap[params.get("type")] ? params.get("type") : "poi";
+      const drawer = document.getElementById("resourceDrawer");
+      const refs = document.getElementById("resourceRefsModal");
+      document.getElementById("masterdataPageTitle").textContent = typeMap[currentType].title;
+      document.getElementById("masterdataCreateBtn").textContent = typeMap[currentType].action;
+      document.querySelectorAll("[data-master-panel]").forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.masterPanel === currentType);
       });
-      var pageTitle = document.getElementById('masterdataPageTitle');
-      if (pageTitle) pageTitle.textContent = labels[type];
-      document.title = labels[type] + ' - 基础资源 - 凯撒旅游';
 
-      var pagePanel = document.getElementById('masterdataPagePanel');
-      var headerActions = document.getElementById('masterdataHeaderActions');
-      if (activePanel) {
-        var panelActions = activePanel.querySelector('.panel-actions, .masterdata-row-actions');
-        if (headerActions && panelActions) {
-          headerActions.appendChild(panelActions);
-        }
-        var panelFilter = activePanel.querySelector('.filter-card');
-        if (pagePanel && panelFilter) {
-          pagePanel.appendChild(panelFilter);
-        }
-        var panelHead = activePanel.querySelector('.masterdata-panel-head');
-        if (panelHead) {
-          panelHead.remove();
-        }
+      function openLayer(layer) {
+        layer.hidden = false;
+        requestAnimationFrame(() => layer.classList.add("show"));
       }
 
-      document.querySelectorAll('[data-open-modal]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          var modal = document.getElementById(button.dataset.openModal);
-          if (!modal) return;
-          modal.classList.add('show');
-          modal.setAttribute('aria-hidden', 'false');
-        });
-      });
+      function closeLayer(layer) {
+        layer.classList.remove("show");
+        window.setTimeout(() => {
+          layer.hidden = true;
+        }, 240);
+      }
 
-      document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
-        overlay.addEventListener('click', function (event) {
-          if (event.target !== overlay && !event.target.closest('[data-close-modal]')) return;
-          overlay.classList.remove('show');
-          overlay.setAttribute('aria-hidden', 'true');
-        });
+      document.querySelectorAll("[data-open-resource-drawer], [data-open-price], [data-open-import]").forEach((button) => {
+        button.addEventListener("click", () => openLayer(drawer));
       });
-
-      document.querySelectorAll('[data-inner-tab]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          var modal = button.closest('.modal');
-          var key = button.dataset.innerTab;
-          modal.querySelectorAll('[data-inner-tab]').forEach(function (item) {
-            item.classList.toggle('active', item === button);
-          });
-          modal.querySelectorAll('[data-inner-panel]').forEach(function (panel) {
-            panel.classList.toggle('active', panel.dataset.innerPanel === key);
-          });
+      document.querySelectorAll("[data-close-resource-drawer]").forEach((button) => {
+        button.addEventListener("click", () => closeLayer(drawer));
+      });
+      document.querySelectorAll("[data-open-refs]").forEach((button) => {
+        button.addEventListener("click", () => openLayer(refs));
+      });
+      document.querySelectorAll("[data-close-resource-refs]").forEach((button) => {
+        button.addEventListener("click", () => closeLayer(refs));
+      });
+      [drawer, refs].forEach((layer) => {
+        layer.addEventListener("click", (event) => {
+          if (event.target === layer) closeLayer(layer);
         });
       });
     })();

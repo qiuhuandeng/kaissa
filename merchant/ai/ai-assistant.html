@@ -41,12 +41,20 @@
             <option>销售总监</option>
             <option>门店店长</option>
             <option>销售顾问</option>
-            <option>呼叫中心坐席</option>
-            <option>OTA渠道运营</option>
-            <option>客服专员</option>
-            <option>超管</option>
           </select>
         </label>
+
+        <section class="card ai-permission-card" aria-label="当前AI权限范围">
+          <div class="card-header">
+            <div class="card-title">权限范围</div>
+          </div>
+          <div class="description-grid compact-description-grid">
+            <div class="description-item"><div class="description-label">功能权限</div><div id="roleModuleText" class="description-value">产品审批、产品分析</div></div>
+            <div class="description-item"><div class="description-label">数据权限</div><div id="roleDataScopeText" class="description-value">本中心产品与线路</div></div>
+            <div class="description-item"><div class="description-label">敏感字段</div><div id="roleSensitiveText" class="description-value">游客证件、客户联系方式默认脱敏</div></div>
+            <div class="description-item"><div class="description-label">高危动作</div><div id="roleActionText" class="description-value">发布、调价需审批确认</div></div>
+          </div>
+        </section>
 
         <section id="commandEditBox" class="ai-command-edit-box" hidden>
           <div class="ai-command-edit-title">新增指令</div>
@@ -73,6 +81,7 @@
             <button id="openHistoryDrawer" class="btn btn-secondary" type="button">历史对话</button>
           </div>
         </header>
+        <section id="aiPermissionBanner" class="alert alert-blue">AI只会读取和执行当前角色已授权的功能与数据；写入、导出、发送、财务动作会再次校验。</section>
 
         <div id="messageList" class="ai-message-list" aria-live="polite"></div>
 
@@ -147,6 +156,11 @@
       var roleSelect = document.getElementById('roleSelect');
       var currentRoleTag = document.getElementById('currentRoleTag');
       var chatContextText = document.getElementById('chatContextText');
+      var roleModuleText = document.getElementById('roleModuleText');
+      var roleDataScopeText = document.getElementById('roleDataScopeText');
+      var roleSensitiveText = document.getElementById('roleSensitiveText');
+      var roleActionText = document.getElementById('roleActionText');
+      var aiPermissionBanner = document.getElementById('aiPermissionBanner');
       var commandGroups = document.getElementById('commandGroups');
       var commandEditBox = document.getElementById('commandEditBox');
       var toggleEditModeTop = document.getElementById('toggleEditModeTop');
@@ -239,6 +253,81 @@
         ]
       };
 
+      var rolePolicies = {
+        '产品总监': {
+          modules: '产品审批、定价策略、产品分析、渠道授权',
+          dataScope: '本中心及授权产品线的产品、线路、团期和竞品价格',
+          sensitive: '游客证件、客户联系方式默认脱敏；供应商底价仅展示汇总',
+          action: '产品发布、调价、渠道授权需要二次确认并留痕',
+          allow: { product_admin: true, finance_execute: false, sensitive_export: false, broad_data: false, admin_config: false },
+          confirm: { product_admin: true }
+        },
+        '产品经理/计调': {
+          modules: '产品草稿、线路维护、团期开排、成本录入、出团文件',
+          dataScope: '本人及本部门负责的产品、线路、团期和供应商成本',
+          sensitive: '游客名单可按指定团期脱敏查看；证件号、手机号默认脱敏',
+          action: '可生成草稿和文件，不能代为上架、改价、发布',
+          allow: { product_admin: false, finance_execute: false, sensitive_export: true, broad_data: false, admin_config: false },
+          confirm: { sensitive_export: true }
+        },
+        '运营专员': {
+          modules: '名单管理、证件资料、签证进度、出团通知、回团处理',
+          dataScope: '本人执行及本部门授权团期，不跨产品线、不跨主体',
+          sensitive: '名单导出只允许指定团期，证件号和联系方式按规则脱敏',
+          action: '发送通知、导出名单、记录异常需二次确认',
+          allow: { product_admin: false, finance_execute: false, sensitive_export: true, broad_data: false, admin_config: false },
+          confirm: { sensitive_export: true }
+        },
+        '财务主管': {
+          modules: '收款、认款、应收应付、结算复核、付款审批、财务报表',
+          dataScope: '本财务主体及授权组织的财务单据和汇总报表',
+          sensitive: '银行账号、客户证件、回单附件默认脱敏；明细导出留痕',
+          action: '付款、退款、NC推送等高危动作需要二次确认和审批链校验',
+          allow: { product_admin: false, finance_execute: true, sensitive_export: true, broad_data: false, admin_config: false },
+          confirm: { finance_execute: true, sensitive_export: true }
+        },
+        '财务专员': {
+          modules: '日常收款、手动认款、应付申请、退款执行、回单上传',
+          dataScope: '本人经办及本财务主体授权单据，不看跨主体汇总',
+          sensitive: '银行账号、客户证件、回单附件默认脱敏；导出需记录任务',
+          action: '执行退款、付款申请、批量认款需二次确认',
+          allow: { product_admin: false, finance_execute: true, sensitive_export: true, broad_data: false, admin_config: false },
+          confirm: { finance_execute: true, sensitive_export: true }
+        },
+        '销售总监': {
+          modules: '销售目标、门店业绩、折扣审批、订单经营分析',
+          dataScope: '授权销售组织、门店、顾问、订单和报价数据',
+          sensitive: '客户联系方式默认脱敏，订单明细导出需要留痕',
+          action: '折扣审批、订单导出需要二次确认；不能执行财务付款退款',
+          allow: { product_admin: false, finance_execute: false, sensitive_export: true, broad_data: false, admin_config: false },
+          confirm: { sensitive_export: true }
+        },
+        '门店店长': {
+          modules: '本门店订单、顾问目标、折扣初审、退款初审、客户跟进',
+          dataScope: '本门店及下属顾问的订单、客户和收款状态',
+          sensitive: '客户联系方式默认脱敏；跨门店客户和订单不可查询',
+          action: '折扣、退款初审需要确认；不能上架产品或执行财务动作',
+          allow: { product_admin: false, finance_execute: false, sensitive_export: true, broad_data: false, admin_config: false },
+          confirm: { sensitive_export: true }
+        },
+        '销售顾问': {
+          modules: '我的客户、我的意向单、报价单、订单跟进、佣金查询',
+          dataScope: '本人名下客户、意向、报价和订单，不看门店全量数据',
+          sensitive: '客户证件、联系方式默认脱敏；不能批量导出客户名单',
+          action: '可生成报价和跟进话术，不能改产品、不能执行收退款',
+          allow: { product_admin: false, finance_execute: false, sensitive_export: false, broad_data: false, admin_config: false },
+          confirm: {}
+        }
+      };
+
+      var actionRules = [
+        { type: 'admin_config', label: '后台配置', pattern: /后台角色|系统配置|接口配置|操作审计|AI模型|模型路由|员工账号|组织架构/ },
+        { type: 'broad_data', label: '超范围数据', pattern: /全集团|全租户|全部订单|全部客户|所有门店|跨主体|全量客户|全量订单|导出客户|导出订单/ },
+        { type: 'product_admin', label: '产品上架/发布/改价', pattern: /上架|下架|发布|渠道授权|改价|删除产品|修改价格/ },
+        { type: 'finance_execute', label: '财务执行动作', pattern: /执行退款|执行付款|推送NC|确认入账|一键催款|批量认款|生成结算单|发起付款/ },
+        { type: 'sensitive_export', label: '敏感数据读取或导出', pattern: /导出|下载.*名单|游客名单|客户名单|证件|身份证|护照|手机号|联系方式/ }
+      ];
+
       var pickerData = {
         schedule: ['ZY-202506-0028｜欧洲经典12日｜2025-06-28', 'EU20240715001｜欧洲十国经典游｜2025-07-15', 'TR-SILK-20250805-001｜东方丝路专列｜2025-08-05'],
         product: ['欧洲经典12日｜自营产品｜已上架', '理想号地中海邮轮｜邮轮产品｜航次4个', '日本签证代办｜单项委托｜服务项3个'],
@@ -258,6 +347,60 @@
         if (text.indexOf('新建') >= 0 || text.indexOf('发起') >= 0) return '进入创建流程并补齐必要字段';
         if (text.indexOf('优化') >= 0) return '按渠道规范优化文案与关键词';
         return '发送后由AI读取当前业务上下文处理';
+      }
+
+      function getPolicy() {
+        return rolePolicies[activeRole] || rolePolicies['销售顾问'];
+      }
+
+      function evaluatePermission(text) {
+        var content = String(text || '');
+        var policy = getPolicy();
+        var matched = actionRules.filter(function (rule) {
+          return rule.pattern.test(content);
+        });
+        var denied = matched.filter(function (rule) {
+          return !policy.allow || !policy.allow[rule.type];
+        });
+        if (denied.length) {
+          return {
+            allowed: false,
+            confirm: false,
+            labels: denied.map(function (rule) { return rule.label; }),
+            message: '已拦截：当前角色“' + activeRole + '”没有“' + denied.map(function (rule) { return rule.label; }).join('、') + '”权限。AI不能绕过功能权限、数据范围或审批流执行。'
+          };
+        }
+        var needsConfirm = matched.filter(function (rule) {
+          return policy.confirm && policy.confirm[rule.type];
+        });
+        return {
+          allowed: true,
+          confirm: needsConfirm.length > 0,
+          labels: needsConfirm.map(function (rule) { return rule.label; }),
+          message: needsConfirm.length ? '需要二次确认：' + needsConfirm.map(function (rule) { return rule.label; }).join('、') : ''
+        };
+      }
+
+      function permissionDeniedReply(result, text) {
+        var policy = getPolicy();
+        return [
+          '<div class="alert alert-red">' + escapeHtml(result.message) + '</div>',
+          '<ul>',
+          '<li>当前功能范围：' + escapeHtml(policy.modules) + '</li>',
+          '<li>当前数据范围：' + escapeHtml(policy.dataScope) + '</li>',
+          '<li>原始指令：' + escapeHtml(text) + '</li>',
+          '</ul>',
+          '<p>如确需处理，请在角色权限中补齐对应功能权限和数据权限，或走审批转交给有权限的角色。</p>'
+        ].join('');
+      }
+
+      function updatePermissionSummary() {
+        var policy = getPolicy();
+        roleModuleText.textContent = policy.modules;
+        roleDataScopeText.textContent = policy.dataScope;
+        roleSensitiveText.textContent = policy.sensitive;
+        roleActionText.textContent = policy.action;
+        aiPermissionBanner.textContent = '当前以“' + activeRole + '”处理：' + policy.dataScope + '。' + policy.action + '。';
       }
 
       function normalizeCommand(item) {
@@ -304,6 +447,7 @@
         activeRole = role;
         currentRoleTag.textContent = role;
         chatContextText.textContent = role + '视角';
+        updatePermissionSummary();
         renderCommands();
       }
 
@@ -387,9 +531,10 @@
       }
 
       function genericReply(text) {
+        var policy = getPolicy();
         return [
           '<p>已收到指令：<strong>' + escapeHtml(text) + '</strong></p>',
-          '<ul><li>已读取当前角色：' + escapeHtml(activeRole) + '</li><li>已匹配相关业务对象和权限范围</li><li>涉及写入、导出、发送的动作会在执行前再次确认</li></ul>',
+          '<ul><li>已读取当前角色：' + escapeHtml(activeRole) + '</li><li>功能范围：' + escapeHtml(policy.modules) + '</li><li>数据范围：' + escapeHtml(policy.dataScope) + '</li><li>涉及写入、导出、发送、财务执行的动作会在执行前再次校验</li></ul>',
           '<pre><code>下一步：确认数据范围 → 生成结果 → 执行业务操作</code></pre>'
         ].join('');
       }
@@ -400,6 +545,12 @@
         assistantInput.value = '';
         syncInputState();
         addUserMessage(content);
+        var permission = evaluatePermission(content);
+        if (!permission.allowed) {
+          addAiMessage(permissionDeniedReply(permission, content), null);
+          renderSuggestions(['查看我的权限范围', '选择团期后导出名单', '生成行程文案', '跳转审批页面']);
+          return;
+        }
         var typingId = addTypingMessage();
         window.setTimeout(function () {
           removeTyping(typingId);
@@ -620,7 +771,12 @@
         var actionButton = event.target.closest('[data-execute-action]');
         if (actionButton) {
           pendingAction = actionButton.dataset.executeAction;
-          actionConfirmText.textContent = '即将执行「' + pendingAction + '」。系统会根据当前权限触发对应业务操作。';
+          var actionPermission = evaluatePermission(pendingAction);
+          if (!actionPermission.allowed) {
+            addAiMessage(permissionDeniedReply(actionPermission, pendingAction), null);
+            return;
+          }
+          actionConfirmText.textContent = '即将执行「' + pendingAction + '」。系统会按当前角色的功能权限、数据范围和审批链再次记录操作留痕。';
           openOverlay(actionConfirmModal);
           return;
         }
@@ -634,7 +790,14 @@
           window.alert('表格已复制');
         }
         if (event.target.closest('[data-export-table]')) {
-          window.alert('已生成Excel导出任务');
+          var exportPermission = evaluatePermission('导出当前表格');
+          if (!exportPermission.allowed) {
+            addAiMessage(permissionDeniedReply(exportPermission, '导出当前表格'), null);
+          } else {
+            pendingAction = '导出当前表格';
+            actionConfirmText.textContent = '即将导出当前表格。导出任务会按“' + activeRole + '”的数据范围过滤，并记录导出日志。';
+            openOverlay(actionConfirmModal);
+          }
         }
         var sortable = event.target.closest('[data-sortable]');
         if (sortable) {
@@ -647,8 +810,14 @@
       });
 
       document.getElementById('confirmActionButton').addEventListener('click', function () {
+        var actionPermission = evaluatePermission(pendingAction);
+        if (!actionPermission.allowed) {
+          closeOverlay(actionConfirmModal);
+          addAiMessage(permissionDeniedReply(actionPermission, pendingAction), null);
+          return;
+        }
         closeOverlay(actionConfirmModal);
-        addAiMessage('<p><strong>操作已执行：</strong>' + escapeHtml(pendingAction) + '</p><p>系统已生成对应任务记录，可在相关业务页面继续查看。</p>', null);
+        addAiMessage('<p><strong>操作已提交：</strong>' + escapeHtml(pendingAction) + '</p><p>系统已按“' + escapeHtml(activeRole) + '”的数据范围生成任务，并记录权限校验日志。</p>', null);
       });
       document.querySelectorAll('[data-close-action-confirm]').forEach(function (button) {
         button.addEventListener('click', function () { closeOverlay(actionConfirmModal); });

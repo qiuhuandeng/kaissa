@@ -13,14 +13,10 @@
         {
           title: "基础资源",
           children: [
-            { title: "景点", href: "resource/resource-masterdata.html?type=poi" },
-            { title: "酒店", href: "resource/resource-masterdata.html?type=hotel" },
-            { title: "餐厅", href: "resource/resource-masterdata.html?type=restaurant" },
-            { title: "车型", href: "resource/resource-masterdata.html?type=vehicle" },
-            { title: "邮轮", href: "resource/resource-masterdata.html?type=cruise" },
-            { title: "专列", href: "resource/resource-masterdata.html?type=train" },
-            { title: "供应", href: "resource/resource-masterdata.html?type=supplier" },
-            { title: "别名", href: "resource/resource-masterdata.html?type=alias" },
+            { title: "POI库", href: "resource/resource-masterdata.html?type=poi" },
+            { title: "酒店库", href: "resource/resource-masterdata.html?type=hotel" },
+            { title: "餐厅库", href: "resource/resource-masterdata.html?type=restaurant" },
+            { title: "车型库", href: "resource/resource-masterdata.html?type=vehicle" },
           ],
         },
         {
@@ -45,8 +41,9 @@
             { title: "专列线路", href: "resource/resource-train-routes.html" },
           ],
         },
-        { title: "领队资源", href: "resource/resource-tour-leaders.html" },
         { title: "供应商管理", href: "resource/suppliers.html" },
+        { title: "领队资源", href: "resource/resource-tour-leaders.html" },
+        { title: "别名标准化", href: "resource/resource-masterdata.html?type=alias" },
       ],
     },
     {
@@ -177,6 +174,7 @@
       children: [
         { title: "待我审批", href: "approval/approvals.html?view=todo" },
         { title: "我发起的", href: "approval/approvals.html?view=mine" },
+        { title: "抄送我", href: "approval/approvals.html?view=cc" },
         { title: "审批总览", href: "approval/approvals.html?view=overview" },
         { title: "审批配置", href: "approval/approvals.html?view=config" },
       ],
@@ -280,8 +278,8 @@
   const secondaryOpenKeys = new Set(readSecondaryOpenKeys());
 
   const reportRouteKeys = new Set(["profit", "receipt", "payment", "ar-ap", "prepay", "fund"]);
-  const approvalViewKeys = new Set(["todo", "mine", "overview", "config"]);
-  const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "cruise", "train", "supplier", "alias"]);
+  const approvalViewKeys = new Set(["todo", "mine", "cc", "overview", "config"]);
+  const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "alias"]);
   const merchantBaseUrl = new URL("../merchant/", new URL(bootScript.src || "../../shared/nav-merchant.js", window.location.href));
 
   function routeKeyFromUrl(url) {
@@ -340,8 +338,8 @@
     "product/products-detail.html": { href: "product/products.html", title: "产品详情" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采产品包装" },
-    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期配额" },
-    "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "产品类待审批" },
+    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采产品配额" },
+    "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
     "system/data-scope.html": { href: "system/role-assignment.html", title: "角色授权" },
     "system/hr-requests.html": { href: "approval/approvals.html?view=mine", title: "我发起的" },
     "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学产品编辑" },
@@ -1547,8 +1545,8 @@
   }
 
   const metaTagTexts = new Set([
-    "普通团期", "邮轮航次", "专列班期", "研学营期", "自由行", "单项委托",
-    "自营", "自营产品", "外采", "外采产品", "外采团期", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "国内游",
+    "线路", "团期", "自由行", "单项委托",
+    "自营", "自营产品", "外采", "外采产品", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "国内游",
     "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算",
     "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量",

@@ -115,14 +115,44 @@
         <div>
           <span class="booking-section-kicker">已选产品</span>
           <strong id="selectedProductName">欧洲十国经典游·12天</strong>
-          <span id="selectedProductType" class="tag tag-blue">普通团期</span>
-          <span id="selectedFulfillmentText" class="booking-selected-meta">选择履约对象后生成销售订单</span>
+          <span id="selectedProductType" class="tag tag-blue">自营</span>
+          <span id="selectedFulfillmentText" class="booking-selected-meta">选择线路和团期后生成销售订单</span>
         </div>
         <button class="booking-change-product" type="button">更换产品×</button>
       </div>
 
+      <section class="booking-order-path" aria-label="订单链路">
+        <div class="booking-path-item">
+          <span>产品</span>
+          <strong id="bookingFlowProduct">欧洲十国经典游·12天</strong>
+        </div>
+        <div class="booking-path-item">
+          <span id="bookingFlowRouteLabel">线路</span>
+          <strong id="bookingFlowRoute">A线 法德意经典12天</strong>
+        </div>
+        <div class="booking-path-item">
+          <span id="bookingFlowScheduleLabel">团期</span>
+          <strong id="bookingFlowSchedule">EU20240715001 | 2024-07-15</strong>
+        </div>
+        <div class="booking-path-item">
+          <span>服务方式</span>
+          <strong id="bookingFlowServiceMode">团期出行</strong>
+        </div>
+      </section>
+
       <section class="booking-section" aria-labelledby="scheduleTitle">
-        <h2 id="scheduleTitle" class="booking-section-title">选择履约对象</h2>
+        <h2 id="scheduleTitle" class="booking-section-title">选择团期</h2>
+        <div class="booking-route-select-row">
+          <div class="form-group booking-route-select">
+            <label id="bookingRouteSelectLabel" class="form-label" for="bookingRouteSelect">线路</label>
+            <select id="bookingRouteSelect" class="form-control">
+              <option>A线 法德意经典12天</option>
+              <option>B线 法瑞意深度12天</option>
+              <option>亲子线 巴黎迪士尼12天</option>
+            </select>
+          </div>
+          <div id="bookingRouteNote" class="booking-route-note">同一个产品可配置多条线路，选定线路后只展示该线路下的团期。</div>
+        </div>
         <div class="table-wrap booking-schedule-table">
           <table>
             <thead>
@@ -684,7 +714,7 @@
       <section class="booking-section" aria-labelledby="submitCheckTitle">
         <h2 id="submitCheckTitle" class="booking-section-title">提交前校验</h2>
         <div class="alert alert-blue">
-          <strong id="bookingSubmitCheckTitle">普通团期订单校验</strong>
+          <strong id="bookingSubmitCheckTitle">自营订单校验</strong>
           <p id="bookingSubmitCheckText">将校验团期余位、游客证件、签证预检、联系人和应收金额，异常项进入订单风险提示。</p>
         </div>
       </section>
@@ -787,6 +817,15 @@
       const selectedProductName = document.getElementById('selectedProductName');
       const selectedProductType = document.getElementById('selectedProductType');
       const selectedFulfillmentText = document.getElementById('selectedFulfillmentText');
+      const routeSelect = document.getElementById('bookingRouteSelect');
+      const routeSelectLabel = document.getElementById('bookingRouteSelectLabel');
+      const routeNote = document.getElementById('bookingRouteNote');
+      const bookingFlowProduct = document.getElementById('bookingFlowProduct');
+      const bookingFlowRouteLabel = document.getElementById('bookingFlowRouteLabel');
+      const bookingFlowRoute = document.getElementById('bookingFlowRoute');
+      const bookingFlowScheduleLabel = document.getElementById('bookingFlowScheduleLabel');
+      const bookingFlowSchedule = document.getElementById('bookingFlowSchedule');
+      const bookingFlowServiceMode = document.getElementById('bookingFlowServiceMode');
       const studyFields = document.getElementById('studyFields');
       const cruiseFields = document.getElementById('cruiseFields');
       const trainFields = document.getElementById('trainFields');
@@ -803,14 +842,18 @@
       const productConfigs = {
         standard: {
           tag: 'tag tag-blue',
-          typeLabel: '普通团期',
+          typeLabel: '自营',
           selectedText: '选择团期后生成销售订单',
           sectionTitle: '选择团期',
+          routeLabel: '线路',
+          scheduleLabel: '团期',
+          serviceMode: '团期出行',
+          routeNote: '同一个产品可配置多条线路，选定线路后只展示该线路下的团期。',
           heads: ['出发日期', '团号', '余位'],
           baseLabel: '基础团费',
           aiTitle: '欧洲申根目的地需提前准备签证材料',
           aiText: '已识别 2 位游客，1 位证件有效期存在风险；建议确认护照有效期不少于回团后 6 个月。',
-          submitCheckTitle: '普通团期订单校验',
+          submitCheckTitle: '自营订单校验',
           submitCheckText: '将校验团期余位、游客证件、签证预检、联系人和应收金额，异常项进入订单风险提示。',
           counts: [
             { label: '成人', price: 12800, value: 2, min: 1, hint: '余3位', traveler: true },
@@ -821,19 +864,49 @@
             ['2024-07-15', 'EU20240715001', '余3位', 12800, 'danger'],
             ['2024-07-28', 'EU20240728001', '余18位', 12800, 'success'],
             ['2024-08-10', 'EU20240810001', '余30位', 12800, 'success']
+          ],
+          routes: [
+            {
+              name: 'A线 法德意经典12天',
+              rows: [
+                ['2024-07-15', 'EU20240715001', '余3位', 12800, 'danger'],
+                ['2024-07-28', 'EU20240728001', '余18位', 12800, 'success'],
+                ['2024-08-10', 'EU20240810001', '余30位', 12800, 'success']
+              ]
+            },
+            {
+              name: 'B线 法瑞意深度12天',
+              rows: [
+                ['2024-07-20', 'EU20240720002', '余12位', 13600, 'success'],
+                ['2024-08-03', 'EU20240803002', '余9位', 13600, 'success'],
+                ['2024-08-24', 'EU20240824002', '余22位', 13900, 'success']
+              ]
+            },
+            {
+              name: '亲子线 巴黎迪士尼12天',
+              rows: [
+                ['2024-07-22', 'EU20240722003', '余5位', 14800, 'danger'],
+                ['2024-08-06', 'EU20240806003', '余16位', 14800, 'success'],
+                ['2024-08-18', 'EU20240818003', '余20位', 15200, 'success']
+              ]
+            }
           ]
         },
         cruise: {
           tag: 'tag tag-purple',
-          typeLabel: '邮轮航次',
-          selectedText: '选择航次和舱型后生成销售订单',
-          sectionTitle: '选择航次',
-          heads: ['开航日期', '航次号', '舱位库存'],
+          typeLabel: '邮轮',
+          selectedText: '选择团期和舱型后生成销售订单',
+          sectionTitle: '选择团期',
+          routeLabel: '线路',
+          scheduleLabel: '团期',
+          serviceMode: '团期出行',
+          routeNote: '邮轮产品仍统一按线路和团期展示，团期下继续管理舱型和舱房库存。',
+          heads: ['开航日期', '团号', '舱位库存'],
           baseLabel: '邮轮舱位费',
           aiTitle: '邮轮订单需核对登船资料和护照有效期',
-          aiText: '系统将校验登船港、舱型、护照有效期和岸上游资料；舱房确认后同步进入航次履约。',
+          aiText: '系统将校验登船港、舱型、护照有效期和岸上游资料；舱房确认后同步进入出行服务。',
           submitCheckTitle: '邮轮订单校验',
-          submitCheckText: '将校验航次、舱型偏好、登船港、岸上观光、护照有效期和舱房库存，舱房未确认时订单进入待确认状态。',
+          submitCheckText: '将校验团期、舱型偏好、登船港、岸上观光、护照有效期和舱房库存，舱房未确认时订单进入待确认状态。',
           counts: [
             { label: '成人', price: 28800, value: 2, min: 1, hint: '阳台房余8间', traveler: true },
             { label: '儿童', price: 19800, value: 0, min: 0, hint: '', traveler: true },
@@ -843,19 +916,41 @@
             ['2025-07-20', 'CR-MED-20250720-001', '阳台房余8间', 28800, 'success'],
             ['2025-08-03', 'CR-MED-20250803-001', '海景房余12间', 27500, 'success'],
             ['2025-09-01', 'CR-MED-20250901-001', '套房余2间', 42800, 'danger']
+          ],
+          routes: [
+            {
+              name: '地中海经典线14天',
+              rows: [
+                ['2025-07-20', 'CR-MED-20250720-001', '阳台房余8间', 28800, 'success'],
+                ['2025-08-03', 'CR-MED-20250803-001', '海景房余12间', 27500, 'success'],
+                ['2025-09-01', 'CR-MED-20250901-001', '套房余2间', 42800, 'danger']
+              ]
+            },
+            {
+              name: '西地中海亲子线12天',
+              rows: [
+                ['2025-08-10', 'CR-MED-20250810-002', '阳台房余6间', 30500, 'success'],
+                ['2025-08-24', 'CR-MED-20250824-002', '内舱房余18间', 26800, 'success'],
+                ['2025-09-07', 'CR-MED-20250907-002', '家庭房余3间', 35600, 'danger']
+              ]
+            }
           ]
         },
         train: {
           tag: 'tag tag-orange',
-          typeLabel: '专列班期',
-          selectedText: '选择班期、铺位和上下车站后生成销售订单',
-          sectionTitle: '选择专列班期',
-          heads: ['发车日期', '班期号', '铺位库存'],
+          typeLabel: '专列',
+          selectedText: '选择团期、铺位和上下车站后生成销售订单',
+          sectionTitle: '选择团期',
+          routeLabel: '线路',
+          scheduleLabel: '团期',
+          serviceMode: '团期出行',
+          routeNote: '专列销售口径仍按线路和团期处理，团期下继续确认铺位、上车站和随车服务。',
+          heads: ['发车日期', '团号', '铺位库存'],
           baseLabel: '专列铺位费',
           aiTitle: '专列订单需核对铺位、上车站和随车服务',
           aiText: '系统将同步检查铺位库存、上下车站、随车餐饮和特殊照护需求。',
           submitCheckTitle: '专列订单校验',
-          submitCheckText: '将校验班期、铺位偏好、上车站、随车餐饮和铺位库存，上下车站未开放时不可生成订单。',
+          submitCheckText: '将校验团期、铺位偏好、上车站、随车餐饮和铺位库存，上下车站未开放时不可生成订单。',
           counts: [
             { label: '成人铺位', price: 19800, value: 2, min: 1, hint: '软卧余12铺', traveler: true },
             { label: '儿童铺位', price: 16800, value: 0, min: 0, hint: '', traveler: true },
@@ -865,6 +960,24 @@
             ['2025-08-05', 'TR-SILK-20250805-001', '软卧余12铺', 19800, 'success'],
             ['2025-08-22', 'TR-SILK-20250822-001', '下铺余4铺', 20800, 'danger'],
             ['2025-09-10', 'TR-SILK-20250910-001', '包厢余6间', 22600, 'success']
+          ],
+          routes: [
+            {
+              name: '丝路经典线9天',
+              rows: [
+                ['2025-08-05', 'TR-SILK-20250805-001', '软卧余12铺', 19800, 'success'],
+                ['2025-08-22', 'TR-SILK-20250822-001', '下铺余4铺', 20800, 'danger'],
+                ['2025-09-10', 'TR-SILK-20250910-001', '包厢余6间', 22600, 'success']
+              ]
+            },
+            {
+              name: '河西走廊深度线10天',
+              rows: [
+                ['2025-08-12', 'TR-HX-20250812-001', '软卧余18铺', 21800, 'success'],
+                ['2025-09-02', 'TR-HX-20250902-001', '下铺余8铺', 22600, 'success'],
+                ['2025-09-21', 'TR-HX-20250921-001', '包厢余4间', 24800, 'danger']
+              ]
+            }
           ]
         },
         free: {
@@ -872,12 +985,16 @@
           typeLabel: '自由行',
           selectedText: '选择出行日期和资源套餐后生成销售订单，不进入团期列表',
           sectionTitle: '选择出行日期/资源套餐',
+          routeLabel: '资源套餐',
+          scheduleLabel: '出行日期',
+          serviceMode: '订单服务',
+          routeNote: '自由行不进入团期列表，按订单确认酒店、门票、接送和票务资源。',
           heads: ['出行日期', '资源包', '库存'],
           baseLabel: '自由行套餐费',
           aiTitle: '自由行订单重点校验酒店、接送和票务库存',
-          aiText: '系统会按入住日期核对酒店房态、接送机资源和门票库存，后续进入订单履约。',
+          aiText: '系统会按入住日期核对酒店房态、接送机资源和门票库存，后续进入订单服务。',
           submitCheckTitle: '自由行订单校验',
-          submitCheckText: '将校验入住日期、酒店/房型、资源套餐、房态和接送资源；自由行订单不进入团期列表，直接进入订单履约。',
+          submitCheckText: '将校验入住日期、酒店/房型、资源套餐、房态和接送资源；自由行订单不进入团期列表，直接进入订单服务。',
           counts: [
             { label: '成人', price: 6800, value: 2, min: 1, hint: '房态余4间', traveler: true },
             { label: '儿童', price: 4200, value: 0, min: 0, hint: '', traveler: true },
@@ -887,6 +1004,32 @@
             ['2026-07-18', '亚特兰蒂斯海景房+接送机', '余4间', 6800, 'danger'],
             ['2026-07-22', '海棠湾亲子酒店+门票', '余10间', 6200, 'success'],
             ['2026-08-08', '吉隆坡酒店+接送机', '余22间', 7200, 'success']
+          ],
+          routes: [
+            {
+              name: '亚特兰蒂斯亲子套餐',
+              rows: [
+                ['2026-07-18', '亚特兰蒂斯海景房+接送机', '余4间', 6800, 'danger'],
+                ['2026-07-22', '亚特兰蒂斯海景房+水世界', '余8间', 7200, 'success'],
+                ['2026-08-08', '亚特兰蒂斯亲子套房+接送机', '余6间', 8600, 'success']
+              ]
+            },
+            {
+              name: '海棠湾亲子套餐',
+              rows: [
+                ['2026-07-20', '海棠湾亲子酒店+门票', '余10间', 6200, 'success'],
+                ['2026-08-03', '海棠湾亲子酒店+旅拍', '余14间', 6500, 'success'],
+                ['2026-08-18', '海棠湾亲子酒店+接送机', '余5间', 6800, 'danger']
+              ]
+            },
+            {
+              name: '北京故宫讲解套餐',
+              rows: [
+                ['2026-07-20', '王府井酒店+故宫讲解', '余16间', 3800, 'success'],
+                ['2026-08-01', '中轴线讲解+亲子课程', '余12间', 4200, 'success'],
+                ['2026-08-15', '故宫讲解+颐和园门票', '余9间', 4600, 'success']
+              ]
+            }
           ]
         },
         single: {
@@ -894,6 +1037,10 @@
           typeLabel: '单项委托',
           selectedText: '选择服务项和办理材料后生成委托服务订单',
           sectionTitle: '选择委托服务',
+          routeLabel: '服务项',
+          scheduleLabel: '受理安排',
+          serviceMode: '委托服务',
+          routeNote: '单项委托按服务单处理，不生成团期；订单只跟踪材料、办理和交付节点。',
           heads: ['服务项目', '服务单号', '材料/时效'],
           baseLabel: '委托服务费',
           aiTitle: '单项委托订单重点校验材料完整性',
@@ -909,19 +1056,49 @@
             ['日本签证代办', 'WT20250701001', '材料待收/8-10个工作日', 980, 'success'],
             ['护照翻译认证', 'WT20250701002', '材料已齐/3个工作日', 360, 'success'],
             ['国际驾照翻译件', 'WT20250701003', '可加急/1个工作日', 280, 'success']
+          ],
+          routes: [
+            {
+              name: '日本签证代办',
+              rows: [
+                ['日本签证代办', 'WT20250701001', '材料待收/8-10个工作日', 980, 'success'],
+                ['日本签证加急', 'WT20250701004', '材料已齐/5个工作日', 1280, 'success'],
+                ['日本签证多人送签', 'WT20250701005', '3人起/8-10个工作日', 900, 'success']
+              ]
+            },
+            {
+              name: '护照翻译认证',
+              rows: [
+                ['护照翻译认证', 'WT20250701002', '材料已齐/3个工作日', 360, 'success'],
+                ['驾照翻译认证', 'WT20250701006', '可加急/2个工作日', 420, 'success'],
+                ['亲属关系翻译', 'WT20250701007', '需原件/3个工作日', 520, 'success']
+              ]
+            },
+            {
+              name: '国际驾照翻译件',
+              rows: [
+                ['国际驾照翻译件', 'WT20250701003', '可加急/1个工作日', 280, 'success'],
+                ['驾照公证协办', 'WT20250701008', '材料待收/5个工作日', 680, 'success'],
+                ['租车资料包', 'WT20250701009', '电子交付/1个工作日', 180, 'success']
+              ]
+            }
           ]
         },
         study: {
           tag: 'tag tag-green',
-          typeLabel: '研学营期',
-          selectedText: '选择营期并填写学生、监护人和安全材料',
-          sectionTitle: '选择研学营期',
-          heads: ['开营日期', '营期号', '名额'],
+          typeLabel: '研学',
+          selectedText: '选择团期并填写学生、监护人和安全材料',
+          sectionTitle: '选择团期',
+          routeLabel: '线路',
+          scheduleLabel: '团期',
+          serviceMode: '团期出行',
+          routeNote: '研学按线路和团期销售，团期下继续管理学员资料、监护授权和安全材料。',
+          heads: ['开营日期', '团号', '名额'],
           baseLabel: '研学营费',
           aiTitle: '研学订单需核对监护授权和健康材料',
           aiText: '系统将检查学生资料、监护人信息、保险、健康备注和授权书，异常项进入人工复核。',
           submitCheckTitle: '研学订单校验',
-          submitCheckText: '将校验营期名额、学生年级、学校、监护人、健康备注和授权材料，缺少监护信息时不可生成订单。',
+          submitCheckText: '将校验团期名额、学生年级、学校、监护人、健康备注和授权材料，缺少监护信息时不可生成订单。',
           counts: [
             { label: '学生', price: 9600, value: 1, min: 1, hint: '余26名', traveler: true },
             { label: '随行家长', price: 6800, value: 0, min: 0, hint: '', traveler: true },
@@ -931,6 +1108,32 @@
             ['2025-08-01', 'ST-EUR-20250801-001', '余26名', 16600, 'success'],
             ['2025-08-12', 'ST-SG-20250812-001', '余18名', 9600, 'success'],
             ['2025-08-20', 'ST-BJ-20250820-001', '余6名', 6200, 'danger']
+          ],
+          routes: [
+            {
+              name: '北京航天研学线5天',
+              rows: [
+                ['2025-08-20', 'ST-BJ-20250820-001', '余6名', 6200, 'danger'],
+                ['2025-09-06', 'ST-BJ-20250906-001', '余22名', 6200, 'success'],
+                ['2025-10-01', 'ST-BJ-20251001-001', '余30名', 6800, 'success']
+              ]
+            },
+            {
+              name: '新加坡科技研学线6天',
+              rows: [
+                ['2025-08-12', 'ST-SG-20250812-001', '余18名', 9600, 'success'],
+                ['2025-08-26', 'ST-SG-20250826-001', '余12名', 9800, 'success'],
+                ['2025-09-15', 'ST-SG-20250915-001', '余28名', 9600, 'success']
+              ]
+            },
+            {
+              name: '欧洲艺术研学线10天',
+              rows: [
+                ['2025-08-01', 'ST-EUR-20250801-001', '余26名', 16600, 'success'],
+                ['2025-08-18', 'ST-EUR-20250818-001', '余14名', 17200, 'success'],
+                ['2025-09-05', 'ST-EUR-20250905-001', '余8名', 16800, 'danger']
+              ]
+            }
           ]
         }
       };
@@ -975,12 +1178,51 @@
         return { name: name, price: price, count: count, total: price * count };
       }
 
+      function getActiveRoute(config) {
+        const routes = config.routes || [];
+        return routes.find(function (route) {
+          return route.name === routeSelect.value;
+        }) || routes[0] || null;
+      }
+
+      function updateRouteSelector(config) {
+        const routes = config.routes || [];
+        routeSelectLabel.textContent = config.routeLabel || '线路';
+        routeSelect.innerHTML = routes.map(function (route) {
+          return '<option>' + route.name + '</option>';
+        }).join('');
+        routeSelect.disabled = routes.length <= 1;
+        routeNote.textContent = config.routeNote || '';
+        bookingFlowRouteLabel.textContent = config.routeLabel || '线路';
+        bookingFlowScheduleLabel.textContent = config.scheduleLabel || '团期';
+      }
+
+      function updateBookingFlow() {
+        const config = productConfigs[currentKind] || productConfigs.standard;
+        const selectedRow = fulfillmentRows.querySelector('tr.selected');
+        const dateText = selectedRow ? selectedRow.cells[0].textContent : '';
+        const codeText = selectedRow ? selectedRow.cells[1].textContent : '';
+        const routeText = routeSelect.value || (getActiveRoute(config) ? getActiveRoute(config).name : '');
+        const scheduleText = currentKind === 'free'
+          ? dateText + ' | ' + codeText
+          : currentKind === 'single'
+            ? codeText + ' | ' + dateText
+            : codeText + ' | ' + dateText;
+        bookingFlowProduct.textContent = selectedProductName.textContent;
+        bookingFlowRoute.textContent = routeText || '-';
+        bookingFlowSchedule.textContent = scheduleText || '-';
+        bookingFlowServiceMode.textContent = config.serviceMode || config.typeLabel;
+        selectedFulfillmentText.textContent = (config.routeLabel || '线路') + '：' + (routeText || '-') + ' | ' + (config.scheduleLabel || '团期') + '：' + (scheduleText || '-');
+      }
+
       function renderFulfillmentRows(config) {
         document.getElementById('scheduleTitle').textContent = config.sectionTitle;
         document.getElementById('fulfillmentDateHead').textContent = config.heads[0];
         document.getElementById('fulfillmentCodeHead').textContent = config.heads[1];
         document.getElementById('fulfillmentStockHead').textContent = config.heads[2];
-        fulfillmentRows.innerHTML = config.rows.map(function (row, index) {
+        const route = getActiveRoute(config);
+        const rows = route && route.rows ? route.rows : config.rows;
+        fulfillmentRows.innerHTML = rows.map(function (row, index) {
           const stockClass = row[4] === 'danger' ? 'booking-seat-danger' : 'booking-seat-success';
           const action = index === 0 ? '<span class="tag tag-blue">已选</span>' : '<button class="btn btn-secondary btn-sm" type="button" data-select-schedule>选择</button>';
           return '<tr' + (index === 0 ? ' class="selected"' : '') + ' data-schedule-row>' +
@@ -991,6 +1233,7 @@
             '<td>' + action + '</td>' +
           '</tr>';
         }).join('');
+        updateBookingFlow();
       }
 
       function updateCountConfig(config) {
@@ -1009,6 +1252,26 @@
           input.value = String(countConfig.value);
           input.setAttribute('aria-label', countConfig.label + '数量');
           item.dataset.travelerCount = countConfig.traveler ? 'true' : 'false';
+        });
+      }
+
+      function selectedSchedulePrice() {
+        const selectedRow = fulfillmentRows.querySelector('tr.selected');
+        if (!selectedRow) return 0;
+        return Number(selectedRow.cells[3].textContent.replace(/[^\d.]/g, '')) || 0;
+      }
+
+      function updateCountPricesFromSchedule(config) {
+        const basePrice = selectedSchedulePrice();
+        if (!basePrice || !config.counts || !config.counts.length || !config.counts[0].price) return;
+        const factor = basePrice / config.counts[0].price;
+        document.querySelectorAll('[data-count-slot]').forEach(function (item, index) {
+          const countConfig = config.counts[index];
+          if (!countConfig) return;
+          const stepper = item.querySelector('[data-stepper]');
+          if (!stepper) return;
+          const nextPrice = countConfig.price ? Math.round(countConfig.price * factor) : 0;
+          stepper.dataset.unitPrice = String(nextPrice);
         });
       }
 
@@ -1032,19 +1295,23 @@
         document.querySelector('.booking-ai-visa-panel p').textContent = config.aiText;
         document.getElementById('bookingSubmitCheckTitle').textContent = config.submitCheckTitle;
         document.getElementById('bookingSubmitCheckText').textContent = config.submitCheckText;
-        renderFulfillmentRows(config);
+        updateRouteSelector(config);
         updateCountConfig(config);
+        renderFulfillmentRows(config);
+        updateCountPricesFromSchedule(config);
       }
 
       function collectMissingFields() {
         const requiredByKind = {
           standard: [
+            ['#bookingRouteSelect', '线路'],
             ['#mainTravelerName', '主游客姓名'],
             ['#mainTravelerDocNo', '主游客证件号'],
             ['#contactName', '联系人姓名'],
             ['#contactPhone', '联系人手机']
           ],
           cruise: [
+            ['#bookingRouteSelect', '线路'],
             ['#cabinPreference', '舱型偏好'],
             ['#cruisePort', '登船港'],
             ['#shorePackage', '岸上观光'],
@@ -1052,24 +1319,28 @@
             ['#contactPhone', '联系人手机']
           ],
           train: [
+            ['#bookingRouteSelect', '线路'],
             ['#berthPreference', '铺位偏好'],
             ['#boardingStation', '上车站'],
             ['#trainMeal', '随车餐饮'],
             ['#contactPhone', '联系人手机']
           ],
           free: [
+            ['#bookingRouteSelect', '资源套餐'],
             ['#freeHotel', '酒店/房型'],
             ['#freePackage', '资源套餐'],
             ['#freeCheckIn', '入住日期'],
             ['#contactPhone', '联系人手机']
           ],
           single: [
+            ['#bookingRouteSelect', '服务项'],
             ['#serviceItem', '委托服务项'],
             ['#materialStatus', '材料状态'],
             ['#serviceRequirement', '办理要求'],
             ['#contactPhone', '联系人手机']
           ],
           study: [
+            ['#bookingRouteSelect', '线路'],
             ['#studentGrade', '年级'],
             ['#studentSchool', '学校名称'],
             ['#guardianName', '监护人姓名'],
@@ -1105,6 +1376,14 @@
 
       searchInput.addEventListener('input', filterProducts);
 
+      routeSelect.addEventListener('change', function () {
+        const config = productConfigs[currentKind] || productConfigs.standard;
+        updateCountConfig(config);
+        renderFulfillmentRows(config);
+        updateCountPricesFromSchedule(config);
+        updateSubtotal();
+      });
+
       productCards.forEach(function (card) {
         card.addEventListener('click', function () {
           productCards.forEach(function (item) {
@@ -1128,6 +1407,9 @@
         });
         row.classList.add('selected');
         row.lastElementChild.innerHTML = '<span class="tag tag-blue">已选</span>';
+        updateCountPricesFromSchedule(productConfigs[currentKind] || productConfigs.standard);
+        updateBookingFlow();
+        updateSubtotal();
       });
 
       function updateSubtotal() {
@@ -1249,6 +1531,7 @@
         window.caesarNavigateTo(href);
       }
 
+      updateProductSpecificFields(currentKind);
       updateSubtotal();
     })();
   </script>
