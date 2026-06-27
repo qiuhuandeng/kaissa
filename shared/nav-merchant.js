@@ -125,22 +125,22 @@
         {
           title: "OTA运营",
           children: [
-            { title: "OTA产品", href: "../channel/ota_products.html" },
-            { title: "OTA订单", href: "../channel/ota_orders.html" },
-            { title: "OTA退款", href: "../channel/ota_refunds.html" },
-            { title: "OTA对账", href: "../channel/ota_reconcile.html" },
+            { title: "OTA产品", href: "channel/ota_products.html" },
+            { title: "OTA订单", href: "channel/ota_orders.html" },
+            { title: "OTA退款", href: "channel/ota_refunds.html" },
+            { title: "OTA对账", href: "channel/ota_reconcile.html" },
           ],
         },
-        { title: "分销渠道管理", href: "../channel/distributors.html" },
-        { title: "同行代理管理", href: "../channel/agents.html" },
-        { title: "佣金规则", href: "../channel/commission_rules.html" },
+        { title: "分销渠道管理", href: "channel/distributors.html" },
+        { title: "同行代理管理", href: "channel/agents.html" },
+        { title: "佣金规则", href: "channel/commission_rules.html" },
       ],
     },
     {
       title: "客户",
       icon: "users",
       children: [
-        { title: "客户列表", href: "../customer/list.html" },
+        { title: "客户列表", href: "customer/list.html" },
       ],
     },
     {
@@ -190,15 +190,17 @@
         { title: "竞品分析", href: "ai/competitor.html", ai: true },
         { title: "签证审查", href: "ai/visa_checker.html", ai: true },
         { title: "出行助理", href: "ai/travel_assistant.html", ai: true },
-        { title: "Prompt模板", href: "ai/prompts.html", ai: true },
-        { title: "模型路由", href: "ai/model_routing.html", ai: true },
       ],
     },
     {
-      title: "系统",
+      title: "企业配置",
       icon: "settings",
       children: [
-        { title: "角色权限", href: "system/settings-roles.html" },
+        { title: "组织管理", href: "system/my-org.html" },
+        { title: "员工管理", href: "system/staff-management.html" },
+        { title: "角色授权", href: "system/role-assignment.html" },
+        { title: "通知模板", href: "system/notice-templates.html" },
+        { title: "业务参数", href: "system/business-params.html" },
       ],
     },
   ];
@@ -236,7 +238,7 @@
     财务: "财务",
     审批: "审批",
     AI: "AI",
-    系统: "系统",
+    企业配置: "企业",
   };
 
   const primaryFullLabels = {
@@ -249,8 +251,8 @@
     客户: "客户管理",
     财务: "财务管理",
     审批: "审批中心",
-    AI: "AI中心",
-    系统: "系统设置",
+    AI: "AI工具",
+    企业配置: "企业配置",
   };
 
   function createIcon(name) {
@@ -340,6 +342,8 @@
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采产品包装" },
     "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期配额" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "产品类待审批" },
+    "system/data-scope.html": { href: "system/role-assignment.html", title: "角色授权" },
+    "system/hr-requests.html": { href: "approval/approvals.html?view=mine", title: "我发起的" },
     "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学产品编辑" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
     "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
@@ -353,18 +357,15 @@
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
     "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队排班" },
-    "customer/customers-detail.html": { href: "../customer/list.html", title: "客户详情", tabHref: "../merchant/customer/customers-detail.html" },
-    "system/design-pages.html": { href: "system/settings-roles.html", title: "C端页面管理" },
-    "system/design-editor.html": { href: "system/design-pages.html", title: "C端页面编辑" },
-    "ota_products.html": { href: "../channel/ota_products.html", title: "OTA产品", tabHref: "../channel/ota_products.html" },
-    "ota_orders.html": { href: "../channel/ota_orders.html", title: "OTA订单", tabHref: "../channel/ota_orders.html" },
-    "ota_refunds.html": { href: "../channel/ota_refunds.html", title: "OTA退款", tabHref: "../channel/ota_refunds.html" },
-    "ota_reconcile.html": { href: "../channel/ota_reconcile.html", title: "OTA对账", tabHref: "../channel/ota_reconcile.html" },
-    "distributors.html": { href: "../channel/distributors.html", title: "分销渠道管理", tabHref: "../channel/distributors.html" },
-    "agents.html": { href: "../channel/agents.html", title: "同行代理管理", tabHref: "../channel/agents.html" },
-    "commission_rules.html": { href: "../channel/commission_rules.html", title: "佣金规则", tabHref: "../channel/commission_rules.html" },
-    "list.html": { href: "../customer/list.html", title: "客户列表", tabHref: "../customer/list.html" },
-    "detail.html": { href: "../customer/list.html", title: "客户详情", tabHref: "../customer/detail.html" },
+    "customer/customers-detail.html": { href: "customer/list.html", title: "客户详情" },
+    "customer/detail.html": { href: "customer/list.html", title: "客户详情" },
+    "channel/ota_products.html": { href: "channel/ota_products.html", title: "OTA产品" },
+    "channel/ota_orders.html": { href: "channel/ota_orders.html", title: "OTA订单" },
+    "channel/ota_refunds.html": { href: "channel/ota_refunds.html", title: "OTA退款" },
+    "channel/ota_reconcile.html": { href: "channel/ota_reconcile.html", title: "OTA对账" },
+    "channel/distributors.html": { href: "channel/distributors.html", title: "分销渠道管理" },
+    "channel/agents.html": { href: "channel/agents.html", title: "同行代理管理" },
+    "channel/commission_rules.html": { href: "channel/commission_rules.html", title: "佣金规则" },
   };
 
   const organizationTree = [
@@ -1143,7 +1144,7 @@
 
     const logo = document.createElement("div");
     logo.className = "sidebar-logo caesar-brand-logo";
-    logo.setAttribute("aria-label", "凯撒旅游");
+    logo.setAttribute("aria-label", "凯撒");
     logo.innerHTML = [
       '<span class="caesar-brand-mark" aria-hidden="true">',
       '<svg viewBox="0 0 40 40" focusable="false">',

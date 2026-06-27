@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色授权 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="merchant-auth-page">
+    <section class="list-page-panel">
+      <div class="list-page-head">
+        <div>
+          <h1 class="page-title">角色授权</h1>
+        </div>
+        <div class="list-page-actions">
+          <button class="btn btn-primary" type="button" data-open-auth-request>发起授权申请</button>
+        </div>
+      </div>
+      <div class="filter-card filter-card-compact">
+        <div class="filter-row">
+          <div class="filter-item">
+            <input class="form-control" type="search" placeholder="搜索员工/角色">
+          </div>
+          <div class="filter-item-sm">
+            <select class="form-control" aria-label="角色">
+              <option>全部角色</option>
+              <option>销售顾问</option>
+              <option>计调专员</option>
+              <option>产品经理</option>
+              <option>门店店长</option>
+            </select>
+          </div>
+          <div class="filter-item-sm">
+            <select class="form-control" aria-label="状态">
+              <option>全部状态</option>
+              <option>已生效</option>
+              <option>待审批</option>
+              <option>已拒绝</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-secondary" type="button">查询</button>
+            <button class="btn btn-secondary" type="button">重置</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap merchant-auth-table">
+        <table>
+          <thead>
+            <tr>
+              <th>员工</th>
+              <th>当前角色</th>
+              <th>当前数据范围</th>
+              <th>可申请角色上限</th>
+              <th>可申请数据上限</th>
+              <th>上限来源</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>孙丽</td>
+              <td>销售顾问</td>
+              <td>销售订单：本门店；客户：本门店</td>
+              <td>销售顾问、客服专员</td>
+              <td>本门店</td>
+              <td><span class="tag tag-blue">admin角色模板</span></td>
+              <td><span class="tag tag-green">已生效</span></td>
+              <td><button class="btn-text" type="button" data-open-auth-request>申请调整</button></td>
+            </tr>
+            <tr>
+              <td>周伟</td>
+              <td>计调专员</td>
+              <td>团期执行：本部门；成本：脱敏</td>
+              <td>计调专员、产品经理</td>
+              <td>本部门</td>
+              <td><span class="tag tag-blue">admin数据上限</span></td>
+              <td><span class="tag tag-green">已生效</span></td>
+              <td><button class="btn-text" type="button" data-open-auth-request>申请调整</button></td>
+            </tr>
+            <tr>
+              <td>吴芳</td>
+              <td>产品经理</td>
+              <td>产品：本管理中心；AI：业务工具</td>
+              <td>产品经理</td>
+              <td>本管理中心</td>
+              <td><span class="tag tag-blue">admin角色模板</span></td>
+              <td><span class="tag tag-orange">待审批</span></td>
+              <td><button class="btn-text" type="button" data-open-auth-request>申请调整</button></td>
+            </tr>
+            <tr>
+              <td>李梅</td>
+              <td>产品总监</td>
+              <td>产品：本主体；数据：本主体</td>
+              <td>产品总监</td>
+              <td>本主体</td>
+              <td><span class="tag tag-blue">admin角色模板</span></td>
+              <td><span class="tag tag-green">已生效</span></td>
+              <td><button class="btn-text" type="button" data-open-auth-request>申请调整</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay drawer-overlay" aria-hidden="true" data-auth-request-drawer>
+    <div class="modal drawer-modal merchant-request-drawer" role="dialog" aria-modal="true" aria-labelledby="authRequestTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="authRequestTitle">角色授权申请</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-auth-request>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="authEmployee">员工</label>
+            <select class="form-control" id="authEmployee">
+              <option>孙丽</option>
+              <option>周伟</option>
+              <option>吴芳</option>
+              <option>李梅</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="authType">申请类型</label>
+            <select class="form-control" id="authType">
+              <option>角色调整</option>
+              <option>数据范围调整</option>
+              <option>角色与数据范围同时调整</option>
+              <option>临时授权</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="authRole">申请角色</label>
+            <select class="form-control" id="authRole">
+              <option>销售顾问</option>
+              <option>客服专员</option>
+              <option>计调专员</option>
+              <option>产品经理</option>
+              <option>门店店长</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="authScope">申请数据范围</label>
+            <select class="form-control" id="authScope">
+              <option>本人</option>
+              <option>本门店/本部门</option>
+              <option>本管理中心</option>
+              <option>本主体（需审批）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="authModules">授权业务模块</label>
+            <select class="form-control" id="authModules" multiple size="5">
+              <option selected>销售订单</option>
+              <option>客户列表</option>
+              <option>产品管理</option>
+              <option>团期执行</option>
+              <option>AI业务工具</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="authExpire">临时授权到期</label>
+            <input class="form-control" id="authExpire" type="date">
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="authReason">申请原因</label>
+            <textarea class="form-control" id="authReason" rows="4" placeholder="说明业务场景、需要访问的数据范围和是否临时授权"></textarea>
+          </div>
+        </div>
+        <div class="merchant-approval-note">业务端只能在 admin 下发的角色模板和数据上限内申请；超过上限会进入租户管理员审批或被系统拦截。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-auth-request>取消</button>
+        <button class="btn btn-primary" type="button" data-close-auth-request>提交申请</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var drawer = document.querySelector("[data-auth-request-drawer]");
+
+      function openDrawer() {
+        drawer.classList.add("show");
+        drawer.setAttribute("aria-hidden", "false");
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove("show");
+        drawer.setAttribute("aria-hidden", "true");
+      }
+
+      document.querySelectorAll("[data-open-auth-request]").forEach(function (button) {
+        button.addEventListener("click", openDrawer);
+      });
+
+      document.querySelectorAll("[data-close-auth-request]").forEach(function (button) {
+        button.addEventListener("click", closeDrawer);
+      });
+    })();
+  </script>
+</body>
+</html>

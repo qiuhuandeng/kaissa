@@ -24,14 +24,13 @@
 | --- | --- | --- |
 | ready | merchant/ai/ai-assistant.html | 可直接纳入内容路由 |
 | ready | merchant/ai/competitor.html | 可直接纳入内容路由 |
-| ready | merchant/ai/model_routing.html | 可直接纳入内容路由 |
-| ready | merchant/ai/prompts.html | 可直接纳入内容路由 |
+| ready | admin/ai/model_routing.html | 可直接纳入内容路由 |
+| ready | admin/ai/prompts.html | 可直接纳入内容路由 |
 | ready | merchant/ai/route_parser.html | 可直接纳入内容路由 |
 | ready | merchant/ai/travel_assistant.html | 可直接纳入内容路由 |
 | ready | merchant/ai/visa_checker.html | 可直接纳入内容路由 |
 | ready | merchant/approval/approval-product-review.html | 可直接纳入内容路由 |
 | ready | merchant/approval/approvals.html | 可直接纳入内容路由 |
-| ready | merchant/channel/channel-commission.html | 可直接纳入内容路由 |
 | ready | merchant/customer/customers-detail.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard-group.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard-store.html | 可直接纳入内容路由 |
@@ -63,7 +62,6 @@
 | ready | merchant/product/product-single-orders.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-study-edit.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-study-products.html | 可直接纳入内容路由 |
-| ready | merchant/product/product-study-tour-routes.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-train-routes.html | 可直接纳入内容路由 |
 | ready | merchant/product/products-detail.html | 可直接纳入内容路由 |
 | ready | merchant/product/products.html | 可直接纳入内容路由 |
@@ -93,11 +91,7 @@
 | ready | merchant/sales/sales-product-quote.html | 可直接纳入内容路由 |
 | ready | merchant/sales/store/detail.html | 可直接纳入内容路由 |
 | ready | merchant/sales/store/index.html | 可直接纳入内容路由 |
-| ready | merchant/sales/stores.html | 可直接纳入内容路由 |
 | excluded | merchant/select-workspace.html | [excluded] 不纳入后台内容路由审计范围 |
-| ready | merchant/system/design-editor.html | 可直接纳入内容路由 |
-| ready | merchant/system/design-pages.html | 可直接纳入内容路由 |
-| ready | merchant/system/settings-roles.html | 可直接纳入内容路由 |
 | ready | merchant/tour/fulfillment-cost.html | 可直接纳入内容路由 |
 | ready | merchant/tour/fulfillment-documents.html | 可直接纳入内容路由 |
 | ready | merchant/tour/fulfillment-notice.html | 可直接纳入内容路由 |

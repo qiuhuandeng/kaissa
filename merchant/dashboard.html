@@ -255,11 +255,13 @@
           <input id="opsAiInput" class="form-control" type="text" placeholder="例如：帮我检查6月25日出发团的风险">
           <a id="opsAiStart" class="btn btn-primary" href="ai/ai-assistant.html">开始对话</a>
         </div>
+        <div class="alert alert-red ops-ai-guard" data-ai-guard hidden></div>
         <div class="ops-ai-shortcuts" aria-label="快捷指令">
           <button class="ops-ai-chip" type="button" data-ai-prompt="检查今日出发风险">检查今日出发风险</button>
           <button class="ops-ai-chip" type="button" data-ai-prompt="生成出团通知">生成出团通知</button>
           <button class="ops-ai-chip" type="button" data-ai-prompt="汇总证件缺失名单">汇总证件缺失名单</button>
           <button class="ops-ai-chip" type="button" data-ai-prompt="预测团期毛利">预测团期毛利</button>
+          <button class="ops-ai-chip" type="button" data-ai-prompt="帮我上架欧洲十国经典游">上架欧洲十国经典游</button>
         </div>
         <div class="ops-ai-insight-list" aria-label="AI主动提醒">
           <div>
@@ -327,6 +329,22 @@
       var aiOpenButton = document.querySelector("[data-open-ops-ai]");
       var aiCloseButton = document.querySelector("[data-close-ops-ai]");
       var aiInput = document.getElementById("opsAiInput");
+      var aiStart = document.getElementById("opsAiStart");
+      var aiGuard = document.querySelector("[data-ai-guard]");
+      var deniedAiRules = [
+        {
+          pattern: /上架|下架|发布|提交审核|渠道授权|改价|删除产品/,
+          message: "当前账号缺少产品上架/发布权限，AI不能代为执行。可申请业务角色中的产品管理、产品编辑、提交审核和渠道上架权限。"
+        },
+        {
+          pattern: /全集团|全租户|全部订单|全部客户|导出客户|导出订单/,
+          message: "当前账号只能访问授权组织内数据，AI不能查询或导出超出数据范围的订单、客户或财务信息。"
+        },
+        {
+          pattern: /执行退款|执行付款|推送NC|确认入账/,
+          message: "当前账号缺少财务高危动作权限，AI不能执行退款、付款、入账或NC推送。"
+        }
+      ];
 
       function setAiOpen(open) {
         if (!focusLayout || !aiDock || !aiOpenButton) return;
@@ -401,9 +419,35 @@
           if (aiInput) {
             aiInput.value = chip.dataset.aiPrompt || chip.textContent.trim();
             aiInput.focus();
+            checkAiPermission(aiInput.value);
           }
         });
       });
+
+      function checkAiPermission(value) {
+        var text = (value || "").trim();
+        var denied = deniedAiRules.find(function (rule) {
+          return rule.pattern.test(text);
+        });
+        if (!aiGuard) return !denied;
+        aiGuard.hidden = !denied;
+        aiGuard.textContent = denied ? denied.message : "";
+        return !denied;
+      }
+
+      if (aiInput) {
+        aiInput.addEventListener("input", function () {
+          checkAiPermission(aiInput.value);
+        });
+      }
+
+      if (aiStart) {
+        aiStart.addEventListener("click", function (event) {
+          if (!checkAiPermission(aiInput ? aiInput.value : "")) {
+            event.preventDefault();
+          }
+        });
+      }
     })();
   </script>
 </body>

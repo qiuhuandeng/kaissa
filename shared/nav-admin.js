@@ -3,46 +3,73 @@
   const menu = [
     { title: "工作台", icon: "chart", href: "dashboard.html" },
     {
-      title: "商户管理",
-      icon: "building",
+      title: "部门组织",
+      icon: "users",
       children: [
-        { title: "商户列表", href: "merchants.html" },
-        { title: "主体风控", href: "companies.html" },
-        { title: "初始化任务", href: "initialization.html" },
+        { title: "组织架构", href: "org.html" },
+        { title: "业务角色", href: "merchant-roles.html" },
+        { title: "岗位管理", href: "positions.html" },
+        { title: "员工账号", href: "employees.html" },
       ],
     },
-    { title: "套餐管理", icon: "package", href: "packages.html" },
-    { title: "模板中心", icon: "clipboard", href: "templates.html" },
-    { title: "组件市场", icon: "puzzle", href: "components.html" },
     {
-      title: "数据报表",
-      icon: "trend",
+      title: "AI模型",
+      icon: "sparkles",
       children: [
-        { title: "经营总览", href: "reports-overview.html" },
-        { title: "销售分析", href: "reports-sales.html" },
-        { title: "财务分析", href: "reports-finance.html" },
-        { title: "报表下钻", href: "reports-drill.html" },
+        { title: "模型路由", href: "ai/model_routing.html", ai: true },
+        { title: "Prompt模板", href: "ai/prompts.html", ai: true },
+        { title: "使用统计", href: "ai/usage-stats.html", ai: true },
+        { title: "权限策略", href: "ai/permission-policy.html", ai: true },
+        { title: "成本额度", href: "ai/cost-quota.html", ai: true },
+        { title: "AI审计", href: "ai/audit-log.html", ai: true },
       ],
     },
-    { title: "平台配置", icon: "settings", href: "config-dict.html" },
-    { title: "审计中心", icon: "search", href: "audit-logs.html" },
-    { title: "运维监控", icon: "monitor", href: "monitor.html" },
+    {
+      title: "系统配置",
+      icon: "file",
+      children: [
+        { title: "后台角色", href: "roles.html" },
+        { title: "接口配置", href: "interface.html" },
+        { title: "基础参数", href: "params.html" },
+        { title: "操作审计", href: "audit.html" },
+      ],
+    },
   ];
 
   const icons = {
     chart: '<path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M3 19h18"/>',
-    building: '<path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16"/><path d="M3 21h18"/><path d="M8 7h5"/><path d="M8 11h5"/><path d="M8 15h5"/><path d="M17 9h1a2 2 0 0 1 2 2v10"/>',
-    package: '<path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+    map: '<path d="M9 18 3 20V6l6-2 6 2 6-2v14l-6 2-6-2Z"/><path d="M9 4v14"/><path d="M15 6v14"/>',
     clipboard: '<path d="M9 5h6"/><path d="M9 3h6v4H9z"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>',
-    puzzle: '<path d="M8 3h4v3a2 2 0 1 0 4 0V3h3a2 2 0 0 1 2 2v4h-3a2 2 0 1 0 0 4h3v4a2 2 0 0 1-2 2h-4v-3a2 2 0 1 0-4 0v3H8a2 2 0 0 1-2-2v-3H3a2 2 0 1 1 0-4h3V5a2 2 0 0 1 2-2Z"/>',
+    plane: '<path d="M3 11 21 3l-7 18-3-7-8-3Z"/><path d="m11 14 10-11"/>',
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/>',
+    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>',
+    wallet: '<path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M16 12h5v4h-5a2 2 0 0 1 0-4Z"/><path d="M3 7l12-4 2 4"/>',
+    handshake: '<path d="m8 12 3 3a2 2 0 0 0 3 0l1-1"/><path d="M7 17 3 13l4-4 3 3"/><path d="m17 17 4-4-4-4-3 3"/><path d="M12 8l2-2a2 2 0 0 1 3 0l1 1"/>',
+    gift: '<path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 7v13"/><path d="M12 7H8a2.5 2.5 0 1 1 2.5-2.5L12 7Z"/><path d="M12 7h4a2.5 2.5 0 1 0-2.5-2.5L12 7Z"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    sparkles: '<path d="m12 3 1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z"/><path d="m19 14 .8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z"/><path d="m5 15 .8 2.2L8 18l-2.2.8L5 21l-.8-2.2L2 18l2.2-.8L5 15Z"/>',
+    palette: '<path d="M12 22a10 10 0 1 1 10-10 3 3 0 0 1-3 3h-2a2 2 0 0 0-2 2v1a4 4 0 0 1-4 4Z"/><circle cx="7.5" cy="10.5" r=".8"/><circle cx="12" cy="7.5" r=".8"/><circle cx="16.5" cy="10.5" r=".8"/>',
     trend: '<path d="m3 17 6-6 4 4 7-7"/><path d="M14 8h6v6"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 4l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.9 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
-    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
-    monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/>',
     bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
     menu: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>',
     chevron: '<path d="m9 18 6-6-6-6"/>',
+    chevronDown: '<path d="m6 9 6 6 6-6"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+  };
+
+  const primaryLabels = {
+    工作台: "工作",
+    AI模型: "AI",
+    部门组织: "组织",
+    系统配置: "配置",
+  };
+
+  const primaryFullLabels = {
+    工作台: "租户工作台",
+    AI模型: "AI模型",
+    部门组织: "部门组织",
+    系统配置: "系统配置",
   };
 
   function createIcon(name) {
@@ -52,20 +79,53 @@
     return icon;
   }
 
-  function currentFile() {
-    return (window.location.pathname.split("/").pop() || "dashboard.html").split("?")[0];
+  function primaryLabel(item) {
+    return primaryLabels[item.title] || item.title.slice(0, 2);
   }
 
-  function fileFromUrl(url) {
-    return (url.pathname.split("/").pop() || "dashboard.html").split("?")[0];
+  function primaryFullLabel(item) {
+    return primaryFullLabels[item.title] || item.title;
   }
 
-  const pageOwners = {
-    "merchants-detail.html": { href: "merchants.html", title: "商户详情" },
-  };
+  let primaryScroll = null;
+  let secondaryTitle = null;
+  let secondaryNav = null;
+  let currentPrimaryIndex = 0;
+  let primaryTooltip = null;
   let currentRouteUrl = new URL(window.location.href);
-  const singleNavOpenStorageKey = "caesar-operator-single-nav-open";
+  const secondaryOpenStorageKey = "caesar-admin-secondary-open";
+  const secondaryOpenKeys = new Set(readSecondaryOpenKeys());
+  const singleNavOpenStorageKey = "caesar-admin-single-nav-open";
   const singleNavOpenKeys = new Set(readSingleNavOpenKeys());
+
+  const appBaseUrl = new URL("../admin/", new URL(bootScript.src || "../../shared/nav-admin.js", window.location.href));
+
+  function routeKeyFromUrl(url) {
+    const normalizedPath = url.pathname.replace(/\/+/g, "/");
+    const appMarker = "/admin/";
+    const markerIndex = normalizedPath.lastIndexOf(appMarker);
+    let file = markerIndex >= 0 ? normalizedPath.slice(markerIndex + appMarker.length) : (normalizedPath.split("/").pop() || "dashboard.html");
+    file = (file || "dashboard.html").split("?")[0];
+    if (file.endsWith("/")) file += "dashboard.html";
+    return file;
+  }
+
+  function currentFile() {
+    return routeKeyFromUrl(new URL(window.location.href));
+  }
+
+  function readSecondaryOpenKeys() {
+    try {
+      const keys = JSON.parse(localStorage.getItem(secondaryOpenStorageKey) || "[]");
+      return Array.isArray(keys) ? keys : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveSecondaryOpenKeys() {
+    localStorage.setItem(secondaryOpenStorageKey, JSON.stringify(Array.from(secondaryOpenKeys)));
+  }
 
   function readSingleNavOpenKeys() {
     try {
@@ -80,13 +140,103 @@
     localStorage.setItem(singleNavOpenStorageKey, JSON.stringify(Array.from(singleNavOpenKeys)));
   }
 
-  function findActive(items, file, parent) {
+  function fileFromUrl(url) {
+    return routeKeyFromUrl(url);
+  }
+
+  function resolvedAppHref(href) {
+    if (!href || href.startsWith("#")) return href || "#";
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("/")) return href;
+    return new URL(href, appBaseUrl).href;
+  }
+
+  const pageOwners = {
+    "org_company_modal.html": { href: "org.html", title: "编辑主体公司" },
+  };
+
+  const organizationTree = [
+    {
+      id: "group-caesar",
+      type: "group",
+      typeLabel: "集团",
+      name: "凯撒旅游集团股份有限公司",
+      children: [
+        {
+          id: "sub-caesar-travel",
+          type: "subsidiary",
+          typeLabel: "子公司",
+          name: "北京凯撒旅游集团有限公司",
+          children: [
+            {
+              id: "center-outbound",
+              type: "center",
+              typeLabel: "中心",
+              name: "出境游事业部",
+              children: [
+                { id: "dept-west-eu", type: "department", typeLabel: "部门", name: "西欧产品部" },
+                { id: "dept-eu", type: "department", typeLabel: "部门", name: "欧洲事业部" },
+                { id: "store-bj-chaoyang", type: "store", typeLabel: "门店", name: "北京朝阳门店" },
+                { id: "store-sh-xuhui", type: "store", typeLabel: "门店", name: "上海徐汇门店" },
+              ],
+            },
+            {
+              id: "center-cruise",
+              type: "center",
+              typeLabel: "中心",
+              name: "邮轮中心",
+              children: [
+                { id: "dept-ideal", type: "department", typeLabel: "部门", name: "理想号运营部" },
+                { id: "store-gz-tianhe", type: "store", typeLabel: "门店", name: "广州天河门店" },
+              ],
+            },
+          ],
+        },
+        {
+          id: "sub-yibu",
+          type: "subsidiary",
+          typeLabel: "子公司",
+          name: "凯撒亿步旅行社有限公司",
+          children: [
+            {
+              id: "center-mice",
+              type: "center",
+              typeLabel: "中心",
+              name: "MICE会展中心",
+              children: [
+                { id: "dept-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
+                { id: "store-sh-mice", type: "store", typeLabel: "门店", name: "上海会展门店" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const workspaceExpandedIds = new Set([
+    "sub-caesar-travel",
+    "center-outbound",
+    "center-cruise",
+    "sub-yibu",
+    "center-mice",
+  ]);
+  let currentWorkspaceId = "center-outbound";
+
+  function workspaceRoots() {
+    return organizationTree.flatMap((node) => {
+      if (node.type === "group" && node.children) return node.children;
+      return [node];
+    });
+  }
+
+  function findActive(items, file, ancestors) {
+    const path = ancestors || [];
     for (const item of items) {
       if (item.href === file) {
-        return { item, parent };
+        return { item, parent: path[path.length - 1] || null, ancestors: path };
       }
       if (item.children) {
-        const found = findActive(item.children, file, item);
+        const found = findActive(item.children, file, path.concat(item));
         if (found) return found;
       }
     }
@@ -102,25 +252,198 @@
 
     const active = findActive(menu, owner.href);
     if (!active) return null;
-    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href });
+    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href, tabHref: owner.tabHref });
   }
 
-  function createLink(item, activeFile) {
+  function activeHrefFrom(active, file) {
+    return active ? active.ownerHref || active.item.href : file;
+  }
+
+  function rootIndexFromActive(active) {
+    if (!active) return 0;
+    const root = active.ancestors && active.ancestors.length > 0 ? active.ancestors[0] : active.item;
+    const index = menu.indexOf(root);
+    return index >= 0 ? index : 0;
+  }
+
+  function currentActiveState() {
+    const file = currentFile();
+    const active = resolveActive(file);
+    return { active, activeHref: activeHrefFrom(active, file) };
+  }
+
+  function isNavCollapsed() {
+    const layout = document.querySelector(".layout");
+    return Boolean(layout && layout.classList.contains("nav-collapsed"));
+  }
+
+  function ensurePrimaryTooltip() {
+    if (primaryTooltip) return primaryTooltip;
+    primaryTooltip = document.createElement("div");
+    primaryTooltip.className = "nav-primary-tooltip";
+    primaryTooltip.setAttribute("role", "tooltip");
+    document.body.appendChild(primaryTooltip);
+    return primaryTooltip;
+  }
+
+  function showPrimaryTooltip(control) {
+    if (!isNavCollapsed()) return false;
+    const tooltip = ensurePrimaryTooltip();
+    const rect = control.getBoundingClientRect();
+    tooltip.textContent = control.dataset.title || control.title || "";
+    tooltip.style.left = rect.right + 8 + "px";
+    tooltip.style.top = rect.top + rect.height / 2 + "px";
+    tooltip.classList.add("show");
+    return true;
+  }
+
+  function hidePrimaryTooltip() {
+    if (primaryTooltip) primaryTooltip.classList.remove("show");
+  }
+
+  function createPrimaryItem(item, index, pageRootIndex) {
+    const control = item.children ? document.createElement("button") : document.createElement("a");
+    control.className = "nav-primary-item";
+    control.dataset.title = primaryFullLabel(item);
+    control.title = primaryFullLabel(item);
+
+    if (item.children) {
+      control.type = "button";
+      control.setAttribute("aria-expanded", String(index === currentPrimaryIndex));
+      control.addEventListener("mouseenter", () => showPrimaryTooltip(control));
+      control.addEventListener("mouseleave", hidePrimaryTooltip);
+      control.addEventListener("click", () => {
+        currentPrimaryIndex = index;
+        const state = currentActiveState();
+        renderPrimary(state.active);
+        renderSecondary(state.activeHref);
+
+        const layout = document.querySelector(".layout");
+        if (layout && layout.classList.contains("nav-collapsed")) {
+          layout.classList.remove("nav-collapsed");
+        }
+        hidePrimaryTooltip();
+      });
+    } else {
+      control.href = resolvedAppHref(item.href);
+      control.addEventListener("mouseenter", () => showPrimaryTooltip(control));
+      control.addEventListener("mouseleave", hidePrimaryTooltip);
+    }
+
+    if (index === currentPrimaryIndex) control.classList.add("active");
+    if (index === pageRootIndex) {
+      control.classList.add("current");
+      control.setAttribute("aria-current", "page");
+    }
+
+    const text = document.createElement("span");
+    text.className = item.ai ? "nav-label nav-label-ai" : "nav-label";
+    text.textContent = primaryLabel(item);
+
+    if (item.icon) control.appendChild(createIcon(item.icon));
+    control.appendChild(text);
+    return control;
+  }
+
+  function renderPrimary(active) {
+    if (!primaryScroll) return;
+
+    const pageRootIndex = rootIndexFromActive(active);
+    primaryScroll.replaceChildren();
+    menu.forEach((item, index) => {
+      primaryScroll.appendChild(createPrimaryItem(item, index, pageRootIndex));
+    });
+  }
+
+  function updatePrimaryActive(active) {
+    if (!primaryScroll) return;
+
+    const pageRootIndex = rootIndexFromActive(active);
+    Array.from(primaryScroll.querySelectorAll(".nav-primary-item")).forEach((item, index) => {
+      const isActive = index === currentPrimaryIndex;
+      const isCurrent = index === pageRootIndex;
+      item.classList.toggle("active", isActive);
+      item.classList.toggle("current", isCurrent);
+      if (item.tagName === "BUTTON") item.setAttribute("aria-expanded", String(isActive));
+      if (isCurrent) {
+        item.setAttribute("aria-current", "page");
+      } else {
+        item.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  function renderSecondary(activeHref, primaryIndex) {
+    if (!secondaryTitle || !secondaryNav) return;
+
+    const rootIndex = typeof primaryIndex === "number" ? primaryIndex : currentPrimaryIndex;
+    const root = menu[rootIndex] || menu[0];
+    const hasSecondaryMenu = Boolean(root.children && root.children.length > 0);
+
+    document.body.classList.toggle("nav-primary-only", !hasSecondaryMenu);
+    secondaryTitle.textContent = hasSecondaryMenu ? primaryFullLabel(root) : "";
+    secondaryNav.replaceChildren();
+    if (!hasSecondaryMenu) return;
+
+    const items = root.children && root.children.length > 0 ? root.children : [root];
+    const hasActiveInRoot = hasActive(root, activeHref);
+    let openedDefault = false;
+
+    rememberRenderedSecondaryOpenKeys();
+    items.forEach((item) => {
+      const openByDefault = !hasActiveInRoot && !openedDefault && Boolean(item.children);
+      if (openByDefault) openedDefault = true;
+      secondaryNav.appendChild(item.children ? createSecondaryParent(item, activeHref, 0, openByDefault, rootIndex, [item.title]) : createSecondaryLink(item, activeHref, 0));
+    });
+  }
+
+  function createSecondaryLink(item, activeFile, depth) {
     const link = document.createElement("a");
     link.className = "nav-item";
     link.dataset.title = item.title;
+    link.dataset.depth = String(depth || 0);
     link.dataset.routeHref = item.href;
-    if (!item.icon) link.classList.add("nav-child");
-    link.href = item.href;
+    if (!item.icon || depth > 0) link.classList.add("nav-child");
+    link.href = resolvedAppHref(item.href);
     if (item.href === activeFile) link.classList.add("active");
 
     const text = document.createElement("span");
-    text.className = "nav-label";
+    text.className = item.ai ? "nav-label nav-label-ai" : "nav-label";
     text.textContent = item.title;
 
     if (item.icon) link.appendChild(createIcon(item.icon));
+    if ((depth || 0) === 0) {
+      const arrowPlaceholder = document.createElement("span");
+      arrowPlaceholder.className = "nav-arrow nav-arrow-placeholder";
+      arrowPlaceholder.setAttribute("aria-hidden", "true");
+      link.appendChild(arrowPlaceholder);
+    }
     link.appendChild(text);
     return link;
+  }
+
+  function openSecondaryParents(link) {
+    let parent = link ? link.closest(".nav-parent") : null;
+    while (parent) {
+      parent.classList.add("open");
+      const head = parent.querySelector(":scope > .nav-item");
+      if (head) head.setAttribute("aria-expanded", "true");
+      parent = parent.parentElement ? parent.parentElement.closest(".nav-parent") : null;
+    }
+  }
+
+  function updateSecondaryActive(activeHref) {
+    if (!secondaryNav) return false;
+
+    secondaryNav.querySelectorAll("a.nav-item.active").forEach((link) => link.classList.remove("active"));
+    const activeLink = Array.from(secondaryNav.querySelectorAll("a.nav-item")).find((link) => {
+      return link.dataset.routeHref === activeHref;
+    });
+    if (!activeLink) return false;
+
+    activeLink.classList.add("active");
+    openSecondaryParents(activeLink);
+    return true;
   }
 
   function readTabs(storageKey) {
@@ -137,11 +460,12 @@
   }
 
   function createPageTabs(active, file) {
-    const storageKey = "caesar-operator-tabs";
+    const storageKey = "caesar-admin-tabs";
     const title = active ? active.currentTitle || active.item.title : file;
-    const current = { title, href: file };
+    const currentHref = active && active.tabHref ? active.tabHref : file;
+    const current = { title, href: currentHref };
     const tabs = readTabs(storageKey);
-    const existingIndex = tabs.findIndex((tab) => tab.href === file);
+    const existingIndex = tabs.findIndex((tab) => tab.href === currentHref);
     if (existingIndex >= 0) {
       tabs[existingIndex] = current;
     } else {
@@ -156,8 +480,8 @@
     recentTabs.forEach((tab) => {
       const item = document.createElement("a");
       item.className = "page-tab";
-      if (tab.href === file) item.classList.add("active");
-      item.href = tab.href;
+      if (tab.href === currentHref) item.classList.add("active");
+      item.href = resolvedAppHref(tab.href);
 
       const label = document.createElement("span");
       label.className = "page-tab-label";
@@ -204,19 +528,14 @@
 
   function syncNavActive(file) {
     const active = resolveActive(file);
-    const activeHref = active ? active.ownerHref || active.item.href : file;
+    const activeHref = activeHrefFrom(active, file);
 
     document.querySelectorAll(".nav-scroll .nav-item.active").forEach((item) => item.classList.remove("active"));
 
     const activeLink = Array.from(document.querySelectorAll(".nav-scroll a.nav-item")).find((link) => link.dataset.routeHref === activeHref);
     if (activeLink) {
       activeLink.classList.add("active");
-      const parent = activeLink.closest(".nav-parent");
-      if (parent) {
-        parent.classList.add("open");
-        const head = parent.querySelector(":scope > .nav-item");
-        if (head) head.setAttribute("aria-expanded", "true");
-      }
+      openSecondaryParents(activeLink);
     }
 
     replaceBreadcrumb(active);
@@ -231,7 +550,7 @@
     Array.from(sourceRoot.childNodes).forEach((node) => {
       if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "SCRIPT") {
         const src = node.getAttribute("src") || "";
-        if (!src.includes("nav-operator.js")) {
+        if (!src.includes("nav-admin.js")) {
           const script = document.importNode(node, true);
           if (src && pageUrl) script.setAttribute("src", new URL(src, pageUrl).href);
           scripts.push(script);
@@ -307,15 +626,41 @@
     });
   }
 
-  function createParent(item, activeFile) {
-    const openKey = item.title;
+  function hasActive(item, activeFile) {
+    if (item.href === activeFile) return true;
+    return item.children ? item.children.some((child) => hasActive(child, activeFile)) : false;
+  }
+
+  function secondaryOpenKey(rootIndex, path) {
+    return String(rootIndex) + ":" + path.join(">");
+  }
+
+  function rememberRenderedSecondaryOpenKeys() {
+    if (!secondaryNav) return;
+    secondaryNav.querySelectorAll(".nav-parent").forEach((wrap) => {
+      const key = wrap.dataset.openKey;
+      if (!key) return;
+      if (wrap.classList.contains("open")) {
+        secondaryOpenKeys.add(key);
+      } else {
+        secondaryOpenKeys.delete(key);
+      }
+    });
+    saveSecondaryOpenKeys();
+  }
+
+  function createSecondaryParent(item, activeFile, depth, openByDefault, rootIndex, path) {
     const wrap = document.createElement("div");
     wrap.className = "nav-parent";
+    wrap.dataset.depth = String(depth || 0);
+    const openKey = secondaryOpenKey(rootIndex, path || [item.title]);
+    wrap.dataset.openKey = openKey;
 
     const head = document.createElement("div");
     head.className = "nav-item";
     head.dataset.title = item.title;
-    head.setAttribute("aria-expanded", "false");
+    head.dataset.depth = String(depth || 0);
+    if (depth > 0) head.classList.add("nav-child");
 
     const text = document.createElement("span");
     text.className = "nav-label";
@@ -328,24 +673,27 @@
     const sub = document.createElement("div");
     sub.className = "nav-sub";
 
-    item.children.forEach((child) => sub.appendChild(createLink(child, activeFile)));
-    if (singleNavOpenKeys.has(openKey) || item.children.some((child) => child.href === activeFile)) {
+    item.children.forEach((child) => {
+      const childPath = (path || [item.title]).concat(child.title);
+      sub.appendChild(child.children ? createSecondaryParent(child, activeFile, (depth || 0) + 1, false, rootIndex, childPath) : createSecondaryLink(child, activeFile, (depth || 0) + 1));
+    });
+    if (secondaryOpenKeys.has(openKey) || openByDefault || item.children.some((child) => hasActive(child, activeFile))) {
       wrap.classList.add("open");
-      head.setAttribute("aria-expanded", "true");
+      secondaryOpenKeys.add(openKey);
+      saveSecondaryOpenKeys();
     }
 
     head.addEventListener("click", () => {
       wrap.classList.toggle("open");
-      const isOpen = wrap.classList.contains("open");
-      head.setAttribute("aria-expanded", String(isOpen));
-      if (isOpen) {
-        singleNavOpenKeys.add(openKey);
+      if (wrap.classList.contains("open")) {
+        secondaryOpenKeys.add(openKey);
       } else {
-        singleNavOpenKeys.delete(openKey);
+        secondaryOpenKeys.delete(openKey);
       }
-      saveSingleNavOpenKeys();
+      saveSecondaryOpenKeys();
     });
-    head.append(createIcon(item.icon), text, arrow);
+    if (item.icon) head.appendChild(createIcon(item.icon));
+    head.append(text, arrow);
     wrap.append(head, sub);
     return wrap;
   }
@@ -355,9 +703,7 @@
     breadcrumb.className = "breadcrumb";
 
     const parts = active
-      ? active.parent
-        ? [active.parent.title, active.item.title]
-        : [active.item.title]
+      ? (active.ancestors || []).map((item) => item.title).concat(active.item.title)
       : ["未归属页面"];
 
     if (active && active.currentTitle && active.currentTitle !== active.item.title) {
@@ -392,22 +738,264 @@
     return notify;
   }
 
+  function createSingleLink(item, activeFile, depth) {
+    const link = document.createElement("a");
+    link.className = "nav-item";
+    link.dataset.title = item.title;
+    link.dataset.depth = String(depth || 0);
+    link.dataset.routeHref = item.href;
+    if (!item.icon || depth > 0) link.classList.add("nav-child");
+    link.href = resolvedAppHref(item.href);
+    if (item.href === activeFile) link.classList.add("active");
+
+    const text = document.createElement("span");
+    text.className = item.ai ? "nav-label nav-label-ai" : "nav-label";
+    text.textContent = item.title;
+
+    if (item.icon) link.appendChild(createIcon(item.icon));
+    link.appendChild(text);
+    return link;
+  }
+
+  function createSingleParent(item, activeFile, depth, path) {
+    const itemPath = path || [item.title];
+    const openKey = itemPath.join(">");
+    const wrap = document.createElement("div");
+    wrap.className = "nav-parent";
+    wrap.dataset.depth = String(depth || 0);
+
+    const head = document.createElement("div");
+    head.className = "nav-item";
+    head.dataset.title = item.title;
+    head.dataset.depth = String(depth || 0);
+    head.setAttribute("aria-expanded", "false");
+    if (depth > 0) head.classList.add("nav-child");
+
+    const text = document.createElement("span");
+    text.className = item.ai ? "nav-label nav-label-ai" : "nav-label";
+    text.textContent = item.title;
+
+    const arrow = document.createElement("span");
+    arrow.className = "nav-arrow";
+    arrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevron + "</svg>";
+
+    const sub = document.createElement("div");
+    sub.className = "nav-sub";
+
+    item.children.forEach((child) => {
+      const childPath = itemPath.concat(child.title);
+      sub.appendChild(child.children ? createSingleParent(child, activeFile, (depth || 0) + 1, childPath) : createSingleLink(child, activeFile, (depth || 0) + 1));
+    });
+
+    if (singleNavOpenKeys.has(openKey) || item.children.some((child) => hasActive(child, activeFile))) {
+      wrap.classList.add("open");
+      head.setAttribute("aria-expanded", "true");
+    }
+
+    head.addEventListener("click", () => {
+      wrap.classList.toggle("open");
+      const isOpen = wrap.classList.contains("open");
+      head.setAttribute("aria-expanded", String(isOpen));
+      if (isOpen) {
+        singleNavOpenKeys.add(openKey);
+      } else {
+        singleNavOpenKeys.delete(openKey);
+      }
+      saveSingleNavOpenKeys();
+    });
+
+    if (item.icon) head.appendChild(createIcon(item.icon));
+    head.append(text, arrow);
+    wrap.append(head, sub);
+    return wrap;
+  }
+
+  function findOrgNode(nodes, id) {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children) {
+        const found = findOrgNode(node.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function orgNodeMatches(node, keyword) {
+    if (!keyword) return true;
+    const haystack = [node.typeLabel, node.name].join(" ").toLowerCase();
+    if (haystack.includes(keyword)) return true;
+    return node.children ? node.children.some((child) => orgNodeMatches(child, keyword)) : false;
+  }
+
+  function createOrgNode(node, depth, state) {
+    if (!orgNodeMatches(node, state.keyword)) return null;
+
+    const wrap = document.createElement("div");
+    wrap.className = "org-tree-node";
+
+    const row = document.createElement("div");
+    row.className = "org-tree-row depth-" + Math.min(depth, 4);
+    if (node.id === currentWorkspaceId) row.classList.add("active");
+
+    const hasChildren = Boolean(node.children && node.children.length);
+    const caret = document.createElement("button");
+    caret.className = hasChildren ? "org-tree-caret" : "org-tree-caret placeholder";
+    caret.type = "button";
+    caret.setAttribute("aria-label", hasChildren ? "展开或收起" : "");
+    if (hasChildren && (workspaceExpandedIds.has(node.id) || state.keyword)) caret.classList.add("open");
+    caret.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevron + "</svg>";
+    caret.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (!hasChildren) return;
+      if (workspaceExpandedIds.has(node.id)) {
+        workspaceExpandedIds.delete(node.id);
+      } else {
+        workspaceExpandedIds.add(node.id);
+      }
+      state.render();
+    });
+
+    const select = document.createElement("button");
+    select.className = "org-tree-select";
+    select.type = "button";
+    select.title = node.name;
+    select.addEventListener("click", () => {
+      currentWorkspaceId = node.id;
+      state.workspaceText.textContent = node.name;
+      state.menu.classList.remove("show");
+      state.trigger.setAttribute("aria-expanded", "false");
+      state.render();
+    });
+
+    const tag = document.createElement("span");
+    tag.className = "org-type-tag " + node.type;
+    tag.textContent = node.typeLabel;
+
+    const name = document.createElement("span");
+    name.className = "org-node-name";
+    name.textContent = node.name;
+
+    select.append(tag, name);
+
+    row.append(caret, select);
+    wrap.appendChild(row);
+
+    if (hasChildren && (workspaceExpandedIds.has(node.id) || state.keyword)) {
+      const children = document.createElement("div");
+      children.className = "org-tree-children";
+      node.children.forEach((child) => {
+        const childNode = createOrgNode(child, depth + 1, state);
+        if (childNode) children.appendChild(childNode);
+      });
+      wrap.appendChild(children);
+    }
+
+    return wrap;
+  }
+
+  function createWorkspaceSwitcher() {
+    const current = findOrgNode(organizationTree, currentWorkspaceId) || organizationTree[0];
+    const wrap = document.createElement("div");
+    wrap.className = "workspace-switcher";
+
+    const trigger = document.createElement("button");
+    trigger.className = "workspace-badge";
+    trigger.type = "button";
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const workspaceText = document.createElement("span");
+    workspaceText.className = "workspace-current-text";
+    workspaceText.textContent = current.name;
+    const workspaceArrow = document.createElement("span");
+    workspaceArrow.className = "topbar-chevron";
+    workspaceArrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
+    trigger.append(workspaceText, workspaceArrow);
+
+    const menu = document.createElement("div");
+    menu.className = "workspace-menu";
+
+    const searchWrap = document.createElement("div");
+    searchWrap.className = "workspace-search";
+    searchWrap.innerHTML = '<span class="workspace-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>';
+    const search = document.createElement("input");
+    search.type = "search";
+    search.placeholder = "请输入门店/部门名称";
+    search.setAttribute("aria-label", "搜索组织节点");
+    searchWrap.appendChild(search);
+
+    const tree = document.createElement("div");
+    tree.className = "org-tree";
+
+    const empty = document.createElement("div");
+    empty.className = "org-tree-empty";
+    empty.textContent = "未找到匹配节点";
+
+    const state = {
+      keyword: "",
+      menu,
+      trigger,
+      workspaceText,
+      render: null,
+    };
+
+    state.render = () => {
+      state.keyword = search.value.trim().toLowerCase();
+      tree.replaceChildren();
+      let count = 0;
+      workspaceRoots().forEach((node) => {
+        const item = createOrgNode(node, 0, state);
+        if (item) {
+          tree.appendChild(item);
+          count += 1;
+        }
+      });
+      empty.hidden = count > 0;
+    };
+
+    search.addEventListener("input", state.render);
+    menu.append(searchWrap, tree, empty);
+    state.render();
+
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const opened = menu.classList.toggle("show");
+      trigger.setAttribute("aria-expanded", String(opened));
+      if (opened) setTimeout(() => search.focus(), 0);
+    });
+
+    menu.addEventListener("click", (event) => event.stopPropagation());
+    document.addEventListener("click", () => {
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+
+    wrap.append(trigger, menu);
+    return wrap;
+  }
+
   function initNav() {
     const file = currentFile();
     const active = resolveActive(file);
-    const activeHref = active ? active.ownerHref || active.item.href : file;
+    const activeHref = activeHrefFrom(active, file);
 
     const oldNodes = Array.from(document.body.childNodes).filter((node) => node !== bootScript);
 
     const layout = document.createElement("div");
-    layout.className = "layout operator-layout";
+    layout.className = "layout operator-layout admin-layout";
 
     const sidebar = document.createElement("aside");
     sidebar.className = "sidebar";
 
     const logo = document.createElement("div");
     logo.className = "sidebar-logo caesar-brand-logo";
-    logo.setAttribute("aria-label", "旅游运营平台");
+    logo.setAttribute("aria-label", "凯撒管理后台");
     logo.innerHTML = [
       '<span class="caesar-brand-mark" aria-hidden="true">',
       '<svg viewBox="0 0 40 40" focusable="false">',
@@ -417,13 +1005,18 @@
       '<path class="caesar-brand-star small" d="m29.4 5.4 1 2.1 2.3.4-1.7 1.6.3 2.3-2-1.1-2.2 1 .5-2.3-1.6-1.7 2.3-.3 1.1-2Z"/>',
       '</svg>',
       '</span>',
-      '<span class="caesar-brand-name">旅游运营平台</span>'
+      '<span class="caesar-brand-name">凯撒管理后台</span>'
     ].join("");
 
     const navScroll = document.createElement("nav");
     navScroll.className = "nav-scroll";
-    menu.forEach((item) => navScroll.appendChild(item.children ? createParent(item, activeHref) : createLink(item, activeHref)));
+    navScroll.setAttribute("aria-label", "租户管理导航");
+    menu.forEach((item) => navScroll.appendChild(item.children ? createSingleParent(item, activeHref, 0, [item.title]) : createSingleLink(item, activeHref, 0)));
+
     sidebar.append(logo, navScroll);
+    sidebar.addEventListener("mouseleave", () => {
+      hidePrimaryTooltip();
+    });
 
     const main = document.createElement("main");
     main.className = "main-area";
@@ -450,8 +1043,11 @@
     userIcon.className = "topbar-user-icon";
     userIcon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.user + "</svg>";
     const name = document.createElement("span");
-    name.textContent = "平台超级管理员";
-    user.append(userIcon, name);
+    name.textContent = "租户管理员";
+    const arrow = document.createElement("span");
+    arrow.className = "topbar-chevron";
+    arrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
+    user.append(userIcon, name, arrow);
     right.append(createNotify(3), user);
 
     topbar.append(left, right);
@@ -466,6 +1062,7 @@
 
     toggle.addEventListener("click", () => {
       layout.classList.toggle("nav-collapsed");
+      hidePrimaryTooltip();
     });
 
     initListSurfaces(content);
@@ -488,8 +1085,20 @@
     return true;
   }
 
+  function resolveNavigationTarget(href) {
+    const baseUrl = currentRouteUrl || new URL(window.location.href);
+    if (!href) return new URL(window.location.href);
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("/")) {
+      return new URL(href, baseUrl);
+    }
+    if (href.startsWith("./") || href.startsWith("../") || !href.includes("/")) {
+      return new URL(href, baseUrl);
+    }
+    return new URL(href, appBaseUrl);
+  }
+
   function navigateTo(href) {
-    const target = new URL(href, currentRouteUrl || window.location.href);
+    const target = resolveNavigationTarget(href);
     if (target.protocol === "file:") {
       window.location.href = target.href;
       return;

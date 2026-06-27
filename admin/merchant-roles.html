@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务角色管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../shared/style.css">
+</head>
+<body>
+  <script src="../shared/nav-admin.js"></script>
+
+  <main class="role-management-page">
+    <section class="list-page-panel">
+      <div class="list-page-head">
+        <div>
+          <h1 class="page-title">业务角色管理</h1>
+        </div>
+        <div class="page-actions role-list-actions">
+          <button class="btn btn-secondary" type="button">导出</button>
+          <button class="btn btn-primary" type="button" data-open-merchant-role-modal="新增业务角色">新增业务角色</button>
+        </div>
+      </div>
+
+      <div class="filter-card filter-card-compact">
+        <div class="filter-row">
+          <input class="form-control filter-item" type="search" placeholder="角色名称 / 编码">
+          <select class="form-control filter-item-sm" aria-label="角色来源" data-source-filter>
+            <option value="">全部来源</option>
+            <option value="preset">系统预置</option>
+            <option value="custom">业务自定义</option>
+          </select>
+          <select class="form-control filter-item-sm" aria-label="适用范围" data-scope-filter>
+            <option value="">全部范围</option>
+            <option value="group">集团级</option>
+            <option value="company">主体公司</option>
+            <option value="center">业务中心</option>
+            <option value="store">门店</option>
+          </select>
+          <select class="form-control filter-item-sm" aria-label="状态" data-status-filter>
+            <option value="">全部状态</option>
+            <option value="enabled">启用</option>
+            <option value="disabled">停用</option>
+            <option value="review">待复核</option>
+          </select>
+          <button class="btn btn-secondary" type="button" data-filter-search>查询</button>
+          <button class="btn btn-secondary" type="button" data-filter-reset>重置</button>
+        </div>
+      </div>
+
+      <nav class="tab-bar" data-filter-tabs data-filter-target="[data-merchant-role-table]" aria-label="业务角色状态">
+        <button class="tab-item active" type="button" data-filter-value="">全部</button>
+        <button class="tab-item" type="button" data-filter-value="启用">启用</button>
+        <button class="tab-item" type="button" data-filter-value="停用">停用</button>
+        <button class="tab-item" type="button" data-filter-value="待复核">待复核</button>
+      </nav>
+
+      <div class="table-wrap role-list-table">
+        <table>
+          <thead>
+            <tr>
+              <th>角色名称</th>
+              <th>来源</th>
+              <th>适用范围</th>
+              <th>权限边界</th>
+              <th>数据范围</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody data-merchant-role-table>
+            <tr data-source="preset" data-scope="group" data-status="enabled" data-tab-status="启用">
+              <td><strong>业务超级管理员</strong></td>
+              <td><span class="tag tag-blue">系统预置</span></td>
+              <td>集团级</td>
+              <td>组织、账号、业务配置、权限分配</td>
+              <td>全租户</td>
+              <td><span class="tag tag-green">启用</span></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></td>
+            </tr>
+            <tr data-source="preset" data-scope="company" data-status="enabled" data-tab-status="启用">
+              <td><strong>主体管理员</strong></td>
+              <td><span class="tag tag-blue">系统预置</span></td>
+              <td>主体公司</td>
+              <td>本主体组织、账号、产品和审批配置</td>
+              <td>本主体及下级</td>
+              <td><span class="tag tag-green">启用</span></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></td>
+            </tr>
+            <tr data-source="preset" data-scope="center" data-status="enabled" data-tab-status="启用">
+              <td><strong>业务中心负责人</strong></td>
+              <td><span class="tag tag-blue">系统预置</span></td>
+              <td>业务中心</td>
+              <td>产品、出团、成本、审批和经营数据</td>
+              <td>本中心及下级</td>
+              <td><span class="tag tag-green">启用</span></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></td>
+            </tr>
+            <tr data-source="preset" data-scope="store" data-status="enabled" data-tab-status="启用">
+              <td><strong>门店店长</strong></td>
+              <td><span class="tag tag-blue">系统预置</span></td>
+              <td>门店</td>
+              <td>门店订单、顾问、客户和业绩目标</td>
+              <td>本门店</td>
+              <td><span class="tag tag-green">启用</span></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></td>
+            </tr>
+            <tr data-source="custom" data-scope="center" data-status="review" data-tab-status="待复核">
+              <td><strong>邮轮中心财务专员</strong></td>
+              <td><span class="tag tag-purple">业务自定义</span></td>
+              <td>业务中心</td>
+              <td>收款、认款、应收、发票和回单</td>
+              <td>邮轮中心</td>
+              <td><span class="tag tag-orange">待复核</span></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></td>
+            </tr>
+            <tr data-source="custom" data-scope="store" data-status="disabled" data-tab-status="停用">
+              <td><strong>门店临时查看</strong></td>
+              <td><span class="tag tag-purple">业务自定义</span></td>
+              <td>门店</td>
+              <td>订单、客户和报价只读</td>
+              <td>授权门店</td>
+              <td><span class="tag tag-gray">停用</span></td>
+              <td><button class="btn btn-secondary btn-sm" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span>共 6 条</span>
+        <div class="pager">
+          <button class="pager-btn active" type="button">1</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay drawer-overlay" aria-hidden="true" data-merchant-role-modal>
+    <div class="modal drawer-modal role-management-modal" role="dialog" aria-modal="true" aria-labelledby="merchantRoleModalTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="merchantRoleModalTitle">编辑业务角色</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-merchant-role-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <section class="role-basic-form">
+          <div class="role-form-row">
+            <label class="form-label required" for="merchantRoleName">名称</label>
+            <input class="form-control" id="merchantRoleName" type="text" value="业务中心负责人">
+          </div>
+          <div class="role-form-row">
+            <label class="form-label required" for="merchantRoleCode">编码</label>
+            <input class="form-control" id="merchantRoleCode" type="text" value="MERCHANT_CENTER_OWNER">
+          </div>
+          <div class="role-form-row">
+            <label class="form-label required" for="merchantRoleScope">适用范围</label>
+            <select class="form-control" id="merchantRoleScope">
+              <option>集团级</option>
+              <option>主体公司</option>
+              <option selected>业务中心</option>
+              <option>门店</option>
+            </select>
+          </div>
+          <div class="role-form-row">
+            <label class="form-label" for="merchantRoleDescription">描述</label>
+            <textarea class="form-control" id="merchantRoleDescription" rows="3">用于业务端业务中心负责人，默认覆盖产品、出团、成本、审批与经营数据查看权限。</textarea>
+          </div>
+        </section>
+
+        <nav class="tab-bar role-modal-tabs" aria-label="业务角色权限标签">
+          <button class="tab-item active" type="button" data-role-modal-tab="function">功能权限</button>
+          <button class="tab-item" type="button" data-role-modal-tab="data">数据权限</button>
+          <button class="tab-item" type="button" data-role-modal-tab="control">管控策略</button>
+        </nav>
+
+        <section class="role-modal-panel active" data-role-modal-panel="function">
+          <div class="role-perm-toolbar">
+            <div class="segmented-control" role="tablist" aria-label="业务端范围">
+              <button class="active" type="button" data-role-scope="merchant">业务端</button>
+              <button type="button" data-role-scope="ai">AI能力</button>
+            </div>
+            <div class="role-perm-search">
+              <input class="form-control" type="search" placeholder="请输入" data-role-permission-search>
+              <button class="btn btn-secondary" type="button" data-role-permission-find>查找</button>
+            </div>
+          </div>
+
+          <div class="role-perm-panel active" data-role-scope-panel="merchant">
+            <div class="role-permission-tree">
+              <div class="role-tree-node">
+                <button class="role-tree-caret" type="button" data-role-tree-toggle aria-label="展开工作台"></button>
+                <label><input type="checkbox" checked> 工作台</label>
+              </div>
+              <div class="role-tree-children">
+                <label><span></span><input type="checkbox" checked> 查看计调/集团/门店工作台</label>
+                <label><span></span><input type="checkbox" checked> 待办、预警、快捷入口跳转</label>
+                <label><span></span><input type="checkbox"> 申请资金调拨、生成静态收款码</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret" type="button" data-role-tree-toggle aria-label="展开资源"></button>
+                <label><input type="checkbox" checked> 资源</label>
+              </div>
+              <div class="role-tree-children">
+                <label><span></span><input type="checkbox" checked> 基础资源查看：景点/酒店/餐厅/车型/邮轮/专列/供应/别名</label>
+                <label><span></span><input type="checkbox" checked> 基础资源维护：新增、编辑、停用、批量导入、导出、查看引用</label>
+                <label><span></span><input type="checkbox"> 航空资源：航线库新增编辑、锁位新增、处理、释放</label>
+                <label><span></span><input type="checkbox"> 邮轮资源：船公司、船只档案、舱型、邮轮航线、挂港维护</label>
+                <label><span></span><input type="checkbox"> 专列资源：运营商、专列线路、站点、席别维护</label>
+                <label><span></span><input type="checkbox"> 供应商：新增、编辑、启停、资质上传、对账跳转</label>
+                <label><span></span><input type="checkbox"> 领队资源：新增、编辑、排班、绩效查看</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret" type="button" data-role-tree-toggle aria-label="展开产品"></button>
+                <label><input type="checkbox" checked> 产品</label>
+              </div>
+              <div class="role-tree-children">
+                <label><span></span><input type="checkbox" checked> 产品市场：查询、查看详情、立即代理</label>
+                <label><span></span><input type="checkbox" checked> 自营产品：AI智能上架、新建、编辑、复制、删除、上下架、批量上/下架、导出</label>
+                <label><span></span><input type="checkbox" checked> 产品编辑：保存草稿、提交审核、AI生成行程、上传素材、费用维护</label>
+                <label><span></span><input type="checkbox"> 外采产品：新增、AI上架、配置定价、包装、履约配额、下架</label>
+                <label><span></span><input type="checkbox"> 邮轮/专列产品：新增、舱型/车厢配置、生成航次/班期、停用</label>
+                <label><span></span><input type="checkbox"> 自由行/单项委托/研学：创建、编辑、套餐/履约规则、营期、安全材料</label>
+                <label><span></span><input type="checkbox"> 定价策略：AI定价建议、新增、编辑、删除</label>
+                <label><span></span><input type="checkbox"> 渠道授权：查看、提交撤销申请、确认授权</label>
+                <label><span></span><input type="checkbox"> 竞品价格：查看预警、导出报告、趋势图、确认处理</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret" type="button" data-role-tree-toggle aria-label="展开出团"></button>
+                <label><input type="checkbox" checked> 出团</label>
+              </div>
+              <div class="role-tree-children">
+                <label><span></span><input type="checkbox" checked> 单团自组/MICE项目：新建、编辑、报价方案、创建专属团期、导出资料、取消项目</label>
+                <label><span></span><input type="checkbox" checked> 团期团控：批量开团、新建团期、复制、取消、导出、日历查看</label>
+                <label><span></span><input type="checkbox" checked> 团期详情：编辑团期、成本维护、库存占位、资源确认、操作日志</label>
+                <label><span></span><input type="checkbox" checked> 团期成本：AI毛利预测、查看明细、确认成本、补齐费用、处理异常、发起付款</label>
+                <label><span></span><input type="checkbox"> 供应商费用：新增费用、确认费用、处理差异、发起付款、查看申请</label>
+                <label><span></span><input type="checkbox"> 付款申请：新建、保存草稿、提交付款申请、删除、重新申请、查看财务付款</label>
+                <label><span></span><input type="checkbox"> 出团执行：名单导入导出、证件审核、签证更新、通知生成/发送、领队安排</label>
+                <label><span></span><input type="checkbox"> 回团处理：发起归档、异常处理、保存处理结果、导出记录</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开财务"></button>
+                <label><input type="checkbox"> 销售</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> 产品报价/新建订单：报价、选择产品、申请特殊折扣、生成订单</label>
+                <label><span></span><input type="checkbox"> 意向订单：新建、跟进、分配销售、转订单、查看日志、AI话术</label>
+                <label><span></span><input type="checkbox"> 订单管理：新建、查看、批量导出、分配销售、生成合同、取消订单</label>
+                <label><span></span><input type="checkbox"> 订单详情：认领收款、申请退款、改价、转团、分配客服、同步出团执行</label>
+                <label><span></span><input type="checkbox"> 收款认领：手动/OTA认款、补充、解析单据、提交认款申请、拆分</label>
+                <label><span></span><input type="checkbox"> 合同管理：催签、重发、下载、作废、批量催签</label>
+                <label><span></span><input type="checkbox"> 售后处理：退款、转团、改签改期、发起申请、审批进度、执行变更</label>
+                <label><span></span><input type="checkbox"> 门店/顾问：新增、编辑、暂停、停用、批量导入、导出、添加顾问</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开渠道"></button>
+                <label><input type="checkbox"> 渠道</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> OTA产品：同步全部、查看日志、详情配置、改价、更新库存、上下架</label>
+                <label><span></span><input type="checkbox"> OTA订单：查看详情、确认接单、取消、拒绝</label>
+                <label><span></span><input type="checkbox"> OTA退款：核实处理、确认退款金额、创建系统退款申请</label>
+                <label><span></span><input type="checkbox"> OTA对账：导出对账单、提交财务主管审批</label>
+                <label><span></span><input type="checkbox"> 分销渠道/同行代理：新增、编辑、查看详情、停用、启用、结算佣金</label>
+                <label><span></span><input type="checkbox"> 佣金规则：查看、新增、维护内部销售/分销/同行代理规则</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开客户"></button>
+                <label><input type="checkbox"> 客户</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> 客户列表：新增、查看详情、导出、批量分配顾问、批量打标签</label>
+                <label><span></span><input type="checkbox"> 客户详情：编辑、新增跟进、企微消息、新建意向单/订单、添加标签</label>
+                <label><span></span><input type="checkbox"> 客户AI：标签建议、复购预测、AI客户洞察</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开财务"></button>
+                <label><input type="checkbox"> 财务</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> 收款管理：查询、查看详情、导出</label>
+                <label><span></span><input type="checkbox"> 认款管理：导入银行流水、手工认款、复核、退回、拆分、确认入账</label>
+                <label><span></span><input type="checkbox"> 应收管理：确认应收、批量催款、处理坏账、查看明细</label>
+                <label><span></span><input type="checkbox"> 应付管理：发起对账、处理差异、申请付款、查看回单</label>
+                <label><span></span><input type="checkbox"> 付款执行：执行付款、批量合并付款、预付申请、催审批、导出</label>
+                <label><span></span><input type="checkbox"> 退款执行：立即执行退款、确认执行、导出、查看记录</label>
+                <label><span></span><input type="checkbox"> 对账结算：生成对账单、催确认、查看异议、进入结算详情</label>
+                <label><span></span><input type="checkbox"> 发票/回单：申请开票、确认入账、上传回单、确认核销</label>
+                <label><span></span><input type="checkbox"> 汇率币种：手动录入汇率、修正、导出历史</label>
+                <label><span></span><input type="checkbox"> NC推送：处理错误、修复重推、查看科目映射、导出日志</label>
+                <label><span></span><input type="checkbox"> 财务报表：查询、查看明细、导出Excel/PDF/明细</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开审批"></button>
+                <label><input type="checkbox"> 审批</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> 待我审批/我发起的/审批总览查看</label>
+                <label><span></span><input type="checkbox"> 产品发布、价格调整、渠道授权审批通过/驳回</label>
+                <label><span></span><input type="checkbox"> 履约对象、改期转团、退款、付款、合同作废审批</label>
+                <label><span></span><input type="checkbox"> 审批记录查询、导出审批记录、审批配置查看</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开企业配置"></button>
+                <label><input type="checkbox"> 企业配置</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> 组织管理：查看成员/业务范围/调整记录、发起调整</label>
+                <label><span></span><input type="checkbox"> 员工管理：入职申请、查看、发起调整</label>
+                <label><span></span><input type="checkbox"> 角色授权：发起授权申请、申请调整</label>
+                <label><span></span><input type="checkbox"> 通知模板：新增、编辑</label>
+                <label><span></span><input type="checkbox"> 业务参数：编辑、保存配置、申请调整</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="role-perm-panel" data-role-scope-panel="ai">
+            <div class="role-permission-tree">
+              <div class="role-tree-node">
+                <button class="role-tree-caret" type="button" data-role-tree-toggle aria-label="展开AI业务能力"></button>
+                <label><input type="checkbox" checked> AI业务能力</label>
+              </div>
+              <div class="role-tree-children">
+                <label><span></span><input type="checkbox" checked> AI助手：新建对话、上传文档、选择团期/产品/客户、执行指令、导出结果</label>
+                <label><span></span><input type="checkbox" checked> AI快捷指令：按角色展示可用指令，不展示未授权业务动作</label>
+                <label><span></span><input type="checkbox" checked> 线路拆解：新建测试任务、查看结果、人工校正、批量重解析、归档、删除</label>
+                <label><span></span><input type="checkbox" checked> 竞品分析：新增平台、监控目标、采集任务、导出报告、趋势图、错误日志</label>
+                <label><span></span><input type="checkbox"> 签证审查：批量审查、政策库新增/编辑、规则编辑、版本历史、停用</label>
+                <label><span></span><input type="checkbox"> 出行助理：资料上传/更新/删除、提醒新增/编辑、对话详情、转人工记录</label>
+              </div>
+              <div class="role-tree-node">
+                <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开AI治理"></button>
+                <label><input type="checkbox"> 页面内AI入口</label>
+              </div>
+              <div class="role-tree-children is-hidden">
+                <label><span></span><input type="checkbox"> 产品创建页AI生成行程/亮点/课程行程</label>
+                <label><span></span><input type="checkbox"> 团期成本AI毛利预测、AI成本对比、AI出团风险扫描</label>
+                <label><span></span><input type="checkbox"> 证件/签证AI审查、名单AI核验、通知AI生成</label>
+                <label><span></span><input type="checkbox"> 客户AI标签建议、AI复购预测、订单AI风险提示</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="role-modal-panel" data-role-modal-panel="data">
+          <div class="role-data-form">
+            <div class="form-group">
+              <label class="form-label" for="merchantOrgScope">授权组织范围</label>
+              <select class="form-control" id="merchantOrgScope">
+                <option>本人所在组织</option>
+                <option>本门店/部门</option>
+                <option selected>本中心及下级</option>
+                <option>本主体及下级</option>
+                <option>全租户</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantResourceScope">资源/供应商数据</label>
+              <select class="form-control" id="merchantResourceScope">
+                <option>不开放资源主数据</option>
+                <option>仅查看授权资源类型</option>
+                <option selected>授权资源类型与供应商</option>
+                <option>全租户资源与供应商</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantProductScope">产品/团期数据</label>
+              <select class="form-control" id="merchantProductScope">
+                <option>本人负责产品与团期</option>
+                <option selected>本产品线/中心产品与团期</option>
+                <option>授权产品分类/目的地/履约对象</option>
+                <option>全租户产品与团期</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantSalesScope">销售/客户数据</label>
+              <select class="form-control" id="merchantSalesScope">
+                <option>本人客户与订单</option>
+                <option>本门店客户与订单</option>
+                <option selected>授权组织客户与订单</option>
+                <option>全租户客户与订单</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantFinanceScope">财务数据</label>
+              <select class="form-control" id="merchantFinanceScope">
+                <option>不可见财务金额</option>
+                <option>只看本人经办单据</option>
+                <option selected>授权组织财务单据</option>
+                <option>全租户财务明细与报表</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantChannelScope">渠道数据</label>
+              <select class="form-control" id="merchantChannelScope">
+                <option>不开放渠道数据</option>
+                <option selected>授权渠道来源</option>
+                <option>授权OTA/分销/代理渠道</option>
+                <option>全部渠道来源</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantApprovalScope">审批/流程数据</label>
+              <select class="form-control" id="merchantApprovalScope">
+                <option>仅本人发起和待办</option>
+                <option selected>授权模块审批数据</option>
+                <option>授权组织审批数据</option>
+                <option>全租户审批数据</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchantAiScope">AI调用数据</label>
+              <select class="form-control" id="merchantAiScope">
+                <option>仅本人AI调用</option>
+                <option selected>授权组织AI调用</option>
+                <option>全租户AI调用统计</option>
+                <option>不查看AI调用内容</option>
+              </select>
+            </div>
+            <div class="role-mask-list role-data-mask-list">
+              <label class="role-switch-line"><span>手机号脱敏</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>证件/护照号脱敏</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>客户标签与跟进记录脱敏</span><input type="checkbox"></label>
+              <label class="role-switch-line"><span>供应商联系方式脱敏</span><input type="checkbox"></label>
+              <label class="role-switch-line"><span>成本价脱敏</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>利润率脱敏</span><input type="checkbox"></label>
+              <label class="role-switch-line"><span>应收应付金额脱敏</span><input type="checkbox"></label>
+              <label class="role-switch-line"><span>合同/发票税号脱敏</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>银行流水/回单附件脱敏</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>AI提示词与输出内容脱敏</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>导出必须按数据范围过滤</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>导出敏感数据需审批</span><input type="checkbox" checked></label>
+              <label class="role-switch-line"><span>跨主体数据需二次授权</span><input type="checkbox" checked></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="role-modal-panel" data-role-modal-panel="control">
+          <div class="role-data-form">
+            <label class="role-switch-line"><span>允许业务管理员复制该角色</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>业务管理员可下调功能权限</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>业务角色不可突破平台权限上限</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>高危权限变更需复核</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>财务/退款/付款/NC权限需单独审批</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>导出客户、证件、财务数据需记录审计</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>AI批量调用受额度策略限制</span><input type="checkbox" checked></label>
+            <label class="role-switch-line"><span>系统预置角色锁定删除</span><input type="checkbox" checked></label>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-merchant-role-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-close-merchant-role-modal>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var roleModal = document.querySelector("[data-merchant-role-modal]");
+      var modalTitle = document.getElementById("merchantRoleModalTitle");
+      var roleName = document.getElementById("merchantRoleName");
+      var roleScope = document.getElementById("merchantRoleScope");
+      var roleDescription = document.getElementById("merchantRoleDescription");
+      var filterSource = document.querySelector("[data-source-filter]");
+      var filterScope = document.querySelector("[data-scope-filter]");
+      var filterStatus = document.querySelector("[data-status-filter]");
+
+      function openModal(modal) {
+        if (!modal) return;
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      function applyFilters() {
+        var source = filterSource.value;
+        var scope = filterScope.value;
+        var status = filterStatus.value;
+        var activeTab = document.querySelector("[data-filter-tabs] .tab-item.active");
+        var tabStatus = activeTab ? activeTab.dataset.filterValue || activeTab.textContent.replace(/\(.*/, "").trim() : "";
+        document.querySelectorAll("[data-merchant-role-table] tr").forEach(function (row) {
+          var hidden = false;
+          if (source && row.dataset.source !== source) hidden = true;
+          if (scope && row.dataset.scope !== scope) hidden = true;
+          if (status && row.dataset.status !== status) hidden = true;
+          if (tabStatus && row.dataset.tabStatus !== tabStatus) hidden = true;
+          row.hidden = hidden;
+        });
+      }
+
+      document.querySelectorAll("[data-open-merchant-role-modal]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var row = button.closest("tr");
+          var title = button.dataset.openMerchantRoleModal || "编辑业务角色";
+          if (modalTitle) modalTitle.textContent = title;
+          if (row) {
+            var cells = row.querySelectorAll("td");
+            if (roleName && cells[0]) roleName.value = cells[0].innerText.trim();
+            if (roleScope && cells[2]) roleScope.value = cells[2].innerText.trim();
+            if (roleDescription && cells[3]) roleDescription.value = cells[3].innerText.trim();
+          } else {
+            if (roleName) roleName.value = "";
+            if (roleScope) roleScope.value = "业务中心";
+            if (roleDescription) roleDescription.value = "";
+          }
+          openModal(roleModal);
+        });
+      });
+
+      document.querySelectorAll("[data-close-merchant-role-modal]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          closeModal(roleModal);
+        });
+      });
+
+      document.querySelectorAll("[data-role-modal-tab]").forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          var target = tab.dataset.roleModalTab;
+          document.querySelectorAll("[data-role-modal-tab]").forEach(function (item) {
+            item.classList.toggle("active", item === tab);
+          });
+          document.querySelectorAll("[data-role-modal-panel]").forEach(function (panel) {
+            panel.classList.toggle("active", panel.dataset.roleModalPanel === target);
+          });
+        });
+      });
+
+      document.querySelectorAll("[data-role-scope]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var target = button.dataset.roleScope;
+          document.querySelectorAll("[data-role-scope]").forEach(function (item) {
+            item.classList.toggle("active", item === button);
+          });
+          document.querySelectorAll("[data-role-scope-panel]").forEach(function (panel) {
+            panel.classList.toggle("active", panel.dataset.roleScopePanel === target);
+          });
+        });
+      });
+
+      document.querySelectorAll("[data-role-tree-toggle]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var children = button.parentElement.nextElementSibling;
+          button.classList.toggle("collapsed");
+          if (children && children.classList.contains("role-tree-children")) {
+            children.classList.toggle("is-hidden");
+          }
+        });
+      });
+
+      document.querySelector("[data-role-permission-find]").addEventListener("click", function () {
+        var keyword = document.querySelector("[data-role-permission-search]").value.trim();
+        document.querySelectorAll(".role-permission-tree label").forEach(function (label) {
+          label.classList.toggle("highlight", Boolean(keyword) && label.innerText.indexOf(keyword) >= 0);
+        });
+      });
+
+      document.querySelector("[data-filter-search]").addEventListener("click", applyFilters);
+      [filterSource, filterScope, filterStatus].forEach(function (control) {
+        control.addEventListener("change", applyFilters);
+      });
+      document.querySelectorAll("[data-filter-tabs] .tab-item").forEach(function (button) {
+        button.addEventListener("click", function () {
+          setTimeout(applyFilters, 0);
+        });
+      });
+      document.querySelector("[data-filter-reset]").addEventListener("click", function () {
+        filterSource.value = "";
+        filterScope.value = "";
+        filterStatus.value = "";
+        applyFilters();
+      });
+    })();
+  </script>
+</body>
+</html>
