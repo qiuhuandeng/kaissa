@@ -981,6 +981,7 @@
   }
 
   function initNav() {
+    installCaesarUI();
     const file = currentFile();
     const active = resolveActive(file);
     const activeHref = activeHrefFrom(active, file);
@@ -1068,6 +1069,7 @@
     initListSurfaces(content);
     initFilterTabs(content);
     initActionMenus(content);
+    initLayerSemantics(content);
     initPjaxNavigation();
     requestAnimationFrame(() => window.caesarRefreshListSurfaces && window.caesarRefreshListSurfaces());
   }
@@ -1114,6 +1116,7 @@
       initListSurfaces(currentContent);
       initFilterTabs(currentContent);
       initActionMenus(currentContent);
+      initLayerSemantics(currentContent);
     };
 
   async function loadPage(target, options) {
@@ -1143,6 +1146,7 @@
       initListSurfaces(content);
       initFilterTabs(content);
       initActionMenus(content);
+      initLayerSemantics(content);
       runPageScripts(scripts);
       window.caesarRefreshListSurfaces();
       content.scrollTop = 0;
@@ -1259,6 +1263,158 @@
   function hasChildren(node) {
     return Array.from(node.childNodes).some((child) => {
       return child.nodeType !== Node.TEXT_NODE || child.textContent.trim();
+    });
+  }
+
+  function resolveElement(target) {
+    if (!target) return null;
+    if (typeof target === "string") return document.querySelector(target);
+    return target instanceof HTMLElement ? target : null;
+  }
+
+  function ensureToastContainer() {
+    let container = document.querySelector(".caesar-toast-container");
+    if (container) return container;
+    container = document.createElement("div");
+    container.className = "caesar-toast-container";
+    container.setAttribute("aria-live", "polite");
+    container.setAttribute("aria-atomic", "true");
+    document.body.appendChild(container);
+    return container;
+  }
+
+  function showToast(message, options = {}) {
+    const container = ensureToastContainer();
+    const toast = document.createElement("div");
+    const type = options.type || "info";
+    toast.className = `caesar-toast caesar-toast-${type}`;
+    toast.setAttribute("role", type === "error" ? "alert" : "status");
+
+    const content = document.createElement("div");
+    if (options.title) {
+      const title = document.createElement("strong");
+      title.className = "caesar-toast-title";
+      title.textContent = options.title;
+      content.appendChild(title);
+    }
+    const body = document.createElement("span");
+    body.className = "caesar-toast-message";
+    body.textContent = message || "操作已完成";
+    content.appendChild(body);
+    toast.appendChild(content);
+    container.appendChild(toast);
+
+    const duration = Number(options.duration || 2400);
+    window.setTimeout(() => {
+      toast.classList.add("closing");
+      window.setTimeout(() => toast.remove(), 180);
+    }, duration);
+    return toast;
+  }
+
+  function openLayer(target) {
+    const layer = resolveElement(target);
+    if (!layer) return null;
+    layer.hidden = false;
+    layer.classList.remove("closing");
+    layer.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => layer.classList.add("show"));
+    return layer;
+  }
+
+  function closeLayer(target) {
+    const layer = resolveElement(target);
+    if (!layer) return null;
+    layer.classList.remove("show");
+    layer.classList.add("closing");
+    const delay = layer.classList.contains("drawer-overlay") ? 240 : 180;
+    window.setTimeout(() => {
+      layer.classList.remove("closing");
+      layer.hidden = true;
+      layer.setAttribute("aria-hidden", "true");
+    }, delay);
+    return layer;
+  }
+
+  function ensureListStateNode(surface, className, titleText, messageText) {
+    let node = surface.querySelector(`:scope > .${className}`);
+    if (node) return node;
+    node = document.createElement("div");
+    node.className = `list-state-panel ${className}`;
+    if (className === "list-loading-state") {
+      const skeleton = document.createElement("div");
+      skeleton.className = "list-loading-lines";
+      skeleton.innerHTML = "<span></span><span></span><span></span>";
+      node.appendChild(skeleton);
+    }
+    const title = document.createElement("strong");
+    title.className = "list-state-title";
+    title.textContent = titleText;
+    const message = document.createElement("div");
+    message.className = "list-state-message";
+    message.textContent = messageText;
+    node.append(title, message);
+
+    const anchor = surface.querySelector(":scope > .list-surface-table, :scope > .table-wrap, :scope > .list-empty-state, :scope > [data-list-empty]");
+    if (anchor) {
+      anchor.insertAdjacentElement("afterend", node);
+    } else {
+      surface.appendChild(node);
+    }
+    return node;
+  }
+
+  function ensureListStatePanels(surface) {
+    if (!surface) return;
+    ensureListStateNode(surface, "list-loading-state", "正在加载", "请稍候，数据正在更新。");
+    ensureListStateNode(surface, "list-error-state", "加载失败", "请稍后重试，或检查筛选条件。");
+  }
+
+  function setListLoading(target, loading = true, message) {
+    const surface = resolveElement(target);
+    if (!surface) return;
+    ensureListStatePanels(surface);
+    const node = surface.querySelector(":scope > .list-loading-state");
+    if (message && node) {
+      const msg = node.querySelector(".list-state-message");
+      if (msg) msg.textContent = message;
+    }
+    surface.classList.toggle("is-loading", Boolean(loading));
+    if (loading) surface.classList.remove("is-error");
+  }
+
+  function setListError(target, message) {
+    const surface = resolveElement(target);
+    if (!surface) return;
+    ensureListStatePanels(surface);
+    const node = surface.querySelector(":scope > .list-error-state");
+    if (message && node) {
+      const msg = node.querySelector(".list-state-message");
+      if (msg) msg.textContent = message;
+    }
+    surface.classList.remove("is-loading");
+    surface.classList.add("is-error");
+  }
+
+  function clearListState(target) {
+    const surface = resolveElement(target);
+    if (!surface) return;
+    surface.classList.remove("is-loading", "is-error");
+    updateListSurfaceState(surface);
+  }
+
+  function installCaesarUI() {
+    window.caesarUI = Object.assign({}, window.caesarUI || {}, {
+      openLayer,
+      closeLayer,
+      openDrawer: openLayer,
+      closeDrawer: closeLayer,
+      openModal: openLayer,
+      closeModal: closeLayer,
+      toast: showToast,
+      setListLoading,
+      setListError,
+      clearListState,
     });
   }
 
@@ -1383,36 +1539,231 @@
   }
 
   const metaTagTexts = new Set([
-    "普通团期", "邮轮航次", "专列班期", "研学营期", "自由行", "单项委托",
-    "自营", "自营产品", "外采", "外采产品", "外采团期", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "国内游",
-    "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算",
-    "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
-    "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量",
-    "欧洲", "国内", "MICE", "出境跟团", "跟团游", "普通报价", "团队报价"
+    "线路", "团期", "自由行", "单项委托", "普通团期", "邮轮团期", "专列团期", "研学团期", "邮轮航次", "专列班期", "研学营期",
+    "POI", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮航线", "运营商", "专列线路", "供应商", "领队",
+    "自营", "自营产品", "外采", "外采产品", "外采团期", "外采包团", "外采系列团", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "委托单",
+    "出境游", "国内游", "国内跟团", "港澳台", "小包团", "定制团", "半自由行", "出境跟团", "跟团游", "普通报价", "团队报价",
+    "成人/儿童结算价", "舱型库存价", "铺位/包厢结算价", "服务费/加急费",
+    "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
+    "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
+    "欧洲", "东南亚", "国内", "法国", "德国", "意大利", "荷兰", "比利时", "日本", "英国", "MICE", "全产品",
+    "产品", "销售", "财务", "系统", "资源", "出团", "渠道", "客户", "客服", "审批", "数据", "AI",
+    "产品发布", "价格调整", "渠道授权", "成本差异", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
+    "产品经理", "产品总监", "销售顾问", "高级顾问", "顾问", "计调", "客服", "财务", "管理层", "门店店长", "呼叫中心坐席", "审批管理员", "超管",
+    "专业版", "旗舰版", "基础版", "组织账号", "权限安全", "AI模型", "系统配置", "审计只读", "产品文案生成", "行程生成", "话术建议", "财务异常分析", "客户洞察", "其他"
   ]);
+
+  const metaTagPatterns = [
+    /^(自营|外采|邮轮|专列|研学|自由行|单项委托|跟团游|出境游|国内游|MICE)(产品|团期)?$/,
+    /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
+    /^(门市|门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
+    /^(产品|销售|财务|系统|资源|出团|渠道|客户|客服|审批|数据|AI)$/,
+    /^(产品发布|价格调整|渠道授权|成本差异|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
+    /^(产品经理|产品总监|销售顾问|高级顾问|顾问|计调|客服|财务|管理层|门店店长|呼叫中心坐席|审批管理员|超管)$/,
+    /^(专业版|旗舰版|基础版|组织账号|权限安全|AI模型|系统配置|审计只读)$/,
+    /^(欧洲|东南亚|国内|法国|德国|意大利|荷兰|比利时|日本|英国|全产品)$/,
+    /^(产品文案生成|行程生成|话术建议|财务异常分析|客户洞察|其他)$/
+  ];
+
+  const plainTagPatterns = [
+    /^[+-]?[¥￥]\s?[\d,]+(?:\.\d+)?/,
+    /^(应收|已收|未收|合同|报价|预估|退|补差|尾款|预付款|毛利|成本|收入|销售额)[¥￥\d]/,
+    /^(舱位|剩余|余位|铺位|房量|库存)\s*\d+/,
+    /^\d+\s*(间|铺|人|个|单|项|条)$/
+  ];
 
   function compactText(text) {
     return String(text || "").replace(/\s+/g, "");
   }
 
   function isStatusColumnTitle(title) {
-    return /状态|进度|结果|风险|预警|审批|审核|是否|操作/.test(compactText(title));
+    const text = compactText(title);
+    return /状态|进度|结果|风险|预警|超时|超期|逾期|异常|是否|操作|审核状态|审批状态|处理状态|同步状态|付款状态|收款状态|开票状态|NC状态/.test(text);
+  }
+
+  function isPlainColumnTitle(title) {
+    const text = compactText(title);
+    if (!text || isStatusColumnTitle(text)) return false;
+    return /金额|价格|收入|成本|应收|应付|合同|报价|库存|舱位|房量|铺位|名额|余位|数量|订单量|销售额|余额/.test(text);
   }
 
   function isMetaColumnTitle(title) {
     const text = compactText(title);
     if (!text || isStatusColumnTitle(text)) return false;
-    return /产品类型|业务类型|合同类型|客户类型|团期类型|类型|渠道|来源|平台|分类|标签|履约|对象|适用|付款方|认款方式/.test(text);
+    return /审批事项|事项|来源模块|来源|模块|产品类型|业务类型|合同类型|客户类型|团期类型|资源类型|类型|渠道|平台|分类|标签|履约|对象|适用|付款方|认款方式|供应商|航司|船公司|运营商|目的地|出发地|城市|产品线|主题|结算方式|价格模型|团期形式|套餐|等级|端|模板|权限|角色|岗位|组织|部门|地区|区域/.test(text);
+  }
+
+  const tableColumnClassNames = [
+    "list-col-select",
+    "list-col-visual",
+    "list-col-index",
+    "list-col-action",
+    "list-col-status",
+    "list-col-id",
+    "list-col-date",
+    "list-col-money",
+    "list-col-number",
+    "list-col-person",
+    "list-col-main",
+    "list-col-desc",
+    "list-col-meta",
+    "list-col-default",
+    "list-col-nowrap",
+    "list-col-wrap"
+  ];
+
+  const tableColumnWidths = {
+    select: 44,
+    visual: 76,
+    index: 56,
+    action: 168,
+    status: 108,
+    id: 148,
+    date: 126,
+    money: 112,
+    number: 88,
+    person: 124,
+    main: 232,
+    desc: 240,
+    meta: 116,
+    default: 120
+  };
+
+  function columnTitleText(title) {
+    return compactText(title).replace(/[（(].*?[）)]/g, "");
+  }
+
+  function hasCheckbox(cell) {
+    return Boolean(cell && cell.querySelector('input[type="checkbox"]'));
+  }
+
+  function classifyTableColumn(title, index, headerCell) {
+    const text = columnTitleText(title);
+
+    if (hasCheckbox(headerCell) || (!text && index === 0)) return "select";
+    if (/^(序号|编号)$/.test(text)) return "index";
+    if (/^(操作|动作|管理)$|操作$/.test(text)) return "action";
+    if (/图片|产品图|封面|头像|Logo|图标/.test(text)) return "visual";
+    if (/产品\/|产品名称|线路名称|线路\/|资源名称|供应商名称|客户\/渠道|客户\/联系人|项目\/客户|项目名称|公司名称|门店名称|商户名称|租户名称|组织名称|部门名称|角色名称|员工账号|船只名称|船名|船公司名称|酒店名称|餐厅名称|车型名称|套餐名称|模板名称|规则名称|策略名称|任务名称/.test(text)) return "main";
+    if (/备注|说明|原因|提示|异常|建议|描述|内容|范围|规则摘要|规则命中|特殊需求|处理意见|处理建议|失败原因|错误信息|数据口径|业务边界|权限边界|日志/.test(text)) return "desc";
+    if (/状态|进度|结果|风险|预警|超时|超期|逾期|异常|是否|开关|审核状态|审批状态|处理状态|同步状态|付款状态|收款状态|开票状态|NC状态/.test(text)) return "status";
+    if (/单号|订单号|合同号|团号|编号|编码|证件号|流水号|凭证号|业务单据|关联订单|ID$|^ID$|No$/.test(text)) return "id";
+    if (/日期|时间|有效期|截止|到期|出发日|回团日|下单|创建|更新|申请时间|执行时间|发送时间|付款时间|收款时间/.test(text)) return "date";
+    if (/金额|价格|售价|起价|起售价|应收|已收|待收|未收|应付|已付|待付|未付|成本|收入|支出|毛利|佣金|余额|汇率|合计|小计|报价|合同额|退款|付款|收款|折扣|费率/.test(text)) return "money";
+    if (/库存|数量|人数|成人|儿童|团期数|可售|已售|余量|名额|舱位|房量|铺位|订单量|点击|浏览|转化|评分|天数|晚数|时长|次数|比例/.test(text)) return "number";
+    if (/负责人|负责计调|计调|申请人|处理人|审批人|顾问|联系人|客户|客人|游客|姓名|员工|领队|销售|账号|手机|电话/.test(text)) return "person";
+    if (isMetaColumnTitle(text)) return "meta";
+    return "default";
+  }
+
+  function tableColumnWidth(profile, table, columnIndex) {
+    if (profile !== "action") return tableColumnWidths[profile] || tableColumnWidths.default;
+
+    const actionCounts = Array.from(table.tBodies).flatMap((body) => (
+      Array.from(body.rows).map((row) => {
+        const cell = row.cells[columnIndex];
+        if (!cell || cell.colSpan > 1) return 0;
+        return cell.querySelectorAll(".table-action > a, .table-action > button, .table-action .table-more-toggle").length;
+      })
+    ));
+    const maxActionCount = Math.max(0, ...actionCounts);
+    return Math.min(320, Math.max(tableColumnWidths.action, maxActionCount * 38 + 40));
+  }
+
+  function applyTableColumnClass(cell, profile, width) {
+    if (!cell) return;
+    cell.classList.remove(...tableColumnClassNames);
+    cell.classList.add("list-col", `list-col-${profile}`);
+    cell.classList.add(profile === "desc" ? "list-col-wrap" : "list-col-nowrap");
+    cell.style.setProperty("--list-col-width", `${width}px`);
+    cell.dataset.columnSemantic = profile;
+  }
+
+  function enhanceTableColumnSemantics(table) {
+    if (!table || !table.tHead || !table.closest(".table-wrap, .list-surface-table")) return;
+
+    const headerRows = Array.from(table.tHead.rows);
+    const headerCells = headerRows.length ? Array.from(headerRows[headerRows.length - 1].cells) : [];
+    if (!headerCells.length) return;
+
+    const profiles = headerCells.map((cell, index) => classifyTableColumn(cell.textContent, index, cell));
+    const widths = profiles.map((profile, index) => tableColumnWidth(profile, table, index));
+    const minWidth = Math.max(720, widths.reduce((sum, width) => sum + width, 0));
+
+    table.classList.add("table-column-runtime");
+    table.style.setProperty("--table-min-width", `${minWidth}px`);
+
+    headerCells.forEach((cell, index) => applyTableColumnClass(cell, profiles[index], widths[index]));
+
+    Array.from(table.tBodies).forEach((body) => {
+      Array.from(body.rows).forEach((row) => {
+        Array.from(row.cells).forEach((cell, index) => {
+          if (cell.colSpan > 1 || !profiles[index]) return;
+          applyTableColumnClass(cell, profiles[index], widths[index]);
+        });
+      });
+    });
+  }
+
+  function tagText(tag) {
+    return compactText(tag.textContent);
+  }
+
+  function shouldUsePlainTag(tag, columnTitle) {
+    const text = tagText(tag);
+    if (!text || isStatusColumnTitle(columnTitle)) return false;
+    return isPlainColumnTitle(columnTitle) || plainTagPatterns.some((pattern) => pattern.test(text));
   }
 
   function shouldUseMetaTag(tag, columnTitle) {
     if (isStatusColumnTitle(columnTitle)) return false;
-    const text = compactText(tag.textContent);
-    return isMetaColumnTitle(columnTitle) || metaTagTexts.has(text);
+    const text = tagText(tag);
+    return isMetaColumnTitle(columnTitle) || metaTagTexts.has(text) || metaTagPatterns.some((pattern) => pattern.test(text));
   }
 
-  function normalizeListSurfaceTags(surface) {
-    surface.querySelectorAll(".list-surface-table table, :scope > .table-wrap table").forEach((table) => {
+  function markTag(tag, semantic) {
+    tag.dataset.tagSemantic = semantic;
+    if (semantic === "plain") {
+      tag.classList.add("tag-plain-runtime");
+      tag.classList.remove("tag-meta-runtime");
+      return;
+    }
+    if (semantic === "meta") {
+      tag.classList.add("tag-meta-runtime");
+      tag.classList.remove("tag-plain-runtime");
+    }
+  }
+
+  function normalizeTagBySemantics(tag, columnTitle) {
+    if (!tag || tag.dataset.tagSemantic) return;
+
+    if (tag.classList.contains("tag-meta") || tag.classList.contains("tag-meta-runtime")) {
+      markTag(tag, "meta");
+      return;
+    }
+
+    if (isStatusColumnTitle(columnTitle)) {
+      tag.dataset.tagSemantic = "state";
+      return;
+    }
+
+    if (shouldUsePlainTag(tag, columnTitle)) {
+      markTag(tag, "plain");
+      return;
+    }
+
+    if (shouldUseMetaTag(tag, columnTitle) || (tag.closest(".tag-group") && !isStatusColumnTitle(columnTitle))) {
+      markTag(tag, "meta");
+      return;
+    }
+
+    tag.dataset.tagSemantic = "state";
+  }
+
+  function normalizeTableTags(scope) {
+    scope.querySelectorAll("table").forEach((table) => {
+      enhanceTableColumnSemantics(table);
+
       const headerRows = table.tHead ? Array.from(table.tHead.rows) : [];
       const headerCells = headerRows.length ? Array.from(headerRows[headerRows.length - 1].cells) : [];
       const headers = headerCells.map((cell) => cell.textContent.trim());
@@ -1420,24 +1771,20 @@
       table.querySelectorAll("tbody tr").forEach((row) => {
         Array.from(row.cells).forEach((cell, index) => {
           const columnTitle = headers[index] || "";
-          cell.querySelectorAll(".tag").forEach((tag) => {
-            if (shouldUseMetaTag(tag, columnTitle)) {
-              tag.classList.add("tag-meta-runtime");
-            }
-          });
+          cell.querySelectorAll(".tag").forEach((tag) => normalizeTagBySemantics(tag, columnTitle));
         });
       });
     });
+  }
 
+  function normalizeListSurfaceTags(surface) {
+    normalizeTableTags(surface);
     normalizeStandaloneMetaTags(surface);
   }
 
   function normalizeStandaloneMetaTags(scope) {
-    scope.querySelectorAll(".tag").forEach((tag) => {
-      if (metaTagTexts.has(compactText(tag.textContent))) {
-        tag.classList.add("tag-meta-runtime");
-      }
-    });
+    normalizeTableTags(scope);
+    scope.querySelectorAll(".tag").forEach((tag) => normalizeTagBySemantics(tag, ""));
   }
 
   function normalizeListAlert(alert) {
@@ -1458,7 +1805,7 @@
 
     const pageHead = panel.querySelector(":scope > .list-page-head");
     const pageTitle = pageHead ? pageHead.querySelector(".page-title") : null;
-    const pageActions = pageHead ? pageHead.querySelector(".list-page-actions") : null;
+    const pageActions = pageHead ? pageHead.querySelector(".list-page-actions, .page-actions") : null;
     const panelHead = filter.parentElement
       ? filter.parentElement.querySelector(":scope > .masterdata-panel-head, :scope > .panel-head")
       : null;
@@ -1516,21 +1863,37 @@
     table.insertAdjacentElement("afterend", empty);
   }
 
+  function attachPaginationToTable(pagination, tableWrap) {
+    if (!pagination) return;
+    const table = tableWrap || tableForPagination(pagination);
+    pagination.classList.add("list-surface-pagination", "list-pagination-attached");
+    if (table) table.classList.add("list-table-with-pagination");
+  }
+
+  function tableForPagination(pagination) {
+    let previous = pagination.previousElementSibling;
+    while (previous && previous.matches(".list-empty-state, [data-list-empty], .list-state-panel")) {
+      previous = previous.previousElementSibling;
+    }
+    return previous && previous.matches(".table-wrap, .list-surface-table") ? previous : null;
+  }
+
   function updateListSurfaceState(surface) {
     if (!surface) return;
 
     const rows = Array.from(surface.querySelectorAll("tbody tr"));
     const empty = surface.querySelector(".list-empty-state, [data-list-empty]");
-    if (!empty) return;
-
-    const visibleRows = rows.filter((row) => !row.hidden);
-    empty.hidden = rows.length > 0 && visibleRows.length > 0;
+    if (empty) {
+      const visibleRows = rows.filter((row) => !row.hidden);
+      empty.hidden = rows.length > 0 && visibleRows.length > 0;
+    }
   }
 
   function prepareListSurface(surface) {
     if (!surface) return;
 
     surface.classList.add("list-surface");
+    ensureListStatePanels(surface);
 
     surface.querySelectorAll(".filter-card").forEach((filter) => {
       enhanceListFilter(surface, filter);
@@ -1555,7 +1918,7 @@
     normalizeListSurfaceTags(surface);
 
     surface.querySelectorAll(".pagination").forEach((pagination) => {
-      pagination.classList.add("list-surface-pagination");
+      attachPaginationToTable(pagination);
     });
 
     surface.querySelectorAll("tbody tr[data-href], tbody tr[data-nav-href], tbody tr[data-row-link]").forEach((row) => {
@@ -1583,16 +1946,29 @@
 
       if (!hasTable) return false;
 
-      const pageActions = panel.querySelector(":scope > .list-page-head .list-page-actions");
+      let actionRow = null;
+      const pageActions = panel.querySelector(":scope > .list-page-head .list-page-actions, :scope > .list-page-head .page-actions");
       if (pageActions && hasChildren(pageActions)) {
-        const actionRow = document.createElement("div");
-        actionRow.className = "list-surface-head-actions";
+        actionRow = document.createElement("div");
         moveChildren(pageActions, actionRow);
-        panel.appendChild(actionRow);
       }
 
       panel.classList.add("list-surface", "list-head-surface");
       parts.forEach((part) => panel.appendChild(part));
+      if (actionRow) {
+        const firstPart = parts[0] || null;
+        if (firstPart && firstPart.matches(".tab-bar:not([data-filter-tabs])")) {
+          const tabbarRow = document.createElement("div");
+          tabbarRow.className = "list-surface-tabbar-row";
+          panel.insertBefore(tabbarRow, firstPart);
+          tabbarRow.appendChild(firstPart);
+          actionRow.className = "list-surface-tabbar-actions";
+          tabbarRow.appendChild(actionRow);
+        } else {
+          actionRow.className = "list-surface-head-actions";
+          panel.insertBefore(actionRow, firstPart);
+        }
+      }
       panel.dataset.listSurfaceReady = "true";
       prepareListSurface(panel);
       return true;
@@ -1817,39 +2193,63 @@
   }
 
   function initActionMenus(scope) {
-    scope.querySelectorAll("[data-action-menu]").forEach((wrap) => {
+    const closeActionMenu = (wrap) => {
+      wrap.classList.remove("open");
+      wrap.querySelectorAll(".action-dropdown-menu.show, .dropdown-menu.show").forEach((menu) => menu.classList.remove("show"));
+      wrap.querySelectorAll("[data-action-menu-toggle], .table-more-toggle").forEach((toggle) => {
+        toggle.setAttribute("aria-expanded", "false");
+      });
+    };
+
+    const closeAllActionMenus = (except) => {
+      document.querySelectorAll("[data-action-menu].open, .dropdown.table-action-more.open").forEach((wrap) => {
+        if (wrap !== except) closeActionMenu(wrap);
+      });
+    };
+
+    scope.querySelectorAll("[data-action-menu], .dropdown.table-action-more").forEach((wrap) => {
       if (wrap.dataset.actionMenuReady === "true") return;
       wrap.dataset.actionMenuReady = "true";
 
-      const toggle = wrap.querySelector("[data-action-menu-toggle]");
+      const toggle = wrap.querySelector("[data-action-menu-toggle], .table-more-toggle");
       if (!toggle) return;
+      if (!toggle.hasAttribute("aria-expanded")) toggle.setAttribute("aria-expanded", "false");
 
       toggle.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
 
-        scope.querySelectorAll("[data-action-menu].open").forEach((item) => {
-          if (item !== wrap) {
-            item.classList.remove("open");
-            const itemToggle = item.querySelector("[data-action-menu-toggle]");
-            if (itemToggle) itemToggle.setAttribute("aria-expanded", "false");
-          }
-        });
+        closeAllActionMenus(wrap);
         wrap.classList.toggle("open");
-        toggle.setAttribute("aria-expanded", wrap.classList.contains("open") ? "true" : "false");
+        const open = wrap.classList.contains("open");
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        const menu = wrap.querySelector(".action-dropdown-menu, .dropdown-menu, .table-more-menu");
+        if (menu) menu.classList.toggle("show", open);
       });
     });
 
     if (document.documentElement.dataset.actionMenuReady !== "true") {
       document.documentElement.dataset.actionMenuReady = "true";
       document.addEventListener("click", () => {
-        document.querySelectorAll("[data-action-menu].open").forEach((wrap) => {
-          wrap.classList.remove("open");
-          const toggle = wrap.querySelector("[data-action-menu-toggle]");
-          if (toggle) toggle.setAttribute("aria-expanded", "false");
-        });
+        closeAllActionMenus(null);
       });
     }
+  }
+
+  function initLayerSemantics(scope) {
+    scope.querySelectorAll(".modal-overlay").forEach((layer) => {
+      if (!layer.hasAttribute("aria-hidden")) {
+        layer.setAttribute("aria-hidden", layer.classList.contains("show") ? "false" : "true");
+      }
+      layer.dataset.layerType = layer.classList.contains("drawer-overlay") ? "drawer" : "modal";
+
+      const dialog = layer.querySelector(".modal, .drawer-modal");
+      if (dialog) {
+        if (!dialog.hasAttribute("role")) dialog.setAttribute("role", "dialog");
+        if (!dialog.hasAttribute("aria-modal")) dialog.setAttribute("aria-modal", "true");
+        if (layer.classList.contains("drawer-overlay")) dialog.classList.add("drawer-modal");
+      }
+    });
   }
 
   if (document.readyState === "loading") {

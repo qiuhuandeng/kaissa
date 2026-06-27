@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
-const scopes = ["merchant", "operator"];
+const scopes = ["merchant", "operator", "admin"];
 const excludedPages = new Set([
   "merchant/login.html",
   "merchant/select-workspace.html",
@@ -62,11 +62,292 @@ function attrValues(html, tagName, attrName) {
   return values;
 }
 
+function parseElements(html) {
+  const tagPattern = /<(!--[^]*?--|!DOCTYPE[^>]*|\/?[a-zA-Z][\w:-]*(?:\s[^<>]*?)?)>/g;
+  const stack = [];
+  const elements = [];
+  let match;
+
+  while ((match = tagPattern.exec(html))) {
+    const body = match[1];
+    if (body.startsWith("!")) continue;
+
+    const isClosing = body.startsWith("/");
+    const isSelfClosing = /\/\s*$/.test(body) || /^(link|meta|input|br|img|hr)\b/i.test(body);
+
+    if (isClosing) {
+      const tag = body.slice(1).trim().toLowerCase();
+      for (let index = stack.length - 1; index >= 0; index -= 1) {
+        if (stack[index].tag === tag) {
+          const element = stack.splice(index, 1)[0];
+          element.closeStart = match.index;
+          element.closeEnd = tagPattern.lastIndex;
+          break;
+        }
+      }
+      continue;
+    }
+
+    const tag = (body.match(/^([a-zA-Z][\w:-]*)/) || [])[1]?.toLowerCase();
+    if (!tag) continue;
+
+    const attrs = body.slice(tag.length).replace(/\/\s*$/, "");
+    const element = {
+      tag,
+      attrs,
+      start: match.index,
+      openEnd: tagPattern.lastIndex,
+      closeStart: null,
+      closeEnd: null,
+      parent: stack[stack.length - 1] || null,
+      children: [],
+    };
+    if (element.parent) element.parent.children.push(element);
+    elements.push(element);
+    if (!isSelfClosing) stack.push(element);
+  }
+
+  elements.forEach((element) => {
+    if (element.closeStart === null) {
+      element.closeStart = element.openEnd;
+      element.closeEnd = element.openEnd;
+    }
+  });
+
+  return elements;
+}
+
+function classListOf(element) {
+  return ((element.attrs.match(/class=["']([^"']*)["']/) || [])[1] || "").split(/\s+/).filter(Boolean);
+}
+
+function hasClass(element, className) {
+  return classListOf(element).includes(className);
+}
+
+function ancestorsOf(element) {
+  const ancestors = [];
+  for (let parent = element.parent; parent; parent = parent.parent) ancestors.push(parent);
+  return ancestors;
+}
+
+function nearestListSurface(element) {
+  return ancestorsOf(element).find((ancestor) => {
+    return hasClass(ancestor, "list-surface") || ancestor.attrs.includes("data-list-surface");
+  }) || null;
+}
+
+function nextMeaningfulSibling(element) {
+  const siblings = element.parent ? element.parent.children : [];
+  const index = siblings.indexOf(element);
+  if (index < 0) return null;
+  return siblings.slice(index + 1).find((sibling) => {
+    const classes = classListOf(sibling);
+    return !classes.some((name) => ["list-empty-state", "list-state-panel"].includes(name)) && !sibling.attrs.includes("data-list-empty");
+  }) || null;
+}
+
+function isListTableElement(element, html) {
+  if (!hasClass(element, "table-wrap")) return false;
+  if (!html.slice(element.openEnd, element.closeStart).includes("<table")) return false;
+  if (hasClass(element, "drawer-table-wrap") || hasClass(element, "modal-table-wrap")) return false;
+  if (ancestorsOf(element).some((ancestor) => {
+      return classListOf(ancestor).some((name) => ["modal", "drawer-modal", "modal-overlay", "detail-card", "form-card"].includes(name));
+  })) return false;
+
+  const surface = nearestListSurface(element);
+  if (!surface) return false;
+
+  const next = nextMeaningfulSibling(element);
+  const nextClasses = next ? classListOf(next) : [];
+  const hasPaginationSibling = nextClasses.includes("pagination") || nextClasses.includes("list-surface-pagination");
+  const surfaceContent = html.slice(surface.openEnd, surface.closeStart);
+  const surfaceLooksLikeList = /filter-card|list-surface-filter|tab-bar|list-surface-tabs/.test(surfaceContent);
+
+  return hasClass(element, "list-table-with-pagination") || hasPaginationSibling || surfaceLooksLikeList;
+}
+
+function innerHtml(html, element) {
+  return html.slice(element.openEnd, element.closeStart);
+}
+
+function cellHtml(html, element) {
+  const closeTag = `</${element.tag}>`;
+  const closeIndex = html.indexOf(closeTag, element.openEnd);
+  if (closeIndex >= element.openEnd && closeIndex <= element.closeStart) {
+    return html.slice(element.openEnd, closeIndex);
+  }
+  return innerHtml(html, element);
+}
+
+function decodeText(text) {
+  return text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#215;/g, "×");
+}
+
+function plainText(fragment) {
+  return decodeText(fragment.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " "))
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function elementText(html, element) {
+  return plainText(innerHtml(html, element));
+}
+
+function cellText(html, element) {
+  return plainText(cellHtml(html, element));
+}
+
+function descendantsOf(element, predicate = () => true) {
+  const found = [];
+  const visit = (node) => {
+    node.children.forEach((child) => {
+      if (predicate(child)) found.push(child);
+      visit(child);
+    });
+  };
+  visit(element);
+  return found;
+}
+
+function directCells(row) {
+  return row.children.filter((child) => child.tag === "td" || child.tag === "th");
+}
+
+function isDangerAction(label) {
+  return /删除|停用|禁用|作废|拒绝|下架|撤回|取消|解绑|暂停|放弃|驳回|归档/.test(label);
+}
+
+function actionMenuRanges(fragment) {
+  const ranges = [];
+  const menuPattern = /<(span|div)\b[^>]*class=["'][^"']*(?:action-dropdown-menu|dropdown-menu|table-more-menu)[^"']*["'][^>]*>/gi;
+  let match;
+  while ((match = menuPattern.exec(fragment))) {
+    const tag = match[1].toLowerCase();
+    const start = match.index;
+    const tagPattern = new RegExp(`<\\/?${tag}\\b[^>]*>`, "gi");
+    tagPattern.lastIndex = menuPattern.lastIndex;
+    let depth = 1;
+    let tagMatch;
+    let end = fragment.length;
+    while ((tagMatch = tagPattern.exec(fragment))) {
+      depth += tagMatch[0][1] === "/" ? -1 : 1;
+      if (depth === 0) {
+        end = tagPattern.lastIndex;
+        break;
+      }
+    }
+    ranges.push([start, end]);
+  }
+  return ranges;
+}
+
+function parseActionControls(fragment) {
+  const ranges = actionMenuRanges(fragment);
+  const controls = [];
+  const controlPattern = /<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+  let match;
+  while ((match = controlPattern.exec(fragment))) {
+    const attrs = match[2] || "";
+    const label = plainText(match[3]);
+    if (!label) continue;
+    const classes = (attrs.match(/class=["']([^"']*)["']/i) || [])[1] || "";
+    controls.push({
+      label,
+      attrs,
+      inMenu: ranges.some(([start, end]) => match.index >= start && match.index < end),
+      isToggle: classes.split(/\s+/).includes("table-more-toggle") || label === "更多",
+      isPrimary: classes.split(/\s+/).includes("table-action-primary"),
+      index: match.index,
+    });
+  }
+  return controls;
+}
+
+function auditActionColumn(tableWrap, elements, html, issues) {
+  descendantsOf(tableWrap, (element) => element.tag === "table").forEach((table) => {
+    const thead = descendantsOf(table, (element) => element.tag === "thead")[0] || null;
+    const headerRows = descendantsOf(thead || table, (element) => element.tag === "tr");
+    const headerRow = headerRows[headerRows.length - 1];
+    if (!headerRow) return;
+
+    const headers = directCells(headerRow);
+    const actionIndexes = headers
+      .map((cell, index) => (/^(操作|动作|管理)$/.test(cellText(html, cell)) ? index : -1))
+      .filter((index) => index >= 0);
+    if (!actionIndexes.length) return;
+
+    const bodyRows = descendantsOf(table, (element) => element.tag === "tbody")
+      .flatMap((tbody) => descendantsOf(tbody, (element) => element.tag === "tr"));
+
+    bodyRows.forEach((row) => {
+      const cells = directCells(row);
+      actionIndexes.forEach((index) => {
+        const cell = cells[index];
+        if (!cell || /colspan\s*=/i.test(cell.attrs)) return;
+        const fragment = cellHtml(html, cell);
+        const text = plainText(fragment);
+        if (!text) return;
+
+        if (!/\btable-action\b/.test(fragment)) {
+          addIssue(issues, "blocker", "操作单元格必须使用 .table-action 统一结构", cell.start, html);
+          return;
+        }
+
+        const controls = parseActionControls(fragment);
+        const visible = controls.filter((control) => !control.inMenu && !control.isToggle);
+        const menuItems = controls.filter((control) => control.inMenu && !control.isToggle);
+        const toggles = controls.filter((control) => control.isToggle && !control.inMenu);
+
+        if (visible.length > 3) {
+          addIssue(issues, "blocker", "操作列直露动作不能超过 3 个，低频动作必须进入更多", cell.start, html);
+        }
+
+        visible.forEach((control) => {
+          if ([...control.label].length > 4) {
+            addIssue(issues, "blocker", `操作文案“${control.label}”超过 4 个字，应缩短或放入更多`, cell.start + control.index, html);
+          }
+          if (isDangerAction(control.label)) {
+            addIssue(issues, "blocker", `危险操作“${control.label}”不能直露，必须放入更多菜单底部`, cell.start + control.index, html);
+          }
+        });
+
+        if (visible.length && !visible.some((control) => control.isPrimary)) {
+          addIssue(issues, "blocker", "操作列必须显式标注一个主业务动作 .table-action-primary", cell.start, html);
+        }
+
+        if (toggles.length) {
+          if (!/class=["'][^"']*\bdropdown\b[^"']*\btable-action-more\b[^"']*["']/.test(fragment) || !/\baction-dropdown-menu\b/.test(fragment)) {
+            addIssue(issues, "blocker", "更多菜单必须使用 .dropdown.table-action-more + .table-more-toggle + .action-dropdown-menu 结构", cell.start, html);
+          }
+          toggles.forEach((toggle) => {
+            if (toggle.label !== "更多") {
+              addIssue(issues, "blocker", "更多按钮必须显示“更多”文字，不能只放箭头或其他文案", cell.start + toggle.index, html);
+            }
+          });
+          if (!menuItems.length) {
+            addIssue(issues, "blocker", "更多按钮必须有可点击的菜单项", cell.start, html);
+          }
+          const firstDanger = menuItems.findIndex((control) => isDangerAction(control.label));
+          if (firstDanger >= 0 && menuItems.slice(firstDanger + 1).some((control) => !isDangerAction(control.label))) {
+            addIssue(issues, "blocker", "更多菜单中的危险项必须放在菜单底部", cell.start, html);
+          }
+        }
+      });
+    });
+  });
+}
+
 function auditFile(file) {
   const rel = relative(file);
   const html = fs.readFileSync(file, "utf8");
-  const side = rel.startsWith("merchant/") ? "merchant" : "operator";
-  const expectedNav = side === "merchant" ? "nav-merchant.js" : "nav-operator.js";
+  const side = rel.startsWith("merchant/") ? "merchant" : rel.startsWith("admin/") ? "admin" : "operator";
+  const expectedNav = side === "merchant" ? "nav-merchant.js" : side === "admin" ? "nav-admin.js" : "nav-operator.js";
   const issues = [];
   const isExcluded = excludedPages.has(rel);
 
@@ -153,6 +434,35 @@ function auditFile(file) {
 
   attrValues(html, "form", "action").forEach((form) => {
     addIssue(issues, "medium", `存在 form action=${form.value}，提交行为需要确认不会整页刷新`, form.index, html);
+  });
+
+  const elements = parseElements(html);
+  elements.filter((element) => isListTableElement(element, html)).forEach((table) => {
+    auditActionColumn(table, elements, html, issues);
+
+    if (!hasClass(table, "list-surface-table") || !hasClass(table, "list-table-with-pagination")) {
+      addIssue(issues, "blocker", "列表表格必须使用 list-surface-table list-table-with-pagination 标准类", table.start, html);
+    }
+
+    const paginationInTable = elements.find((element) => {
+      if (element.start <= table.openEnd || element.closeEnd >= table.closeEnd) return false;
+      const classes = classListOf(element);
+      return classes.includes("pagination") || classes.includes("list-surface-pagination");
+    });
+    if (paginationInTable) {
+      addIssue(issues, "blocker", "分页不能放在 table-wrap 内，横向滚动只能属于表格区域", paginationInTable.start, html);
+    }
+
+    const next = nextMeaningfulSibling(table);
+    const nextClasses = next ? classListOf(next) : [];
+    if (!next || !(nextClasses.includes("pagination") || nextClasses.includes("list-surface-pagination"))) {
+      addIssue(issues, "blocker", "列表分页必须紧跟对应 table-wrap，作为表格 footer 同级节点", table.closeEnd, html);
+      return;
+    }
+
+    if (!nextClasses.includes("list-surface-pagination") || !nextClasses.includes("list-pagination-attached")) {
+      addIssue(issues, "blocker", "分页 footer 必须使用 list-surface-pagination list-pagination-attached 标准类", next.start, html);
+    }
   });
 
   return { file: rel, side, excluded: false, issues };

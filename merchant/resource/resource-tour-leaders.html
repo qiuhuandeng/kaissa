@@ -14,13 +14,16 @@
       <div>
         <h1 class="page-title">领队资源</h1>
       </div>
-      <div class="list-page-actions">
-        <button class="btn btn-secondary" type="button" data-open-leader-drawer>导出排班</button>
+
+    </div>
+  </section>
+
+<section class="list-surface resource-tour-leaders-list-surface" data-list-surface>
+<section class="filter-card filter-card-compact list-surface-filter" aria-label="领队筛选">
+      <div class="list-surface-filter-actions list-filter-pinned-actions">
+        <button class="btn btn-secondary" type="button" data-export-leader-schedule>导出排班</button>
         <button class="btn btn-primary" type="button" data-open-leader-drawer>新增领队</button>
       </div>
-    </div>
-
-    <section class="filter-card filter-card-compact" aria-label="领队筛选">
       <div class="filter-row">
         <div class="filter-item">
           <label class="sr-only" for="leaderKeyword">姓名/工号/手机号</label>
@@ -64,9 +67,8 @@
         </div>
       </div>
     </section>
-  </section>
 
-  <section class="table-wrap tour-leader-table" aria-label="领队列表">
+  <section class="table-wrap tour-leader-table list-surface-table list-table-with-pagination" aria-label="领队列表">
     <table>
       <thead>
         <tr>
@@ -93,7 +95,7 @@
           <td><span class="tag tag-green">无冲突</span></td>
           <td>4.8</td>
           <td><span class="tag tag-green">可带团</span></td>
-          <td><div class="table-action"><button type="button" data-open-leader-drawer>编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
+          <td><div class="table-action"><button type="button" data-open-leader-drawer class="table-action-primary">编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
         </tr>
         <tr>
           <td><strong>李梅</strong><br><span class="text-muted">TL-002 / 139****8027</span></td>
@@ -105,7 +107,7 @@
           <td><span class="tag tag-orange">证件需续期</span></td>
           <td>4.6</td>
           <td><span class="tag tag-orange">证件预警</span></td>
-          <td><div class="table-action"><button type="button" data-open-leader-drawer>编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
+          <td><div class="table-action"><button type="button" data-open-leader-drawer class="table-action-primary">编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
         </tr>
         <tr>
           <td><strong>王强</strong><br><span class="text-muted">TL-003 / 136****0198</span></td>
@@ -117,7 +119,7 @@
           <td><span class="tag tag-red">8月2日冲突</span></td>
           <td>4.9</td>
           <td><span class="tag tag-blue">已占用</span></td>
-          <td><div class="table-action"><button type="button" data-open-leader-drawer>编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
+          <td><div class="table-action"><button type="button" data-open-leader-drawer class="table-action-primary">编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
         </tr>
         <tr>
           <td><strong>赵明</strong><br><span class="text-muted">TL-006 / 137****5612</span></td>
@@ -129,12 +131,16 @@
           <td><span class="tag tag-green">无冲突</span></td>
           <td>4.7</td>
           <td><span class="tag tag-green">可带团</span></td>
-          <td><div class="table-action"><button type="button" data-open-leader-drawer>编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
+          <td><div class="table-action"><button type="button" data-open-leader-drawer class="table-action-primary">编辑</button><a href="resource-leader-schedule.html">排班</a><a href="../tour/fulfillment-outbound.html">分配</a></div></td>
         </tr>
       </tbody>
     </table>
   </section>
+  <div class="pagination list-surface-pagination list-pagination-attached">
+    <span>第1-4条/共4条</span>
+  </div>
 
+  </section>
   <div id="leaderDrawer" class="modal-overlay drawer-overlay" hidden>
     <section class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="leaderDrawerTitle">
       <div class="modal-header">
@@ -163,10 +169,18 @@
     (function () {
       const drawer = document.getElementById("leaderDrawer");
       function openDrawer() {
+        if (window.caesarUI) {
+          window.caesarUI.openDrawer(drawer);
+          return;
+        }
         drawer.hidden = false;
         requestAnimationFrame(() => drawer.classList.add("show"));
       }
       function closeDrawer() {
+        if (window.caesarUI) {
+          window.caesarUI.closeDrawer(drawer);
+          return;
+        }
         drawer.classList.remove("show");
         window.setTimeout(() => {
           drawer.hidden = true;
@@ -174,6 +188,9 @@
       }
       document.querySelectorAll("[data-open-leader-drawer]").forEach((button) => {
         button.addEventListener("click", openDrawer);
+      });
+      document.querySelector("[data-export-leader-schedule]").addEventListener("click", () => {
+        if (window.caesarUI) window.caesarUI.toast("领队排班导出任务已创建", { type: "success" });
       });
       document.querySelectorAll("[data-close-leader-drawer]").forEach((button) => {
         button.addEventListener("click", closeDrawer);

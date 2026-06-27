@@ -1,15 +1,15 @@
 # 页面内容路由规范审计
 
-审计时间：2026-06-26T07:16:54.477Z
+审计时间：2026-06-27T15:28:04.802Z
 
 ## 汇总
 
-- 审计后台页面：101
-- 可直接接入：101
+- 审计后台页面：129
+- 可直接接入：127
 - 阻断问题：0
-- 高风险：0
+- 高风险：2
 - 中风险：0
-- 排除页面：4
+- 排除页面：3
 
 ## 判定标准
 
@@ -22,16 +22,40 @@
 
 | 状态 | 页面 | 问题 |
 | --- | --- | --- |
+| high | merchant/approval/approvals.html | [high]:657 页面初始化依赖整页生命周期事件，PJAX 替换内容后不会自然触发 |
+| high | merchant/sales/booking.html | [high]:1379 页面初始化依赖整页生命周期事件，PJAX 替换内容后不会自然触发 |
+| ready | admin/ai/audit-log.html | 可直接纳入内容路由 |
+| ready | admin/ai/cost-quota.html | 可直接纳入内容路由 |
+| ready | admin/ai/model_routing.html | 可直接纳入内容路由 |
+| ready | admin/ai/permission-policy.html | 可直接纳入内容路由 |
+| ready | admin/ai/prompts.html | 可直接纳入内容路由 |
+| ready | admin/ai/usage-stats.html | 可直接纳入内容路由 |
+| ready | admin/audit.html | 可直接纳入内容路由 |
+| ready | admin/dashboard.html | 可直接纳入内容路由 |
+| ready | admin/employees.html | 可直接纳入内容路由 |
+| ready | admin/interface.html | 可直接纳入内容路由 |
+| ready | admin/merchant-roles.html | 可直接纳入内容路由 |
+| ready | admin/org_company_modal.html | 可直接纳入内容路由 |
+| ready | admin/org.html | 可直接纳入内容路由 |
+| ready | admin/params.html | 可直接纳入内容路由 |
+| ready | admin/positions.html | 可直接纳入内容路由 |
+| ready | admin/roles.html | 可直接纳入内容路由 |
 | ready | merchant/ai/ai-assistant.html | 可直接纳入内容路由 |
 | ready | merchant/ai/competitor.html | 可直接纳入内容路由 |
-| ready | admin/ai/model_routing.html | 可直接纳入内容路由 |
-| ready | admin/ai/prompts.html | 可直接纳入内容路由 |
 | ready | merchant/ai/route_parser.html | 可直接纳入内容路由 |
 | ready | merchant/ai/travel_assistant.html | 可直接纳入内容路由 |
 | ready | merchant/ai/visa_checker.html | 可直接纳入内容路由 |
 | ready | merchant/approval/approval-product-review.html | 可直接纳入内容路由 |
-| ready | merchant/approval/approvals.html | 可直接纳入内容路由 |
+| ready | merchant/channel/agents.html | 可直接纳入内容路由 |
+| ready | merchant/channel/commission_rules.html | 可直接纳入内容路由 |
+| ready | merchant/channel/distributors.html | 可直接纳入内容路由 |
+| ready | merchant/channel/ota_orders.html | 可直接纳入内容路由 |
+| ready | merchant/channel/ota_products.html | 可直接纳入内容路由 |
+| ready | merchant/channel/ota_reconcile.html | 可直接纳入内容路由 |
+| ready | merchant/channel/ota_refunds.html | 可直接纳入内容路由 |
 | ready | merchant/customer/customers-detail.html | 可直接纳入内容路由 |
+| ready | merchant/customer/detail.html | 可直接纳入内容路由 |
+| ready | merchant/customer/list.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard-group.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard-store.html | 可直接纳入内容路由 |
 | ready | merchant/dashboard.html | 可直接纳入内容路由 |
@@ -77,7 +101,6 @@
 | ready | merchant/resource/resource-train-routes.html | 可直接纳入内容路由 |
 | ready | merchant/resource/supplier-detail.html | 可直接纳入内容路由 |
 | ready | merchant/resource/suppliers.html | 可直接纳入内容路由 |
-| ready | merchant/sales/booking.html | 可直接纳入内容路由 |
 | ready | merchant/sales/consultant/detail.html | 可直接纳入内容路由 |
 | ready | merchant/sales/consultant/index.html | 可直接纳入内容路由 |
 | ready | merchant/sales/contracts.html | 可直接纳入内容路由 |
@@ -92,6 +115,13 @@
 | ready | merchant/sales/store/detail.html | 可直接纳入内容路由 |
 | ready | merchant/sales/store/index.html | 可直接纳入内容路由 |
 | excluded | merchant/select-workspace.html | [excluded] 不纳入后台内容路由审计范围 |
+| ready | merchant/system/business-params.html | 可直接纳入内容路由 |
+| ready | merchant/system/data-scope.html | 可直接纳入内容路由 |
+| ready | merchant/system/hr-requests.html | 可直接纳入内容路由 |
+| ready | merchant/system/my-org.html | 可直接纳入内容路由 |
+| ready | merchant/system/notice-templates.html | 可直接纳入内容路由 |
+| ready | merchant/system/role-assignment.html | 可直接纳入内容路由 |
+| ready | merchant/system/staff-management.html | 可直接纳入内容路由 |
 | ready | merchant/tour/fulfillment-cost.html | 可直接纳入内容路由 |
 | ready | merchant/tour/fulfillment-documents.html | 可直接纳入内容路由 |
 | ready | merchant/tour/fulfillment-notice.html | 可直接纳入内容路由 |
@@ -108,14 +138,19 @@
 | ready | merchant/tour/schedules-calendar.html | 可直接纳入内容路由 |
 | ready | merchant/tour/schedules-detail.html | 可直接纳入内容路由 |
 | ready | merchant/tour/schedules.html | 可直接纳入内容路由 |
-| excluded | operator/ant_design.html | [excluded] 不纳入后台内容路由审计范围 |
 | ready | operator/audit-logs.html | 可直接纳入内容路由 |
 | ready | operator/companies.html | 可直接纳入内容路由 |
 | ready | operator/components.html | 可直接纳入内容路由 |
 | ready | operator/config-dict.html | 可直接纳入内容路由 |
 | ready | operator/dashboard.html | 可直接纳入内容路由 |
+| ready | operator/initialization.html | 可直接纳入内容路由 |
 | excluded | operator/login.html | [excluded] 不纳入后台内容路由审计范围 |
 | ready | operator/merchants-detail.html | 可直接纳入内容路由 |
 | ready | operator/merchants.html | 可直接纳入内容路由 |
+| ready | operator/monitor.html | 可直接纳入内容路由 |
 | ready | operator/packages.html | 可直接纳入内容路由 |
+| ready | operator/reports-drill.html | 可直接纳入内容路由 |
+| ready | operator/reports-finance.html | 可直接纳入内容路由 |
+| ready | operator/reports-overview.html | 可直接纳入内容路由 |
+| ready | operator/reports-sales.html | 可直接纳入内容路由 |
 | ready | operator/templates.html | 可直接纳入内容路由 |

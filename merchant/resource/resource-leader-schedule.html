@@ -9,17 +9,18 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <section class="list-page-panel">
-    <div class="list-page-head">
-      <div>
+  <section class="page-workbar">
+    <div>
+      <div class="page-title-row">
         <a class="page-back-link" href="resource-tour-leaders.html">返回领队资源</a>
         <h1 class="page-title">张建国 - 领队排班</h1>
       </div>
-      <div class="list-page-actions">
-        <button class="btn btn-secondary" type="button">上一月</button>
-        <button class="btn btn-secondary" type="button">2026年7月</button>
-        <button class="btn btn-secondary" type="button">下一月</button>
-      </div>
+    </div>
+    <div class="btn-group">
+      <button id="prevLeaderMonth" class="btn btn-secondary" type="button">上一月</button>
+      <button id="leaderMonthLabel" class="btn btn-secondary" type="button">2026年7月</button>
+      <button id="nextLeaderMonth" class="btn btn-secondary" type="button">下一月</button>
+      <button id="refreshLeaderCheck" class="btn btn-primary" type="button">刷新校验</button>
     </div>
   </section>
 
@@ -105,5 +106,47 @@
       </tbody>
     </table>
   </section>
+
+  <script>
+    (function () {
+      var currentMonth = new Date(2026, 6, 1);
+      var monthLabel = document.getElementById('leaderMonthLabel');
+
+      function showToast(message) {
+        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+      }
+
+      function formatMonth(date) {
+        return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
+      }
+
+      function refreshMonth(delta) {
+        currentMonth.setMonth(currentMonth.getMonth() + delta);
+        monthLabel.textContent = formatMonth(currentMonth);
+        showToast('已刷新' + monthLabel.textContent + '排班与冲突校验');
+      }
+
+      document.getElementById('prevLeaderMonth').addEventListener('click', function () {
+        refreshMonth(-1);
+      });
+
+      document.getElementById('nextLeaderMonth').addEventListener('click', function () {
+        refreshMonth(1);
+      });
+
+      monthLabel.addEventListener('click', function () {
+        showToast(monthLabel.textContent + '排班已是最新');
+      });
+
+      document.getElementById('refreshLeaderCheck').addEventListener('click', function () {
+        document.querySelectorAll('[aria-label="派团冲突校验"] tbody .tag').forEach(function (tag) {
+          tag.classList.remove('tag-orange');
+          tag.classList.add('tag-green');
+          if (tag.textContent.trim() === '关注') tag.textContent = '通过';
+        });
+        showToast('冲突校验已刷新，当前无阻塞项');
+      });
+    })();
+  </script>
 </body>
 </html>

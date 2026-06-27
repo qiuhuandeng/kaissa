@@ -17,6 +17,10 @@
           <h1 class="page-title">外采产品包装</h1>
         </div>
       </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" type="button" data-open-preview>预览包装效果</button>
+        <button class="btn btn-primary" type="button" data-save-package>保存包装内容</button>
+      </div>
     </section>
 
     <section class="outsource-compare-head" aria-label="内容对照标题">
@@ -151,11 +155,6 @@
       </article>
     </section>
 
-    <section class="outsource-package-actions">
-      <a id="cancelPackageButton" class="btn btn-secondary" href="product-outsource-list.html" data-confirm-back>取消</a>
-      <button class="btn btn-secondary" type="button" data-open-preview>预览包装效果</button>
-      <button class="btn btn-primary" type="button" data-save-package>保存包装内容</button>
-    </section>
   </main>
 
   <div id="aiOptimizeModal" class="modal-overlay" aria-hidden="true">
@@ -215,17 +214,49 @@
       var dirty = false;
 
       function openModal(modal) {
+        if (window.caesarUI && window.caesarUI.openModal) {
+          window.caesarUI.openModal(modal);
+          return;
+        }
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
       }
 
       function closeModal(modal) {
+        if (!modal) return;
+        if (window.caesarUI && window.caesarUI.closeModal) {
+          window.caesarUI.closeModal(modal);
+          return;
+        }
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
       }
 
+      function showToast(message) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast(message);
+        }
+      }
+
       function markDirty() {
         dirty = true;
+      }
+
+      function focusInvalid(field, message) {
+        field.classList.add('field-invalid');
+        field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        field.focus();
+        showToast(message);
+      }
+
+      function validatePackage() {
+        var name = document.getElementById('packageName');
+        name.classList.remove('field-invalid');
+        if (!name.value.trim()) {
+          focusInvalid(name, '请先填写产品名称');
+          return false;
+        }
+        return true;
       }
 
       function createHighlight(value) {
@@ -258,6 +289,7 @@
         description.value = aiText;
         markDirty();
         closeModal(aiModal);
+        showToast('AI文案已替换到产品描述');
       });
 
       document.getElementById('generateHighlights').addEventListener('click', function () {
@@ -268,11 +300,13 @@
           createHighlight('适配家庭、朋友与首次欧洲旅行客群')
         );
         markDirty();
+        showToast('AI亮点已生成，可继续调整');
       });
 
       document.getElementById('addHighlight').addEventListener('click', function () {
         highlightList.appendChild(createHighlight('新增包装亮点'));
         markDirty();
+        showToast('已新增一条亮点');
       });
 
       highlightList.addEventListener('click', function (event) {
@@ -281,6 +315,7 @@
         if (highlightList.children.length <= 1) return;
         button.closest('.outsource-highlight-item').remove();
         markDirty();
+        showToast('亮点已删除');
       });
 
       uploadArea.addEventListener('click', function () {
@@ -291,10 +326,12 @@
         thumb.textContent = '素材' + count;
         uploadedImages.appendChild(thumb);
         markDirty();
+        showToast('图片素材已加入上传队列');
       });
 
-      document.querySelectorAll('input, textarea').forEach(function (field) {
+      document.querySelectorAll('input, textarea, select').forEach(function (field) {
         field.addEventListener('input', markDirty);
+        field.addEventListener('change', markDirty);
       });
 
       document.querySelectorAll('[data-open-preview], #previewPackageButton').forEach(function (button) {
@@ -306,8 +343,10 @@
 
       document.querySelectorAll('[data-save-package], #savePackageButton').forEach(function (button) {
         button.addEventListener('click', function () {
+          if (!validatePackage()) return;
           dirty = false;
           closeModal(previewModal);
+          showToast('包装内容已保存，列表数据已同步刷新');
         });
       });
 
@@ -330,6 +369,12 @@
             event.preventDefault();
           }
         });
+      });
+
+      window.addEventListener('beforeunload', function (event) {
+        if (!dirty) return;
+        event.preventDefault();
+        event.returnValue = '';
       });
     })();
   </script>

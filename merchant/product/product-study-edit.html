@@ -440,6 +440,36 @@
         if (!isViewMode) formDirty = true;
       }
 
+      function showToast(message) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast(message);
+          return;
+        }
+        toast.textContent = message;
+        toast.hidden = false;
+        window.clearTimeout(saveDraft.timer);
+        saveDraft.timer = window.setTimeout(function () {
+          toast.hidden = true;
+        }, 2600);
+      }
+
+      function clearInvalidFields() {
+        document.querySelectorAll('.field-invalid').forEach(function (field) {
+          field.classList.remove('field-invalid');
+        });
+      }
+
+      function focusInvalid(field, targetId, message) {
+        clearInvalidFields();
+        setTab(targetId);
+        window.setTimeout(function () {
+          field.classList.add('field-invalid');
+          field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          field.focus();
+        }, 80);
+        showToast(message);
+      }
+
       function setTab(targetId) {
         stepButtons.forEach(function (button) {
           button.classList.toggle('active', button.dataset.stepTarget === targetId);
@@ -503,12 +533,7 @@
       }
 
       function saveDraft(message) {
-        toast.textContent = message || '草稿已保存';
-        toast.hidden = false;
-        window.clearTimeout(saveDraft.timer);
-        saveDraft.timer = window.setTimeout(function () {
-          toast.hidden = true;
-        }, 2600);
+        showToast(message || '草稿已保存');
         formDirty = false;
       }
 
@@ -520,7 +545,39 @@
         if (firstGoal) firstGoal.value = '建立历史事件、地理通道与艺术遗产之间的关联';
         if (firstOutcome) firstOutcome.value = '完成小组研学问题树，并在结营汇报中展示证据链。';
         markDirty();
-        saveDraft('AI课程行程已生成，可继续调整');
+        showToast('AI课程行程已生成，可继续调整');
+      }
+
+      function validateBeforeSubmit() {
+        var requiredFields = [
+          { field: document.getElementById('projectName'), tab: 'basicInfo', message: '请填写产品/项目名称' },
+          { field: document.getElementById('destination'), tab: 'basicInfo', message: '请填写目的地' },
+          { field: document.getElementById('departureCity'), tab: 'basicInfo', message: '请填写出发地' },
+          { field: document.getElementById('travelDays'), tab: 'basicInfo', message: '行程天数必须大于0', numeric: true },
+          { field: document.getElementById('minGroupSize'), tab: 'basicInfo', message: '最小成团人数必须大于0', numeric: true },
+          { field: document.getElementById('operatorInput'), tab: 'basicInfo', message: '请选择负责计调' },
+          { field: document.getElementById('teacherRequirement'), tab: 'teacherConfig', message: '请填写师资要求' },
+          { field: document.getElementById('partnerOrg'), tab: 'educationCert', message: '请填写合作机构' },
+          { field: document.getElementById('feeIncluded'), tab: 'feeNote', message: '请填写费用包含' }
+        ];
+        var invalid = requiredFields.find(function (item) {
+          return item.numeric ? Number(item.field.value || 0) < 1 : !item.field.value.trim();
+        });
+        if (invalid) {
+          focusInvalid(invalid.field, invalid.tab, invalid.message);
+          return false;
+        }
+
+        var firstBlankNode = Array.from(dayList.querySelectorAll('.study-itinerary-node input, .study-itinerary-node textarea')).find(function (field) {
+          return !field.value.trim();
+        });
+        if (firstBlankNode) {
+          focusInvalid(firstBlankNode, 'courseItinerary', '请补齐课程行程节点内容');
+          return false;
+        }
+
+        clearInvalidFields();
+        return true;
       }
 
       function setupViewMode() {
@@ -572,23 +629,31 @@
           var target = card.querySelector('.study-node-list');
           target.appendChild(addButton.dataset.addNode === 'education' ? createEducationNode() : createTravelNode());
           markDirty();
+          showToast(addButton.dataset.addNode === 'education' ? '已添加教育节点' : '已添加行程节点');
         }
         if (deleteButton) {
           deleteButton.closest('.study-itinerary-node').remove();
           markDirty();
+          showToast('节点已删除');
         }
       });
 
       document.getElementById('addStudyDay').addEventListener('click', function () {
         dayList.appendChild(createDayCard(dayList.children.length + 1));
         markDirty();
+        showToast('已添加一天课程行程');
       });
 
       document.getElementById('aiStudyItinerary').addEventListener('click', applyAiItinerary);
       document.getElementById('saveStudyDraft').addEventListener('click', saveDraft);
       document.getElementById('submitStudyReview').addEventListener('click', function () {
-        submitModal.classList.add('show');
-        submitModal.setAttribute('aria-hidden', 'false');
+        if (!validateBeforeSubmit()) return;
+        if (window.caesarUI && window.caesarUI.openModal) {
+          window.caesarUI.openModal(submitModal);
+        } else {
+          submitModal.classList.add('show');
+          submitModal.setAttribute('aria-hidden', 'false');
+        }
         formDirty = false;
       });
       function navigateTo(href) {
@@ -610,6 +675,12 @@
             event.preventDefault();
           }
         });
+      });
+
+      window.addEventListener('beforeunload', function (event) {
+        if (!formDirty) return;
+        event.preventDefault();
+        event.returnValue = '';
       });
 
       setupViewMode();

@@ -405,6 +405,7 @@
       var nextButton = document.getElementById('nextStep');
       var nameInput = document.getElementById('productName');
       var nameCount = document.getElementById('productNameCount');
+      var productCodeInput = document.getElementById('productCode');
       var introInput = document.getElementById('productIntro');
       var introCount = document.getElementById('introCount');
       var durationInput = document.getElementById('durationDays');
@@ -548,12 +549,33 @@
       }
 
       function showDraftToast(message) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast(message);
+          return;
+        }
         draftToast.textContent = message;
         draftToast.hidden = false;
         window.clearTimeout(saveDraft.toastTimer);
         saveDraft.toastTimer = window.setTimeout(function () {
           draftToast.hidden = true;
         }, 3000);
+      }
+
+      function clearInvalidFields() {
+        document.querySelectorAll('.field-invalid').forEach(function (field) {
+          field.classList.remove('field-invalid');
+        });
+      }
+
+      function focusInvalid(field, stepIndex, message) {
+        clearInvalidFields();
+        if (typeof stepIndex === 'number') setStep(stepIndex);
+        window.setTimeout(function () {
+          field.classList.add('field-invalid');
+          field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          field.focus();
+        }, 80);
+        showDraftToast(message);
       }
 
       function readItineraryFromEditor() {
@@ -817,11 +839,19 @@
       function openCityModal() {
         document.getElementById('citySearch').value = '';
         filterCreateCities('');
+        if (window.caesarUI && window.caesarUI.openModal) {
+          window.caesarUI.openModal(cityModal);
+          return;
+        }
         cityModal.classList.add('show');
         cityModal.setAttribute('aria-hidden', 'false');
       }
 
       function closeCityModal() {
+        if (window.caesarUI && window.caesarUI.closeModal) {
+          window.caesarUI.closeModal(cityModal);
+          return;
+        }
         cityModal.classList.remove('show');
         cityModal.setAttribute('aria-hidden', 'true');
       }
@@ -1033,6 +1063,7 @@
         }
         applyTripPlan(parsed, document.getElementById('applyDraftTrip'));
         pasteParseHint.textContent = '已采用 ' + parsed.length + ' 天行程，可继续在下方逐日调整';
+        showDraftToast('已采用AI/粘贴行程，共' + parsed.length + '天');
       }
 
       function generateTripDraft(triggerButton) {
@@ -1047,6 +1078,7 @@
           button.textContent = 'AI生成';
           bulkItineraryInput.focus();
           markDirty();
+          showDraftToast('AI行程草稿已生成，可点击采用或继续编辑');
         }, 700);
       }
 
@@ -1061,6 +1093,68 @@
         var profitRate = document.getElementById('profitRate');
         profitRate.textContent = rate.toFixed(1) + '%';
         profitRate.classList.toggle('warning', rate < 15);
+      }
+
+      function validateBeforeSubmit() {
+        saveActiveRouteItinerary();
+        saveActiveRoutePrices();
+
+        if (!nameInput.value.trim()) {
+          focusInvalid(nameInput, 0, '请先填写产品名称');
+          return false;
+        }
+        if (!productCodeInput.value.trim()) {
+          focusInvalid(productCodeInput, 0, '请先填写或自动生成产品编号');
+          return false;
+        }
+        if (!supplierInput.value.trim()) {
+          focusInvalid(supplierInput, 0, '请先选择承接组织');
+          return false;
+        }
+        if (Number(durationInput.value || 0) < 1) {
+          focusInvalid(durationInput, 0, '行程天数必须大于0');
+          return false;
+        }
+
+        var invalidRouteIndex = routePlans.findIndex(function (route) {
+          return !route.name || !route.departure || !route.destinations;
+        });
+        if (invalidRouteIndex >= 0) {
+          loadRoute(invalidRouteIndex);
+          focusInvalid(routeFields.name, 1, '请补齐线路名称、出发地和目的地');
+          return false;
+        }
+
+        var invalidTripIndex = routePlans.findIndex(function (route) {
+          return !route.itinerary || !route.itinerary.length || route.itinerary.some(function (day) {
+            return !day.title || !day.desc;
+          });
+        });
+        if (invalidTripIndex >= 0) {
+          loadRoute(invalidTripIndex);
+          setStep(1);
+          window.setTimeout(function () {
+            var fields = Array.from(itineraryEditor.querySelectorAll('[data-day-title], [data-day-desc]'));
+            var invalidDayField = fields.find(function (field) { return !field.value.trim(); });
+            if (invalidDayField) focusInvalid(invalidDayField, 1, '请补齐每日行程标题和描述');
+          }, 80);
+          return false;
+        }
+
+        var invalidPriceIndex = routePlans.findIndex(function (route) {
+          return Object.keys(route.prices || {}).some(function (key) {
+            var price = route.prices[key] || {};
+            return Number(price.retail || 0) <= 0 || Number(price.retail || 0) < Number(price.cost || 0);
+          });
+        });
+        if (invalidPriceIndex >= 0) {
+          loadRoutePrices(invalidPriceIndex);
+          focusInvalid(document.querySelector('[data-price-field="retail"]'), 2, '销售价必须大于0且不能低于成本价');
+          return false;
+        }
+
+        clearInvalidFields();
+        return true;
       }
 
       function summaryField(label, value) {
@@ -1097,9 +1191,14 @@
       }
 
       function submitReview() {
+        if (!validateBeforeSubmit()) return;
         renderSubmitSummary();
-        submitSuccessModal.classList.add('show');
-        submitSuccessModal.setAttribute('aria-hidden', 'false');
+        if (window.caesarUI && window.caesarUI.openModal) {
+          window.caesarUI.openModal(submitSuccessModal);
+        } else {
+          submitSuccessModal.classList.add('show');
+          submitSuccessModal.setAttribute('aria-hidden', 'false');
+        }
         formDirty = false;
       }
 
@@ -1247,6 +1346,7 @@
         saveActiveRouteItinerary();
         renderActiveRouteHeader();
         markDirty();
+        showDraftToast('已添加一天行程');
       });
 
       itineraryEditor.addEventListener('click', function (event) {
@@ -1263,6 +1363,7 @@
           saveActiveRouteItinerary();
           renderActiveRouteHeader();
           markDirty();
+          showDraftToast('行程日已删除');
           return;
         }
 
@@ -1271,6 +1372,7 @@
           refreshDayTitles();
           saveActiveRouteItinerary();
           markDirty();
+          showDraftToast('行程顺序已上移');
           return;
         }
 
@@ -1279,6 +1381,7 @@
           refreshDayTitles();
           saveActiveRouteItinerary();
           markDirty();
+          showDraftToast('行程顺序已下移');
         }
       });
       itineraryEditor.addEventListener('input', function () {
@@ -1328,6 +1431,12 @@
             event.preventDefault();
           }
         });
+      });
+
+      window.addEventListener('beforeunload', function (event) {
+        if (!formDirty) return;
+        event.preventDefault();
+        event.returnValue = '';
       });
 
       window.addEventListener('load', function () {
