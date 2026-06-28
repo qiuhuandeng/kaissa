@@ -28,6 +28,7 @@
     { title: "审计中心", icon: "search", href: "audit-logs.html" },
     { title: "运维监控", icon: "monitor", href: "monitor.html" },
   ];
+  const fullMenu = menu.slice();
 
   const icons = {
     chart: '<path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M3 19h18"/>',
@@ -63,6 +64,32 @@
   const pageOwners = {
     "merchants-detail.html": { href: "merchants.html", title: "商户详情" },
   };
+
+  function demoConfig() {
+    return window.CAESAR_DEMO_CONFIG || {};
+  }
+
+  function demoPhase() {
+    return window.CAESAR_DEMO_PHASE || demoConfig().phase || "full";
+  }
+
+  function demoPhaseLabel() {
+    const labels = demoConfig().phaseLabels || {};
+    return labels[demoPhase()] || demoPhase();
+  }
+
+  function demoAllowedModules() {
+    const phase = demoPhase();
+    const phases = demoConfig().phases || {};
+    const allowed = phases.operator && phases.operator[phase];
+    if (phase === "full" || allowed === "*" || !Array.isArray(allowed)) return null;
+    return new Set(allowed);
+  }
+
+  function applyDemoMenuVisibility() {
+    menu.splice(0, menu.length, ...fullMenu);
+  }
+
   let currentRouteUrl = new URL(window.location.href);
   const singleNavOpenStorageKey = "caesar-operator-single-nav-open";
   const singleNavOpenKeys = new Set(readSingleNavOpenKeys());
@@ -103,6 +130,72 @@
     const active = findActive(menu, owner.href);
     if (!active) return null;
     return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href });
+  }
+
+  function resolveActiveFromMenu(items, file) {
+    const direct = findActive(items, file);
+    if (direct) return direct;
+
+    const owner = pageOwners[file];
+    if (!owner) return null;
+
+    const active = findActive(items, owner.href);
+    if (!active) return null;
+    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href });
+  }
+
+  function rootTitleFromActive(active) {
+    if (!active) return "";
+    return active.parent ? active.parent.title : active.item.title;
+  }
+
+  function isDemoFileAllowed(file) {
+    const allowed = demoAllowedModules();
+    if (!allowed) return true;
+    const active = resolveActiveFromMenu(fullMenu, file);
+    if (!active) return true;
+    return allowed.has(rootTitleFromActive(active));
+  }
+
+  function resolveNavigationTarget(href) {
+    return new URL(href || window.location.href, currentRouteUrl || window.location.href);
+  }
+
+  function createDemoUnavailablePanel(url) {
+    const file = url ? fileFromUrl(url) : currentFile();
+    const active = resolveActiveFromMenu(fullMenu, file);
+    const pageTitle = active ? active.currentTitle || active.item.title : "该页面";
+    const panel = document.createElement("section");
+    panel.className = "route-error-panel";
+
+    const title = document.createElement("div");
+    title.className = "route-error-title";
+    title.textContent = "功能待开发";
+
+    const desc = document.createElement("div");
+    desc.className = "route-error-desc";
+    desc.textContent = pageTitle + " 页面功能开发中，暂时无法提供业务演示。";
+
+    const actions = document.createElement("div");
+    actions.className = "route-error-actions";
+    const home = document.createElement("a");
+    home.className = "btn btn-secondary";
+    home.href = menu[0] && menu[0].href ? menu[0].href : "dashboard.html";
+    home.textContent = "返回工作台";
+    actions.appendChild(home);
+
+    panel.append(title, desc, actions);
+    return panel;
+  }
+
+  function showDemoUnavailablePage(content, url) {
+    const target = content || document.querySelector(".content");
+    if (!target) {
+      window.alert("当前演示批次暂未开放");
+      return;
+    }
+    target.replaceChildren(createDemoUnavailablePanel(url));
+    target.scrollTop = 0;
   }
 
   function createLink(item, activeFile) {
@@ -393,8 +486,10 @@
   }
 
   function initNav() {
+    applyDemoMenuVisibility();
     installCaesarUI();
     const file = currentFile();
+    const routeAllowed = isDemoFileAllowed(file);
     const active = resolveActive(file);
     const activeHref = active ? active.ownerHref || active.item.href : file;
 
@@ -459,7 +554,12 @@
 
     const content = document.createElement("section");
     content.className = "content";
-    oldNodes.forEach((node) => content.appendChild(node));
+    if (routeAllowed) {
+      oldNodes.forEach((node) => content.appendChild(node));
+    } else {
+      oldNodes.forEach((node) => node.remove());
+      content.appendChild(createDemoUnavailablePanel(new URL(window.location.href)));
+    }
 
     main.append(topbar, createPageTabs(active, file), content);
     layout.append(sidebar, main);
@@ -491,7 +591,7 @@
   }
 
   function navigateTo(href) {
-    const target = new URL(href, currentRouteUrl || window.location.href);
+    const target = resolveNavigationTarget(href);
     if (target.protocol === "file:") {
       window.location.href = target.href;
       return;
@@ -516,6 +616,17 @@
 
     if (!content) {
       showPageLoadError(null, url, new Error("页面外壳未初始化"));
+      return;
+    }
+
+    const nextFile = fileFromUrl(url);
+    if (!isDemoFileAllowed(nextFile)) {
+      if (options && options.push && url.protocol !== "file:") {
+        history.pushState({ caesarPjax: true }, "", url.href);
+      }
+      currentRouteUrl = url;
+      syncNavActive(nextFile);
+      showDemoUnavailablePage(content, url);
       return;
     }
 
@@ -1666,9 +1777,34 @@
     }
   }
 
+  function loadDemoConfig(callback) {
+    if (window.CAESAR_DEMO_CONFIG_LOADED === true) {
+      callback();
+      return;
+    }
+
+    const script = document.createElement("script");
+    const scriptBase = new URL(bootScript.src || "../shared/nav-operator.js", window.location.href);
+    script.src = new URL("demo-config.js", scriptBase).href;
+    script.dataset.caesarDemoConfig = "true";
+    script.onload = () => {
+      window.CAESAR_DEMO_CONFIG_LOADED = true;
+      callback();
+    };
+    script.onerror = () => {
+      window.CAESAR_DEMO_CONFIG_LOADED = true;
+      callback();
+    };
+    document.head.appendChild(script);
+  }
+
+  function startNav() {
+    loadDemoConfig(initNav);
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initNav);
+    document.addEventListener("DOMContentLoaded", startNav);
   } else {
-    initNav();
+    startNav();
   }
 })();
