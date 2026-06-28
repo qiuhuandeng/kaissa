@@ -331,30 +331,16 @@
         });
       }
 
-      function openDrawer(modal) {
-        if (window.caesarUI && window.caesarUI.openDrawer) {
-          window.caesarUI.openDrawer(modal);
-          return;
-        }
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeDrawer(modal, message) {
-        if (window.caesarUI && window.caesarUI.closeDrawer) {
-          window.caesarUI.closeDrawer(modal);
-          if (message && window.caesarUI.toast) window.caesarUI.toast(message);
-          return;
-        }
-        modal.classList.remove('show');
-        setTimeout(function () {
-          modal.setAttribute('aria-hidden', 'true');
-        }, 240);
-        if (message && window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+
+      function closeProductLayer(modal, message) {
+        if (!modal) return;
+        window.caesarUI.closeLayer(modal);
+        if (message) window.caesarUI.toast(message);
       }
 
       function showToast(message) {
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+        window.caesarUI.toast(message);
       }
 
       function refreshDays() {
@@ -379,48 +365,48 @@
       });
 
       document.getElementById('openTrainRouteModal').addEventListener('click', function () {
-        openDrawer(routeModal);
+        window.caesarUI.openLayer(routeModal);
       });
 
       document.querySelectorAll('[data-edit-train]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(routeModal);
+          window.caesarUI.openLayer(routeModal);
         });
       });
 
       document.querySelectorAll('[data-edit-carriage]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(carriageModal);
+          window.caesarUI.openLayer(carriageModal);
         });
       });
 
       document.querySelectorAll('[data-open-train-tour]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(tourModal);
+          window.caesarUI.openLayer(tourModal);
         });
       });
 
       document.querySelectorAll('[data-close-train-route]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(routeModal, button.classList.contains('btn-primary') ? '专列产品已保存，车厢配置已准备' : '');
+          closeProductLayer(routeModal, button.classList.contains('btn-primary') ? '专列产品已保存，车厢配置已准备' : '');
         });
       });
 
       document.querySelectorAll('[data-close-train-carriage]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(carriageModal, button.classList.contains('btn-primary') ? '车厢铺位配置已保存' : '');
+          closeProductLayer(carriageModal, button.classList.contains('btn-primary') ? '车厢铺位配置已保存' : '');
         });
       });
 
       document.querySelectorAll('[data-close-train-tour]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(tourModal, button.classList.contains('btn-primary') ? '团期已生成，并同步铺位库存' : '');
+          closeProductLayer(tourModal, button.classList.contains('btn-primary') ? '团期已生成，并同步铺位库存' : '');
         });
       });
 
       [routeModal, carriageModal, tourModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeDrawer(modal);
+          if (event.target === modal) closeProductLayer(modal);
         });
       });
 

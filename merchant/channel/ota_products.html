@@ -468,14 +468,11 @@
       var minProtectPrice = 17800;
 
       function showNotice(text) {
-        noticeText.textContent = text;
-        notice.classList.add('show');
-        notice.setAttribute('aria-hidden', 'false');
+        window.caesarUI.toast(text);
       }
 
       function closeNotice() {
-        notice.classList.remove('show');
-        notice.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(notice);
       }
 
       function switchTab(tabName) {
@@ -487,24 +484,15 @@
         });
       }
 
-      function openDrawer(tabName, trigger) {
+      function openOtaConfigDrawer(tabName, trigger) {
         var row = trigger ? trigger.closest('tr') : null;
         var nameCell = row ? row.querySelector('td:first-child strong') : null;
         if (nameCell) productTitle.textContent = nameCell.textContent;
         switchTab(tabName || 'title');
-        drawer.classList.remove('closing');
-        drawer.classList.add('show');
-        drawer.setAttribute('aria-hidden', 'false');
+        window.caesarUI.openLayer(drawer);
       }
 
-      function closeDrawer() {
-        drawer.classList.add('closing');
-        drawer.classList.remove('show');
-        setTimeout(function () {
-          drawer.classList.remove('closing');
-          drawer.setAttribute('aria-hidden', 'true');
-        }, 240);
-      }
+
 
       function updatePriceCheck() {
         var input = drawer.querySelector('[data-display-price]');
@@ -528,19 +516,19 @@
 
       document.querySelectorAll('[data-open-ota-drawer]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer('title', button);
+          openOtaConfigDrawer('title', button);
         });
       });
 
       document.querySelectorAll('[data-open-price]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer('price', button);
+          openOtaConfigDrawer('price', button);
         });
       });
 
       document.querySelectorAll('[data-open-stock]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer('stock', button);
+          openOtaConfigDrawer('stock', button);
         });
       });
 
@@ -551,11 +539,11 @@
       });
 
       drawer.querySelectorAll('[data-close-ota-drawer]').forEach(function (button) {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
       });
 
       drawer.addEventListener('click', function (event) {
-        if (event.target === drawer) closeDrawer();
+        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
 
       drawer.querySelector('[data-generate-ai-title]').addEventListener('click', function () {

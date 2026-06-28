@@ -328,48 +328,28 @@
         panel.classList.toggle("active", panel.dataset.masterPanel === currentType);
       });
 
-      function openLayer(layer) {
-        if (window.caesarUI) {
-          window.caesarUI.openLayer(layer);
-          return;
-        }
-        layer.hidden = false;
-        requestAnimationFrame(() => layer.classList.add("show"));
-      }
-
-      function closeLayer(layer) {
-        if (window.caesarUI) {
-          window.caesarUI.closeLayer(layer);
-          return;
-        }
-        layer.classList.remove("show");
-        window.setTimeout(() => {
-          layer.hidden = true;
-        }, 240);
-      }
-
       document.querySelectorAll("[data-open-resource-drawer], [data-open-price]").forEach((button) => {
         button.addEventListener("click", () => {
           drawerTitle.textContent = button.hasAttribute("data-open-price") ? "价格维护" : "资源维护";
-          openLayer(drawer);
+          window.caesarUI.openLayer(drawer);
         });
       });
-      document.querySelector("[data-open-import]").addEventListener("click", () => openLayer(importDrawer));
+      document.querySelector("[data-open-import]").addEventListener("click", () => window.caesarUI.openLayer(importDrawer));
       document.querySelectorAll("[data-close-resource-drawer]").forEach((button) => {
-        button.addEventListener("click", () => closeLayer(drawer));
+        button.addEventListener("click", () => window.caesarUI.closeLayer(drawer));
       });
       document.querySelectorAll("[data-close-resource-import]").forEach((button) => {
-        button.addEventListener("click", () => closeLayer(importDrawer));
+        button.addEventListener("click", () => window.caesarUI.closeLayer(importDrawer));
       });
       document.getElementById("confirmResourceImport").addEventListener("click", () => {
-        closeLayer(importDrawer);
-        if (window.caesarUI) window.caesarUI.toast("资源导入校验任务已创建", { type: "success" });
+        window.caesarUI.closeLayer(importDrawer);
+        window.caesarUI.toast("资源导入校验任务已创建", { type: "success" });
       });
       document.querySelectorAll("[data-open-refs]").forEach((button) => {
-        button.addEventListener("click", () => openLayer(refs));
+        button.addEventListener("click", () => window.caesarUI.openLayer(refs));
       });
       document.querySelectorAll("[data-close-resource-refs]").forEach((button) => {
-        button.addEventListener("click", () => closeLayer(refs));
+        button.addEventListener("click", () => window.caesarUI.closeLayer(refs));
       });
       [drawer, refs, importDrawer].forEach((layer) => {
         layer.addEventListener("click", (event) => {

@@ -301,26 +301,67 @@
         <button class="modal-close" type="button" aria-label="关闭" data-close-outsource-ai>×</button>
       </div>
       <div class="modal-body">
-        <section class="ai-upload-card">
-          <div class="ai-upload-section-head"><h2>上传供应商资料</h2></div>
-          <div class="ai-product-type-grid" aria-label="旅游类型选择">
-            <button class="ai-product-type active" type="button"><strong>出境游</strong><span>识别供应商产品、线路、采购价和结算规则</span></button>
-            <button class="ai-product-type" type="button"><strong>国内游</strong><span>识别目的地、用车、酒店和地接报价</span></button>
-          </div>
-          <div class="ai-upload-dropzone">
-            <div class="ai-upload-icon" aria-hidden="true">↑</div>
-            <strong>拖拽供应商报价、行程或合同到此处</strong>
-            <button class="link-button" type="button">或点击选择文件</button>
-            <span>支持PDF、Word、Excel、图片，解析后生成外采产品草稿</span>
-          </div>
-          <div class="ai-upload-actions">
-            <button class="btn btn-ai" type="button" data-start-outsource-ai>开始AI解析</button>
-          </div>
-        </section>
+        <div class="ai-upload-drawer-body">
+          <section class="ai-upload-card ai-source-card">
+            <div class="ai-upload-section-head"><h2>上传解析</h2></div>
+            <div class="ai-upload-criteria-row" aria-label="解析口径">
+              <div class="form-group">
+                <label class="form-label" for="outsourceAiProductTypeSelect">产品类型</label>
+                <select id="outsourceAiProductTypeSelect" class="form-control">
+                  <option>外采产品</option>
+                  <option>邮轮产品</option>
+                  <option>专列产品</option>
+                  <option>单项委托</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="outsourceAiTravelTypeSelect">旅游类型</label>
+                <select id="outsourceAiTravelTypeSelect" class="form-control">
+                  <option>出境游</option>
+                  <option>国内游</option>
+                  <option>港澳台</option>
+                  <option>入境游</option>
+                </select>
+              </div>
+            </div>
+            <nav class="tab-bar ai-source-tabs" aria-label="上传方式">
+              <button class="tab-item active" type="button" data-source-tab="file">供应商资料</button>
+              <button class="tab-item" type="button" data-source-tab="supplier">供应商链接</button>
+              <button class="tab-item" type="button" data-source-tab="text">报价文本</button>
+            </nav>
+
+            <section class="ai-source-panel active" data-source-panel="file">
+              <div class="ai-upload-dropzone">
+                <div class="ai-upload-icon" aria-hidden="true">↑</div>
+                <strong>拖拽供应商报价、行程或合同到此处</strong>
+                <button class="link-button" type="button">选择文件</button>
+                <span>PDF、Word、Excel、图片，解析后生成外采产品草稿</span>
+              </div>
+              <div class="ai-upload-actions">
+                <button class="btn btn-ai" type="button" data-start-outsource-ai>开始AI解析</button>
+              </div>
+            </section>
+
+            <section class="ai-source-panel" data-source-panel="supplier">
+              <div class="ai-link-parse-row">
+                <input class="form-control" type="url" placeholder="粘贴供应商产品、报价或资料页面URL">
+                <button class="btn btn-primary" type="button" data-start-outsource-ai>解析</button>
+              </div>
+            </section>
+
+            <section class="ai-source-panel" data-source-panel="text">
+              <textarea class="form-control ai-text-source" rows="8" placeholder="粘贴供应商报价、采购价、团期配额、结算规则等原始文本"></textarea>
+              <div class="ai-upload-actions">
+                <button class="btn btn-primary" type="button" data-start-outsource-ai>解析文本</button>
+              </div>
+            </section>
+          </section>
+        </div>
         <section id="outsourceAiResult" class="ai-upload-card ai-parse-result" hidden>
           <div class="ai-upload-section-head"><h2>解析结果校正</h2></div>
           <div class="form-grid">
             <div class="form-group form-group-full"><label class="form-label">供应商原始产品 <span class="confidence high">95%</span></label><input class="form-control" type="text" value="西欧精选8日散拼"></div>
+            <div class="form-group"><label class="form-label">产品类型 <span class="confidence high">96%</span></label><select class="form-control"><option>外采产品</option><option>邮轮产品</option><option>专列产品</option><option>单项委托</option></select></div>
             <div class="form-group"><label class="form-label">旅游类型 <span class="confidence high">93%</span></label><select class="form-control"><option>出境游</option><option>国内游</option></select></div>
             <div class="form-group"><label class="form-label">来源供应商 <span class="confidence high">91%</span></label><input class="form-control" type="text" value="欧洲联合地接社"></div>
             <div class="form-group"><label class="form-label">线路数量 <span class="confidence high">88%</span></label><input class="form-control" type="text" value="2条"></div>
@@ -362,30 +403,12 @@
       var statusTargetRow = null;
       var statusAction = '下架';
 
-      function openModal(modal) {
-        if (!modal) return;
-        if (window.caesarUI) {
-          window.caesarUI.openLayer(modal);
-          return;
-        }
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeModal(modal) {
-        if (!modal) return;
-        if (window.caesarUI) {
-          window.caesarUI.closeLayer(modal);
-          return;
-        }
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
+
+
 
       function showToast(message, type) {
-        if (window.caesarUI) {
-          window.caesarUI.toast(message, { type: type || 'success' });
-        }
+        window.caesarUI.toast(message, { type: type || 'success' });
       }
 
       function navigateTo(href) {
@@ -393,12 +416,12 @@
       }
 
       document.getElementById('openOutsourceModal').addEventListener('click', function () {
-        openModal(productModal);
+        window.caesarUI.openLayer(productModal);
       });
 
       document.querySelectorAll('[data-close-outsource]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeModal(productModal);
+          window.caesarUI.closeLayer(productModal);
         });
       });
 
@@ -415,13 +438,13 @@
           offsaleText.textContent = action === '下架'
             ? '确认下架「' + product + '」？下架后该产品将不在任何渠道展示，当前已有' + count + '个团期和相关订单不受影响。'
             : '确认将「' + product + '」' + action + '？确认后该产品将重新进入销售状态筛选。';
-          openModal(offsaleModal);
+          window.caesarUI.openLayer(offsaleModal);
         });
       });
 
       document.querySelectorAll('[data-close-offsale]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeModal(offsaleModal);
+          window.caesarUI.closeLayer(offsaleModal);
         });
       });
 
@@ -439,7 +462,7 @@
 
       document.querySelectorAll('[data-close-outsource-ai]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeModal(aiDrawer);
+          window.caesarUI.closeLayer(aiDrawer);
         });
       });
 
@@ -453,9 +476,21 @@
         });
       });
 
+      document.querySelectorAll('#outsourceAiDrawer [data-source-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var key = tab.dataset.sourceTab;
+          aiDrawer.querySelectorAll('[data-source-tab]').forEach(function (item) {
+            item.classList.toggle('active', item === tab);
+          });
+          aiDrawer.querySelectorAll('[data-source-panel]').forEach(function (panel) {
+            panel.classList.toggle('active', panel.dataset.sourcePanel === key);
+          });
+        });
+      });
+
       [productModal, aiDrawer, offsaleModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeModal(modal);
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       });
 
@@ -468,7 +503,7 @@
       });
 
       document.getElementById('saveOutsourceProduct').addEventListener('click', function () {
-        closeModal(productModal);
+        window.caesarUI.closeLayer(productModal);
         showToast('外采产品已保存，正在进入定价配置');
         window.setTimeout(function () {
           navigateTo('product-pricing.html');
@@ -477,7 +512,7 @@
 
       document.getElementById('aiPublishButton').addEventListener('click', function () {
         if (aiResult) aiResult.hidden = true;
-        openModal(aiDrawer);
+        window.caesarUI.openLayer(aiDrawer);
       });
     })();
   </script>

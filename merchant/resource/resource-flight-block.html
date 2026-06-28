@@ -137,52 +137,24 @@
     (function () {
       const drawer = document.getElementById("blockDrawer");
       const releaseModal = document.getElementById("blockReleaseModal");
-      function openDrawer() {
-        if (window.caesarUI) {
-          window.caesarUI.openDrawer(drawer);
-          return;
-        }
-        drawer.hidden = false;
-        requestAnimationFrame(() => drawer.classList.add("show"));
-      }
-      function closeDrawer() {
-        if (window.caesarUI) {
-          window.caesarUI.closeDrawer(drawer);
-          return;
-        }
-        drawer.classList.remove("show");
-        window.setTimeout(() => {
-          drawer.hidden = true;
-        }, 240);
-      }
+
+
       function openReleaseModal() {
-        if (window.caesarUI) {
-          window.caesarUI.openModal(releaseModal);
-          return;
-        }
-        releaseModal.hidden = false;
-        requestAnimationFrame(() => releaseModal.classList.add("show"));
+        window.caesarUI.openLayer(releaseModal);
       }
       function closeReleaseModal() {
-        if (window.caesarUI) {
-          window.caesarUI.closeModal(releaseModal);
-          return;
-        }
-        releaseModal.classList.remove("show");
-        window.setTimeout(() => {
-          releaseModal.hidden = true;
-        }, 180);
+        window.caesarUI.closeLayer(releaseModal);
       }
-      document.querySelectorAll("[data-open-block-drawer]").forEach((button) => button.addEventListener("click", openDrawer));
+      document.querySelectorAll("[data-open-block-drawer]").forEach((button) => button.addEventListener("click", function () { window.caesarUI.openLayer(drawer); }));
       document.querySelectorAll("[data-open-release]").forEach((button) => button.addEventListener("click", openReleaseModal));
-      document.querySelectorAll("[data-close-block-drawer]").forEach((button) => button.addEventListener("click", closeDrawer));
+      document.querySelectorAll("[data-close-block-drawer]").forEach((button) => button.addEventListener("click", function () { window.caesarUI.closeLayer(drawer); }));
       document.querySelectorAll("[data-close-release]").forEach((button) => button.addEventListener("click", closeReleaseModal));
       document.getElementById("confirmReleaseBlock").addEventListener("click", () => {
         closeReleaseModal();
-        if (window.caesarUI) window.caesarUI.toast("锁位释放申请已提交", { type: "success" });
+        window.caesarUI.toast("锁位释放申请已提交", { type: "success" });
       });
       drawer.addEventListener("click", (event) => {
-        if (event.target === drawer) closeDrawer();
+        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
       releaseModal.addEventListener("click", (event) => {
         if (event.target === releaseModal) closeReleaseModal();

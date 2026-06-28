@@ -408,28 +408,14 @@
         '退款中': 'tag tag-purple'
       };
 
-      function showOverlay(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function hideOverlay(modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
 
-      function closeDrawer() {
-        drawer.classList.add('closing');
-        drawer.classList.remove('show');
-        setTimeout(function () {
-          drawer.classList.remove('closing');
-          drawer.setAttribute('aria-hidden', 'true');
-        }, 240);
-      }
+
+
+
 
       function showNotice(text) {
-        noticeText.textContent = text;
-        showOverlay(noticeModal);
+        window.caesarUI.toast(text);
       }
 
       function updateStatus(row, status) {
@@ -458,27 +444,27 @@
         drawer.querySelector('[data-drawer-remark]').textContent = row.dataset.remark;
       }
 
-      function openDrawer(row) {
+      function openOtaOrderDrawer(row) {
         fillDrawer(row);
         drawer.classList.remove('closing');
-        showOverlay(drawer);
+        window.caesarUI.openLayer(drawer);
       }
 
       function openConfirm(row) {
         currentRow = row || currentRow;
         var seats = currentRow ? currentRow.dataset.seats : '0';
         confirmModal.querySelector('[data-confirm-seats]').value = '当前可用余位 ' + seats + '，本单游客 ' + (currentRow ? currentRow.dataset.tourists : '0') + ' 人';
-        showOverlay(confirmModal);
+        window.caesarUI.openLayer(confirmModal);
       }
 
       function openReject(row) {
         currentRow = row || currentRow;
-        showOverlay(rejectModal);
+        window.caesarUI.openLayer(rejectModal);
       }
 
       document.querySelectorAll('[data-open-order-drawer]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(button.closest('tr'));
+          openOtaOrderDrawer(button.closest('tr'));
         });
       });
 
@@ -503,7 +489,7 @@
       });
 
       drawer.querySelectorAll('[data-close-order-drawer]').forEach(function (button) {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
       });
 
       drawer.querySelectorAll('[data-copy-order]').forEach(function (button) {
@@ -520,7 +506,7 @@
 
       confirmModal.querySelector('[data-submit-confirm]').addEventListener('click', function () {
         updateStatus(currentRow, '已确认');
-        hideOverlay(confirmModal);
+        window.caesarUI.closeLayer(confirmModal);
         showNotice('已确认接单，并向平台回传确认结果。');
       });
 
@@ -531,7 +517,7 @@
           return;
         }
         updateStatus(currentRow, '已拒绝');
-        hideOverlay(rejectModal);
+        window.caesarUI.closeLayer(rejectModal);
         showNotice('已提交拒绝原因，并向平台回传不可确认结果。');
       });
 
@@ -542,27 +528,27 @@
       [drawer, confirmModal, rejectModal, noticeModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) {
-            if (modal === drawer) closeDrawer();
-            else hideOverlay(modal);
+            if (modal === drawer) window.caesarUI.closeLayer(drawer);
+            else window.caesarUI.closeLayer(modal);
           }
         });
       });
 
       confirmModal.querySelectorAll('[data-close-confirm]').forEach(function (button) {
         button.addEventListener('click', function () {
-          hideOverlay(confirmModal);
+          window.caesarUI.closeLayer(confirmModal);
         });
       });
 
       rejectModal.querySelectorAll('[data-close-reject]').forEach(function (button) {
         button.addEventListener('click', function () {
-          hideOverlay(rejectModal);
+          window.caesarUI.closeLayer(rejectModal);
         });
       });
 
       noticeModal.querySelectorAll('[data-close-notice]').forEach(function (button) {
         button.addEventListener('click', function () {
-          hideOverlay(noticeModal);
+          window.caesarUI.closeLayer(noticeModal);
         });
       });
     })();

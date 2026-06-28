@@ -400,30 +400,16 @@
         });
       }
 
-      function openDrawer(modal) {
-        if (window.caesarUI && window.caesarUI.openDrawer) {
-          window.caesarUI.openDrawer(modal);
-          return;
-        }
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeDrawer(modal, message) {
-        if (window.caesarUI && window.caesarUI.closeDrawer) {
-          window.caesarUI.closeDrawer(modal);
-          if (message && window.caesarUI.toast) window.caesarUI.toast(message);
-          return;
-        }
-        modal.classList.remove('show');
-        setTimeout(function () {
-          modal.setAttribute('aria-hidden', 'true');
-        }, 240);
-        if (message && window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+
+      function closeProductLayer(modal, message) {
+        if (!modal) return;
+        window.caesarUI.closeLayer(modal);
+        if (message) window.caesarUI.toast(message);
       }
 
       function showToast(message) {
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+        window.caesarUI.toast(message);
       }
 
       tabs.forEach(function (tab) {
@@ -440,12 +426,12 @@
       });
 
       document.getElementById('openCruiseRouteModal').addEventListener('click', function () {
-        openDrawer(routeModal);
+        window.caesarUI.openLayer(routeModal);
       });
 
       document.querySelectorAll('[data-edit-route]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(routeModal);
+          window.caesarUI.openLayer(routeModal);
         });
       });
 
@@ -457,48 +443,48 @@
       });
 
       document.getElementById('openCruiseAddonModal').addEventListener('click', function () {
-        openDrawer(addonModal);
+        window.caesarUI.openLayer(addonModal);
       });
 
       document.querySelectorAll('[data-open-cruise-tour]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(tourModal);
+          window.caesarUI.openLayer(tourModal);
         });
       });
 
       document.querySelectorAll('[data-close-cruise-route]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(routeModal, button.classList.contains('btn-primary') ? '邮轮产品已保存，产品库已局部刷新' : '');
+          closeProductLayer(routeModal, button.classList.contains('btn-primary') ? '邮轮产品已保存，产品库已局部刷新' : '');
         });
       });
 
       document.querySelectorAll('[data-close-cruise-addon]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(addonModal, button.classList.contains('btn-primary') ? '附加包配置已保存' : '');
+          closeProductLayer(addonModal, button.classList.contains('btn-primary') ? '附加包配置已保存' : '');
         });
       });
 
       document.querySelectorAll('[data-close-cruise-tour]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(tourModal, button.classList.contains('btn-primary') ? '团期已生成，并同步舱型库存' : '');
+          closeProductLayer(tourModal, button.classList.contains('btn-primary') ? '团期已生成，并同步舱型库存' : '');
         });
       });
 
       document.querySelectorAll('[data-close-cruise-cabin]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(cabinModal, button.classList.contains('btn-primary') ? '舱型库存已保存' : '');
+          closeProductLayer(cabinModal, button.classList.contains('btn-primary') ? '舱型库存已保存' : '');
         });
       });
 
       [routeModal, addonModal, tourModal, cabinModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeDrawer(modal);
+          if (event.target === modal) closeProductLayer(modal);
         });
       });
 
       document.querySelectorAll('[data-cabin-edit]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(cabinModal);
+          window.caesarUI.openLayer(cabinModal);
         });
       });
 

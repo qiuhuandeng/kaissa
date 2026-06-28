@@ -25,6 +25,8 @@ node shared/audit-pages.js
 
 一级列表页统一使用 `list-surface` 规范。目标是让筛选、状态 Tab、表格和分页成为一个整体，减少页面标题卡片和列表主体分离造成的割裂感。
 
+后台视觉 token 必须保持克制统一：正文默认 14px / 22px，表格和辅助信息使用 13px / 22px 或 12px / 20px，不使用 12.5px、13.5px、17px 等半档字号；普通正文和操作使用 400-500 字重，表头、卡片标题、主信息最高 600，只有工作台 KPI、详情核心金额等需要强强调的数字才允许 700 以上。
+
 新页面优先直接使用：
 
 ```html
@@ -63,6 +65,7 @@ node shared/audit-pages.js
 - 表格、空状态、分页必须在同一个 `list-surface` 内。
 - 列表表格列宽由共享脚本根据表头自动归类，不在单页硬写列宽。编号/日期/金额/数字/状态/操作列必须单行展示；产品/线路、产品名称/编号、客户/联系人等主信息列只保留显式的 2-3 行信息结构，不允许被窄屏压成 4 行以上；备注、风险提示、失败原因、特殊需求等说明列才允许受控换行。小屏通过 `.table-wrap` 横向滚动承接，不通过强行压缩列宽来塞满视口。
 - 表格操作列统一使用 `.table-action`。操作文字为 13px / 22px，普通动作字重 400、主业务动作字重 500、横向间距 10px，必须不换行、不撑高行高；操作列宽由按钮数量和“更多”自动撑开，小屏由表格横向滚动承接。普通动作用克制灰色，蓝色只用于当前行最重要的业务动作，并显式添加 `.table-action-primary`，不能依赖第一个按钮自动变蓝；hover 必须有轻量颜色变化或浅底反馈，不能做成无响应的死文字。详情/查看只有在没有更强业务动作时才作为主动作。直露操作原则上最多 2 个，流程密集列表最多 3 个，其余低频动作进入“更多”。
+- 表格主信息不直接依赖 `<strong>` 做粗体堆叠。产品/客户/公司/订单等主字段使用 13-14px、600 字重，编号、线路、手机号等辅助信息使用 `text-muted` 或 `table-subtext`，保持 12-13px、400 字重。普通金额、价格、库存和数量使用正文色加 `font-variant-numeric: tabular-nums`；只有亏损、逾期、异常、负数和风险提示才使用红色。
 - 操作文案控制在 2-4 个字，长文案必须缩短或放入更多菜单：`查看详情` 统一为 `详情`，`查看版本历史` / `历史版本` 统一为 `历史`，`查看价格趋势图` 统一为 `趋势`，`查看AI判断详情` 统一为 `AI详情`，`查看错误日志` 统一为 `日志`，`OTA详情配置` 统一为 `配置`，`修改价格` 统一为 `改价`，`更新库存` 统一为 `库存`，`供应商费用` 统一为 `费用`，`发起调价申请` 统一为 `调价`，`生成初始化任务` 统一为 `初始化`。
 - 更多菜单统一结构为 `.dropdown.table-action-more > .table-more-toggle + .dropdown-menu.action-dropdown-menu`。按钮文案必须显示“更多”并带下拉箭头，不能只有箭头；低频动作、长文案动作、危险动作放入菜单，危险项使用 `.dropdown-item.danger` 并放在菜单底部。
 - 分页是表格 footer，不是独立卡片。表格有分页时，页面源码必须采用 `.table-wrap.list-surface-table.list-table-with-pagination + .pagination.list-surface-pagination.list-pagination-attached` 的紧邻同级结构；横向滚动只发生在 `.table-wrap` 内，分页固定在表格外层底部。表格底部取消圆角，分页贴住表格并保留底部圆角，中间只保留一条分隔线；缺分页的列表页必须补源码结构，不通过运行时兼容自动生成。
@@ -76,6 +79,7 @@ node shared/audit-pages.js
 
 - 新建、编辑、配置、批量维护、选择类型等承载表单或复杂内容的操作，使用 `.modal-overlay.drawer-overlay > .modal.drawer-modal`。
 - 删除确认、上下架确认、复制确认、未选择提示、简单状态切换等轻量打断操作，使用 `.modal.modal-sm.modal-confirm`。
+- 弹层标题使用 16px / 24px、600 字重，不使用 700/800 的重标题；关闭按钮必须有 28px 左右的命中区和浅灰 hover 背景，不能只是一个无反馈的 `×` 字符。
 - 共享脚本会为 `.modal-overlay` 补齐 `aria-hidden`、`role="dialog"`、`aria-modal="true"` 和 `data-layer-type`。
 - 打开/关闭统一调用 `window.caesarUI.openDrawer(target)`、`window.caesarUI.closeDrawer(target)`、`window.caesarUI.openModal(target)`、`window.caesarUI.closeModal(target)`，避免每个页面硬写 display 切换导致抽屉没有滑入滑出。
 - 操作成功、失败、提醒统一调用 `window.caesarUI.toast(message, { type: "success|warning|error|info" })`，不在单页内自建提示条。
@@ -95,6 +99,8 @@ node shared/audit-pages.js
 表格中应优先让订单状态、合同状态、财务状态、审批状态、异常风险标签获得颜色；产品类型、银行流水、普通团期、门店 POS、OTA 结算、资源标签、渠道标签等属性信息使用 `tag-meta` 或普通文本。旧页面不需要逐页修改标签类名，共享脚本会根据表头和常见文案在运行时补充 `tag-meta-runtime`。表格内 `.tag-group` 默认按属性标签处理，使用中性样式。
 
 列表表格中的 `.tag`、`.tag-row`、`.tag-group` 必须单行展示，禁止在窄屏单元格内换行。小屏由 `.table-wrap` 承接横向滚动，不能通过标签自动换行来压缩表格。
+
+标签文字默认 12px、500 字重；`tag-meta` / `tag-meta-runtime` 使用 400 字重和中性灰底，不显示圆点。不要为了强调普通分类信息使用蓝、绿、橙、红色标签。
 
 ## 非列表页同步方向
 

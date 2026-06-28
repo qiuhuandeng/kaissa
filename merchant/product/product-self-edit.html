@@ -9,7 +9,7 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <main class="product-create-page">
+  <main class="product-create-page product-self-edit-page">
     <section class="page-workbar">
       <div>
         <div class="page-title-row">
@@ -23,6 +23,25 @@
       </div>
     </section>
 
+    <section class="product-edit-overview" aria-label="产品编辑摘要">
+      <div>
+        <span>产品编号</span>
+        <strong>KS-EU-001</strong>
+      </div>
+      <div>
+        <span>产品归属</span>
+        <strong>自营产品</strong>
+      </div>
+      <div>
+        <span>承接组织</span>
+        <strong>欧洲产品中心</strong>
+      </div>
+      <div>
+        <span>编辑状态</span>
+        <strong><span class="tag tag-orange">草稿</span></strong>
+      </div>
+    </section>
+
     <section class="product-create-layout product-create-layout-horizontal">
       <aside class="product-step-panel" aria-label="产品创建步骤">
         <div class="steps">
@@ -33,9 +52,10 @@
         </div>
       </aside>
 
-      <div>
-        <section id="step1" class="product-step-content active">
-          <section class="card">
+      <div class="product-edit-main">
+        <section class="product-edit-stage">
+          <section id="step1" class="product-step-content active">
+            <section class="card">
             <div class="card-header">
               <div class="card-title">核心信息</div>
             </div>
@@ -313,11 +333,11 @@
           </section>
         </section>
 
-        <div class="page-bottom-actions">
-          <a class="btn btn-secondary" href="products.html" data-confirm-back>取消</a>
-          <button id="saveDraftBottom" class="btn btn-secondary" type="button">保存草稿</button>
-          <button id="nextStep" class="btn btn-primary" type="button">下一步</button>
-        </div>
+          <div class="page-bottom-actions">
+            <a class="btn btn-secondary" href="products.html" data-confirm-back>取消</a>
+            <button id="nextStep" class="btn btn-primary" type="button">下一步</button>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -549,16 +569,7 @@
       }
 
       function showDraftToast(message) {
-        if (window.caesarUI && window.caesarUI.toast) {
-          window.caesarUI.toast(message);
-          return;
-        }
-        draftToast.textContent = message;
-        draftToast.hidden = false;
-        window.clearTimeout(saveDraft.toastTimer);
-        saveDraft.toastTimer = window.setTimeout(function () {
-          draftToast.hidden = true;
-        }, 3000);
+        window.caesarUI.toast(message);
       }
 
       function clearInvalidFields() {
@@ -839,21 +850,11 @@
       function openCityModal() {
         document.getElementById('citySearch').value = '';
         filterCreateCities('');
-        if (window.caesarUI && window.caesarUI.openModal) {
-          window.caesarUI.openModal(cityModal);
-          return;
-        }
-        cityModal.classList.add('show');
-        cityModal.setAttribute('aria-hidden', 'false');
+        window.caesarUI.openLayer(cityModal);
       }
 
       function closeCityModal() {
-        if (window.caesarUI && window.caesarUI.closeModal) {
-          window.caesarUI.closeModal(cityModal);
-          return;
-        }
-        cityModal.classList.remove('show');
-        cityModal.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(cityModal);
       }
 
       function selectCity(button) {
@@ -1193,12 +1194,7 @@
       function submitReview() {
         if (!validateBeforeSubmit()) return;
         renderSubmitSummary();
-        if (window.caesarUI && window.caesarUI.openModal) {
-          window.caesarUI.openModal(submitSuccessModal);
-        } else {
-          submitSuccessModal.classList.add('show');
-          submitSuccessModal.setAttribute('aria-hidden', 'false');
-        }
+        window.caesarUI.openLayer(submitSuccessModal);
         formDirty = false;
       }
 
@@ -1406,7 +1402,6 @@
         submitReview();
       });
       document.getElementById('saveDraftTop').addEventListener('click', saveDraft);
-      document.getElementById('saveDraftBottom').addEventListener('click', saveDraft);
       function navigateTo(href) {
         window.caesarNavigateTo(href);
       }

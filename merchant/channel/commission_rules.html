@@ -325,34 +325,18 @@
       var noticeText = notice.querySelector('[data-notice-text]');
 
       function showNotice(text) {
-        noticeText.textContent = text;
-        notice.classList.add('show');
-        notice.setAttribute('aria-hidden', 'false');
+        window.caesarUI.toast(text);
       }
 
       function closeNotice() {
-        notice.classList.remove('show');
-        notice.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(notice);
       }
 
-      function showOverlay(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function hideOverlay(modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
 
-      function closeDrawer() {
-        ruleDrawer.classList.add('closing');
-        ruleDrawer.classList.remove('show');
-        setTimeout(function () {
-          ruleDrawer.classList.remove('closing');
-          ruleDrawer.setAttribute('aria-hidden', 'true');
-        }, 240);
-      }
+
+
+
 
       document.querySelectorAll('[data-rule-tab]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -368,18 +352,18 @@
       document.querySelectorAll('[data-open-cell-modal]').forEach(function (button) {
         button.addEventListener('click', function () {
           cellModal.querySelector('[data-cell-context]').textContent = button.dataset.product + ' / ' + button.dataset.channel;
-          showOverlay(cellModal);
+          window.caesarUI.openLayer(cellModal);
         });
       });
 
       cellModal.querySelectorAll('[data-close-cell-modal]').forEach(function (button) {
         button.addEventListener('click', function () {
-          hideOverlay(cellModal);
+          window.caesarUI.closeLayer(cellModal);
         });
       });
 
       cellModal.querySelector('[data-save-cell-rule]').addEventListener('click', function () {
-        hideOverlay(cellModal);
+        window.caesarUI.closeLayer(cellModal);
         showNotice('内部销售佣金规则已保存。');
       });
 
@@ -387,16 +371,16 @@
         button.addEventListener('click', function () {
           ruleDrawer.querySelector('[data-rule-drawer-subtitle]').textContent = button.dataset.scope + '佣金规则';
           ruleDrawer.classList.remove('closing');
-          showOverlay(ruleDrawer);
+          window.caesarUI.openLayer(ruleDrawer);
         });
       });
 
       ruleDrawer.querySelectorAll('[data-close-rule-drawer]').forEach(function (button) {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
       });
 
       ruleDrawer.addEventListener('click', function (event) {
-        if (event.target === ruleDrawer) closeDrawer();
+        if (event.target === ruleDrawer) window.caesarUI.closeLayer(drawer);
       });
 
       ruleDrawer.querySelector('[data-tier-switch]').addEventListener('change', function (event) {
@@ -415,13 +399,13 @@
       });
 
       ruleDrawer.querySelector('[data-save-rule-drawer]').addEventListener('click', function () {
-        closeDrawer();
+        window.caesarUI.closeLayer(drawer);
         showNotice('佣金规则已保存并提交审批。');
       });
 
       [cellModal, notice].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) hideOverlay(modal);
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       });
 

@@ -24,12 +24,60 @@
       <button class="tab-item active" type="button" data-comp-tab="alerts">价格预警</button>
       <button class="tab-item" type="button" data-comp-tab="database">竞品数据库</button>
     </nav>
-    </div>
-
-    <section class="competitor-tab-panel active" data-comp-panel="alerts">
-      <div class="competitor-panel-toolbar">
+      <div id="competitorTabActions" class="list-surface-tabbar-actions">
         <button id="markAlertsRead" class="btn btn-secondary" type="button">全部标为已读</button>
       </div>
+    </div>
+
+    <template id="alertsActionTemplate">
+      <button id="markAlertsRead" class="btn btn-secondary" type="button">全部标为已读</button>
+    </template>
+
+    <template id="databaseActionTemplate">
+      <span class="dropdown table-action-more">
+        <button class="btn btn-secondary table-more-toggle" type="button" data-export-toggle aria-expanded="false">导出竞品分析报告</button>
+        <span class="dropdown-menu action-dropdown-menu">
+          <button class="dropdown-item" type="button" data-export-format="PDF">PDF格式</button>
+          <button class="dropdown-item" type="button" data-export-format="Excel">Excel格式</button>
+        </span>
+      </span>
+    </template>
+
+    <section class="free-tab-panel active" data-comp-panel="alerts">
+      <section class="filter-card filter-card-compact list-surface-filter" aria-label="价格预警筛选">
+        <div class="filter-row">
+          <div class="filter-item filter-item-sm">
+            <label class="sr-only" for="alertPlatform">平台</label>
+            <select id="alertPlatform">
+              <option value="">全部平台</option>
+              <option value="携程">携程</option>
+              <option value="飞猪">飞猪</option>
+              <option value="同程">同程</option>
+              <option value="官网">官网</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label class="sr-only" for="alertProductKeyword">产品名称</label>
+            <input id="alertProductKeyword" type="text" placeholder="产品名称搜索">
+          </div>
+          <div class="filter-item filter-item-sm">
+            <label class="sr-only" for="alertProductType">产品类型</label>
+            <select id="alertProductType">
+              <option value="">全部类型</option>
+              <option value="跟团游">跟团游</option>
+              <option value="邮轮">邮轮</option>
+              <option value="专列">专列</option>
+              <option value="自由行">自由行</option>
+              <option value="单项委托">单项委托</option>
+              <option value="研学">研学</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button id="queryPriceAlerts" class="btn btn-secondary" type="button">搜索</button>
+            <button id="resetPriceAlerts" class="btn btn-secondary" type="button">重置</button>
+          </div>
+        </div>
+      </section>
       <section class="table-wrap competitor-alert-table list-surface-table list-table-with-pagination" aria-label="价格异动预警列表">
         <table>
           <thead>
@@ -45,7 +93,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr data-competitor="携程 法瑞意12日经典游" data-price="¥11,980" data-ours="欧洲十国经典游">
+            <tr data-platform="携程" data-type="跟团游" data-product="欧洲十国经典游 法瑞意12日经典游" data-competitor="携程 法瑞意12日经典游" data-price="¥11,980" data-ours="欧洲十国经典游">
               <td>欧洲十国经典游</td>
               <td>¥12,800</td>
               <td><span class="tag tag-blue">携程</span></td>
@@ -55,7 +103,7 @@
               <td>2026-06-24 09:20</td>
               <td><div class="table-action"><button type="button" data-start-adjust class="table-action-primary">调价</button><button type="button" data-view-competitor>竞品</button></div></td>
             </tr>
-            <tr data-competitor="飞猪 大阪京都奈良7日" data-price="¥8,480" data-ours="日本关西深度游">
+            <tr data-platform="飞猪" data-type="跟团游" data-product="日本关西深度游 大阪京都奈良7日" data-competitor="飞猪 大阪京都奈良7日" data-price="¥8,480" data-ours="日本关西深度游">
               <td>日本关西深度游</td>
               <td>¥8,980</td>
               <td><span class="tag tag-orange">飞猪</span></td>
@@ -65,7 +113,7 @@
               <td>2026-06-24 10:05</td>
               <td><div class="table-action"><button type="button" data-start-adjust class="table-action-primary">调价</button><button type="button" data-view-competitor>竞品</button></div></td>
             </tr>
-            <tr data-competitor="同程 地中海邮轮13晚" data-price="¥27,500" data-ours="理想号地中海邮轮12晚">
+            <tr data-platform="同程" data-type="邮轮" data-product="理想号地中海邮轮12晚 地中海邮轮13晚" data-competitor="同程 地中海邮轮13晚" data-price="¥27,500" data-ours="理想号地中海邮轮12晚">
               <td>理想号地中海邮轮12晚</td>
               <td>¥28,800</td>
               <td><span class="tag tag-green">同程</span></td>
@@ -75,7 +123,7 @@
               <td>2026-06-24 10:18</td>
               <td><div class="table-action"><button type="button" data-start-adjust class="table-action-primary">调价</button><button type="button" data-view-competitor>竞品</button></div></td>
             </tr>
-            <tr data-competitor="携程 三亚亲子半自由行5日" data-price="¥6,280" data-ours="三亚亲子5日游">
+            <tr data-platform="携程" data-type="自由行" data-product="三亚亲子5日游 三亚亲子半自由行5日" data-competitor="携程 三亚亲子半自由行5日" data-price="¥6,280" data-ours="三亚亲子5日游">
               <td>三亚亲子5日游</td>
               <td>¥6,800</td>
               <td><span class="tag tag-blue">携程</span></td>
@@ -85,7 +133,7 @@
               <td>2026-06-24 11:00</td>
               <td><div class="table-action"><button type="button" data-start-adjust class="table-action-primary">调价</button><button type="button" data-view-competitor>竞品</button></div></td>
             </tr>
-            <tr data-competitor="飞猪 曼谷清迈7晚8日" data-price="¥5,380" data-ours="泰国曼谷清迈8日">
+            <tr data-platform="飞猪" data-type="跟团游" data-product="泰国曼谷清迈8日 曼谷清迈7晚8日" data-competitor="飞猪 曼谷清迈7晚8日" data-price="¥5,380" data-ours="泰国曼谷清迈8日">
               <td>泰国曼谷清迈8日</td>
               <td>¥5,980</td>
               <td><span class="tag tag-orange">飞猪</span></td>
@@ -103,8 +151,8 @@
       </div>
     </section>
 
-    <section class="competitor-tab-panel" data-comp-panel="database" hidden>
-      <section class="filter-card filter-card-compact competitor-db-filter list-surface-filter" aria-label="竞品数据库筛选">
+    <section class="free-tab-panel" data-comp-panel="database" hidden>
+      <section class="filter-card filter-card-compact list-surface-filter" aria-label="竞品数据库筛选">
         <div class="filter-row">
           <div class="filter-item filter-item-sm">
             <label class="sr-only" for="dbPlatform">平台</label>
@@ -138,15 +186,7 @@
           </div>
           <div class="filter-actions">
             <button id="queryCompetitorDb" class="btn btn-secondary" type="button">查询</button>
-          </div>
-          <div class="competitor-db-export">
-            <span class="dropdown table-action-more">
-              <button class="btn btn-secondary table-more-toggle" type="button" data-export-toggle aria-expanded="false">导出竞品分析报告</button>
-              <span class="dropdown-menu action-dropdown-menu">
-                <button class="dropdown-item" type="button" data-export-format="PDF">PDF格式</button>
-                <button class="dropdown-item" type="button" data-export-format="Excel">Excel格式</button>
-              </span>
-            </span>
+            <button id="resetCompetitorDb" class="btn btn-secondary" type="button">重置</button>
           </div>
         </div>
       </section>
@@ -255,56 +295,37 @@
       var trendModal = document.getElementById('trendModal');
       var noticeModal = document.getElementById('competitorNoticeModal');
       var noticeText = document.getElementById('competitorNoticeText');
+      var tabbarRow = document.querySelector('.product-competitor-price-list-surface .list-surface-tabbar-row');
+      var tabActions = document.getElementById('competitorTabActions');
+      var actionTemplates = {
+        alerts: document.getElementById('alertsActionTemplate'),
+        database: document.getElementById('databaseActionTemplate')
+      };
 
-      function openModal(modal) {
-        if (modal.classList.contains('drawer-overlay') && window.caesarUI && window.caesarUI.openDrawer) {
-          window.caesarUI.openDrawer(modal);
-          return;
-        }
-        if (window.caesarUI && window.caesarUI.openModal) {
-          window.caesarUI.openModal(modal);
-          return;
-        }
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeModal(modal) {
-        if (modal.classList.contains('drawer-overlay') && window.caesarUI && window.caesarUI.closeDrawer) {
-          window.caesarUI.closeDrawer(modal);
-          return;
-        }
-        if (window.caesarUI && window.caesarUI.closeModal) {
-          window.caesarUI.closeModal(modal);
-          return;
-        }
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
+
+
 
       function closeByOverlay(modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeModal(modal);
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       }
 
       function showNotice(message) {
-        if (window.caesarUI && window.caesarUI.toast) {
-          window.caesarUI.toast(message);
-          return;
-        }
-        noticeText.textContent = message;
-        openModal(noticeModal);
+        window.caesarUI.toast(message);
       }
 
       function setTab(key) {
         tabs.forEach(function (tab) {
           tab.classList.toggle('active', tab.dataset.compTab === key);
         });
+        if (actionTemplates[key]) tabActions.innerHTML = actionTemplates[key].innerHTML;
         panels.forEach(function (panel) {
           var visible = panel.dataset.compPanel === key;
           panel.classList.toggle('active', visible);
           panel.hidden = !visible;
+          if (visible) tabbarRow.insertAdjacentElement('afterend', panel);
         });
       }
 
@@ -388,6 +409,50 @@
         drawLine(competitor, '#F97316');
       }
 
+      function updateAlertPagination(count) {
+        var total = document.querySelectorAll('.competitor-alert-table tbody tr').length;
+        var paginationText = document.querySelector('.competitor-alert-table + .pagination span');
+        if (!paginationText) return;
+        paginationText.textContent = count ? '第1-' + count + '条/共' + count + '条' : '第0-0条/共0条';
+        if (count === total) paginationText.textContent = '第1-' + total + '条/共' + total + '条';
+      }
+
+      function filterAlertRows() {
+        var platform = document.getElementById('alertPlatform').value;
+        var keyword = document.getElementById('alertProductKeyword').value.trim().toLowerCase();
+        var type = document.getElementById('alertProductType').value;
+        var visibleCount = 0;
+
+        document.querySelectorAll('.competitor-alert-table tbody tr').forEach(function (row) {
+          var product = (row.dataset.product || '').toLowerCase();
+          var visible = (!platform || row.dataset.platform === platform)
+            && (!type || row.dataset.type === type)
+            && (!keyword || product.indexOf(keyword) > -1);
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        updateAlertPagination(visibleCount);
+        showNotice('已刷新价格预警，共' + visibleCount + '条结果');
+      }
+
+      function resetAlertRows() {
+        document.getElementById('alertPlatform').value = '';
+        document.getElementById('alertProductKeyword').value = '';
+        document.getElementById('alertProductType').value = '';
+        document.querySelectorAll('.competitor-alert-table tbody tr').forEach(function (row) {
+          row.hidden = false;
+        });
+        updateAlertPagination(document.querySelectorAll('.competitor-alert-table tbody tr').length);
+      }
+
+      function updateDbPagination(count) {
+        var total = document.querySelectorAll('#competitorDbRows tr').length;
+        var paginationText = document.querySelector('.competitor-db-table + .pagination span');
+        if (!paginationText) return;
+        paginationText.textContent = count ? '第1-' + count + '条/共' + count + '条' : '第0-0条/共0条';
+        if (count === total) paginationText.textContent = '第1-' + total + '条/共' + total + '条';
+      }
+
       function filterDbRows() {
         var platform = document.getElementById('dbPlatform').value;
         var type = document.getElementById('dbProductType').value;
@@ -404,7 +469,19 @@
           row.hidden = !visible;
           if (visible) visibleCount += 1;
         });
+        updateDbPagination(visibleCount);
         showNotice('已刷新竞品数据库，共' + visibleCount + '条结果');
+      }
+
+      function resetDbRows() {
+        document.getElementById('dbPlatform').value = '';
+        document.getElementById('dbProductType').value = '';
+        document.getElementById('dbPriceMin').value = '';
+        document.getElementById('dbPriceMax').value = '';
+        document.querySelectorAll('#competitorDbRows tr').forEach(function (row) {
+          row.hidden = false;
+        });
+        updateDbPagination(document.querySelectorAll('#competitorDbRows tr').length);
       }
 
       tabs.forEach(function (tab) {
@@ -412,6 +489,7 @@
           setTab(tab.dataset.compTab);
         });
       });
+      setTab('alerts');
 
       document.addEventListener('click', function (event) {
         var exportToggle = event.target.closest('[data-export-toggle]');
@@ -426,15 +504,27 @@
           return;
         }
 
+        var exportFormat = event.target.closest('[data-export-format]');
+        if (exportFormat) {
+          closeMenus();
+          showNotice('竞品分析报告已按 ' + exportFormat.dataset.exportFormat + ' 格式生成');
+          return;
+        }
+
+        var markAlertsRead = event.target.closest('#markAlertsRead');
+        if (markAlertsRead) {
+          document.querySelectorAll('.competitor-alert-table tbody tr').forEach(function (row) {
+            row.classList.add('competitor-row-read');
+          });
+          showNotice('价格预警已全部标为已读');
+          return;
+        }
+
         if (!event.target.closest('.dropdown')) closeMenus();
       });
 
-      document.getElementById('markAlertsRead').addEventListener('click', function () {
-        document.querySelectorAll('.competitor-alert-table tbody tr').forEach(function (row) {
-          row.classList.add('competitor-row-read');
-        });
-        showNotice('价格预警已全部标为已读');
-      });
+      document.getElementById('queryPriceAlerts').addEventListener('click', filterAlertRows);
+      document.getElementById('resetPriceAlerts').addEventListener('click', resetAlertRows);
 
       document.querySelectorAll('[data-view-competitor]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -442,7 +532,7 @@
           document.getElementById('detailCompetitorName').textContent = row.dataset.competitor || row.children[3].textContent.trim();
           document.getElementById('detailCompetitorSource').textContent = row.children[2].textContent.trim() + ' | 当前竞品价 ' + row.dataset.price;
           document.getElementById('detailOurProduct').textContent = row.dataset.ours;
-          openModal(detailDrawer);
+          window.caesarUI.openLayer(detailDrawer);
         });
       });
 
@@ -455,28 +545,22 @@
 
       document.querySelectorAll('[data-view-trend]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openModal(trendModal);
+          window.caesarUI.openLayer(trendModal);
           window.setTimeout(drawTrendChart, 40);
         });
       });
 
       document.getElementById('queryCompetitorDb').addEventListener('click', filterDbRows);
-
-      document.querySelectorAll('[data-export-format]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeMenus();
-          showNotice('竞品分析报告已按 ' + button.dataset.exportFormat + ' 格式生成');
-        });
-      });
+      document.getElementById('resetCompetitorDb').addEventListener('click', resetDbRows);
 
       document.querySelectorAll('[data-close-competitor-detail]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(detailDrawer); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(detailDrawer); });
       });
       document.querySelectorAll('[data-close-trend]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(trendModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(trendModal); });
       });
       document.querySelectorAll('[data-close-competitor-notice]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(noticeModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(noticeModal); });
       });
       [detailDrawer, trendModal, noticeModal].forEach(closeByOverlay);
     })();

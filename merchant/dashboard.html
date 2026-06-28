@@ -264,18 +264,11 @@
             <button class="ops-ai-close" type="button" aria-label="关闭AI助手" data-close-ops-ai>×</button>
           </div>
         </div>
-        <div class="ops-ai-permission-strip" aria-label="AI权限范围">
-          <span class="tag tag-blue">计调角色</span>
-          <span>功能：团期、名单、证件、成本、出团通知</span>
-          <span>数据：西欧产品部授权团期</span>
-          <span>敏感字段默认脱敏</span>
-        </div>
         <div class="ops-ai-query">
           <label class="sr-only" for="opsAiInput">输入自然语言指令</label>
           <input id="opsAiInput" class="form-control" type="text" placeholder="例如：帮我检查6月25日出发团的风险">
           <a id="opsAiStart" class="btn btn-primary" href="ai/ai-assistant.html">开始对话</a>
         </div>
-        <div class="alert alert-red ops-ai-guard" data-ai-guard hidden></div>
         <div class="ops-ai-shortcuts" aria-label="快捷指令">
           <button class="ops-ai-chip" type="button" data-ai-prompt="检查今日出发风险">检查今日出发风险</button>
           <button class="ops-ai-chip" type="button" data-ai-prompt="生成出团通知">生成出团通知</button>
@@ -349,30 +342,6 @@
       var aiOpenButton = document.querySelector("[data-open-ops-ai]");
       var aiCloseButton = document.querySelector("[data-close-ops-ai]");
       var aiInput = document.getElementById("opsAiInput");
-      var aiStart = document.getElementById("opsAiStart");
-      var aiGuard = document.querySelector("[data-ai-guard]");
-      var deniedAiRules = [
-        {
-          pattern: /上架|下架|发布|提交审核|渠道授权|改价|删除产品/,
-          message: "已拦截：当前计调账号只能处理授权团期、名单、证件、成本和出团通知，AI不能代为上架、发布、改价或下架产品。"
-        },
-        {
-          pattern: /全集团|全租户|全部订单|全部客户|所有门店|跨主体|全量客户|全量订单|导出客户|导出订单/,
-          message: "已拦截：当前账号只能访问西欧产品部授权团期数据，AI不能查询或导出跨主体、跨门店或全量订单客户数据。"
-        },
-        {
-          pattern: /执行退款|执行付款|推送NC|确认入账|生成结算单|一键催款|批量认款/,
-          message: "已拦截：当前账号缺少财务执行权限，AI不能执行退款、付款、认款、生成结算单或NC推送。"
-        },
-        {
-          pattern: /后台角色|系统配置|接口配置|操作审计|AI模型|模型路由|员工账号|组织架构/,
-          message: "已拦截：商户工作台AI不处理后台系统配置、角色、员工账号、接口或AI模型路由。"
-        },
-        {
-          pattern: /身份证|护照|手机号|联系方式|游客名单/,
-          message: "当前角色只能在指定团期内查看脱敏名单；如需导出明细，请进入名单管理页面并完成二次确认。"
-        }
-      ];
 
       function setAiOpen(open) {
         if (!focusLayout || !aiDock || !aiOpenButton) return;
@@ -447,35 +416,9 @@
           if (aiInput) {
             aiInput.value = chip.dataset.aiPrompt || chip.textContent.trim();
             aiInput.focus();
-            checkAiPermission(aiInput.value);
           }
         });
       });
-
-      function checkAiPermission(value) {
-        var text = (value || "").trim();
-        var denied = deniedAiRules.find(function (rule) {
-          return rule.pattern.test(text);
-        });
-        if (!aiGuard) return !denied;
-        aiGuard.hidden = !denied;
-        aiGuard.textContent = denied ? denied.message : "";
-        return !denied;
-      }
-
-      if (aiInput) {
-        aiInput.addEventListener("input", function () {
-          checkAiPermission(aiInput.value);
-        });
-      }
-
-      if (aiStart) {
-        aiStart.addEventListener("click", function (event) {
-          if (!checkAiPermission(aiInput ? aiInput.value : "")) {
-            event.preventDefault();
-          }
-        });
-      }
     })();
   </script>
 </body>

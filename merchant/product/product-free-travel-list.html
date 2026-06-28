@@ -373,30 +373,16 @@
         });
       }
 
-      function openDrawer(modal) {
-        if (window.caesarUI && window.caesarUI.openDrawer) {
-          window.caesarUI.openDrawer(modal);
-          return;
-        }
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeDrawer(modal, message) {
-        if (window.caesarUI && window.caesarUI.closeDrawer) {
-          window.caesarUI.closeDrawer(modal);
-          if (message && window.caesarUI.toast) window.caesarUI.toast(message);
-          return;
-        }
-        modal.classList.remove('show');
-        setTimeout(function () {
-          modal.setAttribute('aria-hidden', 'true');
-        }, 240);
-        if (message && window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+
+      function closeProductLayer(modal, message) {
+        if (!modal) return;
+        window.caesarUI.closeLayer(modal);
+        if (message) window.caesarUI.toast(message);
       }
 
       function showToast(message) {
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+        window.caesarUI.toast(message);
       }
 
       tabs.forEach(function (tab) {
@@ -407,17 +393,17 @@
 
       document.querySelectorAll('[data-open-template]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(templateModal);
+          window.caesarUI.openLayer(templateModal);
         });
       });
 
       document.getElementById('openFreeProductModal').addEventListener('click', function () {
-        openDrawer(productModal);
+        window.caesarUI.openLayer(productModal);
       });
 
       document.querySelectorAll('[data-open-free-product]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(productModal);
+          window.caesarUI.openLayer(productModal);
         });
       });
 
@@ -430,47 +416,47 @@
 
       document.querySelectorAll('[data-open-free-inventory]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(inventoryModal);
+          window.caesarUI.openLayer(inventoryModal);
         });
       });
 
       document.getElementById('openFreeInventoryModal').addEventListener('click', function () {
-        openDrawer(inventoryModal);
+        window.caesarUI.openLayer(inventoryModal);
       });
 
       document.querySelectorAll('[data-open-settlement]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(settlementModal);
+          window.caesarUI.openLayer(settlementModal);
         });
       });
 
       document.querySelectorAll('[data-close-free-template]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(templateModal, button.classList.contains('btn-primary') ? '套餐模板已保存' : '');
+          closeProductLayer(templateModal, button.classList.contains('btn-primary') ? '套餐模板已保存' : '');
         });
       });
 
       document.querySelectorAll('[data-close-free-product]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(productModal, button.classList.contains('btn-primary') ? '自由行产品已保存，列表已局部刷新' : '');
+          closeProductLayer(productModal, button.classList.contains('btn-primary') ? '自由行产品已保存，列表已局部刷新' : '');
         });
       });
 
       document.querySelectorAll('[data-close-free-settlement]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(settlementModal, button.classList.contains('btn-primary') ? '结算规则已进入编辑草稿' : '');
+          closeProductLayer(settlementModal, button.classList.contains('btn-primary') ? '结算规则已进入编辑草稿' : '');
         });
       });
 
       document.querySelectorAll('[data-close-free-inventory]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(inventoryModal, button.classList.contains('btn-primary') ? '日期价格库存已保存' : '');
+          closeProductLayer(inventoryModal, button.classList.contains('btn-primary') ? '日期价格库存已保存' : '');
         });
       });
 
       [productModal, templateModal, settlementModal, inventoryModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeDrawer(modal);
+          if (event.target === modal) closeProductLayer(modal);
         });
       });
 
@@ -489,7 +475,7 @@
 
       document.getElementById('freeAiPublish').addEventListener('click', function () {
         showToast('AI已生成自由行上架草稿，可在新建产品抽屉中继续维护');
-        openDrawer(productModal);
+        window.caesarUI.openLayer(productModal);
       });
 
       document.querySelectorAll('.free-product-table .danger').forEach(function (button) {

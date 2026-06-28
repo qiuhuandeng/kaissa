@@ -13,66 +13,39 @@
     <section class="ai-assistant-v2-shell" aria-label="AI助手工作区">
       <aside class="ai-command-panel" aria-label="快捷指令面板">
         <div class="ai-command-panel-head">
-          <div>
-            <h2>快捷指令</h2>
-            <p>点击即可发送，快速完成操作</p>
-          </div>
-          <button id="toggleEditModeTop" class="link-button" type="button">管理指令</button>
+          <label class="ai-role-select ai-role-card">
+            <span class="ai-role-label"><span aria-hidden="true"></span>当前角色</span>
+            <select id="roleSelect" class="form-control" aria-label="切换角色">
+              <option>产品总监</option>
+              <option>产品经理/计调</option>
+              <option>运营专员</option>
+              <option>财务主管</option>
+              <option>财务专员</option>
+              <option>销售总监</option>
+              <option>门店店长</option>
+              <option>销售顾问</option>
+            </select>
+          </label>
         </div>
-
-        <label class="ai-role-select">
-          <span>当前角色</span>
-          <select id="roleSelect" class="form-control" aria-label="切换角色">
-            <option>产品总监</option>
-            <option>产品经理/计调</option>
-            <option>运营专员</option>
-            <option>财务主管</option>
-            <option>财务专员</option>
-            <option>销售总监</option>
-            <option>门店店长</option>
-            <option>销售顾问</option>
-          </select>
-        </label>
-
-        <section class="card ai-permission-card" aria-label="当前AI权限范围">
-          <div class="card-header">
-            <div class="card-title">权限范围</div>
-          </div>
-          <div class="description-grid compact-description-grid">
-            <div class="description-item"><div class="description-label">功能权限</div><div id="roleModuleText" class="description-value">产品审批、产品分析</div></div>
-            <div class="description-item"><div class="description-label">数据权限</div><div id="roleDataScopeText" class="description-value">本中心产品与线路</div></div>
-            <div class="description-item"><div class="description-label">敏感字段</div><div id="roleSensitiveText" class="description-value">游客证件、客户联系方式默认脱敏</div></div>
-            <div class="description-item"><div class="description-label">高危动作</div><div id="roleActionText" class="description-value">发布、调价需审批确认</div></div>
-          </div>
-        </section>
-
-        <section id="commandEditBox" class="ai-command-edit-box" hidden>
-          <div class="ai-command-edit-title">新增指令</div>
-          <input id="newCommandTitle" class="form-control" type="text" placeholder="指令标题">
-          <input id="newCommandContent" class="form-control" type="text" placeholder="指令内容">
-          <button id="saveNewCommand" class="btn btn-secondary" type="button">保存指令</button>
-        </section>
 
         <div id="commandGroups" class="ai-command-groups" aria-live="polite"></div>
-
-        <div class="ai-command-panel-foot">
-          <button id="toggleEditModeBottom" class="btn btn-secondary" type="button">编辑我的快捷指令</button>
-        </div>
       </aside>
 
-      <section class="ai-chat-main" aria-label="AI助手对话">
+      <section class="ai-chat-main" aria-label="AI对话区">
         <header class="ai-chat-header">
           <div class="ai-chat-title">
-            <strong>AI助手对话</strong>
-            <span id="chatContextText">产品总监视角</span>
+            <strong>AI助手</strong>
+            <span id="chatContextText">产品总监</span>
           </div>
-          <div class="btn-group">
-            <button id="newChatButton" class="btn btn-secondary" type="button">新建对话</button>
-            <button id="openHistoryDrawer" class="btn btn-secondary" type="button">历史对话</button>
+          <div class="ai-chat-actions">
+            <button id="newChatButton" class="ai-header-icon-button" type="button" aria-label="新建对话" title="新建对话">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            </button>
+            <button id="openHistoryDrawer" class="ai-header-icon-button" type="button" aria-label="历史对话" title="历史对话">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
+            </button>
           </div>
         </header>
-        <section id="aiPermissionBanner" class="alert alert-blue">AI只会读取和执行当前角色已授权的功能与数据；写入、导出、发送、财务动作会再次校验。</section>
-
         <div id="messageList" class="ai-message-list" aria-live="polite"></div>
 
         <footer class="ai-chat-input-area">
@@ -81,24 +54,18 @@
             <button class="ai-tool-button" type="button" data-open-picker="schedule"><span class="ai-tool-icon ai-tool-icon-date">▦</span><span>选择团期</span></button>
             <button class="ai-tool-button" type="button" data-open-picker="product"><span class="ai-tool-icon ai-tool-icon-product">◆</span><span>选择产品</span></button>
             <button class="ai-tool-button" type="button" data-open-picker="customer"><span class="ai-tool-icon ai-tool-icon-customer">●</span><span>选择客户</span></button>
-            <button id="clearInputButton" class="ai-tool-button" type="button" hidden><span class="ai-tool-icon ai-tool-icon-clear">×</span><span>清除</span></button>
             <input id="assistantFileInput" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden>
           </div>
           <div class="ai-input-compose">
             <textarea id="assistantInput" class="form-control" rows="3" placeholder="输入问题或指令，例如：帮我导出 ZY-202506-0028 的游客名单"></textarea>
             <div class="ai-input-meta">
-              <span>Enter 发送，Shift+Enter 换行，Ctrl+K 聚焦</span>
-              <button id="sendButton" class="ai-send-button" type="button" aria-label="发送" disabled>›</button>
+              <button id="sendButton" class="ai-send-button" type="button" disabled>发送</button>
             </div>
           </div>
-          <div id="suggestionTags" class="ai-suggestion-tags" aria-label="快捷建议"></div>
         </footer>
       </section>
     </section>
   </main>
-
-  <button id="minimizeAssistant" class="ai-minimize-button" type="button" aria-label="最小化AI助手">−</button>
-  <button id="restoreAssistant" class="ai-restore-bubble" type="button" hidden>AI助手</button>
 
   <div id="historyDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal ai-history-drawer" role="dialog" aria-modal="true" aria-labelledby="historyDrawerTitle">
@@ -144,24 +111,11 @@
   <script>
     (function () {
       var roleSelect = document.getElementById('roleSelect');
-      var currentRoleTag = document.getElementById('currentRoleTag');
       var chatContextText = document.getElementById('chatContextText');
-      var roleModuleText = document.getElementById('roleModuleText');
-      var roleDataScopeText = document.getElementById('roleDataScopeText');
-      var roleSensitiveText = document.getElementById('roleSensitiveText');
-      var roleActionText = document.getElementById('roleActionText');
-      var aiPermissionBanner = document.getElementById('aiPermissionBanner');
       var commandGroups = document.getElementById('commandGroups');
-      var commandEditBox = document.getElementById('commandEditBox');
-      var toggleEditModeTop = document.getElementById('toggleEditModeTop');
-      var toggleEditModeBottom = document.getElementById('toggleEditModeBottom');
-      var newCommandTitle = document.getElementById('newCommandTitle');
-      var newCommandContent = document.getElementById('newCommandContent');
       var assistantInput = document.getElementById('assistantInput');
       var sendButton = document.getElementById('sendButton');
-      var clearInputButton = document.getElementById('clearInputButton');
       var messageList = document.getElementById('messageList');
-      var suggestionTags = document.getElementById('suggestionTags');
       var historyDrawer = document.getElementById('historyDrawer');
       var historyList = document.getElementById('historyList');
       var pickerModal = document.getElementById('pickerModal');
@@ -171,9 +125,7 @@
       var actionConfirmModal = document.getElementById('actionConfirmModal');
       var actionConfirmText = document.getElementById('actionConfirmText');
       var pendingAction = '';
-      var editMode = false;
       var activeRole = '产品总监';
-      var draggedCommand = null;
 
       var roles = {
         '产品总监': [
@@ -330,15 +282,6 @@
         });
       }
 
-      function commandDesc(text) {
-        if (text.indexOf('生成') >= 0) return '生成业务内容并可继续确认执行';
-        if (text.indexOf('导出') >= 0) return '读取业务数据后生成可下载文件';
-        if (text.indexOf('查看') >= 0) return '快速查询相关列表和异常明细';
-        if (text.indexOf('新建') >= 0 || text.indexOf('发起') >= 0) return '进入创建流程并补齐必要字段';
-        if (text.indexOf('优化') >= 0) return '按渠道规范优化文案与关键词';
-        return '发送后由AI读取当前业务上下文处理';
-      }
-
       function getPolicy() {
         return rolePolicies[activeRole] || rolePolicies['销售顾问'];
       }
@@ -357,7 +300,7 @@
             allowed: false,
             confirm: false,
             labels: denied.map(function (rule) { return rule.label; }),
-            message: '已拦截：当前角色“' + activeRole + '”没有“' + denied.map(function (rule) { return rule.label; }).join('、') + '”权限。AI不能绕过功能权限、数据范围或审批流执行。'
+            message: '该指令暂不能直接执行，请调整指令或进入对应业务页面处理。'
           };
         }
         var needsConfirm = matched.filter(function (rule) {
@@ -372,35 +315,24 @@
       }
 
       function permissionDeniedReply(result, text) {
-        var policy = getPolicy();
         return [
           '<div class="alert alert-red">' + escapeHtml(result.message) + '</div>',
-          '<ul>',
-          '<li>当前功能范围：' + escapeHtml(policy.modules) + '</li>',
-          '<li>当前数据范围：' + escapeHtml(policy.dataScope) + '</li>',
-          '<li>原始指令：' + escapeHtml(text) + '</li>',
-          '</ul>',
-          '<p>如确需处理，请在角色权限中补齐对应功能权限和数据权限，或走审批转交给有权限的角色。</p>'
+          '<p>该指令暂不能在当前对话中直接执行。</p>',
+          '<p>原始指令：' + escapeHtml(text) + '</p>'
         ].join('');
       }
 
       function updatePermissionSummary() {
-        var policy = getPolicy();
-        roleModuleText.textContent = policy.modules;
-        roleDataScopeText.textContent = policy.dataScope;
-        roleSensitiveText.textContent = policy.sensitive;
-        roleActionText.textContent = policy.action;
-        aiPermissionBanner.textContent = '当前以“' + activeRole + '”处理：' + policy.dataScope + '。' + policy.action + '。';
+        return getPolicy();
       }
 
       function normalizeCommand(item) {
         if (typeof item === 'string') {
-          return { title: item, content: item, desc: commandDesc(item) };
+          return { title: item, content: item };
         }
         return {
           title: item.title || item.content,
-          content: item.content || item.title,
-          desc: item.desc || item.content || commandDesc(item.title || '')
+          content: item.content || item.title
         };
       }
 
@@ -410,33 +342,25 @@
           var items = group.items.map(function (item, itemIndex) {
             var command = normalizeCommand(item);
             return [
-              '<button class="ai-command-card" type="button" draggable="' + (editMode ? 'true' : 'false') + '" data-group-index="' + groupIndex + '" data-item-index="' + itemIndex + '" data-command="' + escapeHtml(command.content) + '">',
-              '<span class="ai-command-drag" aria-hidden="true">☰</span>',
-              '<span class="ai-command-delete" aria-hidden="true">×</span>',
-              '<strong>' + escapeHtml(command.title) + '</strong>',
-              '<em>' + escapeHtml(command.desc) + '</em>',
+              '<button class="ai-command-card" type="button" title="' + escapeHtml(command.title) + '" data-command="' + escapeHtml(command.content) + '">',
+              '<span>' + escapeHtml(command.title) + '</span>',
               '</button>'
             ].join('');
           }).join('');
           return [
             '<details class="ai-command-group" open>',
-            '<summary>' + escapeHtml(group.group) + '</summary>',
+            '<summary><span>' + escapeHtml(group.group) + '</span><em>' + group.items.length + '条</em></summary>',
             '<div class="ai-command-card-list">',
             items,
             '</div>',
             '</details>'
           ].join('');
         }).join('');
-        commandGroups.classList.toggle('editing', editMode);
-        commandEditBox.hidden = !editMode;
-        toggleEditModeTop.textContent = editMode ? '完成编辑' : '管理指令';
-        toggleEditModeBottom.textContent = editMode ? '完成编辑' : '编辑我的快捷指令';
       }
 
       function setRole(role) {
         activeRole = role;
-        if (currentRoleTag) currentRoleTag.textContent = role;
-        chatContextText.textContent = role + '视角';
+        chatContextText.textContent = role;
         updatePermissionSummary();
         renderCommands();
       }
@@ -488,9 +412,9 @@
           '<p>今日共有 <strong>3 个产品</strong> 等待您审批。</p>',
           tableToolbar(),
           '<div class="table-wrap ai-data-table"><table><thead><tr><th data-sortable>序号</th><th data-sortable>产品名称</th><th data-sortable>提交人</th><th data-sortable>提交时间</th><th data-sortable>产品类型</th></tr></thead><tbody>',
-          '<tr><td>1</td><td><div class="table-action"><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item ai-entity-link" href="../approval/approval-product-review.html">欧洲经典12日</a></span></span></div></td><td>计调张明</td><td>10:23</td><td>自营产品</td></tr>',
-          '<tr><td>2</td><td><div class="table-action"><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item ai-entity-link" href="../approval/approval-product-review.html">理想号地中海邮轮</a></span></span></div></td><td>产品经理李梅</td><td>09:48</td><td>邮轮产品</td></tr>',
-          '<tr><td>3</td><td><div class="table-action"><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item ai-entity-link" href="../approval/approval-product-review.html">东方丝路专列9日</a></span></span></div></td><td>计调王强</td><td>09:12</td><td>专列产品</td></tr>',
+          '<tr><td>1</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">欧洲经典12日</a></td><td>计调张明</td><td>10:23</td><td><span class="ai-result-tag ai-result-tag-blue">自营产品</span></td></tr>',
+          '<tr><td>2</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">理想号地中海邮轮</a></td><td>产品经理李梅</td><td>09:48</td><td><span class="ai-result-tag ai-result-tag-green">邮轮产品</span></td></tr>',
+          '<tr><td>3</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">东方丝路专列9日</a></td><td>计调王强</td><td>09:12</td><td><span class="ai-result-tag ai-result-tag-purple">专列产品</span></td></tr>',
           '</tbody></table></div>',
           '<p><a class="ai-inline-link" href="../approval/approval-product-review.html">前往审批中心查看全部</a></p>'
         ].join('');
@@ -521,11 +445,10 @@
       }
 
       function genericReply(text) {
-        var policy = getPolicy();
         return [
           '<p>已收到指令：<strong>' + escapeHtml(text) + '</strong></p>',
-          '<ul><li>已读取当前角色：' + escapeHtml(activeRole) + '</li><li>功能范围：' + escapeHtml(policy.modules) + '</li><li>数据范围：' + escapeHtml(policy.dataScope) + '</li><li>涉及写入、导出、发送、财务执行的动作会在执行前再次校验</li></ul>',
-          '<pre><code>下一步：确认数据范围 → 生成结果 → 执行业务操作</code></pre>'
+          '<ul><li>已按当前角色上下文读取相关业务信息</li><li>已整理可执行的下一步建议</li><li>涉及写入、导出或发送的动作会在执行前再次确认</li></ul>',
+          '<pre><code>下一步：确认对象 → 生成结果 → 执行业务操作</code></pre>'
         ].join('');
       }
 
@@ -538,7 +461,6 @@
         var permission = evaluatePermission(content);
         if (!permission.allowed) {
           addAiMessage(permissionDeniedReply(permission, content), null);
-          renderSuggestions(['查看我的权限范围', '选择团期后导出名单', '生成行程文案', '跳转审批页面']);
           return;
         }
         var typingId = addTypingMessage();
@@ -553,7 +475,6 @@
           } else {
             addAiMessage(genericReply(content), { action: '继续执行', actionLabel: '继续执行' });
           }
-          renderSuggestions(['导出游客名单', '查看成本明细', '生成行程文案', '跳转审批页面']);
         }, 700);
       }
 
@@ -565,39 +486,20 @@
         addAiMessage(noticeReply(), { action: '发送给游客', actionLabel: '发送给游客' });
         addUserMessage('今日待收款是多少？');
         addAiMessage(financeReply(), { action: '一键催款', actionLabel: '一键催款' });
-        renderSuggestions(['导出游客名单', '查看成本明细', '生成行程文案', '跳转审批页面']);
-      }
-
-      function renderSuggestions(items) {
-        suggestionTags.innerHTML = items.map(function (item) {
-          return '<button type="button" data-suggestion="' + escapeHtml(item) + '">' + escapeHtml(item) + '</button>';
-        }).join('');
       }
 
       function syncInputState() {
         var hasValue = assistantInput.value.trim().length > 0;
         sendButton.disabled = !hasValue;
-        clearInputButton.hidden = !hasValue;
       }
 
       function scrollMessages() {
         messageList.scrollTop = messageList.scrollHeight;
       }
 
-      function setEditMode(next) {
-        editMode = next;
-        renderCommands();
-      }
 
-      function openOverlay(overlay) {
-        overlay.classList.add('show');
-        overlay.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeOverlay(overlay) {
-        overlay.classList.remove('show');
-        overlay.setAttribute('aria-hidden', 'true');
-      }
+
 
       function renderHistory() {
         var base = ['今日待审批产品查询', '旅游通知书生成', '今日待收款汇总', '竞品价格预警', '出团风险扫描', '游客名单导出'];
@@ -616,65 +518,23 @@
         pickerList.innerHTML = (pickerData[type] || []).map(function (item) {
           return '<button type="button" data-picker-value="' + escapeHtml(item.split('｜')[0]) + '">' + escapeHtml(item) + '</button>';
         }).join('');
-        openOverlay(pickerModal);
+        window.caesarUI.openLayer(pickerModal);
       }
 
       roleSelect.addEventListener('change', function () {
         setRole(roleSelect.value);
       });
 
-      [toggleEditModeTop, toggleEditModeBottom].forEach(function (button) {
-        button.addEventListener('click', function () {
-          setEditMode(!editMode);
-        });
-      });
-
-      document.getElementById('saveNewCommand').addEventListener('click', function () {
-        var title = newCommandTitle.value.trim();
-        var content = newCommandContent.value.trim();
-        if (!title || !content) return;
-        roles[activeRole][0].items.push({ title: title, content: content, desc: content });
-        newCommandTitle.value = '';
-        newCommandContent.value = '';
-        renderCommands();
-      });
-
       commandGroups.addEventListener('click', function (event) {
         var card = event.target.closest('.ai-command-card');
         if (!card) return;
-        var groupIndex = Number(card.dataset.groupIndex);
-        var itemIndex = Number(card.dataset.itemIndex);
-        if (editMode && event.target.closest('.ai-command-delete')) {
-          roles[activeRole][groupIndex].items.splice(itemIndex, 1);
-          renderCommands();
-          return;
-        }
-        if (editMode) return;
+        commandGroups.querySelectorAll('.ai-command-card.active').forEach(function (item) {
+          item.classList.remove('active');
+        });
+        card.classList.add('active');
         assistantInput.value = card.dataset.command;
         syncInputState();
         sendMessage(card.dataset.command);
-      });
-
-      commandGroups.addEventListener('dragstart', function (event) {
-        var card = event.target.closest('.ai-command-card');
-        if (!card || !editMode) return;
-        draggedCommand = { groupIndex: Number(card.dataset.groupIndex), itemIndex: Number(card.dataset.itemIndex) };
-      });
-
-      commandGroups.addEventListener('dragover', function (event) {
-        if (editMode) event.preventDefault();
-      });
-
-      commandGroups.addEventListener('drop', function (event) {
-        var card = event.target.closest('.ai-command-card');
-        if (!card || !draggedCommand || !editMode) return;
-        var target = { groupIndex: Number(card.dataset.groupIndex), itemIndex: Number(card.dataset.itemIndex) };
-        if (target.groupIndex !== draggedCommand.groupIndex) return;
-        var list = roles[activeRole][target.groupIndex].items;
-        var moved = list.splice(draggedCommand.itemIndex, 1)[0];
-        list.splice(target.itemIndex, 0, moved);
-        draggedCommand = null;
-        renderCommands();
       });
 
       assistantInput.addEventListener('input', syncInputState);
@@ -692,11 +552,6 @@
       });
 
       sendButton.addEventListener('click', function () { sendMessage(); });
-      clearInputButton.addEventListener('click', function () {
-        assistantInput.value = '';
-        syncInputState();
-        assistantInput.focus();
-      });
 
       document.getElementById('assistantFileInput').addEventListener('change', function (event) {
         var file = event.target.files[0];
@@ -721,32 +576,26 @@
         if (!button) return;
         assistantInput.value = (assistantInput.value ? assistantInput.value + ' ' : '') + button.dataset.pickerValue;
         syncInputState();
-        closeOverlay(pickerModal);
+        window.caesarUI.closeLayer(pickerModal);
         assistantInput.focus();
       });
 
       document.querySelectorAll('[data-close-picker]').forEach(function (button) {
-        button.addEventListener('click', function () { closeOverlay(pickerModal); });
-      });
-
-      suggestionTags.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-suggestion]');
-        if (button) sendMessage(button.dataset.suggestion);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(pickerModal); });
       });
 
       document.getElementById('newChatButton').addEventListener('click', function () {
         messageList.innerHTML = '';
         assistantInput.value = '';
         syncInputState();
-        renderSuggestions(['导出游客名单', '查看成本明细', '生成行程文案', '跳转审批页面']);
       });
 
       document.getElementById('openHistoryDrawer').addEventListener('click', function () {
         renderHistory();
-        openOverlay(historyDrawer);
+        window.caesarUI.openLayer(historyDrawer);
       });
       document.querySelectorAll('[data-close-history]').forEach(function (button) {
-        button.addEventListener('click', function () { closeOverlay(historyDrawer); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(historyDrawer); });
       });
       historyList.addEventListener('click', function (event) {
         var button = event.target.closest('[data-history-title]');
@@ -754,7 +603,7 @@
         messageList.innerHTML = '';
         addUserMessage('恢复历史会话：' + button.dataset.historyTitle);
         addAiMessage('<p>已恢复历史会话上下文，可继续追问或执行后续操作。</p>', null);
-        closeOverlay(historyDrawer);
+        window.caesarUI.closeLayer(historyDrawer);
       });
 
       messageList.addEventListener('click', function (event) {
@@ -766,8 +615,8 @@
             addAiMessage(permissionDeniedReply(actionPermission, pendingAction), null);
             return;
           }
-          actionConfirmText.textContent = '即将执行「' + pendingAction + '」。系统会按当前角色的功能权限、数据范围和审批链再次记录操作留痕。';
-          openOverlay(actionConfirmModal);
+          actionConfirmText.textContent = '即将执行「' + pendingAction + '」。系统会记录本次操作，确认后继续。';
+          window.caesarUI.openLayer(actionConfirmModal);
           return;
         }
         if (event.target.closest('[data-copy-message]')) {
@@ -785,8 +634,8 @@
             addAiMessage(permissionDeniedReply(exportPermission, '导出当前表格'), null);
           } else {
             pendingAction = '导出当前表格';
-            actionConfirmText.textContent = '即将导出当前表格。导出任务会按“' + activeRole + '”的数据范围过滤，并记录导出日志。';
-            openOverlay(actionConfirmModal);
+            actionConfirmText.textContent = '即将导出当前表格。确认后系统会生成导出任务。';
+            window.caesarUI.openLayer(actionConfirmModal);
           }
         }
         var sortable = event.target.closest('[data-sortable]');
@@ -802,32 +651,21 @@
       document.getElementById('confirmActionButton').addEventListener('click', function () {
         var actionPermission = evaluatePermission(pendingAction);
         if (!actionPermission.allowed) {
-          closeOverlay(actionConfirmModal);
+          window.caesarUI.closeLayer(actionConfirmModal);
           addAiMessage(permissionDeniedReply(actionPermission, pendingAction), null);
           return;
         }
-        closeOverlay(actionConfirmModal);
-        addAiMessage('<p><strong>操作已提交：</strong>' + escapeHtml(pendingAction) + '</p><p>系统已按“' + escapeHtml(activeRole) + '”的数据范围生成任务，并记录权限校验日志。</p>', null);
+        window.caesarUI.closeLayer(actionConfirmModal);
+        addAiMessage('<p><strong>操作已提交：</strong>' + escapeHtml(pendingAction) + '</p><p>系统已生成任务，请稍后查看处理结果。</p>', null);
       });
       document.querySelectorAll('[data-close-action-confirm]').forEach(function (button) {
-        button.addEventListener('click', function () { closeOverlay(actionConfirmModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(actionConfirmModal); });
       });
 
       [historyDrawer, pickerModal, actionConfirmModal].forEach(function (overlay) {
         overlay.addEventListener('click', function (event) {
-          if (event.target === overlay) closeOverlay(overlay);
+          if (event.target === overlay) window.caesarUI.closeLayer(overlay);
         });
-      });
-
-      document.getElementById('minimizeAssistant').addEventListener('click', function () {
-        document.getElementById('assistantPage').hidden = true;
-        document.getElementById('minimizeAssistant').hidden = true;
-        document.getElementById('restoreAssistant').hidden = false;
-      });
-      document.getElementById('restoreAssistant').addEventListener('click', function () {
-        document.getElementById('assistantPage').hidden = false;
-        document.getElementById('minimizeAssistant').hidden = false;
-        document.getElementById('restoreAssistant').hidden = true;
       });
 
       setRole(activeRole);

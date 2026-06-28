@@ -152,30 +152,16 @@
         });
       }
 
-      function openDrawer(modal) {
-        if (window.caesarUI && window.caesarUI.openDrawer) {
-          window.caesarUI.openDrawer(modal);
-          return;
-        }
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeDrawer(modal, message) {
-        if (window.caesarUI && window.caesarUI.closeDrawer) {
-          window.caesarUI.closeDrawer(modal);
-          if (message && window.caesarUI.toast) window.caesarUI.toast(message);
-          return;
-        }
-        modal.classList.remove('show');
-        setTimeout(function () {
-          modal.setAttribute('aria-hidden', 'true');
-        }, 240);
-        if (message && window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+
+      function closeProductLayer(modal, message) {
+        if (!modal) return;
+        window.caesarUI.closeLayer(modal);
+        if (message) window.caesarUI.toast(message);
       }
 
       function showToast(message) {
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+        window.caesarUI.toast(message);
       }
 
       tabs.forEach(function (tab) {
@@ -185,24 +171,24 @@
       });
 
       document.getElementById('openSingleTypeModal').addEventListener('click', function () {
-        openDrawer(typeModal);
+        window.caesarUI.openLayer(typeModal);
       });
 
       document.querySelectorAll('[data-open-single-type]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(typeModal);
+          window.caesarUI.openLayer(typeModal);
         });
       });
 
       document.querySelectorAll('[data-close-single-type]').forEach(function (button) {
         button.addEventListener('click', function () {
-          closeDrawer(typeModal, button.classList.contains('btn-primary') ? '单项委托产品配置已保存' : '');
+          closeProductLayer(typeModal, button.classList.contains('btn-primary') ? '单项委托产品配置已保存' : '');
         });
       });
 
       [typeModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeDrawer(modal);
+          if (event.target === modal) closeProductLayer(modal);
         });
       });
 

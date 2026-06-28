@@ -278,28 +278,14 @@
         '处理中': 'tag tag-purple'
       };
 
-      function showOverlay(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function hideOverlay(modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
 
-      function closeDrawer() {
-        drawer.classList.add('closing');
-        drawer.classList.remove('show');
-        setTimeout(function () {
-          drawer.classList.remove('closing');
-          drawer.setAttribute('aria-hidden', 'true');
-        }, 240);
-      }
+
+
+
 
       function showNotice(text) {
-        noticeText.textContent = text;
-        showOverlay(notice);
+        window.caesarUI.toast(text);
       }
 
       function updateStatus(row, status) {
@@ -331,20 +317,20 @@
         drawer.querySelector('[data-finance-linkage]').hidden = true;
       }
 
-      function openDrawer(row) {
+      function openOtaRefundDrawer(row) {
         fillDrawer(row);
         drawer.classList.remove('closing');
-        showOverlay(drawer);
+        window.caesarUI.openLayer(drawer);
       }
 
       document.querySelectorAll('[data-open-refund-drawer]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(button.closest('tr'));
+          openOtaRefundDrawer(button.closest('tr'));
         });
       });
 
       drawer.querySelectorAll('[data-close-refund-drawer]').forEach(function (button) {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
       });
 
       drawer.querySelector('[data-confirm-refund-amount]').addEventListener('click', function () {
@@ -372,16 +358,16 @@
       });
 
       drawer.addEventListener('click', function (event) {
-        if (event.target === drawer) closeDrawer();
+        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
 
       notice.addEventListener('click', function (event) {
-        if (event.target === notice) hideOverlay(notice);
+        if (event.target === notice) window.caesarUI.closeLayer(notice);
       });
 
       notice.querySelectorAll('[data-close-notice]').forEach(function (button) {
         button.addEventListener('click', function () {
-          hideOverlay(notice);
+          window.caesarUI.closeLayer(notice);
         });
       });
     })();

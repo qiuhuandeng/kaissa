@@ -897,15 +897,12 @@
         });
       });
 
-      function openModal(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeModal(modal) {
+
+      function closeScheduleLayer(modal) {
+        if (!modal) return;
         if (modal === costModal) syncCostTab();
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(modal);
       }
 
       function addDays(value, days) {
@@ -1050,7 +1047,7 @@
         scheduleData.unit = productStockUnits[scheduleData.product] || '人';
         scheduleData.price = document.getElementById('adultPrice').value.trim() || '¥0';
         refreshScheduleSummary();
-        closeModal(editModal);
+        closeScheduleLayer(editModal);
       }
 
       function cellValue(cell) {
@@ -1108,36 +1105,35 @@
       function closeRosterExportMenu() {
         var menu = document.getElementById('rosterExportMenu');
         if (!menu) return;
-        menu.classList.remove('show');
-        menu.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(menu);
       }
 
       document.getElementById('openEditSchedule').addEventListener('click', function () {
         fillEditForm();
-        openModal(editModal);
+        window.caesarUI.openLayer(editModal);
       });
 
       document.getElementById('openCostModal').addEventListener('click', function () {
-        openModal(costModal);
+        window.caesarUI.openLayer(costModal);
       });
 
       document.getElementById('openAddScheduleCost').addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
-        openModal(addScheduleCostDrawer);
+        window.caesarUI.openLayer(addScheduleCostDrawer);
       });
 
       var changeOpsOwner = document.querySelector('#changeOpsOwner');
       if (changeOpsOwner) {
         changeOpsOwner.addEventListener('click', function () {
           document.getElementById('operatorOwnerSelect').value = changeOpsOwner.textContent.trim();
-          openModal(changeOperatorModal);
+          window.caesarUI.openLayer(changeOperatorModal);
         });
       }
 
       document.getElementById('openCancelSchedule').addEventListener('click', function () {
         document.getElementById('cancelReason').value = '';
-        openModal(cancelModal);
+        window.caesarUI.openLayer(cancelModal);
       });
 
       document.getElementById('saveScheduleEdit').addEventListener('click', saveScheduleEdit);
@@ -1152,7 +1148,7 @@
         if (!document.getElementById('cancelReason').value.trim()) return;
         scheduleData.status = '已取消';
         refreshScheduleSummary();
-        closeModal(cancelModal);
+        closeScheduleLayer(cancelModal);
       });
 
       document.getElementById('addCostRow').addEventListener('click', function () {
@@ -1167,19 +1163,19 @@
 
       document.getElementById('saveCostDraft').addEventListener('click', function () {
         syncCostTab();
-        closeModal(costModal);
+        closeScheduleLayer(costModal);
       });
 
       document.getElementById('submitCostApproval').addEventListener('click', function () {
         syncCostTab();
-        closeModal(costModal);
+        closeScheduleLayer(costModal);
       });
 
       document.getElementById('saveNewScheduleCost').addEventListener('click', function () {
         if (!document.getElementById('newCostSupplier').value.trim()) return;
-        closeModal(addScheduleCostDrawer);
+        closeScheduleLayer(addScheduleCostDrawer);
         document.getElementById('successText').textContent = '成本项已保存，可继续在预估成本明细中维护付款申请。';
-        openModal(successModal);
+        window.caesarUI.openLayer(successModal);
       });
 
       document.querySelectorAll('.actual-cost-input').forEach(function (input) {
@@ -1195,8 +1191,7 @@
         var shouldShow = !menu.classList.contains('show');
         closeRosterExportMenu();
         if (shouldShow) {
-          menu.classList.add('show');
-          menu.setAttribute('aria-hidden', 'false');
+          window.caesarUI.openLayer(menu);
         }
       });
 
@@ -1204,7 +1199,7 @@
         button.addEventListener('click', function () {
           closeRosterExportMenu();
           document.getElementById('successText').textContent = button.dataset.rosterExport + '导出任务已创建。';
-          openModal(successModal);
+          window.caesarUI.openLayer(successModal);
         });
       });
 
@@ -1214,7 +1209,7 @@
         button.addEventListener('click', function () {
           currentSendFileName = button.closest('tr').children[0].textContent.trim();
           document.getElementById('sendFileName').textContent = '发送：' + currentSendFileName;
-          openModal(sendFileModal);
+          window.caesarUI.openLayer(sendFileModal);
         });
       });
 
@@ -1224,12 +1219,12 @@
         var row = document.createElement('tr');
         row.innerHTML = '<td>' + way + '</td><td>' + (way === '企微群发' ? '欧洲十国经典游游客群' : '27名报名游客') + '</td><td>2024-06-18 14:40</td><td><span class="tag tag-green">已发送</span></td>';
         records.prepend(row);
-        closeModal(sendFileModal);
+        closeScheduleLayer(sendFileModal);
       });
 
       document.getElementById('saveOperatorOwner').addEventListener('click', function () {
         if (changeOpsOwner) changeOpsOwner.textContent = document.getElementById('operatorOwnerSelect').value;
-        closeModal(changeOperatorModal);
+        closeScheduleLayer(changeOperatorModal);
       });
 
       document.getElementById('logTypeFilter').addEventListener('change', function (event) {
@@ -1248,7 +1243,7 @@
         if (event.target.closest('[data-release-seat]') && row) {
           currentReleaseRow = row;
           document.getElementById('releaseSeatText').textContent = '确认释放 ' + countFromRow(row) + ' 个占位？释放后该名额恢复可售。';
-          openModal(releaseModal);
+          window.caesarUI.openLayer(releaseModal);
         }
       });
 
@@ -1265,7 +1260,7 @@
         scheduleData.available += count;
         refreshScheduleSummary();
         currentReleaseRow = null;
-        closeModal(releaseModal);
+        closeScheduleLayer(releaseModal);
       });
 
       resourceRows.addEventListener('click', function (event) {
@@ -1273,7 +1268,7 @@
         if (event.target.closest('[data-confirm-resource]') && row) {
           currentResourceRow = row;
           document.getElementById('confirmTime').value = '2024-06-18T10:30';
-          openModal(resourceConfirmModal);
+          window.caesarUI.openLayer(resourceConfirmModal);
           return;
         }
         if (event.target.closest('[data-view-resource]') && row) {
@@ -1283,15 +1278,15 @@
           document.getElementById('viewResourceMethod').textContent = row.children[3].textContent.trim();
           document.getElementById('viewResourceStatus').innerHTML = row.children[4].innerHTML;
           document.getElementById('viewResourceTime').textContent = row.children[5].textContent.trim();
-          openModal(resourceViewModal);
+          window.caesarUI.openLayer(resourceViewModal);
           return;
         }
         if (event.target.closest('[data-remind-resource]')) {
-          openModal(remindResourceModal);
+          window.caesarUI.openLayer(remindResourceModal);
           return;
         }
         if (event.target.closest('[data-view-visa-progress]')) {
-          openModal(visaProgressModal);
+          window.caesarUI.openLayer(visaProgressModal);
         }
       });
 
@@ -1303,55 +1298,55 @@
         currentResourceRow.children[5].textContent = dateText;
         currentResourceRow.children[6].innerHTML = '<div class="table-action"><button type="button" data-view-resource class="table-action-primary">详情</button></div>';
         currentResourceRow = null;
-        closeModal(resourceConfirmModal);
+        closeScheduleLayer(resourceConfirmModal);
       });
 
       document.getElementById('sendResourceReminder').addEventListener('click', function () {
-        closeModal(remindResourceModal);
+        closeScheduleLayer(remindResourceModal);
         document.getElementById('successText').textContent = '提醒已发送，短信和邮件任务已进入消息队列。';
-        openModal(successModal);
+        window.caesarUI.openLayer(successModal);
       });
 
       document.querySelectorAll('[data-close-edit]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(editModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(editModal); });
       });
       document.querySelectorAll('[data-close-cost]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(costModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(costModal); });
       });
       document.querySelectorAll('[data-close-add-cost]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(addScheduleCostDrawer); });
+        button.addEventListener('click', function () { closeScheduleLayer(addScheduleCostDrawer); });
       });
       document.querySelectorAll('[data-close-send-file]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(sendFileModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(sendFileModal); });
       });
       document.querySelectorAll('[data-close-operator]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(changeOperatorModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(changeOperatorModal); });
       });
       document.querySelectorAll('[data-close-cancel]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(cancelModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(cancelModal); });
       });
       document.querySelectorAll('[data-close-release]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(releaseModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(releaseModal); });
       });
       document.querySelectorAll('[data-close-resource-confirm]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(resourceConfirmModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(resourceConfirmModal); });
       });
       document.querySelectorAll('[data-close-resource-view]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(resourceViewModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(resourceViewModal); });
       });
       document.querySelectorAll('[data-close-remind]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(remindResourceModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(remindResourceModal); });
       });
       document.querySelectorAll('[data-close-visa]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(visaProgressModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(visaProgressModal); });
       });
       document.querySelectorAll('[data-close-success]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(successModal); });
+        button.addEventListener('click', function () { closeScheduleLayer(successModal); });
       });
 
       [editModal, costModal, addScheduleCostDrawer, sendFileModal, changeOperatorModal, cancelModal, releaseModal, resourceConfirmModal, resourceViewModal, remindResourceModal, visaProgressModal, successModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeModal(modal);
+          if (event.target === modal) closeScheduleLayer(modal);
         });
       });
       refreshScheduleSummary();

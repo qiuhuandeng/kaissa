@@ -41,8 +41,8 @@
             { title: "专列线路", href: "resource/resource-train-routes.html" },
           ],
         },
-        { title: "供应商管理", href: "resource/suppliers.html" },
         { title: "领队资源", href: "resource/resource-tour-leaders.html" },
+        { title: "供应商管理", href: "resource/suppliers.html" },
         { title: "别名标准化", href: "resource/resource-masterdata.html?type=alias" },
       ],
     },
@@ -128,8 +128,8 @@
             { title: "OTA对账", href: "channel/ota_reconcile.html" },
           ],
         },
-        { title: "分销渠道管理", href: "channel/distributors.html" },
-        { title: "同行代理管理", href: "channel/agents.html" },
+        { title: "分销渠道", href: "channel/distributors.html" },
+        { title: "同业代理", href: "channel/agents.html" },
         { title: "佣金规则", href: "channel/commission_rules.html" },
       ],
     },
@@ -361,8 +361,8 @@
     "channel/ota_orders.html": { href: "channel/ota_orders.html", title: "OTA订单" },
     "channel/ota_refunds.html": { href: "channel/ota_refunds.html", title: "OTA退款" },
     "channel/ota_reconcile.html": { href: "channel/ota_reconcile.html", title: "OTA对账" },
-    "channel/distributors.html": { href: "channel/distributors.html", title: "分销渠道管理" },
-    "channel/agents.html": { href: "channel/agents.html", title: "同行代理管理" },
+    "channel/distributors.html": { href: "channel/distributors.html", title: "分销渠道" },
+    "channel/agents.html": { href: "channel/agents.html", title: "同业代理" },
     "channel/commission_rules.html": { href: "channel/commission_rules.html", title: "佣金规则" },
   };
 
@@ -1489,7 +1489,7 @@
     if (!layer) return null;
     layer.classList.remove("show");
     layer.classList.add("closing");
-    const delay = layer.classList.contains("drawer-overlay") ? 240 : 180;
+    const delay = layer.classList.contains("drawer-overlay") ? 360 : 180;
     window.setTimeout(() => {
       layer.classList.remove("closing");
       layer.hidden = true;
@@ -2411,7 +2411,30 @@
         if (!dialog.hasAttribute("aria-modal")) dialog.setAttribute("aria-modal", "true");
         if (layer.classList.contains("drawer-overlay")) dialog.classList.add("drawer-modal");
       }
+
+      if (layer.dataset.layerCloseReady !== "true") {
+        layer.dataset.layerCloseReady = "true";
+        layer.addEventListener("click", (event) => {
+          if (event.target === layer && layer.dataset.static !== "true") closeLayer(layer);
+        });
+      }
+
+      layer.querySelectorAll(".modal-close, [data-close-modal], [data-close-drawer], [data-close-layer]").forEach((button) => {
+        if (button.dataset.layerCloseReady === "true") return;
+        button.dataset.layerCloseReady = "true";
+        button.addEventListener("click", () => closeLayer(layer));
+      });
     });
+
+    if (document.documentElement.dataset.layerEscapeReady !== "true") {
+      document.documentElement.dataset.layerEscapeReady = "true";
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        const openLayers = Array.from(document.querySelectorAll(".modal-overlay.show"));
+        const topLayer = openLayers[openLayers.length - 1];
+        if (topLayer && topLayer.dataset.static !== "true") closeLayer(topLayer);
+      });
+    }
   }
 
   if (document.readyState === "loading") {

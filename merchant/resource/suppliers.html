@@ -197,38 +197,24 @@
     (function () {
       const drawer = document.getElementById("supplierDrawer");
       const drawerTitle = document.getElementById("supplierDrawerTitle");
-      function openDrawer(event) {
+      function openSupplierDrawer(event) {
         if (drawerTitle) {
           drawerTitle.textContent = event && event.currentTarget && event.currentTarget.hasAttribute("data-open-risk") ? "供应商风险处理" : "供应商维护";
         }
-        if (window.caesarUI) {
-          window.caesarUI.openDrawer(drawer);
-          return;
-        }
-        drawer.hidden = false;
-        requestAnimationFrame(() => drawer.classList.add("show"));
+        window.caesarUI.openLayer(drawer);
       }
-      function closeDrawer() {
-        if (window.caesarUI) {
-          window.caesarUI.closeDrawer(drawer);
-          return;
-        }
-        drawer.classList.remove("show");
-        window.setTimeout(() => {
-          drawer.hidden = true;
-        }, 240);
-      }
+
       document.querySelectorAll("[data-open-supplier-drawer], [data-open-risk]").forEach((button) => {
         button.addEventListener("click", openDrawer);
       });
       document.querySelector("[data-export-suppliers]").addEventListener("click", () => {
-        if (window.caesarUI) window.caesarUI.toast("供应商列表导出任务已创建", { type: "success" });
+        window.caesarUI.toast("供应商列表导出任务已创建", { type: "success" });
       });
       document.querySelectorAll("[data-close-supplier-drawer]").forEach((button) => {
-        button.addEventListener("click", closeDrawer);
+        button.addEventListener("click", function () { window.caesarUI.closeLayer(drawer); });
       });
       drawer.addEventListener("click", (event) => {
-        if (event.target === drawer) closeDrawer();
+        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
     })();
   </script>

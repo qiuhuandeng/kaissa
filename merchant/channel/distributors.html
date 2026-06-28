@@ -342,14 +342,11 @@
       var noticeText = notice.querySelector('[data-notice-text]');
 
       function showNotice(text) {
-        noticeText.textContent = text;
-        notice.classList.add('show');
-        notice.setAttribute('aria-hidden', 'false');
+        window.caesarUI.toast(text);
       }
 
       function closeNotice() {
-        notice.classList.remove('show');
-        notice.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(notice);
       }
 
       function switchTab(name) {
@@ -361,7 +358,7 @@
         });
       }
 
-      function openDrawer(button) {
+      function openDistributorDrawer(button) {
         var row = button.closest('tr');
         var isEdit = button.dataset.mode === 'edit' && row;
         drawer.querySelector('.modal-title').textContent = isEdit ? '编辑分销渠道' : '新增分销渠道';
@@ -373,23 +370,14 @@
         drawer.querySelector('[data-field-status]').value = isEdit ? row.dataset.status : '待开通';
         drawer.querySelector('[data-field-level]').value = isEdit && row.dataset.level === '普通' ? '三级' : (isEdit && row.dataset.level === '银牌' ? '二级' : '一级');
         switchTab('base');
-        drawer.classList.remove('closing');
-        drawer.classList.add('show');
-        drawer.setAttribute('aria-hidden', 'false');
+        window.caesarUI.openLayer(drawer);
       }
 
-      function closeDrawer() {
-        drawer.classList.add('closing');
-        drawer.classList.remove('show');
-        setTimeout(function () {
-          drawer.classList.remove('closing');
-          drawer.setAttribute('aria-hidden', 'true');
-        }, 240);
-      }
+
 
       document.querySelectorAll('[data-open-distributor-drawer]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(button);
+          openDistributorDrawer(button);
         });
       });
 
@@ -400,11 +388,11 @@
       });
 
       drawer.querySelectorAll('[data-close-distributor-drawer]').forEach(function (button) {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
       });
 
       drawer.addEventListener('click', function (event) {
-        if (event.target === drawer) closeDrawer();
+        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
 
       drawer.querySelector('[data-account-switch]').addEventListener('change', function (event) {

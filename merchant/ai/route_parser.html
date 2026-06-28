@@ -28,14 +28,15 @@
       </article>
     </section>
 
-    <div class="list-surface-tabbar-row">
+    <section class="list-surface list-surface-tabbed route-parser-list-surface" data-list-surface>
+      <div class="list-surface-tabbar-row">
       <nav class="tab-bar route-main-tabs list-function-tabs list-surface-tabs" aria-label="线路拆解功能切换">
         <button class="tab-item active" type="button" data-route-tab="tasks">解析任务列表</button>
         <button class="tab-item" type="button" data-route-tab="params">字段规则查看</button>
         <button class="tab-item" type="button" data-route-tab="reports">准确率报告</button>
         <button class="tab-item" type="button" data-route-tab="knowledge">异常词建议</button>
       </nav>
-    </div>
+      </div>
 
     <section class="route-tab-panel active" data-route-panel="tasks">
       <div class="route-list-toolbar">
@@ -366,7 +367,7 @@
           <div class="card-header">
             <div class="card-title">错误样本分析</div>
           </div>
-          <div class="table-wrap route-error-table">
+          <div class="table-wrap route-error-table list-surface-table list-table-with-pagination">
             <table>
               <thead>
                 <tr><th>错误类型</th><th>出现次数</th><th>示例</th></tr>
@@ -378,6 +379,9 @@
                 <tr><td>跨天交通日期识别偏移</td><td>9</td><td>欧洲夜航到达日被记为出发日</td></tr>
               </tbody>
             </table>
+          </div>
+          <div class="pagination list-surface-pagination list-pagination-attached">
+            <span>第1-4条/共4条</span>
           </div>
         </section>
       </section>
@@ -391,7 +395,7 @@
       <div class="route-knowledge-toolbar">
         <button class="btn btn-primary" type="button" data-open-upload-drawer>上传知识文档</button>
       </div>
-      <section class="table-wrap route-knowledge-table" aria-label="知识库文档列表">
+      <section class="table-wrap route-knowledge-table list-surface-table list-table-with-pagination" aria-label="知识库文档列表">
         <table>
           <thead>
             <tr>
@@ -439,9 +443,13 @@
           </tbody>
         </table>
       </section>
+      <div class="pagination list-surface-pagination list-pagination-attached">
+        <span>第1-4条/共4条</span>
+      </div>
       <div class="route-danger-footer">
         <button class="btn btn-danger" type="button" data-open-vector-confirm>触发全量向量索引重建</button>
       </div>
+    </section>
     </section>
   </main>
 
@@ -597,29 +605,12 @@
       var taskRows = Array.from(document.querySelectorAll('#routeTaskRows tr'));
       var chartsReady = false;
 
-      function openModal(modal) {
-        modal.classList.remove('closing');
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeModal(modal) {
-        if (!modal) return;
-        modal.setAttribute('aria-hidden', 'true');
-        if (modal.classList.contains('drawer-overlay') && modal.classList.contains('show')) {
-          modal.classList.add('closing');
-          modal.classList.remove('show');
-          window.setTimeout(function () {
-            modal.classList.remove('closing');
-          }, 240);
-          return;
-        }
-        modal.classList.remove('show');
-      }
+
+
 
       function showNotice(message) {
-        noticeText.textContent = message;
-        openModal(noticeModal);
+        window.caesarUI.toast(message);
       }
 
       routeTabs.forEach(function (tab) {
@@ -642,21 +633,21 @@
         button.addEventListener('click', function () {
           var fileButton = button.closest('tr') ? button.closest('tr').querySelector('[data-file-name]') : button;
           previewFileName.textContent = fileButton && fileButton.dataset.fileName ? fileButton.dataset.fileName : '欧洲十国经典游行程.pdf';
-          openModal(resultDrawer);
+          window.caesarUI.openLayer(resultDrawer);
         });
       });
 
       document.querySelectorAll('[data-open-upload-drawer]').forEach(function (button) {
-        button.addEventListener('click', function () { openModal(uploadDrawer); });
+        button.addEventListener('click', function () { window.caesarUI.openLayer(uploadDrawer); });
       });
 
       document.querySelectorAll('[data-close-modal]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(button.closest('.modal-overlay')); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(button.closest('.modal-overlay')); });
       });
 
       document.querySelectorAll('.modal-overlay').forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeModal(modal);
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       });
 
@@ -756,16 +747,16 @@
       });
 
       document.querySelector('[data-open-vector-confirm]').addEventListener('click', function () {
-        openModal(vectorConfirmModal);
+        window.caesarUI.openLayer(vectorConfirmModal);
       });
 
       document.querySelector('[data-confirm-vector]').addEventListener('click', function () {
-        closeModal(vectorConfirmModal);
+        window.caesarUI.closeLayer(vectorConfirmModal);
         showNotice('全量向量索引重建已触发');
       });
 
       document.querySelector('[data-confirm-upload]').addEventListener('click', function () {
-        closeModal(uploadDrawer);
+        window.caesarUI.closeLayer(uploadDrawer);
         showNotice('样本文档已上传，已创建解析测试任务');
       });
 

@@ -432,19 +432,12 @@
       var currentRow = null;
       var currentImportStep = 1;
 
-      function openModal(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeModal(modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
+
+
 
       function showNotice(text) {
-        document.getElementById('noticeText').textContent = text;
-        openModal(noticeModal);
+        window.caesarUI.toast(text);
       }
 
       function setGroupCollapsed(group, collapsed) {
@@ -536,7 +529,7 @@
         if (editButton) {
           currentRow = editButton.closest('tr');
           fillGuestForm(currentRow);
-          openModal(editModal);
+          window.caesarUI.openLayer(editModal);
           return;
         }
 
@@ -566,7 +559,7 @@
         currentRow.children[5].textContent = document.getElementById('guestRoom').value;
         currentRow.children[6].textContent = document.getElementById('guestNeed').value.trim() || '无';
         updateRowStatus(currentRow);
-        closeModal(editModal);
+        window.caesarUI.closeLayer(editModal);
       });
 
       document.getElementById('searchRoster').addEventListener('click', applyFilters);
@@ -585,15 +578,15 @@
 
       document.getElementById('openImportRoster').addEventListener('click', function () {
         setImportStep(1);
-        openModal(importModal);
+        window.caesarUI.openLayer(importModal);
       });
 
       document.getElementById('openAiRosterCheck').addEventListener('click', function () {
-        openModal(aiRosterModal);
+        window.caesarUI.openLayer(aiRosterModal);
       });
 
       document.getElementById('applyAiRosterSuggestion').addEventListener('click', function () {
-        closeModal(aiRosterModal);
+        window.caesarUI.closeLayer(aiRosterModal);
         showNotice('AI已生成4条名单处理任务');
       });
 
@@ -610,7 +603,7 @@
           setImportStep(currentImportStep + 1);
           return;
         }
-        closeModal(importModal);
+        window.caesarUI.closeLayer(importModal);
         showNotice('名单已导入，解析到27行数据。');
       });
 
@@ -619,21 +612,21 @@
       });
 
       document.querySelectorAll('[data-close-edit]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(editModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(editModal); });
       });
       document.querySelectorAll('[data-close-import]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(importModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(importModal); });
       });
       document.querySelectorAll('[data-close-notice]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(noticeModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(noticeModal); });
       });
       document.querySelectorAll('[data-close-ai-roster]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(aiRosterModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(aiRosterModal); });
       });
 
       [editModal, importModal, noticeModal, aiRosterModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeModal(modal);
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       });
 

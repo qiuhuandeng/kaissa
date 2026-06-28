@@ -306,34 +306,18 @@
       var currentAgent = null;
 
       function showNotice(text) {
-        noticeText.textContent = text;
-        notice.classList.add('show');
-        notice.setAttribute('aria-hidden', 'false');
+        window.caesarUI.toast(text);
       }
 
       function closeNotice() {
-        notice.classList.remove('show');
-        notice.setAttribute('aria-hidden', 'true');
+        window.caesarUI.closeLayer(notice);
       }
 
-      function showOverlay(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function hideOverlay(modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
 
-      function closeDrawer() {
-        drawer.classList.add('closing');
-        drawer.classList.remove('show');
-        setTimeout(function () {
-          drawer.classList.remove('closing');
-          drawer.setAttribute('aria-hidden', 'true');
-        }, 240);
-      }
+
+
+
 
       function fillDrawer(row) {
         drawer.querySelector('[data-agent-name]').value = row ? row.dataset.name : '';
@@ -348,13 +332,13 @@
         drawer.querySelector('[data-agent-status]').value = row ? row.dataset.status : '待签约';
       }
 
-      function openDrawer(button) {
+      function openAgentDrawer(button) {
         var row = button.closest('tr');
         var isEdit = button.dataset.mode === 'edit' && row;
         drawer.querySelector('.modal-title').textContent = isEdit ? '编辑同行代理' : '新增同行代理';
         fillDrawer(isEdit ? row : null);
         drawer.classList.remove('closing');
-        showOverlay(drawer);
+        window.caesarUI.openLayer(drawer);
       }
 
       function openCommission(row) {
@@ -362,21 +346,21 @@
         commissionModal.querySelector('[data-commission-agent]').textContent = row.dataset.name;
         commissionModal.querySelector('[data-commission-total]').textContent = '¥' + Number(row.dataset.commission).toLocaleString('zh-CN');
         commissionModal.querySelector('[data-payment-linkage]').hidden = true;
-        showOverlay(commissionModal);
+        window.caesarUI.openLayer(commissionModal);
       }
 
       document.querySelectorAll('[data-open-agent-drawer]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openDrawer(button);
+          openAgentDrawer(button);
         });
       });
 
       drawer.querySelectorAll('[data-close-agent-drawer]').forEach(function (button) {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
       });
 
       drawer.addEventListener('click', function (event) {
-        if (event.target === drawer) closeDrawer();
+        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
 
       drawer.querySelector('[data-save-agent]').addEventListener('click', function () {
@@ -391,12 +375,12 @@
 
       commissionModal.querySelectorAll('[data-close-commission]').forEach(function (button) {
         button.addEventListener('click', function () {
-          hideOverlay(commissionModal);
+          window.caesarUI.closeLayer(commissionModal);
         });
       });
 
       commissionModal.addEventListener('click', function (event) {
-        if (event.target === commissionModal) hideOverlay(commissionModal);
+        if (event.target === commissionModal) window.caesarUI.closeLayer(commissionModal);
       });
 
       commissionModal.querySelector('[data-submit-commission]').addEventListener('click', function () {

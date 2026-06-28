@@ -271,40 +271,35 @@
       };
       var opinion = document.getElementById("approvalOpinion");
 
-      function openModal(trigger) {
+      function openApprovalModal(trigger) {
         if (!modal) return;
         title.textContent = trigger.dataset.type || "付款审批";
         Object.keys(fieldMap).forEach(function (key) {
           if (fieldMap[key]) fieldMap[key].textContent = trigger.dataset[key] || "-";
         });
         if (opinion) opinion.value = "";
-        modal.classList.add("show");
-        modal.setAttribute("aria-hidden", "false");
+        window.caesarUI.openLayer(modal);
       }
 
-      function closeModal() {
-        if (!modal) return;
-        modal.classList.remove("show");
-        modal.setAttribute("aria-hidden", "true");
-      }
+
 
       document.querySelectorAll("[data-open-approval]").forEach(function (button) {
         button.addEventListener("click", function () {
-          openModal(button);
+          openApprovalModal(button);
         });
       });
 
       document.querySelectorAll("[data-close-approval]").forEach(function (button) {
-        button.addEventListener("click", closeModal);
+        button.addEventListener("click", function () { window.caesarUI.closeLayer(modal); });
       });
 
       document.querySelectorAll("[data-approval-action]").forEach(function (button) {
-        button.addEventListener("click", closeModal);
+        button.addEventListener("click", function () { window.caesarUI.closeLayer(modal); });
       });
 
       if (modal) {
         modal.addEventListener("click", function (event) {
-          if (event.target === modal) closeModal();
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       }
     })();

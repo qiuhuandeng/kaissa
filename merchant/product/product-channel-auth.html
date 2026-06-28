@@ -269,24 +269,17 @@
       var noticeText = document.getElementById('authNoticeText');
       var currentRow = null;
 
-      function openModal(modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
-      }
 
-      function closeModal(modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
+
+
 
       function showNotice(message) {
-        noticeText.textContent = message;
-        openModal(noticeModal);
+        window.caesarUI.toast(message);
       }
 
       function closeByOverlay(modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeModal(modal);
+          if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       }
 
@@ -336,7 +329,7 @@
         document.getElementById('detailDate').textContent = row.children[3].textContent.trim();
         document.getElementById('detailStatus').textContent = row.dataset.status;
         document.getElementById('detailApprover').textContent = row.dataset.approver || '-';
-        openModal(detailDrawer);
+        window.caesarUI.openLayer(detailDrawer);
       }
 
       document.getElementById('queryChannelAuth').addEventListener('click', filterRows);
@@ -359,24 +352,24 @@
             showNotice('该授权已撤销，无需重复提交撤销申请');
             return;
           }
-          openModal(revokeModal);
+          window.caesarUI.openLayer(revokeModal);
         }
       });
 
       document.querySelectorAll('[data-close-auth-detail]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(detailDrawer); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(detailDrawer); });
       });
       document.querySelectorAll('[data-close-auth-revoke]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(revokeModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(revokeModal); });
       });
       document.querySelectorAll('[data-close-auth-notice]').forEach(function (button) {
-        button.addEventListener('click', function () { closeModal(noticeModal); });
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(noticeModal); });
       });
       [detailDrawer, revokeModal, noticeModal].forEach(closeByOverlay);
 
       document.getElementById('confirmAuthRevoke').addEventListener('click', function () {
         if (currentRow) setStatus(currentRow, '待审批');
-        closeModal(revokeModal);
+        window.caesarUI.closeLayer(revokeModal);
         showNotice('撤销授权申请已提交，等待产品总监审批');
         filterRows();
       });
