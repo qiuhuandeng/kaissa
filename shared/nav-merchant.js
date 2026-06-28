@@ -276,11 +276,72 @@
   let currentRouteUrl = new URL(window.location.href);
   const secondaryOpenStorageKey = "caesar-merchant-secondary-open";
   const secondaryOpenKeys = new Set(readSecondaryOpenKeys());
+  const merchantThemeStorageKey = "caesar-merchant-theme";
+  const merchantNavLayoutStorageKey = "caesar-merchant-nav-layout";
 
   const reportRouteKeys = new Set(["profit", "receipt", "payment", "ar-ap", "prepay", "fund"]);
   const approvalViewKeys = new Set(["todo", "mine", "cc", "overview", "config"]);
   const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "alias"]);
   const merchantBaseUrl = new URL("../merchant/", new URL(bootScript.src || "../../shared/nav-merchant.js", window.location.href));
+
+  function normalizeMerchantTheme(value) {
+    return value === "purple" || value === "teal" || value === "onyx" || value === "titan" ? value : "blue";
+  }
+
+  function normalizeMerchantNavLayout(value) {
+    return value === "t" ? "t" : "double";
+  }
+
+  function readMerchantAppearance() {
+    let theme = "blue";
+    let navLayout = "double";
+    try {
+      theme = normalizeMerchantTheme(localStorage.getItem(merchantThemeStorageKey));
+      navLayout = normalizeMerchantNavLayout(localStorage.getItem(merchantNavLayoutStorageKey));
+    } catch (error) {
+      theme = "blue";
+      navLayout = "double";
+    }
+    return { theme, navLayout };
+  }
+
+  function applyMerchantAppearance(settings) {
+    const next = settings || readMerchantAppearance();
+    document.documentElement.dataset.merchantTheme = normalizeMerchantTheme(next.theme);
+    document.documentElement.dataset.merchantNavLayout = normalizeMerchantNavLayout(next.navLayout);
+  }
+
+  function saveMerchantAppearance(settings) {
+    const next = {
+      theme: normalizeMerchantTheme(settings && settings.theme),
+      navLayout: normalizeMerchantNavLayout(settings && settings.navLayout),
+    };
+    try {
+      localStorage.setItem(merchantThemeStorageKey, next.theme);
+      localStorage.setItem(merchantNavLayoutStorageKey, next.navLayout);
+    } catch (error) {
+      // Local storage can be unavailable in a restricted preview context.
+    }
+    applyMerchantAppearance(next);
+    window.dispatchEvent(new CustomEvent("caesar-merchant-appearance-change", { detail: next }));
+    return next;
+  }
+
+  window.caesarMerchantAppearance = {
+    get: readMerchantAppearance,
+    apply: applyMerchantAppearance,
+    save: saveMerchantAppearance,
+  };
+
+  window.addEventListener("storage", (event) => {
+    if (event.key === merchantThemeStorageKey || event.key === merchantNavLayoutStorageKey) {
+      applyMerchantAppearance();
+    }
+  });
+
+  window.addEventListener("caesar-merchant-appearance-change", (event) => {
+    applyMerchantAppearance(event.detail);
+  });
 
   function routeKeyFromUrl(url) {
     const normalizedPath = url.pathname.replace(/\/+/g, "/");
@@ -1214,6 +1275,7 @@
   }
 
   function initNav() {
+    applyMerchantAppearance();
     applyDemoMenuVisibility();
     installCaesarUI();
     const file = currentFile();
@@ -2568,6 +2630,8 @@
   function startNav() {
     loadDemoConfig(initNav);
   }
+
+  applyMerchantAppearance();
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", startNav);

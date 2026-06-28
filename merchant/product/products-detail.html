@@ -817,6 +817,7 @@
         });
         var pointString = points.map(function (point) { return point.x + ',' + point.y; }).join(' ');
         var areaString = pointString + ' ' + points[points.length - 1].x + ',' + bottom + ' ' + points[0].x + ',' + bottom;
+        var primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#2F6FED';
         var grid = [0, 0.33, 0.66, 1].map(function (ratio) {
           var y = bottom - ratio * (bottom - top);
           var label = Math.round(topValue * ratio / 10000) + '万';
@@ -826,7 +827,7 @@
           return '<text x="' + (point.x - 12) + '" y="236" fill="#667085" font-size="12">' + formatMonth(point.item.month) + '</text>';
         }).join('');
         var circles = points.map(function (point, index) {
-          return '<circle class="sales-chart-point" cx="' + point.x + '" cy="' + point.y + '" r="6" fill="#2F6FED" data-point-index="' + index + '"></circle>';
+          return '<circle class="sales-chart-point" cx="' + point.x + '" cy="' + point.y + '" r="6" fill="' + primary + '" data-point-index="' + index + '"></circle>';
         }).join('');
 
         document.getElementById('salesAmountKpi').textContent = formatMoney(totalAmount);
@@ -834,7 +835,7 @@
         document.getElementById('departedKpi').textContent = totalDeparted + '次';
         document.getElementById('refundRateKpi').textContent = refundRate.toFixed(1) + '%';
         document.getElementById('salesChartTitle').textContent = '近' + (salesRange === 12 ? '1年' : salesRange + '个月') + '月度销售额趋势';
-        svg.innerHTML = '<line x1="' + left + '" y1="' + top + '" x2="' + left + '" y2="' + bottom + '" stroke="#d9dee8" stroke-width="1"></line><line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" stroke="#d9dee8" stroke-width="1"></line>' + grid + '<polygon points="' + areaString + '" fill="#2F6FED" opacity="0.08"></polygon><polyline points="' + pointString + '" fill="none" stroke="#2F6FED" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>' + circles + labels;
+        svg.innerHTML = '<line x1="' + left + '" y1="' + top + '" x2="' + left + '" y2="' + bottom + '" stroke="#d9dee8" stroke-width="1"></line><line x1="' + left + '" y1="' + bottom + '" x2="' + right + '" y2="' + bottom + '" stroke="#d9dee8" stroke-width="1"></line>' + grid + '<polygon points="' + areaString + '" fill="' + primary + '" opacity="0.08"></polygon><polyline points="' + pointString + '" fill="none" stroke="' + primary + '" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>' + circles + labels;
 
         svg.querySelectorAll('.sales-chart-point').forEach(function (circle) {
           circle.addEventListener('mouseenter', function () {

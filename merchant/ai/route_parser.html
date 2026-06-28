@@ -776,6 +776,18 @@
         });
       });
 
+      function themeToken(name, fallback) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+      }
+
+      function primaryColor() {
+        return themeToken('--color-primary', '#2F6FED');
+      }
+
+      function primaryRgba(alpha) {
+        return 'rgba(' + themeToken('--color-primary-rgb', '47,111,237') + ',' + alpha + ')';
+      }
+
       function drawFallback(canvas, kind, labels, values, colors) {
         if (!canvas) return;
         var dpr = window.devicePixelRatio || 1;
@@ -801,7 +813,7 @@
         if (kind === 'line') {
           var min = 78;
           var max = 96;
-          ctx.strokeStyle = '#2f6fed';
+          ctx.strokeStyle = primaryColor();
           ctx.lineWidth = 3;
           ctx.beginPath();
           values.forEach(function (value, index) {
@@ -814,7 +826,7 @@
           values.forEach(function (value, index) {
             var x = 44 + index * ((width - 72) / (values.length - 1));
             var y = height - 30 - ((value - min) / (max - min)) * (height - 64);
-            ctx.fillStyle = '#2f6fed';
+            ctx.fillStyle = primaryColor();
             ctx.beginPath();
             ctx.arc(x, y, 3, 0, Math.PI * 2);
             ctx.fill();
@@ -828,7 +840,7 @@
             var x = 104;
             ctx.fillStyle = '#667085';
             ctx.fillText(labels[index], 12, y + 12);
-            ctx.fillStyle = colors[index] || '#2f6fed';
+            ctx.fillStyle = colors[index] || primaryColor();
             ctx.fillRect(x, y, (width - x - 58) * value / 100, barHeight);
             ctx.fillStyle = '#1d2430';
             ctx.fillText(value + '%', width - 44, y + 12);
@@ -836,7 +848,7 @@
             var barWidth = (width - 84) / values.length - 16;
             var bx = 48 + index * ((width - 84) / values.length) + 8;
             var bh = (height - 82) * value / 100;
-            ctx.fillStyle = colors[index] || '#2f6fed';
+            ctx.fillStyle = colors[index] || primaryColor();
             ctx.fillRect(bx, height - 34 - bh, barWidth, bh);
             ctx.fillStyle = '#667085';
             ctx.fillText(labels[index], bx - 4, height - 12);
@@ -851,12 +863,14 @@
         var fieldValues = [96, 92, 76, 74, 79, 88];
         var types = ['跟团游', '邮轮', '自由行', 'MICE', '研学'];
         var typeValues = [93, 87, 89, 82, 86];
-        var fieldColors = fieldValues.map(function (value) { return value < 80 ? '#C2413A' : '#2F6FED'; });
+        var chartPrimary = primaryColor();
+        var fieldColors = fieldValues.map(function (value) { return value < 80 ? '#C2413A' : chartPrimary; });
+        var typeColors = [chartPrimary, '#7156D9', '#1F8F63', '#B7791F', '#53657D'];
 
         if (!window.Chart) {
           drawFallback(document.getElementById('accuracyTrendChart'), 'line', weeks, trend, []);
           drawFallback(document.getElementById('fieldAccuracyChart'), 'horizontal', fields, fieldValues, fieldColors);
-          drawFallback(document.getElementById('typeAccuracyChart'), 'bar', types, typeValues, ['#2F6FED', '#7156D9', '#1F8F63', '#B7791F', '#53657D']);
+          drawFallback(document.getElementById('typeAccuracyChart'), 'bar', types, typeValues, typeColors);
           return;
         }
 
@@ -866,7 +880,7 @@
           type: 'line',
           data: {
             labels: weeks,
-            datasets: [{ label: '整体准确率', data: trend, borderColor: '#2F6FED', backgroundColor: 'rgba(47,111,237,0.10)', tension: 0.35, fill: true, pointRadius: 3 }]
+            datasets: [{ label: '整体准确率', data: trend, borderColor: chartPrimary, backgroundColor: primaryRgba(0.10), tension: 0.35, fill: true, pointRadius: 3 }]
           },
           options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 78, max: 96, ticks: { callback: function (value) { return value + '%'; } } } }, plugins: { legend: { display: false } } }
         });
@@ -877,7 +891,7 @@
         });
         new Chart(document.getElementById('typeAccuracyChart'), {
           type: 'bar',
-          data: { labels: types, datasets: [{ label: '产品类型准确率', data: typeValues, backgroundColor: ['#2F6FED', '#7156D9', '#1F8F63', '#B7791F', '#53657D'], borderRadius: 4 }] },
+          data: { labels: types, datasets: [{ label: '产品类型准确率', data: typeValues, backgroundColor: typeColors, borderRadius: 4 }] },
           options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100, ticks: { callback: function (value) { return value + '%'; } } } }, plugins: { legend: { display: false } } }
         });
       }

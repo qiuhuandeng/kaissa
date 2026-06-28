@@ -28,6 +28,7 @@
       title: "系统配置",
       icon: "file",
       children: [
+        { title: "系统主题", href: "theme.html" },
         { title: "后台角色", href: "roles.html" },
         { title: "接口配置", href: "interface.html" },
         { title: "基础参数", href: "params.html" },
