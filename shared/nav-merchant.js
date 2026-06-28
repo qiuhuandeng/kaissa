@@ -183,7 +183,6 @@
       title: "AI",
       icon: "sparkles",
       children: [
-        { title: "AI助手", href: "ai/ai-assistant.html", ai: true },
         { title: "线路拆解", href: "ai/route_parser.html", ai: true },
         { title: "竞品分析", href: "ai/competitor.html", ai: true },
         { title: "签证审查", href: "ai/visa_checker.html", ai: true },
@@ -335,6 +334,7 @@
   const pageOwners = {
     "dashboard-group.html": { href: "dashboard.html", title: "集团管理层工作台" },
     "dashboard-store.html": { href: "dashboard.html", title: "门店店长工作台" },
+    "ai/ai-assistant.html": { href: "dashboard.html", title: "工作台助手" },
     "product/product-self-edit.html": { href: "product/products.html", title: "自营产品编辑" },
     "product/products-detail.html": { href: "product/products.html", title: "产品详情" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
