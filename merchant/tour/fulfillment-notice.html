@@ -17,12 +17,12 @@
 <section class="filter-card filter-card-compact fulfillment-filter list-surface-filter" aria-label="出团通知筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <button class="btn btn-secondary" type="button">通知模板</button><button class="btn btn-primary" type="button" data-open-notice-send>新建通知</button>
-      </div><div class="filter-row"><div class="filter-item"><label class="sr-only" for="noticeKeyword">团号/产品名称</label><input id="noticeKeyword" type="text" placeholder="团号/产品名称"></div><div class="filter-item filter-item-sm"><label class="sr-only" for="noticeProductType">产品类型</label><select id="noticeProductType"><option>全部类型</option><option>普通团期</option><option>邮轮团期</option><option>专列团期</option><option>研学团期</option></select></div><div class="filter-item filter-item-sm"><label class="sr-only" for="noticeStatus">发送状态</label><select id="noticeStatus"><option>全部</option><option>未生成</option><option>待发送</option><option>已发送</option><option>部分确认</option></select></div><div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">开始日期范围</label><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div><div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button id="resetNotice" class="btn btn-secondary" type="button">重置</button></div></div></section>
+      </div><div class="filter-row"><div class="filter-item"><label class="sr-only" for="noticeKeyword">团号/线路名称</label><input id="noticeKeyword" type="text" placeholder="团号/线路名称"></div><div class="filter-item filter-item-sm"><label class="sr-only" for="noticeProductType">线路类型</label><select id="noticeProductType"><option>全部类型</option><option>普通团期</option><option>邮轮团期</option><option>专列团期</option><option>研学团期</option></select></div><div class="filter-item filter-item-sm"><label class="sr-only" for="noticeStatus">发送状态</label><select id="noticeStatus"><option>全部</option><option>未生成</option><option>待发送</option><option>已发送</option><option>部分确认</option></select></div><div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">开始日期范围</label><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div><div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button id="resetNotice" class="btn btn-secondary" type="button">重置</button></div></div></section>
 
 
   <nav class="tab-bar list-surface-tabs" aria-label="通知状态筛选" data-filter-tabs data-filter-target="#noticeRows"><button class="tab-item active" type="button" data-filter-value="全部">全部</button><button class="tab-item" type="button" data-filter-value="待发送">待发送</button><button class="tab-item" type="button" data-filter-value="已发送">已发送</button><button class="tab-item" type="button" data-filter-value="部分确认">部分确认</button><button class="tab-item" type="button" data-filter-value="未生成">未生成</button></nav>
 
-  <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="出团通知列表"><table><thead><tr><th>产品类型</th><th>团号</th><th>产品名称</th><th>开始日期</th><th>集合/登船/发车信息</th><th>负责人</th><th>通知状态</th><th>发送人数</th><th>确认人数</th><th>最近发送时间</th><th>操作</th></tr></thead><tbody id="noticeRows">
+  <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="出团通知列表"><table><thead><tr><th>线路类型</th><th>团号</th><th>线路名称</th><th>开始日期</th><th>集合/登船/发车信息</th><th>负责人</th><th>通知状态</th><th>发送人数</th><th>确认人数</th><th>最近发送时间</th><th>操作</th></tr></thead><tbody id="noticeRows">
     <tr data-tab-status="待发送"><td><span class="tag tag-blue">普通团期</span></td><td>EU-FRA-20250625-001</td><td>法瑞意经典15日游</td><td>2025-06-25</td><td>首都机场T3 07:30</td><td>李导 138****8800</td><td><span class="tag tag-orange">待发送</span></td><td>0/27</td><td>0/27</td><td>-</td><td><div class="table-action"><button type="button" data-open-notice-send class="table-action-primary">发送</button><button type="button">预览</button></div></td></tr>
     <tr data-tab-status="部分确认"><td><span class="tag tag-orange">专列团期</span></td><td>TR-SILK-20250805-001</td><td>东方丝路专列9日</td><td>2025-08-05</td><td>西安站 08:10 / 软卧车厢</td><td>王导 139****9900</td><td><span class="tag tag-blue">部分确认</span></td><td>92/92</td><td>78/92</td><td>2025-06-23 09:00</td><td><div class="table-action"><button type="button" data-open-notice-send class="table-action-primary">补发</button><button type="button">查看确认</button></div></td></tr>
     <tr data-tab-status="已发送"><td><span class="tag tag-green">研学团期</span></td><td>ST-SG-20250812-001</td><td>新加坡科技创新研学6日</td><td>2025-08-12</td><td>首都机场T3 10:00 / 监护授权必带</td><td>陈老师 137****7700</td><td><span class="tag tag-green">已发送</span></td><td>26/26</td><td>26/26</td><td>2025-06-22 15:30</td><td><div class="table-action"><button type="button" class="table-action-primary">详情</button></div></td></tr>
@@ -40,9 +40,115 @@
     (function () {
       var generateButton = document.getElementById('generateNoticeText');
       var noticeText = document.getElementById('noticeText');
+      var noticeRows = document.getElementById('noticeRows');
+      var pageParams = new URLSearchParams(window.location.search);
+      var activeNoticeConfig = null;
       if (!generateButton || !noticeText) return;
+
+      var noticeConfigs = {
+        group: {
+          title: '发送出团通知',
+          summary: '普通团期 EU20240715001 | 欧洲十国经典游 | 27人',
+          templateOptions: ['普通团期出团通知', '签证材料提醒', '集合变更通知'],
+          meetLabel: '集合时间',
+          leaderLabel: '领队',
+          extraLabel: '关键提醒',
+          placeLabel: '集合地点',
+          meetTime: '2024-07-15T07:30',
+          leader: '李导 138****8800',
+          extra: '护照原件、签证页、集合口令',
+          place: '北京首都国际机场T3航站楼F区',
+          aiText: '尊敬的游客，您好！\n您报名的【欧洲十国经典游】将于2024年07月15日出发，请于07:30在北京首都国际机场T3航站楼F区集合。\n领队：李导 138****8800。\n请携带护照原件、签证页、出团通知书和个人常用药品。近期欧洲早晚温差较大，建议准备薄外套。\n如需协助，请联系您的销售顾问或领队。祝您旅途愉快！',
+          rows: [
+            ['待发送', '普通团期', 'tag tag-blue', 'EU20240715001', '欧洲十国经典游', '2024-07-15', '首都机场T3 07:30', '李导 138****8800', '待发送', 'tag tag-orange', '0/27', '0/27', '-', '发送', '预览']
+          ]
+        },
+        cruise: {
+          title: '发送登船通知',
+          summary: '邮轮团期 CZ20240801001 | 理想号地中海邮轮 | 68人',
+          templateOptions: ['邮轮登船通知', '船票发送通知', '岸上观光确认通知'],
+          meetLabel: '登船时间',
+          leaderLabel: '邮轮管家/领队',
+          extraLabel: '登船提醒',
+          placeLabel: '登船港/码头',
+          meetTime: '2024-08-01T13:30',
+          leader: '王导 139****2200',
+          extra: '护照原件、船票、登船表、岸上观光确认单',
+          place: '巴塞罗那港邮轮码头B区',
+          aiText: '尊敬的游客，您好！\n您报名的【理想号地中海邮轮】将于2024年08月01日登船，请于13:30前抵达巴塞罗那港邮轮码头B区。\n邮轮管家：王导 139****2200。\n请携带护照原件、船票、登船表和岸上观光确认单。登船安检需预留时间，请勿托运贵重物品。\n如需协助，请联系您的销售顾问或邮轮管家。祝您航程愉快！',
+          rows: [
+            ['待发送', '邮轮团期', 'tag tag-purple', 'CZ20240801001', '理想号地中海邮轮', '2024-08-01', '巴塞罗那港 13:30 / 船票待发', '王导 139****2200', '待发送', 'tag tag-orange', '0/68', '0/68', '-', '发送', '预览'],
+            ['部分确认', '邮轮团期', 'tag tag-purple', 'CZ20240801001', '理想号地中海邮轮', '2024-08-01', '岸上观光确认 / 马赛A线', '王导 139****2200', '部分确认', 'tag tag-blue', '58/68', '48/68', '2024-07-18 15:30', '补发', '查看确认']
+          ]
+        },
+        train: {
+          title: '发送专列集合通知',
+          summary: '专列团期 TR20240805001 | 东方丝路专列 | 52人',
+          templateOptions: ['专列发车通知', '铺位分配通知', '上下车站确认通知'],
+          meetLabel: '集合时间',
+          leaderLabel: '随车领队',
+          extraLabel: '乘车提醒',
+          placeLabel: '集合/发车地点',
+          meetTime: '2024-08-05T08:10',
+          leader: '郑导 139****9900',
+          extra: '身份证原件、铺位号、集合口令、随车餐饮说明',
+          place: '西安站北广场团队集合区',
+          aiText: '尊敬的游客，您好！\n您报名的【东方丝路专列】将于2024年08月05日发车，请于08:10在西安站北广场团队集合区集合。\n随车领队：郑导 139****9900。\n请携带身份证原件，并提前确认车厢铺位、上下车站和随车餐饮安排。车站安检客流较大，请预留充足时间。\n如需协助，请联系您的销售顾问或随车领队。祝您旅途愉快！',
+          rows: [
+            ['部分确认', '专列团期', 'tag tag-orange', 'TR20240805001', '东方丝路专列', '2024-08-05', '西安站 08:10 / 软卧车厢', '郑导 139****9900', '部分确认', 'tag tag-blue', '52/52', '44/52', '2024-07-22 09:00', '补发', '查看确认'],
+            ['待发送', '专列团期', 'tag tag-orange', 'TR20240805001', '东方丝路专列', '2024-08-05', '铺位分配表待发送', '郑导 139****9900', '待发送', 'tag tag-orange', '0/52', '0/52', '-', '发送', '预览']
+          ]
+        }
+      };
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeType(value) {
+        var text = String(value || '').toLowerCase();
+        if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
+        if (text.indexOf('train') >= 0 || text.indexOf('专列') >= 0 || text.indexOf('tr') === 0) return 'train';
+        return 'group';
+      }
+
+      function renderNoticeRows(config) {
+        noticeRows.innerHTML = config.rows.map(function (row) {
+          return '<tr data-tab-status="' + escapeHtml(row[0]) + '"><td><span class="' + escapeHtml(row[2]) + '">' + escapeHtml(row[1]) + '</span></td><td>' + escapeHtml(row[3]) + '</td><td>' + escapeHtml(row[4]) + '</td><td>' + escapeHtml(row[5]) + '</td><td>' + escapeHtml(row[6]) + '</td><td>' + escapeHtml(row[7]) + '</td><td><span class="' + escapeHtml(row[9]) + '">' + escapeHtml(row[8]) + '</span></td><td>' + escapeHtml(row[10]) + '</td><td>' + escapeHtml(row[11]) + '</td><td>' + escapeHtml(row[12]) + '</td><td><div class="table-action"><button type="button" data-open-notice-send class="table-action-primary">' + escapeHtml(row[13]) + '</button><button type="button">' + escapeHtml(row[14]) + '</button></div></td></tr>';
+        }).join('');
+        if (window.caesarInitFulfillmentCommon) window.caesarInitFulfillmentCommon(document);
+        document.querySelectorAll('.tab-bar[data-filter-tabs]').forEach(function (tabBar) { delete tabBar.dataset.filterTabsReady; });
+        if (window.caesarRefreshListSurfaces) window.caesarRefreshListSurfaces();
+      }
+
+      function applyNoticeConfig(config) {
+        activeNoticeConfig = config;
+        document.getElementById('noticeSendTitle').textContent = config.title;
+        document.querySelector('#noticeSendModal .readonly-summary').textContent = config.summary;
+        document.getElementById('noticeTemplateType').innerHTML = config.templateOptions.map(function (item) { return '<option>' + escapeHtml(item) + '</option>'; }).join('');
+        document.querySelector('label[for="meetTime"]').textContent = config.meetLabel;
+        document.querySelector('label[for="leaderInfo"]').textContent = config.leaderLabel;
+        document.querySelector('label[for="objectExtra"]').textContent = config.extraLabel;
+        document.querySelector('label[for="meetPlace"]').textContent = config.placeLabel;
+        document.getElementById('meetTime').value = config.meetTime;
+        document.getElementById('leaderInfo').value = config.leader;
+        document.getElementById('objectExtra').value = config.extra;
+        document.getElementById('meetPlace').value = config.place;
+        noticeText.value = config.aiText;
+        renderNoticeRows(config);
+      }
+
+      if (pageParams.has('type')) {
+        applyNoticeConfig(noticeConfigs[normalizeType(pageParams.get('type'))]);
+      }
+
       generateButton.addEventListener('click', function () {
-        noticeText.value = '尊敬的游客，您好！\\n您报名的【法瑞意经典15日游】将于2025年06月25日出发，请于07:30在北京首都国际机场T3航站楼F区集合。\\n领队：李导 138****8800。\\n请携带护照原件、签证材料复印件、出团通知书和个人常用药品。近期欧洲早晚温差较大，建议准备薄外套。\\n如需协助，请联系凯撒旅游客服或您的销售顾问。祝您旅途愉快！';
+        noticeText.value = activeNoticeConfig ? activeNoticeConfig.aiText : '尊敬的游客，您好！\n您报名的【法瑞意经典15日游】将于2025年06月25日出发，请于07:30在北京首都国际机场T3航站楼F区集合。\n领队：李导 138****8800。\n请携带护照原件、签证材料复印件、出团通知书和个人常用药品。近期欧洲早晚温差较大，建议准备薄外套。\n如需协助，请联系您的销售顾问或领队。祝您旅途愉快！';
         generateButton.textContent = '🤖 AI已生成';
       });
     })();

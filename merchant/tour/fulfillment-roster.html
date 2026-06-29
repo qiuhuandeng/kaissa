@@ -35,8 +35,8 @@
           <input id="filterScheduleCode" type="text" placeholder="团号">
         </div>
         <div class="filter-item">
-          <label class="sr-only" for="filterProductName">产品名称</label>
-          <input id="filterProductName" type="text" placeholder="产品名称">
+          <label class="sr-only" for="filterProductName">线路名称</label>
+          <input id="filterProductName" type="text" placeholder="线路名称">
         </div>
         <div class="filter-item">
           <label class="sr-only" for="filterGuestName">游客姓名</label>
@@ -429,8 +429,143 @@
       var importModal = document.getElementById('importRosterModal');
       var noticeModal = document.getElementById('noticeModal');
       var aiRosterModal = document.getElementById('aiRosterModal');
+      var rosterGroups = document.getElementById('rosterGroups');
+      var pageParams = new URLSearchParams(window.location.search);
       var currentRow = null;
       var currentImportStep = 1;
+      var activeRosterConfig = null;
+
+      var rosterConfigs = {
+        group: {
+          scheduleCode: 'EU20240715001',
+          productName: '欧洲十国经典游',
+          batchType: '普通团期',
+          tagClass: 'tag tag-blue',
+          departDate: '2024-07-15',
+          dateText: '2024-07-15出发',
+          totalText: '共27人',
+          completeText: '完整25人',
+          riskText: '缺失2人',
+          arrangeLabel: '房型',
+          arrangeOptions: ['标准间', '大床房', '三人间', '单人间'],
+          actionLabel: '导入名单',
+          remindText: '批量发补资料提醒',
+          templateText: '下载跟团名单模板',
+          importCount: '27行',
+          aiSummary: '已核验27名游客，发现缺证件、证件格式异常、手机号缺失和特殊需求风险。',
+          aiTaskText: 'AI已生成4条名单处理任务',
+          remindDoneText: '已向缺失资料游客发送补资料提醒。',
+          columns: ['序号', '姓名', '证件类型', '证件号', '手机', '房型', '特殊需求', '安排信息', '资料状态', '操作'],
+          rows: [
+            ['1', '张建国', '护照', 'E123****5678', '138****8899', '标准间', '靠窗', '常规房型', '完整', 'tag tag-green'],
+            ['2', '李梅', '护照', '-', '138****0011', '标准间', '素食', '证件待补', '缺证件', 'tag tag-red'],
+            ['3', '王强', '身份证', '110101****9012', '-', '三人间', '无', '常规房型', '缺手机', 'tag tag-orange'],
+            ['4', '陈红', '护照', 'E456****8901', '137****8891', '大床房', '低楼层', '证件照待审核', '待审核', 'tag tag-blue']
+          ]
+        },
+        cruise: {
+          scheduleCode: 'CZ20240801001',
+          productName: '理想号地中海邮轮',
+          batchType: '邮轮团期',
+          tagClass: 'tag tag-purple',
+          departDate: '2024-08-01',
+          dateText: '2024-08-01登船',
+          totalText: '共68人',
+          completeText: '登船资料完成61人',
+          riskText: '待出票10人',
+          arrangeLabel: '舱型/舱号',
+          arrangeOptions: ['内舱房IN', '海景房OV', '阳台房BA', '套房SU'],
+          actionLabel: '导入登船名单',
+          remindText: '批量发登船资料提醒',
+          templateText: '下载邮轮名单模板',
+          importCount: '68行',
+          aiSummary: '已核验68名游客，重点检查护照有效期、登船表、舱号分配和岸上观光偏好。',
+          aiTaskText: 'AI已生成登船资料处理任务',
+          remindDoneText: '已向登船资料未完整游客发送提醒。',
+          columns: ['序号', '姓名', '证件类型', '证件号', '手机', '舱型/舱号', '岸上观光', '登船资料', '资料状态', '操作'],
+          rows: [
+            ['1', '张建国', '护照', 'E123****5678', '138****8899', '阳台房BA / 9232', '马赛A线', '船票已出', '完整', 'tag tag-green'],
+            ['2', '李梅', '护照', 'E234****6789', '138****0011', '海景房OV / 待回填', '罗马深度线', '待船票', '待审核', 'tag tag-blue'],
+            ['3', '王强', '护照', 'E345****7890', '135****6677', '套房SU / 1102', '不参加岸上游', '登船表缺紧急联系人', '缺失', 'tag tag-orange'],
+            ['4', '吴芳', '护照', 'E678****0123', '136****7788', '内舱房IN / 5120', '那不勒斯A线', '资料完整', '完整', 'tag tag-green']
+          ]
+        },
+        train: {
+          scheduleCode: 'TR20240805001',
+          productName: '东方丝路专列',
+          batchType: '专列团期',
+          tagClass: 'tag tag-orange',
+          departDate: '2024-08-05',
+          dateText: '2024-08-05上车',
+          totalText: '共52人',
+          completeText: '实名制完成48人',
+          riskText: '待分铺8人',
+          arrangeLabel: '车厢/铺位',
+          arrangeOptions: ['软卧上铺', '软卧下铺', '硬卧中铺', '豪华包厢'],
+          actionLabel: '导入专列名单',
+          remindText: '批量发实名制提醒',
+          templateText: '下载专列名单模板',
+          importCount: '52行',
+          aiSummary: '已核验52名游客，重点检查实名制证件、车厢铺位、上下车站和随车服务需求。',
+          aiTaskText: 'AI已生成专列名单处理任务',
+          remindDoneText: '已向实名制资料未完整游客发送提醒。',
+          columns: ['序号', '姓名', '证件类型', '证件号', '手机', '车厢/铺位', '上下车站', '随车服务', '资料状态', '操作'],
+          rows: [
+            ['1', '郑华', '身份证', '110101****0415', '136****3300', '03车12下', '西安上/乌鲁木齐下', '清真餐', '完整', 'tag tag-green'],
+            ['2', '周伟', '身份证', '330106****0219', '137****5521', '03车13上', '西安上/乌鲁木齐下', '同车厢', '完整', 'tag tag-green'],
+            ['3', '王强', '身份证', '110103****9012', '135****6677', '待分铺', '兰州上/乌鲁木齐下', '轮椅协助', '缺失', 'tag tag-orange'],
+            ['4', '孙丽', '身份证', '320102****0703', '137****8891', '01车包厢', '西安上/敦煌下', '低噪音车厢', '待审核', 'tag tag-blue']
+          ]
+        }
+      };
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeType(value) {
+        var text = String(value || '').toLowerCase();
+        if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
+        if (text.indexOf('train') >= 0 || text.indexOf('专列') >= 0 || text.indexOf('tr') === 0) return 'train';
+        return 'group';
+      }
+
+      function statusValue(text) {
+        if (text.indexOf('缺') >= 0) return '缺失';
+        if (text.indexOf('审核') >= 0 || text.indexOf('待') >= 0) return '待审核';
+        return '完整';
+      }
+
+      function rosterRowHtml(row) {
+        var status = row[8];
+        var needsRemind = statusValue(status) === '缺失';
+        return '<tr data-roster-row data-status="' + statusValue(status) + '"' + (needsRemind ? ' class="roster-row-danger"' : '') + '>' +
+          row.slice(0, 8).map(function (cell) { return '<td>' + escapeHtml(cell) + '</td>'; }).join('') +
+          '<td><span class="' + escapeHtml(row[9]) + '">' + escapeHtml(status) + '</span></td>' +
+          '<td><div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button>' + (needsRemind ? '<button type="button" data-remind-guest>催促</button>' : '') + '</div></td></tr>';
+      }
+
+      function renderRosterConfig(config) {
+        activeRosterConfig = config;
+        document.getElementById('openImportRoster').textContent = config.actionLabel;
+        document.getElementById('batchRemind').textContent = config.remindText;
+        document.getElementById('downloadTemplate').textContent = config.templateText;
+        document.querySelector('label[for="guestRoom"]').textContent = config.arrangeLabel;
+        document.getElementById('guestRoom').innerHTML = config.arrangeOptions.map(function (item) {
+          return '<option>' + escapeHtml(item) + '</option>';
+        }).join('');
+        var aiSummary = document.querySelector('#aiRosterModal .ai-embedded-summary strong');
+        if (aiSummary) aiSummary.textContent = config.aiSummary;
+        rosterGroups.innerHTML = '<section class="roster-group" data-group data-schedule-code="' + escapeHtml(config.scheduleCode) + '" data-product-name="' + escapeHtml(config.productName) + '" data-depart-date="' + escapeHtml(config.departDate) + '">' +
+          '<div class="roster-group-head" role="button" tabindex="0" data-toggle-group><div class="roster-group-title"><span class="roster-group-arrow" data-group-arrow>▼</span><strong>' + escapeHtml(config.scheduleCode) + '</strong><span class="' + escapeHtml(config.tagClass) + '">' + escapeHtml(config.batchType) + '</span><span>' + escapeHtml(config.productName) + '</span><span>' + escapeHtml(config.dateText) + '</span><span>' + escapeHtml(config.totalText) + '</span><span>' + escapeHtml(config.completeText) + '</span><span class="text-danger">' + escapeHtml(config.riskText) + '</span></div><button class="btn btn-secondary btn-sm" type="button" data-fold-text>折叠</button></div>' +
+          '<div class="roster-group-body expanded"><div class="table-wrap list-surface-table list-table-with-pagination"><table><thead><tr>' + config.columns.map(function (column) { return '<th>' + escapeHtml(column) + '</th>'; }).join('') + '</tr></thead><tbody>' + config.rows.map(rosterRowHtml).join('') + '</tbody></table></div><div class="pagination list-surface-pagination list-pagination-attached"><span>第1-' + config.rows.length + '条/共' + config.rows.length + '条</span></div></div></section>';
+        if (window.caesarRefreshListSurfaces) window.caesarRefreshListSurfaces();
+      }
 
 
 
@@ -458,21 +593,23 @@
       function updateRowStatus(row) {
         var idNo = row.children[3].textContent.trim();
         var phone = row.children[4].textContent.trim();
+        var statusIndex = row.children.length - 2;
+        var actionIndex = row.children.length - 1;
         if (!idNo || idNo === '-') {
           row.dataset.status = '缺失';
           row.classList.add('roster-row-danger');
-          row.children[7].innerHTML = '<span class="tag tag-red">缺证件</span>';
-          row.children[8].innerHTML = '<div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button><button type="button" data-remind-guest>催促</button></div>';
+          row.children[statusIndex].innerHTML = '<span class="tag tag-red">缺证件</span>';
+          row.children[actionIndex].innerHTML = '<div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button><button type="button" data-remind-guest>催促</button></div>';
         } else if (!phone || phone === '-') {
           row.dataset.status = '缺失';
           row.classList.add('roster-row-danger');
-          row.children[7].innerHTML = '<span class="tag tag-orange">缺手机</span>';
-          row.children[8].innerHTML = '<div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button><button type="button" data-remind-guest>催促</button></div>';
+          row.children[statusIndex].innerHTML = '<span class="tag tag-orange">缺手机</span>';
+          row.children[actionIndex].innerHTML = '<div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button><button type="button" data-remind-guest>催促</button></div>';
         } else {
           row.dataset.status = '完整';
           row.classList.remove('roster-row-danger');
-          row.children[7].innerHTML = '<span class="tag tag-green">完整</span>';
-          row.children[8].innerHTML = '<div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button></div>';
+          row.children[statusIndex].innerHTML = '<span class="tag tag-green">完整</span>';
+          row.children[actionIndex].innerHTML = '<div class="table-action"><button type="button" data-edit-guest class="table-action-primary">编辑</button></div>';
         }
       }
 
@@ -520,6 +657,10 @@
         });
       }
 
+      if (pageParams.has('type')) {
+        renderRosterConfig(rosterConfigs[normalizeType(pageParams.get('type'))]);
+      }
+
       document.getElementById('rosterGroups').addEventListener('click', function (event) {
         var groupHead = event.target.closest('[data-toggle-group]');
         var editButton = event.target.closest('[data-edit-guest]');
@@ -534,7 +675,7 @@
         }
 
         if (remindButton) {
-          showNotice('已发送补资料提醒。');
+          showNotice(activeRosterConfig ? activeRosterConfig.remindDoneText : '已发送补资料提醒。');
           return;
         }
 
@@ -587,7 +728,7 @@
 
       document.getElementById('applyAiRosterSuggestion').addEventListener('click', function () {
         window.caesarUI.closeLayer(aiRosterModal);
-        showNotice('AI已生成4条名单处理任务');
+        showNotice(activeRosterConfig ? activeRosterConfig.aiTaskText : 'AI已生成4条名单处理任务');
       });
 
       document.getElementById('downloadTemplate').addEventListener('click', function () {
@@ -604,11 +745,11 @@
           return;
         }
         window.caesarUI.closeLayer(importModal);
-        showNotice('名单已导入，解析到27行数据。');
+        showNotice('名单已导入，解析到' + (activeRosterConfig ? activeRosterConfig.importCount : '27行') + '数据。');
       });
 
       document.getElementById('batchRemind').addEventListener('click', function () {
-        showNotice('已向缺失资料游客发送补资料提醒。');
+        showNotice(activeRosterConfig ? activeRosterConfig.remindDoneText : '已向缺失资料游客发送补资料提醒。');
       });
 
       document.querySelectorAll('[data-close-edit]').forEach(function (button) {

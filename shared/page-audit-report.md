@@ -1,11 +1,11 @@
 # 页面内容路由规范审计
 
-审计时间：2026-06-28T01:52:23.813Z
+审计时间：2026-06-29T02:38:13.611Z
 
 ## 汇总
 
-- 审计后台页面：129
-- 可直接接入：129
+- 审计后台页面：134
+- 可直接接入：134
 - 阻断问题：0
 - 高风险：0
 - 中风险：0
@@ -38,6 +38,7 @@
 | ready | admin/params.html | 可直接纳入内容路由 |
 | ready | admin/positions.html | 可直接纳入内容路由 |
 | ready | admin/roles.html | 可直接纳入内容路由 |
+| ready | admin/theme.html | 可直接纳入内容路由 |
 | ready | merchant/ai/ai-assistant.html | 可直接纳入内容路由 |
 | ready | merchant/ai/competitor.html | 可直接纳入内容路由 |
 | ready | merchant/ai/route_parser.html | 可直接纳入内容路由 |
@@ -74,6 +75,7 @@
 | excluded | merchant/login.html | [excluded] 不纳入后台内容路由审计范围 |
 | ready | merchant/product/product-channel-auth.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-competitor-price.html | 可直接纳入内容路由 |
+| ready | merchant/product/product-cruise-edit.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-cruise-routes.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-free-travel-list.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-market.html | 可直接纳入内容路由 |
@@ -85,6 +87,7 @@
 | ready | merchant/product/product-single-orders.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-study-edit.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-study-products.html | 可直接纳入内容路由 |
+| ready | merchant/product/product-train-edit.html | 可直接纳入内容路由 |
 | ready | merchant/product/product-train-routes.html | 可直接纳入内容路由 |
 | ready | merchant/product/products-detail.html | 可直接纳入内容路由 |
 | ready | merchant/product/products.html | 可直接纳入内容路由 |
@@ -135,9 +138,11 @@
 | ready | merchant/tour/product-custom-list.html | 可直接纳入内容路由 |
 | ready | merchant/tour/projects-detail.html | 可直接纳入内容路由 |
 | ready | merchant/tour/projects.html | 可直接纳入内容路由 |
+| ready | merchant/tour/schedules-batch.html | 可直接纳入内容路由 |
 | ready | merchant/tour/schedules-calendar.html | 可直接纳入内容路由 |
 | ready | merchant/tour/schedules-detail.html | 可直接纳入内容路由 |
 | ready | merchant/tour/schedules.html | 可直接纳入内容路由 |
+| ready | merchant/tour/team-create.html | 可直接纳入内容路由 |
 | ready | operator/audit-logs.html | 可直接纳入内容路由 |
 | ready | operator/companies.html | 可直接纳入内容路由 |
 | ready | operator/components.html | 可直接纳入内容路由 |

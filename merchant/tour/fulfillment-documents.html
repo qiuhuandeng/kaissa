@@ -43,7 +43,7 @@
 
   <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="证件资料列表">
     <table>
-      <thead><tr><th>团号</th><th>游客姓名</th><th>产品名称</th><th>产品类型</th><th>出发日期</th><th>证件类型</th><th>证件号码</th><th>有效期</th><th>业务材料</th><th>资料状态</th><th>AI审查</th><th>异常说明</th><th>操作</th></tr></thead>
+      <thead><tr><th>团号</th><th>游客姓名</th><th>线路名称</th><th>线路类型</th><th>出发日期</th><th>证件类型</th><th>证件号码</th><th>有效期</th><th>业务材料</th><th>资料状态</th><th>AI审查</th><th>异常说明</th><th>操作</th></tr></thead>
       <tbody id="documentRows">
         <tr data-tab-status="缺失"><td>EU-FRA-20250625-001</td><td>李大明</td><td>法瑞意经典15日游</td><td><span class="tag tag-blue">普通团期</span></td><td>2025-06-25</td><td>护照</td><td>-</td><td>-</td><td>申根材料</td><td><span class="tag tag-red">缺失</span></td><td><div class="table-action"><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item link-button danger" type="button" data-ai-doc-detail data-result="拒绝" data-reason="未识别到护照首页，无法判断姓名、证件号和有效期。">拒绝96%</button></span></span></div></td><td>未提交护照首页</td><td><div class="table-action"><button type="button" data-open-document-edit class="table-action-primary">编辑</button><button type="button" data-open-document-remind>催补</button></div></td></tr>
         <tr data-tab-status="异常"><td>EU-FRA-20250625-001</td><td>张明远</td><td>法瑞意经典15日游</td><td><span class="tag tag-blue">普通团期</span></td><td>2025-06-25</td><td>护照</td><td>E****8621</td><td>2025-11-20</td><td>申根材料</td><td><span class="tag tag-red">异常</span></td><td><div class="table-action"><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item link-button" type="button" data-ai-doc-detail data-result="警告" data-reason="护照有效期距回团日期不足6个月，且空白页数量不足。">警告88%</button></span></span></div></td><td>护照空白页不足</td><td><div class="table-action"><button type="button" data-open-document-edit class="table-action-primary">处理</button></div></td></tr>
@@ -103,6 +103,94 @@
       var aiDocumentModal = document.getElementById('aiDocumentModal');
       var aiDocumentResult = document.getElementById('aiDocumentResult');
       var aiDocumentReason = document.getElementById('aiDocumentReason');
+      var documentRows = document.getElementById('documentRows');
+      var pageParams = new URLSearchParams(window.location.search);
+      var activeDocumentConfig = null;
+
+      var documentConfigs = {
+        group: {
+          keywordPlaceholder: '团号/游客姓名/证件号',
+          docOptions: ['全部证件', '护照', '身份证', '港澳通行证'],
+          editSummary: 'EU20240715001 | 欧洲十国经典游 | 护照/签证资料',
+          remindSummary: '将向缺失护照、签证材料或联系信息的游客发送提醒',
+          remindText: '您好，您的出团证件资料尚未完整，请尽快提交护照首页、签证材料或联系信息，以免影响签证及出行安排。',
+          batchText: '已完成当前跟团名单证件资料审查，发现1条缺失、1条异常、1条待人工。',
+          rows: [
+            ['缺失', 'EU20240715001', '李梅', '欧洲十国经典游', '普通团期', 'tag tag-blue', '2024-07-15', '护照', '-', '-', '申根签证材料', '缺失', 'tag tag-red', '拒绝96%', '拒绝', '未提交护照首页，无法判断姓名、证件号和有效期。', '未提交护照首页', '编辑', '催补'],
+            ['异常', 'EU20240715001', '张建国', '欧洲十国经典游', '普通团期', 'tag tag-blue', '2024-07-15', '护照', 'E123****5678', '2025-11-20', '申根签证材料', '异常', 'tag tag-red', '警告88%', '警告', '护照有效期距回团日期不足6个月，且空白页数量不足。', '护照空白页不足', '处理', ''],
+            ['待审核', 'EU20240715001', '陈红', '欧洲十国经典游', '普通团期', 'tag tag-blue', '2024-07-15', '护照', 'E456****8901', '2030-05-12', '证件照', '待审核', 'tag tag-blue', '待人工74%', '待人工', '证件照可识别，但边缘反光影响签发地字段置信度。', '新上传证件照', '审核', ''],
+            ['完整', 'EU20240715001', '王强', '欧洲十国经典游', '普通团期', 'tag tag-blue', '2024-07-15', '身份证', '110101****9012', '2034-02-18', '保险实名信息', '完整', 'tag tag-green', '通过97%', '通过', '证件号、姓名、有效期和目的地签证规则均匹配。', '-', '详情', '']
+          ]
+        },
+        cruise: {
+          keywordPlaceholder: '团号/游客姓名/护照号',
+          docOptions: ['全部证件', '护照', '登船表', '船票资料'],
+          editSummary: 'CZ20240801001 | 理想号地中海邮轮 | 登船资料',
+          remindSummary: '将向登船资料缺失或船票待确认游客发送提醒',
+          remindText: '您好，您的邮轮登船资料尚未完整，请尽快补充护照首页、登船表、紧急联系人和岸上观光确认信息，以免影响船票生成。',
+          batchText: '已完成当前邮轮名单登船资料审查，发现1条登船表缺失、1条船票待确认、1条岸上观光待核。',
+          rows: [
+            ['缺失', 'CZ20240801001', '王强', '理想号地中海邮轮', '邮轮团期', 'tag tag-purple', '2024-08-01', '护照', 'E345****7890', '2029-11-16', '登船表/紧急联系人', '缺失', 'tag tag-orange', '警告91%', '警告', '登船表缺少紧急联系人，船票暂不可生成。', '缺登船紧急联系人', '编辑', '催补'],
+            ['待审核', 'CZ20240801001', '李梅', '理想号地中海邮轮', '邮轮团期', 'tag tag-purple', '2024-08-01', '护照', 'E234****6789', '2030-09-20', '船票资料', '待审核', 'tag tag-blue', '待人工76%', '待人工', '护照资料可识别，待船方回填船票号。', '船票待确认', '审核', ''],
+            ['完整', 'CZ20240801001', '张建国', '理想号地中海邮轮', '邮轮团期', 'tag tag-purple', '2024-08-01', '护照', 'E123****5678', '2031-05-12', '岸上观光确认', '完整', 'tag tag-green', '通过98%', '通过', '护照有效期满足邮轮入境要求，登船表字段完整。', '-', '详情', ''],
+            ['完整', 'CZ20240801001', '吴芳', '理想号地中海邮轮', '邮轮团期', 'tag tag-purple', '2024-08-01', '护照', 'E678****0123', '2031-02-28', '登船资料', '完整', 'tag tag-green', '通过97%', '通过', '登船资料、舱号和岸上游偏好均已匹配。', '-', '详情', '']
+          ]
+        },
+        train: {
+          keywordPlaceholder: '团号/游客姓名/身份证号',
+          docOptions: ['全部证件', '身份证', '实名制资料', '保险资料'],
+          editSummary: 'TR20240805001 | 东方丝路专列 | 实名制资料',
+          remindSummary: '将向实名制资料缺失或铺位待确认游客发送提醒',
+          remindText: '您好，您的专列实名制资料尚未完整，请尽快确认身份证信息、上下车站和紧急联系人，以免影响铺位分配及铁路实名制核验。',
+          batchText: '已完成当前专列名单实名制资料审查，发现1条证件临期、1条待分铺、1条上下车站待确认。',
+          rows: [
+            ['缺失', 'TR20240805001', '王强', '东方丝路专列', '专列团期', 'tag tag-orange', '2024-08-05', '身份证', '110103****9012', '2024-09-08', '实名制/上下车站', '缺失', 'tag tag-orange', '警告92%', '警告', '身份证有效期临近，且上车站需人工确认。', '证件临期、待确认上车站', '编辑', '催补'],
+            ['待审核', 'TR20240805001', '孙丽', '东方丝路专列', '专列团期', 'tag tag-orange', '2024-08-05', '身份证', '320102****0703', '2031-12-30', '铺位资料', '待审核', 'tag tag-blue', '待人工79%', '待人工', '实名制资料完整，待计调确认包厢铺位。', '铺位待确认', '审核', ''],
+            ['完整', 'TR20240805001', '郑华', '东方丝路专列', '专列团期', 'tag tag-orange', '2024-08-05', '身份证', '110101****0415', '2035-05-12', '保险实名信息', '完整', 'tag tag-green', '通过98%', '通过', '实名制证件、上下车站和保险信息均匹配。', '-', '详情', ''],
+            ['完整', 'TR20240805001', '周伟', '东方丝路专列', '专列团期', 'tag tag-orange', '2024-08-05', '身份证', '330106****0219', '2034-09-20', '随车服务资料', '完整', 'tag tag-green', '通过97%', '通过', '实名制资料与铺位分配一致。', '-', '详情', '']
+          ]
+        }
+      };
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeType(value) {
+        var text = String(value || '').toLowerCase();
+        if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
+        if (text.indexOf('train') >= 0 || text.indexOf('专列') >= 0 || text.indexOf('tr') === 0) return 'train';
+        return 'group';
+      }
+
+      function renderAction(row) {
+        var remind = row[18] ? '<button type="button" data-open-document-remind>' + escapeHtml(row[18]) + '</button>' : '';
+        return '<div class="table-action"><button type="button" data-open-document-edit class="table-action-primary">' + escapeHtml(row[17]) + '</button>' + remind + '</div>';
+      }
+
+      function renderDocumentConfig(config) {
+        activeDocumentConfig = config;
+        document.getElementById('docKeyword').placeholder = config.keywordPlaceholder;
+        document.getElementById('docType').innerHTML = config.docOptions.map(function (item) { return '<option>' + escapeHtml(item) + '</option>'; }).join('');
+        document.querySelector('#documentEditModal .readonly-summary').textContent = config.editSummary;
+        document.querySelector('#documentRemindModal .readonly-summary').textContent = config.remindSummary;
+        document.getElementById('docRemindText').value = config.remindText;
+        documentRows.innerHTML = config.rows.map(function (row) {
+          return '<tr data-tab-status="' + escapeHtml(row[0]) + '"><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td><td><span class="' + escapeHtml(row[5]) + '">' + escapeHtml(row[4]) + '</span></td><td>' + escapeHtml(row[6]) + '</td><td>' + escapeHtml(row[7]) + '</td><td>' + escapeHtml(row[8]) + '</td><td>' + escapeHtml(row[9]) + '</td><td>' + escapeHtml(row[10]) + '</td><td><span class="' + escapeHtml(row[12]) + '">' + escapeHtml(row[11]) + '</span></td><td><div class="table-action"><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item link-button" type="button" data-ai-doc-detail data-result="' + escapeHtml(row[14]) + '" data-reason="' + escapeHtml(row[15]) + '">' + escapeHtml(row[13]) + '</button></span></span></div></td><td>' + escapeHtml(row[16]) + '</td><td>' + renderAction(row) + '</td></tr>';
+        }).join('');
+        if (window.caesarInitFulfillmentCommon) window.caesarInitFulfillmentCommon(document);
+        document.querySelectorAll('.tab-bar[data-filter-tabs]').forEach(function (tabBar) { delete tabBar.dataset.filterTabsReady; });
+        if (window.caesarRefreshListSurfaces) window.caesarRefreshListSurfaces();
+      }
+
+      if (pageParams.has('type')) {
+        renderDocumentConfig(documentConfigs[normalizeType(pageParams.get('type'))]);
+      }
 
 
 
@@ -111,7 +199,7 @@
       document.getElementById('openAiDocumentCheck').addEventListener('click', function () {
         aiDocumentResult.textContent = '批量审查';
         aiDocumentResult.className = 'tag tag-blue';
-        aiDocumentReason.textContent = '已完成当前列表6条证件资料审查，发现2条警告、1条拒绝、1条待人工。';
+        aiDocumentReason.textContent = activeDocumentConfig ? activeDocumentConfig.batchText : '已完成当前列表6条证件资料审查，发现2条警告、1条拒绝、1条待人工。';
         window.caesarUI.openLayer(aiDocumentModal);
       });
 

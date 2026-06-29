@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>付款申请 - 凯撒旅游</title>
+  <title>成本付款 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <section class="list-page-panel">
     <div class="list-page-head">
       <div>
-        <h1 class="page-title">付款申请</h1>
+        <h1 class="page-title">成本付款</h1>
       </div>
 
     </div>
@@ -20,13 +20,18 @@
         </section>
 
 <section class="list-surface fulfillment-payment-apply-list-surface" data-list-surface>
+  <nav class="tab-bar list-surface-tabs" aria-label="成本付款流程">
+    <a class="tab-item" href="fulfillment-cost.html?tab=cost">成本确认</a>
+    <a class="tab-item" href="fulfillment-cost.html?tab=fees">供应商费用</a>
+    <button class="tab-item active" type="button">付款申请</button>
+  </nav>
 <section class="filter-card filter-card-compact fulfillment-cost-filter list-surface-filter" aria-label="付款申请筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <button id="openPaymentApplyCreate" class="btn btn-primary" type="button">新建付款申请</button>
       </div>
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="paymentApplyKeyword">团号/供应商/申请单</label><input id="paymentApplyKeyword" type="search" placeholder="团号/供应商/申请单"></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentApplyProductType">产品类型</label><select id="paymentApplyProductType"><option>全部类型</option><option>普通团期</option><option>邮轮团期</option><option>专列团期</option><option>研学团期</option></select></div>
+        <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentApplyProductType">线路类型</label><select id="paymentApplyProductType"><option>全部类型</option><option>普通团期</option><option>邮轮团期</option><option>专列团期</option><option>研学团期</option></select></div>
         <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentApplyStatus">申请状态</label><select id="paymentApplyStatus"><option>全部状态</option><option>草稿</option><option>审批中</option><option>审批通过</option><option>已驳回</option><option>已进入财务</option></select></div>
         <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentApplicant">申请人</label><select id="paymentApplicant"><option>全部申请人</option><option>王芳</option><option>陈刚</option><option>李铭</option></select></div>
         <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">申请时间</label><div class="date-range"><input type="date" aria-label="申请开始日期"><span>至</span><input type="date" aria-label="申请结束日期"></div></div>
@@ -49,8 +54,8 @@
       <thead>
         <tr>
           <th>申请单号</th>
-          <th>产品类型</th>
-          <th>团号/产品</th>
+          <th>线路类型</th>
+          <th>团号/线路</th>
           <th>供应商</th>
           <th>费用项目</th>
           <th>已确认金额</th>
@@ -147,7 +152,7 @@
           <div class="description-item"><div class="description-label">申请状态</div><div class="description-value"><span class="tag tag-green">审批通过</span></div></div>
           <div class="description-item"><div class="description-label">付款对象</div><div class="description-value">欧洲联合地接社</div></div>
           <div class="description-item"><div class="description-label">申请金额</div><div class="description-value amount-strong">¥112,000</div></div>
-          <div class="description-item"><div class="description-label">产品类型</div><div class="description-value">普通团期</div></div>
+          <div class="description-item"><div class="description-label">线路类型</div><div class="description-value">普通团期</div></div>
           <div class="description-item"><div class="description-label">团号</div><div class="description-value">EU-FRA-20250610-001 法瑞意经典15日游</div></div>
           <div class="description-item"><div class="description-label">财务承接</div><div class="description-value"><span class="tag tag-blue">已进入财务付款队列</span></div></div>
         </div>
@@ -169,6 +174,142 @@
       var viewDrawer = document.getElementById('paymentApplyViewDrawer');
       var financeLink = document.getElementById('paymentApplyFinanceLink');
       var applyAmount = document.getElementById('applyAmount');
+      var paymentApplyRows = document.getElementById('paymentApplyRows');
+      var pageParams = new URLSearchParams(window.location.search);
+      var activePaymentConfig = null;
+
+      var paymentConfigs = {
+        group: {
+          rows: [
+            ['已进入财务 审批通过', 'PAY-REQ-20240710-001', '普通团期', 'tag tag-blue', 'EU20240715001', '欧洲十国经典游', '欧洲地接ABC', '地接服务费', '¥38,640', '¥38,640', '2024-07-12', '王芳', '审批通过', 'tag tag-green', '已进入财务付款队列', 'tag tag-blue', '财务', 'view']
+          ],
+          drawerTitle: '新建跟团付款申请',
+          summary: '业务侧付款申请：选择跟团已确认供应商费用，提交后进入审批；审批通过后由财务执行付款。',
+          schedule: 'EU20240715001 欧洲十国经典游',
+          supplier: '欧洲地接ABC',
+          fees: [
+            ['地接服务费', '¥38,640', '回团后尾款', '38640', true],
+            ['签证费用', '¥14,300', '出签后付款', '14300', false]
+          ],
+          amount: '38640',
+          expectedDate: '2024-07-12',
+          reason: '跟团游地接服务费，供应商费用已完成业务确认。',
+          approval: '计调负责人 王芳 → 出团运营主管 陈刚 → 财务主管 刘洋',
+          financeText: '✅ 财务联动：已生成付款申请 PAY-REQ-20240710-001，状态：审批中；审批通过后将自动进入财务付款执行队列。',
+          view: ['PAY-REQ-20240710-001', '审批通过', 'tag tag-green', '欧洲地接ABC', '¥38,640', '普通团期', 'EU20240715001 欧洲十国经典游', '已进入财务付款队列', 'tag tag-blue']
+        },
+        cruise: {
+          rows: [
+            ['审批中', 'PAY-REQ-20240718-006', '邮轮团期', 'tag tag-purple', 'CZ20240801001', '理想号地中海邮轮', '理想邮轮', '船票采购', '¥1,325,600', '¥1,325,600', '2024-07-20', '赵明', '审批中', 'tag tag-blue', '待审批通过', 'tag tag-gray', '详情', 'view']
+          ],
+          drawerTitle: '新建邮轮付款申请',
+          summary: '业务侧付款申请：邮轮费用需绑定船方账单、舱型采购明细和付款节点；审批通过后由财务执行付款。',
+          schedule: 'CZ20240801001 理想号地中海邮轮',
+          supplier: '理想邮轮',
+          fees: [
+            ['船票采购', '¥1,325,600', '开航前30日', '1325600', true],
+            ['港务税费', '¥125,800', '开航前15日', '125800', false],
+            ['船方服务费', '¥48,000', '开航前10日', '48000', false]
+          ],
+          amount: '1325600',
+          expectedDate: '2024-07-20',
+          reason: '邮轮船票采购费用，船方账单已按舱型采购明细完成业务确认。',
+          approval: '邮轮计调 赵明 → 邮轮中心负责人 王强 → 财务主管 刘洋',
+          financeText: '✅ 财务联动：已生成付款申请 PAY-REQ-20240718-006，状态：审批中；审批通过后将自动进入财务付款执行队列。',
+          view: ['PAY-REQ-20240718-006', '审批中', 'tag tag-blue', '理想邮轮', '¥1,325,600', '邮轮团期', 'CZ20240801001 理想号地中海邮轮', '待审批通过', 'tag tag-gray']
+        },
+        train: {
+          rows: [
+            ['草稿', 'PAY-REQ-DRAFT-009', '专列团期', 'tag tag-orange', 'TR20240805001', '东方丝路专列', '西部文旅专列', '包列成本', '¥520,000', '¥520,000', '-', '李铭', '草稿', 'tag tag-gray', '未提交', 'tag tag-gray', '编辑', 'create']
+          ],
+          drawerTitle: '新建专列付款申请',
+          summary: '业务侧付款申请：专列费用需绑定包列协议、车厢铺位明细和发车前付款节点；审批通过后由财务执行付款。',
+          schedule: 'TR20240805001 东方丝路专列',
+          supplier: '西部文旅专列',
+          fees: [
+            ['包列成本', '¥520,000', '发车前20日', '520000', true],
+            ['沿途地接', '¥138,000', '发车前10日', '138000', false],
+            ['随车服务', '¥62,400', '发车前10日', '62400', false]
+          ],
+          amount: '520000',
+          expectedDate: '2024-07-25',
+          reason: '专列团期包列成本，运营商费用已完成业务确认。',
+          approval: '专列计调 李铭 → 出团运营主管 陈刚 → 财务主管 刘洋',
+          financeText: '✅ 财务联动：已生成付款申请 PAY-REQ-20240725-010，状态：审批中；审批通过后将自动进入财务付款执行队列。',
+          view: ['PAY-REQ-DRAFT-009', '草稿', 'tag tag-gray', '西部文旅专列', '¥520,000', '专列团期', 'TR20240805001 东方丝路专列', '未提交', 'tag tag-gray']
+        }
+      };
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeType(value) {
+        var text = String(value || '').toLowerCase();
+        if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
+        if (text.indexOf('train') >= 0 || text.indexOf('专列') >= 0 || text.indexOf('tr') === 0) return 'train';
+        return 'group';
+      }
+
+      function renderPaymentRows(config) {
+        paymentApplyRows.innerHTML = config.rows.map(function (row) {
+          var action = row[17] === 'create'
+            ? '<button type="button" data-open-payment-create class="table-action-primary">' + escapeHtml(row[16]) + '</button>'
+            : '<button type="button" data-open-payment-view class="table-action-primary">' + escapeHtml(row[16]) + '</button>';
+          return '<tr data-tab-status="' + escapeHtml(row[0]) + '"><td>' + escapeHtml(row[1]) + '</td><td><span class="' + escapeHtml(row[3]) + '">' + escapeHtml(row[2]) + '</span></td><td><strong>' + escapeHtml(row[4]) + '</strong><span>' + escapeHtml(row[5]) + '</span></td><td>' + escapeHtml(row[6]) + '</td><td>' + escapeHtml(row[7]) + '</td><td>' + escapeHtml(row[8]) + '</td><td class="amount-strong">' + escapeHtml(row[9]) + '</td><td>' + escapeHtml(row[10]) + '</td><td>' + escapeHtml(row[11]) + '</td><td><span class="' + escapeHtml(row[13]) + '">' + escapeHtml(row[12]) + '</span></td><td><span class="' + escapeHtml(row[15]) + '">' + escapeHtml(row[14]) + '</span></td><td><div class="table-action">' + action + '</div></td></tr>';
+        }).join('');
+        document.querySelector('.fulfillment-payment-apply-list-surface > .pagination span').textContent = '第1-1条/共1条';
+      }
+
+      function renderFeeSelect(config) {
+        document.querySelector('.payment-fee-select').innerHTML = '<div class="payment-fee-select-head"><strong>可申请费用</strong><span>仅展示已完成业务确认且未付款费用</span></div>' + config.fees.map(function (fee) {
+          return '<label><input type="checkbox" data-fee-amount="' + escapeHtml(fee[3]) + '"' + (fee[4] ? ' checked' : '') + '> <span>' + escapeHtml(fee[0]) + '</span><strong>' + escapeHtml(fee[1]) + '</strong><em>' + escapeHtml(fee[2]) + '</em></label>';
+        }).join('');
+      }
+
+      function renderPaymentDrawer(config) {
+        document.getElementById('paymentApplyDrawerTitle').textContent = config.drawerTitle;
+        document.querySelector('#paymentApplyDrawer .readonly-summary').textContent = config.summary;
+        document.getElementById('applySchedule').value = config.schedule;
+        document.getElementById('applySupplier').value = config.supplier;
+        renderFeeSelect(config);
+        document.getElementById('applyAmount').value = config.amount;
+        document.getElementById('expectedPayDate').value = config.expectedDate;
+        document.getElementById('applyReason').value = config.reason;
+        document.querySelector('.payment-approval-preview span').textContent = config.approval;
+        financeLink.textContent = config.financeText;
+        applyAmount = document.getElementById('applyAmount');
+      }
+
+      function renderPaymentView(config) {
+        var values = config.view;
+        var cells = document.querySelectorAll('#paymentApplyViewDrawer .description-value');
+        cells[0].textContent = values[0];
+        cells[1].innerHTML = '<span class="' + escapeHtml(values[2]) + '">' + escapeHtml(values[1]) + '</span>';
+        cells[2].textContent = values[3];
+        cells[3].textContent = values[4];
+        cells[4].textContent = values[5];
+        cells[5].textContent = values[6];
+        cells[6].innerHTML = '<span class="' + escapeHtml(values[8]) + '">' + escapeHtml(values[7]) + '</span>';
+      }
+
+      function applyPaymentConfig(typeValue) {
+        activePaymentConfig = paymentConfigs[normalizeType(typeValue)] || paymentConfigs.group;
+        renderPaymentRows(activePaymentConfig);
+        renderPaymentDrawer(activePaymentConfig);
+        renderPaymentView(activePaymentConfig);
+        document.querySelectorAll('.tab-bar[data-filter-tabs]').forEach(function (tabBar) { delete tabBar.dataset.filterTabsReady; });
+        if (window.caesarRefreshListSurfaces) window.caesarRefreshListSurfaces();
+      }
+
+      if (pageParams.has('type')) {
+        applyPaymentConfig(pageParams.get('type'));
+      }
 
 
 

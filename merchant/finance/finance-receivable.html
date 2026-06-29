@@ -22,7 +22,7 @@
 <section class="filter-card filter-card-compact receivable-filter list-surface-filter" aria-label="应收单筛选">
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="receivableKeyword">应收单/订单/客户/线路</label><input id="receivableKeyword" type="search" placeholder="应收单/订单/客户/线路"></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="receivableProductType">产品类型</label><select id="receivableProductType"><option>全部类型</option><option>自营产品</option><option>外采产品</option><option>邮轮产品</option><option>专列产品</option><option>自由行</option><option>单项委托</option><option>研学产品</option></select></div>
+        <div class="filter-item filter-item-sm"><label class="sr-only" for="receivableProductType">线路类型</label><select id="receivableProductType"><option>全部类型</option><option>自营线路</option><option>外采产品</option><option>邮轮线路</option><option>专列线路</option><option>自由行</option><option>单项服务</option><option>研学线路</option></select></div>
         <div class="filter-item filter-item-sm"><label class="sr-only" for="receivableType">应收类型</label><select id="receivableType"><option>全部类型</option><option>定金</option><option>尾款</option><option>补差</option><option>渠道结算</option><option>退款冲销</option></select></div>
         <div class="filter-item filter-item-sm"><label class="sr-only" for="receivableStatus">收款状态</label><select id="receivableStatus"><option>全部状态</option><option>待收款</option><option>部分收款</option><option>已收清</option><option>逾期</option><option>坏账</option></select></div>
         <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">到期日期</label><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
@@ -47,7 +47,7 @@
           <th>应收单号</th>
           <th>来源订单</th>
           <th>客户/渠道</th>
-          <th>产品/线路</th>
+          <th>线路/方案</th>
           <th>应收类型</th>
           <th>应收金额</th>
           <th>已收</th>
@@ -84,8 +84,8 @@
           <div class="description-item"><div class="description-label">应收单号</div><div class="description-value">SK20240618001</div></div>
           <div class="description-item"><div class="description-label">来源订单</div><div class="description-value">KS2024061801</div></div>
           <div class="description-item"><div class="description-label">客户</div><div class="description-value">张建国</div></div>
-          <div class="description-item"><div class="description-label">产品类型</div><div class="description-value">自营产品</div></div>
-          <div class="description-item"><div class="description-label">产品/线路</div><div class="description-value">欧洲十国经典游 / 法德意A线</div></div>
+          <div class="description-item"><div class="description-label">线路类型</div><div class="description-value">自营线路</div></div>
+          <div class="description-item"><div class="description-label">线路/方案</div><div class="description-value">欧洲十国经典游 / 法德意A线</div></div>
           <div class="description-item"><div class="description-label">团期</div><div class="description-value">EU-FRA-20250720-001</div></div>
           <div class="description-item"><div class="description-label">应收类型</div><div class="description-value">尾款</div></div>
           <div class="description-item"><div class="description-label">到期日</div><div class="description-value">2026-06-25</div></div>
@@ -168,13 +168,138 @@
       var detailModal = document.getElementById('receivableDetailModal');
       var confirmModal = document.getElementById('confirmReceivableModal');
       var badDebtModal = document.getElementById('badDebtModal');
+      var receivableDetailGrid = document.querySelector('#receivableDetailModal .order-description-grid');
+      var receivableRecordBody = document.querySelector('#receivableDetailModal .receivable-order-table tbody');
+      var receivableFinanceBox = document.querySelector('#receivableDetailModal .finance-link-box');
+      var confirmReceivableText = document.querySelector('#confirmReceivableModal .modal-center-text');
+      var confirmReceivableAlert = document.querySelector('#confirmReceivableModal .alert');
+      var badDebtSummary = document.querySelector('#badDebtModal .readonly-summary');
+      var activeReceivable = null;
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function getCellText(cells, index) {
+        var cell = cells[index];
+        return cell ? cell.textContent.trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function normalizeReceivableType(productText) {
+        if (productText.indexOf('邮轮') >= 0 || productText.indexOf('CR-') >= 0) return 'cruise';
+        if (productText.indexOf('专列') >= 0 || productText.indexOf('TR-') >= 0) return 'train';
+        if (productText.indexOf('自由行') >= 0) return 'free';
+        if (productText.indexOf('签证') >= 0 || productText.indexOf('单项服务') >= 0) return 'entrust';
+        return 'group';
+      }
+
+      function getReceivableConfig(type, data) {
+        var configs = {
+          group: {
+            typeLabel: '<span class="tag tag-blue">自营线路</span>',
+            scene: '团费尾款/补差',
+            keyRule: '按团期锁位和订单价格确认应收，收清后进入出团执行和回团利润核算。',
+            finance: '财务联动：该应收单来自订单 ' + data.orderNo + '，认款入账后自动更新订单收款状态，并进入后续回团结算与利润核算。'
+          },
+          cruise: {
+            typeLabel: '<span class="tag tag-purple">邮轮线路</span>',
+            scene: '舱房尾款/船票款/港务费',
+            keyRule: '舱房尾款收清后推进船票确认；港务费随订单冻结，取消退款时按船方扣损规则冲减。',
+            finance: '财务联动：该邮轮应收单冲销后，同步更新舱房尾款状态；船票应付、港务费扣减和退款规则继续保留关联。'
+          },
+          train: {
+            typeLabel: '<span class="tag tag-orange">专列线路</span>',
+            scene: '铺位尾款/包厢补差',
+            keyRule: '按专列班期和铺位结构确认应收，运营商回传铺位后如发生差异，在应付和成本侧调整。',
+            finance: '财务联动：该专列应收单冲销后，同步更新铺位销售收入；运营商应付和铺位差异继续进入应付核对。'
+          },
+          free: {
+            typeLabel: '<span class="tag tag-gray">自由行</span>',
+            scene: '自由行服务款',
+            keyRule: '按订单确认的酒店、机票和服务费资源确认应收。',
+            finance: '财务联动：该应收单来自订单 ' + data.orderNo + '，收清后进入结算口径。'
+          },
+          entrust: {
+            typeLabel: '<span class="tag tag-gray">单项服务</span>',
+            scene: '单项服务费',
+            keyRule: '按单项服务确认单确认应收，办理成本在应付侧核算。',
+            finance: '财务联动：该应收单来自订单 ' + data.orderNo + '，收清后进入单项服务收入确认。'
+          }
+        };
+        return configs[type] || configs.group;
+      }
+
+      function renderGrid(grid, items) {
+        if (!grid) return;
+        grid.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item[2] ? ' full' : '') + '"><div class="description-label">' + item[0] + '</div><div class="description-value">' + item[1] + '</div></div>';
+        }).join('');
+      }
+
+      function renderReceiptRecords(data) {
+        if (!receivableRecordBody) return;
+        if (data.received === '¥0') {
+          receivableRecordBody.innerHTML = '<tr><td colspan="6" class="text-muted">暂无收款记录，待认款入账后自动生成收款单。</td></tr>';
+          return;
+        }
+        var receiptNo = 'SKR-' + data.receivableNo;
+        receivableRecordBody.innerHTML = '<tr><td>' + escapeHtml(receiptNo) + '</td><td>CMBC20260625001</td><td>2026-06-25 09:18</td><td class="amount-strong">' + escapeHtml(data.received) + '</td><td>认款入账</td><td><span class="' + (data.ncStatus.indexOf('已推送') >= 0 ? 'tag tag-green' : 'tag tag-orange') + '">' + escapeHtml(data.ncStatus) + '</span></td></tr>';
+      }
+
+      function renderReceivableDetail(button) {
+        var row = button.closest('tr');
+        if (!row) return;
+        var cells = row.children;
+        var productText = getCellText(cells, 3);
+        var data = {
+          receivableNo: getCellText(cells, 0),
+          orderNo: getCellText(cells, 1),
+          customer: getCellText(cells, 2),
+          productText: productText,
+          receivableType: getCellText(cells, 4),
+          amount: getCellText(cells, 5),
+          received: getCellText(cells, 6),
+          pending: getCellText(cells, 7),
+          dueDate: getCellText(cells, 8),
+          status: getCellText(cells, 9),
+          ncStatus: getCellText(cells, 10)
+        };
+        activeReceivable = data;
+        var config = getReceivableConfig(normalizeReceivableType(productText), data);
+        renderGrid(receivableDetailGrid, [
+          ['应收单号', escapeHtml(data.receivableNo)],
+          ['来源订单', escapeHtml(data.orderNo)],
+          ['客户/渠道', escapeHtml(data.customer)],
+          ['线路类型', config.typeLabel],
+          ['线路/方案', escapeHtml(data.productText), true],
+          ['应收类型', escapeHtml(data.receivableType)],
+          ['业务口径', escapeHtml(config.scene)],
+          ['到期日', escapeHtml(data.dueDate)],
+          ['应收金额', '<span class="amount-strong">' + escapeHtml(data.amount) + '</span>'],
+          ['已收金额', escapeHtml(data.received)],
+          ['待收金额', escapeHtml(data.pending)],
+          ['收款状态', escapeHtml(data.status)],
+          ['NC状态', escapeHtml(data.ncStatus)],
+          ['关键规则', escapeHtml(config.keyRule), true]
+        ]);
+        renderReceiptRecords(data);
+        if (receivableFinanceBox) receivableFinanceBox.textContent = config.finance;
+        if (confirmReceivableText) confirmReceivableText.textContent = '确认应收单 ' + data.receivableNo + ' 已收清，共 ' + data.amount + '？';
+        if (confirmReceivableAlert) confirmReceivableAlert.textContent = '确认后：锁定应收单，订单收款状态更新，并写入对应线路类型的收入和利润口径。';
+        if (badDebtSummary) badDebtSummary.textContent = data.receivableNo + ' 待收 ' + data.pending + '，确认标记为坏账？';
+      }
 
 
 
 
 
       document.querySelectorAll('[data-open-receivable-detail]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.openLayer(detailModal); });
+        button.addEventListener('click', function () {
+          renderReceivableDetail(button);
+          window.caesarUI.openLayer(detailModal);
+        });
       });
 
       document.querySelectorAll('[data-open-confirm-receivable]').forEach(function (button) {
@@ -188,6 +313,7 @@
       document.querySelectorAll('[data-open-bad-debt]').forEach(function (button) {
         button.addEventListener('click', function () {
           var currentModal = button.closest('.modal-overlay');
+          if (!currentModal) renderReceivableDetail(button);
           if (currentModal && currentModal !== badDebtModal) window.caesarUI.closeLayer(currentModal);
           window.caesarUI.openLayer(badDebtModal);
         });

@@ -1,4 +1,4 @@
-window.CAESAR_DEMO_PHASE = "phase-1";
+window.CAESAR_DEMO_PHASE = "full";
 
 window.CAESAR_DEMO_CONFIG = {
   phase: window.CAESAR_DEMO_PHASE,
@@ -11,10 +11,10 @@ window.CAESAR_DEMO_CONFIG = {
   },
   phases: {
     merchant: {
-      "phase-1": ["工作", "资源", "产品"],
-      "phase-2": ["工作", "资源", "产品", "出团", "销售", "客户"],
-      "phase-3": ["工作", "资源", "产品", "出团", "销售", "客户", "渠道", "财务", "审批"],
-      "phase-4": ["工作", "资源", "产品", "出团", "销售", "客户", "渠道", "财务", "审批", "AI", "企业配置"],
+      "phase-1": ["工作", "产品中心"],
+      "phase-2": ["工作", "产品中心", "订单中心", "门店中心", "客户"],
+      "phase-3": ["工作", "产品中心", "订单中心", "门店中心", "客户", "渠道中心", "财务", "审批"],
+      "phase-4": ["工作", "产品中心", "订单中心", "门店中心", "客户", "渠道中心", "财务", "审批", "AI", "系统设置"],
       full: "*",
     },
     operator: {

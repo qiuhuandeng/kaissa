@@ -13,6 +13,8 @@ const excludedPages = new Set([
 ]);
 const safeSharedScripts = new Set([
   "shared/fulfillment-common.js",
+  "shared/route-edit-page.js",
+  "shared/schedule-builder-page.js",
 ]);
 
 function walk(dir) {
