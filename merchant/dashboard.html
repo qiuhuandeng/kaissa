@@ -48,7 +48,7 @@
       <div class="ops-focus-main">
         <section class="kpi-grid kpi-grid-4 ops-todo-kpis" aria-label="今日待办事项">
           <article class="kpi-card orange">
-            <div class="kpi-num">9项</div>
+            <div id="opsApprovalKpi" class="kpi-num">9项</div>
             <div class="kpi-label">待我审批</div>
           </article>
           <article class="kpi-card orange">
@@ -72,7 +72,7 @@
                 <div class="card-title">团期日历视图</div>
                 <div class="ops-calendar-month">2025年6月</div>
               </div>
-              <div class="ops-calendar-legend" aria-label="日历说明">
+              <div class="ops-calendar-legend" aria-label="日历状态">
                 <span><i class="ops-dot green"></i>正常销售中</span>
                 <span><i class="ops-dot yellow"></i>名额告急</span>
                 <span><i class="ops-dot red"></i>有异常</span>
@@ -168,7 +168,7 @@
               <div class="card-title">待办事项列表</div>
               <a class="link-primary" href="approval/approvals.html?view=todo">查看审批</a>
             </div>
-            <ol class="ops-task-list">
+            <ol id="opsTaskList" class="ops-task-list">
           <li class="ops-task-item">
             <span class="ops-priority-dot emergency">审</span>
             <div>
@@ -347,6 +347,178 @@
       var aiOpenButton = document.querySelector("[data-open-ops-ai]");
       var aiCloseButton = document.querySelector("[data-close-ops-ai]");
       var aiInput = document.getElementById("opsAiInput");
+      var taskList = document.getElementById("opsTaskList");
+      var approvalKpi = document.getElementById("opsApprovalKpi");
+
+      function escapeHtml(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "\"": "&quot;",
+            "'": "&#39;"
+          }[char];
+        });
+      }
+
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || "{}");
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function compactNo(value, fallback) {
+        var text = String(value || fallback || "");
+        var digits = text.replace(/\D/g, "").slice(-8);
+        if (digits) return digits;
+        return (text.replace(/[^a-z0-9]/gi, "").slice(-8) || "000000").toUpperCase();
+      }
+
+      function approvalNo(prefix, value) {
+        return "APR-" + prefix + "-" + compactNo(value, prefix);
+      }
+
+      function applyNoFrom(value) {
+        return "PAY-" + compactNo(value, "20260629");
+      }
+
+      function addApprovalTask(tasks, seen, task) {
+        if (!task || !task.approvalNo || seen[task.approvalNo]) return;
+        var approvals = readStored("caesarApprovalResults");
+        var result = approvals[task.approvalNo];
+        if (result && (result.status === "approved" || result.status === "rejected")) return;
+        seen[task.approvalNo] = true;
+        tasks.push(task);
+      }
+
+      function collectApprovalTasks() {
+        var tasks = [];
+        var seen = {};
+        var storedTasks = readStored("caesarApprovalTasks").tasks || {};
+        var ncResults = readStored("caesarNcPushResults");
+        var invoiceTasks = readStored("caesarInvoiceTasks");
+        var outsourceResults = readStored("caesarOutsourceResults");
+        var customResults = readStored("caesarCustomProjectResults");
+        var singleResults = readStored("caesarSingleServiceResults");
+
+        Object.keys(storedTasks).forEach(function (approvalNoValue) {
+          var task = storedTasks[approvalNoValue] || {};
+          if (task.status === "已通过" || task.status === "已拒绝") return;
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: task.approvalType || "审批",
+            desc: (task.approvalType || "审批") + " " + approvalNoValue + " 等待处理，" + (task.productText || task.businessNo || "-"),
+            meta: "关联单据：" + (task.businessNo || "-"),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: task.source === "财务" ? "emergency" : "remind"
+          });
+        });
+
+        Object.keys(ncResults.payables || {}).forEach(function (payableNo) {
+          var item = ncResults.payables[payableNo] || {};
+          var approvalNoValue = approvalNo("PAY", payableNo);
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: "付款申请",
+            desc: "付款申请 " + approvalNoValue + " 等待审批，" + (item.supplier || item.deduction || "供应商") + " " + (item.amount || "¥0"),
+            meta: "关联单据：" + (item.businessNo || payableNo) + " / " + applyNoFrom(payableNo),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: "emergency"
+          });
+        });
+
+        Object.keys(invoiceTasks.supplier || {}).forEach(function (payableNo) {
+          if ((ncResults.payables || {})[payableNo]) return;
+          var item = invoiceTasks.supplier[payableNo] || {};
+          var approvalNoValue = approvalNo("PAY", payableNo);
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: "付款申请",
+            desc: "付款申请 " + approvalNoValue + " 等待审批，" + (item.supplier || "供应商") + " " + (item.payableAmount || item.invoiceAmount || "¥0"),
+            meta: "关联单据：" + (item.payableNo || payableNo) + " / " + applyNoFrom(payableNo),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: "emergency"
+          });
+        });
+
+        Object.keys(ncResults.payments || {}).forEach(function (businessNo) {
+          var item = ncResults.payments[businessNo] || {};
+          if (item.sourceType && item.sourceType !== "结算") return;
+          var approvalNoValue = approvalNo("JS", businessNo);
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: "结算确认",
+            desc: "结算确认 " + approvalNoValue + " 等待复核，" + (item.productText || item.sourceNo || "-"),
+            meta: "关联单据：" + (item.businessNo || businessNo) + " / " + (item.voucherNo || "NC待生成"),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: "remind"
+          });
+        });
+
+        Object.keys(outsourceResults.products || {}).forEach(function (productNo) {
+          var item = outsourceResults.products[productNo] || {};
+          if (!item.packageStatus || item.financeStatus === "已推送") return;
+          var approvalNoValue = approvalNo("OUT", productNo);
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: "线路发布",
+            desc: "外采产品 " + approvalNoValue + " 等待发布审批，" + (item.productName || productNo),
+            meta: "采购价：" + (item.purchasePrice || item.purchaseAmount || "-") + " / 销售价：" + (item.packagePrice || item.saleAmount || "-"),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: "remind"
+          });
+        });
+
+        Object.keys(customResults.projects || {}).forEach(function (projectNo) {
+          var item = customResults.projects[projectNo] || {};
+          if (!item.settlementNo && !item.quoteStatus && !item.financeGenerated) return;
+          var approvalNoValue = approvalNo("MICE", item.settlementNo || projectNo);
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: "结算确认",
+            desc: "MICE项目 " + approvalNoValue + " 等待结算审批，" + (item.projectName || item.productText || projectNo),
+            meta: "关联单据：" + (item.settlementNo || projectNo),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: "remind"
+          });
+        });
+
+        Object.keys(singleResults.services || {}).forEach(function (serviceNo) {
+          var item = singleResults.services[serviceNo] || {};
+          if (!item.financeGenerated) return;
+          var approvalNoValue = approvalNo("SVC", item.payableNo || serviceNo);
+          addApprovalTask(tasks, seen, {
+            approvalNo: approvalNoValue,
+            matter: "付款申请",
+            desc: "单项服务 " + approvalNoValue + " 等待付款审批，" + (item.productText || item.serviceType || serviceNo),
+            meta: "关联单据：" + (item.payableNo || serviceNo) + " / " + applyNoFrom(item.payableNo || serviceNo),
+            href: "approval/approvals.html?view=todo&approvalNo=" + encodeURIComponent(approvalNoValue),
+            priority: "emergency"
+          });
+        });
+
+        return tasks;
+      }
+
+      function renderApprovalTasks() {
+        var tasks = collectApprovalTasks();
+        if (approvalKpi) approvalKpi.textContent = String(9 + tasks.length) + "项";
+        if (!taskList || !tasks.length) return;
+        taskList.insertAdjacentHTML("afterbegin", tasks.slice(0, 8).map(function (task) {
+          return [
+            '<li class="ops-task-item" data-dynamic-approval-task="' + escapeHtml(task.approvalNo) + '">',
+            '<span class="ops-priority-dot ' + escapeHtml(task.priority || "remind") + '">审</span>',
+            '<div>',
+            '<div class="ops-task-desc">' + escapeHtml(task.desc) + '</div>',
+            '<div class="ops-task-meta"><span>' + escapeHtml(task.meta) + '</span><a class="link-primary" href="' + escapeHtml(task.href) + '">处理</a></div>',
+            '</div>',
+            '</li>'
+          ].join("");
+        }).join(""));
+      }
 
       function setAiOpen(open) {
         if (!focusLayout || !aiDock || !aiOpenButton) return;
@@ -424,6 +596,8 @@
           }
         });
       });
+
+      renderApprovalTasks();
     })();
   </script>
 </body>

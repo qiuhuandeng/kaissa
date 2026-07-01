@@ -1236,7 +1236,13 @@
 
   function isEmptyListPageShell(panel) {
     if (!panel || !panel.matches(".list-page-panel")) return false;
-    return Boolean(panel.querySelector(":scope > .list-page-head"))
+    const pageHead = panel.querySelector(":scope > .list-page-head");
+    if (!pageHead) return false;
+    const hasActions = Boolean(pageHead.querySelector(
+      ".btn-group, .page-actions, .list-page-actions, button, a.btn, a[class*='btn'], .dropdown, [data-open], [data-export], [data-bulk-menu-toggle]"
+    ));
+    if (hasActions) return false;
+    return Boolean(pageHead)
       && !panel.querySelector(":scope > .filter-card, :scope > .table-wrap");
   }
 

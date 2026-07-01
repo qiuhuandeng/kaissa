@@ -12,8 +12,8 @@
   <main class="product-review-page">
     <section class="list-page-panel product-review-head">
       <div class="list-page-head">
-        <div>
-          <a class="link-primary" href="approvals.html?view=todo">返回审批中心</a>
+        <div class="page-title-row">
+          <a class="page-back-link" href="approvals.html?view=todo">返回</a>
           <h1 class="page-title">审批详情</h1>
         </div>
         <div class="list-page-actions">
@@ -57,7 +57,7 @@
               <span>收款账户为供应商档案中已认证账户，开户行和账户名与合同一致。</span>
             </div>
             <div>
-              <strong>财务联动</strong>
+              <strong>后续单据</strong>
               <span>审批通过后进入付款执行，上传银行回单后自动生成 NC 付款推送任务。</span>
             </div>
           </div>
@@ -137,7 +137,7 @@
           <div class="competitor-price-list">
             <div>
               <strong>建议通过</strong>
-              <span>单据链路完整，付款金额与应付余额一致，账户校验通过。</span>
+              <span>关联单据齐全，付款金额与应付余额一致，账户校验通过。</span>
             </div>
             <div>
               <strong>需关注</strong>
@@ -173,13 +173,13 @@
         <div class="modal-header">
           <div>
             <h2 id="relatedModalTitle">关联单据</h2>
-            <p class="text-muted">从付款申请回看团期、成本、应付、结算和NC链路</p>
+            <p class="text-muted" id="relatedModalSubtitle">付款申请关联团期、成本、应付、结算和NC记录</p>
           </div>
           <button class="modal-close" type="button" data-close-related aria-label="关闭">×</button>
         </div>
         <div class="modal-body approval-business-modal-body">
           <section class="approval-business-section">
-            <h3>业务链路</h3>
+            <h3>关联单据</h3>
             <div class="approval-mini-grid">
               <div><span>团期</span><strong>EU-FRA-20260720-001</strong></div>
               <div><span>成本单</span><strong>COST-20260620-003</strong></div>
@@ -207,9 +207,23 @@
 
   <script>
     (function () {
+      const params = new URLSearchParams(window.location.search);
       const opinion = document.getElementById("approvalOpinion");
       const toast = document.getElementById("approvalToast");
       const relatedModal = document.getElementById("relatedModal");
+      const readonlySections = Array.from(document.querySelectorAll(".review-readonly-section"));
+      const summaryGrid = document.querySelector(".review-description-grid");
+      const contentTitle = readonlySections[1] && readonlySections[1].querySelector("h2");
+      const contentList = readonlySections[1] && readonlySections[1].querySelector(".review-itinerary-list");
+      const relatedBody = readonlySections[2] && readonlySections[2].querySelector("tbody");
+      const riskList = readonlySections[3] && readonlySections[3].querySelector(".compliance-list");
+      const flowList = readonlySections[4] && readonlySections[4].querySelector(".approval-flow-list");
+      const sideCards = Array.from(document.querySelectorAll(".review-side-card"));
+      const adviceList = sideCards[1] && sideCards[1].querySelector(".competitor-price-list");
+      const nextList = sideCards[2] && sideCards[2].querySelector(".compliance-list");
+      const relatedGrid = relatedModal.querySelector(".approval-mini-grid");
+      const relatedChecks = relatedModal.querySelector(".approval-check-list");
+      let currentApproval;
 
       function showToast(message) {
         toast.textContent = message;
@@ -217,6 +231,579 @@
         window.setTimeout(() => {
           toast.hidden = true;
         }, 1800);
+      }
+
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || "{}");
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeStored(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;"
+        })[char]);
+      }
+
+      function compactNo(value, fallback) {
+        const text = String(value || fallback || "");
+        const digits = text.replace(/\D/g, "").slice(-8);
+        return digits || (text.replace(/[^a-z0-9]/gi, "").slice(-8) || "000000").toUpperCase();
+      }
+
+      function applyNoFrom(value) {
+        return "PAY-" + compactNo(value, "20260629");
+      }
+
+      function pairRows(items) {
+        return items.map((item) => "<div><span>" + escapeHtml(item[0]) + "</span><strong>" + escapeHtml(item[1]) + "</strong></div>").join("");
+      }
+
+      function blockRows(items) {
+        return items.map((item) => "<div><strong>" + escapeHtml(item[0]) + "</strong><span>" + escapeHtml(item[1]) + "</span></div>").join("");
+      }
+
+      function tableRows(items) {
+        return items.map((item) => "<tr><td>" + escapeHtml(item[0]) + "</td><td>" + escapeHtml(item[1]) + "</td><td>" + escapeHtml(item[2]) + "</td><td><span class=\"" + escapeHtml(item[3]) + "\">" + escapeHtml(item[4]) + "</span></td><td>" + escapeHtml(item[5]) + "</td></tr>").join("");
+      }
+
+      const approvalNoMap = {
+        "APR-20260624-018": "product_publish",
+        "APR-20260624-031": "product_publish_cruise",
+        "APR-20260624-035": "product_publish_train",
+        "APR-20260624-030": "team_open_group",
+        "APR-20260624-036": "team_open_cruise",
+        "APR-20260624-032": "team_open_train",
+        "APR-20260624-017": "price_adjust",
+        "APR-20260624-016": "channel_auth",
+        "APR-20260624-039": "cost_diff",
+        "APR-20260624-028": "payment",
+        "APR-20260624-033": "payment_cruise",
+        "APR-20260624-037": "payment_train",
+        "APR-20260624-021": "refund",
+        "APR-20260624-029": "refund_group",
+        "APR-20260624-034": "refund_cruise",
+        "APR-20260624-038": "refund_train",
+        "APR-20260624-025": "bad_debt",
+        "APR-20260624-040": "settlement",
+        "APR-20260623-023": "invoice_red",
+        "APR-20260623-026": "nc_error",
+        "APR-20260623-011": "transfer",
+        "APR-20260623-010": "contract_void",
+        "APR-20260627-008": "org_staff"
+      };
+
+      const templates = {
+        product_publish: {
+          title: "线路发布审批",
+          approvalType: "线路发布",
+          source: "线路",
+          businessNo: "PRD-EU-001",
+          productText: "欧洲十国经典游 / 法德意A线",
+          amount: "发布上线",
+          supplier: "线路产品部",
+          scheduleNo: "EU-FRA-20250720-001",
+          contentTitle: "发布内容",
+          content: [["发布范围", "门店、官网、小程序、指定代理商"], ["方案状态", "线路基础信息、行程方案、费用政策和渠道保护价已维护"], ["价格校验", "成人价¥16,800，渠道保护价¥15,900"], ["后续单据", "通过后进入线路市场，可被团期开排、渠道授权和订单报价引用"]],
+          related: [["线路草稿", "PRD-EU-001", "欧洲十国经典游", "tag tag-orange", "待审批", "王珊"], ["方案版本", "PLAN-EU-A01", "法德意A线", "tag tag-green", "已完成", "王珊"], ["渠道授权", "AUTH-PENDING", "保护价待确认", "tag tag-gray", "未生成", "渠道主管"]],
+          risk: [["渠道价格", "发布后渠道保护价需继续受控。"], ["团期引用", "审批通过前不得开放销售报价。"]],
+          next: [["线路市场", "发布通过后进入统一商品库。"], ["团期开排", "开排时继承线路、方案和费用政策。"], ["渠道授权", "渠道授权通过后才开放指定分销。"]],
+          advice: [["建议通过", "线路资料完整，价格和费用政策可追溯。"], ["需关注", "发布后监控渠道保护价和首批团期毛利。"]],
+          flow: ["产品提交线路发布", "系统完成线路和方案校验", "当前等待线路负责人审批"],
+          opinion: "同意发布。请上线后监控渠道保护价和团期毛利。"
+        },
+        product_publish_cruise: {
+          title: "邮轮线路发布审批",
+          approvalType: "线路发布",
+          source: "线路",
+          businessNo: "PRD-CR-004",
+          productText: "理想号地中海邮轮 / 地中海经典线",
+          amount: "发布上线",
+          supplier: "皇家加勒比",
+          scheduleNo: "CR-MED-20250803-001",
+          contentTitle: "发布内容",
+          content: [["航线方案", "登船港、离船港、岸上游和航程天数已维护"], ["舱房结构", "内舱、海景、阳台、套房已配置价格和配额"], ["费用结构", "船票、港务费、邮轮服务费已拆分"], ["后续单据", "通过后可开排邮轮团期，并承接舱房销售和港务费结算"]],
+          related: [["邮轮线路", "PRD-CR-004", "地中海经典线", "tag tag-orange", "待审批", "赵明"], ["舱型方案", "CABIN-MED-001", "四类舱型", "tag tag-green", "已完成", "赵明"], ["船方合同", "SUP-CR-001", "皇家加勒比", "tag tag-green", "有效", "资源部"]],
+          risk: [["舱房余位", "阳台舱余位低于20间时需限制代理商配额。"], ["港务费", "船方调整港务费会触发价格调整审批。"]],
+          next: [["团期开排", "按舱型生成价格和名额矩阵。"], ["付款申请", "船票或港务费付款需进入付款审批。"], ["NC推送", "付款和结算完成后进入NC队列。"]],
+          advice: [["建议通过", "航线、舱型和费用结构完整。"], ["需关注", "上线后监控港务费、船票出具和舱房余位。"]],
+          flow: ["邮轮线路提交发布", "系统校验舱型和港务费", "当前等待线路负责人审批"],
+          opinion: "同意发布。请重点监控舱房余位和港务费变更。"
+        },
+        product_publish_train: {
+          title: "专列线路发布审批",
+          approvalType: "线路发布",
+          source: "线路",
+          businessNo: "PRD-TR-006",
+          productText: "丝绸之路专列12日 / 西安敦煌乌鲁木齐线",
+          amount: "发布上线",
+          supplier: "西域铁路旅游服务",
+          scheduleNo: "TR-SILK-20250805-001",
+          contentTitle: "发布内容",
+          content: [["线路方案", "始发站、终到站、停靠站和游览节点已维护"], ["铺位结构", "软卧、硬卧、豪华包厢价格和配额已配置"], ["运营商规则", "实名制退改和铺位回传节点已维护"], ["后续单据", "通过后可开排专列班期并承接铺位销售"]],
+          related: [["专列线路", "PRD-TR-006", "丝绸之路专列12日", "tag tag-orange", "待审批", "李铭"], ["铺位方案", "SEAT-TR-001", "软卧/硬卧/包厢", "tag tag-green", "已完成", "李铭"], ["运营商合同", "SUP-TR-001", "西域铁路旅游服务", "tag tag-green", "有效", "资源部"]],
+          risk: [["铺位回传", "铺位号未回传前只能按铺位类型销售。"], ["退改规则", "实名制退铺需保留运营商确认。"]],
+          next: [["团期开排", "按车厢/铺位生成价格和名额矩阵。"], ["成本差异", "运营商调价会触发成本差异审批。"], ["付款申请", "包乘费用付款进入财务审批。"]],
+          advice: [["建议通过", "线路方案和铺位结构完整。"], ["需关注", "上线后监控铺位回传和运营商确认。"]],
+          flow: ["专列线路提交发布", "系统校验铺位结构和运营商规则", "当前等待线路负责人审批"],
+          opinion: "同意发布。请重点监控铺位回传和实名制退改规则。"
+        },
+        team_open_group: {
+          title: "团期开排审批",
+          approvalType: "团期开排审批",
+          source: "出团",
+          businessNo: "TEAM-EU-20250720-001",
+          productText: "欧洲十国经典游 / 法德意A线",
+          amount: "30人 / ¥384,000",
+          supplier: "欧洲地接ABC",
+          scheduleNo: "EU-FRA-20250720-001",
+          contentTitle: "团期开排内容",
+          content: [["团期", "2025-07-20出发，2025-07-31回团"], ["名额", "成人30，儿童占床6，渠道名额已拆分"], ["价格", "成人标准价¥12,800，渠道保护价¥12,200"], ["后续单据", "通过后开放销售订单、名单、收款和团期成本"]],
+          related: [["团期", "EU-FRA-20250720-001", "30人", "tag tag-orange", "待审批", "王珊"], ["线路方案", "PLAN-EU-A01", "法德意A线", "tag tag-green", "已发布", "线路部"], ["成本模板", "COST-TPL-EU", "地接/酒店/车导", "tag tag-blue", "可引用", "周伟"]],
+          risk: [["成团人数", "最低成团人数需和渠道名额保持一致。"], ["渠道名额", "代理商名额不能超过审批额度。"]],
+          next: [["销售订单", "订单占位后扣减团期名额。"], ["收款认款", "订单收款进入应收和认款。"], ["团期成本", "执行前确认预估成本并生成应付。"]],
+          advice: [["建议通过", "名额、价格、渠道分配完整。"], ["需关注", "销售开放前复核最低成团人数。"]],
+          flow: ["计调发起团期开排", "系统校验名额和价格", "当前等待线路负责人审批"],
+          opinion: "同意开排团期。请销售开放前复核渠道名额。"
+        },
+        team_open_cruise: {
+          title: "邮轮团期开排审批",
+          approvalType: "团期开排审批",
+          source: "出团",
+          businessNo: "TEAM-CR-20250803-001",
+          productText: "理想号地中海邮轮 / 地中海东线7晚",
+          amount: "126人 / ¥1,713,600",
+          supplier: "皇家加勒比",
+          scheduleNo: "CR-MED-20250803-001",
+          contentTitle: "航次开排内容",
+          content: [["航次", "2025-08-03开航，8天7晚"], ["舱型", "内舱46、海景32、阳台38、套房10"], ["费用", "船票、港务税、岸上游套餐和邮轮服务费已拆分"], ["后续单据", "通过后按舱型开放销售和付款结算"]],
+          related: [["邮轮团期", "CR-MED-20250803-001", "126人", "tag tag-orange", "待审批", "赵明"], ["舱型矩阵", "CABIN-MED-001", "四类舱型", "tag tag-green", "已配置", "赵明"], ["船方账单", "BILL-CR-20250803", "待船方回传", "tag tag-gray", "未生成", "船方"]],
+          risk: [["阳台舱", "阳台舱余位紧张，需限制渠道配额。"], ["港务税", "船方调整港务税需触发价格调整。"]],
+          next: [["销售订单", "订单按舱型扣减名额。"], ["付款申请", "船票或港务费付款进入审批。"], ["退款执行", "退款需按船方扣损规则处理。"]],
+          advice: [["建议通过", "舱型和费用拆分完整。"], ["需关注", "船方回传后复核舱房余位。"]],
+          flow: ["邮轮计调发起航次开排", "系统校验舱型余位", "当前等待邮轮资源负责人审批"],
+          opinion: "同意开排。请船方回传后复核舱房和港务费。"
+        },
+        team_open_train: {
+          title: "专列团期开排审批",
+          approvalType: "团期开排审批",
+          source: "出团",
+          businessNo: "TEAM-TR-20250805-001",
+          productText: "东方丝路专列9日 / 丝路经典线",
+          amount: "92人 / ¥1,196,000",
+          supplier: "西域铁路旅游服务",
+          scheduleNo: "TR-SILK-20250805-001",
+          contentTitle: "班期开排内容",
+          content: [["班期", "2025-08-05发车，西安上车，乌鲁木齐回程"], ["铺位", "软卧60铺、硬卧40铺，铺位号待回传"], ["成本", "包列成本和车站保障费已录入"], ["后续单据", "通过后按铺位开放销售并承接成本确认"]],
+          related: [["专列团期", "TR-SILK-20250805-001", "92人", "tag tag-orange", "待审批", "李铭"], ["铺位矩阵", "SEAT-TR-001", "软卧/硬卧", "tag tag-green", "已配置", "李铭"], ["运营商账单", "BILL-TR-20250805", "待回传", "tag tag-gray", "未生成", "运营商"]],
+          risk: [["铺位号", "铺位号未回传前不可承诺具体铺位。"], ["成本", "运营商调价会影响班期毛利。"]],
+          next: [["销售订单", "订单按铺位类型扣减名额。"], ["成本差异", "运营商调价进入成本差异审批。"], ["付款申请", "包乘费用付款进入财务审批。"]],
+          advice: [["建议通过", "班期、铺位和成本结构完整。"], ["需关注", "运营商回传铺位后复核铺位分配。"]],
+          flow: ["专列计调发起班期开排", "系统校验铺位结构", "当前等待运营经理审批"],
+          opinion: "同意开排。请运营商回传铺位后复核成本差异。"
+        },
+        price_adjust: {
+          title: "价格调整审批",
+          approvalType: "价格调整",
+          source: "线路",
+          businessNo: "PRICE-20260624-003",
+          productText: "日本关西深度游 / 大阪京都线",
+          amount: "-¥42,000",
+          supplier: "线路产品部",
+          scheduleNo: "JP-KAN-20250712-001",
+          contentTitle: "调价内容",
+          content: [["调整范围", "小程序与官网，7月22日至8月5日出发团期"], ["调整幅度", "成人价下调4%，儿童不占床价不变"], ["毛利测算", "调整后团期毛利率18.6%，高于底线15%"], ["后续单据", "通过后生成调价记录并回写订单报价"]],
+          related: [["调价单", "PRICE-20260624-003", "-¥42,000", "tag tag-orange", "待审批", "李明"], ["团期", "JP-KAN-20250712-001", "日本关西深度游", "tag tag-green", "销售中", "王珊"], ["应收调整", "AR-ADJ-20260624-003", "待生成", "tag tag-gray", "未生成", "财务"]],
+          risk: [["保护价", "调价后仍需高于渠道保护价。"], ["应收", "已下单订单需按规则判断是否同步改价。"]],
+          next: [["订单报价", "新报价按审批后价格生效。"], ["应收调整", "涉及已下单订单时调整应收。"], ["审计记录", "调价记录进入操作审计。"]],
+          advice: [["建议通过", "毛利率仍高于底线。"], ["需关注", "活动结束后恢复原价。"]],
+          flow: ["计调提交调价", "系统完成毛利测算", "当前等待线路负责人审批"],
+          opinion: "同意调价。请活动结束后复核价格恢复。"
+        },
+        cost_diff: {
+          title: "成本差异审批",
+          approvalType: "成本差异",
+          source: "出团",
+          businessNo: "COST-20260624-008",
+          productText: "丝路专列深度游 / 丝路经典线",
+          amount: "+¥6,000",
+          supplier: "敦煌段酒店供应商",
+          scheduleNo: "TR-SILK-20260718-001",
+          contentTitle: "成本差异内容",
+          content: [["差异来源", "酒店从四星调整为挂牌五星，供应商报价上浮"], ["成本口径", "预估成本¥158,000，确认成本¥164,000"], ["影响", "团期毛利从¥48,600降至¥42,600"], ["后续单据", "通过后更新团期成本，并生成应付差异记录"]],
+          related: [["成本单", "COST-20260624-008", "+¥6,000", "tag tag-orange", "待审批", "周伟"], ["应付差异", "AP-DIFF-0624008", "待生成", "tag tag-gray", "未生成", "财务"], ["结算单", "JS-TR-0624008", "待生成", "tag tag-gray", "未生成", "结算会计"]],
+          risk: [["预算", "差异率3.8%，需运营经理确认。"], ["付款", "未审批前不可进入付款申请。"]],
+          next: [["团期成本", "更新确认成本。"], ["应付单", "生成供应商费用差异。"], ["结算单", "回团后纳入结算毛利。"]],
+          advice: [["建议通过", "毛利仍高于最低线。"], ["需关注", "付款前复核供应商账单。"]],
+          flow: ["运营提交成本差异", "系统完成毛利预测", "当前等待运营经理审批"],
+          opinion: "同意成本差异。请付款前复核供应商账单。"
+        },
+        payment: {
+          title: "付款申请审批",
+          approvalType: "付款申请",
+          source: "财务",
+          businessNo: "AP20260624001 / PAY-20260624-001",
+          productText: "欧洲十国经典游 / 法德意A线",
+          amount: "¥112,000",
+          supplier: "欧洲联合地接社",
+          scheduleNo: "EU-FRA-20260720-001",
+          contentTitle: "付款申请内容",
+          content: [["付款依据", "团期成本已确认，回团资料已归档，应付单状态为待付款"], ["付款节点", "合同约定回团后5个工作日支付尾款"], ["账户校验", "供应商档案认证账户与合同一致"], ["后续单据", "通过后进入付款执行，回单上传后生成NC付款任务"]],
+          related: [["团期成本", "COST-20260620-003", "¥712,200", "tag tag-green", "已确认", "周伟"], ["应付单", "AP20260624001", "¥112,000", "tag tag-orange", "待付款", "刘洋"], ["付款申请", "PAY-20260624-001", "¥112,000", "tag tag-orange", "审批中", "刘洋"], ["结算单", "JS20260624002", "毛利¥143,800", "tag tag-blue", "待复核", "郑华"]],
+          risk: [["大额付款", "本次付款超过5万元，需财务主管和财务总监审批。"], ["成本一致性", "付款金额与应付余额一致，未发现重复付款。"], ["供应商账户", "供应商账户已认证，最近一次修改发生在45天前。"], ["团期状态", "团期已回团，资料已归档。"]],
+          next: [["付款执行", "审批通过后生成付款执行待办。"], ["回单", "银行回单上传后核销付款状态。"], ["NC推送", "回单确认后创建NC付款推送任务。"]],
+          advice: [["建议通过", "关联单据齐全，金额与应付余额一致。"], ["需关注", "供应商本月累计付款达到¥486,000，可在财务报表继续跟踪。"]],
+          flow: ["业务侧发起付款申请", "财务专员完成应付核对", "系统完成供应商账户、成本和重复付款校验", "当前等待财务主管审批"],
+          opinion: "同意付款申请。付款执行时请核对供应商账户和回单。"
+        },
+        payment_cruise: {
+          title: "邮轮付款申请审批",
+          approvalType: "付款申请",
+          source: "财务",
+          businessNo: "AP20260624002 / PAY-20260624-002",
+          productText: "理想号地中海邮轮 / 地中海经典线",
+          amount: "¥996,000",
+          supplier: "皇家加勒比",
+          scheduleNo: "CR-MED-20250803-001",
+          contentTitle: "付款申请内容",
+          content: [["付款依据", "航次成本已确认，船方账单与对账一致"], ["费用结构", "舱位包销¥860,000，港务费¥96,000，服务费¥40,000"], ["账户校验", "供应商账户通过白名单校验"], ["后续单据", "通过后进入付款执行并关联航次舱房、港务费和NC凭证"]],
+          related: [["应付单", "AP20260624002", "¥996,000", "tag tag-orange", "待付款", "刘洋"], ["船方账单", "BILL-CR-20250803", "¥996,000", "tag tag-green", "已核对", "赵明"], ["付款申请", "PAY-20260624-002", "¥996,000", "tag tag-orange", "审批中", "刘洋"], ["NC任务", "NC-PAY-0624002", "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [["港务费", "船方规则变化时需保留账单依据。"], ["舱房", "包舱付款后仍需监控舱房销售消化。"]],
+          next: [["付款执行", "审批通过后进入财务付款。"], ["回单", "银行回单关联船方账单。"], ["NC推送", "生成邮轮付款凭证。"]],
+          advice: [["建议通过", "船方账单和应付金额一致。"], ["需关注", "付款后保留港务费和船票出具记录。"]],
+          flow: ["邮轮计调提交付款依据", "财务完成应付核对", "当前等待财务主管审批"],
+          opinion: "同意付款申请。请保留船方账单和港务费明细。"
+        },
+        payment_train: {
+          title: "专列付款申请审批",
+          approvalType: "付款申请",
+          source: "财务",
+          businessNo: "AP20260624003 / PAY-20260624-003",
+          productText: "丝绸之路专列12日 / 西安敦煌乌鲁木齐线",
+          amount: "¥728,000",
+          supplier: "西域铁路旅游服务",
+          scheduleNo: "TR-SILK-20250805-001",
+          contentTitle: "付款申请内容",
+          content: [["付款依据", "专列班期成本已确认，运营商账单与铺位结构一致"], ["费用结构", "整列包乘¥680,000，铺位服务费¥28,000，保障费¥20,000"], ["账户校验", "供应商账户通过白名单校验"], ["后续单据", "通过后进入付款执行并关联班期成本、铺位确认和NC凭证"]],
+          related: [["应付单", "AP20260624003", "¥728,000", "tag tag-orange", "待付款", "刘洋"], ["运营商账单", "BILL-TR-20250805", "¥728,000", "tag tag-green", "已核对", "李铭"], ["付款申请", "PAY-20260624-003", "¥728,000", "tag tag-orange", "审批中", "刘洋"], ["NC任务", "NC-PAY-0624003", "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [["铺位确认", "铺位号尚未最终回传，付款前需保留运营商确认函。"], ["成本", "包乘费用影响班期毛利。"]],
+          next: [["付款执行", "审批通过后进入财务付款。"], ["回单", "银行回单关联运营商账单。"], ["NC推送", "生成专列付款凭证。"]],
+          advice: [["建议通过", "运营商账单和应付金额一致。"], ["需关注", "付款前复核铺位结构和确认函。"]],
+          flow: ["专列计调提交付款依据", "财务完成应付核对", "当前等待财务负责人审批"],
+          opinion: "同意付款申请。请核对运营商确认函和铺位结构。"
+        },
+        refund: {
+          title: "退款申请审批",
+          approvalType: "退款申请",
+          source: "销售",
+          businessNo: "RFD-20260624-006 / KS202406240012",
+          productText: "北欧四国15日 / 北欧峡湾线",
+          amount: "¥36,000",
+          supplier: "北欧地接供应商",
+          scheduleNo: "EU-NOR-20260708-001",
+          contentTitle: "退款申请内容",
+          content: [["退款原因", "客户主动取消，已扣除供应商不可退费用"], ["订单收款", "已收款¥52,000，可退¥36,000"], ["退损", "出发前7天内退款，需确认机票与酒店退改损失"], ["后续单据", "通过后生成退款执行单，财务退款后回写订单状态"]],
+          related: [["订单", "KS202406240012", "¥52,000", "tag tag-green", "已收款", "吴欣"], ["退款申请", "RFD-20260624-006", "¥36,000", "tag tag-orange", "审批中", "吴欣"], ["退款执行", "RFD-EXE-0624006", "待生成", "tag tag-gray", "未生成", "财务"], ["NC任务", "NC-RFD-0624006", "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [["出发临近", "出发前7天内退款，退损需复核。"], ["收款账户", "执行前需核对客户原支付账户。"]],
+          next: [["退款执行", "财务按审批金额执行退款。"], ["应收冲减", "冲减订单应收和收款余额。"], ["NC推送", "生成退款或红冲凭证。"]],
+          advice: [["建议通过", "可退金额与收款余额一致。"], ["需关注", "供应商不可退费用需留存依据。"]],
+          flow: ["销售提交退款申请", "系统校验收款与退损", "当前等待销售主管审批"],
+          opinion: "同意退款申请。请财务执行前核对供应商不可退费用。"
+        },
+        settlement: {
+          title: "结算确认审批",
+          approvalType: "结算确认",
+          source: "财务",
+          businessNo: "JS20260624002",
+          productText: "欧洲十国经典游 / 法德意A线",
+          amount: "毛利¥143,800",
+          supplier: "欧洲联合地接社",
+          scheduleNo: "EU-FRA-20260720-001",
+          contentTitle: "结算确认内容",
+          content: [["收入确认", "订单收入¥856,000，收款已全部认款"], ["成本确认", "确认成本¥712,200，应付已生成并完成尾款申请"], ["差异处理", "酒店退房差额¥3,600已冲减成本"], ["后续单据", "通过后锁定结算单，生成NC收入与成本推送任务"]],
+          related: [["结算单", "JS20260624002", "毛利¥143,800", "tag tag-orange", "待审批", "郑华"], ["应收", "AR-JS-0624002", "¥856,000", "tag tag-green", "已核对", "刘洋"], ["应付", "AP20260624001", "¥112,000", "tag tag-orange", "待付款", "刘洋"], ["NC任务", "NC-JS-0624002", "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [["差异", "收入、成本、退款差异已核对。"], ["发票", "开票和收票状态需纳入NC前校验。"]],
+          next: [["结算锁定", "审批通过后锁定结算口径。"], ["NC推送", "生成收入、成本和结转凭证。"], ["财务报表", "回写团期盈亏报表。"]],
+          advice: [["建议通过", "应收应付和差异已核对。"], ["需关注", "NC推送前复核发票与回单。"]],
+          flow: ["回团处理完成", "财务生成结算单", "当前等待财务主管审批"],
+          opinion: "同意结算确认。请NC推送前复核应收、应付、发票和回单。"
+        },
+        nc_error: {
+          title: "NC异常处理",
+          approvalType: "NC异常",
+          source: "财务",
+          businessNo: "NC-ERR-20260623-004",
+          productText: "理想号地中海邮轮 / 地中海经典线",
+          amount: "¥996,000",
+          supplier: "皇家加勒比",
+          scheduleNo: "CR-MED-20250803-001",
+          contentTitle: "NC异常内容",
+          content: [["异常来源", "邮轮包舱预付款推送NC时科目映射缺失"], ["处理方式", "补充邮轮资源预付款科目和供应商辅助核算"], ["影响", "未处理前该批付款不能生成NC凭证"], ["后续单据", "通过后重试NC推送并记录接口日志"]],
+          related: [["NC异常", "NC-ERR-20260623-004", "¥996,000", "tag tag-orange", "待处理", "系统"], ["付款单", "PAY-20260624-002", "¥996,000", "tag tag-green", "已付款", "刘洋"], ["科目映射", "MAP-CR-001", "待补充", "tag tag-red", "异常", "接口管理员"], ["重试任务", "NC-RETRY-0623004", "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [["科目映射", "映射错误会影响NC凭证入账。"], ["重复推送", "重试前需校验是否已生成凭证。"]],
+          next: [["科目修正", "审批通过后补充映射。"], ["NC重试", "生成重试任务并回写结果。"], ["接口日志", "保留异常和处理记录。"]],
+          advice: [["建议处理", "按建议科目补充后重推。"], ["需关注", "避免重复凭证和辅助核算缺失。"]],
+          flow: ["NC推送失败自动建单", "接口管理员确认原因", "当前等待财务主管处理"],
+          opinion: "同意按建议科目补充映射后重推，并保留接口日志。"
+        },
+        org_staff: {
+          title: "组织人事审批",
+          approvalType: "组织人事",
+          source: "系统",
+          businessNo: "HR20260627008",
+          productText: "孙丽调岗 / 北京朝阳门店至上海徐汇门店",
+          amount: "7项交接",
+          supplier: "人力资源",
+          scheduleNo: "-",
+          contentTitle: "调岗交接内容",
+          content: [["任职变更", "审批通过后新增上海徐汇门店销售顾问任职"], ["历史归属", "历史订单、客户跟进、收款和业绩保留原门店归属"], ["交接清单", "未出行订单3笔、意向订单8个、客户跟进36人"], ["后续单据", "通过后更新员工组织和数据范围，写入操作审计"]],
+          related: [["员工", "EMP-SUNLI", "孙丽", "tag tag-orange", "调岗中", "李明"], ["交接单", "HR20260627008", "7项", "tag tag-orange", "待确认", "王芳"], ["权限变更", "AUTH-HR-0627008", "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [["未完成事项", "仍有尾款待收订单和退款协助工单。"], ["数据权限", "历史经办数据需保留只读入口。"]],
+          next: [["组织更新", "审批通过后更新员工任职。"], ["权限生效", "按新门店数据范围生效。"], ["操作审计", "记录调岗和交接结果。"]],
+          advice: [["建议通过", "交接清单完整。"], ["需关注", "尾款和退款工单需新旧负责人确认。"]],
+          flow: ["门店店长提交调岗", "原负责人确认历史归属", "当前等待新部门负责人确认"],
+          opinion: "同意调岗。请新旧负责人确认交接事项。"
+        }
+      };
+
+      templates.refund_group = Object.assign({}, templates.refund, {
+        title: "跟团退款申请审批",
+        businessNo: "TK20240618001 / KS2024061805",
+        productText: "欧洲十国经典游 / 法德意A线",
+        amount: "¥15,600",
+        supplier: "欧洲地接ABC",
+        scheduleNo: "EU-FRA-20250725-001"
+      });
+      templates.refund_cruise = Object.assign({}, templates.refund, {
+        title: "邮轮退款申请审批",
+        businessNo: "RFD-20260624-029 / KS2024061804",
+        productText: "理想号地中海邮轮 / 地中海经典线",
+        amount: "¥12,800",
+        supplier: "皇家加勒比",
+        scheduleNo: "CR-MED-20250803-001"
+      });
+      templates.refund_train = Object.assign({}, templates.refund, {
+        title: "专列退款申请审批",
+        businessNo: "TK20240616002 / KS2024061502",
+        productText: "丝绸之路专列12日 / 丝路经典线",
+        amount: "¥12,300",
+        supplier: "西域铁路旅游服务",
+        scheduleNo: "TR-SILK-20250805-001"
+      });
+      templates.channel_auth = Object.assign({}, templates.product_publish, {
+        title: "渠道授权审批",
+        approvalType: "渠道授权",
+        source: "线路",
+        businessNo: "AUTH-20260624-011",
+        productText: "英国名校语言研学12日 / 英国名校线",
+        amount: "授权40人",
+        supplier: "北京四季研学服务中心",
+        scheduleNo: "ST-UK-20250812-001",
+        contentTitle: "渠道授权内容",
+        content: [["授权渠道", "北京四季研学服务中心"], ["授权范围", "仅B端机构报价，不开放C端小程序售卖"], ["价格约束", "不得低于渠道保护价¥22,800"], ["后续单据", "通过后生成渠道授权记录和渠道可售名额"]],
+        related: [["授权申请", "AUTH-20260624-011", "40人", "tag tag-orange", "待审批", "陈琳"], ["研学线路", "ST-UK-20250812-001", "英国名校线", "tag tag-green", "已发布", "研学部"], ["渠道名额", "QUOTA-AUTH-011", "待生成", "tag tag-gray", "未生成", "渠道主管"]],
+        risk: [["保护价", "渠道报价不得低于保护价。"], ["数据权限", "渠道不可导出证件号和敏感资料。"]],
+        next: [["渠道授权", "生成授权记录和有效期。"], ["渠道订单", "渠道下单时扣减授权名额。"], ["佣金结算", "订单成交后进入佣金规则。"]],
+        advice: [["建议通过", "授权范围和价格约束清晰。"], ["需关注", "授权后监控渠道保护价。"]],
+        flow: ["研学产品提交渠道授权", "线路负责人确认配额", "当前等待渠道主管审批"],
+        opinion: "同意授权。请渠道销售时严格执行保护价。"
+      });
+      templates.bad_debt = Object.assign({}, templates.settlement, {
+        title: "坏账处理审批",
+        approvalType: "坏账处理",
+        source: "财务",
+        businessNo: "AR20260601008",
+        productText: "日本关西深度游 / 大阪京都线",
+        amount: "¥24,800",
+        supplier: "王磊旅行社",
+        scheduleNo: "JP-KAN-20250712-001",
+        contentTitle: "坏账处理内容",
+        content: [["逾期情况", "应收账款逾期28天，已完成三次催收"], ["处理方式", "申请转坏账观察，暂停渠道授信额度"], ["影响范围", "关联订单2笔，均已出团且无退款争议"], ["后续单据", "通过后生成坏账处理记录，并同步渠道授信状态"]],
+        related: [["应收单", "AR20260601008", "¥24,800", "tag tag-red", "逾期", "刘洋"], ["渠道", "CH-WANGLEI", "王磊旅行社", "tag tag-orange", "授信待冻结", "渠道部"], ["坏账记录", "BD-06240025", "待生成", "tag tag-gray", "未生成", "财务"]],
+        risk: [["逾期", "逾期28天，需财务总监确认。"], ["授信", "审批通过后暂停渠道授信。"]],
+        next: [["坏账台账", "生成坏账观察记录。"], ["渠道授信", "冻结渠道授信额度。"], ["财务报表", "回写应收应付报表。"]],
+        advice: [["建议处理", "催收记录完整。"], ["需关注", "后续回款时需冲回坏账观察。"]],
+        flow: ["财务专员提交坏账申请", "财务主管复核通过", "当前等待财务总监审批"],
+        opinion: "同意转坏账观察。请同步冻结渠道授信额度。"
+      });
+      templates.invoice_red = Object.assign({}, templates.refund, {
+        title: "发票红冲审批",
+        approvalType: "发票红冲",
+        source: "财务",
+        businessNo: "INV-20260618-009",
+        productText: "马来西亚自由行 / 兰卡威酒店机票套餐",
+        amount: "-¥3,200",
+        supplier: "客户抬头变更",
+        scheduleNo: "KS2024061813",
+        contentTitle: "红冲内容",
+        content: [["原发票", "已开具电子普票，客户要求改为公司抬头"], ["红冲原因", "发票抬头错误，订单金额不变"], ["后续动作", "审批通过后作废原票并重新开票"], ["后续单据", "红冲单、重开发票和NC红冲任务"]],
+        related: [["原发票", "INV-20260618-009", "¥3,200", "tag tag-orange", "待红冲", "郑华"], ["订单", "KS2024061813", "马来西亚自由行", "tag tag-green", "已收款", "门店"], ["红冲任务", "INV-RED-0623023", "待生成", "tag tag-gray", "未生成", "税务会计"]],
+        risk: [["重复开票", "订单已收款且未退款，无重复开票风险。"], ["抬头", "新抬头需和客户提交资料一致。"]],
+        next: [["红冲处理", "作废原票并生成红冲记录。"], ["重新开票", "按新抬头开具发票。"], ["NC推送", "生成发票红冲凭证。"]],
+        advice: [["建议通过", "订单金额不变，红冲原因明确。"], ["需关注", "重开发票前复核新抬头。"]],
+        flow: ["门店提交发票重开申请", "财务专员复核订单收款", "当前等待税务会计审批"],
+        opinion: "同意红冲。请重开发票前复核客户抬头资料。"
+      });
+      templates.transfer = Object.assign({}, templates.price_adjust, {
+        title: "改期转团审批",
+        approvalType: "改期转团",
+        source: "销售",
+        businessNo: "KS202406230049",
+        productText: "德捷奥深度游 / 奥捷线",
+        amount: "补差¥2,400",
+        supplier: "客户张丽华",
+        scheduleNo: "EU-DACH-20260905-001",
+        contentTitle: "改期转团内容",
+        content: [["原团期", "2026年7月20日出发"], ["新团期", "2026年9月5日出发"], ["名额校验", "新团期余位8个，可承接4人"], ["后续单据", "通过后同步名单、合同补充协议和应收差额"]],
+        related: [["订单", "KS202406230049", "补差¥2,400", "tag tag-blue", "审批中", "销售"], ["原团期", "EU-DACH-20260720-001", "4人", "tag tag-gray", "待转出", "计调"], ["新团期", "EU-DACH-20260905-001", "余位8", "tag tag-green", "可承接", "计调"]],
+        risk: [["名额", "新团期余位可承接当前转团人数。"], ["补差", "通过后需生成补差应收。"]],
+        next: [["名单同步", "游客从原团期转入新团期。"], ["合同补充", "生成补充协议。"], ["收款认款", "补差收款进入应收。"]],
+        advice: [["建议通过", "新团期余位满足转团。"], ["需关注", "补差收款完成后再确认名单。"]],
+        flow: ["销售提交转团申请", "销售主管已通过", "当前等待线路经理审批"],
+        opinion: "同意转团。请补差收款完成后同步名单。"
+      });
+      templates.contract_void = Object.assign({}, templates.transfer, {
+        title: "合同作废审批",
+        approvalType: "合同作废",
+        source: "销售",
+        businessNo: "CTR-20260623-01058",
+        productText: "欧洲十国经典游 / 法德意A线",
+        amount: "需重签",
+        supplier: "客户合同",
+        scheduleNo: "KS202406230058",
+        contentTitle: "合同作废内容",
+        content: [["作废原因", "游客姓名拼写错误，需重新签署电子合同"], ["收款状态", "订单已收款¥25,600，无退款动作"], ["控制规则", "作废后原合同不可下载，新合同继承订单收款"], ["后续单据", "通过后触发合同重签待办并保留审计日志"]],
+        related: [["合同", "CTR-20260623-01058", "需重签", "tag tag-blue", "审批中", "销售"], ["订单", "KS202406230058", "¥25,600", "tag tag-green", "已收款", "门店"], ["新合同", "CTR-NEW-0623010", "待生成", "tag tag-gray", "未生成", "系统"]],
+        risk: [["已收款", "合同已绑定收款订单，作废需保留审计。"], ["重签", "新合同生成后继承订单收款。"]],
+        next: [["合同作废", "原合同不可继续下载。"], ["合同重签", "生成新合同签署任务。"], ["操作审计", "记录作废原因和审批意见。"]],
+        advice: [["建议处理", "作废原因明确。"], ["需关注", "新合同生成后确认客户签署。"]],
+        flow: ["销售提交合同作废", "当前等待销售主管审批"],
+        opinion: "同意作废。请新合同生成后确认客户签署。"
+      });
+
+      function templateFromTask(task, approvalNo) {
+        const amount = task.amount || "-";
+        const businessNo = task.businessNo || "-";
+        const applyNo = task.applyNo || applyNoFrom(businessNo);
+        return {
+          title: task.title || task.approvalType || "审批详情",
+          approvalType: task.approvalType || "审批",
+          source: task.source || "财务",
+          businessNo: businessNo,
+          productText: task.productText || "-",
+          amount: amount,
+          supplier: task.supplier || task.applicant || "系统",
+          scheduleNo: task.sourceNo || "-",
+          contentTitle: (task.approvalType || "审批") + "内容",
+          content: task.detail || [["业务单据", businessNo], ["线路/方案", task.productText || "-"], ["金额/影响", amount], ["后续单据", task.opinion || "审批通过后进入下一业务节点"]],
+          related: [["审批单", approvalNo, task.approvalType || "审批", "tag tag-orange", task.status || "待审批", task.applicant || "系统"], ["业务单据", businessNo, amount, "tag tag-blue", "已关联", task.source || "系统"], ["后续单据", applyNo, "待生成", "tag tag-gray", "未生成", "系统"]],
+          risk: [[task.risk || "风险校验", "请审批人核对金额、状态和单据关联。"]],
+          next: [["业务状态", "审批通过后回写来源单据状态。"], ["财务单据", "涉及收付结算时进入财务执行。"], ["NC推送", "符合条件后进入NC队列。"]],
+          advice: [["建议处理", task.opinion || "请按业务单据和附件完成审批。"]],
+          flow: task.flow || ["业务单据已提交", "系统完成基础校验", "当前等待审批"],
+          opinion: task.opinion || "同意。"
+        };
+      }
+
+      function resolveApproval() {
+        const approvalNo = params.get("approvalNo") || "APR-20260624-028";
+        const tasks = readStored("caesarApprovalTasks").tasks || {};
+        const task = tasks[approvalNo];
+        const kind = params.get("kind") || (task && task.kind) || approvalNoMap[approvalNo] || "payment";
+        const template = task ? templateFromTask(task, approvalNo) : (templates[kind] || templates.payment);
+        const result = readStored("caesarApprovalResults")[approvalNo];
+        const status = result ? (result.status === "approved" ? "已通过" : result.status === "rejected" ? "已拒绝" : "审批中") : (task && task.status) || "待审批";
+        return Object.assign({}, template, {
+          approvalNo: approvalNo,
+          kind: kind,
+          status: status,
+          applyNo: (task && task.applyNo) || applyNoFrom(template.businessNo)
+        });
+      }
+
+      function statusTagClass(status) {
+        if (status === "已通过") return "tag tag-green";
+        if (status === "已拒绝") return "tag tag-red";
+        if (status === "审批中") return "tag tag-blue";
+        return "tag tag-orange";
+      }
+
+      function renderApproval(data) {
+        document.querySelector(".page-title").textContent = data.title;
+        summaryGrid.innerHTML = pairRows([
+          ["审批单号", data.approvalNo],
+          ["审批事项", data.approvalType],
+          ["来源模块", data.source],
+          ["业务单据", data.businessNo],
+          ["线路/方案", data.productText],
+          ["团期", data.scheduleNo || "-"],
+          ["供应商/责任方", data.supplier || "-"],
+          ["金额/影响", data.amount],
+          ["当前节点", data.status === "待审批" ? "当前审批人" : "已完成"],
+          ["审批状态", data.status]
+        ]);
+        if (contentTitle) contentTitle.textContent = data.contentTitle || data.approvalType + "内容";
+        if (contentList) contentList.innerHTML = blockRows(data.content || []);
+        if (relatedBody) relatedBody.innerHTML = tableRows(data.related || []);
+        if (riskList) riskList.innerHTML = blockRows(data.risk || []);
+        if (flowList) flowList.innerHTML = (data.flow || []).map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
+        if (adviceList) adviceList.innerHTML = blockRows(data.advice || []);
+        if (nextList) nextList.innerHTML = blockRows(data.next || []);
+        if (relatedGrid) {
+          relatedGrid.innerHTML = pairRows([
+            ["业务单据", data.businessNo],
+            ["线路/方案", data.productText],
+            ["团期/项目", data.scheduleNo || "-"],
+            ["审批单", data.approvalNo],
+            ["后续单据", data.applyNo],
+            ["NC任务", data.status === "已通过" ? "待生成" : "审批通过后生成"]
+          ]);
+        }
+        if (relatedChecks) {
+          relatedChecks.innerHTML = [
+            "当前角色可查看该审批事项的来源单据。",
+            "金额、状态、应收应付和NC任务按审批结果继续流转。",
+            "敏感信息按角色权限脱敏展示。"
+          ].map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
+        }
+        const submitButton = document.querySelector("[data-submit-approval]");
+        if (submitButton) submitButton.disabled = data.status === "已通过" || data.status === "已拒绝";
+        if (opinion && data.opinion) opinion.value = data.opinion;
+      }
+
+      function writeApprovalResult(decision) {
+        const passed = decision === "通过";
+        const results = readStored("caesarApprovalResults");
+        results[currentApproval.approvalNo] = {
+          status: passed ? "approved" : "rejected",
+          kind: currentApproval.kind,
+          approvalType: currentApproval.approvalType,
+          businessNo: currentApproval.businessNo,
+          productText: currentApproval.productText,
+          amount: currentApproval.amount,
+          applyNo: currentApproval.applyNo,
+          source: currentApproval.source,
+          updatedAt: "2026-06-29 16:30"
+        };
+        writeStored("caesarApprovalResults", results);
+        const tasks = readStored("caesarApprovalTasks");
+        if (tasks.tasks && tasks.tasks[currentApproval.approvalNo]) {
+          tasks.tasks[currentApproval.approvalNo].status = passed ? "已通过" : "已拒绝";
+          tasks.tasks[currentApproval.approvalNo].updatedAt = "2026-06-29 16:30";
+          writeStored("caesarApprovalTasks", tasks);
+        }
+        currentApproval.status = passed ? "已通过" : "已拒绝";
+        renderApproval(currentApproval);
       }
 
       function openRelatedModal() {
@@ -231,6 +818,9 @@
         }, 240);
       }
 
+      currentApproval = resolveApproval();
+      renderApproval(currentApproval);
+
       document.querySelector("[data-focus-opinion]").addEventListener("click", () => {
         opinion.focus();
       });
@@ -241,7 +831,8 @@
           opinion.focus();
           return;
         }
-        showToast("审批意见已提交，后续单据将按流程联动");
+        writeApprovalResult(decision);
+        showToast(decision === "通过" ? "审批已通过，后续单据进入下一节点" : "审批已提交，来源单据已停止流转");
       });
 
       document.querySelector("[data-save-draft]").addEventListener("click", () => {

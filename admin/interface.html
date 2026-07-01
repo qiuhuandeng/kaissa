@@ -116,7 +116,7 @@
           <section class="interface-section">
             <div class="interface-section-head">
               <h2>连接测试与请求日志</h2>
-              <a class="btn-text" href="#">查看全部日志</a>
+              <a class="btn-text" href="audit.html">查看全部日志</a>
             </div>
             <div class="interface-test-layout">
               <div class="interface-test-box">
@@ -289,6 +289,82 @@
       var otaTitle = document.querySelector("[data-ota-title]");
       var otaKey = document.querySelector("#otaAppKey");
 
+      function toast(message, type) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast(message, { type: type || "success" });
+        }
+      }
+
+      function pad(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function currentTime() {
+        var date = new Date();
+        return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) + " " + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds());
+      }
+
+      function readAuditLogs() {
+        try {
+          return JSON.parse(localStorage.getItem("caesarAdminAuditLogs") || "[]");
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function writeAudit(record) {
+        var logs = readAuditLogs();
+        logs.unshift(Object.assign({
+          operator: "张建国",
+          role: "超级管理员",
+          module: "接口配置",
+          action: "编辑",
+          ip: "10.12.8.21",
+          time: currentTime()
+        }, record));
+        localStorage.setItem("caesarAdminAuditLogs", JSON.stringify(logs.slice(0, 80)));
+      }
+
+      function sectionName(button) {
+        var section = button.closest(".interface-section");
+        var heading = section ? section.querySelector("h2") : null;
+        if (heading && heading.textContent.trim()) return heading.textContent.trim();
+        var cardTitle = button.closest(".interface-status-card");
+        var cardName = cardTitle ? cardTitle.querySelector("strong") : null;
+        return cardName ? cardName.textContent.trim() : "接口配置";
+      }
+
+      function actionType(text) {
+        if (text.indexOf("新增") >= 0) return "新增";
+        if (text.indexOf("测试") >= 0) return "测试";
+        if (text.indexOf("绑定") >= 0) return "编辑";
+        if (text.indexOf("上传") >= 0) return "编辑";
+        return "编辑";
+      }
+
+      function appendBankMapping() {
+        var table = document.querySelector('[data-interface-panel="bank"] table tbody');
+        if (!table) return;
+        var row = document.createElement("tr");
+        row.innerHTML = '<td>6222 8801 0004</td><td>自由行业务子账户</td><td>凯撒国际旅游有限公司</td><td><span class="tag tag-green">启用</span></td>';
+        table.appendChild(row);
+      }
+
+      function markTestPassed(button, name) {
+        var card = button.closest(".interface-status-card");
+        if (!card) return;
+        card.classList.remove("is-error");
+        var dot = card.querySelector(".interface-status-dot");
+        if (dot) {
+          dot.classList.remove("is-error");
+          dot.classList.add("is-normal");
+        }
+        var latency = card.querySelector(".interface-status-foot span strong");
+        if (latency) latency.textContent = name === "OTA接口" ? "168ms" : "82ms";
+        var checkedAt = card.querySelector(".interface-status-meta strong");
+        if (checkedAt) checkedAt.textContent = currentTime().slice(0, 16);
+      }
+
       function activate(name, otaName, otaCode) {
         tabs.forEach(function (tab) {
           tab.classList.toggle("active", tab.dataset.interfaceTab === name);
@@ -326,6 +402,64 @@
           bankResult.innerHTML = '<span class="tag tag-green">成功</span><strong>测试通过，响应内容：CMBC_GATEWAY_OK，耗时 82ms。</strong>';
         });
       }
+
+      document.querySelectorAll("[data-test-interface]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var name = button.dataset.testInterface;
+          markTestPassed(button, name);
+          toast(name + "连接测试通过");
+          writeAudit({
+            action: "测试",
+            summary: "测试" + name + "连接",
+            before: { status: "待检测" },
+            after: { status: "连接正常", latency: name === "OTA接口" ? "168ms" : "82ms" }
+          });
+        });
+      });
+
+      document.querySelectorAll(".interface-section button").forEach(function (button) {
+        if (button.dataset.toggleSecret !== undefined || button.dataset.interfaceHandled === "true") return;
+        button.addEventListener("click", function () {
+          var text = button.textContent.trim();
+          var context = sectionName(button);
+          if (!text || button.matches("[data-run-bank-test]")) {
+            if (button.matches("[data-run-bank-test]")) {
+              toast("银企直联连接测试通过");
+              writeAudit({
+                action: "测试",
+                summary: "测试银企直联连接",
+                before: { status: "待检测" },
+                after: { status: "连接正常", latency: "82ms" }
+              });
+            }
+            return;
+          }
+          if (text === "新增映射") {
+            appendBankMapping();
+          }
+          if (text === "重新上传") {
+            var uploadDate = button.closest(".interface-upload").querySelector("span");
+            if (uploadDate) uploadDate.textContent = "上传日期 " + currentTime().slice(0, 10);
+          }
+          if (text === "绑定") {
+            var row = button.closest("tr");
+            var tag = row ? row.querySelector(".tag") : null;
+            if (tag) {
+              tag.className = "tag tag-green";
+              tag.textContent = "已绑定";
+            }
+            button.textContent = "编辑";
+          }
+          var message = button.dataset.toastAction || (context + "已处理");
+          toast(message);
+          writeAudit({
+            action: actionType(text),
+            summary: context + "：" + text,
+            before: { status: "变更前" },
+            after: { status: message }
+          });
+        });
+      });
     })();
   </script>
 </body>

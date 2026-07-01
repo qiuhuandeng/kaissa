@@ -177,6 +177,59 @@
     </section>
   </main>
 
+  <div class="modal-overlay drawer-overlay" aria-hidden="true" data-param-drawer>
+    <div class="modal drawer-modal template-drawer" role="dialog" aria-modal="true" aria-labelledby="paramDrawerTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="paramDrawerTitle">编辑参数</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-param>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="paramCategory">参数分类</label>
+            <input class="form-control" id="paramCategory" type="text" data-param-category readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paramName">参数名称</label>
+            <input class="form-control" id="paramName" type="text" data-param-name readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paramValue">当前值</label>
+            <input class="form-control" id="paramValue" type="text" data-param-value>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paramScope">生效范围</label>
+            <select class="form-control" id="paramScope" data-param-scope>
+              <option>全集团</option>
+              <option>主体公司</option>
+              <option>业务中心</option>
+              <option>门店</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paramEffectTime">生效时间</label>
+            <select class="form-control" id="paramEffectTime" data-param-effect-time>
+              <option>保存后立即生效</option>
+              <option>次日 00:00 生效</option>
+              <option>下个自然月生效</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paramReview">变更审批</label>
+            <select class="form-control" id="paramReview" data-param-review>
+              <option>需要审批</option>
+              <option>无需审批</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer template-drawer-footer">
+        <button class="btn btn-secondary" type="button" data-close-param>取消</button>
+        <button class="btn btn-primary" type="button" data-save-param>保存</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay drawer-overlay" aria-hidden="true" data-template-drawer>
     <div class="modal drawer-modal template-drawer" role="dialog" aria-modal="true" aria-labelledby="templateDrawerTitle">
       <div class="modal-header">
@@ -189,10 +242,10 @@
           <input class="form-control" id="templateName" type="text" value="产品发布审批提醒">
         </div>
         <div class="template-variable-bar">
-          <button class="btn btn-secondary btn-sm" type="button">{{订单号}}</button>
-          <button class="btn btn-secondary btn-sm" type="button">{{客户姓名}}</button>
-          <button class="btn btn-secondary btn-sm" type="button">{{产品名称}}</button>
-          <button class="btn btn-secondary btn-sm" type="button">{{审批链接}}</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-template-token="{{订单号}}">{{订单号}}</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-template-token="{{客户姓名}}">{{客户姓名}}</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-template-token="{{产品名称}}">{{产品名称}}</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-template-token="{{审批链接}}">{{审批链接}}</button>
         </div>
         <div class="form-group">
           <label class="form-label" for="templateEditor">模板内容</label>
@@ -200,24 +253,84 @@
         </div>
       </div>
       <div class="modal-footer template-drawer-footer">
-        <button class="btn btn-secondary" type="button">发送测试</button>
-        <button class="btn btn-primary" type="button" data-close-template>保存</button>
+        <button class="btn btn-secondary" type="button" data-send-template-test>发送测试</button>
+        <button class="btn btn-primary" type="button" data-save-template>保存</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var drawer = document.querySelector("[data-template-drawer]");
+      var templateDrawer = document.querySelector("[data-template-drawer]");
+      var paramDrawer = document.querySelector("[data-param-drawer]");
+      var selectedParamRow = null;
+      var selectedParamValueCell = null;
 
-      function openDrawer() {
-        drawer.classList.add("show");
-        drawer.setAttribute("aria-hidden", "false");
+      function toast(message, type) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast(message, { type: type || "success" });
+        }
       }
 
-      function closeDrawer() {
-        drawer.classList.remove("show");
-        drawer.setAttribute("aria-hidden", "true");
+      function pad(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function currentTime() {
+        var date = new Date();
+        return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) + " " + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds());
+      }
+
+      function readAuditLogs() {
+        try {
+          return JSON.parse(localStorage.getItem("caesarAdminAuditLogs") || "[]");
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function writeAudit(record) {
+        var logs = readAuditLogs();
+        logs.unshift(Object.assign({
+          operator: "张建国",
+          role: "超级管理员",
+          module: "基础参数",
+          action: "编辑",
+          ip: "10.12.8.21",
+          time: currentTime()
+        }, record));
+        localStorage.setItem("caesarAdminAuditLogs", JSON.stringify(logs.slice(0, 80)));
+      }
+
+      function openTemplateDrawer() {
+        templateDrawer.classList.add("show");
+        templateDrawer.setAttribute("aria-hidden", "false");
+      }
+
+      function closeTemplateDrawer() {
+        templateDrawer.classList.remove("show");
+        templateDrawer.setAttribute("aria-hidden", "true");
+      }
+
+      function openParamDrawer(row, button) {
+        var activePanel = document.querySelector("[data-param-panel].active");
+        var category = activePanel ? activePanel.querySelector(".card-title").textContent.trim() : "基础参数";
+        var cells = Array.from(row.querySelectorAll("td"));
+        var actionText = button.textContent.trim();
+        var valueIndex = category === "税率配置" || category === "审批阈值配置" ? 1 : 2;
+        if (category === "币种与汇率") valueIndex = actionText === "详情" ? 2 : 2;
+        selectedParamRow = row;
+        selectedParamValueCell = cells[valueIndex] || cells[1] || cells[0];
+        paramDrawer.querySelector("[data-param-category]").value = category;
+        paramDrawer.querySelector("[data-param-name]").value = cells[0] ? cells[0].textContent.trim() : "";
+        paramDrawer.querySelector("[data-param-value]").value = selectedParamValueCell ? selectedParamValueCell.textContent.trim() : "";
+        paramDrawer.classList.add("show");
+        paramDrawer.setAttribute("aria-hidden", "false");
+      }
+
+      function closeParamDrawer() {
+        paramDrawer.classList.remove("show");
+        paramDrawer.setAttribute("aria-hidden", "true");
       }
 
       document.querySelectorAll("[data-param-tab]").forEach(function (tab) {
@@ -233,11 +346,91 @@
       });
 
       document.querySelectorAll("[data-open-template]").forEach(function (button) {
-        button.addEventListener("click", openDrawer);
+        button.addEventListener("click", openTemplateDrawer);
       });
 
       document.querySelectorAll("[data-close-template]").forEach(function (button) {
-        button.addEventListener("click", closeDrawer);
+        button.addEventListener("click", closeTemplateDrawer);
+      });
+
+      document.querySelectorAll("[data-close-param]").forEach(function (button) {
+        button.addEventListener("click", closeParamDrawer);
+      });
+
+      document.querySelectorAll(".table-action-primary").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var row = button.closest("tr");
+          if (!row) return;
+          if (button.textContent.trim() === "发送测试") {
+            var name = row.cells[0] ? row.cells[0].textContent.trim() : "消息模板";
+            toast(name + "测试消息已发送");
+            writeAudit({
+              action: "测试",
+              summary: "发送" + name + "测试消息",
+              before: { status: "待发送" },
+              after: { status: "已发送测试消息" }
+            });
+            return;
+          }
+          openParamDrawer(row, button);
+        });
+      });
+
+      document.querySelectorAll("[data-template-token]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var editor = document.querySelector("#templateEditor");
+          editor.textContent = editor.textContent + button.dataset.templateToken;
+          toast("变量已加入模板");
+        });
+      });
+
+      document.querySelector("[data-send-template-test]").addEventListener("click", function () {
+        var name = document.querySelector("#templateName").value.trim() || "消息模板";
+        toast(name + "测试消息已发送");
+        writeAudit({
+          action: "测试",
+          summary: "发送" + name + "测试消息",
+          before: { status: "待发送" },
+          after: { status: "已发送测试消息" }
+        });
+      });
+
+      document.querySelector("[data-save-template]").addEventListener("click", function () {
+        var name = document.querySelector("#templateName").value.trim() || "消息模板";
+        toast(name + "已保存");
+        writeAudit({
+          summary: "保存消息通知模板：" + name,
+          before: { status: "编辑中" },
+          after: { status: "已保存" }
+        });
+        closeTemplateDrawer();
+      });
+
+      document.querySelector("[data-save-param]").addEventListener("click", function () {
+        var name = paramDrawer.querySelector("[data-param-name]").value.trim();
+        var category = paramDrawer.querySelector("[data-param-category]").value.trim();
+        var value = paramDrawer.querySelector("[data-param-value]").value.trim();
+        var beforeValue = selectedParamValueCell ? selectedParamValueCell.textContent.trim() : "";
+        if (selectedParamValueCell) selectedParamValueCell.textContent = value;
+        if (selectedParamRow) {
+          var statusTag = selectedParamRow.querySelector(".tag-gray");
+          if (statusTag && category === "消息通知模板") {
+            statusTag.className = "tag tag-green";
+            statusTag.textContent = "启用";
+          }
+        }
+        toast(name + "已保存");
+        writeAudit({
+          summary: "更新" + category + "：" + name,
+          before: { value: beforeValue },
+          after: {
+            value: value,
+            scope: paramDrawer.querySelector("[data-param-scope]").value,
+            effectTime: paramDrawer.querySelector("[data-param-effect-time]").value,
+            review: paramDrawer.querySelector("[data-param-review]").value
+          }
+        });
+        closeParamDrawer();
       });
     })();
   </script>

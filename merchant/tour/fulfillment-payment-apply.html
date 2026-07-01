@@ -177,6 +177,7 @@
       var paymentApplyRows = document.getElementById('paymentApplyRows');
       var pageParams = new URLSearchParams(window.location.search);
       var activePaymentConfig = null;
+      var shouldOpenInboundPaymentCreate = false;
 
       var paymentConfigs = {
         group: {
@@ -237,6 +238,25 @@
           approval: '专列计调 李铭 → 出团运营主管 陈刚 → 财务主管 刘洋',
           financeText: '✅ 财务联动：已生成付款申请 PAY-REQ-20240725-010，状态：审批中；审批通过后将自动进入财务付款执行队列。',
           view: ['PAY-REQ-DRAFT-009', '草稿', 'tag tag-gray', '西部文旅专列', '¥520,000', '专列团期', 'TR20240805001 东方丝路专列', '未提交', 'tag tag-gray']
+        },
+        study: {
+          rows: [
+            ['审批中', 'PAY-REQ-20240806-001', '研学团期', 'tag tag-green', 'XY20240805001', '北京航天研学营', '研学基地供应商', '课程住宿费', '¥62,000', '¥62,000', '2024-08-02', '陈刚', '审批中', 'tag tag-blue', '待审批通过', 'tag tag-gray', '详情', 'view']
+          ],
+          drawerTitle: '新建研学付款申请',
+          summary: '业务侧付款申请：研学费用需绑定营期、课程住宿确认和安全材料，审批通过后由财务执行付款。',
+          schedule: 'XY20240805001 北京航天研学营',
+          supplier: '研学基地供应商',
+          fees: [
+            ['课程住宿费', '¥62,000', '开营前10日', '62000', true],
+            ['保险服务费', '¥4,200', '名单确认后付款', '4200', false]
+          ],
+          amount: '62000',
+          expectedDate: '2024-08-02',
+          reason: '研学营期课程住宿费用，基地确认和学员名单已完成业务复核。',
+          approval: '研学运营 陈刚 → 研学负责人 王芳 → 财务主管 刘洋',
+          financeText: '✅ 财务联动：已生成付款申请 PAY-REQ-20240806-001，状态：审批中；审批通过后将自动进入财务付款执行队列。',
+          view: ['PAY-REQ-20240806-001', '审批中', 'tag tag-blue', '研学基地供应商', '¥62,000', '研学团期', 'XY20240805001 北京航天研学营', '待审批通过', 'tag tag-gray']
         }
       };
 
@@ -253,7 +273,22 @@
         var text = String(value || '').toLowerCase();
         if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
         if (text.indexOf('train') >= 0 || text.indexOf('专列') >= 0 || text.indexOf('tr') === 0) return 'train';
+        if (text.indexOf('study') >= 0 || text.indexOf('研学') >= 0 || text.indexOf('xy') === 0) return 'study';
         return 'group';
+      }
+
+      function paymentTypeMeta(type) {
+        var metas = {
+          group: ['普通团期', 'tag tag-blue', '地接服务费'],
+          cruise: ['邮轮团期', 'tag tag-purple', '船票采购'],
+          train: ['专列团期', 'tag tag-orange', '包列成本'],
+          study: ['研学团期', 'tag tag-green', '课程住宿费']
+        };
+        return metas[type] || metas.group;
+      }
+
+      function compactDigits(value) {
+        return String(value || '').replace(/\D/g, '').slice(-10) || '0000000001';
       }
 
       function renderPaymentRows(config) {
@@ -307,9 +342,47 @@
         if (window.caesarRefreshListSurfaces) window.caesarRefreshListSurfaces();
       }
 
+      function applyInboundPaymentContext() {
+        var orderNo = pageParams.get('orderNo') || '';
+        var scheduleNo = pageParams.get('schedule') || pageParams.get('sourceNo') || '';
+        var product = pageParams.get('product') || '';
+        if (!orderNo && !scheduleNo && !product) return;
+        var type = normalizeType(pageParams.get('type') || scheduleNo || product);
+        var base = activePaymentConfig || paymentConfigs[type] || paymentConfigs.group;
+        var meta = paymentTypeMeta(type);
+        var supplier = pageParams.get('supplier') || base.supplier || '待选择供应商';
+        var feeItem = pageParams.get('feeItem') || meta[2];
+        var amount = pageParams.get('payableAmount') || base.amount || '0';
+        var displayAmount = /^¥/.test(amount) ? amount : '¥' + Number(amount || 0).toLocaleString('zh-CN');
+        var applyNo = 'PAY-REQ-DRAFT-' + compactDigits(orderNo || scheduleNo);
+        activePaymentConfig = Object.assign({}, base, {
+          rows: [
+            ['草稿', applyNo, meta[0], meta[1], scheduleNo || '-', product || base.schedule, supplier, feeItem, displayAmount, displayAmount, '-', '当前用户', '草稿', 'tag tag-gray', '未提交', 'tag tag-gray', '申请', 'create']
+          ],
+          drawerTitle: '新建付款申请',
+          summary: '关联订单：' + (orderNo || '-') + '，' + meta[0] + ' ' + (scheduleNo || '-') + '。选择已确认供应商费用后提交审批。',
+          schedule: [scheduleNo, product].filter(Boolean).join(' ') || base.schedule,
+          supplier: supplier,
+          fees: [
+            [feeItem, displayAmount, '业务确认后付款', String(Number(String(amount).replace(/[^\d.]/g, '')) || 0), true]
+          ],
+          amount: String(Number(String(amount).replace(/[^\d.]/g, '')) || 0),
+          expectedDate: base.expectedDate,
+          reason: '订单' + (orderNo || '-') + '关联' + (product || meta[0]) + '供应商费用付款申请。',
+          approval: base.approval,
+          financeText: '✅ 财务联动：提交后生成付款申请 ' + applyNo + '，审批通过后进入财务付款执行队列。',
+          view: [applyNo, '草稿', 'tag tag-gray', supplier, displayAmount, meta[0], [scheduleNo, product].filter(Boolean).join(' '), '未提交', 'tag tag-gray']
+        });
+        renderPaymentRows(activePaymentConfig);
+        renderPaymentDrawer(activePaymentConfig);
+        renderPaymentView(activePaymentConfig);
+        shouldOpenInboundPaymentCreate = pageParams.get('from') === 'order-detail' || pageParams.get('focus') === 'payable';
+      }
+
       if (pageParams.has('type')) {
         applyPaymentConfig(pageParams.get('type'));
       }
+      applyInboundPaymentContext();
 
 
 
@@ -349,6 +422,12 @@
           if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       });
+      if (shouldOpenInboundPaymentCreate) {
+        window.requestAnimationFrame(function () {
+          financeLink.hidden = true;
+          window.caesarUI.openLayer(createDrawer);
+        });
+      }
     })();
   </script>
 </body>

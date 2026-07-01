@@ -49,10 +49,12 @@
       panel.classList.toggle('active', panelIndex === currentStep);
     });
 
-    var prevButton = $('[data-route-prev]');
-    var nextButton = $('[data-route-next]');
-    if (prevButton) prevButton.disabled = currentStep === 0;
-    if (nextButton) nextButton.textContent = currentStep === panels.length - 1 ? '提交审核' : '下一步';
+    page.querySelectorAll('[data-route-prev]').forEach(function (prevButton) {
+      prevButton.disabled = currentStep === 0;
+    });
+    page.querySelectorAll('[data-route-next]').forEach(function (nextButton) {
+      nextButton.textContent = currentStep === panels.length - 1 ? '提交审核' : '下一步';
+    });
   }
 
   function navigateTo(href) {
@@ -66,6 +68,7 @@
 
   function openSubmitModal() {
     var modal = $('.route-submit-modal');
+    persistResourceTemplates();
     if (modal) modal.classList.add('show');
     formDirty = false;
   }
@@ -77,16 +80,8 @@
 
   function saveDraft() {
     formDirty = false;
-    showToast('草稿已保存');
-  }
-
-  function generateCode(button) {
-    var target = $(button.getAttribute('data-generate-code'));
-    var prefix = page.getAttribute('data-code-prefix') || 'RT';
-    if (!target) return;
-    target.value = prefix + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-    setDirty();
-    showToast('编号已生成');
+    var savedTemplates = persistResourceTemplates();
+    showToast(savedTemplates.length ? '草稿已保存，资源模板草稿已记录' : '草稿已保存');
   }
 
   function updateCounter(field) {
@@ -105,6 +100,71 @@
   function setFieldValue(id, value) {
     var field = document.getElementById(id);
     if (field) field.value = value;
+  }
+
+  function collectResourceTemplates() {
+    return Array.from(page.querySelectorAll('[data-save-resource-template]:checked')).map(function (field) {
+      return {
+        type: field.getAttribute('data-template-type') || '资源模板',
+        product: (document.getElementById('lineName') || {}).value || '',
+        route: (page.querySelector('[data-plan-switch].active strong') || {}).textContent || '',
+        createdAt: new Date().toISOString()
+      };
+    });
+  }
+
+  function persistResourceTemplates() {
+    var templates = collectResourceTemplates();
+    if (!templates.length) return [];
+    try {
+      var oldTemplates = JSON.parse(window.localStorage.getItem('caesarResourceTemplateDrafts') || '[]');
+      window.localStorage.setItem('caesarResourceTemplateDrafts', JSON.stringify(templates.concat(oldTemplates).slice(0, 20)));
+    } catch (error) {}
+    return templates;
+  }
+
+  function applyResourceSelection(field) {
+    var value = field.value || '';
+    if (field.id === 'flightRouteResource') {
+      var flightMap = {
+        '北京首都T3 → 巴黎戴高乐T1（国航/法航）': ['国际航空CA', 'CA933 / AF111', '北京首都T3 → 巴黎戴高乐T1', '直飞'],
+        '北京首都T3 → 法兰克福T1（国航/汉莎）': ['汉莎航空中国区', 'CA837 / LH721', '北京首都T3 → 法兰克福T1', '直飞'],
+        '上海浦东T1 → 大阪关西T1（东航/日航）': ['东航华东销售部', 'MU515 / JL898', '上海浦东T1 → 大阪关西T1', '直飞']
+      };
+      var flight = flightMap[value] || ['', '', '', ''];
+      setFieldValue('flightCarrier', flight[0]);
+      setFieldValue('flightNo', flight[1]);
+      setFieldValue('flightAirports', flight[2]);
+      setFieldValue('flightTransit', flight[3]);
+      return true;
+    }
+    if (field.id === 'cruiseRoute') {
+      var cruiseMap = {
+        '西地中海精华': ['皇家加勒比国际游轮', '海洋绿洲号', '巴塞罗那', '巴塞罗那 / 马赛 / 那不勒斯 / 巴塞罗那'],
+        '地中海经典线': ['地中海邮轮 MSC Cruises', '地中海荣耀号', '巴塞罗那', '巴塞罗那 / 罗马 / 雅典 / 圣托里尼 / 巴塞罗那'],
+        '日韩短线': ['地中海邮轮 MSC Cruises', '地中海荣耀号', '上海', '上海 / 福冈 / 长崎 / 上海']
+      };
+      var cruise = cruiseMap[value] || ['', '', '', ''];
+      setFieldValue('cruiseCompany', cruise[0]);
+      setFieldValue('shipName', cruise[1]);
+      setFieldValue('homePort', cruise[2]);
+      setFieldValue('ports', cruise[3]);
+      return true;
+    }
+    if (field.id === 'trainRouteResource') {
+      var trainMap = {
+        '丝绸之路基础线': ['西安站', '乌鲁木齐站', '丝路专列运营中心', '西安 / 兰州 / 张掖 / 敦煌 / 吐鲁番 / 乌鲁木齐'],
+        '东北冰雪基础线': ['哈尔滨站', '长春站', '冰雪北国旅游专列公司', '哈尔滨 / 雪乡 / 亚布力 / 吉林 / 长春'],
+        '茶马古道基础线': ['成都站', '昆明站', '茶马古道铁路文旅', '成都 / 大理 / 丽江 / 香格里拉 / 昆明']
+      };
+      var train = trainMap[value] || ['', '', '', ''];
+      setFieldValue('startStation', train[0]);
+      setFieldValue('endStation', train[1]);
+      setFieldValue('operator', train[2]);
+      setFieldValue('mainCities', train[3]);
+      return true;
+    }
+    return false;
   }
 
   function htmlEscape(value) {
@@ -129,7 +189,7 @@
 
   function renderKeyValueList(items, className) {
     return items.map(function (item) {
-      return '<span class="' + className + '">' + htmlEscape(item[0]) + ' <strong>' + htmlEscape(item[1]) + '</strong></span>';
+      return '<span class="' + className + '">' + htmlEscape(item[0]) + '：<strong>' + htmlEscape(item[1]) + '</strong></span>';
     }).join('');
   }
 
@@ -137,6 +197,23 @@
     return items.map(function (item) {
       return '<div class="route-readiness-item"><span>' + htmlEscape(item[0]) + '</span><strong>' + htmlEscape(item[1]) + '</strong></div>';
     }).join('');
+  }
+
+  function renderHeroTags(items) {
+    return items.map(function (item) {
+      return '<span># ' + htmlEscape(item) + '</span>';
+    }).join('');
+  }
+
+  function renderTabActions(isLastStep) {
+    return [
+      '<div class="route-tab-actions">',
+      '<button class="btn btn-secondary" type="button" data-route-prev>上一步</button>',
+      '<button class="btn btn-primary" type="button" data-route-next>',
+      isLastStep ? '提交审核' : '下一步',
+      '</button>',
+      '</div>'
+    ].join('');
   }
 
   function renderPlanList(items) {
@@ -150,199 +227,207 @@
     }).join('');
   }
 
-  var sharedRouteTypeOptions = ['跟团游', '邮轮', '专列', '自由行', '小包团', '半自由行'];
-  var groupExtraHtml = panels[0] && panels[0].querySelectorAll('.route-form-section')[1] ? panels[0].querySelectorAll('.route-form-section')[1].innerHTML : '';
-  var groupPlanStructureHtml = panels[1] && panels[1].querySelectorAll('.route-form-section')[2] ? panels[1].querySelectorAll('.route-form-section')[2].innerHTML : '';
+  var groupExtraHtml = panels[0] && panels[0].querySelector('[data-route-basic-extra]') ? panels[0].querySelector('[data-route-basic-extra]').innerHTML : '';
+  var groupPlanStructureHtml = panels[1] && panels[1].querySelector('[data-plan-structure-section]') ? panels[1].querySelector('[data-plan-structure-section]').innerHTML : '';
   var groupCostHtml = panels[2] && panels[2].querySelector('.route-form-section') ? panels[2].querySelector('.route-form-section').innerHTML : '';
 
   var routePresets = {
     group: {
-      prefix: 'GT',
       scheduleType: 'group',
-      code: 'GT-EU-001',
       tagText: '跟团线路',
       tagClass: 'tag tag-blue',
       title: '欧洲十国经典游 12日11晚',
-      desc: '北京出发，覆盖法国、德国、瑞士、意大利等核心目的地；本页维护线路稳定信息、方案结构和通用费用政策，出发日期、价格和库存进入团期层维护。',
+      desc: '北京出发，覆盖法国、德国、瑞士、意大利等核心目的地。',
       subtitle: '纯玩无购物，法德瑞意核心城市连线，含中文领队与签证协助',
       supplier: ['欧洲地接ABC', '国际航空CA', '法国地接联盟'],
       ownerOrg: ['欧洲线路中心', '亚洲线路中心', '国内线路中心'],
       routeType: '跟团游',
-      chips: [['供货方', '欧洲地接ABC'], ['承接组织', '欧洲线路中心'], ['出发城市', '北京'], ['主题', '经典巡游']],
-      readiness: [['方案数', '2个'], ['参考起价', '¥29,800/人'], ['最后编辑', '2026-06-28']],
+      chips: [['供货方', '欧洲地接ABC'], ['承接组织', '欧洲线路中心'], ['出发城市', '北京']],
+      heroTags: ['纯玩', '含签证', '中文领队'],
+      readiness: [['方案总数', '2个'], ['参考起价', '¥29,800/人'], ['数据完整度', '100%']],
       plans: [
         { name: '经济款', meta: '12天11晚 · 三星酒店 · 不含机票' },
         { name: '品质款', meta: '12天11晚 · 五星酒店 · 含机票' }
       ],
-      planTitle: '线路方案',
+      planTitle: '行程方案',
       planSummary: '当前方案参考价 ¥29,800 - ¥32,800/人',
       extraHtml: groupExtraHtml,
       planStructureHtml: groupPlanStructureHtml,
       costHtml: groupCostHtml,
-      publishTiles: [['线路基础', '字段完整，可提交'], ['方案结构', '2个方案，均可售'], ['费用政策', '包含/不含/退改已维护'], ['后续动作', '审核通过后按方案开排团期']],
+      publishTiles: [['基础信息', '字段完整，可提交'], ['行程方案', '2个方案，均可售'], ['费用说明', '包含/不含/退改已维护'], ['后续动作', '审核通过后按方案开排团期']],
       modalTitle: '已提交线路发布审核',
       modalFocus: '线路发布审批',
       navigateText: '开排团期',
+      scheduleHref: '../tour/team-create.html',
       modalNext: '通过后可开排团期'
     },
     cruise: {
-      prefix: 'CR',
       scheduleType: 'cruise',
-      code: 'CR-MED-001',
       tagText: '邮轮线路',
       tagClass: 'tag tag-purple',
       title: '理想号地中海邮轮 8天7晚',
-      desc: '巴塞罗那母港往返，停靠马赛、热那亚、那不勒斯等经典港口；本页维护船只、航线和售卖舱型结构，航次日期、舱型价格和库存进入团期层维护。',
+      desc: '巴塞罗那母港往返，停靠马赛、热那亚、那不勒斯等经典港口。',
       subtitle: '巴塞罗那往返，阳台舱优选，含港务费与岸上精选行程',
       supplier: ['凯撒邮轮资源部', '皇家加勒比', '地中海邮轮'],
       ownerOrg: ['邮轮线路中心', '欧洲线路中心', '渠道运营组'],
       routeType: '邮轮',
-      chips: [['邮轮公司', '凯撒理想号'], ['船名', '理想号'], ['母港', '巴塞罗那'], ['停靠港', '4个']],
-      readiness: [['方案数', '2个'], ['舱型结构', '4类'], ['参考起价', '¥12,800/人']],
+      chips: [['邮轮公司', '凯撒理想号'], ['船名', '理想号'], ['母港', '巴塞罗那']],
+      heroTags: ['阳台舱', '岸上游', '接送机'],
+      readiness: [['方案总数', '2个'], ['参考起价', '¥12,800/人'], ['数据完整度', '100%']],
       plans: [
         { name: '阳台舱优选', meta: '8天7晚 · 4港口 · 含岸上精选' },
         { name: '套房礼遇', meta: '8天7晚 · 套房权益 · 小团岸上游' }
       ],
-      planTitle: '邮轮方案',
+      planTitle: '行程方案',
       planSummary: '当前方案关联 4 类舱型，参考价 ¥12,800 - ¥26,800/人',
       extraHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">船舶与航区</h2></div>',
         '<div class="route-field-grid three">',
-        '<div class="form-group"><label class="form-label" for="cruiseCompany">邮轮公司 <span class="req">*</span></label><input id="cruiseCompany" class="form-control" type="text" value="凯撒理想号"></div>',
-        '<div class="form-group"><label class="form-label" for="shipName">船名 <span class="req">*</span></label><input id="shipName" class="form-control" type="text" value="理想号"></div>',
+        '<div class="form-group"><label class="form-label" for="cruiseCompany">邮轮公司 <span class="req">*</span></label><select id="cruiseCompany" class="form-control" data-resource-ref><option selected>地中海邮轮 MSC Cruises</option><option>皇家加勒比国际游轮</option><option>歌诗达邮轮 Costa Cruises</option></select></div>',
+        '<div class="form-group"><label class="form-label" for="shipName">船只档案 <span class="req">*</span></label><select id="shipName" class="form-control" data-resource-ref><option selected>地中海荣耀号</option><option>海洋绿洲号</option><option>歌诗达威尼斯号</option></select></div>',
+        '<div class="form-group"><label class="form-label" for="cruiseRoute">邮轮模板 <span class="req">*</span></label><select id="cruiseRoute" class="form-control" data-resource-ref><option selected>西地中海精华</option><option>地中海经典线</option><option>日韩短线</option><option>直接填写</option></select></div>',
         '<div class="form-group"><label class="form-label" for="homePort">母港 <span class="req">*</span></label><input id="homePort" class="form-control" type="text" value="巴塞罗那"></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="ports">停靠港口及顺序 <span class="req">*</span></label><input id="ports" class="form-control" type="text" value="巴塞罗那 / 马赛 / 热那亚 / 那不勒斯 / 巴塞罗那"></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="shipFacility">船舶设施简介</label><textarea id="shipFacility" class="form-control" rows="3">船上配置主餐厅、自助餐厅、剧院、泳池、儿童俱乐部、健身中心与海景酒廊。</textarea></div>',
+        '<div class="form-group"><label class="form-label" for="cruisePackageName">售卖航线名称 <span class="req">*</span></label><input id="cruisePackageName" class="form-control" type="text" value="理想号地中海阳台舱优选"></div>',
+        '<div class="form-group"><label class="form-label" for="cruiseCabinSale">舱型售卖组合 <span class="req">*</span></label><input id="cruiseCabinSale" class="form-control" type="text" value="阳台舱为主，开放内舱/海景/套房加价"></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="shoreTour">岸上游安排 <span class="req">*</span></label><textarea id="shoreTour" class="form-control" rows="3">马赛、热那亚、那不勒斯安排精选岸上游；罗马提供小团加购。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="prePostCruise">航前航后服务</label><textarea id="prePostCruise" class="form-control" rows="3">可选巴塞罗那航前酒店、登船日接送机、离船日送机。</textarea></div>',
         '</div>'
       ].join(''),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">方案舱型结构</h2><button class="btn btn-secondary" type="button" data-add-row="#cabinMatrix">新增舱型</button></div>',
-        '<div class="table-wrap"><table id="cabinMatrix" data-matrix-type="cabin"><thead><tr><th>舱型</th><th>舱型描述</th><th>舱位面积</th><th>床型配置</th><th>窗/阳台</th><th>最大入住</th><th>操作</th></tr></thead><tbody>',
-        '<tr><td><input class="form-control" type="text" value="内舱房"></td><td><input class="form-control" type="text" value="经济基础舱"></td><td><input class="form-control" type="text" value="16㎡"></td><td><input class="form-control" type="text" value="双床/大床"></td><td><select class="form-control"><option selected>无窗</option><option>海景窗</option><option>阳台</option></select></td><td><input class="form-control" type="number" value="2"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
-        '<tr><td><input class="form-control" type="text" value="阳台房"></td><td><input class="form-control" type="text" value="家庭热销舱"></td><td><input class="form-control" type="text" value="24㎡"></td><td><input class="form-control" type="text" value="大床+沙发床"></td><td><select class="form-control"><option>无窗</option><option>海景窗</option><option selected>阳台</option></select></td><td><input class="form-control" type="number" value="4"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<div class="table-wrap"><table id="cabinMatrix" data-matrix-type="cabin"><thead><tr><th>舱型</th><th>舱位面积</th><th>床型配置</th><th>窗/阳台</th><th>最大入住</th><th>操作</th></tr></thead><tbody>',
+        '<tr><td><input class="form-control" type="text" value="内舱房"></td><td><input class="form-control" type="text" value="16㎡"></td><td><input class="form-control" type="text" value="双床/大床"></td><td><select class="form-control"><option selected>无窗</option><option>海景窗</option><option>阳台</option></select></td><td><input class="form-control" type="number" value="2"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<tr><td><input class="form-control" type="text" value="阳台房"></td><td><input class="form-control" type="text" value="24㎡"></td><td><input class="form-control" type="text" value="大床+沙发床"></td><td><select class="form-control"><option>无窗</option><option>海景窗</option><option selected>阳台</option></select></td><td><input class="form-control" type="number" value="4"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
         '</tbody></table></div>'
       ].join(''),
       costHtml: [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">船票与税费政策</h2></div>',
+        '<div class="route-section-titlebar"><h2 class="route-section-title">费用说明</h2></div>',
         '<div class="route-field-grid">',
-        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准说明 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="2-12岁与成人同舱按儿童同舱价核算"></div>',
+        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="2-12岁与成人同舱按儿童同舱价核算"></div>',
         '<div class="form-group"><label class="form-label" for="taxIncluded">港口税费是否已含 <span class="req">*</span></label><select id="taxIncluded" class="form-control"><option selected>已含</option><option>未含</option></select></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="includeFee">船票通常包含说明 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">指定舱型住宿、船上主餐厅与自助餐厅、船上基础娱乐活动、港口税费。</textarea></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">船票通常不含说明 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">个人消费、收费餐厅、SPA、部分船上活动、岸上自费项目、签证及保险差额。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="includeFee">船票通常包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">指定舱型住宿、船上主餐厅与自助餐厅、船上基础娱乐活动、港口税费。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">船票通常不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">个人消费、收费餐厅、SPA、部分船上活动、岸上自费项目、签证及保险差额。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">名单与舱房确认后按船方政策核损，港务税和船票损失按实际发生扣减。</textarea></div>',
         '</div>'
       ].join(''),
-      publishTiles: [['线路基础', '船舶与母港已维护'], ['方案结构', '2个方案，4类舱型'], ['费用政策', '税费/小费/签证已维护'], ['后续动作', '审核通过后按方案舱型开排团期']],
+      publishTiles: [['基础信息', '船舶与母港已维护'], ['行程方案', '2个方案，4类舱型'], ['费用说明', '税费/小费/签证已维护'], ['后续动作', '审核通过后按方案舱型开排航次']],
       modalTitle: '已提交邮轮线路审核',
       modalFocus: '舱型结构与税费政策',
-      navigateText: '开排团期',
-      modalNext: '通过后可开排团期'
+      navigateText: '开排航次',
+      scheduleHref: '../tour/team-create.html',
+      modalNext: '通过后可开排航次'
     },
     train: {
-      prefix: 'TR',
       scheduleType: 'train',
-      code: 'TR-SILK-001',
       tagText: '专列线路',
       tagClass: 'tag tag-orange',
       title: '丝绸之路专列 12日11晚',
-      desc: '西安始发，串联兰州、张掖、敦煌、吐鲁番、乌鲁木齐等核心节点；本页维护线路、站点和车厢铺位结构，车次日期、铺位价格和库存进入团期层维护。',
+      desc: '西安始发，串联兰州、张掖、敦煌、吐鲁番、乌鲁木齐等核心节点。',
       subtitle: '专列串联西北经典目的地，软卧铺位，随车服务团队全程保障',
       supplier: ['中国铁路合作局', '西北地接联盟', '敦煌文旅资源公司'],
       ownerOrg: ['专列线路中心', '国内线路中心', '研学线路中心'],
       routeType: '专列',
-      chips: [['运营方', '中国铁路合作局'], ['出发站', '西安站'], ['终到站', '乌鲁木齐站'], ['铺位结构', '3类']],
-      readiness: [['方案数', '2个'], ['铺位结构', '3类'], ['参考起价', '¥18,800/人']],
+      chips: [['运营方', '中国铁路合作局'], ['出发站', '西安站'], ['终到站', '乌鲁木齐站']],
+      heroTags: ['专列', '软卧', '随车服务'],
+      readiness: [['方案总数', '2个'], ['参考起价', '¥18,800/人'], ['数据完整度', '100%']],
       plans: [
         { name: '舒适软卧', meta: '12天11晚 · 软卧为主 · 标准地接' },
         { name: '尊享包厢', meta: '12天11晚 · 包厢权益 · 小团讲解' }
       ],
-      planTitle: '专列方案',
+      planTitle: '行程方案',
       planSummary: '当前方案关联 3 类铺位，参考价 ¥18,800 - ¥26,800/人',
       extraHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">列车与站点</h2></div>',
         '<div class="route-field-grid three">',
         '<div class="form-group"><label class="form-label" for="startStation">出发站 <span class="req">*</span></label><input id="startStation" class="form-control" type="text" value="西安站"></div>',
         '<div class="form-group"><label class="form-label" for="endStation">终到站 <span class="req">*</span></label><input id="endStation" class="form-control" type="text" value="乌鲁木齐站"></div>',
-        '<div class="form-group"><label class="form-label" for="operator">运营方/合作铁路局 <span class="req">*</span></label><input id="operator" class="form-control" type="text" value="中国铁路合作局"></div>',
+        '<div class="form-group"><label class="form-label" for="operator">专列运营商 <span class="req">*</span></label><select id="operator" class="form-control" data-resource-ref><option selected>丝路专列运营中心</option><option>冰雪北国旅游专列公司</option><option>茶马古道铁路文旅</option></select></div>',
+        '<div class="form-group"><label class="form-label" for="trainRouteResource">专列模板 <span class="req">*</span></label><select id="trainRouteResource" class="form-control" data-resource-ref><option selected>丝绸之路基础线</option><option>东北冰雪基础线</option><option>茶马古道基础线</option><option>直接填写</option></select></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="mainCities">途经主要城市/地区 <span class="req">*</span></label><input id="mainCities" class="form-control" type="text" value="西安 / 兰州 / 张掖 / 敦煌 / 吐鲁番 / 乌鲁木齐"></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="facility">列车设施亮点</label><textarea id="facility" class="form-control" rows="3">配置随车餐吧、活动车厢、公共洗漱区、行李储物区，随车管家负责车上服务协调。</textarea></div>',
+        '<div class="form-group"><label class="form-label" for="trainPackageName">售卖线路名称 <span class="req">*</span></label><input id="trainPackageName" class="form-control" type="text" value="丝绸之路专列舒适软卧"></div>',
+        '<div class="form-group"><label class="form-label" for="berthSale">铺位售卖组合 <span class="req">*</span></label><input id="berthSale" class="form-control" type="text" value="软卧为主，硬卧/包厢加价"></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="offTrainTour">下车游览安排 <span class="req">*</span></label><textarea id="offTrainTour" class="form-control" rows="3">兰州、张掖、敦煌、吐鲁番安排下车游览，站点接驳由当地地接承接。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="onTrainService">随车服务</label><textarea id="onTrainService" class="form-control" rows="3">随车领队、管家、餐饮协调和夜间巡查；重点站点安排行李协助。</textarea></div>',
         '</div>'
       ].join(''),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">方案车厢/铺位结构</h2><button class="btn btn-secondary" type="button" data-add-row="#berthMatrix">新增结构</button></div>',
-        '<div class="table-wrap"><table id="berthMatrix" data-matrix-type="berth"><thead><tr><th>车厢类型</th><th>铺位类型</th><th>车厢位置</th><th>单元人数</th><th>设施说明</th><th>操作</th></tr></thead><tbody>',
+        '<div class="table-wrap"><table id="berthMatrix" data-matrix-type="berth"><thead><tr><th>车厢类型</th><th>铺位类型</th><th>车厢位置</th><th>单元人数</th><th>设施配置</th><th>操作</th></tr></thead><tbody>',
         '<tr><td><input class="form-control" type="text" value="软卧车厢"></td><td><input class="form-control" type="text" value="四人软卧"></td><td><input class="form-control" type="text" value="3-8号车厢"></td><td><input class="form-control" type="number" value="4"></td><td><input class="form-control" type="text" value="空调/充电/储物"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
         '<tr><td><input class="form-control" type="text" value="高包车厢"></td><td><input class="form-control" type="text" value="双人包厢"></td><td><input class="form-control" type="text" value="9-10号车厢"></td><td><input class="form-control" type="number" value="2"></td><td><input class="form-control" type="text" value="独立门锁/软卧床品"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
         '</tbody></table></div>'
       ].join(''),
       costHtml: [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">费用与服务政策</h2></div>',
+        '<div class="route-section-titlebar"><h2 class="route-section-title">费用说明</h2></div>',
         '<div class="route-field-grid">',
-        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准说明 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="儿童按占铺/不占铺两类核价"></div>',
-        '<div class="form-group"><label class="form-label" for="serviceStaff">随车服务人员说明 <span class="req">*</span></label><input id="serviceStaff" class="form-control" type="text" value="随车领队、管家、目的地地接导游"></div>',
+        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="儿童按占铺/不占铺两类核价"></div>',
+        '<div class="form-group"><label class="form-label" for="serviceStaff">随车服务人员 <span class="req">*</span></label><input id="serviceStaff" class="form-control" type="text" value="随车领队、管家、目的地地接导游"></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="includeFee">通用费用包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">专列铺位、行程内地接交通、景区首道门票、导游服务、随车服务、行程所列餐食。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">通用费用不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">出发地至出发站交通、终到站返程交通、个人消费、单人占包厢附加费、自费项目。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">名单提交前按规则扣除已发生费用；名单提交后如铁路资源已确认，以实际铁路及地接损失核算。</textarea></div>',
         '</div>'
       ].join(''),
-      publishTiles: [['线路基础', '站点与运营方已维护'], ['方案结构', '2个方案，3类铺位'], ['费用政策', '包含/不含/退改已维护'], ['后续动作', '审核通过后按方案铺位开排团期']],
+      publishTiles: [['基础信息', '站点与运营方已维护'], ['行程方案', '2个方案，3类铺位'], ['费用说明', '包含/不含/退改已维护'], ['后续动作', '审核通过后按方案铺位开排班期']],
       modalTitle: '已提交专列线路审核',
       modalFocus: '车厢结构与运营资源',
-      navigateText: '开排团期',
-      modalNext: '通过后可开排团期'
+      navigateText: '开排班期',
+      scheduleHref: '../tour/team-create.html',
+      modalNext: '通过后可开排班期'
     },
     free: {
-      prefix: 'FT',
       scheduleType: 'free',
-      code: 'FT-PAR-001',
       tagText: '自由行',
       tagClass: 'tag tag-green',
       title: '巴黎自由行 5-7日',
-      desc: '围绕巴黎目的地资源，组合机票、酒店、接送机与当地玩乐；本页维护线路和套餐组合，出行日期价格、库存和采购批次在日期库存层维护。',
-      subtitle: '机票+酒店+接送机可选组合，支持按日期维护套餐价格库存',
+      desc: '巴黎目的地自由行，组合机票、酒店、接送机与当地玩乐。',
+      subtitle: '机票+酒店+接送机可选组合，按出行日期销售',
       supplier: ['欧洲地接ABC', '国际航空CA', '巴黎酒店直采'],
       ownerOrg: ['自由行线路中心', '欧洲线路中心', '渠道运营组'],
       routeType: '自由行',
-      chips: [['目的地', '法国巴黎'], ['套餐组合', '3类'], ['资源引用', '酒店/航班/接送'], ['库存方式', '日期库存']],
-      readiness: [['方案数', '3个'], ['套餐组合', '机酒/酒店/接送'], ['参考起价', '¥4,800/人']],
+      chips: [['目的地', '法国巴黎'], ['套餐组合', '3类'], ['服务项目', '酒店/航班/接送']],
+      heroTags: ['机酒组合', '出行日期', '接送机'],
+      readiness: [['方案总数', '3个'], ['参考起价', '¥4,800/人'], ['数据完整度', '100%']],
       plans: [
-        { name: '机票+酒店套餐', meta: '5-7日 · 航班锁位 · 四星酒店' },
+        { name: '机票+酒店套餐', meta: '5-7日 · 航班协议 · 四星酒店' },
         { name: '纯酒店套餐', meta: '3-5晚 · 多房型 · 可加接送机' }
       ],
-      planTitle: '自由行方案',
-      planSummary: '当前方案关联机票、酒店、接送机套餐，价格库存在日期层维护',
+      planTitle: '行程方案',
+      planSummary: '当前方案关联机票、酒店、接送机套餐',
       extraHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">目的地与资源组合</h2></div>',
         '<div class="route-field-grid three">',
         '<div class="form-group"><label class="form-label" for="departCity">出发城市 <span class="req">*</span></label><input id="departCity" class="form-control" type="text" value="全国"></div>',
         '<div class="form-group"><label class="form-label" for="destinationCountry">目的地国家/地区 <span class="req">*</span></label><input id="destinationCountry" class="form-control" type="text" value="法国"></div>',
         '<div class="form-group"><label class="form-label" for="destinationCity">目的地城市 <span class="req">*</span></label><input id="destinationCity" class="form-control" type="text" value="巴黎"></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="resourcePool">引用资源</label><input id="resourcePool" class="form-control" type="text" value="国际航空CA锁位、巴黎四星酒店、接送机服务、卢浮宫门票"></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="resourcePool">资源组合</label><select id="resourcePool" class="form-control" data-resource-ref><option selected>国际航空CA协议 + 巴黎四星酒店池 + 接送机服务 + 卢浮宫门票</option><option>巴黎酒店直采 + 接送机服务</option><option>国际航空CA协议 + 巴黎酒店直采</option><option>直接填写</option></select></div>',
         '</div>'
       ].join(''),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">方案套餐组合</h2><button class="btn btn-secondary" type="button" data-add-row="#packageMatrix">新增套餐项</button></div>',
-        '<div class="table-wrap"><table id="packageMatrix" data-matrix-type="package"><thead><tr><th>套餐项</th><th>引用资源</th><th>规则说明</th><th>操作</th></tr></thead><tbody>',
-        '<tr><td><input class="form-control" type="text" value="往返机票"></td><td><input class="form-control" type="text" value="国际航空CA锁位"></td><td><input class="form-control" type="text" value="按出发城市匹配航班"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
-        '<tr><td><input class="form-control" type="text" value="巴黎四星酒店"></td><td><input class="form-control" type="text" value="巴黎酒店直采"></td><td><input class="form-control" type="text" value="3晚起订，可选房型"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<div class="table-wrap"><table id="packageMatrix" data-matrix-type="package"><thead><tr><th>套餐项</th><th>服务内容</th><th>供应商</th><th>适用规则</th><th>操作</th></tr></thead><tbody>',
+        '<tr><td><input class="form-control" type="text" value="往返机票"></td><td><select class="form-control" data-resource-ref><option selected>国际航空CA巴黎航线协议</option><option>汉莎航空巴黎航线协议</option><option>按订单临采</option></select></td><td>国际航空CA</td><td><input class="form-control" type="text" value="按出发城市匹配航班"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<tr><td><input class="form-control" type="text" value="巴黎四星酒店"></td><td><select class="form-control" data-resource-ref><option selected>巴黎四星酒店池</option><option>巴黎索菲特大酒店</option><option>巴黎酒店直采</option></select></td><td>巴黎酒店直采</td><td><input class="form-control" type="text" value="3晚起订，可选房型"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
         '</tbody></table></div>'
       ].join(''),
       costHtml: [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">套餐与日期价格规则</h2></div>',
+        '<div class="route-section-titlebar"><h2 class="route-section-title">费用说明</h2></div>',
         '<div class="route-field-grid">',
         '<div class="form-group"><label class="form-label" for="adultRef">套餐参考价区间</label><input id="adultRef" class="form-control" type="text" value="¥4,800 - ¥9,800"></div>',
-        '<div class="form-group"><label class="form-label" for="dateStock">库存维护方式 <span class="req">*</span></label><select id="dateStock" class="form-control"><option selected>按出行日期维护价格库存</option><option>按酒店房晚维护</option></select></div>',
+        '<div class="form-group"><label class="form-label" for="dateStock">日期价格方式 <span class="req">*</span></label><select id="dateStock" class="form-control"><option selected>按出行日期维护价格与可售量</option><option>按酒店房晚维护</option></select></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="includeFee">费用包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">套餐所选机票、酒店房晚、接送机或当地玩乐项目，以方案套餐项为准。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">费用不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">签证、保险、城市税、个人消费和未选择的当地玩乐项目。</textarea></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">机票、酒店和当地玩乐按各自资源退改规则核损，日期库存售罄后不可超卖。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">机票、酒店和当地玩乐按各自资源退改规则核损，套餐名额售罄后不可超卖。</textarea></div>',
         '</div>'
       ].join(''),
-      publishTiles: [['线路基础', '目的地与资源已维护'], ['方案结构', '3类套餐组合'], ['费用政策', '日期库存规则已维护'], ['后续动作', '审核通过后维护日期价格库存']],
+      publishTiles: [['基础信息', '目的地与资源已维护'], ['行程方案', '3类套餐组合'], ['费用说明', '出行日期规则已维护'], ['后续动作', '审核通过后开售出行日期']],
       modalTitle: '已提交自由行线路审核',
-      modalFocus: '套餐组合与日期库存',
-      navigateText: '日期库存',
-      scheduleHref: 'product-free-travel-list.html?tab=inventory',
-      modalNext: '通过后可维护日期价格库存'
+      modalFocus: '套餐组合与出行日期',
+      navigateText: '开售日期',
+      scheduleHref: 'product-free-travel-list.html?tab=calendar',
+      modalNext: '通过后可开售出行日期并维护价格名额'
     }
   };
 
@@ -350,45 +435,43 @@
     currentKind = normalizeKind(kind);
     var preset = routePresets[currentKind] || routePresets.group;
     page.setAttribute('data-route-kind', currentKind);
-    page.setAttribute('data-code-prefix', preset.prefix);
     page.setAttribute('data-schedule-href', preset.scheduleHref || 'products.html');
 
     var title = page.querySelector('.route-hero-title');
     var desc = page.querySelector('.route-hero-desc');
     var eyebrow = page.querySelector('.route-eyebrow');
-    var typeTag = page.querySelector('.route-hero-title-row .tag:last-child');
+    var typeTag = page.querySelector('.route-hero-type-tag');
     var chips = page.querySelector('.route-hero-main .route-meta-strip');
+    var heroTags = page.querySelector('.route-hero-tags');
     var readiness = page.querySelector('.route-readiness-grid');
     if (title) title.textContent = preset.title;
     if (desc) desc.textContent = preset.desc;
-    if (eyebrow) eyebrow.textContent = '线路编号 ' + preset.code;
+    if (eyebrow) eyebrow.textContent = '最后编辑 2026-06-28';
     if (typeTag) {
       typeTag.className = preset.tagClass;
       typeTag.textContent = preset.tagText;
     }
     if (chips) chips.innerHTML = renderKeyValueList(preset.chips, 'route-chip');
+    if (heroTags) heroTags.innerHTML = renderHeroTags(preset.heroTags || []);
     if (readiness) readiness.innerHTML = renderReadiness(preset.readiness);
     var navigateButton = page.querySelector('[data-route-navigate]');
     if (navigateButton) navigateButton.textContent = preset.navigateText || '开排团期';
 
-    setFieldValue('lineCode', preset.code);
     setFieldValue('lineName', preset.title);
     setFieldValue('subTitle', preset.subtitle);
 
-    var routeType = document.getElementById('lineType');
-    if (routeType) routeType.innerHTML = selectedOptionHtml(sharedRouteTypeOptions, preset.routeType);
     var supplier = document.getElementById('supplier');
     if (supplier) supplier.innerHTML = selectedOptionHtml(preset.supplier, preset.supplier[0]);
     var ownerOrg = document.getElementById('ownerOrg');
     if (ownerOrg) ownerOrg.innerHTML = selectedOptionHtml(preset.ownerOrg, preset.ownerOrg[0]);
 
-    var basicExtraSection = panels[0] && panels[0].querySelectorAll('.route-form-section')[1];
+    var basicExtraSection = panels[0] && panels[0].querySelector('[data-route-basic-extra]');
     if (basicExtraSection) basicExtraSection.innerHTML = preset.extraHtml;
 
     var planTitle = panels[1] && panels[1].querySelector('.route-section-title');
     if (planTitle) planTitle.textContent = preset.planTitle;
-    var itineraryTitle = panels[1] && panels[1].querySelectorAll('.route-form-section')[1] && panels[1].querySelectorAll('.route-form-section')[1].querySelector('.route-section-title');
-    if (itineraryTitle) itineraryTitle.textContent = currentKind === 'cruise' ? '航线日程' : currentKind === 'free' ? '自由行安排' : '分日行程';
+    var itineraryTitle = panels[1] && panels[1].querySelector('[data-itinerary-section] .route-subsection-title');
+    if (itineraryTitle) itineraryTitle.textContent = '行程安排';
     var planList = page.querySelector('.route-plan-list');
     if (planList) planList.innerHTML = renderPlanList(preset.plans);
     var activePlanLabel = page.querySelector('[data-active-plan-label]');
@@ -396,28 +479,26 @@
     if (activePlanLabel) activePlanLabel.textContent = preset.plans[0].name;
     if (planHeadSummary) planHeadSummary.textContent = preset.planSummary;
 
-    var planStructureSection = panels[1] && panels[1].querySelectorAll('.route-form-section')[2];
+    var planStructureSection = panels[1] && panels[1].querySelector('[data-plan-structure-section]');
     if (planStructureSection) {
       planStructureSection.classList.toggle('route-matrix-table', currentKind !== 'group');
       planStructureSection.innerHTML = preset.planStructureHtml;
     }
 
     var costSection = panels[2] && panels[2].querySelector('.route-form-section');
-    if (costSection) costSection.innerHTML = preset.costHtml;
-
-    var publishGrid = panels[3] && panels[3].querySelector('.route-publish-grid');
-    if (publishGrid) {
-      publishGrid.innerHTML = preset.publishTiles.map(function (item) {
-        return '<div class="route-publish-tile"><span>' + htmlEscape(item[0]) + '</span><strong>' + htmlEscape(item[1]) + '</strong></div>';
-      }).join('');
+    if (costSection) {
+      costSection.innerHTML = preset.costHtml;
+      if (!costSection.querySelector('[data-route-next]')) {
+        costSection.insertAdjacentHTML('beforeend', renderTabActions(true));
+      }
     }
 
     var modalTitle = document.querySelector('.route-submit-modal .modal-title');
     var modalItems = document.querySelectorAll('.route-success-summary > div');
     if (modalTitle) modalTitle.textContent = preset.modalTitle;
-    if (modalItems[0]) modalItems[0].innerHTML = '<span>线路编号</span><strong>' + htmlEscape(preset.code) + '</strong>';
+    if (modalItems[0]) modalItems[0].innerHTML = '<span>产品类型</span><strong>' + htmlEscape(preset.tagText) + '</strong>';
     if (modalItems[1]) modalItems[1].innerHTML = '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
-    if (modalItems[2]) modalItems[2].innerHTML = '<span>方案数量</span><strong>' + htmlEscape(String(preset.plans.length)) + '个</strong>';
+    if (modalItems[2]) modalItems[2].innerHTML = '<span>行程方案</span><strong>' + htmlEscape(String(preset.plans.length)) + '个</strong>';
     if (modalItems[3]) modalItems[3].innerHTML = '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后可开排团期') + '</strong>';
 
     page.querySelectorAll('input, textarea').forEach(updateCounter);
@@ -428,7 +509,6 @@
       return [
         '<tr>',
         '<td><input class="form-control" type="text" value="新增舱型"></td>',
-        '<td><input class="form-control" type="text" value="待维护"></td>',
         '<td><input class="form-control" type="text" value="18㎡"></td>',
         '<td><input class="form-control" type="text" value="双床/大床"></td>',
         '<td><select class="form-control"><option>无窗</option><option>海景窗</option><option>阳台</option></select></td>',
@@ -455,7 +535,8 @@
       return [
         '<tr>',
         '<td><input class="form-control" type="text" value="新增套餐项"></td>',
-        '<td><input class="form-control" type="text" value="待选择资源"></td>',
+        '<td><select class="form-control" data-resource-ref><option selected>选择资源</option><option>国际航空CA巴黎航线协议</option><option>巴黎四星酒店池</option><option>接送机服务</option><option>卢浮宫门票</option></select></td>',
+        '<td><input class="form-control" type="text" value="待选择供应商"></td>',
         '<td><input class="form-control" type="text" value="待维护规则"></td>',
         '<td><button class="table-link danger" type="button" data-remove-row>删除</button></td>',
         '</tr>'
@@ -465,7 +546,7 @@
     return [
       '<tr>',
       '<td><input class="form-control" type="text" value="新增服务项"></td>',
-      '<td><input class="form-control" type="text" value="待维护"></td>',
+      '<td><select class="form-control" data-resource-ref><option selected>选择资源</option><option>卢浮宫</option><option>巴黎中餐厅Le Bonheur</option><option>巴黎索菲特大酒店</option><option>Volvo 45座大巴</option></select></td>',
       '<td><button class="table-link danger" type="button" data-remove-row>删除</button></td>',
       '</tr>'
     ].join('');
@@ -495,6 +576,59 @@
     target.dispatchEvent(new Event('input', { bubbles: true }));
     setDirty();
     showToast('已生成方案草稿');
+  }
+
+  function routeScheduleContext() {
+    var preset = routePresets[currentKind] || routePresets.group;
+    var activePlan = page.querySelector('[data-plan-switch].active strong');
+    var lineName = document.getElementById('lineName');
+    var ownerOrg = document.getElementById('ownerOrg');
+    var supplier = document.getElementById('supplier');
+    var flightRouteResource = document.getElementById('flightRouteResource');
+    var flightUsePolicy = document.getElementById('flightUsePolicy');
+    var resourceRefs = Array.from(page.querySelectorAll('[data-resource-ref]')).map(function (field) {
+      return field.value;
+    }).filter(Boolean);
+    return {
+      type: currentKind,
+      product: lineName && lineName.value.trim() ? lineName.value.trim() : preset.title,
+      route: activePlan ? activePlan.textContent.trim() : preset.plans[0].name,
+      ownerOrg: ownerOrg ? ownerOrg.value : '',
+      supplier: supplier ? supplier.value : '',
+      flightRouteResource: flightRouteResource ? flightRouteResource.value : '',
+      flightUsePolicy: flightUsePolicy ? flightUsePolicy.value : '',
+      resourceRefs: resourceRefs.slice(0, 8),
+      source: 'product',
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  function writeRouteScheduleContext() {
+    try {
+      window.localStorage.setItem('caesarRouteScheduleContext', JSON.stringify(routeScheduleContext()));
+    } catch (error) {}
+  }
+
+  function scheduleHrefWithContext(href) {
+    var context = routeScheduleContext();
+    if (href && href.indexOf('product-free-travel-list.html') > -1) {
+      try {
+        window.localStorage.setItem('caesarFreeTravelContext', JSON.stringify(context));
+      } catch (error) {}
+      var freeParts = href.split('?');
+      var freeQuery = new URLSearchParams(freeParts[1] || '');
+      freeQuery.set('product', context.product);
+      freeQuery.set('route', context.route);
+      return freeParts[0] + '?' + freeQuery.toString();
+    }
+    if (!href || href.indexOf('team-create.html') < 0) return href;
+    var parts = href.split('?');
+    var query = new URLSearchParams(parts[1] || '');
+    query.set('source', 'product');
+    query.set('type', context.type);
+    query.set('product', context.product);
+    query.set('route', context.route);
+    return parts[0] + '?' + query.toString();
   }
 
   function selectPlan(button) {
@@ -543,12 +677,6 @@
     if (submitButton) {
       showStep(panels.length - 1);
       openSubmitModal();
-      return;
-    }
-
-    var generateButton = target.closest('[data-generate-code]');
-    if (generateButton) {
-      generateCode(generateButton);
       return;
     }
 
@@ -606,13 +734,22 @@
         showToast('团期开排将在下一批团期创建页承接');
         return;
       }
-      navigateTo(scheduleHref);
+      writeRouteScheduleContext();
+      navigateTo(scheduleHrefWithContext(scheduleHref));
     }
   });
 
   page.addEventListener('change', function (event) {
     if (event.target && event.target.id === 'lineType') {
       applyRoutePreset(routeTypeToKind(event.target.value));
+      setDirty();
+      return;
+    }
+    if (event.target && event.target.matches('[data-resource-mode-control]')) {
+      setDirty();
+      return;
+    }
+    if (event.target && applyResourceSelection(event.target)) {
       setDirty();
       return;
     }

@@ -9,6 +9,14 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">发票管理</h1>
+      </div>
+    </div>
+  </section>
+
   <section class="list-surface list-surface-tabbed finance-invoice-list-surface" data-list-surface>
     <div class="list-surface-tabbar-row">
       <nav class="tab-bar list-function-tabs list-surface-tabs" aria-label="发票管理标签页">
@@ -25,11 +33,11 @@
           <div class="filter-item filter-item-sm"><label class="sr-only" for="invoiceStatus">开票状态</label><select id="invoiceStatus"><option>全部状态</option><option>待开票</option><option>部分开票</option><option>已开票</option><option>红冲中</option><option>已作废</option></select></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="invoiceProductType">线路类型</label><select id="invoiceProductType"><option>全部类型</option><option>自营线路</option><option>外采产品</option><option>邮轮线路</option><option>专列线路</option><option>自由行</option><option>单项服务</option><option>研学线路</option></select></div>
           <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">申请日期</label><div class="date-range"><input type="date" aria-label="申请开始日期"><span>至</span><input type="date" aria-label="申请结束日期"></div></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">重置</button></div>
+          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-invoice="issued">查询</button><button class="btn btn-secondary" type="button" data-reset-invoice="issued">重置</button></div>
           </div>
           <div class="filter-actions list-surface-filter-actions list-filter-pinned-actions">
             <button id="openInvoiceApply" class="btn btn-primary" type="button">申请开票</button>
-            <button class="btn btn-secondary" type="button">导出记录</button>
+            <button class="btn btn-secondary" type="button" data-sync-issued-invoices>同步单据</button>
           </div>
         </div>
       </section>
@@ -51,12 +59,12 @@
               <th>操作</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td>INV-REQ-20260618001</td><td>KS2024061801<br><span class="text-muted">SK20240618001</span></td><td>张建国</td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td>¥25,600</td><td>¥25,600</td><td class="amount-strong">¥25,600</td><td>普票</td><td><span class="tag tag-green">已开票</span></td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary">详情</button></div></td></tr>
-            <tr><td>INV-REQ-20260618002</td><td>KS2024061802<br><span class="text-muted">SK20240618002</span></td><td>李梅</td><td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td><td>¥49,900</td><td>¥24,950</td><td class="amount-strong">¥24,950</td><td>专票</td><td><span class="tag tag-orange">部分开票</span></td><td><span class="tag tag-orange">待同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary">继续开票</button></div></td></tr>
-            <tr><td>INV-REQ-20260617003</td><td>KS2024061807<br><span class="text-muted">SK20240618007</span></td><td>旅途驿站</td><td>丝路专列深度游<br><span class="text-muted">丝路经典线</span></td><td>¥38,400</td><td>¥0</td><td class="amount-strong">¥38,400</td><td>专票</td><td><span class="tag tag-blue">待开票</span></td><td><span class="tag tag-gray">未同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary">开具</button></div></td></tr>
-            <tr><td>INV-REQ-20260616004</td><td>KS2024061813<br><span class="text-muted">SK20240618131</span></td><td>刘洋</td><td>马来西亚自由行<br><span class="text-muted">兰卡威酒店机票套餐</span></td><td>¥15,600</td><td>¥12,400</td><td class="amount-red">-¥3,200</td><td>红字发票</td><td><span class="tag tag-red">红冲中</span></td><td><span class="tag tag-orange">待同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary">查看红冲</button></div></td></tr>
-            <tr><td>INV-REQ-20260615005</td><td>KS2024061815<br><span class="text-muted">SK20240618151</span></td><td>吴芳</td><td>日本签证代办<br><span class="text-muted">单项服务</span></td><td>¥15,600</td><td>¥15,600</td><td class="amount-strong">¥15,600</td><td>普票</td><td><span class="tag tag-green">已开票</span></td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary">详情</button></div></td></tr>
+          <tbody id="issuedInvoiceRows">
+            <tr><td>INV-REQ-20260618001</td><td>KS2024061801<br><span class="text-muted">SK20240618001</span></td><td>张建国</td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td>¥25,600</td><td>¥25,600</td><td class="amount-strong">¥25,600</td><td>普票</td><td><span class="tag tag-green">已开票</span></td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-issued-detail>详情</button></div></td></tr>
+            <tr><td>INV-REQ-20260618002</td><td>KS2024061802<br><span class="text-muted">SK20240618002</span></td><td>李梅</td><td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td><td>¥49,900</td><td>¥24,950</td><td class="amount-strong">¥24,950</td><td>专票</td><td><span class="tag tag-orange">部分开票</span></td><td><span class="tag tag-orange">待同步</span></td><td><div class="table-action"><button type="button" data-issue-invoice class="table-action-primary">继续开票</button></div></td></tr>
+            <tr><td>INV-REQ-20260617003</td><td>KS2024061807<br><span class="text-muted">SK20240618007</span></td><td>旅途驿站</td><td>丝路专列深度游<br><span class="text-muted">丝路经典线</span></td><td>¥38,400</td><td>¥0</td><td class="amount-strong">¥38,400</td><td>专票</td><td><span class="tag tag-blue">待开票</span></td><td><span class="tag tag-gray">未同步</span></td><td><div class="table-action"><button type="button" data-issue-invoice class="table-action-primary">开具</button></div></td></tr>
+            <tr><td>INV-REQ-20260616004</td><td>KS2024061813<br><span class="text-muted">SK20240618131</span></td><td>刘洋</td><td>马来西亚自由行<br><span class="text-muted">兰卡威酒店机票套餐</span></td><td>¥15,600</td><td>¥12,400</td><td class="amount-red">-¥3,200</td><td>红字发票</td><td><span class="tag tag-red">红冲中</span></td><td><span class="tag tag-orange">待同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-issued-detail>查看红冲</button></div></td></tr>
+            <tr><td>INV-REQ-20260615005</td><td>KS2024061815<br><span class="text-muted">SK20240618151</span></td><td>吴芳</td><td>日本签证代办<br><span class="text-muted">单项服务</span></td><td>¥15,600</td><td>¥15,600</td><td class="amount-strong">¥15,600</td><td>普票</td><td><span class="tag tag-green">已开票</span></td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-issued-detail>详情</button></div></td></tr>
           </tbody>
         </table>
       </section>
@@ -73,10 +81,12 @@
           <div class="filter-item filter-item-sm"><label class="sr-only" for="supplierInvoiceStatus">收票状态</label><select id="supplierInvoiceStatus"><option>全部状态</option><option>待入账</option><option>已入账</option><option>金额不符</option><option>发票异常</option></select></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="supplierInvoiceProductType">线路类型</label><select id="supplierInvoiceProductType"><option>全部类型</option><option>自营线路</option><option>外采产品</option><option>邮轮线路</option><option>专列线路</option><option>自由行</option><option>单项服务</option><option>研学线路</option></select></div>
           <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">收票日期</label><div class="date-range"><input type="date" aria-label="收票开始日期"><span>至</span><input type="date" aria-label="收票结束日期"></div></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">重置</button></div>
+          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-invoice="supplier">查询</button><button class="btn btn-secondary" type="button" data-reset-invoice="supplier">重置</button></div>
           </div>
           <div class="filter-actions list-surface-filter-actions list-filter-pinned-actions">
-            <button class="btn btn-secondary" type="button">导出记录</button>
+            <button class="btn btn-primary" type="button" data-open-supplier-entry>登记供应商发票</button>
+            <button class="btn btn-secondary" type="button" data-sync-supplier-invoices>同步应付发票</button>
+            <button class="btn btn-secondary" type="button" data-export-supplier-invoices>导出记录</button>
           </div>
         </div>
       </section>
@@ -97,11 +107,11 @@
               <th>操作</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td>欧洲联合地接社</td><td>FR20260618001</td><td>AP20260624001<br><span class="text-muted">PAY-20260624-001</span></td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td>地接综合费</td><td class="amount-strong">¥112,000</td><td>¥112,000</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-green">已入账</span></td><td><div class="table-action"><button type="button" class="table-action-primary">详情</button></div></td></tr>
-            <tr><td>皇家加勒比</td><td>RC20260618088</td><td>AP20260624002<br><span class="text-muted">PAY-20260624-002</span></td><td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td><td>舱位包销</td><td class="amount-strong">¥996,000</td><td>¥996,000</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-orange">待入账</span></td><td><div class="table-action"><button type="button" class="table-action-primary">确认入账</button></div></td></tr>
-            <tr><td>丝路专列运营商</td><td>TR20260615012</td><td>AP20260623003<br><span class="text-muted">未付款</span></td><td>丝路专列深度游<br><span class="text-muted">丝路经典线</span></td><td>铺位包列</td><td class="amount-strong">¥386,000</td><td>¥380,000</td><td><span class="tag tag-red">金额不符</span></td><td><span class="tag tag-red">发票异常</span></td><td><div class="table-action"><button type="button" class="table-action-primary">处理差异</button><button type="button">退回</button></div></td></tr>
-            <tr><td>日本签证中心</td><td>VISA2026061206</td><td>AP20260622005<br><span class="text-muted">PAYEX-20260617-002</span></td><td>日本签证代办<br><span class="text-muted">单项服务</span></td><td>签证代办费</td><td class="amount-strong">¥1,200</td><td>¥1,200</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-green">已入账</span></td><td><div class="table-action"><button type="button" class="table-action-primary">详情</button></div></td></tr>
+          <tbody id="supplierInvoiceRows">
+            <tr><td>欧洲联合地接社</td><td>FR20260618001</td><td>AP20260624001<br><span class="text-muted">PAY-20260624-001</span></td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td>地接综合费</td><td class="amount-strong">¥112,000</td><td>¥112,000</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-green">已入账</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-supplier-entry>详情</button></div></td></tr>
+            <tr><td>皇家加勒比</td><td>RC20260618088</td><td>AP20260624002<br><span class="text-muted">PAY-20260624-002</span></td><td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td><td>舱位包销</td><td class="amount-strong">¥996,000</td><td>¥996,000</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-orange">待入账</span></td><td><div class="table-action"><button type="button" data-open-supplier-entry class="table-action-primary">确认入账</button></div></td></tr>
+            <tr><td>丝路专列运营商</td><td>TR20260615012</td><td>AP20260623003<br><span class="text-muted">未付款</span></td><td>丝路专列深度游<br><span class="text-muted">丝路经典线</span></td><td>铺位包列</td><td class="amount-strong">¥386,000</td><td>¥380,000</td><td><span class="tag tag-red">金额不符</span></td><td><span class="tag tag-red">发票异常</span></td><td><div class="table-action"><button type="button" data-open-supplier-entry class="table-action-primary">处理差异</button><button type="button" data-return-supplier-invoice>退回</button></div></td></tr>
+            <tr><td>日本签证中心</td><td>VISA2026061206</td><td>AP20260622005<br><span class="text-muted">PAYEX-20260617-002</span></td><td>日本签证代办<br><span class="text-muted">单项服务</span></td><td>签证代办费</td><td class="amount-strong">¥1,200</td><td>¥1,200</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-green">已入账</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-supplier-entry>详情</button></div></td></tr>
           </tbody>
         </table>
       </section>
@@ -177,13 +187,86 @@
           <label class="form-label" for="taxNo">税号</label>
           <input id="taxNo" class="form-control" type="text" placeholder="专用发票必填">
         </div>
-        <section class="finance-link-box">
-          开票金额不能超过已收金额；发票开具后回写订单、应收单和结算单，红冲会自动冲减可开票余额并进入NC推送队列。
-        </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-invoice>取消</button>
-        <button class="btn btn-primary" type="button">提交开票申请</button>
+        <button class="btn btn-primary" type="button" data-submit-issued-invoice>提交开票申请</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="supplierInvoiceModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="supplierInvoiceTitle">
+      <div class="modal-header">
+        <div id="supplierInvoiceTitle" class="modal-title">供应商发票入账</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-invoice>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="supplierInvoiceSummary" class="readonly-summary">
+          <div>供应商：皇家加勒比 | 应付单：AP20260624002 | 发票金额：¥996,000</div>
+          <div>线路/方案：理想号地中海邮轮 / 地中海经典线 | 费用项目：舱位包销</div>
+        </section>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="supplierEntryInvoiceNo">发票号 <span class="req">*</span></label>
+            <input id="supplierEntryInvoiceNo" class="form-control" type="text" value="RC20260618088" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="supplierEntryPayableNo">应付单号 <span class="req">*</span></label>
+            <input id="supplierEntryPayableNo" class="form-control" type="text" value="AP20260624002" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="supplierEntryAmount">发票金额 <span class="req">*</span></label>
+            <input id="supplierEntryAmount" class="form-control" type="number" min="0" step="0.01" value="996000" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="supplierEntryTaxAmount">税额</label>
+            <input id="supplierEntryTaxAmount" class="form-control" type="number" min="0" step="0.01" value="56377.36">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="supplierEntryType">发票类型</label>
+            <select id="supplierEntryType" class="form-control">
+              <option>增值税专用发票</option>
+              <option>增值税普通发票</option>
+              <option>电子普通发票</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="supplierEntryDate">入账日期</label>
+            <input id="supplierEntryDate" class="form-control" type="date" value="2026-06-24">
+          </div>
+        </div>
+        <div id="supplierEntryAlert" class="alert alert-blue">发票金额与应付金额一致，可确认入账。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-invoice>取消</button>
+        <button class="btn btn-primary" type="button" data-submit-supplier-entry>确认入账</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="issuedInvoiceDetailModal" class="modal-overlay drawer-overlay" aria-hidden="true" hidden>
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="issuedInvoiceDetailTitle">
+      <div class="modal-header">
+        <div id="issuedInvoiceDetailTitle" class="modal-title">发票详情</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-invoice>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="issuedInvoiceDetailSummary" class="readonly-summary"></section>
+        <section id="issuedInvoiceDetailGrid" class="description-grid"></section>
+        <section class="table-wrap">
+          <table>
+            <thead><tr><th>节点</th><th>单据</th><th>金额</th><th>状态</th></tr></thead>
+            <tbody id="issuedInvoiceDetailRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-invoice>关闭</button>
       </div>
     </div>
   </div>
@@ -192,30 +275,998 @@
     (function () {
       var tabs = Array.from(document.querySelectorAll('.finance-invoice-list-surface .tab-item'));
       var panels = Array.from(document.querySelectorAll('.finance-invoice-list-surface .detail-tab-panel'));
-      var modal = document.getElementById('invoiceApplyModal');
+      var invoiceApplyModal = document.getElementById('invoiceApplyModal');
+      var supplierInvoiceModal = document.getElementById('supplierInvoiceModal');
+      var issuedInvoiceDetailModal = document.getElementById('issuedInvoiceDetailModal');
+      var issuedInvoiceDetailTitle = document.getElementById('issuedInvoiceDetailTitle');
+      var issuedInvoiceDetailSummary = document.getElementById('issuedInvoiceDetailSummary');
+      var issuedInvoiceDetailGrid = document.getElementById('issuedInvoiceDetailGrid');
+      var issuedInvoiceDetailRows = document.getElementById('issuedInvoiceDetailRows');
+      var invoiceReceivable = document.getElementById('invoiceReceivable');
+      var invoiceLine = document.getElementById('invoiceLine');
+      var invoiceAvailableAmount = document.getElementById('invoiceAvailableAmount');
+      var invoiceApplyAmount = document.getElementById('invoiceApplyAmount');
+      var invoiceApplyCustomer = document.getElementById('invoiceApplyCustomer');
+      var invoiceOrderSearch = document.getElementById('invoiceOrderSearch');
+      var invoiceTitle = document.getElementById('invoiceTitle');
+      var supplierInvoiceSummary = document.getElementById('supplierInvoiceSummary');
+      var supplierEntryInvoiceNo = document.getElementById('supplierEntryInvoiceNo');
+      var supplierEntryPayableNo = document.getElementById('supplierEntryPayableNo');
+      var supplierEntryAmount = document.getElementById('supplierEntryAmount');
+      var supplierEntryTaxAmount = document.getElementById('supplierEntryTaxAmount');
+      var supplierEntryType = document.getElementById('supplierEntryType');
+      var supplierEntryDate = document.getElementById('supplierEntryDate');
+      var supplierEntryAlert = document.getElementById('supplierEntryAlert');
+      var supplierEntryFinanceBox = document.getElementById('supplierEntryFinanceBox');
+      var activeSupplierRow = null;
+      var activeSupplierData = null;
+      var activeIssuedApplySource = null;
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function getCellText(cells, index) {
+        var cell = cells[index];
+        return cell ? cell.textContent.trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function parseAmount(value) {
+        return String(value || '').replace(/[^\d.]/g, '') || '0';
+      }
+
+      function amountNumber(value) {
+        return Number(parseAmount(value)) || 0;
+      }
+
+      function formatAmount(value) {
+        return '¥' + Number(parseAmount(value)).toLocaleString('zh-CN');
+      }
+
+      function negativeAmount(value) {
+        return '-' + formatAmount(value);
+      }
+
+      function todayText() {
+        return '2026-06-24';
+      }
+
+      function readInvoiceTasks() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarInvoiceTasks') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeInvoiceTasks(tasks) {
+        window.localStorage.setItem('caesarInvoiceTasks', JSON.stringify(tasks));
+      }
+
+      function readOrderFinanceEvents() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarOrderFinanceEvents') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeOrderFinanceEvents(results) {
+        window.localStorage.setItem('caesarOrderFinanceEvents', JSON.stringify(results));
+      }
+
+      function rememberOrderFinanceBackfill(data) {
+        var results = readOrderFinanceEvents();
+        if (!results.orders) results.orders = {};
+        if (!results.events) results.events = {};
+        if (!results.financeSources) results.financeSources = {};
+        if (data.orderNo && data.orderNo !== '-') {
+          results.orders[data.orderNo] = Object.assign({}, results.orders[data.orderNo] || {}, {
+            orderNo: data.orderNo,
+            invoiceNo: data.financeNo,
+            invoiceStatus: data.status,
+            invoiceNcStatus: data.ncStatus,
+            updatedAt: '2026-06-29 11:40'
+          });
+        }
+        var eventNo = data.eventNo || ('EVT-FIN-' + String(data.financeNo || data.businessNo || Date.now()).replace(/[^A-Z0-9]/gi, ''));
+        results.events[eventNo] = {
+          eventNo: eventNo,
+          eventType: data.eventType,
+          orderNo: data.orderNo || '-',
+          businessNo: data.businessNo || '-',
+          financeNo: data.financeNo || '-',
+          amount: data.amount || '-',
+          status: data.status || '已记录',
+          ncStatus: data.ncStatus || '未生成',
+          createdAt: '2026-06-29 11:40'
+        };
+        [data.businessNo, data.financeNo].forEach(function (sourceNo) {
+          if (!sourceNo) return;
+          results.financeSources[sourceNo] = Object.assign({}, results.financeSources[sourceNo] || {}, {
+            sourceNo: sourceNo,
+            orderNo: data.orderNo || '-',
+            eventType: data.eventType,
+            amount: data.amount || '-',
+            productText: data.productText || '-',
+            status: data.status || '已记录',
+            ncStatus: data.ncStatus || '未生成',
+            updatedAt: '2026-06-29 11:40'
+          });
+        });
+        writeOrderFinanceEvents(results);
+      }
+
+      function readReceivableResults() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarReceivableResults') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeReceivableResults(results) {
+        window.localStorage.setItem('caesarReceivableResults', JSON.stringify(results));
+      }
+
+      function readRefundResults() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarRefundResults') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeRefundResults(results) {
+        window.localStorage.setItem('caesarRefundResults', JSON.stringify(results));
+      }
+
+      function readNcPushResults() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarNcPushResults') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeNcPushResults(results) {
+        window.localStorage.setItem('caesarNcPushResults', JSON.stringify(results));
+      }
+
+      function readTaxLedger() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarTaxLedger') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeTaxLedger(ledger) {
+        window.localStorage.setItem('caesarTaxLedger', JSON.stringify(ledger));
+      }
+
+      function rowExists(tbody, key, index) {
+        if (!tbody) return false;
+        return Array.from(tbody.querySelectorAll('tr')).some(function (row) {
+          return row.children[index || 0] && row.children[index || 0].textContent.trim() === key;
+        });
+      }
+
+      function updatePagination(panelId) {
+        var panel = document.getElementById(panelId);
+        if (!panel) return;
+        var rows = panel.querySelectorAll('tbody tr').length;
+        var pagination = panel.querySelector('.pagination span');
+        if (pagination) pagination.textContent = '第1-' + rows + '条/共' + rows + '条';
+      }
+
+      function setTab(name) {
+        tabs.forEach(function (item) {
+          item.classList.toggle('active', item.dataset.tab === name);
+        });
+        panels.forEach(function (panel) {
+          panel.classList.toggle('active', panel.id === 'tab-' + name);
+        });
+      }
+
+      function notify(message) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message);
+        }
+      }
+
+      function queryString(data) {
+        var query = new URLSearchParams();
+        Object.keys(data).forEach(function (key) {
+          if (data[key]) query.set(key, data[key]);
+        });
+        return query.toString();
+      }
+
+      function optionEnabled(value) {
+        return value && value.indexOf('全部') !== 0;
+      }
+
+      function rowText(row) {
+        return row ? row.textContent.trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function applyIssuedInvoiceFilters() {
+        var keyword = (document.getElementById('invoiceKeyword').value || '').trim().toLowerCase();
+        var status = document.getElementById('invoiceStatus').value;
+        var type = document.getElementById('invoiceProductType').value;
+        document.querySelectorAll('#issuedInvoiceRows tr').forEach(function (row) {
+          var text = rowText(row);
+          var visible = true;
+          if (keyword && text.toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (optionEnabled(status) && getCellText(row.children, 8).indexOf(status) < 0) visible = false;
+          if (optionEnabled(type) && productTypeLabel(getCellText(row.children, 3)) !== type.replace('线路', '').replace('自营', '跟团游')) {
+            if (!(type === '自营线路' && !/邮轮|专列|自由行|单项服务|签证|研学|外采/.test(text))) visible = false;
+          }
+          row.hidden = !visible;
+        });
+      }
+
+      function applySupplierInvoiceFilters() {
+        var keyword = (document.getElementById('supplierInvoiceKeyword').value || '').trim().toLowerCase();
+        var status = document.getElementById('supplierInvoiceStatus').value;
+        var type = document.getElementById('supplierInvoiceProductType').value;
+        document.querySelectorAll('#supplierInvoiceRows tr').forEach(function (row) {
+          var text = rowText(row);
+          var visible = true;
+          if (keyword && text.toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (optionEnabled(status) && getCellText(row.children, 8).indexOf(status) < 0 && getCellText(row.children, 7).indexOf(status) < 0) visible = false;
+          if (optionEnabled(type) && productTypeLabel(getCellText(row.children, 3)) !== type.replace('线路', '').replace('自营', '跟团游')) {
+            if (!(type === '自营线路' && !/邮轮|专列|自由行|单项服务|签证|研学|外采/.test(text))) visible = false;
+          }
+          row.hidden = !visible;
+        });
+      }
+
+      function resetInvoiceFilters(scope) {
+        var root = scope === 'supplier' ? document.getElementById('tab-supplier') : document.getElementById('tab-issued');
+        if (!root) return;
+        root.querySelectorAll('.list-surface-filter input').forEach(function (input) {
+          input.value = '';
+        });
+        root.querySelectorAll('.list-surface-filter select').forEach(function (select) {
+          select.selectedIndex = 0;
+        });
+        if (scope === 'supplier') applySupplierInvoiceFilters();
+        else applyIssuedInvoiceFilters();
+      }
+
+      function productTypeLabel(text) {
+        text = text || '';
+        if (text.indexOf('邮轮') >= 0) return '邮轮';
+        if (text.indexOf('专列') >= 0) return '专列';
+        if (text.indexOf('自由行') >= 0) return '自由行';
+        if (text.indexOf('单项服务') >= 0 || text.indexOf('签证') >= 0) return '单项服务';
+        if (text.indexOf('研学') >= 0) return '研学';
+        if (text.indexOf('外采') >= 0 || text.indexOf('OUT-') >= 0) return '外采产品';
+        if (text.indexOf('MICE') >= 0 || text.indexOf('年会') >= 0) return 'MICE';
+        return '跟团游';
+      }
+
+      function ncVoucherNo(prefix, no) {
+        return prefix + String(no || '').replace(/\D/g, '');
+      }
+
+      function requestNoFrom(prefix, no) {
+        var digits = String(no || '').replace(/\D/g, '').slice(-11);
+        return prefix + (digits || '20260624001');
+      }
+
+      function nextIssuedRequestNo() {
+        var tasks = readInvoiceTasks();
+        var total = Object.keys(tasks.issued || {}).length + document.querySelectorAll('#issuedInvoiceRows tr').length + 1;
+        return 'INV-REQ-20260624' + String(total).padStart(3, '0');
+      }
+
+      function rememberNcTask(bucket, key, data) {
+        var results = readNcPushResults();
+        if (!results[bucket]) results[bucket] = {};
+        results[bucket][key] = data;
+        writeNcPushResults(results);
+      }
+
+      function rememberTaxLedger(kind, key, data) {
+        var ledger = readTaxLedger();
+        if (!ledger[kind]) ledger[kind] = {};
+        ledger[kind][key] = data;
+        writeTaxLedger(ledger);
+      }
+
+      function supplierStatusTag(status) {
+        return status === '已入账' ? '<span class="tag tag-green">已入账</span>' : status === '发票异常' ? '<span class="tag tag-red">发票异常</span>' : '<span class="tag tag-orange">待入账</span>';
+      }
+
+      function checkTag(status) {
+        return status === '金额一致' ? '<span class="tag tag-green">金额一致</span>' : '<span class="tag tag-red">金额不符</span>';
+      }
+
+      function appendSupplierInvoiceRow(task) {
+        var body = document.getElementById('supplierInvoiceRows');
+        if (!body) return;
+        task.invoiceNo = task.invoiceNo || task.supplierInvoiceNo || ('SUP-INV-' + String(task.payableNo || task.sourceNo || '').replace(/\D/g, ''));
+        task.payableNo = task.payableNo || task.businessNo || task.sourceNo || '-';
+        task.paymentNo = task.paymentNo || task.payment || '未付款';
+        task.feeItem = task.feeItem || task.deduction || task.costItem || '供应商费用';
+        task.invoiceAmount = task.invoiceAmount || task.amount || task.payableAmount || '¥0';
+        task.payableAmount = task.payableAmount || task.amount || task.invoiceAmount || '¥0';
+        task.productText = task.productText || task.product || '-';
+        task.status = task.status || '待入账';
+        task.checkStatus = task.checkStatus || '金额一致';
+        if (rowExists(body, task.invoiceNo, 1)) return;
+        var action = task.status === '已入账'
+          ? '<button type="button" class="table-action-primary" data-open-supplier-entry>详情</button><button type="button" data-open-invoice-nc>NC</button>'
+          : '<button type="button" data-open-supplier-entry class="table-action-primary">确认入账</button>';
+        body.insertAdjacentHTML('afterbegin', '<tr><td>' + escapeHtml(task.supplier) + '</td><td>' + escapeHtml(task.invoiceNo) + '</td><td>' + escapeHtml(task.payableNo) + '<br><span class="text-muted">' + escapeHtml(task.paymentNo || '未付款') + '</span></td><td>' + escapeHtml(task.productText) + '</td><td>' + escapeHtml(task.feeItem) + '</td><td class="amount-strong">' + escapeHtml(task.invoiceAmount) + '</td><td>' + escapeHtml(task.payableAmount) + '</td><td>' + checkTag(task.checkStatus || '金额一致') + '</td><td>' + supplierStatusTag(task.status || '待入账') + '</td><td><div class="table-action">' + action + '</div></td></tr>');
+      }
+
+      function applySupplierInvoiceTasks() {
+        var tasks = readInvoiceTasks();
+        Object.keys(tasks.supplier || {}).forEach(function (payableNo) {
+          var task = Object.assign({ payableNo: payableNo }, tasks.supplier[payableNo]);
+          appendSupplierInvoiceRow(task);
+        });
+        updatePagination('tab-supplier');
+      }
+
+      function parseSupplierRow(button) {
+        var row = button.closest('tr');
+        var cells = row ? row.children : [];
+        var payableText = getCellText(cells, 2);
+        return {
+          row: row,
+          supplier: getCellText(cells, 0),
+          invoiceNo: getCellText(cells, 1),
+          payableNo: payableText.split(' ')[0],
+          paymentNo: payableText.split(' ').slice(1).join(' ') || '未付款',
+          productText: getCellText(cells, 3),
+          feeItem: getCellText(cells, 4),
+          invoiceAmount: getCellText(cells, 5),
+          payableAmount: getCellText(cells, 6),
+          checkStatus: getCellText(cells, 7),
+          status: getCellText(cells, 8)
+        };
+      }
+
+      function defaultSupplierData() {
+        return {
+          supplier: '兰卡威海景酒店',
+          invoiceNo: 'FP20260624001',
+          payableNo: 'AP20260623004',
+          paymentNo: '未付款',
+          productText: '马来西亚自由行 / 兰卡威酒店机票套餐',
+          feeItem: '酒店代订',
+          invoiceAmount: '¥8,400',
+          payableAmount: '¥8,400',
+          checkStatus: '金额一致',
+          status: '待入账'
+        };
+      }
+
+      function renderSupplierEntry(button) {
+        activeSupplierRow = button ? button.closest('tr') : null;
+        activeSupplierData = activeSupplierRow ? parseSupplierRow(button) : defaultSupplierData();
+        if (supplierInvoiceSummary) {
+          supplierInvoiceSummary.innerHTML = '<div>供应商：' + escapeHtml(activeSupplierData.supplier) + ' | 应付单：' + escapeHtml(activeSupplierData.payableNo) + ' | 发票金额：' + escapeHtml(activeSupplierData.invoiceAmount) + '</div><div>线路/方案：' + escapeHtml(activeSupplierData.productText) + ' | 费用项目：' + escapeHtml(activeSupplierData.feeItem) + '</div>';
+        }
+        if (supplierEntryInvoiceNo) supplierEntryInvoiceNo.value = activeSupplierData.invoiceNo;
+        if (supplierEntryPayableNo) supplierEntryPayableNo.value = activeSupplierData.payableNo;
+        if (supplierEntryAmount) supplierEntryAmount.value = parseAmount(activeSupplierData.invoiceAmount);
+        if (supplierEntryTaxAmount) supplierEntryTaxAmount.value = (Number(parseAmount(activeSupplierData.invoiceAmount)) * 0.06 / 1.06).toFixed(2);
+        if (supplierEntryDate) supplierEntryDate.value = todayText();
+        var matched = parseAmount(activeSupplierData.invoiceAmount) === parseAmount(activeSupplierData.payableAmount);
+        if (supplierEntryAlert) {
+          supplierEntryAlert.className = matched ? 'alert alert-blue' : 'alert alert-orange';
+          supplierEntryAlert.textContent = matched ? '发票金额与应付金额一致，可确认入账。' : '发票金额与应付金额不一致，需处理差异后入账。';
+        }
+        if (supplierEntryFinanceBox) supplierEntryFinanceBox.textContent = matched
+          ? '应付：' + activeSupplierData.payableNo + ' | 进项税台账：待登记 | NC：未生成'
+          : '应付：' + activeSupplierData.payableNo + ' | 差异：待处理 | NC：未生成';
+      }
+
+      function supplierEntryDataFromModal() {
+        var data = Object.assign({}, activeSupplierData || defaultSupplierData());
+        data.invoiceNo = supplierEntryInvoiceNo.value;
+        data.payableNo = supplierEntryPayableNo.value;
+        data.invoiceAmount = formatAmount(supplierEntryAmount.value);
+        data.taxAmount = formatAmount(supplierEntryTaxAmount.value);
+        data.invoiceType = supplierEntryType.value;
+        data.entryDate = supplierEntryDate.value;
+        data.checkStatus = parseAmount(data.invoiceAmount) === parseAmount(data.payableAmount) ? '金额一致' : '金额不符';
+        data.status = data.checkStatus === '金额一致' ? '已入账' : '发票异常';
+        data.productTypeLabel = productTypeLabel(data.productText);
+        return data;
+      }
+
+      function rememberSupplierEntry(data) {
+        var tasks = readInvoiceTasks();
+        if (!tasks.supplier) tasks.supplier = {};
+        tasks.supplier[data.payableNo] = Object.assign({}, data, { ncStatus: data.status === '已入账' ? '待推送' : '未生成' });
+        writeInvoiceTasks(tasks);
+      }
+
+      function payableNcTask(data) {
+        return {
+          sourceType: '应付确认',
+          businessNo: data.payableNo,
+          voucherNo: ncVoucherNo('NC-AP-', data.payableNo),
+          sourceNo: data.invoiceNo,
+          amount: data.invoiceAmount,
+          productText: data.productText,
+          productTypeLabel: data.productTypeLabel,
+          trigger: '供应商发票入账',
+          status: '待推送',
+          checkTitle: '发票已入账',
+          check: '应付金额、发票金额和供应商一致',
+          entry: '借：主营业务成本 ' + data.invoiceAmount + ' / 贷：应付账款 ' + data.invoiceAmount,
+          result: '等待推送',
+          remark: '供应商发票入账后生成'
+        };
+      }
+
+      function submitSupplierEntry() {
+        var data = supplierEntryDataFromModal();
+        rememberSupplierEntry(data);
+        if (!activeSupplierRow) {
+          appendSupplierInvoiceRow(data);
+          activeSupplierRow = document.querySelector('#supplierInvoiceRows tr');
+        }
+        if (activeSupplierRow) {
+          activeSupplierRow.children[7].innerHTML = checkTag(data.checkStatus);
+          activeSupplierRow.children[8].innerHTML = supplierStatusTag(data.status);
+          activeSupplierRow.children[9].innerHTML = data.status === '已入账'
+            ? '<div class="table-action"><button type="button" class="table-action-primary" data-open-supplier-entry>详情</button><button type="button" data-open-invoice-nc>NC</button></div>'
+            : '<div class="table-action"><button type="button" data-open-supplier-entry class="table-action-primary">处理差异</button></div>';
+        }
+        if (data.status === '已入账') {
+          rememberNcTask('payables', data.payableNo, payableNcTask(data));
+          rememberTaxLedger('input', data.invoiceNo, data);
+          window.caesarUI.toast('供应商发票已入账，NC凭证待推送');
+        } else {
+          window.caesarUI.toast('发票金额不一致，已保留异常状态');
+        }
+        window.caesarUI.closeLayer(supplierInvoiceModal);
+        updatePagination('tab-supplier');
+      }
+
+      function issuedStatusTag(status) {
+        if (status === '已开票' || status === '已红冲') return '<span class="tag tag-green">' + escapeHtml(status) + '</span>';
+        if (status === '红冲中' || status === '待红冲') return '<span class="tag tag-red">' + escapeHtml(status) + '</span>';
+        if (status === '部分开票') return '<span class="tag tag-orange">部分开票</span>';
+        return '<span class="tag tag-blue">' + escapeHtml(status || '待开票') + '</span>';
+      }
+
+      function invoiceNcTag(status) {
+        if (status === '已同步') return '<span class="tag tag-green">已同步</span>';
+        if (status === '待同步') return '<span class="tag tag-orange">待同步</span>';
+        return '<span class="tag tag-gray">未同步</span>';
+      }
+
+      function isRedInvoice(data) {
+        return data.sourceKind === 'refund' || String(data.amount || '').indexOf('-') === 0 || String(data.invoiceType || '').indexOf('红') >= 0;
+      }
+
+      function actionHtmlForIssued(data) {
+        var done = data.status === '已开票' || data.status === '已红冲';
+        var action = isRedInvoice(data)
+          ? '<button type="button" data-issue-invoice class="table-action-primary">确认红冲</button>'
+          : '<button type="button" data-issue-invoice class="table-action-primary">开具</button>';
+        return '<div class="table-action">' + (done ? '<button type="button" data-open-issued-detail class="table-action-primary">详情</button><button type="button" data-open-invoice-nc>NC</button>' : action + '<button type="button" data-open-issued-detail>详情</button>') + '</div>';
+      }
+
+      function appendIssuedInvoiceRow(data) {
+        var body = document.getElementById('issuedInvoiceRows');
+        if (!body) return;
+        data.requestNo = data.requestNo || data.invoiceNo || requestNoFrom('INV-REQ-', data.receivableNo || data.sourceNo || data.orderNo);
+        data.orderNo = data.orderNo || data.sourceNo || '-';
+        data.receivableNo = data.receivableNo || data.sourceNo || '';
+        data.customer = data.customer || data.title || '-';
+        data.productText = data.productText || '-';
+        data.availableAmount = data.availableAmount || data.amount || data.received || '¥0';
+        data.amount = data.amount || data.availableAmount || '¥0';
+        data.status = data.status || '待开票';
+        data.ncStatus = data.ncStatus || '未同步';
+        if (rowExists(body, data.requestNo, 0)) return;
+        var amountClass = isRedInvoice(data) ? 'amount-red' : 'amount-strong';
+        var issuedAmount = data.issuedAmount || (data.status === '已开票' || data.status === '已红冲' ? data.amount : '¥0');
+        body.insertAdjacentHTML('afterbegin', '<tr data-request-no="' + escapeHtml(data.requestNo) + '" data-source-kind="' + escapeHtml(data.sourceKind || 'receivable') + '" data-receivable-no="' + escapeHtml(data.receivableNo || '') + '" data-refund-no="' + escapeHtml(data.refundNo || '') + '" data-change-no="' + escapeHtml(data.changeNo || '') + '" data-invoice-item="' + escapeHtml(data.invoiceItem || '') + '" data-title="' + escapeHtml(data.title || data.customer || '') + '" data-tax-no="' + escapeHtml(data.taxNo || '') + '">' +
+          '<td>' + escapeHtml(data.requestNo) + '</td>' +
+          '<td>' + escapeHtml(data.orderNo) + '<br><span class="text-muted">' + escapeHtml(data.receivableNo || data.refundNo || '-') + '</span></td>' +
+          '<td>' + escapeHtml(data.customer) + '</td>' +
+          '<td>' + escapeHtml(data.productText) + '</td>' +
+          '<td>' + escapeHtml(data.availableAmount || data.amount) + '</td>' +
+          '<td>' + escapeHtml(issuedAmount) + '</td>' +
+          '<td class="' + amountClass + '">' + escapeHtml(data.amount) + '</td>' +
+          '<td>' + escapeHtml(data.invoiceType || '普票') + '</td>' +
+          '<td>' + issuedStatusTag(data.status) + '</td>' +
+          '<td>' + invoiceNcTag(data.ncStatus) + '</td>' +
+          '<td>' + actionHtmlForIssued(data) + '</td>' +
+        '</tr>');
+      }
+
+      function rememberIssuedTask(data) {
+        var tasks = readInvoiceTasks();
+        if (!tasks.issued) tasks.issued = {};
+        tasks.issued[data.requestNo] = data;
+        writeInvoiceTasks(tasks);
+      }
+
+      function issuedTaskFromReceivable(receivableNo, receivable) {
+        var amount = receivable.amount || receivable.received || receivable.pending || '¥0';
+        return {
+          requestNo: requestNoFrom('INV-REQ-', receivableNo),
+          sourceKind: 'receivable',
+          orderNo: receivable.orderNo || '-',
+          receivableNo: receivableNo,
+          receiptNo: receivable.receiptNo || '',
+          customer: receivable.customer || '-',
+          productText: receivable.productText || '-',
+          availableAmount: amount,
+          issuedAmount: '¥0',
+          amount: amount,
+          invoiceType: '普票',
+          invoiceItem: receivable.receivableType || '旅游服务费',
+          status: '待开票',
+          ncStatus: '未同步',
+          title: receivable.customer || '-',
+          productTypeLabel: productTypeLabel(receivable.productText)
+        };
+      }
+
+      function issuedTaskFromRefund(refundNo, refund) {
+        return {
+          requestNo: requestNoFrom('INV-RED-', refundNo),
+          sourceKind: 'refund',
+          orderNo: refund.orderNo || '-',
+          receivableNo: refund.receivable || '',
+          refundNo: refundNo,
+          changeNo: refund.changeNo || '',
+          customer: refund.customer || '-',
+          productText: refund.productText || '-',
+          availableAmount: refund.amount || '¥0',
+          issuedAmount: '¥0',
+          amount: negativeAmount(refund.amount || '0'),
+          invoiceType: '红字发票',
+          invoiceItem: '旅游服务费红冲',
+          status: '红冲中',
+          ncStatus: '未同步',
+          title: refund.customer || '-',
+          productTypeLabel: productTypeLabel(refund.productText)
+        };
+      }
+
+      function isReceivableReady(receivable) {
+        return receivable && (receivable.status === '已收清' || receivable.pending === '¥0') && receivable.invoiceStatus !== '已开票';
+      }
+
+      function isRefundReady(refund) {
+        return refund && (refund.afterSaleStatus === '退款已执行' || refund.orderStatus === '已退款' || refund.remittanceStatus) && refund.invoiceStatus !== '已红冲';
+      }
+
+      function applyIssuedInvoiceTasks() {
+        var tasks = readInvoiceTasks();
+        var receivables = readReceivableResults();
+        var refunds = readRefundResults();
+        if (!tasks.issued) tasks.issued = {};
+        Object.keys(receivables.receivables || {}).forEach(function (receivableNo) {
+          if (!isReceivableReady(receivables.receivables[receivableNo])) return;
+          var requestNo = requestNoFrom('INV-REQ-', receivableNo);
+          if (!tasks.issued[requestNo]) tasks.issued[requestNo] = issuedTaskFromReceivable(receivableNo, receivables.receivables[receivableNo]);
+        });
+        Object.keys(refunds.refunds || {}).forEach(function (refundNo) {
+          if (!isRefundReady(refunds.refunds[refundNo])) return;
+          var requestNo = requestNoFrom('INV-RED-', refundNo);
+          if (!tasks.issued[requestNo]) tasks.issued[requestNo] = issuedTaskFromRefund(refundNo, refunds.refunds[refundNo]);
+        });
+        writeInvoiceTasks(tasks);
+        Object.keys(tasks.issued || {}).forEach(function (requestNo) {
+          var task = Object.assign({ requestNo: requestNo }, tasks.issued[requestNo]);
+          appendIssuedInvoiceRow(task);
+        });
+        updatePagination('tab-issued');
+      }
+
+      function applyInboundInvoiceParams() {
+        var params = new URLSearchParams(window.location.search);
+        var tab = params.get('tab');
+        var receivableNo = params.get('receivableNo') || (/^SK/.test(params.get('sourceNo') || '') ? params.get('sourceNo') : '');
+        var payableNo = params.get('payableNo') || (/^AP/.test(params.get('sourceNo') || '') ? params.get('sourceNo') : '') || (/^AP/.test(params.get('businessNo') || '') ? params.get('businessNo') : '');
+        if (payableNo) {
+          appendSupplierInvoiceRow({
+            supplier: params.get('supplier') || '待确认供应商',
+            invoiceNo: params.get('invoiceNo') || 'SUP-INV-' + String(payableNo).replace(/\D/g, ''),
+            payableNo: payableNo,
+            paymentNo: params.get('paymentNo') || params.get('applyNo') || '未付款',
+            productText: params.get('productText') || params.get('product') || '-',
+            feeItem: params.get('feeItem') || '结算应付',
+            invoiceAmount: params.get('amount') || params.get('payableAmount') || '¥0',
+            payableAmount: params.get('amount') || params.get('payableAmount') || '¥0',
+            checkStatus: params.get('checkStatus') || '金额一致',
+            status: params.get('status') || '待入账'
+          });
+          setTab('supplier');
+          document.getElementById('supplierInvoiceKeyword').value = payableNo;
+          applySupplierInvoiceFilters();
+          return;
+        }
+        if (receivableNo) {
+          appendIssuedInvoiceRow({
+            requestNo: requestNoFrom('INV-REQ-', receivableNo),
+            sourceKind: 'receivable',
+            orderNo: params.get('orderNo') || params.get('businessNo') || '-',
+            receivableNo: receivableNo,
+            customer: params.get('customer') || '-',
+            productText: params.get('productText') || params.get('product') || '-',
+            availableAmount: params.get('amount') || '¥0',
+            issuedAmount: '¥0',
+            amount: params.get('amount') || '¥0',
+            invoiceType: '普票',
+            invoiceItem: params.get('invoiceItem') || '旅游服务费',
+            status: '待开票',
+            ncStatus: '未同步',
+            title: params.get('customer') || '-'
+          });
+          setTab(tab === 'supplier' ? 'supplier' : 'issued');
+          document.getElementById('invoiceKeyword').value = receivableNo;
+          applyIssuedInvoiceFilters();
+        } else if (tab) {
+          setTab(tab);
+        }
+      }
+
+      function invoiceNcTarget(button) {
+        var row = button.closest('tr');
+        if (!row) return 'finance-nc.html?tab=queue';
+        if (row.closest('#supplierInvoiceRows')) {
+          var data = parseSupplierRow(button);
+          return 'finance-nc.html?' + queryString({
+            tab: 'queue',
+            voucherNo: ncVoucherNo('NC-AP-', data.payableNo),
+            sourceNo: data.invoiceNo,
+            businessNo: data.payableNo,
+            productText: data.productText,
+            amount: data.invoiceAmount
+          });
+        }
+        var issued = issuedDataFromRow(row);
+        return 'finance-nc.html?' + queryString({
+          tab: 'queue',
+          voucherNo: ncVoucherNo('NC-INV-', issued.requestNo),
+          sourceNo: issued.refundNo || issued.receivableNo,
+          businessNo: issued.requestNo,
+          productText: issued.productText,
+          amount: issued.amount
+        });
+      }
+
+      function issuedApplyCandidates() {
+        var tasks = readInvoiceTasks();
+        return Object.keys(tasks.issued || {}).map(function (requestNo) {
+          return tasks.issued[requestNo];
+        }).filter(function (task) {
+          return task.sourceKind !== 'refund' && task.status !== '已开票';
+        });
+      }
+
+      function renderIssuedApply(source) {
+        var candidates = issuedApplyCandidates();
+        activeIssuedApplySource = source || candidates[0] || {
+          requestNo: '',
+          orderNo: 'KS2024061802',
+          receivableNo: 'SK20240618002',
+          customer: '李梅',
+          productText: '理想号地中海邮轮 / 地中海经典线',
+          availableAmount: '¥37,100',
+          amount: '¥24,950',
+          title: '李梅'
+        };
+        if (invoiceReceivable) {
+          invoiceReceivable.innerHTML = candidates.length
+            ? candidates.map(function (item) {
+              return '<option value="' + escapeHtml(item.requestNo) + '"' + (item.requestNo === activeIssuedApplySource.requestNo ? ' selected' : '') + '>' + escapeHtml(item.receivableNo) + ' / 已收 ' + escapeHtml(item.availableAmount) + '</option>';
+            }).join('')
+            : '<option value="' + escapeHtml(activeIssuedApplySource.requestNo) + '">' + escapeHtml(activeIssuedApplySource.receivableNo) + ' / 已收 ' + escapeHtml(activeIssuedApplySource.availableAmount) + '</option>';
+        }
+        if (invoiceOrderSearch) invoiceOrderSearch.value = activeIssuedApplySource.orderNo + ' ' + activeIssuedApplySource.customer;
+        if (invoiceLine) invoiceLine.value = activeIssuedApplySource.productText;
+        if (invoiceAvailableAmount) invoiceAvailableAmount.value = amountNumber(activeIssuedApplySource.availableAmount);
+        if (invoiceApplyAmount) invoiceApplyAmount.value = amountNumber(activeIssuedApplySource.amount || activeIssuedApplySource.availableAmount);
+        if (invoiceApplyCustomer) invoiceApplyCustomer.value = activeIssuedApplySource.customer;
+        if (invoiceTitle) invoiceTitle.value = activeIssuedApplySource.title || activeIssuedApplySource.customer;
+        var financeBox = invoiceApplyModal.querySelector('.finance-link-box');
+        if (financeBox) financeBox.textContent = '应收：' + activeIssuedApplySource.receivableNo + ' | 已收：' + activeIssuedApplySource.availableAmount + ' | 税控：待开票 | NC：未同步';
+      }
+
+      function submitIssuedInvoice() {
+        var tasks = readInvoiceTasks();
+        var source = tasks.issued && tasks.issued[invoiceReceivable.value] ? tasks.issued[invoiceReceivable.value] : activeIssuedApplySource;
+        var typeChecked = document.querySelector('input[name="invoiceType"]:checked');
+        var data = Object.assign({}, source || {}, {
+          requestNo: nextIssuedRequestNo(),
+          sourceKind: 'receivable',
+          orderNo: document.getElementById('invoiceOrderSearch').value.split(' ')[0],
+          receivableNo: source && source.receivableNo ? source.receivableNo : document.getElementById('invoiceReceivable').value.split(' / ')[0],
+          customer: document.getElementById('invoiceApplyCustomer').value,
+          productText: document.getElementById('invoiceLine').value,
+          availableAmount: formatAmount(document.getElementById('invoiceAvailableAmount').value),
+          amount: formatAmount(document.getElementById('invoiceApplyAmount').value),
+          invoiceType: typeChecked && typeChecked.parentElement.textContent.indexOf('专用') >= 0 ? '专票' : '普票',
+          invoiceItem: document.getElementById('invoiceItem').value,
+          status: '待开票',
+          ncStatus: '未同步',
+          title: document.getElementById('invoiceTitle').value,
+          taxNo: document.getElementById('taxNo').value,
+          productTypeLabel: productTypeLabel(document.getElementById('invoiceLine').value)
+        });
+        appendIssuedInvoiceRow(data);
+        rememberIssuedTask(data);
+        window.caesarUI.closeLayer(invoiceApplyModal);
+        setTab('issued');
+        updatePagination('tab-issued');
+        window.caesarUI.toast('开票申请已提交');
+      }
+
+      function issuedDataFromRow(row) {
+        var cells = row.children;
+        return {
+          requestNo: row.dataset.requestNo || getCellText(cells, 0),
+          sourceKind: row.dataset.sourceKind || '',
+          orderNo: getCellText(cells, 1).split(' ')[0],
+          receivableNo: row.dataset.receivableNo || getCellText(cells, 1).split(' ').slice(1).join(' '),
+          refundNo: row.dataset.refundNo || '',
+          changeNo: row.dataset.changeNo || '',
+          customer: getCellText(cells, 2),
+          productText: getCellText(cells, 3),
+          availableAmount: getCellText(cells, 4),
+          issuedAmount: getCellText(cells, 5),
+          amount: getCellText(cells, 6),
+          invoiceType: getCellText(cells, 7),
+          status: getCellText(cells, 8),
+          ncStatus: getCellText(cells, 9),
+          invoiceItem: row.dataset.invoiceItem || '',
+          title: row.dataset.title || getCellText(cells, 2),
+          taxNo: row.dataset.taxNo || '',
+          productTypeLabel: productTypeLabel(getCellText(cells, 3))
+        };
+      }
+
+      function invoiceNcTask(data) {
+        var red = isRedInvoice(data);
+        var amount = red ? negativeAmount(data.amount) : data.amount;
+        var absAmount = formatAmount(data.amount);
+        return {
+          sourceType: '发票',
+          businessNo: data.requestNo,
+          voucherNo: ncVoucherNo('NC-INV-', data.requestNo),
+          sourceNo: red ? data.refundNo || data.receivableNo : data.receivableNo,
+          customer: data.customer,
+          amount: amount,
+          productText: data.productText,
+          productTypeLabel: data.productTypeLabel,
+          trigger: red ? '红冲开票' : '税控开票',
+          status: '待推送',
+          checkTitle: red ? '红字发票已开' : '税控已开票',
+          check: red ? '红冲金额、退款单和原应收一致' : '开票金额、应收单和客户一致',
+          entry: red ? '借：主营业务收入 ' + absAmount + ' / 贷：应收账款 ' + absAmount : '借：应收账款 ' + amount + ' / 贷：主营业务收入 ' + amount,
+          result: '等待推送',
+          remark: red ? '红冲完成后生成' : '开票完成后生成'
+        };
+      }
+
+      function rememberIssuedResult(data) {
+        var red = isRedInvoice(data);
+        var tasks = readInvoiceTasks();
+        if (!tasks.issued) tasks.issued = {};
+        tasks.issued[data.requestNo] = Object.assign({}, tasks.issued[data.requestNo] || data, {
+          status: red ? '已红冲' : '已开票',
+          issuedAmount: data.amount,
+          ncStatus: '待同步',
+          invoiceNo: data.requestNo
+        });
+        writeInvoiceTasks(tasks);
+
+        if (!red && data.receivableNo) {
+          var receivables = readReceivableResults();
+          if (receivables.receivables && receivables.receivables[data.receivableNo]) {
+            receivables.receivables[data.receivableNo].invoiceStatus = '已开票';
+            receivables.receivables[data.receivableNo].invoiceNo = data.requestNo;
+            receivables.receivables[data.receivableNo].invoiceAmount = data.amount;
+            receivables.receivables[data.receivableNo].invoiceNcStatus = '待同步';
+            writeReceivableResults(receivables);
+          }
+        }
+        if (red && data.refundNo) {
+          var refunds = readRefundResults();
+          if (refunds.refunds && refunds.refunds[data.refundNo]) {
+            refunds.refunds[data.refundNo].invoiceStatus = '已红冲';
+            refunds.refunds[data.refundNo].invoiceNo = data.requestNo;
+            refunds.refunds[data.refundNo].invoiceNcStatus = '待同步';
+            writeRefundResults(refunds);
+          }
+        }
+        rememberOrderFinanceBackfill({
+          eventType: red ? '红冲开票' : '税控开票',
+          orderNo: data.orderNo,
+          businessNo: red ? data.refundNo || data.receivableNo : data.receivableNo,
+          financeNo: data.requestNo,
+          amount: data.amount,
+          productText: data.productText,
+          status: red ? '已红冲' : '已开票',
+          ncStatus: '待同步'
+        });
+      }
+
+      function issueInvoice(button) {
+        var row = button.closest('tr');
+        if (!row) return;
+        var data = issuedDataFromRow(row);
+        var red = isRedInvoice(data);
+        row.children[5].textContent = data.amount;
+        row.children[8].innerHTML = issuedStatusTag(red ? '已红冲' : '已开票');
+        row.children[9].innerHTML = '<span class="tag tag-orange">待同步</span>';
+        row.children[10].innerHTML = '<div class="table-action"><button type="button" data-open-issued-detail class="table-action-primary">详情</button><button type="button" data-open-invoice-nc>NC</button></div>';
+        rememberNcTask('invoices', data.requestNo, invoiceNcTask(data));
+        rememberTaxLedger(red ? 'red' : 'output', data.requestNo, data);
+        rememberIssuedResult(data);
+        window.caesarUI.toast(red ? '红字发票已开具，NC待同步' : '发票已开具，税控/NC待同步');
+      }
+
+      function renderIssuedDetail(button) {
+        var row = button.closest('tr');
+        if (!row) return;
+        var data = issuedDataFromRow(row);
+        if (issuedInvoiceDetailTitle) issuedInvoiceDetailTitle.textContent = data.requestNo + ' · ' + (isRedInvoice(data) ? '红冲' : '开票');
+        if (issuedInvoiceDetailSummary) {
+          issuedInvoiceDetailSummary.innerHTML = '<div>订单：' + escapeHtml(data.orderNo) + ' | 客户：' + escapeHtml(data.customer) + ' | 金额：' + escapeHtml(data.amount) + '</div><div>线路/方案：' + escapeHtml(data.productText) + '</div>';
+        }
+        if (issuedInvoiceDetailGrid) {
+          issuedInvoiceDetailGrid.innerHTML = [
+            ['关联应收', data.receivableNo || '-'],
+            ['关联退款', data.refundNo || '-'],
+            ['发票类型', data.invoiceType],
+            ['开票项目', data.invoiceItem || '-'],
+            ['发票抬头', data.title || data.customer],
+            ['NC状态', data.ncStatus || '未同步']
+          ].map(function (item) {
+            return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + escapeHtml(item[1]) + '</div></div>';
+          }).join('');
+        }
+        if (issuedInvoiceDetailRows) {
+          issuedInvoiceDetailRows.innerHTML = [
+            ['来源单据', data.refundNo || data.receivableNo || '-', data.availableAmount || data.amount, data.sourceKind === 'refund' ? '已退款' : '已收款'],
+            [isRedInvoice(data) ? '红冲' : '开票', data.requestNo, data.amount, data.status || '待开票'],
+            ['NC推送', ncVoucherNo('NC-INV-', data.requestNo), data.amount, data.ncStatus || '未同步']
+          ].map(function (item) {
+            return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td class="amount-strong">' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
+          }).join('');
+        }
+        issuedInvoiceDetailModal.hidden = false;
+        issuedInvoiceDetailModal.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(function () {
+          issuedInvoiceDetailModal.classList.add('show');
+        });
+      }
 
       tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
-          var name = tab.dataset.tab;
-          tabs.forEach(function (item) {
-            item.classList.toggle('active', item === tab);
-          });
-          panels.forEach(function (panel) {
-            panel.classList.toggle('active', panel.id === 'tab-' + name);
-          });
+          setTab(tab.dataset.tab);
         });
       });
 
+      applySupplierInvoiceTasks();
+      applyIssuedInvoiceTasks();
+      applyInboundInvoiceParams();
 
-
-
-
-      document.getElementById('openInvoiceApply').addEventListener('click', function () { window.caesarUI.openLayer(modal); });
-      document.querySelectorAll('[data-close-invoice]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.closeLayer(modal); });
+      document.getElementById('openInvoiceApply').addEventListener('click', function () {
+        applyIssuedInvoiceTasks();
+        renderIssuedApply();
+        window.caesarUI.openLayer(invoiceApplyModal);
       });
-      modal.addEventListener('click', function (event) {
-        if (event.target === modal) window.caesarUI.closeLayer(modal);
+      if (invoiceReceivable) {
+        invoiceReceivable.addEventListener('change', function () {
+          var tasks = readInvoiceTasks();
+          if (tasks.issued && tasks.issued[invoiceReceivable.value]) renderIssuedApply(tasks.issued[invoiceReceivable.value]);
+        });
+      }
+      document.querySelector('[data-submit-issued-invoice]').addEventListener('click', submitIssuedInvoice);
+      document.querySelector('[data-submit-supplier-entry]').addEventListener('click', submitSupplierEntry);
+      document.addEventListener('click', function (event) {
+        var ncButton = event.target.closest('[data-open-invoice-nc]');
+        if (ncButton) {
+          window.location.href = invoiceNcTarget(ncButton);
+          return;
+        }
+        var supplierButton = event.target.closest('[data-open-supplier-entry]');
+        if (supplierButton) {
+          renderSupplierEntry(supplierButton);
+          window.caesarUI.openLayer(supplierInvoiceModal);
+          return;
+        }
+        if (event.target.closest('[data-sync-supplier-invoices]')) {
+          applySupplierInvoiceTasks();
+          window.caesarUI.toast('应付发票已同步');
+          return;
+        }
+        if (event.target.closest('[data-sync-issued-invoices]')) {
+          applyIssuedInvoiceTasks();
+          notify('开票单据已同步');
+          return;
+        }
+        if (event.target.closest('[data-export-supplier-invoices]')) {
+          notify('供应商发票记录已加入导出队列');
+          return;
+        }
+        var returnButton = event.target.closest('[data-return-supplier-invoice]');
+        if (returnButton) {
+          var row = returnButton.closest('tr');
+          if (row) {
+            row.children[8].innerHTML = '<span class="tag tag-orange">待入账</span>';
+            row.children[9].innerHTML = '<div class="table-action"><button type="button" data-open-supplier-entry class="table-action-primary">重新入账</button></div>';
+          }
+          notify('供应商发票已退回');
+          return;
+        }
+        var invoiceSearch = event.target.closest('[data-search-invoice]');
+        if (invoiceSearch) {
+          if (invoiceSearch.dataset.searchInvoice === 'supplier') applySupplierInvoiceFilters();
+          else applyIssuedInvoiceFilters();
+          return;
+        }
+        var invoiceReset = event.target.closest('[data-reset-invoice]');
+        if (invoiceReset) {
+          resetInvoiceFilters(invoiceReset.dataset.resetInvoice);
+          return;
+        }
+        var issueButton = event.target.closest('[data-issue-invoice]');
+        if (issueButton) {
+          issueInvoice(issueButton);
+          return;
+        }
+        var issuedDetailButton = event.target.closest('[data-open-issued-detail]');
+        if (issuedDetailButton) {
+          renderIssuedDetail(issuedDetailButton);
+          return;
+        }
+        var issuedTableButton = event.target.closest('#issuedInvoiceRows .table-action button');
+        if (issuedTableButton) {
+          renderIssuedDetail(issuedTableButton);
+          return;
+        }
+        var supplierTableButton = event.target.closest('#supplierInvoiceRows .table-action button');
+        if (supplierTableButton) {
+          renderSupplierEntry(supplierTableButton);
+          window.caesarUI.openLayer(supplierInvoiceModal);
+        }
+      });
+      document.querySelectorAll('[data-close-invoice]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var layer = button.closest('.modal-overlay');
+          if (layer === issuedInvoiceDetailModal) {
+            issuedInvoiceDetailModal.classList.remove('show');
+            issuedInvoiceDetailModal.setAttribute('aria-hidden', 'true');
+            window.setTimeout(function () { issuedInvoiceDetailModal.hidden = true; }, 240);
+            return;
+          }
+          window.caesarUI.closeLayer(layer);
+        });
+      });
+      document.querySelectorAll('.modal-overlay').forEach(function (layer) {
+        layer.addEventListener('click', function (event) {
+          if (event.target !== layer) return;
+          if (layer === issuedInvoiceDetailModal) {
+            issuedInvoiceDetailModal.classList.remove('show');
+            issuedInvoiceDetailModal.setAttribute('aria-hidden', 'true');
+            window.setTimeout(function () { issuedInvoiceDetailModal.hidden = true; }, 240);
+            return;
+          }
+          window.caesarUI.closeLayer(layer);
+        });
       });
     })();
   </script>

@@ -3,509 +3,843 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>自由行方案配置 - 凯撒旅游</title>
+  <title>自由行出行日期 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <section class="list-page-panel free-travel-page">
-    <div class="list-page-head">
-      <div>
-        <h1 class="page-title">自由行方案配置</h1>
-      </div>
+  <section class="page-workbar free-date-workbar">
+    <div class="page-title-row">
+      <a class="page-back-link" href="products.html">返回</a>
+      <h1 id="freePageTitle" class="page-title">出行日期</h1>
     </div>
   </section>
 
-  <section class="list-surface list-surface-tabbed product-free-travel-list-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-function-tabs free-travel-tabs list-surface-tabs" aria-label="自由行方案配置">
-    <button class="tab-item active" type="button" data-free-tab="products">自由行方案</button>
-    <button class="tab-item" type="button" data-free-tab="templates">方案套餐组合</button>
-    <button class="tab-item" type="button" data-free-tab="calendar">日期价格库存</button>
-  </nav>
-      <div class="list-surface-tabbar-actions">
-        <button id="freeAiPublish" class="btn btn-ai" type="button">🤖 AI智能上架</button>
-        <button id="openFreeProductModal" class="btn btn-primary" type="button">新建自由行方案</button>
+  <section class="list-surface free-date-surface" data-list-surface>
+    <section class="filter-card filter-card-compact free-travel-filter list-surface-filter" aria-label="出行日期筛选">
+      <div class="list-surface-filter-actions list-filter-pinned-actions">
+        <span class="dropdown table-action-more free-batch-menu">
+          <button id="freeBatchMenuToggle" class="btn btn-secondary table-more-toggle" type="button" aria-expanded="false">批量操作</button>
+          <span class="dropdown-menu action-dropdown-menu">
+            <button class="dropdown-item" type="button" data-open-batch="open">批量开放日期</button>
+            <button class="dropdown-item" type="button" data-open-batch="price">批量调价</button>
+            <button class="dropdown-item danger" type="button" data-open-batch="stop">批量停售</button>
+            <button class="dropdown-item" type="button" data-export-free-dates>导出日期价格</button>
+          </span>
+        </span>
+        <button id="openFreeDateDrawer" class="btn btn-primary" type="button">新增出行日期</button>
       </div>
-    </div>
-
-  <section id="freeProductsPanel" class="free-tab-panel active" data-free-panel="products">
-    <section class="filter-card filter-card-compact free-travel-filter list-surface-filter" aria-label="自由行方案筛选">
       <div class="filter-row">
         <div class="filter-item">
-          <label class="sr-only" for="freeKeyword">方案名称</label>
-          <input id="freeKeyword" type="text" placeholder="方案名称搜索">
+          <label class="sr-only" for="filterKeyword">出行日期/套餐</label>
+          <input id="filterKeyword" type="search" placeholder="出行日期/套餐搜索">
         </div>
         <div class="filter-item filter-item-sm">
-          <label class="sr-only" for="freeDestination">目的地</label>
-          <select id="freeDestination">
-            <option>全部目的地</option>
-            <option>法国巴黎</option>
-            <option>意大利罗马</option>
-            <option>捷克布拉格</option>
-            <option>日本东京</option>
+          <label class="sr-only" for="filterPackage">套餐</label>
+          <select id="filterPackage">
+            <option value="">全部套餐</option>
+            <option value="机票+酒店套餐">机票+酒店套餐</option>
+            <option value="纯酒店套餐">纯酒店套餐</option>
+            <option value="酒店+接送机套餐">酒店+接送机套餐</option>
           </select>
         </div>
-        <div class="filter-item filter-item-wide free-days-range">
-          <label class="sr-only">天数范围</label>
-          <div class="date-range">
-            <input id="freeMinDays" type="number" min="1" placeholder="最少天数" aria-label="最少天数">
-            <span>至</span>
-            <input id="freeMaxDays" type="number" min="1" placeholder="最多天数" aria-label="最多天数">
-          </div>
-        </div>
-        <div class="filter-item filter-item-status">
-          <label class="sr-only" for="freeStatus">状态</label>
-          <select id="freeStatus">
-            <option>全部状态</option>
-            <option>在售</option>
-            <option>下架</option>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="filterSaleStatus">销售状态</label>
+          <select id="filterSaleStatus">
+            <option value="">全部销售状态</option>
+            <option>销售中</option>
+            <option>待开放</option>
+            <option>低库存</option>
+            <option>停售</option>
+            <option>售罄</option>
           </select>
         </div>
-        <div class="filter-actions free-travel-actions">
-          <button id="searchFreeProducts" class="btn btn-secondary" type="button">搜索</button>
-          <button id="resetFreeFilters" class="btn btn-secondary" type="button">重置</button>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="filterResourceStatus">资源确认</label>
+          <select id="filterResourceStatus">
+            <option value="">全部资源确认</option>
+            <option>已确认</option>
+            <option>待确认</option>
+            <option>需补确认</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="filterChannelStatus">渠道状态</label>
+          <select id="filterChannelStatus">
+            <option value="">全部渠道状态</option>
+            <option>已同步</option>
+            <option>未同步</option>
+            <option>暂停同步</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="applyFreeFilters" class="btn btn-secondary" type="button">查询</button>
         </div>
       </div>
     </section>
 
-    <section class="table-wrap free-product-table list-surface-table list-table-with-pagination" aria-label="自由行方案列表">
-      <table>
-        <thead>
-          <tr>
-            <th>方案名称</th>
-            <th>目的地</th>
-            <th>天数范围</th>
-            <th>套餐组成</th>
-            <th>起价</th>
-            <th>日期库存</th>
-            <th>订单量</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>巴黎自由行5-7日</td><td>法国巴黎</td><td>5-7天</td><td>机票+酒店</td><td>¥4,800起</td><td>20个日期 / 房量18</td><td>12单</td><td><div class="table-action"><button type="button" data-open-free-product class="table-action-primary">编辑</button><button type="button" data-open-free-product>详情</button><button type="button" data-show-calendar>日期</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" data-open-settlement class="dropdown-item">结算</button><button class="dropdown-item danger" type="button">下架</button></span></span></div></td></tr>
-          <tr><td>罗马自由行5-8日</td><td>意大利罗马</td><td>5-8天</td><td>机票+酒店+接送机</td><td>¥5,200起</td><td>14个日期 / 房量12</td><td>8单</td><td><div class="table-action"><button type="button" data-open-free-product class="table-action-primary">编辑</button><button type="button" data-open-free-product>详情</button><button type="button" data-show-calendar>日期</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" data-open-settlement class="dropdown-item">结算</button><button class="dropdown-item danger" type="button">下架</button></span></span></div></td></tr>
-          <tr><td>布拉格自由行4-6日</td><td>捷克布拉格</td><td>4-6天</td><td>机票+酒店</td><td>¥3,900起</td><td>10个日期 / 房量9</td><td>6单</td><td><div class="table-action"><button type="button" data-open-free-product class="table-action-primary">编辑</button><button type="button" data-open-free-product>详情</button><button type="button" data-show-calendar>日期</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" data-open-settlement class="dropdown-item">结算</button><button class="dropdown-item danger" type="button">下架</button></span></span></div></td></tr>
-          <tr><td>巴塞罗那自由行6-8日</td><td>西班牙巴塞罗那</td><td>6-8天</td><td>机票+酒店+接送机</td><td>¥5,600起</td><td>8个日期 / 房量6</td><td>4单</td><td><div class="table-action"><button type="button" data-open-free-product class="table-action-primary">编辑</button><button type="button" data-open-free-product>详情</button><button type="button" data-show-calendar>日期</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" data-open-settlement class="dropdown-item">结算</button><button class="dropdown-item danger" type="button">下架</button></span></span></div></td></tr>
-          <tr><td>维也纳+布拉格双城5日</td><td>奥地利/捷克</td><td>5天</td><td>机票+酒店+城际交通</td><td>¥4,600起</td><td>6个日期 / 房量5</td><td>3单</td><td><div class="table-action"><button type="button" data-open-free-product class="table-action-primary">编辑</button><button type="button" data-open-free-product>详情</button><button type="button" data-show-calendar>日期</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" data-open-settlement class="dropdown-item">结算</button><button class="dropdown-item danger" type="button">下架</button></span></span></div></td></tr>
-          <tr><td>东京自由行5-7日</td><td>日本东京</td><td>5-7天</td><td>机票+酒店</td><td>¥2,800起</td><td>0个日期</td><td>0单</td><td><div class="table-action"><button type="button" data-republish-free class="table-action-primary">上架</button><button type="button" data-open-free-product>详情</button></div></td></tr>
-        </tbody>
-      </table>
-    </section>
-    <div class="pagination list-surface-pagination list-pagination-attached">
-      <span>第1-6条/共6条</span>
+    <div class="free-date-context">
+      <span><strong id="contextProduct">巴黎自由行</strong></span>
+      <span>负责人：<strong id="contextOwner">郑华</strong></span>
+      <span>资源组合：<strong id="contextSupplier">国际航空CA / 巴黎酒店直采</strong></span>
     </div>
-  </section>
 
-  <section id="freeTemplatesPanel" class="free-tab-panel" data-free-panel="templates" hidden>
-    <section class="table-wrap free-template-table list-surface-table list-table-with-pagination" aria-label="方案套餐组合">
-      <table>
-        <thead>
-          <tr>
-            <th>组合名称</th>
-            <th>组合内容</th>
-            <th>供应商绑定情况</th>
-            <th>关联方案数</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>标准机票+酒店</td><td>国际机票+目的地酒店</td><td>机票：国航协议/酒店：多供应商</td><td>18个方案</td><td><div class="table-action"><button type="button" data-open-template class="table-action-primary">编辑</button><button type="button" data-view-template-links>关联</button></div></td></tr>
-          <tr><td>豪华机票+酒店+接送机</td><td>国际机票+五星酒店+专车接送</td><td>机票：多航司/酒店：希尔顿+洲际/车队：欧洲优选</td><td>8个方案</td><td><div class="table-action"><button type="button" data-open-template class="table-action-primary">编辑</button><button type="button" data-view-template-links>关联</button></div></td></tr>
-          <tr><td>纯酒店套餐</td><td>目的地酒店（不含机票）</td><td>酒店：多供应商</td><td>2个方案</td><td><div class="table-action"><button type="button" data-open-template class="table-action-primary">编辑</button><button type="button" data-view-template-links>关联</button></div></td></tr>
-          <tr><td>城际交通+酒店</td><td>欧铁/大巴+酒店</td><td>欧铁：欧洲铁路合作/酒店：多供应商</td><td>2个方案</td><td><div class="table-action"><button type="button" data-open-template class="table-action-primary">编辑</button><button type="button" data-view-template-links>关联</button></div></td></tr>
-        </tbody>
-      </table>
-    </section>
-    <div class="pagination list-surface-pagination list-pagination-attached">
-      <span>第1-4条/共4条</span>
-    </div>
-  </section>
-
-  <section id="freeCalendarPanel" class="free-tab-panel" data-free-panel="calendar" hidden>
-    <section class="card cruise-cabin-card">
-      <div class="section-head">
-        <div>
-	          <h2>巴黎自由行5-7日 方案日期价格库存</h2>
-        </div>
-        <div class="section-actions">
-          <button id="openFreeInventoryModal" class="btn btn-secondary" type="button">批量维护日期价格</button>
-        </div>
+    <div class="list-surface-tabbar-row free-date-view-row">
+      <div class="tab-bar free-date-view-switch" role="tablist">
+        <button class="tab-item active" type="button" data-free-view="list">列表视图</button>
+        <button class="tab-item" type="button" data-free-view="calendar">日历视图</button>
       </div>
-        <section class="product-mini-calendar" aria-label="自由行日期价格库存">
-        <button type="button" data-open-free-inventory><strong>07/01</strong><span>¥4,800 | 房量18</span></button>
-        <button type="button" data-open-free-inventory><strong>07/02</strong><span>¥4,800 | 房量16</span></button>
-        <button type="button" data-open-free-inventory><strong>07/03</strong><span>¥5,200 | 房量10</span></button>
-        <button type="button" data-open-free-inventory><strong>07/04</strong><span>¥5,600 | 房量8</span></button>
-        <button type="button" data-open-free-inventory><strong>07/05</strong><span>¥5,800 | 房量4</span></button>
-        <button type="button" data-open-free-inventory><strong>07/06</strong><span>¥4,900 | 房量20</span></button>
-        <button type="button" data-open-free-inventory><strong>07/07</strong><span>¥4,900 | 房量18</span></button>
-      </section>
+    </div>
+
+    <section id="freeListPanel" class="free-date-panel">
+      <div class="table-wrap free-date-table">
+        <table>
+          <thead>
+            <tr>
+              <th>出行日期</th>
+              <th>套餐</th>
+              <th>销售状态</th>
+              <th>价格</th>
+              <th>可售/已售</th>
+              <th>停售时间</th>
+              <th>资源确认</th>
+              <th>渠道状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="freeDateRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="freeCalendarPanel" class="free-date-panel hidden">
+      <div id="freeDateCalendar" class="free-date-calendar" aria-label="自由行出行日期"></div>
     </section>
   </section>
 
-  </section>
-  <div id="freeProductModal" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal free-template-modal" role="dialog" aria-modal="true" aria-labelledby="freeProductTitle">
+  <div id="freeDateDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg free-date-drawer" role="dialog" aria-modal="true" aria-labelledby="freeDateDrawerTitle">
       <div class="modal-header">
-        <div id="freeProductTitle" class="modal-title">自由行方案配置</div>
-        <button class="modal-close" type="button" data-close-free-product aria-label="关闭">×</button>
+        <div id="freeDateDrawerTitle" class="modal-title">维护出行日期</div>
+        <button class="modal-close" type="button" data-close-free-date aria-label="关闭">×</button>
       </div>
       <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group form-group-full">
-            <label class="form-label" for="freeProductName">方案名称</label>
-            <input id="freeProductName" class="form-control" type="text" value="巴黎自由行5-7日">
+        <input id="freeDateId" type="hidden">
+        <section class="free-date-form-section">
+          <div class="section-head compact">
+            <h2>日期与售卖</h2>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="freeProductDestination">目的地</label>
-            <input id="freeProductDestination" class="form-control" type="text" value="法国巴黎">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="freeProductDays">可选天数</label>
-            <input id="freeProductDays" class="form-control" type="text" value="5-7天">
-          </div>
-          <div class="form-group form-group-full">
-            <label class="form-label">套餐组成</label>
-            <div class="cruise-date-options">
-              <label><input type="checkbox" checked> 国际机票</label>
-              <label><input type="checkbox" checked> 酒店</label>
-              <label><input type="checkbox"> 接送机</label>
-              <label><input type="checkbox"> 门票</label>
-              <label><input type="checkbox"> 当地一日游</label>
+          <div class="form-row free-date-form-grid">
+            <div class="form-group">
+              <label class="form-label" for="freeDate">出行日期</label>
+              <input id="freeDate" class="form-control" type="date">
             </div>
-          </div>
-          <div class="form-group form-group-full">
-            <label class="form-label" for="freeProductRule">客户可选规则</label>
-            <textarea id="freeProductRule" class="form-control" rows="4">客户可选择3-5星酒店、直飞/转机航班、接送机和当地一日游加购项；确认后按散客订单办理，不进入团期列表。</textarea>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-free-product>取消</button>
-        <button class="btn btn-primary" type="button" data-close-free-product>保存方案</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="freeInventoryModal" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal free-settlement-modal" role="dialog" aria-modal="true" aria-labelledby="freeInventoryTitle">
-      <div class="modal-header">
-        <div id="freeInventoryTitle" class="modal-title">维护日期价格与库存</div>
-        <button class="modal-close" type="button" data-close-free-inventory aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="freeInventoryDate">出行日期</label>
-            <input id="freeInventoryDate" class="form-control" type="date" value="2026-07-03">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="freeAdultPrice">成人价</label>
-            <input id="freeAdultPrice" class="form-control" type="text" value="¥5,200">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="freeChildPrice">儿童价</label>
-            <input id="freeChildPrice" class="form-control" type="text" value="¥4,600">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="freeRoomStock">酒店房量</label>
-            <input id="freeRoomStock" class="form-control" type="number" value="10">
-          </div>
-          <div class="form-group form-group-full">
-            <label class="form-label" for="freeInventoryNote">库存说明</label>
-            <textarea id="freeInventoryNote" class="form-control" rows="4">房量来自巴黎市区四星酒店资源池，机票按实时占位确认，接送机需提前48小时确认。</textarea>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-free-inventory>取消</button>
-        <button class="btn btn-primary" type="button" data-close-free-inventory>保存价格库存</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="freeTemplateModal" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal free-template-modal" role="dialog" aria-modal="true" aria-labelledby="freeTemplateTitle">
-      <div class="modal-header">
-        <div id="freeTemplateTitle" class="modal-title">编辑套餐组合</div>
-        <button class="modal-close" type="button" data-close-free-template aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group form-group-full">
-            <label class="form-label" for="templateName">组合名称 <span class="req">*</span></label>
-            <input id="templateName" class="form-control" type="text" value="标准机票+酒店" required>
-          </div>
-        </div>
-        <section class="free-template-parts" aria-label="组成部分">
-          <div class="free-template-part">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="partName1">部分名称</label>
-                <input id="partName1" class="form-control" type="text" value="国际机票">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="partType1">类型</label>
-                <select id="partType1" class="form-control">
-                  <option selected>必选</option>
-                  <option>可选</option>
-                </select>
-              </div>
-              <div class="form-group form-group-full">
-                <label class="form-label" for="partSupplier1">关联供应商</label>
-                <select id="partSupplier1" class="form-control" multiple>
-                  <option selected>国航合作协议</option>
-                  <option>东航协议</option>
-                  <option>多航司资源池</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="upgrade1">允许客户自选升级</label>
-                <label class="switch-line"><input id="upgrade1" type="checkbox" checked> 开启</label>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="settlementRule1">结算规则</label>
-                <select id="settlementRule1" class="form-control">
-                  <option selected>本部分与该供应商独立结算</option>
-                </select>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="freePackage">适用套餐</label>
+              <select id="freePackage" class="form-control">
+                <option>机票+酒店套餐</option>
+                <option>纯酒店套餐</option>
+                <option>酒店+接送机套餐</option>
+              </select>
             </div>
-          </div>
-          <div class="free-template-part">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="partName2">部分名称</label>
-                <input id="partName2" class="form-control" type="text" value="目的地酒店">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="partType2">类型</label>
-                <select id="partType2" class="form-control">
-                  <option selected>必选</option>
-                  <option>可选</option>
-                </select>
-              </div>
-              <div class="form-group form-group-full">
-                <label class="form-label" for="partSupplier2">关联供应商</label>
-                <select id="partSupplier2" class="form-control" multiple>
-                  <option selected>多供应商酒店资源池</option>
-                  <option>希尔顿</option>
-                  <option>洲际</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="upgrade2">允许客户自选升级</label>
-                <label class="switch-line"><input id="upgrade2" type="checkbox" checked> 开启</label>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="settlementRule2">结算规则</label>
-                <select id="settlementRule2" class="form-control">
-                  <option selected>本部分与该供应商独立结算</option>
-                </select>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="freeSaleStatus">销售状态</label>
+              <select id="freeSaleStatus" class="form-control">
+                <option>销售中</option>
+                <option>待开放</option>
+                <option>低库存</option>
+                <option>停售</option>
+                <option>售罄</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeStopTime">停售时间</label>
+              <input id="freeStopTime" class="form-control" type="datetime-local">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeAdultPrice">成人价</label>
+              <input id="freeAdultPrice" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeChildPrice">儿童价</label>
+              <input id="freeChildPrice" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeSingleDiff">单房差</label>
+              <input id="freeSingleDiff" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeSaleable">总可售量</label>
+              <input id="freeSaleable" class="form-control" type="number" min="0">
             </div>
           </div>
         </section>
-        <button class="btn btn-secondary" type="button" data-add-free-part>新增组成部分</button>
-        <div class="form-group free-combo-rule">
-          <label class="form-label" for="comboRule">动态组合规则说明</label>
-          <textarea id="comboRule" class="form-control" rows="4">客户可在同一目的地城市范围内选择不同星级酒店，并在航班时间、舱位等级、接送机服务中选择升级项。</textarea>
-        </div>
+
+        <section class="free-date-form-section">
+          <div class="section-head compact">
+            <h2>资源确认</h2>
+          </div>
+          <div class="form-row free-date-form-grid">
+            <div class="form-group">
+              <label class="form-label" for="freeHotelRoomType">酒店房型</label>
+              <input id="freeHotelRoomType" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeHotelAllotment">保留房量</label>
+              <input id="freeHotelAllotment" class="form-control" type="number" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeHotelConfirmMode">酒店确认方式</label>
+              <select id="freeHotelConfirmMode" class="form-control">
+                <option>房量确认</option>
+                <option>下单二次确认</option>
+                <option>实时确认</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeFlightMode">机票确认方式</label>
+              <select id="freeFlightMode" class="form-control">
+                <option>实时询位</option>
+                <option>采购锁位</option>
+                <option>客人自理</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeResourceStatus">资源确认状态</label>
+              <select id="freeResourceStatus" class="form-control">
+                <option>已确认</option>
+                <option>待确认</option>
+                <option>需补确认</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="freeSupplierDeadline">供应商确认截止</label>
+              <input id="freeSupplierDeadline" class="form-control" type="datetime-local">
+            </div>
+          </div>
+        </section>
+
+        <section class="free-date-form-section">
+          <div class="section-head compact">
+            <h2>渠道与附加服务</h2>
+          </div>
+          <div class="form-row free-date-form-grid">
+            <div class="form-group">
+              <label class="form-label" for="freeChannelStatus">渠道状态</label>
+              <select id="freeChannelStatus" class="form-control">
+                <option>已同步</option>
+                <option>未同步</option>
+                <option>暂停同步</option>
+              </select>
+            </div>
+            <div class="form-group form-group-full">
+              <label class="form-label">可售渠道</label>
+              <div class="free-channel-options">
+                <label><input class="free-channel-check" type="checkbox" value="门店"> 门店</label>
+                <label><input class="free-channel-check" type="checkbox" value="小程序"> 小程序</label>
+                <label><input class="free-channel-check" type="checkbox" value="OTA"> OTA</label>
+                <label><input class="free-channel-check" type="checkbox" value="代理"> 代理</label>
+              </div>
+            </div>
+            <div class="form-group form-group-full">
+              <label class="form-label">附加服务</label>
+              <div class="free-channel-options">
+                <label><input id="freeComponentTransfer" type="checkbox"> 接送机</label>
+                <label><input id="freeComponentActivity" type="checkbox"> 当地玩乐</label>
+                <label><input id="freeComponentInsurance" type="checkbox"> 保险</label>
+              </div>
+            </div>
+            <div class="form-group form-group-full">
+              <label class="form-label" for="freeDateRemark">备注</label>
+              <textarea id="freeDateRemark" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+        </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-free-template>取消</button>
-        <button class="btn btn-primary" type="button" data-close-free-template>保存组合</button>
+        <button class="btn btn-secondary" type="button" data-close-free-date>取消</button>
+        <button id="saveFreeDate" class="btn btn-primary" type="button">保存出行日期</button>
       </div>
     </div>
   </div>
 
-  <div id="freeSettlementModal" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal free-settlement-modal" role="dialog" aria-modal="true" aria-labelledby="freeSettlementTitle">
+  <div id="freeResourceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg free-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="freeResourceDrawerTitle">
       <div class="modal-header">
-        <div id="freeSettlementTitle" class="modal-title">自由行结算规则配置</div>
-        <button class="modal-close" type="button" data-close-free-settlement aria-label="关闭">×</button>
+        <div id="freeResourceDrawerTitle" class="modal-title">资源状态</div>
+        <button class="modal-close" type="button" data-close-free-resource aria-label="关闭">×</button>
       </div>
       <div class="modal-body">
-        <section class="table-wrap free-settlement-table" aria-label="结算规则配置">
+        <div class="description-grid free-resource-summary">
+          <div class="description-item"><div class="description-label">线路</div><div id="resourceProduct" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">出行日期</div><div id="resourceTravelDate" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">套餐</div><div id="resourcePackage" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">当前状态</div><div id="resourceCurrentStatus" class="description-value">-</div></div>
+        </div>
+        <section class="table-wrap free-resource-table">
           <table>
             <thead>
               <tr>
-                <th>组成部分</th>
-                <th>结算供应商</th>
-                <th>结算时机</th>
-                <th>备注</th>
+                <th>资源项</th>
+                <th>当前记录</th>
+                <th>确认号</th>
+                <th>状态</th>
+                <th>待处理</th>
               </tr>
             </thead>
-            <tbody>
-              <tr><td>国际机票</td><td>国航合作协议</td><td>出票后7日内</td><td>按协议价结算</td></tr>
-              <tr><td>目的地酒店</td><td>各酒店直签</td><td>入住后14日内</td><td>按实际入住人数结算</td></tr>
-              <tr><td>专车接送</td><td>欧洲优选车队</td><td>服务完成后7日内</td><td>按订单数量结算</td></tr>
-            </tbody>
+            <tbody id="freeResourceRows"></tbody>
           </table>
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-free-settlement>关闭</button>
-        <button class="btn btn-primary" type="button" data-edit-settlement-rule>编辑结算规则</button>
+        <button class="btn btn-secondary" type="button" data-close-free-resource>关闭</button>
+        <button id="viewResourceOrders" class="btn btn-primary" type="button">查看该日订单</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="freeBatchDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal free-date-batch-drawer" role="dialog" aria-modal="true" aria-labelledby="freeBatchDrawerTitle">
+      <div class="modal-header">
+        <div id="freeBatchDrawerTitle" class="modal-title">批量维护出行日期</div>
+        <button class="modal-close" type="button" data-close-free-batch aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <input id="freeBatchMode" type="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="batchStartDate">开始日期</label>
+            <input id="batchStartDate" class="form-control" type="date" value="2026-07-01">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchEndDate">结束日期</label>
+            <input id="batchEndDate" class="form-control" type="date" value="2026-07-31">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchPackage">适用套餐</label>
+            <select id="batchPackage" class="form-control">
+              <option>机票+酒店套餐</option>
+              <option>纯酒店套餐</option>
+              <option>酒店+接送机套餐</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchSaleStatus">销售状态</label>
+            <select id="batchSaleStatus" class="form-control">
+              <option>销售中</option>
+              <option>待开放</option>
+              <option>停售</option>
+            </select>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">开放星期</label>
+            <div class="free-batch-weekdays">
+              <label><input type="checkbox" value="1" checked> 周一</label>
+              <label><input type="checkbox" value="2" checked> 周二</label>
+              <label><input type="checkbox" value="3" checked> 周三</label>
+              <label><input type="checkbox" value="4" checked> 周四</label>
+              <label><input type="checkbox" value="5" checked> 周五</label>
+              <label><input type="checkbox" value="6" checked> 周六</label>
+              <label><input type="checkbox" value="0" checked> 周日</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchAdultPrice">成人价</label>
+            <input id="batchAdultPrice" class="form-control" type="text" value="¥4,800">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchChildPrice">儿童价</label>
+            <input id="batchChildPrice" class="form-control" type="text" value="¥4,200">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchSaleable">总可售量</label>
+            <input id="batchSaleable" class="form-control" type="number" min="0" value="16">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="batchStopTime">停售时间</label>
+            <input id="batchStopTime" class="form-control" type="datetime-local" value="2026-06-28T18:00">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-free-batch>取消</button>
+        <button id="saveFreeBatch" class="btn btn-primary" type="button">确认批量维护</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var tabs = document.querySelectorAll('[data-free-tab]');
-      var panels = document.querySelectorAll('[data-free-panel]');
-      var productModal = document.getElementById('freeProductModal');
-      var templateModal = document.getElementById('freeTemplateModal');
-      var settlementModal = document.getElementById('freeSettlementModal');
-      var inventoryModal = document.getElementById('freeInventoryModal');
+      var params = new URLSearchParams(window.location.search);
+      var dateDrawer = document.getElementById('freeDateDrawer');
+      var resourceDrawer = document.getElementById('freeResourceDrawer');
+      var batchDrawer = document.getElementById('freeBatchDrawer');
+      var calendarPanel = document.getElementById('freeCalendarPanel');
+      var listPanel = document.getElementById('freeListPanel');
+      var calendar = document.getElementById('freeDateCalendar');
+      var rows = document.getElementById('freeDateRows');
+      var currentView = params.get('tab') === 'calendar' ? 'calendar' : 'list';
+      var context = readContext();
+      var dateItems = readDateItems();
 
-      function showTab(name) {
-        tabs.forEach(function (tab) {
-          tab.classList.toggle('active', tab.getAttribute('data-free-tab') === name);
-        });
-        panels.forEach(function (panel) {
-          var visible = panel.getAttribute('data-free-panel') === name;
-          panel.classList.toggle('active', visible);
-          panel.hidden = !visible;
+      function readStored(key, fallback) {
+        try {
+          var raw = window.localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (error) {
+          return fallback;
+        }
+      }
+
+      function writeStored(key, value) {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {}
+      }
+
+      function readContext() {
+        var stored = readStored('caesarFreeTravelContext', {});
+        return {
+          product: params.get('product') || stored.product || '巴黎自由行 5-7日',
+          route: params.get('route') || stored.route || '机票+酒店套餐',
+          supplier: params.get('supplier') || stored.supplier || '国际航空CA / 巴黎酒店直采',
+          owner: params.get('owner') || stored.owner || '郑华'
+        };
+      }
+
+      function defaultItems() {
+        return [
+          makeItem('2026-07-01', '机票+酒店套餐', '销售中', '¥4,800', '¥4,200', '¥900', 18, 6, '2026-06-28T18:00', '已确认', '已同步', '高级大床/双床', 18, '房量确认', '实时询位'),
+          makeItem('2026-07-02', '机票+酒店套餐', '销售中', '¥4,800', '¥4,200', '¥900', 16, 4, '2026-06-29T18:00', '已确认', '已同步', '高级大床/双床', 16, '房量确认', '实时询位'),
+          makeItem('2026-07-03', '机票+酒店套餐', '待开放', '¥5,200', '¥4,600', '¥980', 10, 0, '2026-06-30T18:00', '待确认', '未同步', '高级大床/双床', 10, '下单二次确认', '实时询位'),
+          makeItem('2026-07-04', '酒店+接送机套餐', '销售中', '¥5,600', '¥5,000', '¥1,100', 8, 3, '2026-07-01T18:00', '已确认', '已同步', '埃菲尔景观房', 8, '房量确认', '客人自理'),
+          makeItem('2026-07-05', '机票+酒店套餐', '低库存', '¥5,800', '¥5,200', '¥1,100', 4, 12, '2026-07-02T18:00', '需补确认', '已同步', '高级大床/双床', 4, '下单二次确认', '采购锁位'),
+          makeItem('2026-07-06', '纯酒店套餐', '销售中', '¥3,600', '¥3,200', '¥760', 20, 5, '2026-07-03T18:00', '已确认', '已同步', '舒适双床', 20, '实时确认', '客人自理'),
+          makeItem('2026-07-07', '纯酒店套餐', '停售', '¥3,700', '¥3,300', '¥760', 18, 2, '2026-07-04T18:00', '待确认', '暂停同步', '舒适双床', 18, '下单二次确认', '客人自理')
+        ];
+      }
+
+      function makeItem(date, packageName, saleStatus, adultPrice, childPrice, singleDiff, saleable, sold, stopTime, resourceStatus, channelStatus, hotelRoomType, hotelAllotment, hotelConfirmMode, flightMode) {
+        return {
+          id: date + '-' + packageName,
+          date: date,
+          packageName: packageName,
+          saleStatus: saleStatus,
+          adultPrice: adultPrice,
+          childPrice: childPrice,
+          singleDiff: singleDiff,
+          saleable: saleable,
+          sold: sold,
+          stopTime: stopTime,
+          resourceStatus: resourceStatus,
+          channelStatus: channelStatus,
+          hotelRoomType: hotelRoomType,
+          hotelAllotment: hotelAllotment,
+          hotelConfirmMode: hotelConfirmMode,
+          flightMode: flightMode,
+          supplierDeadline: stopTime,
+          channels: ['门店', '小程序'],
+          transfer: packageName.indexOf('接送机') >= 0,
+          activity: false,
+          insurance: true,
+          remark: ''
+        };
+      }
+
+      function readDateItems() {
+        var stored = readStored('caesarFreeTravelDateItems', null);
+        return Array.isArray(stored) && stored.length ? stored : defaultItems();
+      }
+
+      function saveDateItems() {
+        writeStored('caesarFreeTravelDateItems', dateItems);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
         });
       }
 
-
-
-      function closeProductLayer(modal, message) {
-        if (!modal) return;
-        window.caesarUI.closeLayer(modal);
-        if (message) window.caesarUI.toast(message);
+      function openLayer(target) {
+        if (!target) return;
+        if (window.caesarUI && window.caesarUI.openLayer) window.caesarUI.openLayer(target);
+        else {
+          target.classList.add('show');
+          target.setAttribute('aria-hidden', 'false');
+        }
       }
 
-      function showToast(message) {
-        window.caesarUI.toast(message);
+      function closeLayer(target) {
+        if (!target) return;
+        if (window.caesarUI && window.caesarUI.closeLayer) window.caesarUI.closeLayer(target);
+        else {
+          target.classList.remove('show');
+          target.setAttribute('aria-hidden', 'true');
+        }
       }
 
-      tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-          showTab(tab.getAttribute('data-free-tab'));
+      function toast(message, type) {
+        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message, { type: type || 'success' });
+      }
+
+      function statusClass(status) {
+        if (status === '销售中') return 'tag-green';
+        if (status === '待开放') return 'tag-blue';
+        if (status === '低库存') return 'tag-orange';
+        if (status === '停售' || status === '售罄') return 'tag-red';
+        return 'tag-gray';
+      }
+
+      function resourceClass(status) {
+        if (status === '已确认') return 'tag-green';
+        if (status === '需补确认') return 'tag-orange';
+        return 'tag-blue';
+      }
+
+      function channelClass(status) {
+        if (status === '已同步') return 'tag-green';
+        if (status === '暂停同步') return 'tag-orange';
+        return 'tag-gray';
+      }
+
+      function orderListUrl(item) {
+        var query = new URLSearchParams();
+        query.set('productType', 'free');
+        query.set('product', context.product);
+        query.set('travelDate', item.date);
+        query.set('package', item.packageName);
+        return '../sales/orders.html?' + query.toString();
+      }
+
+      function navigateTo(url) {
+        if (window.caesarNavigateTo) window.caesarNavigateTo(url);
+        else window.location.href = url;
+      }
+
+      function formatDate(date) {
+        var parts = String(date).split('-');
+        return parts.length === 3 ? parts[1] + '/' + parts[2] : date;
+      }
+
+      function weekday(date) {
+        var names = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        return names[new Date(date + 'T00:00:00').getDay()];
+      }
+
+      function visibleItems() {
+        var keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
+        var packageValue = document.getElementById('filterPackage').value;
+        var saleStatus = document.getElementById('filterSaleStatus').value;
+        var resourceStatus = document.getElementById('filterResourceStatus').value;
+        var channelStatus = document.getElementById('filterChannelStatus').value;
+        return dateItems.filter(function (item) {
+          var haystack = [item.date, item.packageName, item.saleStatus, item.resourceStatus, item.channelStatus].join(' ').toLowerCase();
+          if (keyword && haystack.indexOf(keyword) < 0) return false;
+          if (packageValue && item.packageName !== packageValue) return false;
+          if (saleStatus && item.saleStatus !== saleStatus) return false;
+          if (resourceStatus && item.resourceStatus !== resourceStatus) return false;
+          if (channelStatus && item.channelStatus !== channelStatus) return false;
+          return true;
+        }).sort(function (a, b) {
+          return a.date.localeCompare(b.date) || a.packageName.localeCompare(b.packageName);
         });
-      });
+      }
 
-      document.querySelectorAll('[data-open-template]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.openLayer(templateModal);
+      function renderCalendar() {
+        var items = visibleItems();
+        if (!items.length) {
+          calendar.innerHTML = '<div class="empty-state">暂无符合条件的出行日期</div>';
+          return;
+        }
+        calendar.innerHTML = items.map(function (item) {
+          var available = Math.max(Number(item.saleable || 0) - Number(item.sold || 0), 0);
+          var stateClass = item.saleStatus === '低库存' ? ' is-low' : '';
+          stateClass += item.saleStatus === '停售' || item.saleStatus === '售罄' ? ' is-stopped' : '';
+          return '<button class="free-date-card' + stateClass + '" type="button" data-edit-free-date="' + escapeHtml(item.id) + '">' +
+            '<span class="free-date-card-head"><strong>' + escapeHtml(formatDate(item.date)) + '</strong><em>' + escapeHtml(weekday(item.date)) + '</em></span>' +
+            '<span class="free-date-card-package">' + escapeHtml(item.packageName) + '</span>' +
+            '<span class="free-date-card-price">' + escapeHtml(item.adultPrice) + '</span>' +
+            '<span class="free-date-card-body"><span>可售 ' + available + '</span><span>已售 ' + escapeHtml(item.sold) + '</span></span>' +
+            '<span class="free-date-card-foot"><span class="tag ' + statusClass(item.saleStatus) + '">' + escapeHtml(item.saleStatus) + '</span><span class="tag ' + resourceClass(item.resourceStatus) + '">' + escapeHtml(item.resourceStatus) + '</span></span>' +
+          '</button>';
+        }).join('');
+      }
+
+      function renderRows() {
+        var items = visibleItems();
+        if (!items.length) {
+          rows.innerHTML = '<tr><td colspan="9" class="empty-cell">暂无符合条件的出行日期</td></tr>';
+          return;
+        }
+        rows.innerHTML = items.map(function (item) {
+          var available = Math.max(Number(item.saleable || 0) - Number(item.sold || 0), 0);
+          return '<tr>' +
+            '<td><strong>' + escapeHtml(item.date) + '</strong><br><span class="text-muted">' + escapeHtml(weekday(item.date)) + '</span></td>' +
+            '<td>' + escapeHtml(item.packageName) + '</td>' +
+            '<td><span class="tag ' + statusClass(item.saleStatus) + '">' + escapeHtml(item.saleStatus) + '</span></td>' +
+            '<td>成人 ' + escapeHtml(item.adultPrice) + '<br><span class="text-muted">儿童 ' + escapeHtml(item.childPrice) + '</span></td>' +
+            '<td>' + available + ' / ' + escapeHtml(item.sold) + '</td>' +
+            '<td>' + escapeHtml(String(item.stopTime || '').replace('T', ' ')) + '</td>' +
+            '<td><span class="tag ' + resourceClass(item.resourceStatus) + '">' + escapeHtml(item.resourceStatus) + '</span></td>' +
+            '<td><span class="tag ' + channelClass(item.channelStatus) + '">' + escapeHtml(item.channelStatus) + '</span></td>' +
+            '<td><div class="table-action"><button class="table-action-primary" type="button" data-edit-free-date="' + escapeHtml(item.id) + '">维护</button><button type="button" data-open-free-orders="' + escapeHtml(item.id) + '">订单</button><button type="button" data-open-resource-status="' + escapeHtml(item.id) + '">资源状态</button><button type="button" data-toggle-free-date="' + escapeHtml(item.id) + '">' + (item.saleStatus === '停售' ? '开放' : '停售') + '</button></div></td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function renderAll() {
+        renderCalendar();
+        renderRows();
+      }
+
+      function syncContext() {
+        document.getElementById('contextProduct').textContent = context.product;
+        document.getElementById('contextOwner').textContent = context.owner;
+        document.getElementById('contextSupplier').textContent = context.supplier;
+        writeStored('caesarFreeTravelContext', context);
+      }
+
+      function setView(view) {
+        currentView = view;
+        calendarPanel.classList.toggle('hidden', view !== 'calendar');
+        listPanel.classList.toggle('hidden', view !== 'list');
+        document.querySelectorAll('[data-free-view]').forEach(function (button) {
+          button.classList.toggle('active', button.dataset.freeView === view);
         });
-      });
+      }
 
-      document.getElementById('openFreeProductModal').addEventListener('click', function () {
-        window.caesarUI.openLayer(productModal);
-      });
+      function findItem(id) {
+        return dateItems.find(function (item) { return item.id === id; });
+      }
 
-      document.querySelectorAll('[data-open-free-product]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.openLayer(productModal);
+      function openDateDrawer(item) {
+        var data = item || makeItem('', context.route, '待开放', '¥4,800', '¥4,200', '¥900', 12, 0, '', '待确认', '未同步', '高级大床/双床', 12, '下单二次确认', '实时询位');
+        document.getElementById('freeDateDrawerTitle').textContent = item ? '维护出行日期' : '新增出行日期';
+        document.getElementById('freeDateId').value = data.id || '';
+        document.getElementById('freeDate').value = data.date || '';
+        document.getElementById('freePackage').value = data.packageName || context.route;
+        document.getElementById('freeSaleStatus').value = data.saleStatus || '待开放';
+        document.getElementById('freeStopTime').value = data.stopTime || '';
+        document.getElementById('freeAdultPrice').value = data.adultPrice || '¥4,800';
+        document.getElementById('freeChildPrice').value = data.childPrice || '¥4,200';
+        document.getElementById('freeSingleDiff').value = data.singleDiff || '¥900';
+        document.getElementById('freeSaleable').value = data.saleable || 0;
+        document.getElementById('freeHotelRoomType').value = data.hotelRoomType || '';
+        document.getElementById('freeHotelAllotment').value = data.hotelAllotment || 0;
+        document.getElementById('freeHotelConfirmMode').value = data.hotelConfirmMode || '下单二次确认';
+        document.getElementById('freeFlightMode').value = data.flightMode || '实时询位';
+        document.getElementById('freeResourceStatus').value = data.resourceStatus || '待确认';
+        document.getElementById('freeSupplierDeadline').value = data.supplierDeadline || '';
+        document.getElementById('freeChannelStatus').value = data.channelStatus || '未同步';
+        document.getElementById('freeDateRemark').value = data.remark || '';
+        document.getElementById('freeComponentTransfer').checked = !!data.transfer;
+        document.getElementById('freeComponentActivity').checked = !!data.activity;
+        document.getElementById('freeComponentInsurance').checked = data.insurance !== false;
+        document.querySelectorAll('.free-channel-check').forEach(function (checkbox) {
+          checkbox.checked = (data.channels || []).indexOf(checkbox.value) >= 0;
         });
-      });
+        openLayer(dateDrawer);
+      }
 
-      document.querySelectorAll('[data-show-calendar]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          showTab('calendar');
-          showToast('已切换至日期价格库存');
+      function saveDateFromDrawer() {
+        var date = document.getElementById('freeDate').value;
+        var packageName = document.getElementById('freePackage').value;
+        if (!date) {
+          toast('请先选择出行日期', 'warning');
+          return;
+        }
+        var id = document.getElementById('freeDateId').value || date + '-' + packageName;
+        var item = findItem(id);
+        var payload = {
+          id: id,
+          date: date,
+          packageName: packageName,
+          saleStatus: document.getElementById('freeSaleStatus').value,
+          stopTime: document.getElementById('freeStopTime').value,
+          adultPrice: document.getElementById('freeAdultPrice').value,
+          childPrice: document.getElementById('freeChildPrice').value,
+          singleDiff: document.getElementById('freeSingleDiff').value,
+          saleable: Number(document.getElementById('freeSaleable').value || 0),
+          sold: item ? item.sold : 0,
+          hotelRoomType: document.getElementById('freeHotelRoomType').value,
+          hotelAllotment: Number(document.getElementById('freeHotelAllotment').value || 0),
+          hotelConfirmMode: document.getElementById('freeHotelConfirmMode').value,
+          flightMode: document.getElementById('freeFlightMode').value,
+          resourceStatus: document.getElementById('freeResourceStatus').value,
+          supplierDeadline: document.getElementById('freeSupplierDeadline').value,
+          channelStatus: document.getElementById('freeChannelStatus').value,
+          channels: Array.from(document.querySelectorAll('.free-channel-check:checked')).map(function (checkbox) { return checkbox.value; }),
+          transfer: document.getElementById('freeComponentTransfer').checked,
+          activity: document.getElementById('freeComponentActivity').checked,
+          insurance: document.getElementById('freeComponentInsurance').checked,
+          remark: document.getElementById('freeDateRemark').value
+        };
+        if (item) Object.assign(item, payload);
+        else dateItems.push(payload);
+        saveDateItems();
+        renderAll();
+        closeLayer(dateDrawer);
+        toast('出行日期已保存');
+      }
+
+      function toggleSaleStatus(id) {
+        var item = findItem(id);
+        if (!item) return;
+        item.saleStatus = item.saleStatus === '停售' ? '销售中' : '停售';
+        item.channelStatus = item.saleStatus === '停售' ? '暂停同步' : '未同步';
+        saveDateItems();
+        renderAll();
+        toast(item.saleStatus === '停售' ? '已停售' : '已重新开放');
+      }
+
+      function resourceRowsForItem(item) {
+        var hotelStatus = item.resourceStatus === '需补确认' ? ['房量不足', 'tag tag-orange', '补供应商确认号或调整可售量'] : item.resourceStatus === '待确认' ? ['待确认', 'tag tag-blue', '催酒店供应商确认房态'] : ['已确认', 'tag tag-green', '无'];
+        var flightStatus = item.flightMode === '采购锁位' && item.resourceStatus !== '已确认' ? ['待出票确认', 'tag tag-orange', '确认锁位与出票时限'] : item.flightMode === '客人自理' ? ['客人自理', 'tag tag-gray', '无'] : ['已询位', 'tag tag-green', '关注航变提醒'];
+        var transferStatus = item.transfer ? ['待派车确认', item.resourceStatus === '已确认' ? 'tag tag-blue' : 'tag tag-orange', '回填用车确认号'] : ['未包含', 'tag tag-gray', '无'];
+        var activityStatus = item.activity ? ['待预约确认', 'tag tag-blue', '确认当地玩乐名额'] : ['未包含', 'tag tag-gray', '无'];
+        return [
+          ['酒店', item.hotelRoomType || '标准房型', item.resourceStatus === '已确认' ? 'HTL-' + item.date.replace(/-/g, '') : '待回传', hotelStatus[0], hotelStatus[1], hotelStatus[2]],
+          ['机票', item.flightMode || '实时询位', item.flightMode === '客人自理' ? '-' : 'FLT-' + item.date.replace(/-/g, ''), flightStatus[0], flightStatus[1], flightStatus[2]],
+          ['接送机', item.transfer ? '机场接送1车' : '不含接送机', item.transfer ? 'TRF-' + item.date.replace(/-/g, '') : '-', transferStatus[0], transferStatus[1], transferStatus[2]],
+          ['当地玩乐', item.activity ? '巴黎城市游' : '未配置', item.activity ? 'ACT-' + item.date.replace(/-/g, '') : '-', activityStatus[0], activityStatus[1], activityStatus[2]]
+        ];
+      }
+
+      function openResourceDrawer(item) {
+        if (!item) return;
+        document.getElementById('freeResourceDrawerTitle').textContent = item.date + ' 资源状态';
+        document.getElementById('resourceProduct').textContent = context.product;
+        document.getElementById('resourceTravelDate').textContent = item.date + ' ' + weekday(item.date);
+        document.getElementById('resourcePackage').textContent = item.packageName;
+        document.getElementById('resourceCurrentStatus').innerHTML = '<span class="tag ' + resourceClass(item.resourceStatus) + '">' + escapeHtml(item.resourceStatus) + '</span>';
+        document.getElementById('freeResourceRows').innerHTML = resourceRowsForItem(item).map(function (row) {
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><span class="' + row[4] + '">' + escapeHtml(row[3]) + '</span></td><td>' + escapeHtml(row[5]) + '</td></tr>';
+        }).join('');
+        document.getElementById('viewResourceOrders').dataset.orderUrl = orderListUrl(item);
+        openLayer(resourceDrawer);
+      }
+
+      function openBatchDrawer(mode) {
+        var titleMap = { open: '批量开放日期', price: '批量调价', stop: '批量停售' };
+        document.getElementById('freeBatchDrawerTitle').textContent = titleMap[mode] || '批量维护出行日期';
+        document.getElementById('freeBatchMode').value = mode;
+        document.getElementById('batchSaleStatus').value = mode === 'stop' ? '停售' : '销售中';
+        openLayer(batchDrawer);
+      }
+
+      function datesBetween(start, end, weekdays) {
+        var result = [];
+        var current = new Date(start + 'T00:00:00');
+        var last = new Date(end + 'T00:00:00');
+        while (current <= last) {
+          if (weekdays.indexOf(String(current.getDay())) >= 0) result.push(current.toISOString().slice(0, 10));
+          current.setDate(current.getDate() + 1);
+        }
+        return result;
+      }
+
+      function saveBatch() {
+        var mode = document.getElementById('freeBatchMode').value;
+        var start = document.getElementById('batchStartDate').value;
+        var end = document.getElementById('batchEndDate').value;
+        var weekdays = Array.from(document.querySelectorAll('.free-batch-weekdays input:checked')).map(function (checkbox) { return checkbox.value; });
+        var packageName = document.getElementById('batchPackage').value;
+        if (!start || !end || start > end || !weekdays.length) {
+          toast('请检查日期范围和开放星期', 'warning');
+          return;
+        }
+        datesBetween(start, end, weekdays).forEach(function (date) {
+          var id = date + '-' + packageName;
+          var item = findItem(id);
+          if (!item) {
+            item = makeItem(date, packageName, '待开放', document.getElementById('batchAdultPrice').value, document.getElementById('batchChildPrice').value, '¥900', Number(document.getElementById('batchSaleable').value || 0), 0, document.getElementById('batchStopTime').value, '待确认', '未同步', '高级大床/双床', Number(document.getElementById('batchSaleable').value || 0), '下单二次确认', packageName === '纯酒店套餐' ? '客人自理' : '实时询位');
+            dateItems.push(item);
+          }
+          if (mode === 'price' || mode === 'open') {
+            item.adultPrice = document.getElementById('batchAdultPrice').value;
+            item.childPrice = document.getElementById('batchChildPrice').value;
+            item.saleable = Number(document.getElementById('batchSaleable').value || item.saleable);
+          }
+          item.saleStatus = mode === 'stop' ? '停售' : document.getElementById('batchSaleStatus').value;
+          item.stopTime = document.getElementById('batchStopTime').value;
+          item.channelStatus = item.saleStatus === '停售' ? '暂停同步' : '未同步';
         });
-      });
+        saveDateItems();
+        renderAll();
+        closeLayer(batchDrawer);
+        toast('批量维护已完成');
+      }
 
-      document.querySelectorAll('[data-open-free-inventory]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.openLayer(inventoryModal);
+      function bindEvents() {
+        document.getElementById('openFreeDateDrawer').addEventListener('click', function () {
+          openDateDrawer(null);
         });
-      });
-
-      document.getElementById('openFreeInventoryModal').addEventListener('click', function () {
-        window.caesarUI.openLayer(inventoryModal);
-      });
-
-      document.querySelectorAll('[data-open-settlement]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.openLayer(settlementModal);
+        document.getElementById('saveFreeDate').addEventListener('click', saveDateFromDrawer);
+        document.getElementById('saveFreeBatch').addEventListener('click', saveBatch);
+        document.getElementById('applyFreeFilters').addEventListener('click', renderAll);
+        document.getElementById('filterKeyword').addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') renderAll();
         });
-      });
-
-      document.querySelectorAll('[data-close-free-template]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeProductLayer(templateModal, button.classList.contains('btn-primary') ? '套餐组合已保存' : '');
+        document.querySelectorAll('[data-free-view]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            setView(button.dataset.freeView);
+          });
         });
-      });
-
-      document.querySelectorAll('[data-close-free-product]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeProductLayer(productModal, button.classList.contains('btn-primary') ? '自由行方案已保存，列表已局部刷新' : '');
+        document.querySelectorAll('[data-close-free-date]').forEach(function (button) {
+          button.addEventListener('click', function () { closeLayer(dateDrawer); });
         });
-      });
-
-      document.querySelectorAll('[data-close-free-settlement]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeProductLayer(settlementModal, button.classList.contains('btn-primary') ? '结算规则已进入编辑草稿' : '');
+        document.querySelectorAll('[data-close-free-batch]').forEach(function (button) {
+          button.addEventListener('click', function () { closeLayer(batchDrawer); });
         });
-      });
-
-      document.querySelectorAll('[data-close-free-inventory]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          closeProductLayer(inventoryModal, button.classList.contains('btn-primary') ? '日期价格库存已保存' : '');
+        document.querySelectorAll('[data-close-free-resource]').forEach(function (button) {
+          button.addEventListener('click', function () { closeLayer(resourceDrawer); });
         });
-      });
-
-      [productModal, templateModal, settlementModal, inventoryModal].forEach(function (modal) {
-        modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeProductLayer(modal);
+        document.getElementById('viewResourceOrders').addEventListener('click', function () {
+          navigateTo(this.dataset.orderUrl || '../sales/orders.html?productType=free');
         });
-      });
-
-      document.getElementById('resetFreeFilters').addEventListener('click', function () {
-        document.getElementById('freeKeyword').value = '';
-        document.getElementById('freeDestination').selectedIndex = 0;
-        document.getElementById('freeMinDays').value = '';
-        document.getElementById('freeMaxDays').value = '';
-        document.getElementById('freeStatus').selectedIndex = 0;
-        showToast('筛选条件已重置');
-      });
-
-      document.getElementById('searchFreeProducts').addEventListener('click', function () {
-        showToast('已按当前条件刷新自由行方案列表');
-      });
-
-      document.getElementById('freeAiPublish').addEventListener('click', function () {
-        showToast('AI已生成自由行上架草稿，可在新建方案抽屉中继续维护');
-        window.caesarUI.openLayer(productModal);
-      });
-
-      document.querySelectorAll('.free-product-table .danger').forEach(function (button) {
-        button.addEventListener('click', function () {
-          button.textContent = '重新上架';
-          button.classList.remove('danger');
-          showToast('自由行方案已下架，列表状态已刷新');
+        document.querySelectorAll('[data-open-batch]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            document.querySelector('.free-batch-menu').classList.remove('open');
+            openBatchDrawer(button.dataset.openBatch);
+          });
         });
-      });
-
-      document.querySelectorAll('[data-republish-free]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          button.textContent = '编辑';
-          showToast('自由行方案已重新上架');
+        document.querySelector('[data-export-free-dates]').addEventListener('click', function () {
+          document.querySelector('.free-batch-menu').classList.remove('open');
+          toast('日期价格已加入导出任务');
         });
-      });
-
-      document.querySelectorAll('[data-view-template-links]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          showToast('已刷新当前模板关联方案列表');
+        document.getElementById('freeBatchMenuToggle').addEventListener('click', function (event) {
+          event.stopPropagation();
+          document.querySelector('.free-batch-menu').classList.toggle('open');
         });
-      });
+        document.addEventListener('click', function () {
+          document.querySelector('.free-batch-menu').classList.remove('open');
+        });
+        document.addEventListener('click', function (event) {
+          var editButton = event.target.closest('[data-edit-free-date]');
+          if (editButton) openDateDrawer(findItem(editButton.dataset.editFreeDate));
+          var toggleButton = event.target.closest('[data-toggle-free-date]');
+          if (toggleButton) toggleSaleStatus(toggleButton.dataset.toggleFreeDate);
+          var orderButton = event.target.closest('[data-open-free-orders]');
+          if (orderButton) {
+            var orderItem = findItem(orderButton.dataset.openFreeOrders);
+            if (orderItem) navigateTo(orderListUrl(orderItem));
+          }
+          var resourceButton = event.target.closest('[data-open-resource-status]');
+          if (resourceButton) openResourceDrawer(findItem(resourceButton.dataset.openResourceStatus));
+        });
+        [dateDrawer, batchDrawer, resourceDrawer].forEach(function (drawer) {
+          drawer.addEventListener('click', function (event) {
+            if (event.target === drawer) closeLayer(drawer);
+          });
+        });
+      }
 
-      document.querySelector('[data-add-free-part]').addEventListener('click', function () {
-        showToast('已新增组成部分草稿');
-      });
-
-      document.querySelector('[data-edit-settlement-rule]').addEventListener('click', function () {
-        showToast('结算规则已进入编辑状态');
-      });
+      syncContext();
+      setView(currentView);
+      renderAll();
+      bindEvents();
     })();
   </script>
 </body>

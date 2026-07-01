@@ -41,6 +41,7 @@
                 <option>删除</option>
                 <option>审批</option>
                 <option>导出</option>
+                <option>测试</option>
                 <option>登录</option>
               </select>
             </div>
@@ -163,8 +164,134 @@
   <script>
     (function () {
       var detail = document.querySelector("[data-audit-detail]");
+      var tbody = document.querySelector(".audit-table-wrap tbody");
+      var searchInput = document.querySelector('.audit-filter-card input[type="search"]');
+      var moduleSelect = document.querySelector('.audit-filter-card select[aria-label="操作模块"]');
+      var actionSelect = document.querySelector('.audit-filter-card select[aria-label="操作动作"]');
+      var dateInputs = document.querySelectorAll('.audit-filter-card input[type="date"]');
+      var staticRows = Array.from(tbody.querySelectorAll("tr"));
+      var staticRecords = staticRows.map(function (row) {
+        var cells = row.querySelectorAll("td");
+        return {
+          operator: cells[1].textContent.trim(),
+          role: cells[2].textContent.trim(),
+          module: cells[3].textContent.trim(),
+          action: cells[4].textContent.trim(),
+          summary: cells[5].textContent.trim(),
+          ip: cells[6].textContent.trim(),
+          time: cells[7].textContent.trim(),
+          before: { status: "变更前" },
+          after: { status: cells[5].textContent.trim() }
+        };
+      });
 
-      function openDetail() {
+      function toast(message, type) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast(message, { type: type || "success" });
+        }
+      }
+
+      function pad(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function currentTime() {
+        var date = new Date();
+        return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) + " " + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds());
+      }
+
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, function (char) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+          }[char];
+        });
+      }
+
+      function readAuditLogs() {
+        try {
+          return JSON.parse(localStorage.getItem("caesarAdminAuditLogs") || "[]");
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function writeAudit(record) {
+        var logs = readAuditLogs();
+        logs.unshift(Object.assign({
+          operator: "张建国",
+          role: "超级管理员",
+          module: "操作审计",
+          action: "导出",
+          ip: "10.12.8.21",
+          time: currentTime()
+        }, record));
+        localStorage.setItem("caesarAdminAuditLogs", JSON.stringify(logs.slice(0, 80)));
+      }
+
+      function allRecords() {
+        return readAuditLogs().concat(staticRecords);
+      }
+
+      function actionClass(action) {
+        if (action === "新增") return "tag-green";
+        if (action === "删除") return "tag-red";
+        if (action === "审批") return "tag-purple";
+        if (action === "导出") return "tag-orange";
+        if (action === "登录") return "tag-gray";
+        if (action === "测试") return "tag-green";
+        return "tag-blue";
+      }
+
+      function filteredRecords() {
+        var keyword = (searchInput.value || "").trim();
+        var moduleValue = moduleSelect.value;
+        var actionValue = actionSelect.value;
+        var startDate = dateInputs[0] ? dateInputs[0].value : "";
+        var endDate = dateInputs[1] ? dateInputs[1].value : "";
+        return allRecords().filter(function (record) {
+          var matchKeyword = !keyword || [record.operator, record.role, record.summary, record.module].join(" ").indexOf(keyword) >= 0;
+          var matchModule = moduleValue === "全部模块" || record.module === moduleValue;
+          var matchAction = actionValue === "全部动作" || record.action === actionValue;
+          var day = String(record.time || "").slice(0, 10);
+          var matchStart = !startDate || day >= startDate;
+          var matchEnd = !endDate || day <= endDate;
+          return matchKeyword && matchModule && matchAction && matchStart && matchEnd;
+        });
+      }
+
+      function render(records) {
+        tbody.innerHTML = records.slice(0, 15).map(function (record, index) {
+          return '<tr data-audit-index="' + index + '">' +
+            "<td>" + (index + 1) + "</td>" +
+            "<td>" + escapeHtml(record.operator) + "</td>" +
+            "<td>" + escapeHtml(record.role) + "</td>" +
+            "<td>" + escapeHtml(record.module) + "</td>" +
+            '<td><span class="tag ' + actionClass(record.action) + '">' + escapeHtml(record.action) + "</span></td>" +
+            "<td>" + escapeHtml(record.summary) + "</td>" +
+            "<td>" + escapeHtml(record.ip) + "</td>" +
+            "<td>" + escapeHtml(record.time) + "</td>" +
+            '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-audit-detail="' + index + '">详情</button></div></td>' +
+            "</tr>";
+        }).join("");
+        tbody.dataset.renderedRecords = JSON.stringify(records.slice(0, 15));
+      }
+
+      function openDetail(record) {
+        var userNodes = detail.querySelectorAll(".audit-detail-user strong");
+        if (userNodes[0]) userNodes[0].textContent = record.operator || "";
+        if (userNodes[1]) userNodes[1].textContent = record.role || "";
+        if (userNodes[2]) userNodes[2].textContent = record.ip || "";
+        if (userNodes[3]) userNodes[3].textContent = record.time || "";
+        var content = detail.querySelector(".audit-detail-section p");
+        if (content) content.textContent = record.summary || "";
+        var codeNodes = detail.querySelectorAll(".audit-json code");
+        if (codeNodes[0]) codeNodes[0].textContent = JSON.stringify(record.before || {}, null, 2);
+        if (codeNodes[1]) codeNodes[1].textContent = JSON.stringify(record.after || {}, null, 2);
         detail.classList.add("show");
         detail.setAttribute("aria-hidden", "false");
       }
@@ -174,13 +301,54 @@
         detail.setAttribute("aria-hidden", "true");
       }
 
-      document.querySelectorAll("[data-open-audit-detail]").forEach(function (button) {
-        button.addEventListener("click", openDetail);
+      function refresh() {
+        render(filteredRecords());
+      }
+
+      tbody.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-open-audit-detail]");
+        if (!button) return;
+        var records = JSON.parse(tbody.dataset.renderedRecords || "[]");
+        openDetail(records[Number(button.dataset.openAuditDetail)] || records[0] || {});
       });
 
       document.querySelectorAll("[data-close-audit-detail]").forEach(function (button) {
         button.addEventListener("click", closeDetail);
       });
+
+      document.querySelectorAll(".filter-actions .btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var text = button.textContent.trim();
+          if (text === "重置") {
+            searchInput.value = "";
+            moduleSelect.value = "全部模块";
+            actionSelect.value = "全部动作";
+            refresh();
+            return;
+          }
+          if (text === "导出日志") {
+            writeAudit({
+              summary: "导出操作审计日志",
+              before: { rows: filteredRecords().length },
+              after: { status: "导出任务已创建" }
+            });
+            refresh();
+            toast("审计日志导出任务已创建");
+            return;
+          }
+          refresh();
+        });
+      });
+
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") refresh();
+      });
+
+      [moduleSelect, actionSelect].forEach(function (select) {
+        select.addEventListener("change", refresh);
+      });
+
+      refresh();
     })();
   </script>
 </body>

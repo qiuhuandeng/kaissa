@@ -26,7 +26,7 @@
         <div class="filter-item filter-item-sm"><label class="sr-only" for="payableSource">来源</label><select id="payableSource"><option>全部来源</option><option>成本确认</option><option>供应商费用</option><option>预付款</option><option>退款手续费</option></select></div>
         <div class="filter-item filter-item-sm"><label class="sr-only" for="payableStatus">付款状态</label><select id="payableStatus"><option>全部状态</option><option>待对账</option><option>有差异</option><option>已确认</option><option>已申请付款</option><option>已付款</option></select></div>
         <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">应付日期</label><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
-        <div class="filter-actions"><button class="btn btn-secondary" type="button">搜索</button><button id="resetPayables" class="btn btn-secondary" type="button">重置</button></div>
+        <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-payable>搜索</button><button id="resetPayables" class="btn btn-secondary" type="button">重置</button></div>
       </div>
     </section>
 
@@ -63,7 +63,7 @@
         <tr data-tab-status="有差异"><td>AP20260623003</td><td>COST20260623011<br><span class="text-muted">成本确认</span></td><td>丝路专列运营商</td><td>丝路专列深度游<br><span class="text-muted">丝路经典线 · TR-SILK-20250815-001</span></td><td>铺位包列</td><td class="amount-strong">¥380,000</td><td>¥386,000</td><td><span class="tag tag-red">有差异</span></td><td><span class="tag tag-orange">未收票</span></td><td><span class="tag tag-gray">未申请</span></td><td><div class="table-action"><button type="button" data-open-diff class="table-action-primary">处理差异</button></div></td></tr>
         <tr data-tab-status="待对账"><td>AP20260623004</td><td>COST20260623018<br><span class="text-muted">供应商费用</span></td><td>兰卡威海景酒店</td><td>马来西亚自由行<br><span class="text-muted">兰卡威酒店机票套餐</span></td><td>酒店代订</td><td class="amount-strong">¥8,400</td><td>-</td><td><span class="tag tag-orange">待对账</span></td><td><span class="tag tag-orange">未收票</span></td><td><span class="tag tag-gray">未申请</span></td><td><div class="table-action"><button type="button" data-open-reconcile class="table-action-primary">发起对账</button></div></td></tr>
         <tr data-tab-status="待对账"><td>AP20260622005</td><td>COST20260622006<br><span class="text-muted">单项服务成本</span></td><td>日本签证中心</td><td>日本签证代办<br><span class="text-muted">单项服务</span></td><td>签证代办费</td><td class="amount-strong">¥1,200</td><td>-</td><td><span class="tag tag-orange">待对账</span></td><td><span class="tag tag-orange">未收票</span></td><td><span class="tag tag-gray">未申请</span></td><td><div class="table-action"><button type="button" data-open-reconcile class="table-action-primary">发起对账</button></div></td></tr>
-        <tr data-tab-status="已付款"><td>AP20260620006</td><td>COST20260620009<br><span class="text-muted">成本确认</span></td><td>北京优选车队</td><td>北京故宫定制游<br><span class="text-muted">京城文化线 · CN-BJG-20250701-001</span></td><td>用车服务</td><td class="amount-strong">¥18,900</td><td>¥18,900</td><td><span class="tag tag-green">已确认</span></td><td><span class="tag tag-green">已收票</span></td><td><span class="tag tag-green">已付款</span></td><td><div class="table-action"><button type="button" class="table-action-primary">查看回单</button></div></td></tr>
+        <tr data-tab-status="已付款"><td>AP20260620006</td><td>COST20260620009<br><span class="text-muted">成本确认</span></td><td>北京优选车队</td><td>北京故宫定制游<br><span class="text-muted">京城文化线 · CN-BJG-20250701-001</span></td><td>用车服务</td><td class="amount-strong">¥18,900</td><td>¥18,900</td><td><span class="tag tag-green">已确认</span></td><td><span class="tag tag-green">已收票</span></td><td><span class="tag tag-green">已付款</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-payable-target="remittance">查看回单</button></div></td></tr>
       </tbody>
     </table>
   </section>
@@ -97,11 +97,10 @@
             <textarea id="reconcilePreview" class="form-control" rows="5">请核对应付单 AP20260623004，线路为马来西亚自由行，费用项目为酒店代订，系统应付金额为 ¥8,400。请确认账单金额、发票信息及付款账户。</textarea>
           </div>
         </section>
-        <section class="finance-link-box">供应商确认后，应付单进入已确认；若金额不一致，进入差异处理并回写成本确认记录。</section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button">确认发起对账</button>
+        <button class="btn btn-primary" type="button" data-submit-reconcile>确认发起对账</button>
       </div>
     </div>
   </div>
@@ -133,14 +132,13 @@
           <input id="negotiatedAmount" class="form-control" type="number" value="382000">
         </div>
         <div class="form-group">
-          <label class="form-label" for="diffReason">处理原因说明 <span class="req">*</span></label>
+          <label class="form-label" for="diffReason">处理原因 <span class="req">*</span></label>
           <textarea id="diffReason" class="form-control" rows="4" required></textarea>
         </div>
-        <section class="finance-link-box">确认差异后将同步调整应付单、成本确认记录和团期利润口径，超阈值金额需进入审批。</section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button">确认处理</button>
+        <button class="btn btn-primary" type="button" data-submit-diff>确认处理</button>
       </div>
     </div>
   </div>
@@ -185,7 +183,6 @@
           <textarea id="paymentRemark" class="form-control" rows="3" placeholder="选填"></textarea>
         </div>
         <div class="alert alert-orange">¥112,000 超过付款审批阈值 ¥50,000，提交后自动进入审批中心。</div>
-        <section class="finance-link-box">审批通过后生成付款申请 PAY-20260624-001，并进入“付款执行”待付款队列。</section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
@@ -215,16 +212,90 @@
     </div>
   </div>
 
+  <div id="supplierInvoiceModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal payable-invoice-modal" role="dialog" aria-modal="true" aria-labelledby="supplierInvoiceTitle">
+      <div class="modal-header">
+        <div id="supplierInvoiceTitle" class="modal-title">登记供应商发票</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="supplierInvoiceSummary" class="readonly-summary">
+          <div>应付单：AP20260623004 | 供应商：兰卡威海景酒店 | 应付金额：¥8,400</div>
+          <div>线路/方案：马来西亚自由行 / 兰卡威酒店机票套餐 | 费用项目：酒店代订</div>
+        </section>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="supplierInvoiceNo">发票号 <span class="req">*</span></label>
+            <input id="supplierInvoiceNo" class="form-control" type="text" value="FP20260624001" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="supplierInvoiceDate">收票日期 <span class="req">*</span></label>
+            <input id="supplierInvoiceDate" class="form-control" type="date" value="2026-06-24" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="supplierInvoiceAmount">发票金额 <span class="req">*</span></label>
+            <input id="supplierInvoiceAmount" class="form-control" type="number" min="0" step="0.01" value="8400" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="supplierInvoiceType">发票类型</label>
+            <select id="supplierInvoiceType" class="form-control">
+              <option>增值税专用发票</option>
+              <option>增值税普通发票</option>
+              <option>电子普通发票</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="supplierInvoiceTaxRate">税率</label>
+            <select id="supplierInvoiceTaxRate" class="form-control">
+              <option>6%</option>
+              <option>9%</option>
+              <option>13%</option>
+              <option>免税</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="supplierInvoiceTaxAmount">税额</label>
+            <input id="supplierInvoiceTaxAmount" class="form-control" type="number" min="0" step="0.01" value="475.47">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="supplierInvoiceFile">发票附件</label>
+          <input id="supplierInvoiceFile" class="form-control" type="text" value="兰卡威海景酒店_发票.pdf">
+        </div>
+        <div id="supplierInvoiceAlert" class="alert alert-blue">发票金额与应付金额一致，可提交入账复核。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-submit-supplier-invoice>提交收票</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var reconcileModal = document.getElementById('reconcileModal');
       var diffModal = document.getElementById('diffModal');
       var paymentApplyModal = document.getElementById('paymentApplyModal');
       var paymentApplySuccessModal = document.getElementById('paymentApplySuccessModal');
+      var supplierInvoiceModal = document.getElementById('supplierInvoiceModal');
       var reconcileLetterFields = document.getElementById('reconcileLetterFields');
       var negotiatedAmountWrap = document.getElementById('negotiatedAmountWrap');
       var paymentOnlineFields = document.getElementById('paymentOnlineFields');
       var paymentOfflineFields = document.getElementById('paymentOfflineFields');
+      var supplierInvoiceSummary = document.getElementById('supplierInvoiceSummary');
+      var supplierInvoiceNo = document.getElementById('supplierInvoiceNo');
+      var supplierInvoiceDate = document.getElementById('supplierInvoiceDate');
+      var supplierInvoiceAmount = document.getElementById('supplierInvoiceAmount');
+      var supplierInvoiceType = document.getElementById('supplierInvoiceType');
+      var supplierInvoiceTaxRate = document.getElementById('supplierInvoiceTaxRate');
+      var supplierInvoiceTaxAmount = document.getElementById('supplierInvoiceTaxAmount');
+      var supplierInvoiceFile = document.getElementById('supplierInvoiceFile');
+      var supplierInvoiceAlert = document.getElementById('supplierInvoiceAlert');
+      var supplierInvoiceFinanceBox = document.getElementById('supplierInvoiceFinanceBox');
       var reconcileSummary = document.querySelector('#reconcileModal .readonly-summary');
       var reconcileEmail = document.getElementById('reconcileEmail');
       var reconcilePreview = document.getElementById('reconcilePreview');
@@ -238,6 +309,10 @@
       var paymentFinanceBox = document.querySelector('#paymentApplyModal .finance-link-box');
       var paymentApprovalLink = document.getElementById('paymentApprovalLink');
       var activePaymentApproval = null;
+      var activePayableRow = null;
+      var activePayableData = null;
+      var inboundPayableRow = null;
+      var shouldOpenInboundPayable = false;
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -250,6 +325,160 @@
         return cell ? cell.textContent.trim().replace(/\s+/g, ' ') : '';
       }
 
+      function notify(message) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message);
+        }
+      }
+
+      function openPayableLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+          window.caesarUI.openLayer(layer);
+          return;
+        }
+        layer.hidden = false;
+        layer.classList.remove('closing');
+        layer.setAttribute('aria-hidden', 'false');
+        window.requestAnimationFrame(function () {
+          layer.classList.add('show');
+        });
+      }
+
+      function queryString(data) {
+        var query = new URLSearchParams();
+        Object.keys(data).forEach(function (key) {
+          if (data[key]) query.set(key, data[key]);
+        });
+        return query.toString();
+      }
+
+      function optionEnabled(value) {
+        return value && value.indexOf('全部') !== 0;
+      }
+
+      function rowText(row) {
+        return row ? row.textContent.trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function matchesPayableProductType(row, type) {
+        if (!optionEnabled(type)) return true;
+        var rowType = row.dataset.productType || '';
+        if (rowType === type || rowType === type.replace('线路', '')) return true;
+        var text = rowText(row);
+        if (type === '自营线路') return !/邮轮|专列|自由行|单项服务|签证|研学|外采/.test(text);
+        if (type === '邮轮线路') return /邮轮|CR-/.test(text);
+        if (type === '专列线路') return /专列|TR-/.test(text);
+        if (type === '单项服务') return /单项服务|签证/.test(text);
+        return text.indexOf(type.replace('线路', '')) >= 0;
+      }
+
+      function refreshPayablePagination(visibleCount, totalCount) {
+        var label = document.querySelector('.list-surface-pagination span');
+        if (!label) return;
+        label.textContent = '第1-' + visibleCount + '条/共' + totalCount + '条';
+      }
+
+      function activePayableTab() {
+        var active = document.querySelector('.payable-tabs .tab-item.active');
+        return active ? active.dataset.filterValue : '全部';
+      }
+
+      function applyPayableFilters() {
+        var keyword = (document.getElementById('payableKeyword').value || '').trim().toLowerCase();
+        var productType = document.getElementById('payableProductType').value;
+        var source = document.getElementById('payableSource').value;
+        var status = document.getElementById('payableStatus').value;
+        var tab = activePayableTab();
+        var visibleCount = 0;
+        var totalCount = 0;
+        document.querySelectorAll('#payableRows tr').forEach(function (row) {
+          totalCount += 1;
+          var text = rowText(row);
+          var lower = text.toLowerCase();
+          var visible = true;
+          if (keyword && lower.indexOf(keyword) < 0) visible = false;
+          if (!matchesPayableProductType(row, productType)) visible = false;
+          if (optionEnabled(source) && getCellText(row.children, 1).indexOf(source) < 0) visible = false;
+          if (optionEnabled(status) && row.dataset.tabStatus !== status && getCellText(row.children, 9).indexOf(status) < 0 && getCellText(row.children, 7).indexOf(status) < 0) visible = false;
+          if (tab && tab !== '全部' && String(row.dataset.tabStatus || '').indexOf(tab) < 0) visible = false;
+          if (visible) visibleCount += 1;
+          row.hidden = !visible;
+        });
+        refreshPayablePagination(visibleCount, totalCount);
+      }
+
+      function resetPayableFilters() {
+        document.querySelectorAll('.payable-filter input').forEach(function (input) {
+          input.value = '';
+        });
+        document.querySelectorAll('.payable-filter select').forEach(function (select) {
+          select.selectedIndex = 0;
+        });
+        applyPayableFilters();
+      }
+
+      function readInvoiceTasks() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarInvoiceTasks') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function readApprovalResults() {
+        try {
+          return JSON.parse(window.localStorage.getItem('caesarApprovalResults') || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function compactNo(value) {
+        return String(value || '').replace(/\D/g, '').slice(-8) || '00000000';
+      }
+
+      function payableApprovalCandidates(payableNo) {
+        var staticMap = {
+          AP20260624001: 'APR-20260624-028',
+          AP20260624002: 'APR-20260624-033',
+          AP20260624003: 'APR-20260624-037'
+        };
+        var candidates = ['APR-PAY-' + compactNo(payableNo)];
+        if (staticMap[payableNo]) candidates.push(staticMap[payableNo]);
+        return candidates;
+      }
+
+      function payableApprovalState(payableNo) {
+        var approvals = readApprovalResults();
+        var state = null;
+        payableApprovalCandidates(payableNo).some(function (approvalNo) {
+          if (!approvals[approvalNo]) return false;
+          state = {
+            approvalNo: approvalNo,
+            status: approvals[approvalNo].status
+          };
+          return true;
+        });
+        return state;
+      }
+
+      function writeInvoiceTasks(tasks) {
+        window.localStorage.setItem('caesarInvoiceTasks', JSON.stringify(tasks));
+      }
+
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeStored(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
+
       function normalizePayableType(productText, feeItem) {
         if (productText.indexOf('邮轮') >= 0 || productText.indexOf('CR-') >= 0 || feeItem.indexOf('舱位') >= 0) return 'cruise';
         if (productText.indexOf('专列') >= 0 || productText.indexOf('TR-') >= 0 || feeItem.indexOf('铺位') >= 0) return 'train';
@@ -260,6 +489,15 @@
 
       function parseAmount(value) {
         return String(value || '').replace(/[^\d.]/g, '') || '0';
+      }
+
+      function formatAmount(value) {
+        var number = Number(parseAmount(value));
+        return '¥' + number.toLocaleString('zh-CN');
+      }
+
+      function todayText() {
+        return '2026-06-24';
       }
 
       function getPayableRowData(button) {
@@ -279,6 +517,136 @@
         };
       }
 
+      function findPayableRow(payableNo) {
+        return Array.from(document.querySelectorAll('#payableRows tr')).find(function (row) {
+          return row.children[0] && row.children[0].textContent.trim() === payableNo;
+        }) || null;
+      }
+
+      function payableActionByState(invoiceStatus, paymentStatus) {
+        if (/已付款/.test(paymentStatus)) {
+          return '<div class="table-action"><button type="button" class="table-action-primary" data-open-payable-target="remittance">查看回单</button><button type="button" data-open-payable-target="nc">NC</button></div>';
+        }
+        if (/审批中|已申请|审批通过|已审批/.test(paymentStatus)) {
+          return '<div class="table-action"><button type="button" data-open-payment-apply class="table-action-primary">查看申请</button><button type="button" data-open-payable-target="payment">付款执行</button></div>';
+        }
+        if (/已收票|已入账/.test(invoiceStatus)) return paymentApplyAction();
+        return supplierInvoiceAction();
+      }
+
+      function appendInboundPayableFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var fromOrderDetail = params.get('from') === 'order-detail' || params.get('orderNo') || params.get('product');
+        var sourceNo = params.get('sourceNo') || params.get('schedule') || params.get('businessNo') || params.get('orderNo') || '';
+        var generatedFromOrder = !params.get('payableNo') && fromOrderDetail;
+        var payableNo = params.get('payableNo') || (/^AP/.test(params.get('sourceNo') || '') ? params.get('sourceNo') : '');
+        if (!payableNo && generatedFromOrder) {
+          payableNo = 'AP-ORD-' + (String(sourceNo || params.get('product') || '').replace(/\D/g, '').slice(-10) || '0000000001');
+        }
+        var existingRow = payableNo ? findPayableRow(payableNo) : null;
+        if (!payableNo || existingRow) {
+          if (payableNo) {
+            document.getElementById('payableKeyword').value = payableNo;
+            applyPayableFilters();
+            inboundPayableRow = existingRow || findPayableRow(payableNo);
+            shouldOpenInboundPayable = params.get('from') === 'order-detail' || params.get('open') === 'payable' || !!params.get('orderNo');
+          }
+          return;
+        }
+        var amount = params.get('payableAmount') || (generatedFromOrder ? '' : params.get('amount')) || '¥0';
+        var supplier = params.get('supplier') || params.get('customer') || '待确认供应商';
+        var productText = params.get('productText') || [params.get('product'), params.get('package'), params.get('orderNo')].filter(Boolean).join(' · ') || '-';
+        var invoiceStatus = params.get('invoiceStatus') || '未收票';
+        var paymentStatus = params.get('financeStatus') || params.get('paymentStatus') || '未申请';
+        var tabStatus = /审批|申请/.test(paymentStatus) ? '已申请付款' : '已确认';
+        document.getElementById('payableRows').insertAdjacentHTML('afterbegin',
+          '<tr data-tab-status="' + escapeHtml(tabStatus) + '" data-product-type="' + escapeHtml(params.get('type') || '') + '" data-order-no="' + escapeHtml(params.get('orderNo') || '') + '" data-source-no="' + escapeHtml(sourceNo) + '" data-settlement-no="' + escapeHtml(params.get('settlementNo') || '') + '"><td>' + escapeHtml(payableNo) + '</td><td>' + escapeHtml(params.get('sourceCostNo') || sourceNo || '-') + '<br><span class="text-muted">' + escapeHtml(generatedFromOrder ? '订单成本待确认' : '结算转入') + '</span></td><td>' + escapeHtml(supplier) + '</td><td>' + escapeHtml(productText) + '</td><td>' + escapeHtml(params.get('feeItem') || (generatedFromOrder ? '订单关联成本' : '结算应付')) + '</td><td class="amount-strong">' + escapeHtml(amount) + '</td><td>' + escapeHtml(params.get('billAmount') || amount) + '</td><td><span class="tag ' + (generatedFromOrder ? 'tag-orange' : 'tag-green') + '">' + escapeHtml(generatedFromOrder ? '待确认' : '已确认') + '</span></td><td><span class="tag ' + (/已/.test(invoiceStatus) ? 'tag-green' : 'tag-orange') + '">' + escapeHtml(invoiceStatus) + '</span></td><td><span class="tag ' + (/已付款|审批通过|已审批/.test(paymentStatus) ? 'tag-green' : /审批|申请/.test(paymentStatus) ? 'tag-orange' : 'tag-gray') + '">' + escapeHtml(paymentStatus) + '</span></td><td>' + payableActionByState(invoiceStatus, paymentStatus) + '</td></tr>'
+        );
+        document.getElementById('payableKeyword').value = payableNo;
+        applyPayableFilters();
+        inboundPayableRow = findPayableRow(payableNo);
+        shouldOpenInboundPayable = params.get('from') === 'order-detail' || params.get('open') === 'payable' || !!params.get('orderNo');
+      }
+
+      function payableTagClass(status) {
+        if (/有差异|驳回|失败/.test(status)) return 'tag tag-red';
+        if (/已确认|已收票|已入账|审批通过|已审批|已付款/.test(status)) return 'tag tag-green';
+        if (/审批中|待|未收票/.test(status)) return 'tag tag-orange';
+        if (/未申请/.test(status)) return 'tag tag-gray';
+        return 'tag tag-blue';
+      }
+
+      function payableTabStatus(item) {
+        var reconcileStatus = item.reconcileStatus || '';
+        var paymentStatus = item.paymentStatus || '';
+        if (item.tabStatus) return item.tabStatus;
+        if (/有差异/.test(reconcileStatus)) return '有差异';
+        if (/待对账/.test(reconcileStatus)) return '待对账';
+        if (/已付款/.test(paymentStatus)) return '已付款';
+        if (/审批中|已申请|审批通过/.test(paymentStatus)) return '已申请付款';
+        return '已确认';
+      }
+
+      function storedPayableRowHtml(item) {
+        var reconcileStatus = item.reconcileStatus || '已确认';
+        var invoiceStatus = item.invoiceStatus || '未收票';
+        var paymentStatus = item.paymentStatus || '未申请';
+        var productLine = item.productName || item.productText || '-';
+        var productMeta = [item.packageName, item.travelDate, item.orderNo].filter(Boolean).join(' · ');
+        return '<tr data-tab-status="' + escapeHtml(payableTabStatus(item)) + '" data-product-type="' + escapeHtml(item.productType || '') + '" data-order-no="' + escapeHtml(item.orderNo || '') + '" data-source-no="' + escapeHtml(item.sourceNo || '') + '"><td>' + escapeHtml(item.payableNo) + '</td><td>' + escapeHtml(item.sourceNo || '-') + '<br><span class="text-muted">' + escapeHtml(item.sourceType || '成本确认') + '</span></td><td>' + escapeHtml(item.supplier || '-') + '</td><td>' + escapeHtml(productLine) + (productMeta ? '<br><span class="text-muted">' + escapeHtml(productMeta) + '</span>' : '') + '</td><td>' + escapeHtml(item.feeItem || '自由行成本') + '</td><td class="amount-strong">' + escapeHtml(item.payableAmount || '¥0') + '</td><td>' + escapeHtml(item.billAmount || item.payableAmount || '¥0') + '</td><td><span class="' + payableTagClass(reconcileStatus) + '">' + escapeHtml(reconcileStatus) + '</span></td><td><span class="' + payableTagClass(invoiceStatus) + '">' + escapeHtml(invoiceStatus) + '</span></td><td><span class="' + payableTagClass(paymentStatus) + '">' + escapeHtml(paymentStatus) + '</span></td><td>' + payableActionByState(invoiceStatus, paymentStatus) + '</td></tr>';
+      }
+
+      function appendStoredPayables() {
+        var store = readStored('caesarFinancePayables');
+        var payables = store.payables || {};
+        var rows = document.getElementById('payableRows');
+        Object.keys(payables).sort(function (a, b) {
+          return String(payables[b].createdAt || '').localeCompare(String(payables[a].createdAt || ''));
+        }).forEach(function (payableNo) {
+          var item = payables[payableNo];
+          if (!item || !item.payableNo || findPayableRow(item.payableNo)) return;
+          rows.insertAdjacentHTML('afterbegin', storedPayableRowHtml(item));
+        });
+      }
+
+      function syncStoredPayableState(row) {
+        if (!row) return;
+        var payableNo = getCellText(row.children, 0);
+        var store = readStored('caesarFinancePayables');
+        if (!store.payables || !store.payables[payableNo]) return;
+        Object.assign(store.payables[payableNo], {
+          billAmount: getCellText(row.children, 6),
+          reconcileStatus: getCellText(row.children, 7),
+          invoiceStatus: getCellText(row.children, 8),
+          paymentStatus: getCellText(row.children, 9),
+          tabStatus: row.dataset.tabStatus || store.payables[payableNo].tabStatus,
+          updatedAt: '2026-07-01 18:00'
+        });
+        writeStored('caesarFinancePayables', store);
+      }
+
+      function payableTarget(kind, row) {
+        var data = row ? getPayableRowData({ closest: function () { return row; } }) : activePayableData || {};
+        var base = {
+          payableNo: data.payableNo,
+          sourceNo: data.payableNo,
+          businessNo: data.payableNo,
+          productText: data.productText,
+          amount: data.payableAmount,
+          supplier: data.supplier
+        };
+        if (kind === 'invoice') return 'finance-invoice.html?' + queryString(Object.assign({}, base, { tab: 'supplier' }));
+        if (kind === 'payment') return 'finance-payment.html?' + queryString(Object.assign({}, base, { tab: 'execute', open: 'execute', approvalStatus: '审批通过', financeStatus: '待付款' }));
+        if (kind === 'remittance') return 'finance-remittance.html?' + queryString(Object.assign({}, base, { tab: 'match' }));
+        return 'finance-nc.html?' + queryString(Object.assign({}, base, { tab: 'queue', voucherNo: 'NC-AP-' + String(data.payableNo || '').replace(/\D/g, '') }));
+      }
+
+      function setActivePayable(button) {
+        activePayableRow = button.closest('tr');
+        activePayableData = getPayableRowData(button);
+        return activePayableData;
+      }
+
       function getPayableConfig(type, data) {
         var configs = {
           group: {
@@ -292,7 +660,7 @@
             account: data.supplier + ' | 招商银行上海分行 | 6225 **** 1188',
             email: 'settlement@cruise.example',
             payableRule: '舱位包销、船票和港务费按航次核对；取消退款时需保留船方扣损依据。',
-            diffRule: '差异会回写邮轮航次成本、舱房库存和港务费扣减口径，超阈值进入审批。',
+            diffRule: '差异会回写邮轮航次成本、舱房量和港务费扣减口径，超阈值进入审批。',
             paymentRule: '审批通过后生成邮轮船票付款申请，并关联航次舱房、港务费和船方账单。'
           },
           train: {
@@ -312,7 +680,7 @@
           entrust: {
             account: data.supplier + ' | 民生银行 | 6214 **** 0038',
             email: 'billing@service.example',
-            payableRule: '委托办理成本按服务完成节点对账。',
+            payableRule: '单项服务成本按服务完成节点对账。',
             diffRule: '差异会回写单项服务成本。',
             paymentRule: '审批通过后生成单项服务付款申请。'
           }
@@ -342,9 +710,102 @@
             node: '财务负责人',
             next: '审批通过后生成专列运营商付款申请，并进入付款执行队列',
             text: '专列运营商付款申请已进入审批流程，铺位确认和包乘成本将同步校验。'
+          },
+          free: {
+            no: 'APR-20260701-019',
+            matter: '付款申请',
+            node: '财务主管',
+            next: '审批通过后生成自由行资源付款申请，并进入付款执行队列',
+            text: '自由行机票、酒店或当地服务付款申请已进入审批流程，订单资源确认和供应商账单将同步校验。'
           }
         };
         return approvals[type] || approvals.group;
+      }
+
+      function payableProductTypeLabel(data) {
+        var type = normalizePayableType(data.productText || '', data.feeItem || '');
+        return {
+          group: '跟团游',
+          cruise: '邮轮',
+          train: '专列',
+          free: '自由行',
+          entrust: '单项服务'
+        }[type] || '跟团游';
+      }
+
+      function invoiceNoFromPayable(payableNo) {
+        return 'FP' + String(payableNo || '').replace(/\D/g, '');
+      }
+
+      function setPayableRowState(row, options) {
+        if (!row) return;
+        if (options.payableAmount) row.children[5].innerHTML = '<strong class="amount-strong">' + escapeHtml(options.payableAmount) + '</strong>';
+        if (options.billAmount) row.children[6].textContent = options.billAmount;
+        if (options.reconcileStatus) row.children[7].innerHTML = options.reconcileStatus;
+        if (options.invoiceStatus) row.children[8].innerHTML = options.invoiceStatus;
+        if (options.paymentStatus) row.children[9].innerHTML = options.paymentStatus;
+        if (options.actionHtml) row.children[10].innerHTML = options.actionHtml;
+        if (options.tabStatus) row.dataset.tabStatus = options.tabStatus;
+        syncStoredPayableState(row);
+      }
+
+      function supplierInvoiceTask(data) {
+        var invoiceAmount = supplierInvoiceAmount ? formatAmount(supplierInvoiceAmount.value) : data.payableAmount;
+        return {
+          supplier: data.supplier,
+          invoiceNo: supplierInvoiceNo ? supplierInvoiceNo.value : invoiceNoFromPayable(data.payableNo),
+          payableNo: data.payableNo,
+          paymentNo: data.paymentStatus.indexOf('已付款') >= 0 ? '已付款' : '未付款',
+          productText: data.productText,
+          feeItem: data.feeItem,
+          invoiceAmount: invoiceAmount,
+          payableAmount: data.payableAmount,
+          invoiceType: supplierInvoiceType ? supplierInvoiceType.value : '增值税专用发票',
+          taxRate: supplierInvoiceTaxRate ? supplierInvoiceTaxRate.value : '6%',
+          taxAmount: supplierInvoiceTaxAmount ? formatAmount(supplierInvoiceTaxAmount.value) : '¥0',
+          receivedAt: supplierInvoiceDate ? supplierInvoiceDate.value : todayText(),
+          fileName: supplierInvoiceFile ? supplierInvoiceFile.value : '供应商发票.pdf',
+          checkStatus: invoiceAmount === data.payableAmount ? '金额一致' : '金额不符',
+          status: '待入账',
+          ncStatus: '未生成',
+          productTypeLabel: payableProductTypeLabel(data)
+        };
+      }
+
+      function rememberSupplierInvoiceTask(data) {
+        var tasks = readInvoiceTasks();
+        if (!tasks.supplier) tasks.supplier = {};
+        tasks.supplier[data.payableNo] = supplierInvoiceTask(data);
+        writeInvoiceTasks(tasks);
+      }
+
+      function supplierInvoiceAction() {
+        return '<div class="table-action"><button type="button" data-open-supplier-invoice class="table-action-primary">登记收票</button></div>';
+      }
+
+      function paymentApplyAction() {
+        return '<div class="table-action"><button type="button" data-open-payment-apply class="table-action-primary">申请付款</button></div>';
+      }
+
+      function applyPayableApprovalResults() {
+        document.querySelectorAll('#payableRows tr').forEach(function (row) {
+          var payableNo = getCellText(row.children, 0);
+          var state = payableApprovalState(payableNo);
+          if (!state) return;
+          if (state.status === 'approved') {
+            setPayableRowState(row, {
+              paymentStatus: '<span class="tag tag-green">审批通过</span>',
+              actionHtml: '<div class="table-action"><a class="table-action-primary" href="' + payableTarget('payment', row) + '">付款执行</a><a href="../approval/approvals.html?view=todo&approvalNo=' + encodeURIComponent(state.approvalNo) + '">记录</a></div>',
+              tabStatus: '已申请付款'
+            });
+          } else if (state.status === 'rejected') {
+            setPayableRowState(row, {
+              paymentStatus: '<span class="tag tag-red">已驳回</span>',
+              actionHtml: '<div class="table-action"><a class="table-action-primary" href="../approval/approvals.html?view=todo&approvalNo=' + encodeURIComponent(state.approvalNo) + '">记录</a><button type="button" data-open-payment-apply>重新申请</button></div>',
+              tabStatus: '已确认'
+            });
+          }
+        });
       }
 
       function renderDescriptionGrid(grid, items) {
@@ -362,7 +823,7 @@
       }
 
       function renderReconcile(button) {
-        var data = getPayableRowData(button);
+        var data = setActivePayable(button);
         var config = getPayableConfig(normalizePayableType(data.productText, data.feeItem), data);
         if (reconcileSummary) reconcileSummary.textContent = data.payableNo + ' | ' + data.supplier + ' | ' + data.feeItem + ' | 系统应付 ' + data.payableAmount;
         if (reconcileEmail) reconcileEmail.value = config.email;
@@ -373,7 +834,7 @@
       }
 
       function renderDiff(button) {
-        var data = getPayableRowData(button);
+        var data = setActivePayable(button);
         var config = getPayableConfig(normalizePayableType(data.productText, data.feeItem), data);
         var payableAmount = Number(parseAmount(data.payableAmount));
         var billAmount = Number(parseAmount(data.billAmount || data.payableAmount));
@@ -398,7 +859,7 @@
       }
 
       function renderPaymentApply(button) {
-        var data = getPayableRowData(button);
+        var data = setActivePayable(button);
         var type = normalizePayableType(data.productText, data.feeItem);
         var config = getPayableConfig(type, data);
         activePaymentApproval = getPaymentApproval(type, data);
@@ -421,9 +882,75 @@
         paymentApprovalLink.href = '../approval/approvals.html?view=todo&approvalNo=' + encodeURIComponent(approval.no);
       }
 
+      function renderSupplierInvoice(button) {
+        var data = setActivePayable(button);
+        var amount = parseAmount(data.payableAmount);
+        if (supplierInvoiceSummary) {
+          supplierInvoiceSummary.innerHTML = '<div>应付单：' + escapeHtml(data.payableNo) + ' | 供应商：' + escapeHtml(data.supplier) + ' | 应付金额：' + escapeHtml(data.payableAmount) + '</div><div>线路/方案：' + escapeHtml(data.productText) + ' | 费用项目：' + escapeHtml(data.feeItem) + '</div>';
+        }
+        if (supplierInvoiceNo) supplierInvoiceNo.value = invoiceNoFromPayable(data.payableNo);
+        if (supplierInvoiceDate) supplierInvoiceDate.value = todayText();
+        if (supplierInvoiceAmount) supplierInvoiceAmount.value = amount;
+        if (supplierInvoiceTaxAmount) supplierInvoiceTaxAmount.value = (Number(amount) * 0.06 / 1.06).toFixed(2);
+        if (supplierInvoiceFile) supplierInvoiceFile.value = data.supplier + '_发票.pdf';
+        if (supplierInvoiceAlert) supplierInvoiceAlert.textContent = '发票金额与应付金额一致，可提交入账复核。';
+        if (supplierInvoiceFinanceBox) supplierInvoiceFinanceBox.textContent = '提交后应付单更新为已收票，供应商发票进入发票管理待入账。';
+      }
+
+      function confirmReconcile() {
+        if (!activePayableRow || !activePayableData) return;
+        setPayableRowState(activePayableRow, {
+          billAmount: activePayableData.payableAmount,
+          reconcileStatus: '<span class="tag tag-green">已确认</span>',
+          invoiceStatus: '<span class="tag tag-orange">未收票</span>',
+          paymentStatus: '<span class="tag tag-gray">未申请</span>',
+          actionHtml: supplierInvoiceAction(),
+          tabStatus: '已确认'
+        });
+        window.caesarUI.closeLayer(reconcileModal);
+        window.caesarUI.toast('对账已确认，待登记供应商发票');
+      }
+
+      function confirmDiff() {
+        if (!activePayableRow || !activePayableData) return;
+        var diffMode = document.querySelector('input[name="diffMode"]:checked');
+        var amount = activePayableData.payableAmount;
+        if (diffMode && diffMode.value === 'accept') amount = activePayableData.billAmount || activePayableData.payableAmount;
+        if (diffMode && diffMode.value === 'negotiated') amount = formatAmount(document.getElementById('negotiatedAmount').value);
+        setPayableRowState(activePayableRow, {
+          payableAmount: amount,
+          billAmount: activePayableData.billAmount || amount,
+          reconcileStatus: '<span class="tag tag-green">已确认</span>',
+          invoiceStatus: '<span class="tag tag-orange">未收票</span>',
+          paymentStatus: '<span class="tag tag-gray">未申请</span>',
+          actionHtml: supplierInvoiceAction(),
+          tabStatus: '已确认'
+        });
+        window.caesarUI.closeLayer(diffModal);
+        window.caesarUI.toast('差异已处理，待登记供应商发票');
+      }
+
+      function submitSupplierInvoice() {
+        if (!activePayableRow || !activePayableData) return;
+        activePayableData.payableAmount = getCellText(activePayableRow.children, 5);
+        rememberSupplierInvoiceTask(activePayableData);
+        setPayableRowState(activePayableRow, {
+          invoiceStatus: '<span class="tag tag-green">已收票</span>',
+          actionHtml: paymentApplyAction(),
+          tabStatus: '已确认'
+        });
+        window.caesarUI.closeLayer(supplierInvoiceModal);
+        window.caesarUI.toast('供应商发票已登记，待确认入账');
+      }
 
 
 
+
+
+      appendStoredPayables();
+      appendInboundPayableFromParams();
+      applyPayableApprovalResults();
+      applyPayableFilters();
 
       document.querySelectorAll('[data-open-reconcile]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -437,16 +964,48 @@
           window.caesarUI.openLayer(diffModal);
         });
       });
-      document.querySelectorAll('[data-open-payment-apply]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          renderPaymentApply(button);
+      document.addEventListener('click', function (event) {
+        var invoiceButton = event.target.closest('[data-open-supplier-invoice]');
+        if (invoiceButton) {
+          renderSupplierInvoice(invoiceButton);
+          window.caesarUI.openLayer(supplierInvoiceModal);
+          return;
+        }
+        var paymentButton = event.target.closest('[data-open-payment-apply]');
+        if (paymentButton) {
+          renderPaymentApply(paymentButton);
           window.caesarUI.openLayer(paymentApplyModal);
-        });
+          return;
+        }
+        var targetButton = event.target.closest('[data-open-payable-target]');
+        if (targetButton) {
+          window.location.href = payableTarget(targetButton.dataset.openPayableTarget, targetButton.closest('tr'));
+          return;
+        }
+        if (event.target.closest('[data-search-payable]')) {
+          applyPayableFilters();
+        }
       });
+      document.querySelector('[data-submit-reconcile]').addEventListener('click', confirmReconcile);
+      document.querySelector('[data-submit-diff]').addEventListener('click', confirmDiff);
+      document.querySelector('[data-submit-supplier-invoice]').addEventListener('click', submitSupplierInvoice);
       document.querySelector('[data-submit-payment-apply]').addEventListener('click', function () {
         renderPaymentApplySuccess();
+        if (activePayableRow && activePaymentApproval) {
+          setPayableRowState(activePayableRow, {
+            paymentStatus: '<span class="tag tag-orange">审批中</span>',
+            actionHtml: '<div class="table-action"><a class="table-action-primary" href="../approval/approvals.html?view=todo&approvalNo=' + encodeURIComponent(activePaymentApproval.no) + '">审批</a><button type="button" data-open-payment-apply>查看申请</button></div>',
+            tabStatus: '已申请付款'
+          });
+        }
         window.caesarUI.closeLayer(paymentApplyModal);
         window.caesarUI.openLayer(paymentApplySuccessModal);
+      });
+
+      document.querySelectorAll('.payable-tabs .tab-item').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          window.setTimeout(applyPayableFilters, 0);
+        });
       });
 
       document.querySelectorAll('input[name="reconcileMode"]').forEach(function (radio) {
@@ -478,13 +1037,30 @@
       });
 
       document.getElementById('resetPayables').addEventListener('click', function () {
-        document.querySelectorAll('.payable-filter input').forEach(function (input) {
-          input.value = '';
-        });
-        document.querySelectorAll('.payable-filter select').forEach(function (select) {
-          select.selectedIndex = 0;
-        });
+        resetPayableFilters();
       });
+
+      if (shouldOpenInboundPayable && inboundPayableRow) {
+        window.requestAnimationFrame(function () {
+          var paymentButton = inboundPayableRow.querySelector('[data-open-payment-apply]');
+          var invoiceButton = inboundPayableRow.querySelector('[data-open-supplier-invoice]');
+          var reconcileButton = inboundPayableRow.querySelector('[data-open-reconcile]');
+          if (paymentButton) {
+            renderPaymentApply(paymentButton);
+            openPayableLayer(paymentApplyModal);
+            return;
+          }
+          if (invoiceButton) {
+            renderSupplierInvoice(invoiceButton);
+            openPayableLayer(supplierInvoiceModal);
+            return;
+          }
+          if (reconcileButton) {
+            renderReconcile(reconcileButton);
+            openPayableLayer(reconcileModal);
+          }
+        });
+      }
     })();
   </script>
 </body>

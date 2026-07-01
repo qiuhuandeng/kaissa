@@ -16,15 +16,15 @@
             <div class="filter-item-sm"><select class="form-control" aria-label="线路类型"><option>全部类型</option><option>自营线路</option><option>外采产品</option><option>邮轮线路</option><option>专列线路</option><option>自由行</option><option>单项服务</option><option>研学线路</option></select></div>
             <div class="filter-item-sm"><select class="form-control" aria-label="结算方式"><option>全部结算</option><option>团期结算</option><option>订单结算</option><option>项目结算</option></select></div>
             <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">导出Excel</button></div>
+            <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出Excel</button></div>
           </div>
       </section>
 
       <div class="finance-report-metrics" aria-label="团期盈亏汇总">
-        <article><span>已结算团期/订单</span><strong>36个</strong></article>
-        <article><span>结算收入</span><strong>¥4,126,800</strong></article>
-        <article><span>确认成本</span><strong>¥3,162,900</strong></article>
-        <article><span>综合毛利率</span><strong>23.4%</strong></article>
+        <article><span>已结算团期/订单</span><strong id="profitMetricCount">36个</strong></article>
+        <article><span>结算收入</span><strong id="profitMetricIncome">¥4,126,800</strong></article>
+        <article><span>确认成本</span><strong id="profitMetricCost">¥3,162,900</strong></article>
+        <article><span>综合毛利率</span><strong id="profitMetricRate">23.4%</strong></article>
       </div>
 
       <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
@@ -39,17 +39,18 @@
               <th>确认成本</th>
               <th>毛利</th>
               <th>毛利率</th>
+              <th>发票/NC</th>
               <th>操作</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td>JS20260624001</td><td>团期结算</td><td>欧洲十国经典游 / 法德意A线</td><td>EU-FRA-20250720-001</td><td>¥441,600</td><td>¥297,800</td><td>¥143,800</td><td>32.6%</td><td><div class="table-action"><button type="button" class="js-profit-detail table-action-primary">明细</button></div></td></tr>
-            <tr><td>JS20260624002</td><td>团期结算</td><td>理想号地中海邮轮 / 地中海经典线</td><td>CR-MED-20250803-001</td><td>¥1,176,200</td><td>¥996,000</td><td>¥180,200</td><td>15.3%</td><td><div class="table-action"><button type="button" class="js-profit-detail table-action-primary">明细</button></div></td></tr>
-            <tr><td>JS20260623003</td><td>团期结算</td><td>丝路专列深度游 / 丝路经典线</td><td>TR-SILK-20250815-001</td><td>¥1,255,200</td><td>¥386,000</td><td>¥869,200</td><td>69.2%</td><td><div class="table-action"><button type="button" class="js-profit-detail table-action-primary">明细</button></div></td></tr>
-            <tr><td>JS20260622004</td><td>订单结算</td><td>马来西亚自由行 / 兰卡威酒店机票套餐</td><td>KS2024061813</td><td>¥12,400</td><td>¥8,400</td><td>¥4,000</td><td>32.3%</td><td><div class="table-action"><button type="button" class="js-profit-detail table-action-primary">明细</button></div></td></tr>
-            <tr><td>JS20260620005</td><td>订单结算</td><td>日本签证代办 / 单项服务</td><td>KS2024061815</td><td>¥15,600</td><td>¥1,200</td><td>¥14,400</td><td>92.3%</td><td><div class="table-action"><button type="button" class="js-profit-detail table-action-primary">明细</button></div></td></tr>
-            <tr><td>JS20260618006</td><td>项目结算</td><td>新加坡研学营 / 科技营线</td><td>ST-SG-20250812-001</td><td>¥416,600</td><td>¥331,600</td><td>¥85,000</td><td>20.4%</td><td><div class="table-action"><button type="button" class="js-profit-detail table-action-primary">明细</button></div></td></tr>
-            <tr class="table-total-row"><td colspan="4">合计</td><td>¥3,317,600</td><td>¥2,021,000</td><td>¥1,296,600</td><td>39.1%</td><td>-</td></tr>
+          <tbody id="profitReportRows">
+            <tr><td>JS20260624001</td><td>团期结算</td><td>欧洲十国经典游 / 法德意A线</td><td>EU-FRA-20250720-001</td><td>¥441,600</td><td>¥297,800</td><td>¥143,800</td><td>32.6%</td><td>已开票 / 未推送</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>JS20260624002</td><td>团期结算</td><td>理想号地中海邮轮 / 地中海经典线</td><td>CR-MED-20250803-001</td><td>¥1,176,200</td><td>¥996,000</td><td>¥180,200</td><td>15.3%</td><td>待收票 / 未推送</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>JS20260623003</td><td>团期结算</td><td>丝路专列深度游 / 丝路经典线</td><td>TR-SILK-20250815-001</td><td>¥1,255,200</td><td>¥386,000</td><td>¥869,200</td><td>69.2%</td><td>已开票 / 未推送</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>JS20260622004</td><td>订单结算</td><td>马来西亚自由行 / 兰卡威酒店机票套餐</td><td>KS2024061813</td><td>¥12,400</td><td>¥8,400</td><td>¥4,000</td><td>32.3%</td><td>已开票 / 已推送</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>JS20260620005</td><td>订单结算</td><td>日本签证代办 / 单项服务</td><td>KS2024061815</td><td>¥15,600</td><td>¥1,200</td><td>¥14,400</td><td>92.3%</td><td>已开票 / 已推送</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>JS20260618006</td><td>项目结算</td><td>新加坡研学营 / 科技营线</td><td>ST-SG-20250812-001</td><td>¥416,600</td><td>¥331,600</td><td>¥85,000</td><td>20.4%</td><td>已开票 / 待推送</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr class="table-total-row"><td colspan="4">合计</td><td>¥3,317,600</td><td>¥2,021,000</td><td>¥1,296,600</td><td>39.1%</td><td>-</td><td>-</td></tr>
           </tbody>
         </table>
       </div>
@@ -64,7 +65,7 @@
             <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="收款开始日期"><span>至</span><input type="date" aria-label="收款结束日期"></div></div>
             <div class="filter-item-sm"><select class="form-control" aria-label="渠道"><option>全部渠道</option><option>门店</option><option>OTA</option><option>直客</option><option>代理商</option></select></div>
             <div class="filter-item-sm"><select class="form-control" aria-label="NC状态"><option>全部NC</option><option>已推送</option><option>待推送</option><option>推送失败</option></select></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">导出</button></div>
+            <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
           </div>
       </section>
 
@@ -80,11 +81,11 @@
 
       <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
         <table>
-          <thead><tr><th>收款单</th><th>来源流水</th><th>订单/应收单</th><th>客户/渠道</th><th>线路/方案</th><th>收款金额</th><th>入账结果</th><th>NC状态</th></tr></thead>
-          <tbody>
-            <tr><td>SKR20260625001</td><td>CMBC20260625001</td><td>KS2024061801 / SK20240618001</td><td>张建国</td><td>欧洲十国经典游 / 法德意A线</td><td>¥25,600</td><td><span class="tag tag-green">已入账</span></td><td><span class="tag tag-green">已推送</span></td></tr>
-            <tr><td>SKR20260625002</td><td>CMB20260625018</td><td>KS2024061811 / SK20240618111</td><td>OTA批量订单</td><td>理想号地中海邮轮 / 地中海经典线</td><td>¥18,900</td><td><span class="tag tag-orange">部分入账</span></td><td><span class="tag tag-orange">待推送</span></td></tr>
-            <tr><td>SKR20260625005</td><td>GDB20260625022</td><td>KS2024061814 / SK20240618141</td><td>旅途驿站</td><td>丝路专列深度游 / 丝路经典线</td><td>¥31,200</td><td><span class="tag tag-green">已入账</span></td><td><span class="tag tag-red">推送失败</span></td></tr>
+          <thead><tr><th>收款单</th><th>来源流水</th><th>订单/应收单</th><th>客户/渠道</th><th>线路/方案</th><th>收款金额</th><th>入账结果</th><th>NC状态</th><th>操作</th></tr></thead>
+          <tbody id="receiptReportRows">
+            <tr><td>SKR20260625001</td><td>CMBC20260625001</td><td>KS2024061801 / SK20240618001</td><td>张建国</td><td>欧洲十国经典游 / 法德意A线</td><td>¥25,600</td><td><span class="tag tag-green">已入账</span></td><td><span class="tag tag-green">已推送</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receipt">收款单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>SKR20260625002</td><td>CMB20260625018</td><td>KS2024061811 / SK20240618111</td><td>OTA批量订单</td><td>理想号地中海邮轮 / 地中海经典线</td><td>¥18,900</td><td><span class="tag tag-orange">部分入账</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receipt">收款单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>SKR20260625005</td><td>GDB20260625022</td><td>KS2024061814 / SK20240618141</td><td>旅途驿站</td><td>丝路专列深度游 / 丝路经典线</td><td>¥31,200</td><td><span class="tag tag-green">已入账</span></td><td><span class="tag tag-red">推送失败</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receipt">收款单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -98,7 +99,7 @@
           <div class="filter-row">
             <div class="filter-item-sm"><select class="form-control" aria-label="供应商"><option>全部供应商</option><option>欧洲联合地接社</option><option>皇家加勒比</option><option>西北铁路文旅集团</option></select></div>
             <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="付款开始日期"><span>至</span><input type="date" aria-label="付款结束日期"></div></div>
-            <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">导出</button></div>
+            <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
           </div>
       </section>
 
@@ -109,11 +110,11 @@
 
       <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
         <table>
-          <thead><tr><th>应付单</th><th>付款单</th><th>供应商</th><th>线路/方案</th><th>应付金额</th><th>已付金额</th><th>回单状态</th><th>NC状态</th></tr></thead>
-          <tbody>
-            <tr><td>AP20260624001</td><td>PAYEX-20260624-001</td><td>欧洲联合地接社</td><td>欧洲十国经典游 / 法德意A线</td><td>¥112,000</td><td>¥112,000</td><td><span class="tag tag-green">已回单</span></td><td><span class="tag tag-orange">待推送</span></td></tr>
-            <tr><td>AP20260624002</td><td>PAY-20260624-002</td><td>皇家加勒比</td><td>理想号地中海邮轮 / 地中海经典线</td><td>¥996,000</td><td>¥0</td><td><span class="tag tag-red">未回单</span></td><td><span class="tag tag-red">推送失败</span></td></tr>
-            <tr><td>AP20260620006</td><td>PAYEX-20260620-001</td><td>北京优选车队</td><td>北京故宫定制游 / 京城文化线</td><td>¥18,900</td><td>¥18,900</td><td><span class="tag tag-green">已回单</span></td><td><span class="tag tag-green">已推送</span></td></tr>
+          <thead><tr><th>应付单</th><th>付款单</th><th>供应商</th><th>线路/方案</th><th>应付金额</th><th>已付金额</th><th>回单状态</th><th>NC状态</th><th>操作</th></tr></thead>
+          <tbody id="paymentReportRows">
+            <tr><td>AP20260624001</td><td>PAYEX-20260624-001</td><td>欧洲联合地接社</td><td>欧洲十国经典游 / 法德意A线</td><td>¥112,000</td><td>¥112,000</td><td><span class="tag tag-green">已回单</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payment">付款</button><button type="button" data-report-target="remittance">回单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>AP20260624002</td><td>PAY-20260624-002</td><td>皇家加勒比</td><td>理想号地中海邮轮 / 地中海经典线</td><td>¥996,000</td><td>¥0</td><td><span class="tag tag-red">未回单</span></td><td><span class="tag tag-red">推送失败</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payment">付款</button><button type="button" data-report-target="remittance">回单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+            <tr><td>AP20260620006</td><td>PAYEX-20260620-001</td><td>北京优选车队</td><td>北京故宫定制游 / 京城文化线</td><td>¥18,900</td><td>¥18,900</td><td><span class="tag tag-green">已回单</span></td><td><span class="tag tag-green">已推送</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payment">付款</button><button type="button" data-report-target="remittance">回单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -134,7 +135,7 @@
           <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
           <div class="filter-item-sm"><select class="form-control" aria-label="线路类型"><option>全部类型</option><option>自营线路</option><option>外采产品</option><option>邮轮线路</option><option>专列线路</option><option>自由行</option><option>单项服务</option><option>研学线路</option></select></div>
           <div class="filter-item-sm"><select class="form-control" aria-label="状态"><option>全部状态</option><option>逾期</option><option>部分收款</option><option>已付款</option><option>审批中</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">导出</button></div>
+          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
         </div>
       </section>
 
@@ -147,7 +148,7 @@
           <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
             <table>
               <thead><tr><th>线路/方案</th><th>团期/订单</th><th>总应收</th><th>已收</th><th>待收</th><th>逾期</th></tr></thead>
-              <tbody>
+              <tbody id="receivableSummaryRows">
                 <tr><td>欧洲十国经典游 / 法德意A线</td><td>EU-FRA-20250720-001</td><td>¥448,000</td><td>¥448,000</td><td>¥0</td><td>¥0</td></tr>
                 <tr><td>理想号地中海邮轮 / 地中海经典线</td><td>CR-MED-20250803-001</td><td>¥49,900</td><td>¥37,100</td><td>¥12,800</td><td>¥0</td></tr>
                 <tr><td>日本关西深度游 / 大阪京都线</td><td>JP-KAN-20250712-001</td><td>¥64,800</td><td>¥40,000</td><td>¥24,800</td><td>¥24,800</td></tr>
@@ -161,10 +162,10 @@
         <div class="finance-subpanel" id="receivable-detail">
           <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
             <table>
-              <thead><tr><th>应收单</th><th>订单</th><th>客户/渠道</th><th>线路/方案</th><th>应收</th><th>已收</th><th>待收</th><th>状态</th></tr></thead>
-              <tbody>
-                <tr><td>SK20240618002</td><td>KS2024061802</td><td>李梅</td><td>理想号地中海邮轮 / 地中海经典线</td><td>¥49,900</td><td>¥37,100</td><td>¥12,800</td><td><span class="tag tag-orange">部分收款</span></td></tr>
-                <tr><td>SK20240618009</td><td>KS2024061809</td><td>环球同业</td><td>日本关西深度游 / 大阪京都线</td><td>¥64,800</td><td>¥40,000</td><td>¥24,800</td><td><span class="tag tag-red">逾期</span></td></tr>
+              <thead><tr><th>应收单</th><th>订单</th><th>客户/渠道</th><th>线路/方案</th><th>应收</th><th>已收</th><th>待收</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="receivableDetailRows">
+                <tr><td>SK20240618002</td><td>KS2024061802</td><td>李梅</td><td>理想号地中海邮轮 / 地中海经典线</td><td>¥49,900</td><td>¥37,100</td><td>¥12,800</td><td><span class="tag tag-orange">部分收款</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receivable">应收</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+                <tr><td>SK20240618009</td><td>KS2024061809</td><td>环球同业</td><td>日本关西深度游 / 大阪京都线</td><td>¥64,800</td><td>¥40,000</td><td>¥24,800</td><td><span class="tag tag-red">逾期</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receivable">应收</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -183,7 +184,7 @@
           <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
             <table>
               <thead><tr><th>供应商</th><th>总应付</th><th>已申请</th><th>已付</th><th>待付</th></tr></thead>
-              <tbody>
+              <tbody id="payableSupplierRows">
                 <tr><td>欧洲联合地接社</td><td>¥112,000</td><td>¥112,000</td><td>¥112,000</td><td>¥0</td></tr>
                 <tr><td>皇家加勒比</td><td>¥996,000</td><td>¥996,000</td><td>¥0</td><td>¥996,000</td></tr>
                 <tr><td>丝路专列运营商</td><td>¥386,000</td><td>¥0</td><td>¥0</td><td>¥386,000</td></tr>
@@ -197,10 +198,10 @@
         <div class="finance-subpanel" id="payable-detail">
           <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
             <table>
-              <thead><tr><th>应付单</th><th>供应商</th><th>线路/方案</th><th>费用项目</th><th>应付</th><th>已付</th><th>发票</th><th>状态</th></tr></thead>
-              <tbody>
-                <tr><td>AP20260624001</td><td>欧洲联合地接社</td><td>欧洲十国经典游 / 法德意A线</td><td>地接综合费</td><td>¥112,000</td><td>¥112,000</td><td>已入账</td><td><span class="tag tag-green">已付款</span></td></tr>
-                <tr><td>AP20260624002</td><td>皇家加勒比</td><td>理想号地中海邮轮 / 地中海经典线</td><td>舱位包销</td><td>¥996,000</td><td>¥0</td><td>待入账</td><td><span class="tag tag-orange">审批中</span></td></tr>
+              <thead><tr><th>应付单</th><th>供应商</th><th>线路/方案</th><th>费用项目</th><th>应付</th><th>已付</th><th>发票</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="payableDetailRows">
+                <tr><td>AP20260624001</td><td>欧洲联合地接社</td><td>欧洲十国经典游 / 法德意A线</td><td>地接综合费</td><td>¥112,000</td><td>¥112,000</td><td>已入账</td><td><span class="tag tag-green">已付款</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payable">应付</button><button type="button" data-report-target="payment">付款</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
+                <tr><td>AP20260624002</td><td>皇家加勒比</td><td>理想号地中海邮轮 / 地中海经典线</td><td>舱位包销</td><td>¥996,000</td><td>¥0</td><td>待入账</td><td><span class="tag tag-orange">审批中</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payable">应付</button><button type="button" data-report-target="payment">付款</button><button type="button" data-report-target="nc">NC</button></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -216,7 +217,7 @@
         <div class="filter-row">
           <div class="filter-item"><input class="form-control" type="search" placeholder="供应商/线路/方案"></div>
           <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">导出</button></div>
+          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
         </div>
       </section>
       <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
@@ -239,7 +240,7 @@
         <div class="filter-row">
           <div class="filter-item"><input class="form-control" type="search" placeholder="账户/部门"></div>
           <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button">查询</button><button class="btn btn-secondary" type="button">导出</button></div>
+          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
         </div>
       </section>
       <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
@@ -258,11 +259,6 @@
     </section>
   </section>
 
-  <section class="data-footnote">
-    <div class="data-footnote-title">数据口径说明</div>
-    <div class="data-footnote-content">统计口径：收入取已确认应收、收款单和退款执行单；成本取已确认应付、付款执行和回单核销；结算取审批通过或待审批结算单。部门、门店、顾问业绩按业务单据创建或确认时的归属快照统计，不按员工当前部门重算。数据更新频率：业务单据实时写入，报表每5分钟刷新。数据范围：当前组织及下级组织授权范围。</div>
-  </section>
-
   <div class="modal-overlay" id="profitDetailModal" aria-hidden="true">
     <div class="modal modal-lg finance-profit-modal" role="dialog" aria-modal="true" aria-labelledby="profitDetailTitle">
       <div class="modal-header">
@@ -276,7 +272,7 @@
             <div class="table-wrap finance-report-table">
               <table>
                 <thead><tr><th>单据</th><th>项目</th><th>金额</th><th>状态</th></tr></thead>
-                <tbody>
+                <tbody id="profitIncomeDetailRows">
                   <tr><td>SK20240618001</td><td>订单收入</td><td>¥448,000</td><td><span class="tag tag-green">已收清</span></td></tr>
                   <tr><td>RFD-20260620-0025</td><td>退款冲减</td><td>-¥6,400</td><td><span class="tag tag-green">已执行</span></td></tr>
                 </tbody>
@@ -288,7 +284,7 @@
             <div class="table-wrap finance-report-table">
               <table>
                 <thead><tr><th>应付单</th><th>费用项目</th><th>金额</th><th>付款状态</th></tr></thead>
-                <tbody>
+                <tbody id="profitCostDetailRows">
                   <tr><td>AP20260624001</td><td>地接综合费</td><td>¥112,000</td><td><span class="tag tag-orange">审批中</span></td></tr>
                   <tr><td>AP20260615009</td><td>酒店住宿</td><td>¥29,400</td><td><span class="tag tag-green">已付款</span></td></tr>
                   <tr><td>AP20260620006</td><td>用车服务</td><td>¥18,900</td><td><span class="tag tag-green">已付款</span></td></tr>
@@ -299,7 +295,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button">导出明细</button>
+        <button class="btn btn-secondary" type="button" data-report-export-detail>导出明细</button>
         <button class="btn btn-primary" type="button" data-close-modal>关闭</button>
       </div>
     </div>
@@ -311,6 +307,16 @@
       var modal = document.getElementById('profitDetailModal');
       var allowedReports = ['profit', 'receipt', 'payment', 'ar-ap', 'prepay', 'fund'];
       var currentReport = new URLSearchParams(window.location.search).get('report') || 'profit';
+      var profitRows = [];
+      var reportLedger = {
+        income: [],
+        cost: [],
+        receipts: [],
+        payments: [],
+        receivables: [],
+        payables: [],
+        invoices: []
+      };
 
       if (allowedReports.indexOf(currentReport) === -1) {
         currentReport = 'profit';
@@ -319,6 +325,574 @@
       panels.forEach(function (panel) {
         panel.classList.toggle('active', panel.id === 'report-' + currentReport);
       });
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function moneyNumber(value) {
+        var text = String(value || '');
+        var sign = text.indexOf('-') >= 0 ? -1 : 1;
+        var number = Number(text.replace(/[^\d.]/g, '')) || 0;
+        return sign * number;
+      }
+
+      function moneyText(value) {
+        var sign = value < 0 ? '-' : '';
+        return sign + '¥' + Math.abs(value || 0).toLocaleString('zh-CN');
+      }
+
+      function rateText(value, base) {
+        if (!base) return '0%';
+        return ((value / base) * 100).toFixed(1) + '%';
+      }
+
+      function tagClass(status) {
+        if (/已|成功|完成|同步|收清|入账|核销|开票|红冲/.test(status)) return 'tag tag-green';
+        if (/失败|异常|逾期|坏账/.test(status)) return 'tag tag-red';
+        if (/待|部分|审批|执行|推送|未/.test(status)) return 'tag tag-orange';
+        return 'tag tag-blue';
+      }
+
+      function statusTag(status) {
+        return '<span class="' + tagClass(status) + '">' + escapeHtml(status) + '</span>';
+      }
+
+      function queryString(params) {
+        var search = new URLSearchParams();
+        Object.keys(params).forEach(function (key) {
+          var value = params[key];
+          if (value !== undefined && value !== null && value !== '-' && value !== '') search.set(key, value);
+        });
+        return search.toString();
+      }
+
+      function splitPair(value) {
+        return String(value || '').split('/').map(function (item) { return item.trim(); });
+      }
+
+      function compactNo(prefix, value) {
+        var body = String(value || '').replace(/[^A-Z0-9]/gi, '').slice(-12);
+        return prefix + (body || '0001');
+      }
+
+      function navigateToReportTarget(button) {
+        var target = button.dataset.reportTarget;
+        var row = button.closest('tr');
+        if (!target || !row) return;
+        var cells = Array.from(row.children).map(function (cell) { return cell.textContent.trim(); });
+        var panel = button.closest('.finance-report-panel');
+        var panelId = panel ? panel.id : '';
+        var params = {};
+        var url = '';
+
+        if (target === 'settlement') {
+          params = { settlementNo: cells[0], settlementMode: cells[1], productText: cells[2], sourceNo: cells[3] };
+          url = 'finance-settlement-detail.html?' + queryString(params);
+        } else if (target === 'receipt') {
+          var receiptPair = splitPair(cells[2]);
+          params = { receiptNo: cells[0], flowNo: cells[1], orderNo: receiptPair[0], receivableNo: receiptPair[1], productText: cells[4], amount: cells[5] };
+          url = 'receipts.html?' + queryString(params);
+        } else if (target === 'payment') {
+          if (panelId === 'report-payment') {
+            params = { tab: 'execute', payableNo: cells[0], applyNo: cells[1], businessNo: cells[0], supplier: cells[2], productText: cells[3], amount: cells[5] || cells[4], approvalStatus: '审批通过', financeStatus: '待付款', open: 'execute' };
+          } else {
+            params = { tab: 'execute', payableNo: cells[0], applyNo: compactNo('PAY-', cells[0]), businessNo: cells[0], supplier: cells[1], productText: cells[2], amount: cells[5] || cells[4], approvalStatus: '审批通过', financeStatus: '待付款', open: 'execute' };
+          }
+          url = 'finance-payment.html?' + queryString(params);
+        } else if (target === 'remittance') {
+          params = { paymentNo: cells[1], payableNo: cells[0], supplier: cells[2], productText: cells[3], amount: cells[5] || cells[4] };
+          url = 'finance-remittance.html?' + queryString(params);
+        } else if (target === 'receivable') {
+          params = { receivableNo: cells[0], orderNo: cells[1], customer: cells[2], productText: cells[3], amount: cells[4], received: cells[5], pending: cells[6] };
+          url = 'finance-receivable.html?' + queryString(params);
+        } else if (target === 'payable') {
+          params = { payableNo: cells[0], supplier: cells[1], productText: cells[2], feeItem: cells[3], amount: cells[4], paidAmount: cells[5] };
+          url = 'finance-payable.html?' + queryString(params);
+        } else if (target === 'nc') {
+          if (panelId === 'report-profit') {
+            params = { tab: 'queue', businessNo: cells[0], sourceNo: cells[3], voucherNo: compactNo('NC-JS-', cells[0]), productText: cells[2] };
+          } else if (panelId === 'report-receipt') {
+            params = { tab: 'queue', businessNo: cells[0], sourceNo: splitPair(cells[2])[1] || splitPair(cells[2])[0], voucherNo: compactNo('NC-SKR-', cells[0]), productText: cells[4] };
+          } else if (panelId === 'report-payment') {
+            params = { tab: 'queue', businessNo: cells[1], sourceNo: cells[0], voucherNo: compactNo('NC-PAY-', cells[1]), productText: cells[3] };
+          } else if (cells[0] && cells[0].indexOf('SK') === 0) {
+            params = { tab: 'queue', businessNo: cells[0], sourceNo: cells[1], voucherNo: compactNo('NC-AR-', cells[0]), productText: cells[3] };
+          } else {
+            params = { tab: 'queue', businessNo: cells[0], sourceNo: cells[1], voucherNo: compactNo('NC-AP-', cells[0]), productText: cells[2] };
+          }
+          url = 'finance-nc.html?' + queryString(params);
+        }
+
+        if (url) window.location.href = url;
+      }
+
+      function currentPanel() {
+        return document.querySelector('.finance-report-panel.active') || panels[0];
+      }
+
+      function matchLineType(rowText, selected) {
+        if (selected === '全部类型') return true;
+        var label = productTypeLabel(rowText);
+        if (selected === '自营线路') return label === '跟团游';
+        if (selected === '邮轮线路') return label === '邮轮';
+        if (selected === '专列线路') return label === '专列';
+        if (selected === '研学线路') return label === '研学';
+        return label === selected;
+      }
+
+      function applyCurrentReportFilters() {
+        var panel = currentPanel();
+        if (!panel) return;
+        var filter = panel.querySelector('.finance-report-filter');
+        if (!filter) return;
+        var keyword = '';
+        var selects = Array.from(filter.querySelectorAll('select'));
+        var searchInput = filter.querySelector('input[type="search"]');
+        if (searchInput) keyword = searchInput.value.trim();
+        var rows = Array.from(panel.querySelectorAll('tbody tr:not(.table-total-row)'));
+        var visibleCount = 0;
+        rows.forEach(function (row) {
+          var rowText = row.textContent.trim();
+          var matched = !keyword || rowText.indexOf(keyword) >= 0;
+          selects.forEach(function (select) {
+            var value = select.value;
+            if (!matched || !value || value.indexOf('全部') === 0) return;
+            var label = select.getAttribute('aria-label') || '';
+            if (label === '线路类型') {
+              matched = matchLineType(rowText, value);
+            } else {
+              matched = rowText.indexOf(value) >= 0;
+            }
+          });
+          row.hidden = !matched;
+          if (matched) visibleCount += 1;
+        });
+        var pagination = panel.querySelector('.pagination span');
+        if (pagination) pagination.textContent = '第1-' + visibleCount + '条/共' + visibleCount + '条';
+      }
+
+      function productTypeLabel(text) {
+        text = text || '';
+        if (text.indexOf('邮轮') >= 0 || text.indexOf('CR-') >= 0) return '邮轮';
+        if (text.indexOf('专列') >= 0 || text.indexOf('TR-') >= 0) return '专列';
+        if (text.indexOf('自由行') >= 0 || text.indexOf('FIT-') >= 0) return '自由行';
+        if (text.indexOf('签证') >= 0 || text.indexOf('单项服务') >= 0) return '单项服务';
+        if (text.indexOf('研学') >= 0 || text.indexOf('ST-') >= 0) return '研学';
+        if (text.indexOf('外采') >= 0 || text.indexOf('OUT-') >= 0) return '外采产品';
+        if (text.indexOf('MICE') >= 0 || text.indexOf('年会') >= 0) return 'MICE';
+        return '跟团游';
+      }
+
+      function sourceFromText(productText, fallback) {
+        var match = String(productText || '').match(/[A-Z]{2,4}-[A-Z0-9-]+-\d{8}-\d{3}|MICE-\d{8}-\d{3}|OUT-[A-Z0-9-]+|SVC-\d{8}-\d{3}|KS\d{10,}/);
+        return match ? match[0] : fallback || '-';
+      }
+
+      function productName(productText) {
+        return String(productText || '-').split(' / ')[0] || '-';
+      }
+
+      function rowKey(productText, source) {
+        return productName(productText) + '|' + (source || '-');
+      }
+
+      function initialProfitRows() {
+        return [
+          { key: '欧洲十国经典游|EU-FRA-20250720-001', settlementNo: 'JS20260624001', mode: '团期结算', productText: '欧洲十国经典游 / 法德意A线', source: 'EU-FRA-20250720-001', income: 441600, refund: 6400, cost: 297800, invoiceStatus: '已开票', ncStatus: '未推送' },
+          { key: '理想号地中海邮轮|CR-MED-20250803-001', settlementNo: 'JS20260624002', mode: '团期结算', productText: '理想号地中海邮轮 / 地中海经典线', source: 'CR-MED-20250803-001', income: 1176200, refund: 12800, cost: 996000, invoiceStatus: '待收票', ncStatus: '未推送' },
+          { key: '丝路专列深度游|TR-SILK-20250815-001', settlementNo: 'JS20260623003', mode: '团期结算', productText: '丝路专列深度游 / 丝路经典线', source: 'TR-SILK-20250815-001', income: 1255200, refund: 19200, cost: 386000, invoiceStatus: '已开票', ncStatus: '未推送' },
+          { key: '马来西亚自由行|KS2024061813', settlementNo: 'JS20260622004', mode: '订单结算', productText: '马来西亚自由行 / 兰卡威酒店机票套餐', source: 'KS2024061813', income: 12400, refund: 3200, cost: 8400, invoiceStatus: '已开票', ncStatus: '已推送' },
+          { key: '日本签证代办|KS2024061815', settlementNo: 'JS20260620005', mode: '订单结算', productText: '日本签证代办 / 单项服务', source: 'KS2024061815', income: 15600, refund: 0, cost: 1200, invoiceStatus: '已开票', ncStatus: '已推送' },
+          { key: '新加坡研学营|ST-SG-20250812-001', settlementNo: 'JS20260618006', mode: '项目结算', productText: '新加坡研学营 / 科技营线', source: 'ST-SG-20250812-001', income: 416600, refund: 10800, cost: 331600, invoiceStatus: '已开票', ncStatus: '待推送' }
+        ];
+      }
+
+      function ensureProfit(map, data) {
+        var key = data.key || rowKey(data.productText, data.source);
+        if (!map[key]) {
+          map[key] = {
+            key: key,
+            settlementNo: data.settlementNo || 'RPT-' + String(data.source || key).replace(/\D/g, '').slice(-10),
+            mode: data.mode || (/^KS/.test(data.source || '') ? '订单结算' : '团期结算'),
+            productText: data.productText || '-',
+            source: data.source || '-',
+            income: 0,
+            refund: 0,
+            cost: 0,
+            invoiceStatus: data.invoiceStatus || '未开票',
+            ncStatus: data.ncStatus || '未推送'
+          };
+        }
+        return map[key];
+      }
+
+      function ncStatus(results, bucket, key) {
+        var item = results[bucket] && results[bucket][key];
+        return item && item.status === '成功' ? '已推送' : item && item.status ? item.status : '未推送';
+      }
+
+      function buildReportData() {
+        var receipts = readStored('caesarReceiptResults');
+        var receivables = readStored('caesarReceivableResults');
+        var refunds = readStored('caesarRefundResults');
+        var financeResults = readStored('caesarFinanceExecutionResults');
+        var remittances = readStored('caesarRemittanceTasks');
+        var invoiceTasks = readStored('caesarInvoiceTasks');
+        var ncResults = readStored('caesarNcPushResults');
+        var outsourceResults = readStored('caesarOutsourceResults');
+        var customProjects = readStored('caesarCustomProjectResults');
+        var singleServices = readStored('caesarSingleServiceResults');
+        var map = {};
+
+        initialProfitRows().forEach(function (row) {
+          var item = Object.assign({}, row);
+          var settlementNc = ncStatus(ncResults, 'settlements', item.settlementNo);
+          if (settlementNc !== '未推送') item.ncStatus = settlementNc;
+          map[item.key] = item;
+        });
+
+        Object.keys(receivables.receivables || {}).forEach(function (receivableNo) {
+          var item = receivables.receivables[receivableNo];
+          var product = item.productText || '-';
+          var source = sourceFromText(product, item.orderNo || receivableNo);
+          var profit = ensureProfit(map, { productText: product, source: source, mode: /^KS/.test(source) ? '订单结算' : '团期结算' });
+          var amount = moneyNumber(item.amount);
+          var pending = moneyNumber(item.pending);
+          var received = item.received ? moneyNumber(item.received) : Math.max(amount - pending, 0);
+          profit.income += amount;
+          profit.ncStatus = item.ncStatus || profit.ncStatus;
+          if (item.invoiceStatus) profit.invoiceStatus = item.invoiceStatus;
+          reportLedger.receivables.push({
+            key: profit.key,
+            receivableNo: receivableNo,
+            orderNo: item.orderNo || '-',
+            customer: item.customer || '-',
+            productText: product,
+            amount: amount,
+            received: received,
+            pending: pending,
+            status: item.status || '待收款',
+            ncStatus: item.ncStatus || '未生成'
+          });
+          reportLedger.income.push({ key: profit.key, no: receivableNo, item: item.receivableType || '应收', amount: amount, status: item.status || '待收款' });
+        });
+
+        Object.keys(receipts.receipts || {}).forEach(function (receiptNo) {
+          var item = receipts.receipts[receiptNo];
+          var product = item.productText || item.route || item.product || '-';
+          var source = sourceFromText(product, item.orderNo || receiptNo);
+          var profit = ensureProfit(map, { productText: product, source: source, mode: /^KS/.test(source) ? '订单结算' : '团期结算' });
+          var amount = moneyNumber(item.amount || item.receiptAmount);
+          var nc = ncStatus(ncResults, 'receipts', receiptNo);
+          reportLedger.receipts.push({
+            key: profit.key,
+            receiptNo: receiptNo,
+            flowNo: item.flowNo || receiptNo,
+            orderNo: item.orderNo || '-',
+            receivableNo: item.receivableNo || '-',
+            customer: item.payer || item.customer || '-',
+            productText: product,
+            amount: amount,
+            status: item.resultStatus || '已入账',
+            ncStatus: nc
+          });
+        });
+
+        Object.keys(refunds.refunds || {}).forEach(function (refundNo) {
+          var item = refunds.refunds[refundNo];
+          var product = item.productText || '-';
+          var source = sourceFromText(product, item.orderNo || refundNo);
+          var profit = ensureProfit(map, { productText: product, source: source, mode: /^KS/.test(source) ? '订单结算' : '团期结算' });
+          var amount = moneyNumber(item.amount);
+          var nc = ncStatus(ncResults, 'refunds', refundNo);
+          profit.refund += amount;
+          profit.ncStatus = nc;
+          reportLedger.income.push({ key: profit.key, no: refundNo, item: '退款冲减', amount: -amount, status: item.afterSaleStatus || item.orderStatus || '退款已执行' });
+        });
+
+        Object.keys(invoiceTasks.issued || {}).forEach(function (requestNo) {
+          var item = invoiceTasks.issued[requestNo];
+          var product = item.productText || '-';
+          var source = sourceFromText(product, item.orderNo || requestNo);
+          var profit = ensureProfit(map, { productText: product, source: source, mode: /^KS/.test(source) ? '订单结算' : '团期结算' });
+          var nc = ncStatus(ncResults, 'invoices', requestNo);
+          profit.invoiceStatus = item.status || profit.invoiceStatus;
+          if (nc !== '未推送') profit.ncStatus = nc;
+          reportLedger.invoices.push({
+            key: profit.key,
+            requestNo: requestNo,
+            sourceNo: item.refundNo || item.receivableNo || '-',
+            productText: product,
+            amount: moneyNumber(item.amount),
+            status: item.status || '待开票',
+            ncStatus: nc
+          });
+        });
+
+        Object.keys(invoiceTasks.supplier || {}).forEach(function (payableNo) {
+          var item = invoiceTasks.supplier[payableNo];
+          var product = item.productText || '-';
+          var source = sourceFromText(product, item.payableNo || payableNo);
+          var profit = ensureProfit(map, { productText: product, source: source, mode: /^KS/.test(source) ? '订单结算' : '团期结算' });
+          var amount = moneyNumber(item.payableAmount || item.invoiceAmount);
+          if (item.status === '已入账') profit.cost += amount;
+          reportLedger.payables.push({
+            key: profit.key,
+            payableNo: payableNo,
+            supplier: item.supplier || '-',
+            productText: product,
+            feeItem: item.feeItem || '-',
+            payableAmount: amount,
+            paidAmount: 0,
+            invoiceStatus: item.status || '待入账',
+            status: item.status === '已入账' ? '已确认' : item.status || '待入账'
+          });
+          reportLedger.cost.push({ key: profit.key, no: payableNo, item: item.feeItem || '供应商费用', amount: amount, status: item.status || '待入账' });
+        });
+
+        Object.keys(financeResults.payments || {}).forEach(function (applyNo) {
+          var item = financeResults.payments[applyNo];
+          var recordNo = item.recordNo || applyNo;
+          var product = item.productText || '-';
+          var source = sourceFromText(product, item.payableNo || recordNo);
+          var profit = ensureProfit(map, { productText: product, source: source, mode: /^KS/.test(source) ? '订单结算' : '团期结算' });
+          var amount = moneyNumber(item.amount);
+          var remittance = remittances.payments && remittances.payments[recordNo];
+          var nc = ncStatus(ncResults, 'payments', recordNo);
+          profit.cost += amount;
+          profit.ncStatus = nc !== '未推送' ? nc : profit.ncStatus;
+          reportLedger.payments.push({
+            key: profit.key,
+            payableNo: item.payableNo || '-',
+            paymentNo: recordNo,
+            supplier: item.supplier || '-',
+            productText: product,
+            payableAmount: amount,
+            paidAmount: amount,
+            remittanceStatus: remittance ? remittance.status : '待核销',
+            ncStatus: nc
+          });
+          reportLedger.cost.push({ key: profit.key, no: recordNo, item: item.payableNo || '付款执行', amount: amount, status: remittance ? remittance.status : '待核销' });
+        });
+
+        Object.keys(outsourceResults.settlements || {}).forEach(function (settlementNo) {
+          var item = outsourceResults.settlements[settlementNo];
+          var product = (item.productName || '-') + ' / ' + (item.supplier || '外采产品') + ' / 团期 ' + (item.scheduleNo || item.sourceNo || '-');
+          var source = item.scheduleNo || item.sourceNo || settlementNo;
+          var profit = ensureProfit(map, { settlementNo: settlementNo, mode: '团期结算', productText: product, source: source, invoiceStatus: '待开票/待收票', ncStatus: item.settlementStatus || '待推送' });
+          var income = moneyNumber(item.saleAmount);
+          var cost = moneyNumber(item.purchaseAmount);
+          if (!profit.income) profit.income = income;
+          if (!profit.cost) profit.cost = cost;
+          profit.settlementNo = settlementNo;
+          profit.invoiceStatus = profit.invoiceStatus || '待开票/待收票';
+          var outsourceSettlementNc = ncStatus(ncResults, 'settlements', settlementNo);
+          profit.ncStatus = outsourceSettlementNc !== '未推送' ? outsourceSettlementNc : item.settlementStatus || profit.ncStatus;
+          reportLedger.receivables.push({ key: profit.key, receivableNo: item.receivableNo || ('YS-OUT-' + source), orderNo: source, customer: '渠道销售汇总', productText: product, amount: income, received: income, pending: 0, status: '已收清', ncStatus: ncStatus(ncResults, 'receipts', item.receiptNo || ('SKR-OUT-' + source)) });
+          reportLedger.payables.push({ key: profit.key, payableNo: item.payableNo || ('AP-OUT-' + source), supplier: item.supplier || '-', productText: product, feeItem: '采购团款', payableAmount: cost, paidAmount: 0, invoiceStatus: '待收票', status: '待付款' });
+        });
+
+        Object.keys(customProjects.projects || {}).forEach(function (projectNo) {
+          var item = customProjects.projects[projectNo];
+          if (!item.financeGenerated && !item.settlementNo) return;
+          var product = (item.projectName || '-') + ' / ' + (item.plan || '-') + ' / ' + projectNo;
+          var profit = ensureProfit(map, { settlementNo: item.settlementNo || ('JS-MICE-' + projectNo.replace(/\D/g, '')), mode: '项目结算', productText: product, source: projectNo, invoiceStatus: '待开票/待收票', ncStatus: item.settlementStatus || '待推送' });
+          var income = moneyNumber(item.amount);
+          var cost = moneyNumber(item.cost);
+          if (!profit.income) profit.income = income;
+          if (!profit.cost) profit.cost = cost;
+          profit.settlementNo = item.settlementNo || profit.settlementNo;
+          var customSettlementNc = ncStatus(ncResults, 'settlements', profit.settlementNo);
+          profit.ncStatus = customSettlementNc !== '未推送' ? customSettlementNc : item.settlementStatus || profit.ncStatus;
+          reportLedger.payables.push({ key: profit.key, payableNo: 'AP-MICE-' + projectNo.replace(/\D/g, ''), supplier: '项目供应商汇总', productText: product, feeItem: '项目成本', payableAmount: cost, paidAmount: 0, invoiceStatus: '待收票', status: item.costStatus || '待确认' });
+        });
+
+        Object.keys(singleServices.services || {}).forEach(function (serviceNo) {
+          var item = singleServices.services[serviceNo];
+          if (!item.financeGenerated && !item.settlementNo) return;
+          var product = (item.serviceType || '单项服务') + ' / ' + (item.customer || '-') + ' / ' + serviceNo;
+          var profit = ensureProfit(map, { settlementNo: item.settlementNo || ('JS-SVC-' + serviceNo.replace(/\D/g, '')), mode: '订单结算', productText: product, source: serviceNo, invoiceStatus: item.invoiceStatus || '待开票/待收票', ncStatus: item.ncStatus || '待推送' });
+          var income = moneyNumber(item.receivableAmount);
+          var cost = moneyNumber(item.payableAmount);
+          if (!profit.income) profit.income = income;
+          if (!profit.cost) profit.cost = cost;
+          profit.settlementNo = item.settlementNo || profit.settlementNo;
+          var serviceSettlementNc = ncStatus(ncResults, 'settlements', profit.settlementNo);
+          if (serviceSettlementNc !== '未推送') profit.ncStatus = serviceSettlementNc;
+          reportLedger.payables.push({ key: profit.key, payableNo: item.payableNo || ('AP-SVC-' + serviceNo.replace(/\D/g, '')), supplier: item.supplier || '服务供应商', productText: product, feeItem: item.serviceType || '单项服务成本', payableAmount: cost, paidAmount: 0, invoiceStatus: '待收票', status: item.payableStatus || '待付款' });
+        });
+
+        profitRows = Object.keys(map).map(function (key) {
+          var row = map[key];
+          row.netIncome = row.income - row.refund;
+          row.profit = row.netIncome - row.cost;
+          row.rate = rateText(row.profit, row.netIncome);
+          return row;
+        });
+      }
+
+      function updatePagination(panelId) {
+        var panel = $(panelId);
+        if (!panel) return;
+        var rows = panel.querySelectorAll('tbody tr:not(.table-total-row)').length;
+        var pagination = panel.querySelector('.pagination span');
+        if (pagination) pagination.textContent = '第1-' + rows + '条/共' + rows + '条';
+      }
+
+      function renderProfitReport() {
+        var body = $('profitReportRows');
+        if (!body) return;
+        var totalIncome = 0;
+        var totalCost = 0;
+        var totalProfit = 0;
+        body.innerHTML = profitRows.map(function (row) {
+          totalIncome += row.netIncome;
+          totalCost += row.cost;
+          totalProfit += row.profit;
+          return '<tr data-profit-key="' + escapeHtml(row.key) + '">' +
+            '<td>' + escapeHtml(row.settlementNo) + '</td>' +
+            '<td>' + escapeHtml(row.mode) + '</td>' +
+            '<td>' + escapeHtml(row.productText) + '</td>' +
+            '<td>' + escapeHtml(row.source) + '</td>' +
+            '<td>' + escapeHtml(moneyText(row.netIncome)) + '</td>' +
+            '<td>' + escapeHtml(moneyText(row.cost)) + '</td>' +
+            '<td>' + escapeHtml(moneyText(row.profit)) + '</td>' +
+            '<td>' + escapeHtml(row.rate) + '</td>' +
+            '<td>' + escapeHtml(row.invoiceStatus) + ' / ' + escapeHtml(row.ncStatus) + '</td>' +
+            '<td><div class="table-action"><button type="button" class="table-action-primary" data-report-detail>明细</button><button type="button" data-report-target="settlement">结算</button><button type="button" data-report-target="nc">NC</button></div></td>' +
+          '</tr>';
+        }).join('') + '<tr class="table-total-row"><td colspan="4">合计</td><td>' + escapeHtml(moneyText(totalIncome)) + '</td><td>' + escapeHtml(moneyText(totalCost)) + '</td><td>' + escapeHtml(moneyText(totalProfit)) + '</td><td>' + escapeHtml(rateText(totalProfit, totalIncome)) + '</td><td>-</td><td>-</td></tr>';
+        if ($('profitMetricCount')) $('profitMetricCount').textContent = profitRows.length + '个';
+        if ($('profitMetricIncome')) $('profitMetricIncome').textContent = moneyText(totalIncome);
+        if ($('profitMetricCost')) $('profitMetricCost').textContent = moneyText(totalCost);
+        if ($('profitMetricRate')) $('profitMetricRate').textContent = rateText(totalProfit, totalIncome);
+        updatePagination('report-profit');
+      }
+
+      function renderReceiptReport() {
+        var body = $('receiptReportRows');
+        if (!body) return;
+        var rows = reportLedger.receipts.length ? reportLedger.receipts : [
+          { receiptNo: 'SKR20260625001', flowNo: 'CMBC20260625001', orderNo: 'KS2024061801', receivableNo: 'SK20240618001', customer: '张建国', productText: '欧洲十国经典游 / 法德意A线', amount: 25600, status: '已入账', ncStatus: '已推送' },
+          { receiptNo: 'SKR20260625002', flowNo: 'CMB20260625018', orderNo: 'KS2024061811', receivableNo: 'SK20240618111', customer: 'OTA批量订单', productText: '理想号地中海邮轮 / 地中海经典线', amount: 18900, status: '部分入账', ncStatus: '待推送' },
+          { receiptNo: 'SKR20260625005', flowNo: 'GDB20260625022', orderNo: 'KS2024061814', receivableNo: 'SK20240618141', customer: '旅途驿站', productText: '丝路专列深度游 / 丝路经典线', amount: 31200, status: '已入账', ncStatus: '推送失败' }
+        ];
+        body.innerHTML = rows.map(function (row) {
+          return '<tr><td>' + escapeHtml(row.receiptNo) + '</td><td>' + escapeHtml(row.flowNo) + '</td><td>' + escapeHtml(row.orderNo + ' / ' + row.receivableNo) + '</td><td>' + escapeHtml(row.customer) + '</td><td>' + escapeHtml(row.productText) + '</td><td>' + escapeHtml(moneyText(row.amount)) + '</td><td>' + statusTag(row.status) + '</td><td>' + statusTag(row.ncStatus) + '</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receipt">收款单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>';
+        }).join('');
+        updatePagination('report-receipt');
+      }
+
+      function renderPaymentReport() {
+        var body = $('paymentReportRows');
+        if (!body) return;
+        var rows = reportLedger.payments.length ? reportLedger.payments : [
+          { payableNo: 'AP20260624001', paymentNo: 'PAYEX-20260624-001', supplier: '欧洲联合地接社', productText: '欧洲十国经典游 / 法德意A线', payableAmount: 112000, paidAmount: 112000, remittanceStatus: '已回单', ncStatus: '待推送' },
+          { payableNo: 'AP20260624002', paymentNo: 'PAY-20260624-002', supplier: '皇家加勒比', productText: '理想号地中海邮轮 / 地中海经典线', payableAmount: 996000, paidAmount: 0, remittanceStatus: '未回单', ncStatus: '推送失败' },
+          { payableNo: 'AP20260620006', paymentNo: 'PAYEX-20260620-001', supplier: '北京优选车队', productText: '北京故宫定制游 / 京城文化线', payableAmount: 18900, paidAmount: 18900, remittanceStatus: '已回单', ncStatus: '已推送' }
+        ];
+        body.innerHTML = rows.map(function (row) {
+          return '<tr><td>' + escapeHtml(row.payableNo) + '</td><td>' + escapeHtml(row.paymentNo) + '</td><td>' + escapeHtml(row.supplier) + '</td><td>' + escapeHtml(row.productText) + '</td><td>' + escapeHtml(moneyText(row.payableAmount)) + '</td><td>' + escapeHtml(moneyText(row.paidAmount)) + '</td><td>' + statusTag(row.remittanceStatus) + '</td><td>' + statusTag(row.ncStatus) + '</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payment">付款</button><button type="button" data-report-target="remittance">回单</button><button type="button" data-report-target="nc">NC</button></div></td></tr>';
+        }).join('');
+        updatePagination('report-payment');
+      }
+
+      function renderArapReport() {
+        if ($('receivableDetailRows')) {
+          var receivableRows = reportLedger.receivables.length ? reportLedger.receivables : [
+            { receivableNo: 'SK20240618002', orderNo: 'KS2024061802', customer: '李梅', productText: '理想号地中海邮轮 / 地中海经典线', amount: 49900, received: 37100, pending: 12800, status: '部分收款' },
+            { receivableNo: 'SK20240618009', orderNo: 'KS2024061809', customer: '环球同业', productText: '日本关西深度游 / 大阪京都线', amount: 64800, received: 40000, pending: 24800, status: '逾期' }
+          ];
+          $('receivableDetailRows').innerHTML = receivableRows.map(function (row) {
+            return '<tr><td>' + escapeHtml(row.receivableNo) + '</td><td>' + escapeHtml(row.orderNo) + '</td><td>' + escapeHtml(row.customer) + '</td><td>' + escapeHtml(row.productText) + '</td><td>' + escapeHtml(moneyText(row.amount)) + '</td><td>' + escapeHtml(moneyText(row.received)) + '</td><td>' + escapeHtml(moneyText(row.pending)) + '</td><td>' + statusTag(row.status) + '</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="receivable">应收</button><button type="button" data-report-target="nc">NC</button></div></td></tr>';
+          }).join('');
+        }
+        if ($('receivableSummaryRows')) {
+          $('receivableSummaryRows').innerHTML = profitRows.slice(0, 8).map(function (row) {
+            var received = Math.max(row.netIncome, 0);
+            return '<tr><td>' + escapeHtml(row.productText) + '</td><td>' + escapeHtml(row.source) + '</td><td>' + escapeHtml(moneyText(row.income)) + '</td><td>' + escapeHtml(moneyText(received)) + '</td><td>' + escapeHtml(moneyText(Math.max(row.income - received, 0))) + '</td><td>' + escapeHtml(moneyText(0)) + '</td></tr>';
+          }).join('');
+        }
+        if ($('payableDetailRows')) {
+          var payableRows = reportLedger.payables.length ? reportLedger.payables : [
+            { payableNo: 'AP20260624001', supplier: '欧洲联合地接社', productText: '欧洲十国经典游 / 法德意A线', feeItem: '地接综合费', payableAmount: 112000, paidAmount: 112000, invoiceStatus: '已入账', status: '已付款' },
+            { payableNo: 'AP20260624002', supplier: '皇家加勒比', productText: '理想号地中海邮轮 / 地中海经典线', feeItem: '舱位包销', payableAmount: 996000, paidAmount: 0, invoiceStatus: '待入账', status: '审批中' }
+          ];
+          $('payableDetailRows').innerHTML = payableRows.map(function (row) {
+            return '<tr><td>' + escapeHtml(row.payableNo) + '</td><td>' + escapeHtml(row.supplier) + '</td><td>' + escapeHtml(row.productText) + '</td><td>' + escapeHtml(row.feeItem) + '</td><td>' + escapeHtml(moneyText(row.payableAmount)) + '</td><td>' + escapeHtml(moneyText(row.paidAmount || 0)) + '</td><td>' + escapeHtml(row.invoiceStatus) + '</td><td>' + statusTag(row.status) + '</td><td><div class="table-action"><button type="button" class="table-action-primary" data-report-target="payable">应付</button><button type="button" data-report-target="payment">付款</button><button type="button" data-report-target="nc">NC</button></div></td></tr>';
+          }).join('');
+          var supplierMap = {};
+          payableRows.forEach(function (row) {
+            if (!supplierMap[row.supplier]) supplierMap[row.supplier] = { supplier: row.supplier, payable: 0, applied: 0, paid: 0 };
+            supplierMap[row.supplier].payable += row.payableAmount;
+            supplierMap[row.supplier].applied += row.payableAmount;
+            supplierMap[row.supplier].paid += row.paidAmount || 0;
+          });
+          if ($('payableSupplierRows')) {
+            $('payableSupplierRows').innerHTML = Object.keys(supplierMap).map(function (supplier) {
+              var row = supplierMap[supplier];
+              return '<tr><td>' + escapeHtml(row.supplier) + '</td><td>' + escapeHtml(moneyText(row.payable)) + '</td><td>' + escapeHtml(moneyText(row.applied)) + '</td><td>' + escapeHtml(moneyText(row.paid)) + '</td><td>' + escapeHtml(moneyText(row.payable - row.paid)) + '</td></tr>';
+            }).join('');
+          }
+        }
+      }
+
+      function renderProfitDetail(row) {
+        var key = row && row.dataset.profitKey;
+        var profit = profitRows.find(function (item) { return item.key === key; });
+        if (!profit) return;
+        var title = document.getElementById('profitDetailTitle');
+        if (title) title.textContent = profit.source + ' · 盈亏明细';
+        var incomeRows = reportLedger.income.filter(function (item) { return item.key === key; });
+        var invoiceRows = reportLedger.invoices.filter(function (item) { return item.key === key; });
+        var costRows = reportLedger.cost.filter(function (item) { return item.key === key; });
+        if (!incomeRows.length) {
+          incomeRows = [
+            { no: profit.settlementNo + '-AR', item: '结算收入', amount: profit.income, status: '已确认' },
+            { no: profit.settlementNo + '-RF', item: '退款冲减', amount: -profit.refund, status: profit.refund ? '已执行' : '无退款' }
+          ];
+        }
+        if (!costRows.length) {
+          costRows = [{ no: profit.settlementNo + '-AP', item: '确认成本', amount: profit.cost, status: '已确认' }];
+        }
+        if ($('profitIncomeDetailRows')) {
+          $('profitIncomeDetailRows').innerHTML = incomeRows.concat(invoiceRows.map(function (item) {
+            return { no: item.requestNo, item: '发票/红冲', amount: item.amount, status: item.status + ' / NC ' + item.ncStatus };
+          })).map(function (item) {
+            return '<tr><td>' + escapeHtml(item.no) + '</td><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(moneyText(item.amount)) + '</td><td>' + statusTag(item.status) + '</td></tr>';
+          }).join('');
+        }
+        if ($('profitCostDetailRows')) {
+          $('profitCostDetailRows').innerHTML = costRows.map(function (item) {
+            return '<tr><td>' + escapeHtml(item.no) + '</td><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(moneyText(item.amount)) + '</td><td>' + statusTag(item.status) + '</td></tr>';
+          }).join('');
+        }
+        showModal();
+      }
+
+      function renderReports() {
+        reportLedger = { income: [], cost: [], receipts: [], payments: [], receivables: [], payables: [], invoices: [] };
+        buildReportData();
+        renderProfitReport();
+        renderReceiptReport();
+        renderPaymentReport();
+        renderArapReport();
+      }
 
       document.querySelectorAll('input[name="arApView"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
@@ -351,8 +925,33 @@
         window.caesarUI.closeLayer(modal);
       }
 
-      document.querySelectorAll('.js-profit-detail').forEach(function (button) {
-        button.addEventListener('click', showModal);
+      document.addEventListener('click', function (event) {
+        var detailButton = event.target.closest('[data-report-detail]');
+        if (detailButton) {
+          renderProfitDetail(detailButton.closest('tr'));
+          return;
+        }
+        var targetButton = event.target.closest('[data-report-target]');
+        if (targetButton) {
+          navigateToReportTarget(targetButton);
+          return;
+        }
+        var detailExportButton = event.target.closest('[data-report-export-detail]');
+        if (detailExportButton) {
+          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('明细导出任务已创建');
+          return;
+        }
+        var exportButton = event.target.closest('[data-report-export]');
+        if (exportButton) {
+          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('报表导出任务已创建');
+          return;
+        }
+        var searchButton = event.target.closest('[data-report-search]');
+        if (searchButton) {
+          renderReports();
+          applyCurrentReportFilters();
+          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('报表已刷新');
+        }
       });
 
       if (modal) {
@@ -362,6 +961,8 @@
           }
         });
       }
+
+      renderReports();
     })();
   </script>
 </body>

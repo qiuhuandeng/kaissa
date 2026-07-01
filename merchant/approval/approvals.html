@@ -82,7 +82,7 @@
         </div>
         </div>
         <div class="filter-actions list-surface-filter-actions list-filter-pinned-actions">
-          <a class="btn btn-primary" href="approval-product-review.html">查看审批详情</a>
+          <a class="btn btn-primary" href="approval-product-review.html?approvalNo=APR-20260624-028&kind=payment">查看审批详情</a>
         </div>
       </div>
     </section>
@@ -200,7 +200,7 @@
             <td><span class="tag tag-orange">待审批</span></td>
             <td><div class="table-action"><button type="button" data-approval-action="approve" class="table-action-primary">审批</button><button type="button" data-approval-action="detail">详情</button></div></td>
           </tr>
-          <tr data-tab-status="团期开排审批" data-kind="team_open_group" data-scope="todo overview" data-approval-type="团期开排审批" data-source="出团" data-status="待审批" data-keywords="APR-20260624-030 欧洲十国经典游 法德意A线 团期开排审批 名额 库存 渠道">
+          <tr data-tab-status="团期开排审批" data-kind="team_open_group" data-scope="todo overview" data-approval-type="团期开排审批" data-source="出团" data-status="待审批" data-keywords="APR-20260624-030 欧洲十国经典游 法德意A线 团期开排审批 名额 渠道">
             <td>APR-20260624-030</td>
             <td>出团</td>
             <td><span class="tag tag-blue">团期开排审批</span></td>
@@ -220,7 +220,7 @@
             <td>TEAM-CR-20250803-001</td>
             <td>理想号地中海邮轮<br><span class="text-muted">地中海东线7晚 / CR-MED-20250803-001</span></td>
             <td>126人 / ¥1,713,600</td>
-            <td><span class="tag tag-orange">阳台舱库存紧张</span></td>
+            <td><span class="tag tag-orange">阳台舱余位紧张</span></td>
             <td>邮轮资源负责人</td>
             <td>45分钟后</td>
             <td><span class="tag tag-orange">待审批</span></td>
@@ -461,7 +461,7 @@
         </thead>
         <tbody>
           <tr><td>线路发布</td><td>线路</td><td>跟团/邮轮/专列线路从草稿提交发布，线路方案/航线方案/专列方案新增后重新发布</td><td>线路负责人 → 线路负责人</td><td>4小时提醒，8小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config" class="table-action-primary">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
-          <tr><td>团期开排审批</td><td>出团</td><td>团期开排、批量开排、邮轮航次/专列班期开排、库存或成本超阈值</td><td>线路负责人 → 运营经理</td><td>2小时提醒，6小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config" class="table-action-primary">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
+          <tr><td>团期开排审批</td><td>出团</td><td>团期开排、批量开排、邮轮航次/专列班期开排、名额或成本超阈值</td><td>线路负责人 → 运营经理</td><td>2小时提醒，6小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config" class="table-action-primary">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
           <tr><td>价格调整</td><td>线路/销售</td><td>调价超过3%、低于渠道保护价、订单优惠超过授权额度</td><td>线路负责人 → 财务主管</td><td>2小时提醒，6小时升级</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config" class="table-action-primary">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
           <tr><td>渠道授权</td><td>线路/渠道</td><td>新增分销商、调整配额、撤销渠道授权</td><td>渠道主管 → 线路负责人</td><td>4小时提醒</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config" class="table-action-primary">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
           <tr><td>成本差异</td><td>出团</td><td>团期成本确认超预算、供应商报价变更、成本补录</td><td>运营经理 → 财务主管</td><td>2小时提醒，超时推送待办</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><button type="button" data-config-action="config" class="table-action-primary">配置</button><button type="button" data-config-action="log">记录</button></div></td></tr>
@@ -536,8 +536,344 @@
       const typeTabs = document.getElementById("approvalTypeTabs");
       const listArea = document.getElementById("approvalListArea");
       const configArea = document.getElementById("approvalConfigArea");
+      const dynamicDetailMap = {};
+
+      function escapeHtml(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;"
+        })[char]);
+      }
+
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || "{}");
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeStored(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function compactNo(value, fallback) {
+        const text = String(value || fallback || "");
+        const digits = text.replace(/\D/g, "").slice(-8);
+        if (digits) return digits;
+        return (text.replace(/[^a-z0-9]/gi, "").slice(-8) || "000000").toUpperCase();
+      }
+
+      function dynamicKind(prefix, value) {
+        return "dynamic_" + prefix + "_" + compactNo(value, prefix);
+      }
+
+      function approvalNo(prefix, value) {
+        return "APR-" + prefix + "-" + compactNo(value, prefix);
+      }
+
+      function applyNoFrom(value) {
+        return "PAY-" + compactNo(value, "20260629");
+      }
+
+      function resultStatus(approvalNoValue) {
+        const result = readStored("caesarApprovalResults")[approvalNoValue];
+        if (!result) return null;
+        return result.status === "approved" ? "已通过" : result.status === "rejected" ? "已拒绝" : null;
+      }
+
+      function addTask(tasks, seen, task) {
+        if (!task || !task.approvalNo || seen[task.approvalNo]) return;
+        if (document.querySelector("#approvalRows tr td:first-child") && Array.from(document.querySelectorAll("#approvalRows tr[data-kind]")).some((row) => row.cells[0] && row.cells[0].textContent.trim() === task.approvalNo)) return;
+        seen[task.approvalNo] = true;
+        const status = resultStatus(task.approvalNo) || task.status || "待审批";
+        const normalized = Object.assign({
+          source: "财务",
+          approvalType: "付款申请",
+          businessNo: "-",
+          productText: "-",
+          amount: "-",
+          risk: "待复核",
+          node: "财务主管",
+          timeout: "今日18:00",
+          scope: "todo mine overview",
+          status: status,
+          applicant: "系统",
+          title: task.approvalType || "审批详情",
+          subtitle: "业务单据进入审批中心",
+          detail: [],
+          flow: ["业务单据已提交", "系统完成金额、状态和单据关联校验", "当前等待审批"],
+          opinion: "同意。请后续节点按单据状态继续处理。"
+        }, task, { status: status });
+        if (!normalized.kind) normalized.kind = dynamicKind("stored", task.approvalNo);
+        tasks.push(normalized);
+      }
+
+      function buildDynamicApprovalTasks() {
+        const tasks = [];
+        const seen = {};
+        const ncResults = readStored("caesarNcPushResults");
+        const invoiceTasks = readStored("caesarInvoiceTasks");
+        const outsourceResults = readStored("caesarOutsourceResults");
+        const customResults = readStored("caesarCustomProjectResults");
+        const singleResults = readStored("caesarSingleServiceResults");
+        const storedApprovalTasks = readStored("caesarApprovalTasks").tasks || {};
+
+        Object.keys(storedApprovalTasks).forEach((approvalNoValue) => {
+          const task = Object.assign({}, storedApprovalTasks[approvalNoValue] || {}, {
+            approvalNo: approvalNoValue
+          });
+          addTask(tasks, seen, task);
+        });
+
+        Object.keys(ncResults.payables || {}).forEach((payableNo) => {
+          const item = ncResults.payables[payableNo] || {};
+          const productText = item.productText || item.product || item.sourceNo || "-";
+          const amount = item.amount || item.invoiceAmount || item.payableAmount || "¥0";
+          const supplier = item.supplier || item.deduction || "供应商";
+          const no = approvalNo("PAY", payableNo);
+          addTask(tasks, seen, {
+            kind: dynamicKind("payment", payableNo),
+            approvalNo: no,
+            approvalType: "付款申请",
+            source: "财务",
+            businessNo: (item.businessNo || payableNo) + " / " + applyNoFrom(payableNo),
+            productText: productText,
+            amount: amount,
+            risk: item.productTypeLabel === "外采产品" ? "采购价待复核" : item.productTypeLabel === "MICE" ? "项目验收待复核" : "供应商费用待复核",
+            node: "财务主管",
+            applicant: item.owner || "财务专员",
+            title: "付款申请审批",
+            subtitle: supplier + "付款复核",
+            detail: [
+              ["应付单", item.businessNo || payableNo],
+              ["付款申请", applyNoFrom(payableNo)],
+              ["付款对象", supplier],
+              ["付款金额", amount],
+              ["关联线路", productText],
+              ["后续联动", "通过后进入付款执行，回单上传后生成NC付款任务"]
+            ],
+            flow: ["业务侧确认供应商费用", "财务生成应付单和付款申请", "当前等待财务主管审批"],
+            opinion: "同意付款申请。付款执行时请核对供应商账户、合同和回单。"
+          });
+        });
+
+        Object.keys(invoiceTasks.supplier || {}).forEach((payableNo) => {
+          const item = invoiceTasks.supplier[payableNo] || {};
+          if ((ncResults.payables || {})[payableNo]) return;
+          const productText = item.productText || item.sourceNo || "-";
+          const amount = item.payableAmount || item.invoiceAmount || item.amount || "¥0";
+          const no = approvalNo("PAY", payableNo);
+          addTask(tasks, seen, {
+            kind: dynamicKind("invoicepay", payableNo),
+            approvalNo: no,
+            approvalType: "付款申请",
+            source: "财务",
+            businessNo: (item.payableNo || payableNo) + " / " + applyNoFrom(payableNo),
+            productText: productText,
+            amount: amount,
+            risk: item.checkStatus || "收票待核对",
+            node: "财务主管",
+            applicant: "税务会计",
+            title: "付款申请审批",
+            subtitle: (item.supplier || "供应商") + "费用付款复核",
+            detail: [
+              ["应付单", item.payableNo || payableNo],
+              ["供应商", item.supplier || "-"],
+              ["费用项目", item.feeItem || "-"],
+              ["发票状态", item.status || "-"],
+              ["付款金额", amount],
+              ["后续联动", "通过后进入付款执行，回单上传后生成NC付款任务"]
+            ],
+            flow: ["供应商费用完成核对", "财务生成付款申请", "当前等待财务主管审批"]
+          });
+        });
+
+        Object.keys(ncResults.payments || {}).forEach((businessNo) => {
+          const item = ncResults.payments[businessNo] || {};
+          if (item.sourceType && item.sourceType !== "结算") return;
+          const productText = item.productText || item.sourceNo || "-";
+          const amount = item.amount || "¥0";
+          addTask(tasks, seen, {
+            kind: dynamicKind("settlement", businessNo),
+            approvalNo: approvalNo("JS", businessNo),
+            approvalType: "结算确认",
+            source: "财务",
+            businessNo: item.businessNo || businessNo,
+            productText: productText,
+            amount: amount,
+            risk: item.productTypeLabel === "外采产品" ? "差额收入待复核" : "盈亏待复核",
+            node: "财务主管",
+            applicant: "结算会计",
+            title: "结算确认审批",
+            subtitle: "收入、成本、应收应付复核",
+            detail: [
+              ["结算单", item.businessNo || businessNo],
+              ["来源单据", item.sourceNo || "-"],
+              ["结算金额", amount],
+              ["线路/方案", productText],
+              ["NC任务", item.voucherNo || "-"],
+              ["后续联动", "通过后允许推送NC，并回写财务报表"]
+            ],
+            flow: ["业务完成执行或回团处理", "财务生成结算单", "当前等待财务主管审批"],
+            opinion: "同意结算确认。请NC推送前复核应收、应付、发票和回单状态。"
+          });
+        });
+
+        Object.keys(outsourceResults.products || {}).forEach((productNo) => {
+          const item = outsourceResults.products[productNo] || {};
+          if (!item.packageStatus || item.financeStatus === "已推送") return;
+          addTask(tasks, seen, {
+            kind: dynamicKind("outsource", productNo),
+            approvalNo: approvalNo("OUT", productNo),
+            approvalType: "线路发布",
+            source: "线路",
+            businessNo: item.productNo || productNo,
+            productText: item.productName || item.sourceName || "-",
+            amount: item.packagePrice || item.saleAmount || "-",
+            risk: "包装价待复核",
+            node: "线路负责人",
+            applicant: "外采运营",
+            title: "外采产品发布审批",
+            subtitle: "采购价、包装价和渠道价复核",
+            detail: [
+              ["外采产品", item.productName || "-"],
+              ["供应商", item.supplier || "-"],
+              ["采购价", item.purchasePrice || item.purchaseAmount || "-"],
+              ["销售价", item.packagePrice || item.saleAmount || "-"],
+              ["差额收入", item.margin || "-"],
+              ["后续联动", "通过后可进入渠道售卖，销售后进入对账结算"]
+            ],
+            flow: ["外采产品完成包装", "系统校验采购价和渠道价", "当前等待线路负责人审批"],
+            opinion: "同意发布。请销售开放前复核供应商确认价和渠道保护价。"
+          });
+        });
+
+        Object.keys(customResults.projects || {}).forEach((projectNo) => {
+          const item = customResults.projects[projectNo] || {};
+          if (!item.settlementNo && !item.quoteStatus && !item.financeGenerated) return;
+          addTask(tasks, seen, {
+            kind: dynamicKind("custom", projectNo),
+            approvalNo: approvalNo("MICE", item.settlementNo || projectNo),
+            approvalType: "结算确认",
+            source: "财务",
+            businessNo: item.settlementNo || projectNo,
+            productText: item.projectName || item.productText || projectNo,
+            amount: item.profit || item.quoteAmount || item.amount || "-",
+            risk: "项目验收待复核",
+            node: "财务主管",
+            applicant: item.owner || "项目经理",
+            title: "MICE项目结算审批",
+            subtitle: "报价版本、验收单、应收应付复核",
+            detail: [
+              ["项目编号", projectNo],
+              ["项目名称", item.projectName || item.productText || "-"],
+              ["客户", item.customer || "-"],
+              ["结算单", item.settlementNo || "-"],
+              ["项目毛利", item.profit || "-"],
+              ["后续联动", "通过后锁定项目结算，并进入NC推送"]
+            ],
+            flow: ["项目经理锁定报价或验收", "财务生成项目结算", "当前等待财务主管审批"],
+            opinion: "同意项目结算。请NC推送前保留报价版本和验收依据。"
+          });
+        });
+
+        Object.keys(singleResults.services || {}).forEach((serviceNo) => {
+          const item = singleResults.services[serviceNo] || {};
+          if (!item.financeGenerated) return;
+          addTask(tasks, seen, {
+            kind: dynamicKind("service", serviceNo),
+            approvalNo: approvalNo("SVC", item.payableNo || serviceNo),
+            approvalType: "付款申请",
+            source: "财务",
+            businessNo: (item.payableNo || serviceNo) + " / " + applyNoFrom(item.payableNo || serviceNo),
+            productText: item.productText || item.serviceType || "单项服务",
+            amount: item.payableAmount || item.advance || "¥0",
+            risk: item.serviceType ? item.serviceType + "费用待复核" : "服务费用待复核",
+            node: "财务主管",
+            applicant: item.owner || "服务专员",
+            title: "单项服务付款审批",
+            subtitle: "服务费、代垫和供应商费用复核",
+            detail: [
+              ["服务单", serviceNo],
+              ["订单", item.orderNo || "-"],
+              ["客户", item.customer || "-"],
+              ["供应商", item.supplier || "-"],
+              ["应付金额", item.payableAmount || "¥0"],
+              ["后续联动", "通过后进入付款执行，服务单结算继续推送NC"]
+            ],
+            flow: ["服务单完成费用拆分", "财务生成应付和付款申请", "当前等待财务主管审批"],
+            opinion: "同意付款申请。请付款执行时核对代垫凭证和服务完成状态。"
+          });
+        });
+
+        return tasks;
+      }
+
+      function tagClass(status) {
+        if (status === "已通过") return "tag tag-green";
+        if (status === "已拒绝") return "tag tag-red";
+        if (status === "审批中") return "tag tag-blue";
+        return "tag tag-orange";
+      }
+
+      function renderTaskRow(task) {
+        const keyword = [task.approvalNo, task.businessNo, task.productText, task.amount, task.approvalType, task.source, task.risk].join(" ");
+        const status = task.status || "待审批";
+        const pending = status === "待审批" || status === "审批中";
+        dynamicDetailMap[task.kind] = {
+          title: task.title,
+          subtitle: task.subtitle,
+          summary: [
+            "申请人：" + (task.applicant || "系统"),
+            "业务单据：" + task.businessNo,
+            "线路/方案：" + task.productText,
+            "影响金额：" + task.amount,
+            "当前节点：" + task.node,
+            "状态：" + status
+          ],
+          detail: task.detail,
+          flow: task.flow,
+          opinion: task.opinion
+        };
+        return '<tr data-tab-status="' + escapeHtml(task.approvalType) + '" data-kind="' + escapeHtml(task.kind) + '" data-scope="' + escapeHtml(task.scope) + '" data-approval-type="' + escapeHtml(task.approvalType) + '" data-source="' + escapeHtml(task.source) + '" data-status="' + escapeHtml(status) + '" data-keywords="' + escapeHtml(keyword) + '" data-dynamic-approval="true" data-apply-no="' + escapeHtml(applyNoFrom(task.businessNo)) + '">' +
+          '<td>' + escapeHtml(task.approvalNo) + '</td>' +
+          '<td>' + escapeHtml(task.source) + '</td>' +
+          '<td><span class="tag tag-blue">' + escapeHtml(task.approvalType) + '</span></td>' +
+          '<td>' + escapeHtml(task.businessNo) + '</td>' +
+          '<td>' + escapeHtml(task.productText) + '</td>' +
+          '<td>' + escapeHtml(task.amount) + '</td>' +
+          '<td><span class="tag tag-orange">' + escapeHtml(task.risk) + '</span></td>' +
+          '<td>' + escapeHtml(task.node) + '</td>' +
+          '<td>' + escapeHtml(pending ? task.timeout : "已完成") + '</td>' +
+          '<td><span class="' + tagClass(status) + '">' + escapeHtml(status) + '</span></td>' +
+          '<td><div class="table-action">' + (pending ? '<button type="button" data-approval-action="approve" class="table-action-primary">审批</button><button type="button" data-approval-action="detail">详情</button><button type="button" data-approval-action="related">单据</button>' : '<button type="button" data-approval-action="detail" class="table-action-primary">详情</button><button type="button" data-approval-action="progress">记录</button><button type="button" data-approval-action="related">单据</button>') + '</div></td>' +
+          '</tr>';
+      }
+
+      function appendDynamicApprovalRows() {
+        const body = document.getElementById("approvalRows");
+        const empty = document.getElementById("approvalEmptyRow");
+        if (!body || !empty) return;
+        const tasks = buildDynamicApprovalTasks();
+        if (tasks.length) empty.insertAdjacentHTML("beforebegin", tasks.map(renderTaskRow).join(""));
+        const stored = readStored("caesarApprovalTasks");
+        stored.tasks = tasks.reduce((map, task) => {
+          map[task.approvalNo] = task;
+          return map;
+        }, {});
+        writeStored("caesarApprovalTasks", stored);
+      }
+
+      appendDynamicApprovalRows();
+
       const rows = Array.from(document.querySelectorAll("#approvalRows tr[data-kind]"));
       const emptyRow = document.getElementById("approvalEmptyRow");
+      const approvalPagination = document.querySelector("#approvalListArea .pagination span");
+      if (approvalPagination) approvalPagination.textContent = "第1-" + rows.length + "条/共" + rows.length + "条";
       const keywordInput = document.getElementById("approvalKeyword");
       const matterSelect = document.getElementById("approvalMatter");
       const sourceSelect = document.getElementById("approvalSource");
@@ -562,12 +898,12 @@
           summary: ["申请人：王珊（计调）", "业务单据：PRD-EU-001", "线路/方案：欧洲十国经典游 / 法德意A线", "当前节点：线路负责人", "申请时间：今天09:12", "状态：待审批"],
           detail: [
             ["发布范围", "门店、官网、小程序、指定代理商"],
-            ["团期准备", "已开排6个团期，默认线路为法德意A线，团期库存与价格已同步"],
+            ["团期准备", "已开排6个团期，默认线路为法德意A线，团期名额与价格已同步"],
             ["价格校验", "成人价¥16,800，渠道保护价¥15,900，低于保护价需线路负责人二次确认"],
-            ["AI风险", "竞品同类最低价¥15,780，建议审批时确认渠道底价和早鸟库存"]
+            ["AI风险", "竞品同类最低价¥15,780，建议审批时确认渠道底价和早鸟名额"]
           ],
           flow: ["王珊提交线路发布", "线路负责人已通过", "当前等待线路负责人审批"],
-          opinion: "同意发布。请在上线后持续观察渠道保护价和早鸟库存消耗。"
+          opinion: "同意发布。请在上线后持续观察渠道保护价和早鸟名额消耗。"
         },
         product_publish_cruise: {
           title: "邮轮线路发布审批",
@@ -578,10 +914,10 @@
             ["线路方案", "已维护地中海经典线，登船港、离船港、岸上观光和航程天数已完整"],
             ["舱房结构", "内舱、海景、阳台、套房已配置成本价、销售价、结算价和渠道保护价"],
             ["船票/港务费", "船票出具时点、港务费、邮轮服务费和登船资料条款已写入合同补充条款"],
-            ["风险校验", "阳台舱库存低于20间时需限制代理商配额，港务费变更需触发价格调整审批"]
+            ["风险校验", "阳台舱余位低于20间时需限制代理商配额，港务费变更需触发价格调整审批"]
           ],
           flow: ["邮轮线路提交发布", "线路负责人确认航线和舱型", "当前等待线路负责人审批"],
-          opinion: "同意发布。上线后请重点监控舱房库存、港务费变更和船票出具节点。"
+          opinion: "同意发布。上线后请重点监控舱房余位、港务费变更和船票出具节点。"
         },
         product_publish_train: {
           title: "专列线路发布审批",
@@ -592,7 +928,7 @@
             ["线路方案", "已维护始发站、终到站、沿途停靠、游览节点和行程天数"],
             ["车厢结构", "软卧、硬卧、商务座、豪华包厢已配置成本价、销售价和渠道保护价"],
             ["运营商资源", "整列包乘框架、铺位回传时间和实名制退改规则已写入发布资料"],
-            ["风险校验", "豪华包厢库存少，授权代理商配额需受控；运营商铺位调整会触发成本差异审批"]
+            ["风险校验", "豪华包厢余位少，授权代理商配额需受控；运营商铺位调整会触发成本差异审批"]
           ],
           flow: ["专列线路提交发布", "线路负责人确认线路和铺位结构", "当前等待线路负责人审批"],
           opinion: "同意发布。上线后请重点监控铺位回传、车厢结构和运营商退改规则。"
@@ -603,13 +939,13 @@
           summary: ["申请人：王珊（计调）", "业务单据：TEAM-EU-20250720-001", "线路/方案：欧洲十国经典游 / 法德意A线", "团期规模：30人", "预计收入：¥384,000", "状态：待审批"],
           detail: [
             ["团期信息", "2025-07-20出发，2025-07-31回团，报名截止日已同步"],
-            ["名额库存", "成人名额30，儿童占床6，单房差库存8，渠道合计与主库存一致"],
-            ["价格渠道", "成人标准价¥12,800，渠道保护价¥12,200，直营和代理库存已拆分"],
+            ["名额安排", "成人名额30，儿童占床6，单房差8间，渠道合计与总名额一致"],
+            ["价格渠道", "成人标准价¥12,800，渠道保护价¥12,200，直营和代理名额已拆分"],
             ["资源准备", "欧洲地接ABC、45座旅游巴士和领队安排已关联"],
-            ["审批要点", "确认名额库存、渠道分配、最低成团人数和团期毛利率"]
+            ["审批要点", "确认名额、渠道分配、最低成团人数和团期毛利率"]
           ],
-          flow: ["计调发起开排团期", "系统完成库存和价格校验", "当前等待线路负责人审批"],
-          opinion: "同意开排团期。请在销售开放前复核渠道库存和最低成团人数。"
+          flow: ["计调发起开排团期", "系统完成名额和价格校验", "当前等待线路负责人审批"],
+          opinion: "同意开排团期。请在销售开放前复核渠道名额和最低成团人数。"
         },
         team_open_cruise: {
           title: "邮轮团期开排审批",
@@ -617,13 +953,13 @@
           summary: ["申请人：赵明（邮轮计调）", "业务单据：TEAM-CR-20250803-001", "线路/航线方案：理想号地中海邮轮 / 地中海东线7晚", "团期规模：126人", "预计收入：¥1,713,600", "状态：待审批"],
           detail: [
             ["开航信息", "2025-08-03开航，巴塞罗那登船并返港，航程8天7晚"],
-            ["舱型库存", "内舱46、海景32、阳台38、套房10，阳台舱库存紧张"],
+            ["舱型余位", "内舱46、海景32、阳台38、套房10，阳台舱余位紧张"],
             ["费用结构", "船票、港务税、岸上游套餐和邮轮服务费已拆分"],
             ["船方规则", "锁舱取消费、登船资料截止日和港务税调整规则已维护"],
             ["审批要点", "确认舱型结构、港务税、岸上游配置和船方扣损规则"]
           ],
           flow: ["邮轮计调发起航次团期开排", "线路负责人确认航线与舱型", "当前等待邮轮资源负责人审批"],
-          opinion: "同意开排团期。请在船方回传舱房后同步复核舱型库存和港务费。"
+          opinion: "同意开排团期。请在船方回传舱房后同步复核舱型余位和港务费。"
         },
         team_open_train: {
           title: "专列团期开排审批",
@@ -631,7 +967,7 @@
           summary: ["申请人：李铭（专列计调）", "业务单据：TEAM-TR-20250805-001", "线路/方案：东方丝路专列9日 / 丝路经典线", "团期规模：92人", "预计收入：¥1,196,000", "状态：待审批"],
           detail: [
             ["团期信息", "2025-08-05发车，西安上车，乌鲁木齐回程，软卧和硬卧结构已配置"],
-            ["铺位库存", "软卧60铺、硬卧40铺；下铺需求超过可确认铺位时需提示销售改铺"],
+            ["铺位安排", "软卧60铺、硬卧40铺；下铺需求超过可确认铺位时需提示销售改铺"],
             ["运营商确认", "运营商已确认包列框架价，铺位号待发车前10天回传"],
             ["成本毛利", "预估成本¥1,120,000，当前确认成本¥1,196,000，毛利异常需运营经理确认"],
             ["审批要点", "核对班期、车厢结构、上下车站、铺位分配规则和实名制退改规则"]
@@ -647,7 +983,7 @@
             ["调整范围", "小程序与官网，7月22日至8月5日出发团期"],
             ["调整幅度", "成人价下调4%，儿童不占床价不变"],
             ["毛利测算", "调整后团期毛利率18.6%，高于业务线底线15%"],
-            ["财务联动", "通过后自动生成调价记录，订单新报价按审批后价格生效"]
+            ["后续单据", "通过后自动生成调价记录，订单新报价按审批后价格生效"]
           ],
           flow: ["李明提交限时调价", "系统完成毛利测算", "当前等待线路负责人审批"]
         },
@@ -658,7 +994,7 @@
           detail: [
             ["调整范围", "指定订单改价，不影响线路基础价格和渠道保护价"],
             ["调整原因", "客户临时取消接送服务，订单总价相应下调"],
-            ["财务联动", "审批通过后已同步调整应收金额和收款计划"],
+            ["后续单据", "审批通过后已同步调整应收金额和收款计划"],
             ["审计记录", "改价记录已归档，可在订单详情和操作审计中追溯"]
           ],
           flow: ["门店提交订单改价", "销售主管通过", "财务主管复核通过", "审批已完成"]
@@ -695,7 +1031,7 @@
             ["付款依据", "团期成本已确认，回团资料已归档，应付单状态为待付款"],
             ["付款账户", "欧洲联合地接社尾号 8821，已通过供应商账户校验"],
             ["风险校验", "本月累计付款¥486,000，未超过合同约定额度"],
-            ["财务联动", "通过后进入付款执行，回单上传后自动生成NC付款推送任务"]
+            ["后续单据", "通过后进入付款执行，回单上传后自动生成NC付款推送任务"]
           ],
           flow: ["业务侧发起付款申请", "财务专员完成应付核对", "当前等待财务主管审批", "后续需财务总监审批"],
           opinion: "同意付款申请。请付款执行时核对供应商账户和回单。"
@@ -709,7 +1045,7 @@
             ["费用结构", "舱位包销¥860,000，港务费¥96,000，船票服务费¥40,000"],
             ["账户校验", "供应商账户已通过收款账户白名单校验，币种与合同一致"],
             ["风险校验", "港务费可能随船方规则调整，付款后需保留船方账单和扣损依据"],
-            ["财务联动", "通过后进入付款执行，执行后关联航次舱房、港务费和NC付款凭证"]
+            ["后续单据", "通过后进入付款执行，执行后关联航次舱房、港务费和NC付款凭证"]
           ],
           flow: ["邮轮计调提交付款依据", "财务专员完成应付核对", "当前等待财务主管审批", "后续需财务总监审批"],
           opinion: "同意付款申请。付款执行时请保留船方账单、港务费明细和船票出具记录。"
@@ -723,7 +1059,7 @@
             ["费用结构", "整列包乘¥680,000，铺位服务费¥28,000，车站保障费¥20,000"],
             ["账户校验", "供应商账户已通过白名单校验，付款币种与合同一致"],
             ["风险校验", "铺位号尚未最终回传，付款执行前需保留运营商确认函"],
-            ["财务联动", "通过后进入付款执行，执行后关联班期成本、铺位确认和NC付款凭证"]
+            ["后续单据", "通过后进入付款执行，执行后关联班期成本、铺位确认和NC付款凭证"]
           ],
           flow: ["专列计调提交付款依据", "财务专员完成应付核对", "当前等待财务负责人审批", "后续需财务总监审批"],
           opinion: "同意付款申请。付款执行时请核对运营商确认函、铺位结构和回单。"
@@ -736,7 +1072,7 @@
             ["退款原因", "客户家庭原因主动取消，已扣除供应商不可退费用"],
             ["订单收款", "已收款¥52,000，可退¥36,000"],
             ["风险校验", "出发前7天内退款，需确认机票与酒店退改损失"],
-            ["财务联动", "通过后生成退款执行单，财务退款后回写订单状态"]
+            ["后续单据", "通过后生成退款执行单，财务退款后回写订单状态"]
           ],
           flow: ["销售提交退款申请", "系统校验收款与退损", "当前等待销售主管审批"],
           opinion: "同意退款申请。请财务执行前再次核对供应商不可退费用。"
@@ -750,7 +1086,7 @@
             ["订单收款", "已收款¥15,600，当前可退金额¥15,600"],
             ["资源损失", "地接与酒店尚未产生不可退费用，机票未出票"],
             ["风险校验", "需确认报名截止日前取消，不影响团期最低成团人数"],
-            ["财务联动", "通过后生成退款执行单，财务退款后回写订单售后记录"]
+            ["后续单据", "通过后生成退款执行单，财务退款后回写订单售后记录"]
           ],
           flow: ["销售提交跟团退款", "系统校验订单收款与资源损失", "当前等待销售主管审批", "后续进入财务退款执行"],
           opinion: "同意退款申请。请财务执行前核对客户收款账户和订单可退金额。"
@@ -764,7 +1100,7 @@
             ["扣损规则", "船方扣损¥8,000，港务费可退¥4,800，岸上观光未确认不产生扣费"],
             ["订单收款", "已收款¥57,600，扣除船方损失后本次可退¥12,800"],
             ["风险校验", "需确认船方锁舱取消凭证、港务费可退比例和登船资料状态"],
-            ["财务联动", "通过后生成退款执行单，执行时冲减邮轮应收并保留船方扣损依据"]
+            ["后续单据", "通过后生成退款执行单，执行时冲减邮轮应收并保留船方扣损依据"]
           ],
           flow: ["销售提交邮轮退款", "邮轮计调确认船方扣损", "当前等待销售主管审批", "后续进入财务退款执行"],
           opinion: "同意退款申请。请财务执行前核对船方扣损、港务费和船票状态。"
@@ -778,7 +1114,7 @@
             ["扣损规则", "运营商退铺扣费需按实名制确认节点计算，本次暂按可退金额¥12,300提交"],
             ["订单收款", "已收款¥18,600，扣除预计退铺损失后可退¥12,300"],
             ["风险校验", "需确认运营商退铺凭证、铺位释放状态和同车厢替补报名情况"],
-            ["财务联动", "通过后生成退款执行单，执行时冲减专列应收并保留运营商退铺依据"]
+            ["后续单据", "通过后生成退款执行单，执行时冲减专列应收并保留运营商退铺依据"]
           ],
           flow: ["销售提交专列退款", "专列计调确认运营商退铺规则", "当前等待销售主管审批", "后续进入财务退款执行"],
           opinion: "同意退款申请。请财务执行前核对运营商退铺扣费和客户收款账户。"
@@ -791,7 +1127,7 @@
             ["逾期情况", "应收账款逾期28天，已完成三次催收"],
             ["处理方式", "申请转坏账观察，暂停该渠道授信额度"],
             ["影响范围", "关联订单2笔，均已出团且客户无退款争议"],
-            ["财务联动", "通过后生成坏账处理记录，并同步渠道授信状态"]
+            ["后续单据", "通过后生成坏账处理记录，并同步渠道授信状态"]
           ],
           flow: ["财务专员提交坏账申请", "财务主管复核通过", "当前等待财务总监审批"]
         },
@@ -803,7 +1139,7 @@
             ["收入确认", "订单收入¥856,000，收款已全部认款"],
             ["成本确认", "确认成本¥712,200，应付已生成并完成尾款申请"],
             ["差异处理", "酒店退房差额¥3,600已冲减成本"],
-            ["财务联动", "通过后锁定团期结算，生成NC收入与成本推送任务"]
+            ["后续单据", "通过后锁定团期结算，生成NC收入与成本推送任务"]
           ],
           flow: ["回团处理完成", "财务专员生成结算单", "当前等待财务主管审批"]
         },
@@ -908,13 +1244,110 @@
       function actionTitle(action, detail) {
         if (action === "approve") return detail.title;
         if (action === "progress") return "流转记录";
+        if (action === "related") return "关联单据";
         if (action === "withdraw") return "撤回申请";
         if (action === "remind") return "催办审批";
         return detail.title || "审批详情";
       }
 
+      function relatedItems(row) {
+        const type = row.dataset.approvalType || "";
+        const source = row.dataset.source || "";
+        const businessNo = row.cells[3].textContent.trim().replace(/\s+/g, " ");
+        const productText = row.cells[4].textContent.trim().replace(/\s+/g, " ");
+        const amount = row.cells[5].textContent.trim().replace(/\s+/g, " ");
+        const noPart = compactNo(businessNo, row.cells[0].textContent.trim());
+        const common = [
+          ["审批单", row.cells[0].textContent.trim()],
+          ["来源模块", source],
+          ["业务单据", businessNo],
+          ["线路/方案", productText],
+          ["金额/影响", amount]
+        ];
+        if (type === "线路发布") {
+          return common.concat([
+            ["上游对象", "线路草稿 / 方案版本 / 价格政策"],
+            ["通过后", "进入线路市场，可被团期开排和渠道授权引用"],
+            ["后续单据", "团期开排审批、渠道授权、价格调整、销售订单"]
+          ]);
+        }
+        if (type === "团期开排审批") {
+          return common.concat([
+            ["上游对象", "线路 / 方案 / 资源确认"],
+            ["通过后", "生成可售团期并开放名单、成本和订单占位"],
+            ["后续单据", "销售订单、收款认款、团期成本、应付付款"]
+          ]);
+        }
+        if (type === "价格调整") {
+          return common.concat([
+            ["上游对象", "线路价格政策 / 渠道保护价 / 订单报价"],
+            ["通过后", "回写调价记录和订单应收"],
+            ["后续单据", "应收调整、收款计划、NC收入凭证"]
+          ]);
+        }
+        if (type === "成本差异") {
+          return common.concat([
+            ["上游对象", "团期成本 / 供应商费用 / 预算版本"],
+            ["通过后", "更新确认成本并生成应付差异"],
+            ["后续单据", "应付单 AP-DIFF-" + noPart + "、付款申请、结算单"]
+          ]);
+        }
+        if (type === "付款申请") {
+          return common.concat([
+            ["上游对象", "团期成本 / 应付单 / 供应商账单"],
+            ["通过后", "进入付款执行队列，等待财务付款和回单"],
+            ["后续单据", "付款单 " + applyNoFrom(businessNo) + "、回单、NC付款任务"]
+          ]);
+        }
+        if (type === "退款申请") {
+          return common.concat([
+            ["上游对象", "订单 / 售后单 / 退损规则"],
+            ["通过后", "进入退款执行，冲减应收并回写订单状态"],
+            ["后续单据", "退款执行 RFD-EXE-" + noPart + "、红冲/NC任务"]
+          ]);
+        }
+        if (type === "结算确认") {
+          return common.concat([
+            ["上游对象", "回团处理 / 订单收款 / 供应商费用"],
+            ["通过后", "锁定结算单并允许NC收入成本推送"],
+            ["后续单据", "发票、回单、NC-JS-" + noPart + "、团期盈亏报表"]
+          ]);
+        }
+        if (type === "NC异常") {
+          return common.concat([
+            ["上游对象", "NC推送任务 / 科目映射 / 辅助核算"],
+            ["通过后", "按处理结果重试推送或转人工凭证"],
+            ["后续单据", "NC重试任务、接口日志、操作审计"]
+          ]);
+        }
+        return common.concat([
+          ["上游对象", type + "来源单据"],
+          ["通过后", "按审批配置进入下一业务节点"],
+          ["后续单据", "业务单据状态、操作审计、消息待办"]
+        ]);
+      }
+
+      function buildRelatedDetail(row, detail) {
+        return {
+          title: "关联单据",
+          subtitle: row.dataset.approvalType + " · " + row.cells[3].textContent.trim().replace(/\s+/g, " "),
+          summary: [
+            "审批单号：" + row.cells[0].textContent.trim(),
+            "审批事项：" + row.dataset.approvalType,
+            "来源模块：" + row.dataset.source,
+            "业务单据：" + row.cells[3].textContent.trim().replace(/\s+/g, " "),
+            "当前节点：" + row.cells[7].textContent.trim(),
+            "审批状态：" + row.dataset.status
+          ],
+          detail: relatedItems(row),
+          flow: (detail.flow || []).concat(["关联单据已按当前审批记录聚合"]),
+          opinion: detail.opinion || ""
+        };
+      }
+
       function openApprovalModal(row, action) {
-        const detail = detailMap[row.dataset.kind] || detailMap.product_publish;
+        let detail = dynamicDetailMap[row.dataset.kind] || detailMap[row.dataset.kind] || detailMap.product_publish;
+        if (action === "related") detail = buildRelatedDetail(row, detail);
         activeRow = row;
         currentAction = action;
         modalTitle.textContent = actionTitle(action, detail);
@@ -922,12 +1355,12 @@
         summaryGrid.innerHTML = detail.summary.map((item) => {
           const parts = item.split("：");
           const label = parts.shift();
-          return "<div><span>" + label + "</span><strong>" + parts.join("：") + "</strong></div>";
+          return "<div><span>" + escapeHtml(label) + "</span><strong>" + escapeHtml(parts.join("：")) + "</strong></div>";
         }).join("");
         detailContent.innerHTML = "<div class=\"approval-mini-grid\">" + detail.detail.map((item) => {
-          return "<div><span>" + item[0] + "</span><strong>" + item[1] + "</strong></div>";
+          return "<div><span>" + escapeHtml(item[0]) + "</span><strong>" + escapeHtml(item[1]) + "</strong></div>";
         }).join("") + "</div>";
-        flowList.innerHTML = detail.flow.map((item) => "<li>" + item + "</li>").join("");
+        flowList.innerHTML = detail.flow.map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
         decisionPanel.hidden = !["approve", "withdraw", "remind"].includes(action);
         const passDecision = document.querySelector("input[name='approvalDecision'][value='通过']");
         if (passDecision) passDecision.checked = true;
@@ -955,15 +1388,25 @@
       function writeApprovalResult(row, decisionValue) {
         const approvalNo = row.cells[0].textContent.trim();
         const results = readApprovalResults();
+        const passed = decisionValue === "通过";
         results[approvalNo] = {
-          status: decisionValue === "通过" ? "approved" : "rejected",
+          status: passed ? "approved" : "rejected",
           kind: row.dataset.kind,
           approvalType: row.dataset.approvalType,
           businessNo: row.cells[3].textContent.trim().replace(/\s+/g, " "),
           productText: row.cells[4].textContent.trim().replace(/\s+/g, " "),
+          amount: row.cells[5].textContent.trim().replace(/\s+/g, " "),
+          applyNo: row.dataset.applyNo || "",
+          source: row.dataset.source,
           updatedAt: "2026-06-24 16:30"
         };
         window.localStorage.setItem("caesarApprovalResults", JSON.stringify(results));
+        const tasks = readStored("caesarApprovalTasks");
+        if (tasks.tasks && tasks.tasks[approvalNo]) {
+          tasks.tasks[approvalNo].status = passed ? "已通过" : "已拒绝";
+          tasks.tasks[approvalNo].updatedAt = "2026-06-24 16:30";
+          writeStored("caesarApprovalTasks", tasks);
+        }
       }
 
       function updateRowAfterDecision(row, decisionValue) {
@@ -972,7 +1415,7 @@
         row.cells[7].textContent = "已完成";
         row.cells[8].textContent = "已完成";
         row.cells[9].innerHTML = passed ? "<span class=\"tag tag-green\">已通过</span>" : "<span class=\"tag tag-red\">已拒绝</span>";
-        row.cells[10].innerHTML = "<div class=\"table-action\"><button type=\"button\" data-approval-action=\"detail\" class=\"table-action-primary\">详情</button><button type=\"button\" data-approval-action=\"progress\">记录</button></div>";
+        row.cells[10].innerHTML = "<div class=\"table-action\"><button type=\"button\" data-approval-action=\"detail\" class=\"table-action-primary\">详情</button><button type=\"button\" data-approval-action=\"progress\">记录</button><button type=\"button\" data-approval-action=\"related\">单据</button></div>";
         row.classList.add("approval-row-highlight");
         writeApprovalResult(row, decisionValue);
         row.querySelectorAll("[data-approval-action]").forEach((button) => {
@@ -1018,6 +1461,16 @@
 
       initApprovalTypeFilter();
 
+      function ensureRelatedButtons() {
+        rows.forEach((row) => {
+          const actionBox = row.querySelector(".table-action");
+          if (!actionBox || actionBox.querySelector('[data-approval-action="related"]')) return;
+          actionBox.insertAdjacentHTML("beforeend", '<button type="button" data-approval-action="related">单据</button>');
+        });
+      }
+
+      ensureRelatedButtons();
+
       [keywordInput, matterSelect, sourceSelect, statusSelect].forEach((control) => {
         control.addEventListener("input", filterRows);
         control.addEventListener("change", filterRows);
@@ -1061,6 +1514,27 @@
           submitBtn.textContent = "关闭";
           modal.hidden = false;
           requestAnimationFrame(() => modal.classList.add("show"));
+        });
+      });
+
+      document.querySelectorAll("[data-row-more]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          const dropdown = button.closest(".dropdown");
+          event.stopPropagation();
+          document.querySelectorAll(".dropdown.open").forEach((item) => {
+            if (item !== dropdown) item.classList.remove("open");
+          });
+          if (dropdown) dropdown.classList.toggle("open");
+          button.setAttribute("aria-expanded", dropdown && dropdown.classList.contains("open") ? "true" : "false");
+        });
+      });
+
+      document.addEventListener("click", (event) => {
+        if (event.target.closest(".dropdown")) return;
+        document.querySelectorAll(".dropdown.open").forEach((item) => {
+          item.classList.remove("open");
+          const toggle = item.querySelector("[data-row-more]");
+          if (toggle) toggle.setAttribute("aria-expanded", "false");
         });
       });
 

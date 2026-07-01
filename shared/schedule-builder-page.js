@@ -11,10 +11,11 @@
     group: {
       label: '跟团线路',
       scheduleType: '普通团期',
+      objectName: '团期',
       tagClass: 'tag tag-blue',
       prefix: 'GT',
       unit: '人',
-      planLabel: '线路方案',
+      planLabel: '行程方案',
       departLabel: '出发日期',
       returnLabel: '返回日期',
       startLabel: '出发城市',
@@ -44,12 +45,13 @@
           ]
         }
       ],
-      matrixColumns: ['价格库存项', '总名额', '预留', '可售', '销售价', '结算价', '说明'],
+      matrixColumns: ['价格项', '总名额', '预留', '可售', '销售价', '结算价', '备注'],
       matrix: [
         ['成人', 30, 2, 29800, 27600, '主销售价'],
         ['儿童占床', 8, 0, 26800, 24800, '按儿童政策'],
         ['儿童不占床', 8, 0, 23800, 21800, '不占床'],
-        ['老人', 6, 0, 29800, 27600, '同成人']
+        ['老人', 6, 0, 29800, 27600, '同成人'],
+        ['单房差', 8, 0, 4800, 4200, '按房差补收']
       ],
       nodes: [
         ['报名截止日期', 'date', '2026-06-20'],
@@ -60,7 +62,8 @@
     },
     cruise: {
       label: '邮轮线路',
-      scheduleType: '邮轮团期',
+      scheduleType: '邮轮航次',
+      objectName: '航次',
       tagClass: 'tag tag-purple',
       prefix: 'CR',
       unit: '间',
@@ -98,10 +101,14 @@
         ['内舱房', 42, 4, 12800, 4800, 980],
         ['海景房', 36, 3, 15800, 5800, 980],
         ['阳台房', 36, 4, 18800, 6800, 980],
-        ['套房', 12, 2, 26800, 9800, 980]
+        ['套房', 12, 2, 26800, 9800, 980],
+        ['豪华套房', 6, 1, 58800, 18800, 980],
+        ['岸上游加购', 60, 0, 1280, 920, '按人'],
+        ['餐饮升级', 40, 0, 680, 420, '按人'],
+        ['接送机加购', 30, 0, 980, 650, '按车']
       ],
       nodes: [
-        ['航次号', 'text', 'MED-20260701'],
+	        ['航次名称', 'text', '地中海7月1日航次'],
         ['乘客名单提交截止', 'date', '2026-06-18'],
         ['护照/签证资料截止', 'date', '2026-06-15'],
         ['在线登船值机开放', 'date', '2026-06-24']
@@ -109,11 +116,12 @@
     },
     train: {
       label: '专列线路',
-      scheduleType: '专列团期',
+      scheduleType: '专列班期',
+      objectName: '班期',
       tagClass: 'tag tag-green',
       prefix: 'TR',
       unit: '铺',
-      planLabel: '线路方案',
+      planLabel: '行程方案',
       departLabel: '发车日期',
       returnLabel: '回程日期',
       startLabel: '出发站',
@@ -146,63 +154,69 @@
       matrix: [
         ['四人软卧', 64, 6, 18800, 16800, 0],
         ['双人包厢', 24, 4, 26800, 23800, 6800],
-        ['硬卧铺位', 32, 4, 15800, 13800, 0]
+        ['硬卧铺位', 32, 4, 15800, 13800, 0],
+        ['高铁商务座', 12, 0, 24800, 21800, 0],
+        ['高铁一等座', 20, 2, 18800, 16800, 0],
+        ['单人包间差价', 8, 0, 6800, 5800, '差价']
       ],
       nodes: [
-        ['车次号', 'text', 'Y653'],
+	        ['班期名称', 'text', '丝路7月班期'],
         ['购票名单提交截止', 'date', '2026-06-18'],
         ['集合站及时间', 'text', '西安站 18:30'],
         ['包列固定成本', 'text', '¥620,000']
       ]
     },
-    free: {
-      label: '自由行日期库存',
-      scheduleType: '自由行库存',
+    study: {
+      label: '研学线路',
+      scheduleType: '研学营期',
+      objectName: '营期',
       tagClass: 'tag tag-green',
-      prefix: 'FT',
-      unit: '套',
-      planLabel: '套餐方案',
-      departLabel: '使用日期',
-      returnLabel: '可售截止日期',
-      startLabel: '出发城市',
-      endLabel: '目的地',
-      startValue: '全国',
-      endValue: '巴黎',
-      deadlineLabel: '采购确认截止',
-      defaultPrice: 6800,
-      defaultStock: 36,
+      prefix: 'ST',
+      unit: '名',
+      planLabel: '研学方案',
+      departLabel: '开营日期',
+      returnLabel: '结营日期',
+      startLabel: '集合城市',
+      endLabel: '解散城市',
+      startValue: '北京',
+      endValue: '北京',
+      deadlineLabel: '报名截止日期',
+      defaultPrice: 9600,
+      defaultStock: 30,
       approvalNo: 'APR-20260624-038',
-      approvalNode: '自由行产品负责人',
+      approvalNode: '研学产品负责人',
       products: [
         {
-          name: '巴黎自由行 5-7日',
-          meta: '机票、酒店、接送机与当地玩乐组合，按使用日期维护套餐价格库存和采购批次。',
+          name: '北京航天研学营',
+          meta: '适合小学高年级至初中学生，覆盖航天课程、基地参访和项目制任务。',
           plans: [
-            { name: '机票+酒店套餐', days: 6, basis: '国际航空CA锁位，巴黎四星酒店，含接送机，套餐参考价 ¥6,800' },
-            { name: '纯酒店套餐', days: 5, basis: '巴黎四星酒店3晚起订，可加当地玩乐，套餐参考价 ¥4,800' }
+            { name: '航天科技7日', days: 7, basis: '航天基地课程、导师带教、营地住宿，学生参考价 ¥9,600' },
+            { name: '航天科技冬令', days: 6, basis: '冬令营课程、家长告知材料、未成年人保险' }
           ]
         },
         {
-          name: '马来西亚自由行',
-          meta: '吉隆坡与槟城机酒套餐，可选接送机和当地玩乐。',
+          name: '新加坡科技研学线',
+          meta: '面向初高中学生，覆盖高校参访、创新课程和英语任务。',
           plans: [
-            { name: '吉隆坡机酒5日', days: 5, basis: '往返机票锁位，市中心四星酒店，套餐参考价 ¥4,200' },
-            { name: '槟城酒店套餐', days: 4, basis: '海边酒店3晚，可加订包车和门票，套餐参考价 ¥3,200' }
+            { name: '创新科技8日', days: 8, basis: '高校参访、科技企业课堂、双语导师，学生参考价 ¥18,800' }
           ]
         }
       ],
-      matrixColumns: ['套餐项', '日期库存', '预留', '可售', '销售价', '采购价', '供应商/批次'],
+      matrixColumns: ['班级/角色', '名额', '预留', '可售', '学生价', '结算价', '配置'],
       matrix: [
-        ['机票+酒店', 18, 2, 6800, 5600, '国际航空CA / 巴黎酒店直采'],
-        ['纯酒店', 12, 1, 4800, 3900, '巴黎酒店直采'],
-        ['接送机加购', 20, 0, 680, 420, '欧洲地接ABC'],
-        ['当地玩乐加购', 16, 0, 980, 650, '巴黎玩乐供应商']
+        ['学生名额', 30, 2, 9600, 8800, '六年级以上'],
+        ['带队老师', 4, 0, 0, 0, '每班至少1名'],
+        ['课程导师', 3, 0, 0, 0, '航天导师/安全导师'],
+        ['家长陪同', 6, 0, 6200, 5600, '可选陪同']
       ],
       nodes: [
-        ['采购批次号', 'text', 'FT-PAR-202607'],
-        ['酒店确认截止', 'date', '2026-06-22'],
-        ['机票出票截止', 'date', '2026-06-20'],
-        ['退改核损规则', 'text', '按机票/酒店/玩乐资源分别核损']
+        ['适合年级', 'text', '小学五年级-初二'],
+        ['班级数量', 'number', '2'],
+        ['每班上限', 'number', '15'],
+        ['导师配置', 'text', '航天导师2名/安全员1名'],
+        ['学校名称', 'text', '北京市示范学校'],
+        ['实名制截止', 'date', '2026-06-18'],
+        ['保险要求', 'text', '未成年人意外险+旅行责任险']
       ]
     }
   };
@@ -242,12 +256,66 @@
     return data[selectedTypeKey()];
   }
 
+  function inferTypeFromProductName(productName) {
+    var name = String(productName || '');
+    var matched = '';
+    Object.keys(data).some(function (typeKey) {
+      return data[typeKey].products.some(function (product) {
+        if (product.name === name) {
+          matched = typeKey;
+          return true;
+        }
+        return false;
+      });
+    });
+    if (matched) return matched;
+    if (/邮轮/.test(name)) return 'cruise';
+    if (/专列/.test(name)) return 'train';
+    if (/研学/.test(name)) return 'study';
+    return '';
+  }
+
   function selectedProduct() {
     return selectedType().products[$('#lineSelect').selectedIndex] || selectedType().products[0];
   }
 
   function selectedPlan() {
     return selectedProduct().plans[$('#planSelect').selectedIndex] || selectedProduct().plans[0];
+  }
+
+  function selectedResourceDemand() {
+    var demand = $('#trafficDemand');
+    var route = $('#defaultFlightRoute');
+    var method = $('#flightUseMethod');
+    if (!demand || selectedTypeKey() !== 'group') return null;
+    return {
+      trafficDemand: demand.value,
+      defaultRoute: route ? route.value : '',
+      useMethod: method ? method.value : '',
+      expectedPeople: $('#matrixTotal') ? $('#matrixTotal').textContent : ''
+    };
+  }
+
+  function renderResourceDemandContext() {
+    var section = $('[data-resource-demand-section]');
+    if (!section) return;
+    section.hidden = selectedTypeKey() !== 'group';
+    var demand = selectedResourceDemand();
+    if (!demand) return;
+    var type = $('#resourceDemandType');
+    var route = $('#resourceDemandRoute');
+    var people = $('#resourceDemandPeople');
+    var next = $('#resourceDemandNext');
+    if (type) type.textContent = demand.trafficDemand || '航班资源';
+    if (route) route.textContent = demand.defaultRoute || '暂不指定';
+    if (people) people.textContent = demand.expectedPeople || '按总名额确认';
+    if (next) next.textContent = demand.useMethod || '生成后分配资源';
+  }
+
+  function defaultPlanDays(type) {
+    if (type.scheduleType === '邮轮航次') return 8;
+    if (type.scheduleType === '研学营期') return 7;
+    return 12;
   }
 
   function setType(typeKey) {
@@ -260,6 +328,7 @@
     renderMatrix();
     renderTypeNodes();
     syncDates(true);
+    renderResourceDemandContext();
     renderPreviewIfNeeded();
   }
 
@@ -267,6 +336,20 @@
     var type = selectedType();
     var lineSelect = $('#lineSelect');
     var planSelect = $('#planSelect');
+    var preferredProduct = null;
+
+    type.products.forEach(function (product) {
+      if (product.name === preferredLine) preferredProduct = product;
+    });
+
+    if (preferredLine && !preferredProduct) {
+      preferredProduct = {
+        name: preferredLine,
+        meta: '待开排线路',
+        plans: [{ name: preferredPlan || '默认方案', days: defaultPlanDays(type), basis: '按当前方案开排' }]
+      };
+      type.products.unshift(preferredProduct);
+    }
 
     lineSelect.innerHTML = type.products.map(function (product) {
       return '<option>' + product.name + '</option>';
@@ -280,6 +363,11 @@
         }
         return false;
       });
+    }
+
+    var currentProduct = selectedProduct();
+    if (preferredPlan && !currentProduct.plans.some(function (plan) { return plan.name === preferredPlan; })) {
+      currentProduct.plans.unshift({ name: preferredPlan, days: defaultPlanDays(type), basis: '按当前方案开排' });
     }
 
     planSelect.innerHTML = selectedProduct().plans.map(function (plan) {
@@ -304,7 +392,8 @@
     $('#heroType').textContent = type.label;
     $('#heroType').className = type.tagClass;
     $('#heroTitle').textContent = product.name;
-    $('#heroDesc').textContent = product.meta;
+    var heroDesc = $('#heroDesc');
+    if (heroDesc) heroDesc.textContent = product.meta;
     $('#heroPlan').textContent = plan.name;
     $('#heroDuration').textContent = plan.days + '天' + Math.max(plan.days - 1, 0) + '晚';
     $('#heroUnit').textContent = type.defaultStock + type.unit;
@@ -319,6 +408,7 @@
     $('#endPlace').value = type.endValue;
     $('#deadline2Label').textContent = type.deadlineLabel;
     $('#scheduleCodePreview').textContent = type.prefix + dateCode($('#departDate').value) + '001';
+    renderResourceDemandContext();
   }
 
   function syncDates(forceReturn) {
@@ -415,6 +505,18 @@
     var plan = selectedPlan();
     var depart = date || $('#departDate').value;
     var totals = matrixTotals();
+    var saleStatusField = $('#saleStatus');
+    var executionStatusField = $('#executionStatus');
+    var settlementStatusField = $('#settlementStatus');
+    var saleStatus = saleStatusField ? saleStatusField.value : '筹备中';
+    var executionStatus = executionStatusField ? executionStatusField.value : '未出团';
+    var settlementStatus = settlementStatusField ? settlementStatusField.value : '未维护成本';
+    var resourceDemand = selectedResourceDemand();
+    if (mode === 'batch') {
+      saleStatus = '筹备中';
+      executionStatus = '未出团';
+      settlementStatus = '未维护成本';
+    }
     return {
       code: scheduleCode(index || 1, depart),
       product: selectedProduct().name,
@@ -431,12 +533,18 @@
       channelSeats: channelMap(),
       price: primaryPrice(),
       planner: $('#plannerSelect').value,
-      status: mode === 'batch' ? '待售' : '销售中',
-      tabStatus: mode === 'batch' ? '待售' : '销售中',
-      costStatus: type.scheduleType === '自由行库存' ? '采购批次待确认' : '未维护',
+      saleStatus: saleStatus,
+      executionStatus: executionStatus,
+      settlementStatus: settlementStatus,
+      status: saleStatus,
+      tabStatus: saleStatus + ' ' + executionStatus + ' ' + settlementStatus,
+      costStatus: settlementStatus,
       costClass: 'tag tag-orange',
       locked: false,
-      remark: type.label + '按' + type.planLabel + '生成，价格库存矩阵已同步',
+      trafficDemand: resourceDemand ? resourceDemand.trafficDemand : '',
+      defaultFlightRoute: resourceDemand ? resourceDemand.defaultRoute : '',
+      flightUseMethod: resourceDemand ? resourceDemand.useMethod : '',
+      remark: type.label + '按' + type.planLabel + '生成，价格与余量已确认',
       deadline: $('#deadlineDate').value || addDays(depart, -10)
     };
   }
@@ -444,12 +552,17 @@
   function renderSummary() {
     var type = selectedType();
     var totals = matrixTotals();
-    $('#summaryContent').innerHTML = [
+    var demand = selectedResourceDemand();
+    var summary = [
       '<div class="schedule-summary-card"><span>线路类型</span><strong>' + type.label + '</strong></div>',
       '<div class="schedule-summary-card"><span>线路/方案</span><strong>' + selectedProduct().name + ' / ' + selectedPlan().name + '</strong></div>',
       '<div class="schedule-summary-card"><span>日期</span><strong>' + $('#departDate').value + ' 至 ' + $('#returnDate').value + '</strong></div>',
-      '<div class="schedule-summary-card"><span>价格库存</span><strong>' + totals.saleable + type.unit + '可售，起价' + primaryPrice() + '</strong></div>'
-    ].join('');
+      '<div class="schedule-summary-card"><span>价格余量</span><strong>' + totals.saleable + type.unit + '可售，起价' + primaryPrice() + '</strong></div>'
+    ];
+    if (demand) {
+      summary.push('<div class="schedule-summary-card"><span>资源需求</span><strong>' + demand.trafficDemand + '，' + demand.useMethod + '</strong></div>');
+    }
+    $('#summaryContent').innerHTML = summary.join('');
   }
 
   function setStep(index) {
@@ -465,8 +578,7 @@
     });
     var next = $('[data-next-step]');
     if (next) {
-      var submitText = selectedType().scheduleType === '自由行库存' ? '生成日期库存' : '生成团期';
-      next.textContent = currentStep === panels.length - 1 ? (mode === 'batch' ? '确认开排' : submitText) : '下一步';
+      next.textContent = currentStep === panels.length - 1 ? (mode === 'batch' ? '确认开排' : '生成' + selectedType().objectName) : '下一步';
     }
     if (mode === 'batch' && currentStep === panels.length - 1) renderPreview();
     if (mode === 'single' && currentStep === panels.length - 1) renderSummary();
@@ -490,6 +602,46 @@
     } catch (error) {
       return {};
     }
+  }
+
+  function readRouteScheduleContext() {
+    try {
+      return JSON.parse(window.localStorage.getItem('caesarRouteScheduleContext') || '{}');
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function scheduleListHref() {
+    var product = params.get('productName') || params.get('product') || '';
+    var type = params.get('type') || selectedTypeKey();
+    if (!product) return 'schedules.html';
+    var listParams = new URLSearchParams();
+    listParams.set('productName', product);
+    if (type) listParams.set('type', type);
+    return 'schedules.html?' + listParams.toString();
+  }
+
+  function syncBackLinks() {
+    $all('[data-confirm-back]').forEach(function (link) {
+      link.href = scheduleListHref();
+    });
+  }
+
+  function appendRouteContextMeta(routeContext) {
+    if (!routeContext || !routeContext.product) return;
+    var lineMeta = $('#lineMeta');
+    if (!lineMeta) return;
+    var pieces = ['来源线路：' + routeContext.product];
+    if (routeContext.route) pieces.push('承接行程方案：' + routeContext.route);
+    if (routeContext.ownerOrg) pieces.push('承接组织：' + routeContext.ownerOrg);
+    if (routeContext.supplier) pieces.push('供货方：' + routeContext.supplier);
+    if (routeContext.flightRouteResource) pieces.push('航线资源：' + routeContext.flightRouteResource);
+    if (routeContext.flightUsePolicy) pieces.push('用位方式：' + routeContext.flightUsePolicy);
+    if (Array.isArray(routeContext.resourceRefs) && routeContext.resourceRefs.length) {
+      pieces.push('方案资源：' + routeContext.resourceRefs.slice(0, 4).join('、'));
+    }
+    lineMeta.value = lineMeta.value + '\n' + pieces.join('；');
   }
 
   function writePending(item) {
@@ -523,11 +675,11 @@
     renderSummary();
     var type = selectedType();
     writePending(schedulePayload(null, 1));
-    $('#successTitle').textContent = type.scheduleType === '自由行库存' ? '日期库存已提交' : '团期已提交';
-    $('#successText').textContent = type.label + '已提交审批，审批通过后生成' + (type.scheduleType === '自由行库存' ? '日期库存并同步采购批次。' : '团期并同步价格库存。');
+    $('#successTitle').textContent = type.objectName + '已提交';
+    $('#successText').textContent = type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
     $('#approvalNo').textContent = type.approvalNo;
     $('#approvalNode').textContent = type.approvalNode;
-    $('#approvalLink').href = 'schedules.html';
+    $('#approvalLink').href = scheduleListHref();
     $('#approvalLink').textContent = '返回列表';
     dirty = false;
     openModal();
@@ -566,7 +718,7 @@
     var type = selectedType();
     var plan = selectedPlan();
     var dates = generatedDates();
-    $('#previewCount').textContent = dates.length + '个团期';
+    $('#previewCount').textContent = dates.length + '个' + type.objectName;
     $('#previewRows').innerHTML = dates.map(function (date, index) {
       var item = schedulePayload(date, index + 1);
       return '<tr data-preview-row><td><input type="checkbox" checked></td><td>' + item.code + '</td><td>' + item.depart + '</td><td>' + item.back + '</td><td>' + selectedProduct().name + '<br><span class="text-muted">' + plan.name + '</span></td><td>' + item.left + type.unit + '</td><td>' + item.price + '</td><td>' + Object.keys(item.channelSeats).map(function (key) { return key + ':' + item.channelSeats[key]; }).join(' ') + '</td></tr>';
@@ -586,7 +738,7 @@
     });
     writeBatch(items);
     $('#successTitle').textContent = '批量开排完成';
-    $('#successText').textContent = '已生成' + items.length + '个' + selectedType().label + '团期，并同步价格库存矩阵。';
+    $('#successText').textContent = '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
     $('#approvalNo').textContent = '无需审批';
     $('#approvalNode').textContent = '已进入团期列表';
     $('#approvalLink').style.display = 'none';
@@ -620,6 +772,14 @@
     $('#returnDate').addEventListener('change', function () {
       syncDates(false);
       markDirty();
+    });
+
+    $all('#trafficDemand, #defaultFlightRoute, #flightUseMethod').forEach(function (field) {
+      field.addEventListener('change', function () {
+        renderResourceDemandContext();
+        renderSummary();
+        markDirty();
+      });
     });
 
     $('#matrixRows').addEventListener('input', function () {
@@ -698,8 +858,9 @@
     var done = $('[data-builder-success]');
     if (done) {
       done.addEventListener('click', function () {
-        if (window.caesarNavigateTo) window.caesarNavigateTo('schedules.html');
-        else window.location.href = 'schedules.html';
+        var href = scheduleListHref();
+        if (window.caesarNavigateTo) window.caesarNavigateTo(href);
+        else window.location.href = href;
       });
     }
 
@@ -712,13 +873,25 @@
   }
 
   function init() {
-    var type = params.get('type') || 'group';
+    var routeContext = readRouteScheduleContext();
+    var fromProduct = params.get('source') === 'product';
+    var requestedProduct = params.get('product') || params.get('productName') || (fromProduct ? routeContext.product : '') || '';
+    var requestedRoute = params.get('route') || (fromProduct ? routeContext.route : '') || '';
+    var type = params.get('type') || (fromProduct && routeContext.type) || inferTypeFromProductName(requestedProduct) || 'group';
+    if (type === 'free') {
+      var url = '../product/product-free-travel-list.html?tab=calendar&product=' + encodeURIComponent(requestedProduct) + '&route=' + encodeURIComponent(requestedRoute);
+      if (window.caesarNavigateTo) window.caesarNavigateTo(url);
+      else window.location.replace(url);
+      return;
+    }
     setType(data[type] ? type : 'group');
-    renderSelectors(params.get('product') || '', params.get('route') || '');
+    renderSelectors(requestedProduct, requestedRoute);
     renderContext();
     renderMatrix();
     renderTypeNodes();
     syncDates(true);
+    if (fromProduct) appendRouteContextMeta(routeContext);
+    syncBackLinks();
     bindEvents();
     setStep(0);
     renderPreviewIfNeeded();

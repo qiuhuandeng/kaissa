@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>凯撒旅游 - ERP 数智协同管理平台</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e62ec', // 凯撒数智蓝
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .secondary-menu-active {
+      background-color: #f0f7ff;
+      color: #1e62ec;
+      font-weight: 700;
+      border-left: 3px solid #1e62ec;
+    }
+    /* 隐藏横向滚动条 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans antialiased flex flex-col overflow-hidden">
+
+  <!-- 顶部主导航栏（T型的横） -->
+  <header class="bg-white border-b border-slate-200 h-16 sticky top-0 z-40 shrink-0 flex items-center justify-between px-6 shadow-sm">
+    <!-- 左侧 Logo 标识 -->
+    <div class="flex items-center gap-3 shrink-0 mr-4">
+      <div class="bg-brand-800 text-white p-2 rounded-lg flex items-center justify-center font-bold tracking-wider text-sm shadow-md flex items-center gap-1.5">
+        <i data-lucide="globe" class="w-5 h-5 mr-1.5 animate-spin-slow"></i>
+        <span>CAISSA ERP</span>
+      </div>
+      <div class="h-6 w-[1px] bg-slate-200 hidden xl:block"></div>
+      <span class="text-xs font-bold text-slate-500 tracking-wide hidden xl:block">数智化一站式协同业务系统</span>
+    </div>
+
+    <!-- 顶部横向主导航签（顶部一级战略菜单） -->
+    <nav class="flex-1 px-4 h-full flex items-center gap-1 overflow-x-auto no-scrollbar" id="topHeaderNav" aria-label="系统顶级大类">
+      <!-- JS 动态渲染顶级业务分类页签 -->
+    </nav>
+
+    <!-- 右侧系统状态与个人档 -->
+    <div class="flex items-center gap-4 shrink-0 ml-4">
+      <div class="hidden lg:flex items-center gap-2 text-xs bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200 text-slate-500">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span>NC 财务与集成已联通</span>
+      </div>
+      <div class="h-4 w-[1px] bg-slate-200 hidden lg:block"></div>
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-xs shadow-inner">
+          OP
+        </div>
+        <div class="text-left hidden sm:block">
+          <div class="text-[11px] font-bold text-slate-800 leading-none">张建国</div>
+          <span class="text-[9px] text-slate-400">欧洲计调部</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主体协同区：左侧侧边栏（立柱） + 右侧工作区 -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- 左侧辅助功能导航栏（T型的立柱） -->
+    <aside class="w-60 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 shadow-sm z-20">
+      <!-- 当前顶级模块的显眼标题 -->
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-900 tracking-wider flex items-center gap-1.5" id="activeModuleTitle">
+          <i data-lucide="folder" class="w-4 h-4 text-brand-800"></i>
+          <span>加载中...</span>
+        </span>
+      </div>
+
+      <!-- 当前模块大类内快速检索过滤 -->
+      <div class="p-3 border-b border-slate-100">
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+          </span>
+          <input type="text" id="menuSearchInput" oninput="filterLeftSidebar()" class="w-full pl-8 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:bg-white focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all" placeholder="查找当前分类菜单...">
+        </div>
+      </div>
+
+      <!-- 二级/三级分组聚合垂直菜单栏 -->
+      <div class="flex-1 overflow-y-auto px-2 py-3 space-y-4" id="sidebarMenuContainer">
+        <!-- JS 动态渲染二级、三级菜单列表 -->
+      </div>
+    </aside>
+
+    <!-- 右侧工作面板 -->
+    <main class="flex-1 flex flex-col overflow-y-auto p-6" id="mainWorkspace">
+      
+      <!-- ============================================== -->
+      <!-- VIEW 1: 旅游线路列表 (products.html) -->
+      <!-- ============================================== -->
+      <section id="viewList" class="flex flex-col gap-6">
+        <!-- 列表头部 -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm gap-4">
+          <div>
+            <div class="text-xs text-slate-400">产品大厅 / 自营产品</div>
+            <h1 class="text-xl font-bold text-slate-900 mt-1 flex items-center gap-1.5">
+              <i data-lucide="compass" class="w-5 h-5 text-brand-800"></i>
+              <span>自营产品线路中心</span>
+            </h1>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm" onclick="showToast('正在导出筛选到的数据...','info')">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>导出</span>
+            </button>
+            <button class="px-3.5 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm" onclick="openAiUploadModal()">
+              <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+              <span>🤖 AI智能上架</span>
+            </button>
+            <button class="px-3.5 py-1.5 bg-brand-800 hover:bg-brand-900 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-800/10" onclick="enterEditMode(null)">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>新建线路</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 筛选与搜索卡片 -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">线路名称 / 编号</label>
+              <input type="text" id="searchName" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none" placeholder="输入关键字搜索...">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">目的地地区</label>
+              <input type="text" id="searchDest" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none" placeholder="例如：法国, 日本...">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">销售状态</label>
+              <select id="searchStatus" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:border-brand-800" onchange="filterProducts()">
+                <option value="">全部状态</option>
+                <option value="草稿">草稿</option>
+                <option value="审核中">审核中</option>
+                <option value="已上架">已上架</option>
+                <option value="已下架">已下架</option>
+              </select>
+            </div>
+            <div class="flex items-end gap-2">
+              <button class="flex-1 py-1.5 bg-brand-800 hover:bg-brand-900 text-white font-semibold rounded-lg text-xs transition-colors" onclick="filterProducts()">搜索</button>
+              <button class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold border border-slate-200 rounded-lg text-xs transition-colors" onclick="resetFilters()">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据过滤 Tab 条 -->
+        <nav class="flex border-b border-slate-200 gap-1.5" aria-label="线路类型标签页">
+          <button class="list-tab px-4 py-2 text-xs font-semibold text-brand-800 border-b-2 border-brand-800" onclick="switchListTab('全部', this)">全部</button>
+          <button class="list-tab px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchListTab('跟团', this)">跟团线路</button>
+          <button class="list-tab px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchListTab('邮轮', this)">邮轮航线</button>
+          <button class="list-tab px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchListTab('专列', this)">专列铁旅</button>
+          <button class="list-tab px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchListTab('自由行', this)">自由行 / 套餐</button>
+        </nav>
+
+        <!-- 数据表格 -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th class="p-4 w-10"><input type="checkbox" id="checkAll" class="rounded" onclick="toggleSelectAll(this)"></th>
+                  <th class="p-4">线路对象与编码</th>
+                  <th class="p-4">线路类型</th>
+                  <th class="p-4">线路摘要信息</th>
+                  <th class="p-4">包含方案层</th>
+                  <th class="p-4">开排团期/出行</th>
+                  <th class="p-4">供应责任</th>
+                  <th class="p-4">当前状态</th>
+                  <th class="p-4">操作</th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- JS 动态填充表格行 -->
+              </tbody>
+            </table>
+          </div>
+          <!-- 分页器 -->
+          <div class="p-4 bg-slate-50 border-t border-slate-150 flex items-center justify-between">
+            <span class="text-xs text-slate-500">共计 3 条线路，当前展示第 1 页</span>
+            <div class="flex gap-1">
+              <button class="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-semibold text-slate-400 cursor-not-allowed" disabled>上一页</button>
+              <button class="px-2.5 py-1 bg-brand-800 text-white rounded text-[11px] font-semibold">1</button>
+              <button class="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-semibold hover:bg-slate-50">2</button>
+              <button class="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-semibold hover:bg-slate-50">下一页</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VIEW 2: 旅游线路详情页 (products-detail.html) -->
+      <!-- ============================================== -->
+      <section id="viewDetail" class="hidden flex flex-col gap-6">
+        <!-- 详情操作头部栏 -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm gap-3">
+          <div class="flex items-center gap-3">
+            <button class="p-1.5 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-500" onclick="switchView('list')">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <div>
+              <div class="text-xs text-slate-400">产品大厅 / 线路详情</div>
+              <h2 class="text-lg font-bold text-slate-900" id="detailHeaderTitle">欧洲十国经典游 12日11晚</h2>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="px-3.5 py-1.5 bg-brand-800 hover:bg-brand-900 text-white rounded-lg text-xs font-semibold flex items-center gap-1" onclick="editCurrentProduct()">
+              <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+              <span>编辑线路</span>
+            </button>
+            <button class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-amber-700 rounded-lg text-xs font-semibold" onclick="triggerShelfState()">下架线路</button>
+            <button class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-semibold" onclick="cloneCurrentRouteAsDraft()">复制线路</button>
+          </div>
+        </div>
+
+        <!-- 线路简要信息看板 (Hero Card) -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
+          <div class="md:w-1/3 bg-slate-100 h-52 md:h-auto relative">
+            <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover" id="detailCoverImage">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div class="absolute bottom-4 left-4 text-white">
+              <span class="text-xs bg-emerald-500 font-bold px-2 py-0.5 rounded-full" id="detailStatusBadge">已上架</span>
+              <h3 class="text-lg font-bold mt-1.5" id="detailCoverTitle">欧洲十国经典游</h3>
+            </div>
+          </div>
+          <div class="md:w-2/3 p-6 flex flex-col justify-between gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-4 text-xs">
+              <div><span class="text-slate-400">线路编号：</span><strong id="detailCode" class="text-slate-800 font-mono">GT-EU-001</strong></div>
+              <div><span class="text-slate-400">出发地区：</span><strong id="detailDepartCity" class="text-slate-800">北京</strong></div>
+              <div><span class="text-slate-400">承接组织：</span><strong id="detailOwnerOrg" class="text-slate-800">欧洲线路中心</strong></div>
+              <div><span class="text-slate-400">旅游类型：</span><strong id="detailTravelType" class="text-slate-800">出境游</strong></div>
+              <div><span class="text-slate-400">主题标签：</span><strong id="detailTags" class="text-brand-800">纯玩, 含签证</strong></div>
+              <div><span class="text-slate-400">供应商：</span><strong id="detailSupplier" class="text-slate-800">欧洲地接ABC</strong></div>
+            </div>
+            <div class="border-t border-slate-100 pt-3">
+              <span class="text-slate-400 text-xs">起价销售：</span>
+              <strong class="text-xl text-brand-800 font-bold" id="detailPrice">¥29,800</strong> <small class="text-xs text-slate-400">元/人起</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- 线路详情标签组与内容区 -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6">
+          <nav class="flex border-b border-slate-200 gap-1 mb-6" aria-label="线路详情标签页">
+            <button class="detail-tab px-4 py-2.5 text-xs font-semibold text-brand-800 border-b-2 border-brand-800" onclick="switchDetailTab('info', this)">线路信息</button>
+            <button class="detail-tab px-4 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchDetailTab('方案', this)">线路方案</button>
+            <button class="detail-tab px-4 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchDetailTab('价格', this)">价格费用</button>
+            <button class="detail-tab px-4 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchDetailTab('团期', this)">团期(8)</button>
+            <button class="detail-tab px-4 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchDetailTab('数据', this)">销售数据</button>
+            <button class="detail-tab px-4 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800" onclick="switchDetailTab('渠道', this)">渠道状态</button>
+          </nav>
+
+          <!-- Tab 1: 线路信息 -->
+          <div class="detail-panel space-y-6" id="detailPanel_info">
+            <div>
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">线路副标题</h3>
+              <p class="text-sm text-slate-700 font-medium" id="detailSubTitle">纯玩无购物，法德瑞意核心城市连线，含中文领队与签证协助</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 mb-1.5">通用包含费用</h4>
+                <p class="text-xs text-slate-600 leading-relaxed" id="detailIncludeFee">行程内酒店住宿、当地旅游巴士、中文导游服务、行程所列首道门票、部分餐食。</p>
+              </div>
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 mb-1.5">通用不含费用</h4>
+                <p class="text-xs text-slate-600 leading-relaxed" id="detailExcludeFee">护照办理费、个人消费、单房差、自费项目、航空公司临时调整产生的税费差额。</p>
+              </div>
+              <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 mb-1.5">通用退改规则说明</h4>
+                <p class="text-xs text-slate-600 leading-relaxed" id="detailRefundRule">出发前30日以上取消收取已发生费用；出发前15-29日取消收取团款30%；出发前14日内以实际损失核算。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: 线路方案 -->
+          <div class="detail-panel hidden space-y-6" id="detailPanel_方案">
+            <div class="flex flex-col lg:flex-row gap-6">
+              <!-- 方案选择 -->
+              <div class="lg:w-1/4 flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200" id="detailPlanTabs">
+                <!-- 动态渲染方案选项 -->
+              </div>
+              <!-- 方案预览工作区 -->
+              <div class="lg:w-3/4 border border-slate-200 rounded-xl p-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                  <strong class="text-sm font-bold text-slate-900" id="detailActivePlanLabel">经济款</strong>
+                  <span class="text-xs text-slate-500" id="detailActivePlanMeta">12天11晚 · 三星/四星混排 · 不含大交通</span>
+                </div>
+                <!-- 途经城市 -->
+                <div class="mb-4">
+                  <span class="text-xs text-slate-400 block mb-1">途经城市</span>
+                  <span class="text-xs font-semibold text-slate-800" id="detailActivePlanPassing">巴黎 / 卢塞恩 / 米兰 / 佛罗伦萨 / 罗马</span>
+                </div>
+                <!-- 每日行程可视化时间轴 -->
+                <div class="space-y-4 pt-3 border-t border-slate-100" id="detailActivePlanItinerary">
+                  <!-- 行程日卡片列表 -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: 价格费用 -->
+          <div class="detail-panel hidden space-y-4" id="detailPanel_价格">
+            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs flex items-center gap-2">
+              <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+              <span>此处展示默认方案价格基准。团期开排后的销售价、结算底价和分销配额由团期决策层控制。</span>
+            </div>
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                    <th class="p-3">价格类型</th>
+                    <th class="p-3">方案适用</th>
+                    <th class="p-3">成人基础价</th>
+                    <th class="p-3">儿童价基准</th>
+                    <th class="p-3">单房差</th>
+                    <th class="p-3">收入结算口径</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-150">
+                  <tr>
+                    <td class="p-3 font-semibold text-slate-900">基准门市价</td>
+                    <td class="p-3">全部方案统一适用</td>
+                    <td class="p-3 text-brand-800 font-bold">¥29,800</td>
+                    <td class="p-3">¥25,800</td>
+                    <td class="p-3">¥4,500</td>
+                    <td class="p-3">订单成团并完成结算后确认</td>
+                  </tr>
+                  <tr class="bg-slate-50/50">
+                    <td class="p-3 font-semibold text-slate-900">协议代理底价</td>
+                    <td class="p-3">仅部分协议授权分销商</td>
+                    <td class="p-3">¥28,200</td>
+                    <td class="p-3">¥24,000</td>
+                    <td class="p-3">¥4,000</td>
+                    <td class="p-3">出团后按实际结算确认</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 4: 团期(8) -->
+          <div class="detail-panel hidden space-y-4" id="detailPanel_团期">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-slate-500">当前线路已开排团期列表</h3>
+              <button class="px-3 py-1 bg-brand-800 hover:bg-brand-900 text-white rounded text-xs font-semibold shadow-sm" onclick="openScheduleModal()">+ 快速排期</button>
+            </div>
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                    <th class="p-3">团期班号</th>
+                    <th class="p-3">出发日期</th>
+                    <th class="p-3">计划余量/总席</th>
+                    <th class="p-3">成人售价</th>
+                    <th class="p-3">单团销售状态</th>
+                    <th class="p-3">操作/成本分析</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-150" id="detailSchedulesTable">
+                  <!-- 动态团期数据 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 5: 销售数据 (Responsive SVG Line Chart) -->
+          <div class="detail-panel hidden space-y-6" id="detailPanel_数据">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <span class="text-xs text-slate-400 font-medium">总销售额</span>
+                <strong class="block text-xl font-extrabold text-blue-700 mt-1">¥1,643,800</strong>
+              </div>
+              <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                <span class="text-xs text-slate-400 font-medium">累计出票数</span>
+                <strong class="block text-xl font-extrabold text-emerald-700 mt-1">54 张</strong>
+              </div>
+              <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                <span class="text-xs text-slate-400 font-medium">退改纠纷单</span>
+                <strong class="block text-xl font-extrabold text-amber-700 mt-1">0 笔</strong>
+              </div>
+              <div class="bg-purple-50 border border-purple-100 rounded-xl p-4">
+                <span class="text-xs text-slate-400 font-medium">首客复购率</span>
+                <strong class="block text-xl font-extrabold text-purple-700 mt-1">18.4%</strong>
+              </div>
+            </div>
+            
+            <div class="border border-slate-200 rounded-xl p-5">
+              <div class="flex items-center justify-between mb-4">
+                <strong class="text-xs font-bold text-slate-700">近6个月月度销售额趋势</strong>
+                <span class="text-[10px] text-slate-400">单位 (元)</span>
+              </div>
+              <div class="relative w-full h-52">
+                <svg viewBox="0 0 600 180" class="w-full h-full text-brand-800">
+                  <path d="M 50,140 L 150,120 L 250,90 L 350,60 L 450,75 L 550,30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                  <circle cx="50" cy="140" r="4" fill="currentColor"></circle>
+                  <circle cx="150" cy="120" r="4" fill="currentColor"></circle>
+                  <circle cx="250" cy="90" r="4" fill="currentColor"></circle>
+                  <circle cx="350" cy="60" r="4" fill="currentColor"></circle>
+                  <circle cx="450" cy="75" r="4" fill="currentColor"></circle>
+                  <circle cx="550" cy="30" r="4" fill="currentColor"></circle>
+                  <!-- 标签 -->
+                  <text x="50" y="160" font-size="10" fill="#64748b" text-anchor="middle">1月</text>
+                  <text x="150" y="160" font-size="10" fill="#64748b" text-anchor="middle">2月</text>
+                  <text x="250" y="160" font-size="10" fill="#64748b" text-anchor="middle">3月</text>
+                  <text x="350" y="160" font-size="10" fill="#64748b" text-anchor="middle">4月</text>
+                  <text x="450" y="160" font-size="10" fill="#64748b" text-anchor="middle">5月</text>
+                  <text x="550" y="160" font-size="10" fill="#64748b" text-anchor="middle">6月</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 6: 渠道状态 -->
+          <div class="detail-panel hidden space-y-4" id="detailPanel_渠道">
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                    <th class="p-3">平台分销渠道</th>
+                    <th class="p-3">授权状态</th>
+                    <th class="p-3">渠道分销价格</th>
+                    <th class="p-3">最后同步时间</th>
+                    <th class="p-3">同步节点反馈</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-150">
+                  <tr>
+                    <td class="p-3 font-medium">携程分销 API</td>
+                    <td class="p-3"><span class="tag bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px]">正常分发</span></td>
+                    <td class="p-3 font-semibold text-slate-800">¥29,800</td>
+                    <td class="p-3 text-slate-500 font-mono">2026-06-29 14:15</td>
+                    <td class="p-3 text-emerald-600">正常对齐同步</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-medium">飞猪旗舰店 API</td>
+                    <td class="p-3"><span class="tag bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[10px]">待重试</span></td>
+                    <td class="p-3 font-semibold text-slate-800">¥29,800</td>
+                    <td class="p-3 text-slate-500 font-mono">2026-06-29 13:20</td>
+                    <td class="p-3 text-rose-500">接口频率超出限制，等待队列自动重试</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VIEW 3: 旅游线路编辑/新建 (product-self-edit.html) -->
+      <!-- ============================================== -->
+      <section id="viewEdit" class="hidden flex flex-col gap-6">
+        <!-- 3.1 步骤进度条 -->
+        <nav class="grid grid-cols-3 bg-white rounded-xl border border-slate-200 shadow-sm p-1.5 gap-1.5" aria-label="编辑步骤">
+          <button class="step-btn py-3 px-4 rounded-lg flex items-center justify-center gap-2.5 font-semibold transition-all text-xs" type="button" onclick="switchStep(1)" id="stepTab1">
+            <span class="step-num w-5 h-5 rounded-full flex items-center justify-center border text-[10px]">1</span>
+            <span>线路基础</span>
+          </button>
+          <button class="step-btn py-3 px-4 rounded-lg flex items-center justify-center gap-2.5 font-semibold transition-all text-xs" type="button" onclick="switchStep(2)" id="stepTab2">
+            <span class="step-num w-5 h-5 rounded-full flex items-center justify-center border text-[10px]">2</span>
+            <span>线路方案</span>
+          </button>
+          <button class="step-btn py-3 px-4 rounded-lg flex items-center justify-center gap-2.5 font-semibold transition-all text-xs" type="button" onclick="switchStep(3)" id="stepTab3">
+            <span class="step-num w-5 h-5 rounded-full flex items-center justify-center border text-[10px]">3</span>
+            <span>费用政策</span>
+          </button>
+        </nav>
+
+        <!-- 编辑容器工作台 -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          
+          <!-- STEP 1: 线路基础 -->
+          <div class="edit-step-panel space-y-6" id="editStep1">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div class="w-1.5 h-4 bg-brand-800 rounded-full"></div>
+              <h3 class="text-sm font-bold text-slate-900">产品基础主档配置</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">线路编号 <span class="text-rose-500">*</span></label>
+                <div class="flex gap-2">
+                  <input type="text" id="editForm_lineCode" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-1 focus:ring-brand-800 focus:outline-none">
+                  <button type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] font-semibold rounded-lg shrink-0" onclick="generateRandomCode()">随机生成</button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">线路类型 <span class="text-rose-500">*</span></label>
+                <select id="editForm_lineType" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none">
+                  <option value="跟团线路">跟团线路</option>
+                  <option value="邮轮航线">邮轮航线</option>
+                  <option value="专列铁旅">专列铁旅</option>
+                  <option value="自由行">自由行</option>
+                </select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">产品官方名称 <span class="text-rose-500">*</span></label>
+                <input type="text" id="editForm_lineName" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-1 focus:ring-brand-800 focus:outline-none" placeholder="例如：欧洲十国经典游 12日11晚">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">线路副标题 / 亮点大纲 <span class="text-rose-500">*</span></label>
+                <input type="text" id="editForm_subTitle" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none" placeholder="一句话卖点精辟提炼">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">供货方名称 <span class="text-rose-500">*</span></label>
+                <select id="editForm_supplier" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none">
+                  <option value="欧洲地接ABC">欧洲地接ABC</option>
+                  <option value="日本地接XYZ">日本地接XYZ</option>
+                  <option value="凯撒邮轮资源部">凯撒邮轮资源部</option>
+                  <option value="三亚亚特兰蒂斯酒店">三亚亚特兰蒂斯酒店</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">承接执行组织 <span class="text-rose-500">*</span></label>
+                <select id="editForm_ownerOrg" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none">
+                  <option value="欧洲线路中心">欧洲线路中心</option>
+                  <option value="亚洲线路中心">亚洲线路中心</option>
+                  <option value="国内线路中心">国内线路中心</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3 pt-4">
+              <div class="w-1.5 h-4 bg-brand-800 rounded-full"></div>
+              <h3 class="text-sm font-bold text-slate-900">目的地定位与属性</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">旅游类型</label>
+                <select id="editForm_travelType" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none">
+                  <option value="出境游">出境游</option>
+                  <option value="国内游">国内游</option>
+                  <option value="入境游">入境游</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">出发城市 <span class="text-rose-500">*</span></label>
+                <input type="text" id="editForm_departCity" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">目的地国家/地区 <span class="text-rose-500">*</span></label>
+                <input type="text" id="editForm_destinationCountry" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none">
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">目的地城市连线配置 <span class="text-rose-500">*</span></label>
+                <input type="text" id="editForm_destinationCity" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none" placeholder="斜杠 / 隔开城市">
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">适合人群描述</label>
+                <input type="text" id="editForm_audience" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: 线路方案 -->
+          <div class="edit-step-panel hidden space-y-6" id="editStep2">
+            <div class="flex flex-col lg:flex-row gap-6">
+              <!-- 方案面板切换 -->
+              <div class="lg:w-1/4 flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200" id="editForm_planListTabs">
+                <!-- JS 动态渲染方案选项 -->
+              </div>
+              <!-- 单个方案配置区 -->
+              <div class="lg:w-3/4 border border-slate-200 rounded-xl p-5 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <strong class="text-xs font-bold text-slate-700">编辑产品子方案</strong>
+                  <button type="button" class="px-2 py-1 bg-brand-50 border border-brand-200 text-brand-800 rounded text-[10px] font-semibold flex items-center gap-1" onclick="duplicateEditPlan()">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>复制方案</span>
+                  </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">方案名称 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="editForm_activePlanName" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs" oninput="updateActiveEditPlan('planName', this.value)">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">行程天数 <span class="text-rose-500">*</span></label>
+                    <input type="number" id="editForm_activePlanDays" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs" oninput="updateEditPlanDays(this.value)">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">酒店星级标准</label>
+                    <select id="editForm_activePlanHotel" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white" onchange="updateActiveEditPlan('hotelLevel', this.value)">
+                      <option value="三星/四星混排">三星/四星混排</option>
+                      <option value="全程四星">全程四星</option>
+                      <option value="全程五星">全程五星</option>
+                    </select>
+                  </div>
+                  <div class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">途经城市连线 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="editForm_activePlanPassing" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs" oninput="updateActiveEditPlan('passingCities', this.value)">
+                  </div>
+                </div>
+
+                <!-- 每日具体行程与 AI 生成大纲 -->
+                <div class="border-t border-slate-100 pt-5 mt-4">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        <i data-lucide="bot" class="w-4 h-4 text-brand-800 animate-bounce"></i>
+                        <span>AI 智能大纲行程设计</span>
+                      </h4>
+                      <p class="text-[10px] text-slate-400">点击下方按钮，由后台 Gemini 2.5 引擎根据基础信息一键生成每天的行程、餐饮和住宿规划。</p>
+                    </div>
+                    <button class="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded text-[11px] font-bold shadow-md shadow-indigo-100 flex items-center gap-1" type="button" onclick="generateItineraryWithAI()">
+                      <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                      <span>AI 生成分日方案</span>
+                    </button>
+                  </div>
+
+                  <!-- AI生成动画提示 -->
+                  <div id="aiProgressBox" class="hidden bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3">
+                    <div class="w-4 h-4 border-2 border-brand-800 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-[11px] text-indigo-800 font-medium">凯撒大模型计调助理正在快速智能排版，请稍候约 5 约秒...</span>
+                  </div>
+
+                  <!-- 渲染每日行车和吃住标准 -->
+                  <div class="space-y-3" id="editForm_daysList">
+                    <!-- 动态天数配置卡片 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: 费用政策 -->
+          <div class="edit-step-panel hidden space-y-6" id="editStep3">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div class="w-1.5 h-4 bg-brand-800 rounded-full"></div>
+              <h3 class="text-sm font-bold text-slate-900">核心费用政策、业财及核算边界</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">儿童价标准规范 <span class="text-rose-500">*</span></label>
+                <input type="text" id="editForm_childPolicy" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">收入确认口径 <span class="text-rose-500">*</span></label>
+                <select id="editForm_revenuePolicy" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none">
+                  <option value="订单成团并完成结算后确认">订单成团并完成结算后确认</option>
+                  <option value="出团后按实际结算确认">出团后按实际结算确认</option>
+                  <option value="按差额收入确认">按差额收入确认</option>
+                </select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">费用包含服务范围 <span class="text-rose-500">*</span></label>
+                <textarea id="editForm_includeFee" class="w-full p-3 border border-slate-300 rounded-lg text-xs" rows="3"></textarea>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">费用不含说明 <span class="text-rose-500">*</span></label>
+                <textarea id="editForm_excludeFee" class="w-full p-3 border border-slate-300 rounded-lg text-xs" rows="3"></textarea>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">退改规则与免责声明 <span class="text-rose-500">*</span></label>
+                <textarea id="editForm_refundRule" class="w-full p-3 border border-slate-300 rounded-lg text-xs" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部控制按钮 -->
+          <div class="border-t border-slate-150 pt-5 mt-8 flex items-center justify-between">
+            <button class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-xs font-semibold border border-slate-200 flex items-center gap-1.5" type="button" id="editPrevBtn" onclick="navigateStep(-1)">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              <span>上一步</span>
+            </button>
+            <button class="px-5 py-2 bg-brand-800 hover:bg-brand-900 text-white rounded-lg text-xs font-semibold shadow-md flex items-center gap-1.5" type="button" id="editNextBtn" onclick="navigateStep(1)">
+              <span>下一步</span>
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODALS & DRAWERS (弹窗、抽屉模块) -->
+  <!-- ============================================== -->
+  
+  <!-- AI 智能解析快速上架抽屉 -->
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-end hidden" id="aiUploadModal">
+    <div class="bg-white h-full w-full max-w-xl shadow-2xl flex flex-col transform translate-x-full transition-transform duration-200" id="aiUploadModalBody">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-brand-100 text-brand-800 rounded-lg">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </span>
+          <strong class="text-sm font-bold text-slate-950">AI智能解构上架</strong>
+        </div>
+        <button class="text-slate-400 hover:text-slate-600 text-lg font-bold" onclick="closeAiUploadModal()">&times;</button>
+      </div>
+      <div class="p-5 flex-1 overflow-y-auto space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1.5">智能解构目标线路类型</label>
+          <select id="aiRouteType" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
+            <option value="跟团">跟团游（按团期开排）</option>
+            <option value="邮轮">邮轮（按船只舱型）</option>
+            <option value="自由行">自由行套餐</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1.5">粘贴供应商原始 Word/文本 资料</label>
+          <textarea id="aiRawText" class="w-full p-3 border border-slate-200 rounded-lg text-xs font-mono text-slate-600" rows="8" placeholder="在此粘贴任意散乱非结构化的行程介绍、吃住说明、飞机班期..."></textarea>
+        </div>
+        <div class="border border-slate-200 rounded-xl overflow-hidden text-xs">
+          <div class="bg-slate-50 p-2.5 font-bold border-b border-slate-200">智能提取预览项</div>
+          <div class="divide-y divide-slate-100" id="aiProcessResults">
+            <div class="p-2.5 flex items-center justify-between"><span>基本线路要素 (名称, 天数, 目的地)</span><span class="text-slate-400">待解析</span></div>
+            <div class="p-2.5 flex items-center justify-between"><span>分日行程描述与标准</span><span class="text-slate-400">待解析</span></div>
+            <div class="p-2.5 flex items-center justify-between"><span>财务边界 & 费用说明条款</span><span class="text-slate-400">待解析</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2.5">
+        <button class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold" onclick="closeAiUploadModal()">取消</button>
+        <button class="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white rounded-lg text-xs font-semibold shadow-md" onclick="simulateAiExtraction()">🤖 开启智能解构并导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 团期成本详情 & 地接费用核算弹窗 -->
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" id="costModal">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calculator" class="w-5 h-5 text-brand-800"></i>
+          <h3 class="text-sm font-bold text-slate-950" id="costModalTitle">团期成本分析核算 - EU20260715001</h3>
+        </div>
+        <button class="text-slate-400 hover:text-slate-600 text-lg font-bold" onclick="closeCostModal()">&times;</button>
+      </div>
+      <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div class="flex items-center justify-between text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <span>当前归集核算方案：<strong id="costModalPlanLabel" class="text-slate-900 font-bold">经济款</strong></span>
+          <span>实际预报销售名额：<strong class="text-emerald-700">30人</strong></span>
+        </div>
+        
+        <!-- 成本类目表 -->
+        <div class="border border-slate-200 rounded-xl overflow-hidden text-xs">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                <th class="p-2.5">费用类目</th>
+                <th class="p-2.5">核算供应商</th>
+                <th class="p-2.5">数量</th>
+                <th class="p-2.5">核算单价</th>
+                <th class="p-2.5">小计 (元)</th>
+                <th class="p-2.5">操作</th>
+              </tr>
+            </thead>
+            <tbody id="costRows" class="divide-y divide-slate-150">
+              <!-- 动态财务数据行 -->
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="px-3 py-1.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded text-xs font-semibold" onclick="addNewCostRow()">+ 增补采购费用类目</button>
+        
+        <!-- 业财汇总计算 -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex justify-between items-center text-xs">
+          <div>
+            <span class="text-slate-400">总成本预估：</span><strong class="text-slate-800 mr-4" id="costTotalText">¥0</strong>
+            <span class="text-slate-400">总营收预估：</span><strong class="text-slate-800" id="incomeTotalText">¥894,000</strong>
+          </div>
+          <div>
+            <span class="text-slate-400">毛利：</span><strong class="text-brand-800 font-bold text-sm" id="profitText">¥0</strong>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <button class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold" onclick="closeCostModal()">关闭</button>
+        <button class="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white rounded-lg text-xs font-semibold shadow-md" onclick="saveCostApproval()">保存并提交审批核对</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 团期批量开排 Modal -->
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" id="scheduleModal">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calendar" class="w-5 h-5 text-brand-800"></i>
+          <h3 class="text-sm font-bold text-slate-950">开排团期计划</h3>
+        </div>
+        <button class="text-slate-400 hover:text-slate-600 text-lg font-bold" onclick="closeScheduleModal()">&times;</button>
+      </div>
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-500 mb-1">选择开排方案模板</label>
+          <select class="w-full p-2 border border-slate-200 bg-white rounded-lg" id="schedulePlanSelect">
+            <!-- 动态填充 -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1.5">选择开排出发日期 (多选)</label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button class="p-2 border border-slate-200 rounded text-center hover:border-brand-800" onclick="toggleScheduleDate(this)">2026-07-05</button>
+            <button class="p-2 border border-slate-200 rounded text-center hover:border-brand-800" onclick="toggleScheduleDate(this)">2026-07-12</button>
+            <button class="p-2 border border-slate-200 rounded text-center hover:border-brand-800" onclick="toggleScheduleDate(this)">2026-07-19</button>
+            <button class="p-2 border border-slate-200 rounded text-center hover:border-brand-800" onclick="toggleScheduleDate(this)">2026-07-26</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-500 mb-1">基础定价 (元/人)</label>
+            <input type="number" id="schedulePrice" class="w-full p-2 border border-slate-200 rounded-lg" value="29800">
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-1">单团席位库存</label>
+            <input type="number" id="scheduleSeats" class="w-full p-2 border border-slate-200 rounded-lg" value="30">
+          </div>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold" onclick="closeScheduleModal()">取消</button>
+        <button class="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white rounded-lg text-xs font-semibold shadow-md" onclick="saveNewSchedules()">确认开排并推送分销网络</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 消息容器 -->
+  <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none" id="toastContainer"></div>
+
+  <!-- ============================================== -->
+  <!-- JAVASCRIPT SYSTEM ENGINE (系统业务逻辑) -->
+  <!-- ============================================== -->
+  <script>
+    // 固定的 API 密钥，执行环境运行时将自动提供
+    const apiKey = "";
+
+    // ERP 顶级横向主菜单 + 侧边栏垂直 3级 Accordion 折叠树数据
+    const systemMenuData = [
+      {
+        title: "工作",
+        icon: "briefcase",
+        groups: [
+          {
+            groupName: "日常业务",
+            items: [
+              { name: "首页工作台", view: "list" },
+              { name: "我的待办", view: "list" },
+              { name: "消息中心", view: "list" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "资源",
+        icon: "database",
+        groups: [
+          {
+            groupName: "基础资源",
+            items: [
+              { name: "POI库" }, { name: "酒店库" }, { name: "餐厅库" }, { name: "车型库" }
+            ]
+          },
+          {
+            groupName: "航空资源",
+            items: [
+              { name: "航线库" }, { name: "锁位管理" }
+            ]
+          },
+          {
+            groupName: "邮轮与专列",
+            items: [
+              { name: "船公司" }, { name: "船只档案" }, { name: "邮轮航线" },
+              { name: "运营商" }, { name: "专列线路" }
+            ]
+          },
+          {
+            groupName: "外协服务",
+            items: [
+              { name: "供应商管理" }, { name: "领队资源" }, { name: "别名标准化" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "产品",
+        icon: "package-search",
+        groups: [
+          {
+            groupName: "智能运营",
+            items: [
+              { name: "AI智能上架", action: () => openAiUploadModal() },
+              { name: "产品市场" }
+            ]
+          },
+          {
+            groupName: "产品管理",
+            items: [
+              { name: "自营产品", view: "list", active: true },
+              { name: "外采产品" },
+              { name: "邮轮产品" },
+              { name: "专列产品" },
+              { name: "自由行" },
+              { name: "单项委托" },
+              { name: "研学产品" }
+            ]
+          },
+          {
+            groupName: "审批与渠道",
+            items: [
+              { name: "产品审核" },
+              { name: "定价策略" },
+              { name: "渠道授权" },
+              { name: "竞品价格" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "出团",
+        icon: "truck",
+        groups: [
+          {
+            groupName: "组团执行",
+            items: [
+              { name: "单团自组" }
+            ]
+          },
+          {
+            groupName: "团期团控",
+            items: [
+              { name: "团期列表" }, { name: "团期日历" }, { name: "批量开排", action: () => openScheduleModal() }, { name: "团期详情" }
+            ]
+          },
+          {
+            groupName: "团期成本",
+            items: [
+              { name: "成本确认" }, { name: "供应商费用" }, { name: "发起付款申请" }
+            ]
+          },
+          {
+            groupName: "过程落实",
+            items: [
+              { name: "名单管理" }, { name: "证件资料" }, { name: "签证进度" }, { name: "出团通知" }, { name: "领队分配" }
+            ]
+          },
+          {
+            groupName: "回团归档",
+            items: [
+              { name: "回团处理" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "销售",
+        icon: "badge-percent",
+        groups: [
+          {
+            groupName: "前台报价",
+            items: [
+              { name: "产品浏览与报价" }, { name: "报价单" }
+            ]
+          },
+          {
+            groupName: "销售流程",
+            items: [
+              { name: "意向订单" }, { name: "订单管理" }, { name: "合同管理" }
+            ]
+          },
+          {
+            groupName: "售后协助",
+            items: [
+              { name: "转团" }, { name: "改签改期" }, { name: "退款申请" }
+            ]
+          },
+          {
+            groupName: "门店与坐席",
+            items: [
+              { name: "门店管理" }, { name: "顾问管理" }, { name: "业绩目标" },
+              { name: "坐席工作台" }, { name: "通话记录" }, { name: "外呼任务" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "渠道",
+        icon: "share-2",
+        groups: [
+          {
+            groupName: "分销代理",
+            items: [
+              { name: "渠道来源" }
+            ]
+          },
+          {
+            groupName: "OTA平台对接",
+            items: [
+              { name: "OTA产品" }, { name: "OTA订单" }, { name: "OTA退款" }, { name: "OTA对账" }, { name: "同步日志" }
+            ]
+          },
+          {
+            groupName: "同业联络",
+            items: [
+              { name: "分销商管理" }, { name: "代理商管理" }, { name: "佣金规则" }, { name: "渠道数据" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "客户",
+        icon: "users",
+        groups: [
+          {
+            groupName: "CRM控制",
+            items: [
+              { name: "客户列表" }, { name: "客户详情" }, { name: "跟进记录" }, { name: "会员管理" }, { name: "客户标签" }, { name: "客户分群" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "客服",
+        icon: "headset",
+        groups: [
+          {
+            groupName: "工单派遣",
+            items: [
+              { name: "工单列表" }, { name: "工单详情" }, { name: "退款协助" }, { name: "AI转人工" }, { name: "投诉升级" }, { name: "工单统计" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "财务",
+        icon: "landmark",
+        groups: [
+          {
+            groupName: "收付款台账",
+            items: [
+              { name: "收款管理" }, { name: "认款管理" }, { name: "应收管理" }, { name: "应付管理" }
+            ]
+          },
+          {
+            groupName: "财务执行",
+            items: [
+              { name: "付款执行" }, { name: "退款执行" }, { name: "对账结算" }
+            ]
+          },
+          {
+            groupName: "发票汇率",
+            items: [
+              { name: "发票管理" }, { name: "回单管理" }, { name: "资金池" }, { name: "汇率币种" }, { name: "NC推送" }
+            ]
+          },
+          {
+            groupName: "盈亏对账表",
+            items: [
+              { name: "团期盈亏" }, { name: "收款统计" }, { name: "付款统计" }, { name: "预付款" }, { name: "资金池余额" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "审批",
+        icon: "clipboard-check",
+        groups: [
+          {
+            groupName: "流程审批",
+            items: [
+              { name: "待我审批" }, { name: "我发起的" }, { name: "审批总览" }, { name: "审批配置" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "数据",
+        icon: "bar-chart-2",
+        groups: [
+          {
+            groupName: "决策驾驶舱",
+            items: [
+              { name: "经营驾驶舱" }, { name: "产品分析" }, { name: "团期利润" }, { name: "渠道分析" }, { name: "客户价值" }, { name: "价格分析" }, { name: "财务分析" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "AI辅助",
+        icon: "bot",
+        groups: [
+          {
+            groupName: "数智工具",
+            items: [
+              { name: "线路拆解" }, { name: "竞品分析" }, { name: "签证审查" }, { name: "出行助理" }, { name: "Prompt模板" }, { name: "使用统计" }, { name: "模型路由" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "系统",
+        icon: "settings",
+        groups: [
+          {
+            groupName: "系统参数",
+            items: [
+              { name: "组织架构" }, { name: "角色权限" }, { name: "员工账号" }, { name: "接口配置" }, { name: "基础参数" }, { name: "通知模板" }, { name: "操作审计" }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // 线路及团期本地运行数据库
+    let productDatabase = [
+      {
+        id: "GT-EU-001",
+        lineCode: "GT-EU-001",
+        lineType: "跟团线路",
+        lineName: "欧洲十国经典游 12日11晚",
+        subTitle: "纯玩无购物，法德瑞意核心城市连线，含中文领队与签证协助",
+        supplier: "欧洲地接ABC",
+        ownerOrg: "欧洲线路中心",
+        travelType: "出境游",
+        departCity: "北京",
+        destinationCountry: "法国 / 德国 / 瑞士 / 意大利",
+        destinationCity: "巴黎 / 法兰克福 / 卢塞恩 / 米兰 / 罗马",
+        tags: ["纯玩", "含签证", "中文领队"],
+        audience: "首次欧洲出游、银发客群、家庭客群",
+        status: "已上架",
+        price: 29800,
+        plans: {
+          "经济款": {
+            planName: "经济款",
+            hotelLevel: "三星/四星混排",
+            durationDays: 12,
+            nightCount: 11,
+            passingCities: "巴黎 / 卢塞恩 / 米兰 / 佛罗伦萨 / 罗马",
+            itinerary: [
+              { day: 1, desc: "北京大兴/首都机场集合，由领队协助办理出境，直飞浪漫巴黎。", cateringAndHotel: "自理 / 巴黎三星或同级" },
+              { day: 2, desc: "巴黎市区游：游览协和广场，凯旋门和香榭丽舍，外观卢浮宫。", cateringAndHotel: "早中 / 巴黎三星或同级" },
+              { day: 3, desc: "沿途观赏法兰西田园自然胜景，漫步第戎中世纪历史街区。", cateringAndHotel: "早中晚 / 第戎精品舒适酒店" }
+            ]
+          },
+          "品质款": {
+            planName: "品质款",
+            hotelLevel: "全程五星",
+            durationDays: 12,
+            nightCount: 11,
+            passingCities: "巴黎 / 阿尔卑斯山 / 威尼斯 / 罗马",
+            itinerary: [
+              { day: 1, desc: "贵宾于机场 VIP 厅集合，专人带队直飞法国，专车送往市中心高端酒店。", cateringAndHotel: "机上 / 巴黎华丽五星" },
+              { day: 2, desc: "官方讲解带您入内细戏品味卢浮宫藏品。下午体验塞纳河烛光游船晚餐。", cateringAndHotel: "早 / 巴黎华丽五星" }
+            ]
+          }
+        },
+        childPolicy: "2-12岁不占床按8折核算，占床与成人同价",
+        revenuePolicy: "订单成团并完成结算后确认",
+        includeFee: "行程内标准酒店双人间、大巴、优秀国导陪同、首道大门票。",
+        excludeFee: "护照及办签衍生费、个人额外消费自理。",
+        refundRule: "出发前30天无损退，15天内收取30%违约损失。",
+        schedules: [
+          { code: "EU260715001", date: "2026-07-15", seats: "12 / 30人", status: "销售中", price: 29800 },
+          { code: "EU260728001", date: "2026-07-28", seats: "28 / 30人", status: "已满员", price: 29800 },
+          { code: "EU261025001", date: "2026-10-25", seats: "0 / 30人", status: "待售", price: 29800 }
+        ]
+      },
+      {
+        id: "GT-JP-002",
+        lineCode: "GT-JP-002",
+        lineType: "跟团线路",
+        lineName: "日本关西深度游 7日6晚",
+        subTitle: "探秘京都古意、大阪繁华与奈良温驯神鹿，温泉美食深度人文",
+        supplier: "日本地接XYZ",
+        ownerOrg: "亚洲线路中心",
+        travelType: "出境游",
+        departCity: "上海",
+        destinationCountry: "日本",
+        destinationCity: "大阪 / 京都 / 奈良",
+        tags: ["古都巡礼", "双温泉", "怀石料理"],
+        audience: "家庭亲子、深度文青、摄影发烧友",
+        status: "已上架",
+        price: 12800,
+        plans: {
+          "标准版": {
+            planName: "标准版",
+            hotelLevel: "全程四星",
+            durationDays: 7,
+            nightCount: 6,
+            passingCities: "大阪 / 京都 / 奈良",
+            itinerary: [
+              { day: 1, desc: "上海集结飞往关西国际机场，专车接送，下榻大阪心斋桥附近酒店。", cateringAndHotel: "自理 / 大阪精选四星" },
+              { day: 2, desc: "整日京都游览：穿梭千本鸟居、清水寺眺望，晚间体验正宗和风温泉。", cateringAndHotel: "早中 / 京都町屋温泉酒店" }
+            ]
+          }
+        },
+        childPolicy: "4-12岁占床收取成人价格的90%",
+        revenuePolicy: "出团后按实际结算确认",
+        includeFee: "全程往返中日国际机票、高端专车、双温泉酒店。",
+        excludeFee: "自费体验、私人和服租赁、不占床单房差。",
+        refundRule: "一经出票，机票款不退；地接部分出发前10天可免费调整。",
+        schedules: [
+          { code: "JP260805001", date: "2026-08-05", seats: "15 / 25人", status: "销售中", price: 12800 }
+        ]
+      }
+    ];
+
+    let currentActiveId = "GT-EU-001";
+    let activeDetailTab = "info";
+    let activeEditStep = 1;
+    let editForm_activePlanKey = "经济款";
+    let currentEditState = null;
+    let currentCostData = [];
+
+    // 当前激活的顶级一级菜单索引（默认高亮“产品”大类：索引为 2）
+    let activeTopNavIndex = 2;
+
+    // 初始化注册监听
+    window.addEventListener("DOMContentLoaded", function() {
+      renderTopHeaderNav();
+      renderSidebarMenu(activeTopNavIndex);
+      switchView("list");
+      renderProductTable();
+    });
+
+    // --- T型菜单之：顶部顶级页签渲染 ---
+    function renderTopHeaderNav() {
+      const container = document.getElementById("topHeaderNav");
+      container.innerHTML = "";
+
+      systemMenuData.forEach((menu, idx) => {
+        const isActive = idx === activeTopNavIndex;
+        const btn = document.createElement("button");
+        btn.className = `h-10 px-3 flex items-center gap-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+          isActive 
+            ? 'bg-brand-50 text-brand-800' 
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+        }`;
+        btn.innerHTML = `
+          <i data-lucide="${menu.icon}" class="w-4 h-4 ${isActive ? 'text-brand-800' : 'text-slate-400'}"></i>
+          <span>${menu.title}</span>
+        `;
+        btn.onclick = () => {
+          activeTopNavIndex = idx;
+          renderTopHeaderNav();
+          renderSidebarMenu(idx);
+          // 默认加载第一个叶子项的动作
+          if (menu.groups && menu.groups[0] && menu.groups[0].items[0]) {
+            const firstItem = menu.groups[0].items[0];
+            if (firstItem.action) firstItem.action();
+            else if (firstItem.view) switchView(firstItem.view);
+          }
+        };
+        container.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    // --- T型菜单之：左侧 3 级折叠树渲染 ---
+    function renderSidebarMenu(topIdx) {
+      const activeMenu = systemMenuData[topIdx];
+      document.getElementById("activeModuleTitle").innerHTML = `
+        <i data-lucide="${activeMenu.icon}" class="w-4 h-4 text-brand-800"></i>
+        <span>${activeMenu.title}主控台</span>
+      `;
+
+      const container = document.getElementById("sidebarMenuContainer");
+      container.innerHTML = "";
+
+      activeMenu.groups.forEach((group, gIdx) => {
+        const groupWrap = document.createElement("div");
+        groupWrap.className = "space-y-1.5 border-b border-slate-100 pb-3 mb-2 last:border-b-0";
+
+        // 二级分组：手风琴组头
+        const groupTitleBtn = document.createElement("button");
+        groupTitleBtn.className = "w-full text-left py-1.5 px-2.5 text-[10px] font-extrabold text-slate-400 hover:text-slate-700 uppercase tracking-widest flex items-center justify-between";
+        groupTitleBtn.innerHTML = `
+          <span>${group.groupName}</span>
+          <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
+        `;
+
+        const itemsBox = document.createElement("div");
+        itemsBox.className = "space-y-0.5 pl-1.5 transition-all";
+        itemsBox.id = `items-group-${topIdx}-${gIdx}`;
+
+        groupTitleBtn.onclick = () => {
+          const isHidden = itemsBox.classList.toggle("hidden");
+          groupTitleBtn.querySelector("i").style.transform = isHidden ? 'rotate(-90deg)' : 'rotate(0deg)';
+        };
+
+        // 三级动作/视窗节点
+        group.items.forEach(item => {
+          const btn = document.createElement("button");
+          const isSelected = item.active || item.name === "自营产品";
+          btn.className = `w-full text-left py-1.5 px-3 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-between transition-all ${
+            isSelected ? 'secondary-menu-active' : ''
+          }`;
+          btn.innerHTML = `
+            <span>${item.name}</span>
+            <i data-lucide="chevron-right" class="w-3 h-3 opacity-0"></i>
+          `;
+
+          btn.onclick = () => {
+            document.querySelectorAll("#sidebarMenuContainer button").forEach(b => b.classList.remove("secondary-menu-active"));
+            btn.classList.add("secondary-menu-active");
+
+            if (item.action) {
+              item.action();
+            } else if (item.view) {
+              switchView(item.view);
+            } else {
+              showToast(`成功切换业务窗：${item.name}`, "info");
+              switchView("list");
+            }
+          };
+
+          itemsBox.appendChild(btn);
+        });
+
+        groupWrap.appendChild(groupTitleBtn);
+        groupWrap.appendChild(itemsBox);
+        container.appendChild(groupWrap);
+      });
+
+      lucide.createIcons();
+    }
+
+    // 左边栏树检索过滤
+    function filterLeftSidebar() {
+      const query = document.getElementById("menuSearchInput").value.trim().toLowerCase();
+      const buttons = document.querySelectorAll("#sidebarMenuContainer button");
+
+      buttons.forEach(btn => {
+        const text = btn.textContent.toLowerCase();
+        if (text.includes(query)) {
+          btn.classList.remove("hidden");
+        } else {
+          // 排除组大头，不隐藏
+          if (!btn.classList.contains("uppercase")) {
+            btn.classList.add("hidden");
+          }
+        }
+      });
+    }
+
+    // --- SPA 页面切换控制 ---
+    function switchView(viewName) {
+      document.getElementById("viewList").classList.add("hidden");
+      document.getElementById("viewDetail").classList.add("hidden");
+      document.getElementById("viewEdit").classList.add("hidden");
+
+      if (viewName === "list") {
+        document.getElementById("viewList").classList.remove("hidden");
+      } else if (viewName === "detail") {
+        document.getElementById("viewDetail").classList.remove("hidden");
+        syncActiveDetailToUI();
+      } else if (viewName === "edit") {
+        document.getElementById("viewEdit").classList.remove("hidden");
+      }
+      lucide.createIcons();
+    }
+
+    // --- VIEW 1: 自营产品列表行为 ---
+    function renderProductTable() {
+      const tbody = document.getElementById("productTableBody");
+      tbody.innerHTML = "";
+
+      productDatabase.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/50 transition-colors border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="p-4"><input type="checkbox" class="rounded"></td>
+          <td class="p-4">
+            <button onclick="viewProductDetail('${item.id}')" class="text-xs font-bold text-brand-800 hover:underline text-left block">
+              ${item.lineName}
+            </button>
+            <span class="text-[10px] text-slate-400 font-mono mt-0.5 block">${item.lineCode} · ${item.departCity}出发</span>
+          </td>
+          <td class="p-4">
+            <span class="px-2 py-0.5 bg-blue-50 text-brand-800 font-bold rounded border border-blue-100 text-[10px]">${item.lineType}</span>
+          </td>
+          <td class="p-4 text-slate-500 max-w-xs truncate" title="${item.subTitle}">
+            ${item.subTitle}
+          </td>
+          <td class="p-4 text-slate-600 font-semibold">
+            ${Object.keys(item.plans).length} 个方案
+          </td>
+          <td class="p-4 text-slate-500">
+            ${item.schedules.length} 个开班团期
+          </td>
+          <td class="p-4 text-slate-500">
+            <strong>${item.ownerOrg}</strong>
+            <span class="block text-[10px] text-slate-400">${item.supplier}</span>
+          </td>
+          <td class="p-4">
+            <span class="tag px-2 py-0.5 font-bold rounded-md ${
+              item.status === '已上架' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+              item.status === '审核中' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+              'bg-slate-100 text-slate-500 border border-slate-200'
+            }">${item.status}</span>
+          </td>
+          <td class="p-4">
+            <div class="flex items-center gap-2">
+              <button class="px-2 py-1 bg-slate-100 hover:bg-brand-100 hover:text-brand-800 text-slate-600 rounded text-[10px] font-semibold" onclick="enterEditMode('${item.id}')">编辑</button>
+              <button class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px]" onclick="viewProductDetail('${item.id}')">详情</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function switchListTab(type, element) {
+      document.querySelectorAll(".list-tab").forEach(tab => {
+        tab.classList.remove("text-brand-800", "border-b-2", "border-brand-800");
+        tab.classList.add("text-slate-500");
+      });
+      element.classList.add("text-brand-800", "border-b-2", "border-brand-800");
+
+      if (type === '全部') {
+        renderProductTable();
+      } else {
+        const tbody = document.getElementById("productTableBody");
+        tbody.innerHTML = "";
+        const filtered = productDatabase.filter(item => item.lineType.includes(type));
+        filtered.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-50/50 transition-colors border-b border-slate-100";
+          tr.innerHTML = `
+            <td class="p-4"><input type="checkbox" class="rounded"></td>
+            <td class="p-4">
+              <button onclick="viewProductDetail('${item.id}')" class="text-xs font-bold text-brand-800 hover:underline text-left block">
+                ${item.lineName}
+              </button>
+              <span class="text-[10px] text-slate-400 font-mono mt-0.5 block">${item.lineCode} · ${item.departCity}出发</span>
+            </td>
+            <td class="p-4">
+              <span class="px-2 py-0.5 bg-blue-50 text-brand-800 font-bold rounded border border-blue-100 text-[10px]">${item.lineType}</span>
+            </td>
+            <td class="p-4 text-slate-500 max-w-xs truncate">${item.subTitle}</td>
+            <td class="p-4 text-slate-600 font-semibold">${Object.keys(item.plans).length} 个方案</td>
+            <td class="p-4 text-slate-500">${item.schedules.length} 个开班团期</td>
+            <td class="p-4 text-slate-500"><strong>${item.ownerOrg}</strong><span class="block text-[10px] text-slate-400">${item.supplier}</span></td>
+            <td class="p-4"><span class="tag px-2 py-0.5 rounded-md ${item.status === '已上架' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100'}">${item.status}</span></td>
+            <td class="p-4">
+              <div class="flex items-center gap-2">
+                <button class="px-2 py-1 bg-slate-100 hover:bg-brand-100 text-slate-600 rounded text-[10px]" onclick="enterEditMode('${item.id}')">编辑</button>
+                <button class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px]" onclick="viewProductDetail('${item.id}')">详情</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    function toggleSelectAll(checkbox) {
+      document.querySelectorAll("#productTableBody input[type='checkbox']").forEach(box => {
+        box.checked = checkbox.checked;
+      });
+    }
+
+    function viewProductDetail(id) {
+      currentActiveId = id;
+      switchView("detail");
+    }
+
+    // --- VIEW 2: 产品详情面板行为 ---
+    function syncActiveDetailToUI() {
+      const activeObj = productDatabase.find(item => item.id === currentActiveId);
+      if (!activeObj) return;
+
+      document.getElementById("detailHeaderTitle").textContent = activeObj.lineName;
+      document.getElementById("detailCoverTitle").textContent = activeObj.lineName;
+      document.getElementById("detailCode").textContent = activeObj.lineCode;
+      document.getElementById("detailDepartCity").textContent = activeObj.departCity;
+      document.getElementById("detailOwnerOrg").textContent = activeObj.ownerOrg;
+      document.getElementById("detailTravelType").textContent = activeObj.travelType;
+      document.getElementById("detailSupplier").textContent = activeObj.supplier;
+      document.getElementById("detailPrice").textContent = `¥${activeObj.price.toLocaleString()}`;
+      
+      const badge = document.getElementById("detailStatusBadge");
+      badge.textContent = activeObj.status;
+      badge.className = `text-[10px] font-bold px-2 py-0.5 rounded-full ${activeObj.status === '已上架' ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white'}`;
+
+      const tagsText = activeObj.tags.join(" , ");
+      document.getElementById("detailTags").textContent = tagsText;
+
+      document.getElementById("detailSubTitle").textContent = activeObj.subTitle;
+      document.getElementById("detailIncludeFee").textContent = activeObj.includeFee;
+      document.getElementById("detailExcludeFee").textContent = activeObj.excludeFee;
+      document.getElementById("detailRefundRule").textContent = activeObj.refundRule;
+
+      renderDetailPlansLayout(activeObj);
+      renderDetailSchedulesTable(activeObj);
+    }
+
+    function switchDetailTab(tabName, element) {
+      document.querySelectorAll(".detail-tab").forEach(tab => {
+        tab.classList.remove("text-brand-800", "border-b-2", "border-brand-800");
+        tab.classList.add("text-slate-500");
+      });
+      element.classList.add("text-brand-800", "border-b-2", "border-brand-800");
+
+      document.querySelectorAll(".detail-tab-panel").forEach(p => p.classList.add("hidden"));
+      const target = document.getElementById(`detailPanel_${tabName}`);
+      if (target) target.classList.remove("hidden");
+    }
+
+    function renderDetailPlansLayout(activeObj) {
+      const planContainer = document.getElementById("detailPlanTabs");
+      planContainer.innerHTML = "";
+
+      const keys = Object.keys(activeObj.plans);
+      if (keys.length === 0) {
+        planContainer.innerHTML = "<span class='text-slate-400 text-xs'>暂无方案，请在编辑中新增</span>";
+        return;
+      }
+
+      keys.forEach((key, index) => {
+        const plan = activeObj.plans[key];
+        const isSelected = index === 0;
+        const btn = document.createElement("button");
+        btn.className = `w-full text-left p-3 rounded-lg border text-xs font-semibold ${
+          isSelected ? 'bg-brand-800 text-white border-brand-800 shadow-md' : 'bg-white text-slate-700 border-slate-200'
+        }`;
+        btn.textContent = plan.planName;
+        btn.onclick = () => {
+          document.querySelectorAll("#detailPlanTabs button").forEach(b => {
+            b.className = "w-full text-left p-3 rounded-lg border text-xs font-semibold bg-white text-slate-700 border-slate-200";
+          });
+          btn.className = "w-full text-left p-3 rounded-lg border text-xs font-semibold bg-brand-800 text-white border-brand-800 shadow-md";
+          syncActiveDetailPlanToPreview(plan);
+        };
+        planContainer.appendChild(btn);
+
+        if (isSelected) {
+          syncActiveDetailPlanToPreview(plan);
+        }
+      });
+    }
+
+    function syncActiveDetailPlanToPreview(plan) {
+      document.getElementById("detailActivePlanLabel").textContent = plan.planName;
+      document.getElementById("detailActivePlanMeta").textContent = `${plan.durationDays}天${plan.nightCount || (plan.durationDays-1)}晚 · ${plan.hotelLevel}`;
+      document.getElementById("detailActivePlanPassing").textContent = plan.passingCities;
+
+      const itinContainer = document.getElementById("detailActivePlanItinerary");
+      itinContainer.innerHTML = "";
+
+      plan.itinerary.forEach(item => {
+        const itemWrap = document.createElement("div");
+        itemWrap.className = "flex gap-3 text-xs items-start bg-slate-50 p-3 rounded-lg border border-slate-200";
+        itemWrap.innerHTML = `
+          <span class="w-8 h-8 rounded-lg bg-brand-800 text-white font-bold flex items-center justify-center shrink-0">D${item.day}</span>
+          <div class="flex-1 space-y-1">
+            <p class="text-slate-800 font-medium leading-relaxed">${item.desc}</p>
+            <div class="text-[10px] text-slate-400">
+              <span class="mr-3">餐饮吃住：${item.cateringAndHotel}</span>
+            </div>
+          </div>
+        `;
+        itinContainer.appendChild(itemWrap);
+      });
+    }
+
+    function renderDetailSchedulesTable(activeObj) {
+      const tbody = document.getElementById("detailSchedulesTable");
+      tbody.innerHTML = "";
+
+      if (activeObj.schedules.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' class='p-3 text-slate-400 text-center'>暂无团期班期</td></tr>";
+        return;
+      }
+
+      activeObj.schedules.forEach(sc => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-slate-100 hover:bg-slate-50/50";
+        tr.innerHTML = `
+          <td class="p-3 font-semibold font-mono text-slate-900">${sc.code}</td>
+          <td class="p-3 font-mono">${sc.date}</td>
+          <td class="p-3 font-bold text-slate-600">${sc.seats}</td>
+          <td class="p-3 font-bold text-brand-800">¥${sc.price.toLocaleString()}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-brand-800 font-bold border border-blue-100">${sc.status}</span></td>
+          <td class="p-3">
+            <button class="text-brand-800 hover:underline font-bold" onclick="openCostModal('${sc.code}', '${sc.price}')">核算成本</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function triggerShelfState() {
+      const activeObj = productDatabase.find(item => item.id === currentActiveId);
+      if (activeObj) {
+        activeObj.status = activeObj.status === '已上架' ? '已下架' : '已上架';
+        syncActiveDetailToUI();
+        renderProductTable();
+        showToast(`产品状态调整为：${activeObj.status}`, "success");
+      }
+    }
+
+    function cloneCurrentRouteAsDraft() {
+      const activeObj = productDatabase.find(item => item.id === currentActiveId);
+      if (activeObj) {
+        const clone = JSON.parse(JSON.stringify(activeObj));
+        clone.id = `GT-CLONE-${Date.now()}`;
+        clone.lineCode = `GT-CLONE-${Math.floor(Math.random()*1000)}`;
+        clone.lineName += " (副本)";
+        clone.status = "草稿";
+        productDatabase.push(clone);
+        renderProductTable();
+        showToast("已成功复制新草稿，请在列表中查看编辑！", "success");
+        switchView("list");
+      }
+    }
+
+    function editCurrentProduct() {
+      enterEditMode(currentActiveId);
+    }
+
+    // --- VIEW 3: 新建、编辑产品主面板行为 ---
+    function enterEditMode(id) {
+      if (id) {
+        currentActiveId = id;
+        const activeObj = productDatabase.find(item => item.id === id);
+        currentEditState = JSON.parse(JSON.stringify(activeObj));
+      } else {
+        currentEditState = {
+          id: `GT-NEW-${Date.now()}`,
+          lineCode: `GT-NEW-${Math.floor(Math.random()*1000)}`,
+          lineType: "跟团线路",
+          lineName: "全新出境游项目 大纲待确认",
+          subTitle: "亮点大纲待编辑",
+          supplier: "欧洲地接ABC",
+          ownerOrg: "欧洲线路中心",
+          travelType: "出境游",
+          departCity: "北京",
+          destinationCountry: "目的地国家/地区",
+          destinationCity: "目的地城市",
+          tags: ["纯玩"],
+          audience: "家庭, 银发, 白领",
+          status: "草稿",
+          price: 19800,
+          plans: {
+            "标准方案": {
+              planName: "标准方案",
+              hotelLevel: "全程四星",
+              durationDays: 5,
+              nightCount: 4,
+              passingCities: "巴黎",
+              itinerary: [
+                { day: 1, desc: "首日集结，准备启航前往奢华度假胜地。", cateringAndHotel: "机上 / 精选星级酒店" }
+              ]
+            }
+          },
+          childPolicy: "与成人同价",
+          revenuePolicy: "订单成团并完成结算后确认",
+          includeFee: "行程所列景点游玩、大巴用车、导游讲解、酒店晚数。",
+          excludeFee: "个人产生费用、境外衍生签证规费等。",
+          refundRule: "按凯撒集团统一通用退改标准核准。",
+          schedules: []
+        };
+      }
+
+      document.getElementById("editForm_lineCode").value = currentEditState.lineCode;
+      document.getElementById("editForm_lineType").value = currentEditState.lineType;
+      document.getElementById("editForm_lineName").value = currentEditState.lineName;
+      document.getElementById("lineNameCount").textContent = `${currentEditState.lineName.length}/50`;
+      document.getElementById("editForm_subTitle").value = currentEditState.subTitle;
+      document.getElementById("editForm_supplier").value = currentEditState.supplier;
+      document.getElementById("editForm_ownerOrg").value = currentEditState.ownerOrg;
+
+      document.getElementById("editForm_travelType").value = currentEditState.travelType;
+      document.getElementById("editForm_departCity").value = currentEditState.departCity;
+      document.getElementById("editForm_destinationCountry").value = currentEditState.destinationCountry;
+      document.getElementById("editForm_destinationCity").value = currentEditState.destinationCity;
+      document.getElementById("editForm_audience").value = currentEditState.audience;
+
+      document.getElementById("editForm_childPolicy").value = currentEditState.childPolicy;
+      document.getElementById("editForm_revenuePolicy").value = currentEditState.revenuePolicy;
+      document.getElementById("editForm_includeFee").value = currentEditState.includeFee;
+      document.getElementById("editForm_excludeFee").value = currentEditState.excludeFee;
+      document.getElementById("editForm_refundRule").value = currentEditState.refundRule;
+
+      switchStep(1);
+      switchView("edit");
+    }
+
+    function switchStep(stepNum) {
+      currentEditState.currentStep = stepNum;
+
+      for (let i = 1; i <= 3; i++) {
+        const tab = document.getElementById(`stepTab${i}`);
+        const panel = document.getElementById(`stepPanel${i}`);
+
+        if (i === stepNum) {
+          tab.classList.add("bg-slate-100", "text-brand-800", "font-bold");
+          tab.querySelector(".step-num").classList.add("bg-brand-800", "text-white", "border-brand-800");
+          panel.classList.remove("hidden");
+        } else {
+          tab.classList.remove("bg-slate-100", "text-brand-800", "font-bold");
+          tab.querySelector(".step-num").classList.remove("bg-brand-800", "text-white", "border-brand-800");
+          panel.classList.add("hidden");
+        }
+      }
+
+      const prevBtn = document.getElementById("editPrevBtn");
+      const nextBtn = document.getElementById("editNextBtn");
+
+      prevBtn.disabled = (stepNum === 1);
+      
+      if (stepNum === 3) {
+        nextBtn.innerHTML = `
+          <span>确认并提交发布</span>
+          <i data-lucide="send" class="w-4 h-4"></i>
+        `;
+        nextBtn.onclick = () => submitEditPanel();
+      } else {
+        nextBtn.innerHTML = `
+          <span>下一步</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        `;
+        nextBtn.onclick = () => navigateStep(1);
+      }
+
+      if (stepNum === 2) {
+        renderEditPlansLayout();
+      }
+
+      lucide.createIcons();
+    }
+
+    function navigateStep(direction) {
+      const target = currentEditState.currentStep + direction;
+      if (target >= 1 && target <= 3) {
+        switchStep(target);
+      }
+    }
+
+    function renderEditPlansLayout() {
+      const container = document.getElementById("editForm_planListTabs");
+      container.innerHTML = "";
+
+      const keys = Object.keys(currentEditState.plans);
+      keys.forEach((key, index) => {
+        const plan = currentEditState.plans[key];
+        const isActive = editForm_activePlanKey === key;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `w-full text-left p-3.5 rounded-xl border transition-all duration-200 flex flex-col gap-1 ${
+          isActive 
+            ? 'bg-brand-800 text-white border-brand-800 shadow-md shadow-brand-900/10' 
+            : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+        }`;
+        btn.onclick = () => {
+          editForm_activePlanKey = key;
+          renderEditPlansLayout();
+        };
+        btn.innerHTML = `
+          <strong class="text-sm font-bold block">${plan.planName}</strong>
+          <span class="text-[11px] ${isActive ? 'text-blue-100' : 'text-slate-400'} block truncate">
+            ${plan.durationDays}天 · ${plan.hotelLevel}
+          </span>
+        `;
+        container.appendChild(btn);
+      });
+
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (activePlan) {
+        document.getElementById("activePlanLabel").textContent = activePlan.planName;
+        document.getElementById("editForm_activePlanName").value = activePlan.planName;
+        document.getElementById("editForm_activePlanDays").value = activePlan.durationDays;
+        document.getElementById("editForm_activePlanHotel").value = activePlan.hotelLevel;
+        document.getElementById("editForm_activePlanPassing").value = activePlan.passingCities;
+
+        renderEditDaysList(activePlan);
+      }
+    }
+
+    function renderEditDaysList(activePlan) {
+      const container = document.getElementById("editForm_daysList");
+      container.innerHTML = "";
+
+      activePlan.itinerary.forEach((item, index) => {
+        const dayCard = document.createElement("div");
+        dayCard.className = "bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col md:flex-row gap-4 items-start relative hover:shadow-sm transition-all duration-150";
+        dayCard.innerHTML = `
+          <span class="w-8 h-8 rounded-lg bg-brand-800 text-white font-bold flex items-center justify-center shrink-0">D${item.day}</span>
+          <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="md:col-span-2">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">分日行车/游览/景点</label>
+              <textarea class="w-full p-2 border border-slate-300 rounded-lg text-xs" rows="2" oninput="updateEditDayDesc(${index}, this.value)">${item.desc}</textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">餐饮/住宿安排</label>
+              <input type="text" class="w-full p-2 border border-slate-300 rounded-lg text-xs" value="${item.cateringAndHotel}" oninput="updateEditDayHotel(${index}, this.value)">
+            </div>
+          </div>
+        `;
+        container.appendChild(dayCard);
+      });
+    }
+
+    function updateEditDayDesc(idx, val) {
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (activePlan) activePlan.itinerary[idx].desc = val;
+    }
+
+    function updateEditDayHotel(idx, val) {
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (activePlan) activePlan.itinerary[idx].cateringAndHotel = val;
+    }
+
+    function updateActiveEditPlan(field, val) {
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (activePlan) {
+        activePlan[field] = val;
+        if (field === 'planName') {
+          const oldKey = editForm_activePlanKey;
+          currentEditState.plans[val] = activePlan;
+          delete currentEditState.plans[oldKey];
+          editForm_activePlanKey = val;
+          renderEditPlansLayout();
+        }
+      }
+    }
+
+    function updateEditPlanDays(val) {
+      const num = parseInt(val) || 1;
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (activePlan) {
+        activePlan.durationDays = num;
+        activePlan.nightCount = Math.max(0, num - 1);
+        const curLen = activePlan.itinerary.length;
+        if (num > curLen) {
+          for (let i = curLen + 1; i <= num; i++) {
+            activePlan.itinerary.push({ day: i, desc: `第 ${i} 天自主探索或统一行程游览规划。`, cateringAndHotel: "早含 / 品质星级酒店" });
+          }
+        } else if (num < curLen) {
+          activePlan.itinerary.splice(num);
+        }
+        renderEditDaysList(activePlan);
+      }
+    }
+
+    function duplicateEditPlan() {
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (activePlan) {
+        const clone = JSON.parse(JSON.stringify(activePlan));
+        const newName = `${activePlan.planName}-DUP`;
+        clone.planName = newName;
+        currentEditState.plans[newName] = clone;
+        editForm_activePlanKey = newName;
+        renderEditPlansLayout();
+        showToast("方案复制成功，您可以继续编辑细节！", "success");
+      }
+    }
+
+    function submitEditPanel() {
+      currentEditState.lineCode = document.getElementById("editForm_lineCode").value;
+      currentEditState.lineType = document.getElementById("editForm_lineType").value;
+      currentEditState.lineName = document.getElementById("editForm_lineName").value;
+      currentEditState.subTitle = document.getElementById("editForm_subTitle").value;
+      currentEditState.supplier = document.getElementById("editForm_supplier").value;
+      currentEditState.ownerOrg = document.getElementById("editForm_ownerOrg").value;
+
+      currentEditState.travelType = document.getElementById("editForm_travelType").value;
+      currentEditState.departCity = document.getElementById("editForm_departCity").value;
+      currentEditState.destinationCountry = document.getElementById("editForm_destinationCountry").value;
+      currentEditState.destinationCity = document.getElementById("editForm_destinationCity").value;
+      currentEditState.audience = document.getElementById("editForm_audience").value;
+
+      currentEditState.childPolicy = document.getElementById("editForm_childPolicy").value;
+      currentEditState.revenuePolicy = document.getElementById("editForm_revenuePolicy").value;
+      currentEditState.includeFee = document.getElementById("editForm_includeFee").value;
+      currentEditState.excludeFee = document.getElementById("editForm_excludeFee").value;
+      currentEditState.refundRule = document.getElementById("editForm_refundRule").value;
+
+      currentEditState.status = "已上架";
+
+      const idx = productDatabase.findIndex(item => item.id === currentActiveId);
+      if (idx !== -1) {
+        productDatabase[idx] = currentEditState;
+      } else {
+        productDatabase.unshift(currentEditState);
+        currentActiveId = currentEditState.id;
+      }
+
+      renderProductTable();
+      showToast("您的线路大档配置已正式通过业财校验，已成功推送并上架！", "success");
+      switchView("detail");
+    }
+
+    // --- Gemini 2.5 AI 智能行程大纲方案设计 ---
+    async function generateItineraryWithAI() {
+      const activePlan = currentEditState.plans[editForm_activePlanKey];
+      if (!activePlan) return;
+
+      const progressBox = document.getElementById("aiProgressBox");
+      progressBox.classList.remove("hidden");
+
+      const userPrompt = `
+        请为凯撒旅游的线路【${currentEditState.lineName}】中，名称为【${activePlan.planName}】的方案，智能生成一份共【${activePlan.durationDays}】天的精细分日行程。
+        途连目的地包括：${activePlan.passingCities}。
+        酒店定位标准：${activePlan.hotelLevel}。
+        出发地：${currentEditState.departCity}。
+      `;
+
+      const systemPrompt = `
+        你是一名凯撒旅游资深的欧洲游计调专家。请输出绝对标准的 JSON 数组格式，不要带任何 markdown 注释或包裹。
+        数组的格式要求如下：
+        [
+          {
+            "day": 1,
+            "desc": "详细具体的游览过程，包含交通、必游景点、时间分配...",
+            "cateringAndHotel": "餐食标准 / 推荐下榻酒店标准"
+          }
+        ]
+        输出的项目数必须严格为 ${activePlan.durationDays}。
+      `;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  day: { type: "INTEGER" },
+                  desc: { type: "STRING" },
+                  cateringAndHotel: { type: "STRING" }
+                },
+                required: ["day", "desc", "cateringAndHotel"]
+              }
+            }
+          }
+        };
+
+        const response = await fetchWithRetry(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }
+        );
+
+        const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("大模型未能成功反馈。");
+
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          activePlan.itinerary = parsed;
+          activePlan.durationDays = parsed.length;
+          activePlan.nightCount = Math.max(0, parsed.length - 1);
+          document.getElementById("editForm_activePlanDays").value = parsed.length;
+          renderEditDaysList(activePlan);
+          showToast(`🤖 AI 助理已成功为方案【${activePlan.planName}】生成完美的高端设计行程！`, "success");
+        }
+
+      } catch (error) {
+        console.error(error);
+        simulateLocalItineraryAIEngine(activePlan);
+      } finally {
+        progressBox.classList.add("hidden");
+      }
+    }
+
+    async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, delay));
+          return fetchWithRetry(url, options, retries - 1, delay * 2);
+        }
+        throw err;
+      }
+    }
+
+    function simulateLocalItineraryAIEngine(plan) {
+      showToast("大模型助理已转入本地专属计调知识库，并开始极速排班！", "info");
+      const localMock = [];
+      const days = plan.durationDays || 5;
+      const cities = plan.passingCities.split("/");
+
+      for (let i = 1; i <= days; i++) {
+        let city = cities[(i-1)%cities.length]?.trim() || "目的地小镇";
+        let desc = "";
+        let eatAndHotel = "早中含 / 当地四星";
+
+        if (i === 1) {
+          desc = `从【${currentEditState.departCity}】国际机场集合登机，由领队办理登机手续并搭乘航班。抵达【${city}】后，专车送您前往下榻酒店修整。`;
+          eatAndHotel = "自理 / 精选品质高端酒店";
+        } else if (i === days) {
+          desc = `在酒店内用完早餐，随后前往当地知名手信集市和自由漫步区。午后专车送往机场搭乘回程直飞航班，结束此次惬意体验。`;
+          eatAndHotel = "早含 / 飞机机上餐饮";
+        } else {
+          desc = `开启【${city}深度半日探索】。上午游览历史悠久的老城区广场、大教堂。下午由随行导游带路，入内参观极具代表性的地标展馆。`;
+          eatAndHotel = "早中含 / 当地高星级精品下榻";
+        }
+
+        localMock.push({ day: i, desc, cateringAndHotel: eatAndHotel });
+      }
+
+      plan.itinerary = localMock;
+      renderEditDaysList(plan);
+    }
+
+    function generateRandomCode() {
+      const date = new Date();
+      const random = Math.floor(Math.random() * 900) + 100;
+      const generated = `GT-EU-${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${random}`;
+      document.getElementById("editForm_lineCode").value = generated;
+      showToast(`已成功自动分配高标准产品编码：${generated}`, "success");
+    }
+
+    // --- 财务与团期成本计算器分析 (Cost Calculator) ---
+    function openCostModal(scheduleCode, basePrice) {
+      document.getElementById("costModalTitle").textContent = `团期成本核算与分析 - ${scheduleCode}`;
+      
+      const activeObj = productDatabase.find(item => item.id === currentActiveId);
+      document.getElementById("costModalPlanLabel").textContent = activeObj ? activeObj.lineName : "经济款";
+
+      currentCostData = [
+        { category: "欧洲当地大巴用车", supplier: "欧洲大巴集团", count: "12天", unitPrice: 1200, remark: "45座豪华巴士" },
+        { category: "境外全段四星精选住宿", supplier: "地接社联盟精选", count: "11晚", unitPrice: 380, remark: "含早餐" },
+        { category: "首道门票与地陪讲解", supplier: "卢浮宫/大剧院地陪", count: "30人", unitPrice: 180, remark: "官方持牌" }
+      ];
+
+      renderCostRows();
+      document.getElementById("costModal").classList.remove("hidden");
+    }
+
+    function renderCostRows() {
+      const tbody = document.getElementById("costRows");
+      tbody.innerHTML = "";
+
+      let totalCost = 0;
+      currentCostData.forEach((row, index) => {
+        const countNum = parseFloat(row.count) || 30;
+        const subtotal = countNum * row.unitPrice;
+        totalCost += subtotal;
+
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-slate-100 hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-2.5 font-medium">${row.category}</td>
+          <td class="p-2.5">${row.supplier}</td>
+          <td class="p-2.5 font-mono">${row.count}</td>
+          <td class="p-2.5 font-mono">¥${row.unitPrice}</td>
+          <td class="p-2.5 font-bold text-slate-800">¥${subtotal.toLocaleString()}</td>
+          <td class="p-2.5">
+            <button class="text-rose-600 font-bold hover:underline" onclick="removeCostRow(${index})">删除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const totalIncome = 894000;
+      const profit = totalIncome - totalCost;
+
+      document.getElementById("costTotalText").textContent = `¥${totalCost.toLocaleString()}`;
+      document.getElementById("profitText").textContent = `¥${profit.toLocaleString()} (毛利率 ${Math.round((profit / totalIncome) * 100)}%)`;
+    }
+
+    function addNewCostRow() {
+      currentCostData.push({
+        category: "新增临时补差/餐饮",
+        supplier: "当地合作社",
+        count: "30人",
+        unitPrice: 150,
+        remark: "备用金费用"
+      });
+      renderCostRows();
+      showToast("增补成功！已重新运算业财利润公式。", "success");
+    }
+
+    function removeCostRow(idx) {
+      currentCostData.splice(idx, 1);
+      renderCostRows();
+      showToast("已成功扣除此笔地接财务成本！", "info");
+    }
+
+    function saveCostApproval() {
+      closeCostModal();
+      showToast("财务成本草稿核对完成，已上报财务审核并推送NC应付归集 V3.0！", "success");
+    }
+
+    function closeCostModal() {
+      document.getElementById("costModal").classList.add("hidden");
+    }
+
+    // --- 快速排班功能 (Schedule Drawer) ---
+    function openScheduleModal() {
+      const select = document.getElementById("schedulePlanSelect");
+      select.innerHTML = "";
+      
+      const activeObj = productDatabase.find(item => item.id === currentActiveId);
+      if (activeObj) {
+        Object.keys(activeObj.plans).forEach(key => {
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.textContent = key;
+          select.appendChild(opt);
+        });
+      }
+
+      document.getElementById("scheduleModal").classList.remove("hidden");
+    }
+
+    function closeScheduleModal() {
+      document.getElementById("scheduleModal").classList.add("hidden");
+    }
+
+    function toggleScheduleDate(btn) {
+      btn.classList.toggle("bg-brand-800");
+      btn.classList.toggle("text-white");
+      btn.classList.toggle("border-brand-800");
+    }
+
+    function saveNewSchedules() {
+      const activeObj = productDatabase.find(item => item.id === currentActiveId);
+      if (activeObj) {
+        const price = parseInt(document.getElementById("schedulePrice").value) || 29800;
+        const seats = parseInt(document.getElementById("scheduleSeats").value) || 30;
+        
+        const selectedButtons = document.querySelectorAll("#scheduleModal button.text-white");
+        if (selectedButtons.length === 0) {
+          showToast("请至少选择一个出发班期日期！", "error");
+          return;
+        }
+
+        selectedButtons.forEach(btn => {
+          const date = btn.textContent;
+          const code = `EU${date.replace(/-/g, '').slice(2)}${Math.floor(Math.random()*100)}`;
+          activeObj.schedules.unshift({
+            code: code,
+            date: date,
+            seats: `0 / ${seats}人`,
+            status: "销售中",
+            price: price
+          });
+        });
+
+        syncActiveDetailToUI();
+        closeScheduleModal();
+        showToast("班期团期开排成功！已自动向携程、飞猪等各大渠道同步发布销售矩阵。", "success");
+      }
+    }
+
+    // --- AI智能上架抽屉控制器 ---
+    function openAiUploadModal() {
+      document.getElementById("aiUploadModal").classList.remove("hidden");
+      setTimeout(() => {
+        document.getElementById("aiUploadModalBody").classList.remove("translate-x-full");
+      }, 50);
+    }
+
+    function closeAiUploadModal() {
+      document.getElementById("aiUploadModalBody").classList.add("translate-x-full");
+      setTimeout(() => {
+        document.getElementById("aiUploadModal").classList.add("hidden");
+      }, 150);
+    }
+
+    function simulateAiExtraction() {
+      const text = document.getElementById("aiRawText").value.trim();
+      if (!text) {
+        showToast("原始文本资料为空，请粘贴大纲以供AI识别！", "error");
+        return;
+      }
+
+      const results = document.getElementById("aiProcessResults");
+      results.innerHTML = `
+        <div class="p-2.5 flex items-center justify-between"><span>基本线路要素 (名称, 天数, 目的地)</span><span class="text-emerald-600 font-bold">已写入</span></div>
+        <div class="p-2.5 flex items-center justify-between"><span>分日行程描述与标准</span><span class="text-emerald-600 font-bold">已生成D1-D5方案</span></div>
+        <div class="p-2.5 flex items-center justify-between"><span>财务边界 & 费用说明条款</span><span class="text-amber-600 font-semibold">需人工确认核实</span></div>
+      `;
+
+      showToast("🤖 大模型深度分析提取完毕！已为您创建线路新草稿并导入方案。", "success");
+
+      enterEditMode(null);
+      closeAiUploadModal();
+    }
+
+    // --- ERP Toast 消息弹窗辅助器 ---
+    function showToast(msg, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const div = document.createElement("div");
+      div.className = `p-4 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 max-w-sm border ${
+        type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+        type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+        'bg-blue-50 border-blue-200 text-brand-850'
+      }`;
+
+      div.innerHTML = `
+        <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-triangle' : 'info'}" class="w-5 h-5 shrink-0"></i>
+        <span class="text-xs font-semibold">${msg}</span>
+      `;
+      container.appendChild(div);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        div.classList.remove("translate-y-2", "opacity-0");
+      }, 50);
+
+      setTimeout(() => {
+        div.classList.add("opacity-0", "scale-95");
+        setTimeout(() => div.remove(), 300);
+      }, 3500);
+    }
+
+    function resetFilters() {
+      document.getElementById("searchName").value = "";
+      document.getElementById("searchDest").value = "";
+      document.getElementById("searchStatus").value = "";
+      renderProductTable();
+    }
+
+    function filterProducts() {
+      const name = document.getElementById("searchName").value.trim().toLowerCase();
+      const dest = document.getElementById("searchDest").value.trim().toLowerCase();
+      const status = document.getElementById("searchStatus").value;
+
+      const tbody = document.getElementById("productTableBody");
+      tbody.innerHTML = "";
+
+      const filtered = productDatabase.filter(item => {
+        if (name && !item.lineName.toLowerCase().includes(name) && !item.lineCode.toLowerCase().includes(name)) return false;
+        if (dest && !item.destinationCountry.toLowerCase().includes(dest) && !item.destinationCity.toLowerCase().includes(dest)) return false;
+        if (status && item.status !== status) return false;
+        return true;
+      });
+
+      filtered.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="p-4"><input type="checkbox" class="rounded"></td>
+          <td class="p-4">
+            <button onclick="viewProductDetail('${item.id}')" class="text-xs font-bold text-brand-800 hover:underline text-left block">${item.lineName}</button>
+            <span class="text-[10px] text-slate-400 font-mono mt-0.5 block">${item.lineCode} · ${item.departCity}出发</span>
+          </td>
+          <td class="p-4"><span class="px-2 py-0.5 bg-blue-50 text-brand-800 font-bold rounded border border-blue-100 text-[10px]">${item.lineType}</span></td>
+          <td class="p-4 text-slate-500 max-w-xs truncate">${item.subTitle}</td>
+          <td class="p-4 text-slate-600 font-semibold">${Object.keys(item.plans).length} 个方案</td>
+          <td class="p-4 text-slate-500">${item.schedules.length} 个开班团期</td>
+          <td class="p-4 text-slate-500"><strong>${item.ownerOrg}</strong><span class="block text-[10px] text-slate-400">${item.supplier}</span></td>
+          <td class="p-4"><span class="tag px-2 py-0.5 rounded-md ${item.status === '已上架' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100'}">${item.status}</span></td>
+          <td class="p-4">
+            <div class="flex items-center gap-2">
+              <button class="px-2 py-1 bg-slate-100 hover:bg-brand-100 text-slate-600 rounded text-[10px]" onclick="enterEditMode('${item.id}')">编辑</button>
+              <button class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px]" onclick="viewProductDetail('${item.id}')">详情</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

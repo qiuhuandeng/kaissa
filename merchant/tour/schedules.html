@@ -38,8 +38,8 @@
           <input id="productName" type="text" placeholder="请输入线路名称">
         </div>
         <div class="filter-item">
-          <label class="sr-only" for="scheduleCode">团号</label>
-          <input id="scheduleCode" type="text" placeholder="团号">
+          <label class="sr-only" for="scheduleCode">编号</label>
+          <input id="scheduleCode" type="text" placeholder="编号">
         </div>
         <div class="filter-item filter-item-wide filter-item-date-range">
           <label class="sr-only">出发日期范围</label>
@@ -54,24 +54,42 @@
           <select id="batchTypeFilter">
             <option value="全部">全部线路</option>
             <option value="普通团期">自营线路</option>
-            <option value="邮轮团期">邮轮线路</option>
-            <option value="专列团期">专列线路</option>
-            <option value="自由行库存">自由行库存</option>
-            <option value="研学团期">研学线路</option>
+            <option value="邮轮航次">邮轮线路</option>
+            <option value="专列班期">专列线路</option>
+            <option value="研学营期">研学线路</option>
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
           <label class="sr-only" for="scheduleStatus">销售状态</label>
           <select id="scheduleStatus">
             <option>全部</option>
-            <option>待售</option>
-            <option>销售中</option>
-            <option>售罄</option>
+            <option>筹备中</option>
+            <option>开放报名</option>
             <option>已截止</option>
-            <option>出团中</option>
-            <option>已锁团</option>
-            <option>已回团</option>
+            <option>售罄</option>
             <option>已取消</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="executionStatusFilter">执行状态</label>
+          <select id="executionStatusFilter">
+            <option>全部执行</option>
+            <option>未出团</option>
+            <option>操作中</option>
+            <option>已出发</option>
+            <option>已回团</option>
+            <option>已归档</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="settlementStatusFilter">结算状态</label>
+          <select id="settlementStatusFilter">
+            <option>全部结算</option>
+            <option>未维护成本</option>
+            <option>预估成本</option>
+            <option>实际成本确认</option>
+            <option>结算中</option>
+            <option>已结算</option>
           </select>
         </div>
         <div class="filter-actions">
@@ -81,38 +99,49 @@
       </div>
     </section>
 
+    <section id="currentRouteFilter" class="schedule-current-filter" hidden>
+      <div class="schedule-current-filter-main">
+        <span>当前线路</span>
+        <strong id="currentRouteFilterName">-</strong>
+        <em id="currentRouteFilterCount">0条</em>
+      </div>
+      <button class="table-link" type="button" data-clear-route-filter>清除</button>
+    </section>
+
   <section id="scheduleListPanel" data-schedule-panel="list">
 
   <nav class="tab-bar list-surface-tabs" aria-label="销售状态筛选" data-filter-tabs data-filter-target="#scheduleRows">
     <button class="tab-item active" type="button" data-filter-value="全部">全部(124)</button>
-    <button class="tab-item" type="button" data-filter-value="销售中">销售中(68)</button>
-    <button class="tab-item" type="button" data-filter-value="本周出团">本周出团(5)</button>
-    <button class="tab-item" type="button" data-filter-value="即将售罄">即将售罄(12)</button>
-    <button class="tab-item" type="button" data-filter-value="已回团">已回团(39)</button>
+    <button class="tab-item" type="button" data-filter-value="筹备中">筹备中</button>
+    <button class="tab-item" type="button" data-filter-value="开放报名">开放报名</button>
+    <button class="tab-item" type="button" data-filter-value="已截止">已截止</button>
+    <button class="tab-item" type="button" data-filter-value="售罄">售罄</button>
+    <button class="tab-item" type="button" data-filter-value="已取消">已取消</button>
   </nav>
 
   <section class="table-wrap schedule-list-table list-surface-table list-table-with-pagination" aria-label="团期列表">
     <table>
       <thead>
         <tr>
-          <th>库存编号</th>
+          <th>排期编号</th>
           <th>线路/方案</th>
-          <th>库存锚点</th>
-          <th>出发/使用日期</th>
-          <th>回团/截止日期</th>
-          <th>总库存</th>
+          <th>线路类型</th>
+          <th>出发日期</th>
+          <th>结束日期</th>
+          <th>容量</th>
           <th>已售</th>
           <th>可售</th>
-          <th>渠道库存</th>
+          <th>渠道名额</th>
           <th>销售价</th>
-          <th>负责计调/采购</th>
+          <th>负责计调</th>
           <th>销售状态</th>
-          <th>成本状态</th>
+          <th>执行状态</th>
+          <th>结算状态</th>
           <th>操作</th>
         </tr>
       </thead>
       <tbody id="scheduleRows">
-        <tr data-href="schedules-detail.html" data-tab-status="销售中 即将售罄">
+        <tr data-href="schedules-detail.html" data-tab-status="开放报名 未出团 预估成本 即将售罄">
           <td><a class="link-primary table-main-link" href="schedules-detail.html">EU20240715001</a></td>
           <td data-product="欧洲十国经典游" data-route="A线 法德意12天"><span class="schedule-product-name">欧洲十国经典游</span><span class="text-muted schedule-route-name">A线 法德意12天</span></td>
           <td><span class="tag tag-blue">普通团期</span></td>
@@ -124,11 +153,12 @@
           <td><span class="channel-seat-list"><span>门:5</span><span>携:8</span><span class="low">猪:4</span><span class="low">同:3</span><span>直:5</span><span class="low">协:3</span></span></td>
           <td>¥12,800</td>
           <td>周伟</td>
-          <td><span class="tag tag-blue">销售中</span></td>
-          <td><span class="tag tag-green">已维护</span></td>
+          <td><span class="tag tag-blue">开放报名</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-blue">预估成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html" data-tab-status="销售中">
+        <tr data-href="schedules-detail.html" data-tab-status="开放报名 未出团 未维护成本">
           <td><a class="link-primary table-main-link" href="schedules-detail.html">EU20240728001</a></td>
           <td data-product="欧洲十国经典游" data-route="B线 荷比德法12天"><span class="schedule-product-name">欧洲十国经典游</span><span class="text-muted schedule-route-name">B线 荷比德法12天</span></td>
           <td><span class="tag tag-blue">普通团期</span></td>
@@ -140,11 +170,12 @@
           <td><span class="channel-seat-list"><span>门:12</span><span>携:18</span><span>猪:9</span><span>同:8</span><span>直:10</span><span>协:6</span></span></td>
           <td>¥12,800</td>
           <td>刘洋</td>
-          <td><span class="tag tag-blue">销售中</span></td>
-          <td><span class="tag tag-orange">未维护</span></td>
+          <td><span class="tag tag-blue">开放报名</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-orange">未维护成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html" data-tab-status="售罄">
+        <tr data-href="schedules-detail.html" data-tab-status="售罄 未出团 预估成本">
           <td><a class="link-primary table-main-link" href="schedules-detail.html">JP20240720001</a></td>
           <td data-product="日本关西深度游" data-route="关西古都7日"><span class="schedule-product-name">日本关西深度游</span><span class="text-muted schedule-route-name">关西古都7日</span></td>
           <td><span class="tag tag-blue">普通团期</span></td>
@@ -157,10 +188,11 @@
           <td>¥8,980</td>
           <td>陈红</td>
           <td><span class="tag tag-red">售罄</span></td>
-          <td><span class="tag tag-green">已维护</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-blue">预估成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html" data-tab-status="出团中 本周出团 即将售罄">
+        <tr data-href="schedules-detail.html" data-tab-status="已截止 已出发 预估成本 本周出团 即将售罄">
           <td><a class="link-primary table-main-link" href="schedules-detail.html">HN20240625001</a></td>
           <td data-product="三亚亲子5日游" data-route="亚特兰蒂斯亲子线"><span class="schedule-product-name">三亚亲子5日游</span><span class="text-muted schedule-route-name">亚特兰蒂斯亲子线</span></td>
           <td><span class="tag tag-blue">普通团期</span></td>
@@ -172,14 +204,15 @@
           <td><span class="channel-seat-list"><span class="low">门:2</span><span class="low">携:4</span><span class="low">猪:1</span><span class="low">同:2</span><span class="low">直:3</span><span class="low">协:1</span></span></td>
           <td>¥6,800</td>
           <td>赵明</td>
-          <td><span class="tag tag-purple">出团中</span></td>
-          <td><span class="tag tag-green">已维护</span></td>
+          <td><span class="tag tag-orange">已截止</span></td>
+          <td><span class="tag tag-purple">已出发</span></td>
+          <td><span class="tag tag-blue">预估成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html?type=cruise" data-tab-status="销售中">
+        <tr data-href="schedules-detail.html?type=cruise" data-tab-status="开放报名 未出团 预估成本">
           <td><a class="link-primary table-main-link" href="schedules-detail.html?type=cruise">CZ20240801001</a></td>
           <td data-product="理想号地中海邮轮" data-route="地中海西线 / 阳台舱"><span class="schedule-product-name">理想号地中海邮轮</span><span class="text-muted schedule-route-name">地中海西线 / 阳台舱</span></td>
-          <td><span class="tag tag-purple">邮轮团期</span></td>
+          <td><span class="tag tag-purple">邮轮航次</span></td>
           <td>2024-08-01</td>
           <td>2024-08-14</td>
           <td>120间</td>
@@ -188,11 +221,12 @@
           <td><span class="channel-seat-list"><span>门:35</span><span>携:42</span><span>猪:18</span><span>同:20</span><span>直:28</span><span>协:16</span></span></td>
           <td>¥28,800</td>
           <td>王强</td>
-          <td><span class="tag tag-blue">销售中</span></td>
-          <td><span class="tag tag-green">已维护</span></td>
+          <td><span class="tag tag-blue">开放报名</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-blue">预估成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html?type=cruise">详情</a><a href="schedules-detail.html?type=cruise">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html" data-tab-status="售罄">
+        <tr data-href="schedules-detail.html" data-tab-status="售罄 未出团 预估成本">
           <td><a class="link-primary table-main-link" href="schedules-detail.html">BJ20240710001</a></td>
           <td data-product="北京故宫定制游" data-route="故宫深度讲解线"><span class="schedule-product-name">北京故宫定制游</span><span class="text-muted schedule-route-name">故宫深度讲解线</span></td>
           <td><span class="tag tag-blue">普通团期</span></td>
@@ -205,10 +239,11 @@
           <td>¥3,800</td>
           <td>孙丽</td>
           <td><span class="tag tag-red">售罄</span></td>
-          <td><span class="tag tag-green">已维护</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-blue">预估成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html" data-tab-status="待售">
+        <tr data-href="schedules-detail.html" data-tab-status="筹备中 未出团 未维护成本">
           <td><a class="link-primary table-main-link" href="schedules-detail.html">TH20240815001</a></td>
           <td data-product="泰国曼谷清迈8日" data-route="曼谷清迈经典线"><span class="schedule-product-name">泰国曼谷清迈8日</span><span class="text-muted schedule-route-name">曼谷清迈经典线</span></td>
           <td><span class="tag tag-blue">普通团期</span></td>
@@ -220,14 +255,15 @@
           <td><span class="channel-seat-list"><span>门:18</span><span>携:15</span><span>猪:10</span><span>同:8</span><span>直:12</span><span>协:7</span></span></td>
           <td>¥5,980</td>
           <td>吴芳</td>
-          <td><span class="tag tag-gray">待售</span></td>
-          <td><span class="tag tag-orange">未维护</span></td>
+          <td><span class="tag tag-gray">筹备中</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-orange">未维护成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html?type=train" data-tab-status="销售中">
+        <tr data-href="schedules-detail.html?type=train" data-tab-status="开放报名 未出团 预估成本">
           <td><a class="link-primary table-main-link" href="schedules-detail.html?type=train">TR20240805001</a></td>
           <td data-product="东方丝路专列" data-route="西安敦煌乌鲁木齐线 / 软卧"><span class="schedule-product-name">东方丝路专列</span><span class="text-muted schedule-route-name">西安敦煌乌鲁木齐线 / 软卧</span></td>
-          <td><span class="tag tag-orange">专列团期</span></td>
+          <td><span class="tag tag-orange">专列班期</span></td>
           <td>2024-08-05</td>
           <td>2024-08-13</td>
           <td>96铺</td>
@@ -236,30 +272,15 @@
           <td><span class="channel-seat-list"><span>门:28</span><span>携:20</span><span>猪:12</span><span>同:8</span><span>直:18</span><span>协:10</span></span></td>
           <td>¥19,800</td>
           <td>郑华</td>
-          <td><span class="tag tag-blue">销售中</span></td>
-          <td><span class="tag tag-green">已维护</span></td>
+          <td><span class="tag tag-blue">开放报名</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-blue">预估成本</span></td>
           <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html?type=train">详情</a><a href="schedules-detail.html?type=train">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
-        <tr data-href="schedules-detail.html?type=free" data-tab-status="销售中">
-          <td><a class="link-primary table-main-link" href="schedules-detail.html?type=free">FT20260718001</a></td>
-          <td data-product="巴黎自由行 5-7日" data-route="机票+酒店套餐"><span class="schedule-product-name">巴黎自由行 5-7日</span><span class="text-muted schedule-route-name">机票+酒店套餐</span></td>
-          <td><span class="tag tag-green">自由行库存</span></td>
-          <td>2026-07-18</td>
-          <td>2026-07-23</td>
-          <td>36套</td>
-          <td>14套</td>
-          <td>22套</td>
-          <td><span class="channel-seat-list"><span>门:8</span><span>携:10</span><span>猪:6</span><span>同:4</span><span>直:5</span><span class="low">协:3</span></span></td>
-          <td>¥6,800</td>
-          <td>郑华</td>
-          <td><span class="tag tag-blue">销售中</span></td>
-          <td><span class="tag tag-orange">采购批次待确认</span></td>
-          <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html?type=free">详情</a><a href="schedules-detail.html?type=free">订单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
-        </tr>
-        <tr data-href="schedules-detail.html" data-tab-status="销售中">
-          <td><a class="link-primary table-main-link" href="schedules-detail.html">XY20240805001</a></td>
+        <tr data-href="schedules-detail.html?type=study" data-tab-status="开放报名 未出团 未维护成本">
+          <td><a class="link-primary table-main-link" href="schedules-detail.html?type=study">XY20240805001</a></td>
           <td data-product="北京航天研学营" data-route="航天科技7日"><span class="schedule-product-name">北京航天研学营</span><span class="text-muted schedule-route-name">航天科技7日</span></td>
-          <td><span class="tag tag-green">研学团期</span></td>
+          <td><span class="tag tag-green">研学营期</span></td>
           <td>2024-08-05</td>
           <td>2024-08-11</td>
           <td>45名</td>
@@ -268,16 +289,17 @@
           <td><span class="channel-seat-list"><span>门:10</span><span>携:8</span><span>猪:5</span><span>同:4</span><span>直:12</span><span>协:6</span></span></td>
           <td>¥6,980</td>
           <td>孙丽</td>
-          <td><span class="tag tag-blue">销售中</span></td>
-          <td><span class="tag tag-orange">未维护</span></td>
-          <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html">详情</a><a href="schedules-detail.html">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
+          <td><span class="tag tag-blue">开放报名</span></td>
+          <td><span class="tag tag-gray">未出团</span></td>
+          <td><span class="tag tag-orange">未维护成本</span></td>
+          <td><div class="table-action"><button type="button" data-open-cost class="table-action-primary">成本</button><a href="schedules-detail.html?type=study">详情</a><a href="schedules-detail.html?type=study">名单</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">关闭销售</button><button type="button" class="dropdown-item">复制</button><button type="button" class="dropdown-item danger">取消</button></span></span></div></td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <div class="pagination list-surface-pagination list-pagination-attached">
-    <span>第1-9条/共124条</span>
+    <span>第1-8条/共123条</span>
     <div class="pager" aria-label="分页">
       <button class="pager-btn" type="button" disabled>上一页</button>
       <button class="pager-btn active" type="button">1</button>
@@ -352,34 +374,34 @@
 
         <div class="tour-day"><span class="tour-day-number">1</span></div>
         <div class="tour-day has-events"><span class="tour-day-number">2</span><span class="tour-day-count">1</span>
-          <a class="tour-calendar-event type-study" href="schedules-detail.html">
+          <a class="tour-calendar-event type-study" href="schedules-detail.html?type=study">
             <span>ST260602</span><b>北京研学</b><em>18/30名</em>
-            <span class="tour-event-tooltip"><strong>ST20260602001</strong><small>北京故宫历史文化研学5日</small><small>出发地：北京</small><small>已报名/学员名额：18/30名</small><small>团期状态：招募中</small><small>负责计调：陈红</small></span>
+            <span class="tour-event-tooltip"><strong>ST20260602001</strong><small>北京故宫历史文化研学5日</small><small>出发地：北京</small><small>已报名/学员名额：18/30名</small><small>销售状态：开放报名</small><small>执行状态：未出团</small></span>
           </a>
         </div>
         <div class="tour-day"><span class="tour-day-number">3</span></div>
         <div class="tour-day has-events"><span class="tour-day-number">4</span><span class="tour-day-count">2</span>
           <a class="tour-calendar-event type-outbound" href="schedules-detail.html">
             <span>EU260604</span><b>法瑞意</b><em>24/30人</em>
-            <span class="tour-event-tooltip"><strong>EU20260604001</strong><small>法瑞意经典15日游</small><small>出发地：北京</small><small>团期状态：销售中</small><small>负责计调：周伟</small></span>
+            <span class="tour-event-tooltip"><strong>EU20260604001</strong><small>法瑞意经典15日游</small><small>出发地：北京</small><small>销售状态：开放报名</small><small>执行状态：未出团</small></span>
           </a>
           <a class="tour-calendar-event type-train" href="schedules-detail.html?type=train">
             <span>TR260604</span><b>丝路专列</b><em>92/120铺</em>
-            <span class="tour-event-tooltip"><strong>TR20260604001</strong><small>东方丝路专列9日</small><small>发车地：西安</small><small>团期状态：销售中</small><small>负责计调：刘洋</small></span>
+            <span class="tour-event-tooltip"><strong>TR20260604001</strong><small>东方丝路专列9日</small><small>发车地：西安</small><small>销售状态：开放报名</small><small>执行状态：未出团</small></span>
           </a>
         </div>
         <div class="tour-day"><span class="tour-day-number">5</span></div>
         <div class="tour-day has-events"><span class="tour-day-number">6</span><span class="tour-day-count">1</span>
           <a class="tour-calendar-event type-cruise" href="schedules-detail.html?type=cruise">
             <span>CZ260606</span><b>理想号</b><em>68/120间</em>
-            <span class="tour-event-tooltip"><strong>CZ20260606001</strong><small>理想号地中海邮轮14日</small><small>出发地：上海</small><small>团期状态：销售中</small><small>负责计调：王强</small></span>
+            <span class="tour-event-tooltip"><strong>CZ20260606001</strong><small>理想号地中海邮轮14日</small><small>出发地：上海</small><small>销售状态：开放报名</small><small>执行状态：未出团</small></span>
           </a>
         </div>
         <div class="tour-day"><span class="tour-day-number">7</span></div>
 
         <div class="tour-day has-events"><span class="tour-day-number">8</span><span class="tour-day-count">1</span><a class="tour-calendar-event type-domestic" href="schedules-detail.html"><span>HN260608</span><b>三亚亲子</b><em>35/40人</em></a></div>
         <div class="tour-day"><span class="tour-day-number">9</span></div>
-        <div class="tour-day has-events"><span class="tour-day-number">10</span><span class="tour-day-count">3</span><a class="tour-calendar-event type-outbound" href="schedules-detail.html"><span>JP260610</span><b>关西</b><em>21/25人</em></a><a class="tour-calendar-event type-mice" href="schedules-detail.html"><span>MC260610</span><b>会奖</b><em>42/60人</em></a><a class="tour-calendar-event type-study" href="schedules-detail.html"><span>ST260610</span><b>自然营</b><em>24/30名</em></a></div>
+        <div class="tour-day has-events"><span class="tour-day-number">10</span><span class="tour-day-count">3</span><a class="tour-calendar-event type-outbound" href="schedules-detail.html"><span>JP260610</span><b>关西</b><em>21/25人</em></a><a class="tour-calendar-event type-mice" href="product-custom-detail.html"><span>MC260610</span><b>会奖</b><em>42/60人</em></a><a class="tour-calendar-event type-study" href="schedules-detail.html?type=study"><span>ST260610</span><b>自然营</b><em>24/30名</em></a></div>
         <div class="tour-day"><span class="tour-day-number">11</span></div>
         <div class="tour-day"><span class="tour-day-number">12</span></div>
         <div class="tour-day has-events"><span class="tour-day-number">13</span><span class="tour-day-count">1</span><a class="tour-calendar-event type-train" href="schedules-detail.html?type=train"><span>TR260613</span><b>东北专列</b><em>86/120铺</em></a></div>
@@ -393,7 +415,7 @@
         <div class="tour-day"><span class="tour-day-number">20</span></div>
         <div class="tour-day"><span class="tour-day-number">21</span></div>
 
-        <div class="tour-day has-events"><span class="tour-day-number">22</span><span class="tour-day-count">1</span><a class="tour-calendar-event type-study" href="schedules-detail.html"><span>ST260622</span><b>航天研学</b><em>26/30名</em></a></div>
+        <div class="tour-day has-events"><span class="tour-day-number">22</span><span class="tour-day-count">1</span><a class="tour-calendar-event type-study" href="schedules-detail.html?type=study"><span>ST260622</span><b>航天研学</b><em>26/30名</em></a></div>
         <div class="tour-day"><span class="tour-day-number">23</span></div>
         <div class="tour-day"><span class="tour-day-number">24</span></div>
         <div class="tour-day has-events"><span class="tour-day-number">25</span><span class="tour-day-count">2</span><a class="tour-calendar-event type-outbound" href="schedules-detail.html"><span>EU260625</span><b>欧洲十国</b><em>27/30人</em></a><a class="tour-calendar-event type-cruise" href="schedules-detail.html?type=cruise"><span>CZ260625</span><b>日韩邮轮</b><em>92/150间</em></a></div>
@@ -402,7 +424,7 @@
         <div class="tour-day"><span class="tour-day-number">28</span></div>
 
         <div class="tour-day today"><span class="tour-day-number">29</span></div>
-        <div class="tour-day has-events"><span class="tour-day-number">30</span><span class="tour-day-count">1</span><a class="tour-calendar-event type-mice" href="schedules-detail.html"><span>MC260630</span><b>欧洲会展</b><em>36/45人</em></a></div>
+        <div class="tour-day has-events"><span class="tour-day-number">30</span><span class="tour-day-count">1</span><a class="tour-calendar-event type-mice" href="product-custom-detail.html"><span>MC260630</span><b>欧洲会展</b><em>36/45人</em></a></div>
         <div class="tour-day muted"><span class="tour-day-number">7/1</span></div>
         <div class="tour-day muted"><span class="tour-day-number">7/2</span></div>
         <div class="tour-day muted"><span class="tour-day-number">7/3</span></div>
@@ -416,17 +438,17 @@
         <section class="tour-week-column"><header><span>周一</span><strong>6/29</strong></header></section>
         <section class="tour-week-column">
           <header><span>周二</span><strong>6/30</strong></header>
-          <article class="tour-week-card type-mice" data-href="schedules-detail.html"><div><strong>德国工业展商务考察8日</strong><span class="tag tag-blue">销售中</span></div><p>MC20260630001 ｜ 36/45人</p><p>09:40 出发 ｜ 上海浦东机场T2</p></article>
+          <article class="tour-week-card type-mice" data-href="product-custom-detail.html"><div><strong>德国工业展商务考察8日</strong><span class="tag tag-blue">开放报名</span></div><p>MC20260630001 ｜ 36/45人</p><p>09:40 出发 ｜ 上海浦东机场T2</p></article>
         </section>
         <section class="tour-week-column"><header><span>周三</span><strong>7/1</strong></header></section>
         <section class="tour-week-column">
           <header><span>周四</span><strong>7/2</strong></header>
-          <article class="tour-week-card type-outbound" data-href="schedules-detail.html"><div><strong>欧洲十国经典游12日</strong><span class="tag tag-blue">销售中</span></div><p>EU20260702001 ｜ 24/30人</p><p>09:20 出发 ｜ 北京首都机场T3</p></article>
+          <article class="tour-week-card type-outbound" data-href="schedules-detail.html"><div><strong>欧洲十国经典游12日</strong><span class="tag tag-blue">开放报名</span></div><p>EU20260702001 ｜ 24/30人</p><p>09:20 出发 ｜ 北京首都机场T3</p></article>
         </section>
         <section class="tour-week-column"><header><span>周五</span><strong>7/3</strong></header></section>
         <section class="tour-week-column">
           <header><span>周六</span><strong>7/4</strong></header>
-          <article class="tour-week-card type-cruise" data-href="schedules-detail.html?type=cruise"><div><strong>理想号地中海邮轮14日</strong><span class="tag tag-blue">销售中</span></div><p>CZ20260704001 ｜ 68/120间</p><p>13:30 登船 ｜ 上海吴淞口邮轮港</p></article>
+          <article class="tour-week-card type-cruise" data-href="schedules-detail.html?type=cruise"><div><strong>理想号地中海邮轮14日</strong><span class="tag tag-blue">开放报名</span></div><p>CZ20260704001 ｜ 68/120间</p><p>13:30 登船 ｜ 上海吴淞口邮轮港</p></article>
         </section>
         <section class="tour-week-column"><header><span>周日</span><strong>7/5</strong></header></section>
       </div>
@@ -447,7 +469,7 @@
   <div id="createScheduleModal" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="createScheduleTitle">
       <div class="modal-header">
-        <div id="createScheduleTitle" class="modal-title">新建团期</div>
+        <div id="createScheduleTitle" class="modal-title">新建排期</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-create>×</button>
       </div>
       <div class="modal-body">
@@ -462,15 +484,12 @@
             <option value="泰国曼谷清迈8日"></option>
             <option value="北京故宫定制游"></option>
             <option value="东方丝路专列"></option>
-            <option value="巴黎自由行 5-7日"></option>
-            <option value="马来西亚自由行"></option>
             <option value="北京航天研学营"></option>
           </datalist>
         </div>
         <div class="form-group">
           <label class="form-label" for="scheduleProductTypeText">线路归属</label>
           <input id="scheduleProductTypeText" class="form-control" type="text" value="自营线路" readonly>
-          <div class="form-hint">由所选线路自动带出，不在团期里单独修改。</div>
         </div>
         <div class="form-group">
           <label id="scheduleRoutePlanLabel" class="form-label" for="scheduleRoutePlan">选择方案 <span class="req">*</span></label>
@@ -493,8 +512,8 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label id="totalStockLabel" class="form-label" for="totalStock">总库存 <span class="req">*</span></label>
-            <input id="totalStock" class="form-control" type="number" min="1" placeholder="请输入总库存" required>
+            <label id="totalStockLabel" class="form-label" for="totalStock">总名额 <span class="req">*</span></label>
+            <input id="totalStock" class="form-control" type="number" min="1" placeholder="请输入总名额" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="deadlineDate">截止报名日期</label>
@@ -504,7 +523,6 @@
         <div class="form-group">
           <label id="adultPriceLabel" class="form-label" for="adultPrice">销售价</label>
           <input id="adultPrice" class="form-control" type="text" value="¥12,800" aria-describedby="priceHint">
-          <div id="priceHint" class="form-hint">已自动带出所选线路的默认价，可按本团期调整。</div>
         </div>
         <div class="form-group">
           <label class="form-label" for="scheduleRemark">备注</label>
@@ -607,7 +625,7 @@
       <div class="modal-header">
         <div>
           <div id="batchScheduleTitle" class="modal-title">批量开排</div>
-          <div class="drawer-title-meta">按线路、方案、日期规则和渠道库存一次生成团期</div>
+          <div class="drawer-title-meta">按线路、方案、日期规则和渠道名额一次生成排期</div>
         </div>
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-batch>×</button>
       </div>
@@ -615,8 +633,8 @@
         <section class="batch-create-stepper batch-create-stepper-drawer" aria-label="批量开排步骤">
           <div class="batch-step-item active" data-batch-step-item="1"><span class="batch-step-index">1</span><span class="batch-step-name">线路方案</span></div>
           <div class="batch-step-item" data-batch-step-item="2"><span class="batch-step-index">2</span><span class="batch-step-name">设置日期</span></div>
-          <div class="batch-step-item" data-batch-step-item="3"><span class="batch-step-index">3</span><span class="batch-step-name">团期参数</span></div>
-          <div class="batch-step-item" data-batch-step-item="4"><span class="batch-step-index">4</span><span class="batch-step-name">库存分配</span></div>
+          <div class="batch-step-item" data-batch-step-item="3"><span class="batch-step-index">3</span><span class="batch-step-name">排期参数</span></div>
+          <div class="batch-step-item" data-batch-step-item="4"><span class="batch-step-index">4</span><span class="batch-step-name">名额分配</span></div>
           <div class="batch-step-item" data-batch-step-item="5"><span class="batch-step-index">5</span><span class="batch-step-name">预览确认</span></div>
         </section>
 
@@ -641,7 +659,7 @@
                     <div class="batch-product-head"><strong>日本关西深度游</strong><span class="tag tag-purple">深度游</span></div>
                     <div class="batch-product-meta"><span>大阪/京都/奈良</span><span>7天</span><span>陈红</span></div>
                   </button>
-                  <button class="batch-product-card" type="button" data-product-code="CZ" data-product-type="邮轮" data-batch-type="邮轮团期" data-tag-class="tag-orange" data-name="理想号地中海邮轮" data-route="地中海西线 / 阳台舱" data-route-options="地中海西线 / 内舱|地中海西线 / 阳台舱|地中海东线 / 套房" data-unit="间" data-default-capacity="120" data-destination="巴塞罗那/马赛/罗马" data-days="14" data-planner="王强">
+                  <button class="batch-product-card" type="button" data-product-code="CZ" data-product-type="邮轮" data-batch-type="邮轮航次" data-tag-class="tag-orange" data-name="理想号地中海邮轮" data-route="地中海西线 / 阳台舱" data-route-options="地中海西线 / 内舱|地中海西线 / 阳台舱|地中海东线 / 套房" data-unit="间" data-default-capacity="120" data-destination="巴塞罗那/马赛/罗马" data-days="14" data-planner="王强">
                     <div class="batch-product-head"><strong>理想号地中海邮轮</strong><span class="tag tag-orange">邮轮</span></div>
                     <div class="batch-product-meta"><span>巴塞罗那/马赛/罗马</span><span>14天</span><span>王强</span></div>
                   </button>
@@ -649,15 +667,11 @@
                     <div class="batch-product-head"><strong>三亚亲子5日游</strong><span class="tag tag-green">亲子游</span></div>
                     <div class="batch-product-meta"><span>三亚</span><span>5天</span><span>赵明</span></div>
                   </button>
-                  <button class="batch-product-card" type="button" data-product-code="TR" data-product-type="专列" data-batch-type="专列团期" data-tag-class="tag-orange" data-name="东方丝路专列" data-route="西安敦煌乌鲁木齐线 / 软卧" data-route-options="西安敦煌乌鲁木齐线 / 硬卧|西安敦煌乌鲁木齐线 / 软卧|丝路全景线 / 包厢" data-unit="铺" data-default-capacity="96" data-destination="西安/敦煌/乌鲁木齐" data-days="9" data-planner="郑华">
+                  <button class="batch-product-card" type="button" data-product-code="TR" data-product-type="专列" data-batch-type="专列班期" data-tag-class="tag-orange" data-name="东方丝路专列" data-route="西安敦煌乌鲁木齐线 / 软卧" data-route-options="西安敦煌乌鲁木齐线 / 硬卧|西安敦煌乌鲁木齐线 / 软卧|丝路全景线 / 包厢" data-unit="铺" data-default-capacity="96" data-destination="西安/敦煌/乌鲁木齐" data-days="9" data-planner="郑华">
                     <div class="batch-product-head"><strong>东方丝路专列</strong><span class="tag tag-orange">专列</span></div>
                     <div class="batch-product-meta"><span>西安/敦煌/乌鲁木齐</span><span>9天</span><span>郑华</span></div>
                   </button>
-                  <button class="batch-product-card" type="button" data-product-code="FT" data-product-type="自由行" data-batch-type="自由行库存" data-tag-class="tag-green" data-name="巴黎自由行 5-7日" data-route="机票+酒店套餐" data-route-options="机票+酒店套餐|纯酒店套餐|酒店+接送机套餐" data-unit="套" data-default-capacity="36" data-destination="法国巴黎" data-days="6" data-planner="郑华">
-                    <div class="batch-product-head"><strong>巴黎自由行 5-7日</strong><span class="tag tag-green">自由行</span></div>
-                    <div class="batch-product-meta"><span>法国巴黎</span><span>日期库存</span><span>郑华</span></div>
-                  </button>
-                  <button class="batch-product-card" type="button" data-product-code="XY" data-product-type="研学" data-batch-type="研学团期" data-tag-class="tag-green" data-name="北京航天研学营" data-route="航天科技7日" data-route-options="航天科技7日|航天科技冬令" data-unit="名" data-default-capacity="30" data-destination="北京/酒泉" data-days="7" data-planner="孙丽">
+                  <button class="batch-product-card" type="button" data-product-code="XY" data-product-type="研学" data-batch-type="研学营期" data-tag-class="tag-green" data-name="北京航天研学营" data-route="航天科技7日" data-route-options="航天科技7日|航天科技冬令" data-unit="名" data-default-capacity="30" data-destination="北京/酒泉" data-days="7" data-planner="孙丽">
                     <div class="batch-product-head"><strong>北京航天研学营</strong><span class="tag tag-green">研学</span></div>
                     <div class="batch-product-meta"><span>北京/酒泉</span><span>7天</span><span>孙丽</span></div>
                   </button>
@@ -675,7 +689,7 @@
                 <div class="form-group batch-route-picker">
                   <label id="batchRoutePlanLabel" class="form-label" for="batchRoutePlan">选择方案 <span class="req">*</span></label>
                   <select id="batchRoutePlan" class="form-control"></select>
-                  <div id="batchRouteHint" class="form-hint">该方案会带入行程、成本模板和执行资料字段。</div>
+                  <div id="batchRouteHint" class="form-hint">该方案会带入行程、成本模板和执行资料内容。</div>
                 </div>
               </aside>
             </div>
@@ -726,14 +740,13 @@
 
           <section class="batch-step-panel" data-batch-step-panel="3">
             <div class="batch-panel-head">
-              <h2>团期参数</h2>
+              <h2>排期参数</h2>
               <span class="tag tag-purple">配置</span>
             </div>
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label" for="batchCapacityLimit">容量上限</label>
                 <input id="batchCapacityLimit" class="form-control" type="number" min="1" value="30">
-                <div id="batchCapacityHint" class="form-hint">每个团期的最大人数上限</div>
               </div>
               <div class="form-group">
                 <label class="form-label" for="batchPriceGroup">价格组</label>
@@ -765,7 +778,7 @@
 
           <section class="batch-step-panel" data-batch-step-panel="4">
             <div class="batch-panel-head">
-              <h2>库存分配</h2>
+              <h2>名额分配</h2>
               <span id="batchAllocationPill" class="tag tag-green">分配正常</span>
             </div>
             <div class="batch-quota-grid">
@@ -805,12 +818,12 @@
               </table>
             </section>
             <div class="batch-allocation-total">
-              <span id="batchCreateCountText">将创建 0 个团期</span>
+              <span id="batchCreateCountText">将创建 0 个排期</span>
             </div>
             <section id="batchCreateResult" class="batch-create-result" hidden>
-              <div class="batch-result-row"><strong id="batchProgressText">正在创建团期</strong><span id="batchProgressCount">0/0</span></div>
+              <div class="batch-result-row"><strong id="batchProgressText">正在创建排期</strong><span id="batchProgressCount">0/0</span></div>
               <div class="batch-create-progress"><span></span></div>
-              <div id="batchResultSummary" class="form-hint">系统正在生成团期号、渠道库存和待售团期。</div>
+              <div id="batchResultSummary" class="form-hint">正在生成编号、渠道名额和排期状态。</div>
             </section>
           </section>
         </section>
@@ -826,11 +839,11 @@
   <div id="copyScheduleModal" class="modal-overlay" aria-hidden="true">
     <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="copyScheduleTitle">
       <div class="modal-header">
-        <div id="copyScheduleTitle" class="modal-title">复制团期</div>
+        <div id="copyScheduleTitle" class="modal-title">复制排期</div>
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-copy>×</button>
       </div>
       <div class="modal-body">
-        <p id="copyScheduleText" class="modal-center-text">确认复制当前团期？复制后将在列表顶部新增待售团期。</p>
+        <p id="copyScheduleText" class="modal-center-text">确认复制当前排期？复制后将在列表顶部新增筹备中记录。</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-copy>取消</button>
@@ -842,32 +855,64 @@
   <div id="stockLineageDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal product-route-drawer" role="dialog" aria-modal="true" aria-labelledby="stockLineageTitle">
       <div class="modal-header">
-        <div id="stockLineageTitle" class="modal-title">库存对象链路</div>
+        <div id="stockLineageTitle" class="modal-title">排期详情</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-lineage>×</button>
       </div>
       <div class="modal-body">
         <div class="readonly-summary">
           <strong id="stockLineageName">欧洲十国经典游</strong>
-          <span id="stockLineageMeta">GT20260701001 | 普通团期 | 销售中</span>
+          <span id="stockLineageMeta">GT20260701001 | 普通团期 | 开放报名</span>
         </div>
         <div class="description-grid">
-          <div class="description-item"><span class="description-label">维护对象</span><span id="stockLineageObject" class="description-value">团期库存</span></div>
-          <div class="description-item"><span class="description-label">上游对象</span><span id="stockLineageUpstream" class="description-value">线路、方案、资源主数据</span></div>
-          <div class="description-item"><span class="description-label">下游对象</span><span id="stockLineageDownstream" class="description-value">订单、名单、成本、结算</span></div>
-          <div class="description-item"><span class="description-label">财务影响</span><span class="description-value">库存本身不生成财务单据；订单、收款、成本、结算触发财务</span></div>
-        </div>
-        <h3 class="detail-section-title">业务流向</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>节点</th><th>对象/单据</th><th>状态来源</th><th>校验点</th></tr>
-            </thead>
-            <tbody id="stockLineageRows"></tbody>
-          </table>
+          <div class="description-item"><span class="description-label">排期类型</span><span id="stockLineageObject" class="description-value">普通团期</span></div>
+          <div class="description-item"><span class="description-label">线路/方案</span><span id="stockLineageUpstream" class="description-value">欧洲十国经典游 / 经济款</span></div>
+          <div class="description-item"><span class="description-label">已售/可售</span><span id="stockLineageDownstream" class="description-value">18人 / 12人</span></div>
+          <div class="description-item"><span class="description-label">结算状态</span><span id="stockLineageCostStatus" class="description-value">未维护成本</span></div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-lineage>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scheduleResourceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="scheduleResourceTitle">
+      <div class="modal-header">
+        <div id="scheduleResourceTitle" class="modal-title">资源确认</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-resource-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary">
+          <strong id="resourceScheduleName">欧洲十国经典游</strong>
+          <span id="resourceScheduleMeta">EU20240715001 | 2024-07-15 | 周伟</span>
+        </div>
+        <div class="description-grid">
+          <div class="description-item"><span class="description-label">资源进度</span><span id="resourceProgressText" class="description-value">3项已确认，1项待处理</span></div>
+          <div class="description-item"><span class="description-label">名单状态</span><span id="resourceRosterText" class="description-value">27/30人已收集</span></div>
+          <div class="description-item"><span class="description-label">出票/确认截止</span><span id="resourceDeadlineText" class="description-value">2024-07-05</span></div>
+          <div class="description-item"><span class="description-label">成本/应付</span><span id="resourceFinanceText" class="description-value">成本待确认</span></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>资源项</th>
+                <th>方案资源</th>
+                <th>本次确认</th>
+                <th>截止节点</th>
+                <th>确认状态</th>
+                <th>成本/应付</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleResourceRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-resource-drawer>关闭</button>
+        <a id="resourceDetailLink" class="btn btn-primary" href="schedules-detail.html?tab=resource">进入排期详情</a>
       </div>
     </div>
   </div>
@@ -903,7 +948,7 @@
         <p id="lockScheduleText" class="modal-center-text">确认锁定当前团期？锁定后各渠道不可继续售卖。</p>
         <div class="form-group">
           <label class="form-label" for="lockReason">锁团原因</label>
-          <textarea id="lockReason" class="form-control" rows="3" placeholder="如库存复核、资源待确认、临近出团等"></textarea>
+          <textarea id="lockReason" class="form-control" rows="3" placeholder="如名额复核、资源待确认、临近出团等"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -920,6 +965,7 @@
       var batchScheduleDrawer = document.getElementById('batchScheduleDrawer');
       var copyModal = document.getElementById('copyScheduleModal');
       var stockLineageDrawer = document.getElementById('stockLineageDrawer');
+      var scheduleResourceDrawer = document.getElementById('scheduleResourceDrawer');
       var cancelModal = document.getElementById('cancelScheduleModal');
       var lockModal = document.getElementById('lockScheduleModal');
       var scheduleListPanel = document.getElementById('scheduleListPanel');
@@ -958,11 +1004,20 @@
       var departEndDate = document.getElementById('departEndDate');
       var batchTypeFilter = document.getElementById('batchTypeFilter');
       var scheduleStatusFilter = document.getElementById('scheduleStatus');
+      var executionStatusFilter = document.getElementById('executionStatusFilter');
+      var settlementStatusFilter = document.getElementById('settlementStatusFilter');
       var copyScheduleText = document.getElementById('copyScheduleText');
       var cancelScheduleText = document.getElementById('cancelScheduleText');
       var cancelReason = document.getElementById('cancelReason');
       var lockScheduleText = document.getElementById('lockScheduleText');
       var lockReason = document.getElementById('lockReason');
+      var openCreateSchedule = document.getElementById('openCreateSchedule');
+      var currentRouteFilter = document.getElementById('currentRouteFilter');
+      var currentRouteFilterName = document.getElementById('currentRouteFilterName');
+      var currentRouteFilterCount = document.getElementById('currentRouteFilterCount');
+      var pageParams = new URLSearchParams(window.location.search);
+      var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
+      var routeFilterType = pageParams.get('type') || '';
       var currentMode = 'create';
       var currentSchedule = null;
       var sequence = 9001;
@@ -983,8 +1038,6 @@
         '泰国曼谷清迈8日': 8,
         '北京故宫定制游': 3,
         '东方丝路专列': 9,
-        '巴黎自由行 5-7日': 6,
-        '马来西亚自由行': 5,
         '北京航天研学营': 7
       };
 
@@ -996,8 +1049,6 @@
         '泰国曼谷清迈8日': 'TH',
         '北京故宫定制游': 'BJ',
         '东方丝路专列': 'TR',
-        '巴黎自由行 5-7日': 'FT',
-        '马来西亚自由行': 'FT',
         '北京航天研学营': 'XY'
       };
 
@@ -1009,22 +1060,18 @@
         '泰国曼谷清迈8日': '吴芳',
         '北京故宫定制游': '孙丽',
         '东方丝路专列': '郑华',
-        '巴黎自由行 5-7日': '郑华',
-        '马来西亚自由行': '郑华',
         '北京航天研学营': '孙丽'
       };
 
       var productBatchTypes = {
         '欧洲十国经典游': '普通团期',
         '日本关西深度游': '普通团期',
-        '理想号地中海邮轮': '邮轮团期',
+        '理想号地中海邮轮': '邮轮航次',
         '三亚亲子5日游': '普通团期',
         '泰国曼谷清迈8日': '普通团期',
         '北京故宫定制游': '普通团期',
-        '东方丝路专列': '专列团期',
-        '巴黎自由行 5-7日': '自由行库存',
-        '马来西亚自由行': '自由行库存',
-        '北京航天研学营': '研学团期'
+        '东方丝路专列': '专列班期',
+        '北京航天研学营': '研学营期'
       };
 
       var productRoutePlans = {
@@ -1035,8 +1082,6 @@
         '泰国曼谷清迈8日': ['曼谷清迈经典线', '曼谷芭提雅亲子线'],
         '北京故宫定制游': ['故宫深度讲解线'],
         '东方丝路专列': ['西安敦煌乌鲁木齐线 / 硬卧', '西安敦煌乌鲁木齐线 / 软卧', '丝路全景线 / 包厢'],
-        '巴黎自由行 5-7日': ['机票+酒店套餐', '纯酒店套餐', '酒店+接送机套餐'],
-        '马来西亚自由行': ['吉隆坡机酒5日', '槟城酒店套餐'],
         '北京航天研学营': ['航天科技7日', '航天科技冬令']
       };
 
@@ -1048,10 +1093,26 @@
         '泰国曼谷清迈8日': '人',
         '北京故宫定制游': '人',
         '东方丝路专列': '铺',
-        '巴黎自由行 5-7日': '套',
-        '马来西亚自由行': '套',
         '北京航天研学营': '名'
       };
+
+      function normalizeBatchType(batchType) {
+        var text = String(batchType || '');
+        if (/邮轮/.test(text)) return '邮轮航次';
+        if (/专列/.test(text)) return '专列班期';
+        if (/研学/.test(text)) return '研学营期';
+        if (/自由行/.test(text)) return '自由行出行日期';
+        return '普通团期';
+      }
+
+      function scheduleObjectName(batchType) {
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '航次';
+        if (normalized === '专列班期') return '班期';
+        if (normalized === '研学营期') return '营期';
+        if (normalized === '自由行出行日期') return '出行日期';
+        return '团期';
+      }
 
       function parseStockValue(value) {
         var matched = String(value || '').match(/(\d+)/);
@@ -1062,10 +1123,10 @@
         var text = String(value || '');
         var matched = text.match(/[^\d\s,，]+$/);
         if (matched) return matched[0];
-        if (batchType === '邮轮团期') return '间';
-        if (batchType === '专列团期') return '铺';
-        if (batchType === '自由行库存') return '套';
-        if (batchType === '研学团期') return '名';
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '间';
+        if (normalized === '专列班期') return '铺';
+        if (normalized === '研学营期') return '名';
         return '人';
       }
 
@@ -1074,26 +1135,48 @@
       }
 
       function routeFieldLabel(batchType) {
-        if (batchType === '邮轮团期') return '选择方案';
-        if (batchType === '专列团期') return '选择方案';
-        if (batchType === '研学团期') return '选择方案';
         return '选择方案';
       }
 
       function routeFieldHint(batchType, unit) {
-        if (batchType === '邮轮团期') return '方案会决定行程、库存、成本模板和执行资料字段。';
-        if (batchType === '专列团期') return '方案会决定行程、库存、成本模板和执行资料字段。';
-        if (batchType === '自由行库存') return '套餐方案会决定机票、酒店、接送机、当地玩乐和采购批次字段。';
-        if (batchType === '研学团期') return '方案会决定行程、库存、成本模板和执行资料字段。';
-        return '方案会决定本次团期的方案行程、资源成本模板和执行资料字段。';
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '航线、舱房、成本和执行资料';
+        if (normalized === '专列班期') return '线路、铺位、成本和执行资料';
+        if (normalized === '研学营期') return '课程、学员名额、成本和执行资料';
+        return '行程、成本和执行资料';
       }
 
       function capacityHintText(batchType, unit) {
-        if (batchType === '邮轮团期') return '本团期可售库存，单位：' + unit;
-        if (batchType === '专列团期') return '本团期可售库存，单位：' + unit;
-        if (batchType === '自由行库存') return '本日期下可售套餐库存，单位：' + unit + '，需要绑定采购批次。';
-        if (batchType === '研学团期') return '本团期可售库存，单位：' + unit;
-        return '本团期最大可售名额，单位：' + unit;
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '航次可售舱房，单位：' + unit;
+        if (normalized === '专列班期') return '班期可售铺位，单位：' + unit;
+        if (normalized === '研学营期') return '营期可售学员名额，单位：' + unit;
+        return '可售名额，单位：' + unit;
+      }
+
+      function isFreeTravelProduct(product) {
+        return /自由行/.test(String(product || '').trim());
+      }
+
+      function freeTravelDateHref(product, route) {
+        var params = new URLSearchParams();
+        params.set('tab', 'calendar');
+        if (product) params.set('product', product);
+        if (route) params.set('route', route);
+        return '../product/product-free-travel-list.html?' + params.toString();
+      }
+
+      function redirectFreeTravelDate(product, route) {
+        if (window.caesarUI && window.caesarUI.toast) {
+          window.caesarUI.toast('自由行请维护出行日期');
+        }
+        navigateTo(freeTravelDateHref(product, route));
+      }
+
+      function guardFreeTravelProduct(product, route) {
+        if (!isFreeTravelProduct(product)) return false;
+        redirectFreeTravelDate(product, route);
+        return true;
       }
 
 
@@ -1124,28 +1207,118 @@
       }
 
       function statusClass(status) {
-        if (status === '销售中') return 'tag tag-blue';
+        if (status === '开放报名') return 'tag tag-blue';
+        if (status === '筹备中') return 'tag tag-gray';
+        if (status === '已截止') return 'tag tag-orange';
         if (status === '售罄') return 'tag tag-red';
-        if (status === '出团中') return 'tag tag-purple';
         if (status === '已取消') return 'tag tag-red';
-        if (status === '已锁团') return 'tag tag-orange';
         return 'tag tag-gray';
       }
 
+      function executionStatusClass(status) {
+        if (status === '操作中') return 'tag tag-blue';
+        if (status === '已出发') return 'tag tag-purple';
+        if (status === '已回团') return 'tag tag-green';
+        if (status === '已归档') return 'tag tag-gray';
+        return 'tag tag-gray';
+      }
+
+      function settlementStatusClass(status) {
+        if (status === '预估成本') return 'tag tag-blue';
+        if (status === '实际成本确认') return 'tag tag-green';
+        if (status === '结算中') return 'tag tag-orange';
+        if (status === '已结算') return 'tag tag-green';
+        return 'tag tag-orange';
+      }
+
+      function normalizeSaleStatus(status, tabStatus) {
+        var text = [status, tabStatus].join(' ');
+        if (text.indexOf('已取消') >= 0) return '已取消';
+        if (text.indexOf('售罄') >= 0) return '售罄';
+        if (text.indexOf('已截止') >= 0 || text.indexOf('已锁团') >= 0 || text.indexOf('出团中') >= 0 || text.indexOf('已回团') >= 0) return '已截止';
+        if (text.indexOf('销售中') >= 0 || text.indexOf('开放报名') >= 0) return '开放报名';
+        return '筹备中';
+      }
+
+      function normalizeExecutionStatus(status, tabStatus, value) {
+        var text = [status, tabStatus, value].join(' ');
+        if (text.indexOf('已归档') >= 0) return '已归档';
+        if (text.indexOf('已回团') >= 0) return '已回团';
+        if (text.indexOf('已出发') >= 0 || text.indexOf('出团中') >= 0 || text.indexOf('本周出团') >= 0) return '已出发';
+        if (text.indexOf('操作中') >= 0) return '操作中';
+        return '未出团';
+      }
+
+      function normalizeSettlementStatus(costStatus, value) {
+        var text = [costStatus, value].join(' ');
+        if (text.indexOf('已结算') >= 0) return '已结算';
+        if (text.indexOf('结算中') >= 0) return '结算中';
+        if (text.indexOf('实际成本确认') >= 0 || text.indexOf('实际成本') >= 0) return '实际成本确认';
+        if (text.indexOf('已维护') >= 0 || text.indexOf('预估成本') >= 0) return '预估成本';
+        return '未维护成本';
+      }
+
+      function stateTokens(item) {
+        var tokens = [item.saleStatus, item.executionStatus, item.settlementStatus];
+        String(item.tabStatus || '').split(/\s+/).forEach(function (token) {
+          if (['即将售罄', '本周出团', '待审批', '已锁团'].indexOf(token) > -1) tokens.push(token);
+        });
+        return tokens.filter(Boolean).filter(function (token, index, list) {
+          return list.indexOf(token) === index;
+        }).join(' ');
+      }
+
+      function enrichScheduleState(item) {
+        item.saleStatus = item.saleStatus || normalizeSaleStatus(item.status, item.tabStatus);
+        item.executionStatus = item.executionStatus || normalizeExecutionStatus(item.status, item.tabStatus);
+        item.settlementStatus = item.settlementStatus || normalizeSettlementStatus(item.costStatus);
+        item.status = item.saleStatus;
+        item.costStatus = item.settlementStatus;
+        item.costClass = settlementStatusClass(item.settlementStatus);
+        item.tabStatus = stateTokens(item);
+        return item;
+      }
+
       function batchTypeClass(batchType) {
-        if (batchType === '邮轮团期') return 'tag tag-purple';
-        if (batchType === '专列团期') return 'tag tag-orange';
-        if (batchType === '自由行库存') return 'tag tag-green';
-        if (batchType === '研学团期') return 'tag tag-green';
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return 'tag tag-purple';
+        if (normalized === '专列班期') return 'tag tag-orange';
+        if (normalized === '研学营期') return 'tag tag-green';
         return 'tag tag-blue';
       }
 
       function batchTypeDisplay(batchType) {
-        if (batchType === '邮轮团期') return '邮轮线路';
-        if (batchType === '专列团期') return '专列线路';
-        if (batchType === '自由行库存') return '自由行库存';
-        if (batchType === '研学团期') return '研学线路';
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '邮轮线路';
+        if (normalized === '专列班期') return '专列线路';
+        if (normalized === '研学营期') return '研学线路';
         return '自营线路';
+      }
+
+      function productTypeKey(product) {
+        var batchType = productBatchTypes[product] || '';
+        if (/邮轮/.test(batchType)) return 'cruise';
+        if (/专列/.test(batchType)) return 'train';
+        if (/研学/.test(batchType)) return 'study';
+        return product ? 'group' : '';
+      }
+
+      function buildCreateScheduleHref() {
+        var params = new URLSearchParams();
+        var product = routeFilterProduct || '';
+        var route = pageParams.get('route') || '';
+        if (product) {
+          params.set('source', 'schedules');
+          params.set('product', product);
+          params.set('productName', product);
+          params.set('type', routeFilterType || productTypeKey(product));
+        }
+        if (route) params.set('route', route);
+        return 'team-create.html' + (params.toString() ? '?' + params.toString() : '');
+      }
+
+      function updateCreateScheduleHref() {
+        if (openCreateSchedule) openCreateSchedule.href = buildCreateScheduleHref();
       }
 
       function readChannelSeats(cell) {
@@ -1179,25 +1352,18 @@
       }
 
       function costRowsFor(item) {
-        if (item.batchType === '邮轮团期') {
+        if (normalizeBatchType(item.batchType) === '邮轮航次') {
           return [
             ['船票采购', '凯撒邮轮资源部', item.stock + item.unit, '按舱型', '待核算', '舱型成本按航次矩阵归集'],
             ['港务税费', '港口服务商', item.sold + item.unit, '¥980', '待核算', '随订单人数确认'],
             ['岸上观光', '欧洲地接ABC', item.sold + item.unit, '¥650', '待核算', '按上岸名单确认']
           ];
         }
-        if (item.batchType === '专列团期') {
+        if (normalizeBatchType(item.batchType) === '专列班期') {
           return [
             ['包列固定成本', '中国铁路合作局', '1列', '¥620,000', '¥620,000', '按车次归集'],
             ['目的地地接', '西北地接联盟', item.sold + item.unit, '¥2,800', '待核算', '按实际名单确认'],
             ['随车服务', '随车服务团队', '12天', '¥8,000', '¥96,000', '固定服务费']
-          ];
-        }
-        if (item.batchType === '自由行库存') {
-          return [
-            ['机票锁位', '国际航空CA', item.stock + item.unit, '¥3,200', '待核算', '采购批次 ' + (item.code || 'FT')],
-            ['酒店房晚', '巴黎酒店直采', item.stock + item.unit, '¥1,800', '待核算', '按使用日期释放库存'],
-            ['接送机服务', '欧洲地接ABC', item.sold + item.unit, '¥420', '待核算', '按订单加购确认']
           ];
         }
         return [
@@ -1208,10 +1374,10 @@
       }
 
       function fillCostModal(item) {
-        document.getElementById('costModalTitle').textContent = (item.batchType === '自由行库存' ? '采购批次成本 - ' : '成本维护 - ') + item.code;
+        document.getElementById('costModalTitle').textContent = '成本维护 - ' + item.code;
         var summary = costModal.querySelector('.schedule-cost-summary');
         if (summary) {
-          summary.innerHTML = '<span>线路：' + escapeHtml(item.product) + '</span><span>库存对象：' + escapeHtml(item.route || '-') + '</span><span>已售：' + escapeHtml(stockText(item.sold, item.unit)) + '</span>';
+          summary.innerHTML = '<span>线路：' + escapeHtml(item.product) + '</span><span>方案：' + escapeHtml(item.route || '-') + '</span><span>已售：' + escapeHtml(stockText(item.sold, item.unit)) + '</span>';
         }
         costRows.innerHTML = costRowsFor(item).map(function (row) {
           return '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td>' + row[2] + '</td><td>' + row[3] + '</td><td>' + row[4] + '</td><td>' + row[5] + '</td><td><button class="table-link danger" type="button" data-delete-cost>删除</button></td></tr>';
@@ -1219,26 +1385,98 @@
       }
 
       function fillStockLineage(item) {
-        var isFree = item.batchType === '自由行库存';
         document.getElementById('stockLineageName').textContent = item.product + ' / ' + (item.route || '-');
-        document.getElementById('stockLineageMeta').textContent = item.code + ' | ' + batchTypeDisplay(item.batchType) + ' | ' + item.status;
-        document.getElementById('stockLineageObject').textContent = isFree ? '日期套餐库存' : item.batchType;
-        document.getElementById('stockLineageUpstream').textContent = isFree ? '自由行线路、套餐方案、酒店/航班/接送机资源、采购批次' : '旅游线路、方案、资源主数据、供应商';
-        document.getElementById('stockLineageDownstream').textContent = isFree ? '订单、采购批次结算、应付、付款、NC' : '订单、名单、团队执行、成本、结算、NC';
-        document.getElementById('stockLineageRows').innerHTML = [
-          ['线路/方案', item.product + ' / ' + (item.route || '-'), '产品中心', isFree ? '套餐项必须绑定资源和采购批次' : '方案必须完整后才能生成团期'],
-          [isFree ? '日期库存' : '团期库存', item.code + '，可售 ' + stockText(item.left, item.unit), '团期团控', isFree ? '按日期和套餐控库存' : '维护日期、价格、库存和截止节点'],
-          ['订单', '锁定库存并生成合同/订单', '订单中心', '订单必须反查库存对象'],
-          ['收款', '应收单、收款单、认款记录', '财务', '收款认领完成后生成财务联动'],
-          ['成本', isFree ? '采购批次成本、供应商应付' : '团期供应商费用、成本确认', '团期成本/财务', '成本必须反查库存对象和供应商'],
-          ['结算/NC', '结算单、应收应付、付款、NC凭证', '财务', '每笔凭证追溯业务事件']
-        ].map(function (row) {
-          return '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td>' + row[2] + '</td><td>' + row[3] + '</td></tr>';
+        document.getElementById('stockLineageMeta').textContent = item.code + ' | ' + batchTypeDisplay(item.batchType) + ' | ' + item.saleStatus;
+        document.getElementById('stockLineageObject').textContent = normalizeBatchType(item.batchType);
+        document.getElementById('stockLineageUpstream').textContent = item.product + ' / ' + (item.route || '-');
+        document.getElementById('stockLineageDownstream').textContent = stockText(item.sold, item.unit) + ' / ' + stockText(item.left, item.unit);
+        document.getElementById('stockLineageCostStatus').textContent = item.settlementStatus || '未维护成本';
+      }
+
+      function resourceRowsFor(item) {
+        if (normalizeBatchType(item.batchType) === '邮轮航次') {
+          return [
+            ['航次舱房', '理想号 MED-20240801', item.stock + item.unit + ' / 已售' + item.sold + item.unit, '名单提交 ' + addDays(item.depart, -12), '待确认', '成本待确认', '确认舱房'],
+            ['岸上游', '欧洲地接ABC', item.sold + '人', '靠港前7天', '已确认', '应付待生成', '查看'],
+            ['港务税费', '港口服务商', item.sold + '人', '开航前5天', '待确认', '成本待确认', '确认费用']
+          ];
+        }
+        if (normalizeBatchType(item.batchType) === '专列班期') {
+          return [
+            ['车次铺位', 'Y653 丝路专列', item.stock + item.unit + ' / 已售' + item.sold + item.unit, '名单提交 ' + addDays(item.depart, -10), '待确认', '成本待确认', '确认铺位'],
+            ['随车服务', '随车服务团队', '12天', '发车前7天', '已确认', '应付待生成', '查看'],
+            ['目的地地接', '西北地接联盟', item.sold + '人', '发车前5天', '待确认', '成本待确认', '确认']
+          ];
+        }
+        if (normalizeBatchType(item.batchType) === '研学营期') {
+          return [
+            ['导师配置', '航天导师团队', '导师3名', '开营前10天', '已确认', '应付待生成', '查看'],
+            ['营地住宿', '北京研学基地', item.sold + '名', '开营前7天', '待确认', '成本待确认', '确认'],
+            ['保险', '太平洋保险', item.sold + '名', '开营前3天', '处理中', '应付待生成', '查看进度']
+          ];
+        }
+        return [
+	          ['航班资源', item.defaultFlightRoute || '北京首都T3 → 巴黎戴高乐T1（国航/法航）', item.stock + item.unit + ' / 已售' + item.sold + item.unit, '出票截止 ' + addDays(item.depart, -7), item.trafficDemand ? '待确认' : '待确认', '成本待确认', '确认航班'],
+          ['酒店住宿', '巴黎酒店池', '确认号8/14间，尾房2间待回传', '出发前10天', '部分确认', '成本待确认', '确认'],
+          ['POI门票', '卢浮宫 / 罗马斗兽场', item.sold + '人预约，斗兽场待回传', '出发前7天', '待确认', '成本待确认', '确认'],
+          ['餐厅安排', '巴黎中餐厅Le Bonheur', '2次团队餐，3人特殊餐已确认', '出发前5天', '已确认', '应付待生成', '查看'],
+          ['用车安排', 'Volvo 45座大巴', '12天，司机姓名和车牌待回传', '出发前5天', '待确认', '成本待确认', '确认']
+        ];
+      }
+
+      function resourceStatusClass(status) {
+        if (status === '已确认') return 'tag tag-green';
+        if (status === '处理中') return 'tag tag-blue';
+        return 'tag tag-orange';
+      }
+
+      function fillScheduleResourceDrawer(item) {
+        document.getElementById('scheduleResourceTitle').textContent = '资源确认 - ' + item.code;
+        document.getElementById('resourceScheduleName').textContent = item.product + ' / ' + (item.route || '-');
+        document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (item.planner || '-');
+        document.getElementById('resourceRosterText').textContent = stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
+        document.getElementById('resourceDeadlineText').textContent = addDays(item.depart, -7);
+        document.getElementById('resourceFinanceText').textContent = item.settlementStatus || '未维护成本';
+        var rows = resourceRowsFor(item);
+        var pending = rows.filter(function (row) { return row[4] !== '已确认'; }).length;
+        document.getElementById('resourceProgressText').textContent = (rows.length - pending) + '项已确认，' + pending + '项待处理';
+        document.getElementById('resourceDetailLink').href = detailHref(item) + '&tab=resource';
+        document.getElementById('scheduleResourceRows').innerHTML = rows.map(function (row) {
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td><td><span class="' + resourceStatusClass(row[4]) + '">' + escapeHtml(row[4]) + '</span></td><td>' + escapeHtml(row[5]) + '</td><td><div class="table-action"><button type="button" data-resource-action class="table-action-primary">' + escapeHtml(row[6]) + '</button></div></td></tr>';
         }).join('');
       }
 
       function readRow(row) {
         var cells = row.children;
+        if (cells.length === 15) {
+          var productCellNew = cells[1];
+          var batchTypeNew = cells[2].textContent.trim();
+          return {
+            code: cells[0].textContent.trim(),
+            product: productCellNew.dataset.product || productCellNew.querySelector('.schedule-product-name').textContent.trim(),
+            route: productCellNew.dataset.route || productCellNew.querySelector('.schedule-route-name').textContent.trim(),
+            batchType: batchTypeNew,
+            depart: cells[3].textContent.trim(),
+            back: cells[4].textContent.trim(),
+            stock: parseStockValue(cells[5].textContent.trim()),
+            sold: parseStockValue(cells[6].textContent.trim()),
+            left: parseStockValue(cells[7].textContent.trim()),
+            unit: parseStockUnit(cells[5].textContent.trim(), batchTypeNew),
+            channelSeats: readChannelSeats(cells[8]),
+            price: cells[9].textContent.trim(),
+            planner: cells[10].textContent.trim(),
+            saleStatus: cells[11].textContent.trim(),
+            executionStatus: cells[12].textContent.trim(),
+            settlementStatus: cells[13].textContent.trim(),
+            status: cells[11].textContent.trim(),
+            costStatus: cells[13].textContent.trim(),
+            costClass: cells[13].querySelector('.tag') ? cells[13].querySelector('.tag').className : 'tag tag-orange',
+            locked: row.dataset.locked === 'true',
+            tabStatus: row.dataset.tabStatus || cells[11].textContent.trim(),
+            remark: row.dataset.remark || '',
+            deadline: row.dataset.deadline || addDays(cells[3].textContent.trim(), -5)
+          };
+        }
         if (cells.length === 14) {
           var mergedProductCell = cells[1];
           var mergedBatchType = cells[2].textContent.trim();
@@ -1257,6 +1495,9 @@
             price: cells[9].textContent.trim(),
             planner: cells[10].textContent.trim(),
             status: cells[11].textContent.trim(),
+            saleStatus: normalizeSaleStatus(cells[11].textContent.trim(), row.dataset.tabStatus),
+            executionStatus: normalizeExecutionStatus(cells[11].textContent.trim(), row.dataset.tabStatus),
+            settlementStatus: normalizeSettlementStatus(cells[12].textContent.trim()),
             costStatus: cells[12].textContent.trim(),
             costClass: cells[12].querySelector('.tag') ? cells[12].querySelector('.tag').className : 'tag tag-orange',
             locked: row.dataset.locked === 'true',
@@ -1283,6 +1524,9 @@
             price: cells[8].textContent.trim(),
             planner: cells[9].textContent.trim(),
             status: cells[10].textContent.trim(),
+            saleStatus: normalizeSaleStatus(cells[10].textContent.trim(), row.dataset.tabStatus),
+            executionStatus: normalizeExecutionStatus(cells[10].textContent.trim(), row.dataset.tabStatus),
+            settlementStatus: normalizeSettlementStatus(cells[11].textContent.trim()),
             costStatus: cells[11].textContent.trim(),
             costClass: cells[11].querySelector('.tag') ? cells[11].querySelector('.tag').className : 'tag tag-orange',
             locked: row.dataset.locked === 'true',
@@ -1306,6 +1550,9 @@
           price: cells[10].textContent.trim(),
           planner: cells[11].textContent.trim(),
           status: cells[12].textContent.trim(),
+          saleStatus: normalizeSaleStatus(cells[12].textContent.trim(), row.dataset.tabStatus),
+          executionStatus: normalizeExecutionStatus(cells[12].textContent.trim(), row.dataset.tabStatus),
+          settlementStatus: normalizeSettlementStatus(cells[13].textContent.trim()),
           costStatus: cells[13].textContent.trim(),
           costClass: cells[13].querySelector('.tag') ? cells[13].querySelector('.tag').className : 'tag tag-orange',
           locked: row.dataset.locked === 'true',
@@ -1315,7 +1562,7 @@
         };
       }
 
-      var schedules = Array.from(scheduleRows.querySelectorAll('tr')).map(readRow);
+      var schedules = Array.from(scheduleRows.querySelectorAll('tr')).map(readRow).map(normalizeScheduleItem);
 
       function readApprovalResults() {
         try {
@@ -1358,14 +1605,17 @@
           channelSeats: {},
           price: '¥0',
           planner: '周伟',
-          status: '待售',
-          tabStatus: '待售',
-          costStatus: '未维护',
+          saleStatus: '',
+          executionStatus: '',
+          settlementStatus: '',
+          status: '筹备中',
+          tabStatus: '筹备中',
+          costStatus: '未维护成本',
           costClass: 'tag tag-orange',
           locked: false,
           remark: '',
           deadline: ''
-        }, item || {});
+        }, enrichScheduleState(item || {}));
       }
 
       function addScheduleIfUnique(schedule) {
@@ -1396,18 +1646,21 @@
           channelSeats: { 门: 12, 携: 8, 猪: 4, 同: 3, 直: 2, 协: 1 },
           price: '¥12,800',
           planner: '周伟',
-          status: '销售中',
-          tabStatus: '销售中',
-          costStatus: '未维护',
+          saleStatus: '开放报名',
+          executionStatus: '未出团',
+          settlementStatus: '未维护成本',
+          status: '开放报名',
+          tabStatus: '开放报名 未出团 未维护成本',
+          costStatus: '未维护成本',
           costClass: 'tag tag-orange',
-          remark: '开团审批通过，库存和渠道价格已同步',
+          remark: '开团审批通过，名额和渠道价格已确认',
           deadline: '2025-07-10'
         });
         addApprovedSchedule('APR-20260624-036', {
           code: 'CR20250803001',
           product: '理想号地中海邮轮',
           route: '地中海东线7晚',
-          batchType: '邮轮团期',
+          batchType: '邮轮航次',
           depart: '2025-08-03',
           back: '2025-08-10',
           stock: 126,
@@ -1417,18 +1670,21 @@
           channelSeats: { 门: 35, 携: 42, 猪: 18, 同: 20, 直: 28, 协: 16 },
           price: '¥13,600',
           planner: '赵明',
-          status: '销售中',
-          tabStatus: '销售中',
-          costStatus: '未维护',
+          saleStatus: '开放报名',
+          executionStatus: '未出团',
+          settlementStatus: '未维护成本',
+          status: '开放报名',
+          tabStatus: '开放报名 未出团 未维护成本',
+          costStatus: '未维护成本',
           costClass: 'tag tag-orange',
-          remark: '邮轮开团审批通过，舱型库存已同步',
+          remark: '邮轮开航审批通过，舱型余位已确认',
           deadline: '2025-07-24'
         });
         addApprovedSchedule('APR-20260624-032', {
           code: 'TR20250805001',
           product: '东方丝路专列9日',
           route: '丝路经典线',
-          batchType: '专列团期',
+          batchType: '专列班期',
           depart: '2025-08-05',
           back: '2025-08-13',
           stock: 92,
@@ -1438,33 +1694,15 @@
           channelSeats: { 门: 30, 携: 24, 猪: 12, 同: 8, 直: 12, 协: 6 },
           price: '¥13,000',
           planner: '李铭',
-          status: '销售中',
-          tabStatus: '销售中',
-          costStatus: '未维护',
+          saleStatus: '开放报名',
+          executionStatus: '未出团',
+          settlementStatus: '未维护成本',
+          status: '开放报名',
+          tabStatus: '开放报名 未出团 未维护成本',
+          costStatus: '未维护成本',
           costClass: 'tag tag-orange',
-          remark: '专列开团审批通过，铺位库存已同步',
+          remark: '专列开班审批通过，铺位安排已确认',
           deadline: '2025-07-26'
-        });
-        addApprovedSchedule('APR-20260624-038', {
-          code: 'FT20260718001',
-          product: '巴黎自由行 5-7日',
-          route: '机票+酒店套餐',
-          batchType: '自由行库存',
-          depart: '2026-07-18',
-          back: '2026-07-23',
-          stock: 36,
-          sold: 0,
-          left: 36,
-          unit: '套',
-          channelSeats: { 门: 8, 携: 10, 猪: 6, 同: 4, 直: 5, 协: 3 },
-          price: '¥6,800',
-          planner: '郑华',
-          status: '销售中',
-          tabStatus: '销售中',
-          costStatus: '采购批次待确认',
-          costClass: 'tag tag-orange',
-          remark: '自由行日期库存审批通过，套餐库存和采购批次已同步',
-          deadline: '2026-07-10'
         });
       }
 
@@ -1474,16 +1712,40 @@
         });
       }
 
+      function applyPendingScheduleResults() {
+        var approvals = readApprovalResults();
+        var pending = readPendingTeamCreates();
+        Object.keys(pending).forEach(function (approvalNo) {
+          if (approvals[approvalNo] && approvals[approvalNo].status === 'approved') return;
+          var item = normalizeScheduleItem(pending[approvalNo]);
+          if (/自由行/.test(item.batchType || item.product || '') || /^FT/.test(item.code || '')) return;
+          item.approvalStatus = '待审批';
+          item.saleStatus = '筹备中';
+          item.executionStatus = '未出团';
+          item.settlementStatus = '未维护成本';
+          item.status = item.saleStatus;
+          item.costStatus = item.settlementStatus;
+          item.costClass = settlementStatusClass(item.settlementStatus);
+          item.tabStatus = stateTokens(item);
+          item.remark = (item.remark ? item.remark + '；' : '') + '审批单号 ' + approvalNo;
+          addScheduleIfUnique(item);
+        });
+      }
+
       function detailHref(item) {
-        var type = item.batchType === '邮轮团期' ? 'cruise' : item.batchType === '专列团期' ? 'train' : item.batchType === '自由行库存' ? 'free' : 'group';
+        var normalized = normalizeBatchType(item.batchType);
+        var type = normalized === '邮轮航次' ? 'cruise' : normalized === '专列班期' ? 'train' : normalized === '研学营期' ? 'study' : 'group';
         return 'schedules-detail.html?type=' + type;
       }
 
       function actionHtml(item) {
         var href = detailHref(item);
-        var rosterText = item.batchType === '自由行库存' ? '订单' : '名单';
-        var lockText = item.batchType === '自由行库存' ? '锁库存' : '锁团';
-        return '<div class="table-action"><button type="button" data-lock-schedule class="table-action-primary">' + lockText + '</button><a href="' + href + '">详情</a><button type="button" data-open-lineage>链路</button><button type="button" data-open-cost>成本</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a href="' + href + '" class="dropdown-item">' + rosterText + '</a><button class="dropdown-item" type="button" data-edit-schedule>编辑</button><button class="dropdown-item" type="button" data-copy-schedule>复制</button><button class="dropdown-item danger" type="button" data-cancel-schedule>取消</button></span></span></div>';
+        var rosterText = '名单';
+        var lockText = '锁团';
+        if (item.approvalStatus === '待审批' || (item.tabStatus || '').split(/\s+/).indexOf('待审批') > -1) {
+          return '<div class="table-action"><button type="button" class="table-action-primary" disabled>审批中</button><a href="' + href + '">详情</a><button type="button" data-open-lineage>查看</button><button type="button" data-open-cost>成本</button></div>';
+        }
+        return '<div class="table-action"><button type="button" data-open-resource class="table-action-primary">资源</button><a href="' + href + '">详情</a><button type="button" data-open-cost>成本</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a href="' + href + '" class="dropdown-item">' + rosterText + '</a><button class="dropdown-item" type="button" data-lock-schedule>' + lockText + '</button><button class="dropdown-item" type="button" data-open-lineage>查看</button><button class="dropdown-item" type="button" data-edit-schedule>编辑</button><button class="dropdown-item" type="button" data-copy-schedule>复制</button><button class="dropdown-item danger" type="button" data-cancel-schedule>取消</button></span></span></div>';
       }
 
       function rowHtml(item, index) {
@@ -1504,8 +1766,9 @@
           '<td>' + channelSeatHtml(item.channelSeats) + '</td>' +
           '<td>' + escapeHtml(item.price) + '</td>' +
           '<td>' + escapeHtml(item.planner || '周伟') + '</td>' +
-          '<td><span class="' + statusClass(item.status) + '">' + escapeHtml(item.status) + '</span></td>' +
-          '<td><span class="' + escapeHtml(item.costClass || 'tag tag-orange') + '">' + escapeHtml(item.costStatus || '未维护') + '</span></td>' +
+          '<td><span class="' + statusClass(item.saleStatus) + '">' + escapeHtml(item.saleStatus) + '</span></td>' +
+          '<td><span class="' + executionStatusClass(item.executionStatus) + '">' + escapeHtml(item.executionStatus) + '</span></td>' +
+          '<td><span class="' + settlementStatusClass(item.settlementStatus) + '">' + escapeHtml(item.settlementStatus) + '</span></td>' +
           '<td>' + actions + '</td>' +
           '</tr>';
       }
@@ -1519,22 +1782,39 @@
         var productQuery = productNameFilter.value.trim();
         var codeQuery = scheduleCodeFilter.value.trim().toUpperCase();
         var status = scheduleStatusFilter.value;
+        var executionStatus = executionStatusFilter.value;
+        var settlementStatus = settlementStatusFilter.value;
         var batchType = batchTypeFilter.value;
         if (productQuery && item.product.indexOf(productQuery) === -1) return false;
         if (codeQuery && item.code.toUpperCase().indexOf(codeQuery) === -1) return false;
         if (batchType && batchType !== '全部' && item.batchType !== batchType) return false;
         if (departStartDate.value && item.depart < departStartDate.value) return false;
         if (departEndDate.value && item.depart > departEndDate.value) return false;
-        if (status && status !== '全部' && item.status !== status && item.tabStatus.split(/\s+/).indexOf(status) === -1) return false;
+        if (status && status !== '全部' && item.saleStatus !== status) return false;
+        if (executionStatus && executionStatus !== '全部执行' && item.executionStatus !== executionStatus) return false;
+        if (settlementStatus && settlementStatus !== '全部结算' && item.settlementStatus !== settlementStatus) return false;
         if (activeTabValue && activeTabValue !== '全部' && item.tabStatus.split(/\s+/).indexOf(activeTabValue) === -1) return false;
         return true;
       }
 
       function applyFilters() {
+        var visibleCount = 0;
         Array.from(scheduleRows.querySelectorAll('tr')).forEach(function (row) {
           var item = schedules[Number(row.dataset.index)];
-          row.hidden = !item || !rowMatches(item);
+          var matched = !!item && rowMatches(item);
+          row.hidden = !matched;
+          if (matched) visibleCount += 1;
         });
+        updateCurrentRouteFilter(visibleCount);
+      }
+
+      function updateCurrentRouteFilter(visibleCount) {
+        updateCreateScheduleHref();
+        if (!currentRouteFilter) return;
+        currentRouteFilter.hidden = !routeFilterProduct;
+        if (!routeFilterProduct) return;
+        currentRouteFilterName.textContent = routeFilterProduct;
+        currentRouteFilterCount.textContent = visibleCount + '条';
       }
 
       function closeMenus() {
@@ -1620,11 +1900,14 @@
           channelSeats: currentMode === 'edit' && currentSchedule ? currentSchedule.channelSeats : defaultChannelSeats(stock),
           price: adultPrice.value.trim() || '¥0',
           planner: currentMode === 'edit' && currentSchedule ? currentSchedule.planner : productPlanners[scheduleProduct.value] || '周伟',
-          status: currentMode === 'edit' && currentSchedule ? currentSchedule.status : '待售',
-          costStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.costStatus : '未维护',
-          costClass: currentMode === 'edit' && currentSchedule ? currentSchedule.costClass : 'tag tag-orange',
+          saleStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.saleStatus : '筹备中',
+          executionStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.executionStatus : '未出团',
+          settlementStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.settlementStatus : '未维护成本',
+          status: currentMode === 'edit' && currentSchedule ? currentSchedule.saleStatus : '筹备中',
+          costStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.settlementStatus : '未维护成本',
+          costClass: currentMode === 'edit' && currentSchedule ? settlementStatusClass(currentSchedule.settlementStatus) : 'tag tag-orange',
           locked: currentMode === 'edit' && currentSchedule ? currentSchedule.locked : false,
-          tabStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.tabStatus : '待售',
+          tabStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.tabStatus : '筹备中 未出团 未维护成本',
           remark: scheduleRemark.value.trim(),
           deadline: deadlineDate.value || addDays(departDate.value, -5)
         };
@@ -1646,8 +1929,8 @@
           scheduleRoutePlan.innerHTML = '<option value="">请先选择方案</option>';
           scheduleRoutePlan.disabled = true;
           routePlanHint.textContent = '新建时先选择方案，再选择该线路下本次要开排的方案。';
-          totalStockLabel.innerHTML = '库存 <span class="req">*</span>';
-          totalStock.placeholder = '请输入库存';
+          totalStockLabel.innerHTML = '名额 <span class="req">*</span>';
+          totalStock.placeholder = '请输入名额';
           adultPriceLabel.textContent = '销售价';
           return;
         }
@@ -1659,10 +1942,11 @@
         if (selectedRoute && plans.indexOf(selectedRoute) === -1) {
           scheduleRoutePlan.insertAdjacentHTML('afterbegin', '<option selected>' + escapeHtml(selectedRoute) + '</option>');
         }
-        totalStockLabel.innerHTML = (batchType === '邮轮团期' ? '舱房库存' : batchType === '专列团期' ? '铺位库存' : batchType === '自由行库存' ? '套餐库存' : batchType === '研学团期' ? '学员名额' : '总名额') + ' <span class="req">*</span>';
+        var normalizedBatchType = normalizeBatchType(batchType);
+        totalStockLabel.innerHTML = (normalizedBatchType === '邮轮航次' ? '舱房余位' : normalizedBatchType === '专列班期' ? '铺位数' : normalizedBatchType === '研学营期' ? '学员名额' : '总名额') + ' <span class="req">*</span>';
         totalStock.placeholder = '请输入' + unit + '数';
-        adultPriceLabel.textContent = batchType === '邮轮团期' ? '舱型销售价' : batchType === '专列团期' ? '铺位销售价' : batchType === '自由行库存' ? '套餐销售价' : batchType === '研学团期' ? '学生销售价' : '成人销售价';
-        routePlanHint.textContent = routeFieldHint(batchType, unit) + ' 库存单位：' + unit + '。';
+        adultPriceLabel.textContent = normalizedBatchType === '邮轮航次' ? '舱型销售价' : normalizedBatchType === '专列班期' ? '铺位销售价' : normalizedBatchType === '研学营期' ? '学生销售价' : '成人销售价';
+        routePlanHint.textContent = routeFieldHint(batchType, unit) + ' 单位：' + unit + '。';
       }
 
       function updateDuration(autoFill) {
@@ -1682,9 +1966,10 @@
       }
 
       function openCreate(prefill) {
+        if (prefill && guardFreeTravelProduct(prefill.product, prefill.route)) return;
         currentMode = 'create';
         currentSchedule = null;
-        document.getElementById('createScheduleTitle').textContent = '新建团期';
+        document.getElementById('createScheduleTitle').textContent = '新建排期';
         saveSchedule.textContent = '确认创建';
         resetForm();
         if (prefill && prefill.product) {
@@ -1701,7 +1986,7 @@
       function openEdit(item) {
         currentMode = 'edit';
         currentSchedule = item;
-        document.getElementById('createScheduleTitle').textContent = '编辑团期';
+        document.getElementById('createScheduleTitle').textContent = '编辑' + scheduleObjectName(item.batchType);
         saveSchedule.textContent = '确认保存';
         fillForm(item);
         window.caesarUI.openLayer(createModal);
@@ -1878,8 +2163,7 @@
 
       function updateBatchCreateCount() {
         var count = document.querySelectorAll('.batch-preview-check:checked').length;
-        var objectName = batchSelectedProduct && batchSelectedProduct.dataset.batchType === '自由行库存' ? '个日期库存' : '个团期';
-        document.getElementById('batchCreateCountText').textContent = '将创建 ' + count + ' ' + objectName;
+        document.getElementById('batchCreateCountText').textContent = '将创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期');
         document.getElementById('batchProgressCount').textContent = '0/' + count;
       }
 
@@ -1898,6 +2182,7 @@
       }
 
       function openBatch(prefill) {
+        if (prefill && guardFreeTravelProduct(prefill.product, prefill.route)) return;
         resetBatchWizard();
         if (prefill && prefill.product) {
           var productCard = Array.from(document.querySelectorAll('#batchProductList .batch-product-card')).find(function (card) {
@@ -1934,12 +2219,15 @@
             channelSeats: Object.fromEntries(batchQuotaData().map(function (item) { return [item.name, item.value]; })),
             price: '¥12,800',
             planner: batchSelectedProduct.dataset.planner,
-            status: '待售',
-            costStatus: batchSelectedProduct.dataset.batchType === '自由行库存' ? '采购批次待确认' : '未维护',
+            saleStatus: '筹备中',
+            executionStatus: '未出团',
+            settlementStatus: '未维护成本',
+            status: '筹备中',
+            costStatus: '未维护成本',
             costClass: 'tag tag-orange',
             locked: false,
-            tabStatus: '待售',
-            remark: batchSelectedProduct.dataset.batchType === '自由行库存' ? '批量生成日期库存，待确认采购批次' : '批量开排创建',
+            tabStatus: '筹备中 未出团 未维护成本',
+            remark: '批量开排创建',
             deadline: addDays(cells[1].textContent.trim(), -5)
           });
         });
@@ -1952,9 +2240,9 @@
         if (count === 0 || batchCreated) return;
         result.hidden = false;
         result.classList.remove('done');
-        document.getElementById('batchProgressText').textContent = '正在创建团期';
+        document.getElementById('batchProgressText').textContent = '正在创建' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期');
         document.getElementById('batchProgressCount').textContent = '0/' + count;
-        document.getElementById('batchResultSummary').textContent = '系统正在生成团期号、渠道库存和待售团期。';
+        document.getElementById('batchResultSummary').textContent = '正在生成编号、渠道名额和排期状态。';
         document.getElementById('batchNextStep').disabled = true;
         setTimeout(function () {
           commitBatchCreateRows();
@@ -1962,15 +2250,14 @@
           result.classList.add('done');
           document.getElementById('batchProgressText').textContent = '创建完成';
           document.getElementById('batchProgressCount').textContent = count + '/' + count;
-          var resultObjectName = batchSelectedProduct && batchSelectedProduct.dataset.batchType === '自由行库存' ? '个日期库存' : '个团期';
-          document.getElementById('batchResultSummary').textContent = '已成功创建 ' + count + ' ' + resultObjectName + '，默认状态为待售，渠道库存已按分配同步到列表。';
+          document.getElementById('batchResultSummary').textContent = '已成功创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') + '，默认销售状态为筹备中。';
           document.getElementById('batchNextStep').textContent = '已创建';
         }, 700);
       }
 
-      document.getElementById('openCreateSchedule').addEventListener('click', function (event) {
+      openCreateSchedule.addEventListener('click', function (event) {
         event.preventDefault();
-        navigateTo('team-create.html');
+        navigateTo(buildCreateScheduleHref());
       });
       document.getElementById('openBatchSchedule').addEventListener('click', function (event) {
         event.preventDefault();
@@ -1978,9 +2265,11 @@
       });
 
       saveSchedule.addEventListener('click', function () {
-        if (!scheduleProduct.value.trim() || !scheduleRoutePlan.value || !departDate.value || !returnDate.value || !totalStock.value) return;
+        if (!scheduleProduct.value.trim()) return;
+        if (guardFreeTravelProduct(scheduleProduct.value.trim(), scheduleRoutePlan.value)) return;
+        if (!scheduleRoutePlan.value || !departDate.value || !returnDate.value || !totalStock.value) return;
         if (daysBetween(departDate.value, returnDate.value) <= 0) return;
-        var next = formData();
+        var next = normalizeScheduleItem(formData());
         if (currentMode === 'edit' && currentSchedule) {
           var editIndex = schedules.indexOf(currentSchedule);
           if (editIndex > -1) schedules.splice(editIndex, 1, next);
@@ -2006,6 +2295,9 @@
       document.querySelectorAll('[data-close-lineage]').forEach(function (button) {
         button.addEventListener('click', function () { window.caesarUI.closeLayer(stockLineageDrawer); });
       });
+      document.querySelectorAll('[data-close-resource-drawer]').forEach(function (button) {
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(scheduleResourceDrawer); });
+      });
       document.querySelectorAll('[data-close-cancel]').forEach(function (button) {
         button.addEventListener('click', function () { window.caesarUI.closeLayer(cancelModal); });
       });
@@ -2013,7 +2305,7 @@
         button.addEventListener('click', function () { window.caesarUI.closeLayer(lockModal); });
       });
 
-      [createModal, costModal, batchScheduleDrawer, copyModal, stockLineageDrawer, cancelModal, lockModal].forEach(function (modal) {
+      [createModal, costModal, batchScheduleDrawer, copyModal, stockLineageDrawer, scheduleResourceDrawer, cancelModal, lockModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
@@ -2028,7 +2320,9 @@
         var cancelButton = event.target.closest('[data-cancel-schedule]');
         var lockButton = event.target.closest('[data-lock-schedule]');
         var costButton = event.target.closest('[data-open-cost]');
+        var resourceButton = event.target.closest('[data-open-resource]');
         var lineageButton = event.target.closest('[data-open-lineage]');
+        var resourceActionButton = event.target.closest('[data-resource-action]');
 
         if (moreButton) {
           event.preventDefault();
@@ -2048,7 +2342,7 @@
         }
         if (copyButton && item) {
           currentSchedule = item;
-          copyScheduleText.textContent = '确认复制 ' + item.code + '？复制后将在列表顶部新增待售团期。';
+          copyScheduleText.textContent = '确认复制 ' + item.code + '？复制后将在列表顶部新增筹备中团期。';
           closeMenus();
           window.caesarUI.openLayer(copyModal);
           return;
@@ -2073,6 +2367,18 @@
           event.stopPropagation();
           if (item) fillCostModal(item);
           window.caesarUI.openLayer(costModal);
+          return;
+        }
+        if (resourceButton && item) {
+          event.stopPropagation();
+          closeMenus();
+          fillScheduleResourceDrawer(item);
+          window.caesarUI.openLayer(scheduleResourceDrawer);
+          return;
+        }
+        if (resourceActionButton) {
+          event.stopPropagation();
+          if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('资源处理已记录');
           return;
         }
         if (lineageButton && item) {
@@ -2204,8 +2510,12 @@
         if (!currentSchedule) return;
         var clone = Object.assign({}, currentSchedule, {
           code: currentSchedule.code + '-COPY',
-          status: '待售',
-          tabStatus: '待售',
+          saleStatus: '筹备中',
+          executionStatus: '未出团',
+          settlementStatus: '未维护成本',
+          status: '筹备中',
+          costStatus: '未维护成本',
+          tabStatus: '筹备中 未出团 未维护成本',
           locked: false
         });
         schedules.unshift(clone);
@@ -2216,8 +2526,9 @@
 
       document.getElementById('confirmCancelSchedule').addEventListener('click', function () {
         if (!currentSchedule || !cancelReason.value.trim()) return;
+        currentSchedule.saleStatus = '已取消';
         currentSchedule.status = '已取消';
-        currentSchedule.tabStatus = '已取消';
+        currentSchedule.tabStatus = stateTokens(currentSchedule);
         currentSchedule.remark = cancelReason.value.trim();
         currentSchedule = null;
         window.caesarUI.closeLayer(cancelModal);
@@ -2226,8 +2537,9 @@
 
       document.getElementById('confirmLockSchedule').addEventListener('click', function () {
         if (!currentSchedule) return;
-        currentSchedule.status = '已锁团';
-        currentSchedule.tabStatus = (currentSchedule.tabStatus || '').split(/\s+/).concat('已锁团').filter(Boolean).join(' ');
+        currentSchedule.saleStatus = '已截止';
+        currentSchedule.status = '已截止';
+        currentSchedule.tabStatus = stateTokens(currentSchedule) + ' 已锁团';
         currentSchedule.locked = true;
         if (lockReason.value.trim()) currentSchedule.remark = lockReason.value.trim();
         currentSchedule = null;
@@ -2248,17 +2560,25 @@
 
       document.getElementById('searchSchedules').addEventListener('click', applyFilters);
       document.getElementById('resetSchedules').addEventListener('click', function () {
+        routeFilterProduct = '';
+        routeFilterType = '';
         productNameFilter.value = '';
         scheduleCodeFilter.value = '';
         departStartDate.value = '';
         departEndDate.value = '';
         batchTypeFilter.selectedIndex = 0;
         scheduleStatusFilter.selectedIndex = 0;
+        executionStatusFilter.selectedIndex = 0;
+        settlementStatusFilter.selectedIndex = 0;
         activeTabValue = '全部';
         document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
           item.classList.toggle('active', item.dataset.filterValue === '全部');
         });
         applyFilters();
+      });
+
+      document.querySelector('[data-clear-route-filter]').addEventListener('click', function () {
+        navigateTo('schedules.html');
       });
 
       document.getElementById('addCostRow').addEventListener('click', function () {
@@ -2279,18 +2599,25 @@
       }
 
       scheduleProduct.addEventListener('input', syncScheduleProductContext);
-      scheduleProduct.addEventListener('change', syncScheduleProductContext);
+      scheduleProduct.addEventListener('change', function () {
+        if (guardFreeTravelProduct(scheduleProduct.value.trim(), scheduleRoutePlan.value)) return;
+        syncScheduleProductContext();
+      });
       departDate.addEventListener('change', function () { updateDuration(true); });
       deadlineDate.addEventListener('input', function () { deadlineTouched = true; });
       returnDate.addEventListener('change', function () { updateDuration(false); });
 
       applyApprovedScheduleResults();
+      applyPendingScheduleResults();
       applyStoredBatchScheduleResults();
       renderRows();
 
-      var pageParams = new URLSearchParams(window.location.search);
+      if (routeFilterProduct) {
+        productNameFilter.value = routeFilterProduct;
+        applyFilters();
+      }
       var prefill = {
-        product: pageParams.get('product') || '',
+        product: pageParams.get('product') || routeFilterProduct || '',
         route: pageParams.get('route') || ''
       };
       if (pageParams.get('open') === 'create') {

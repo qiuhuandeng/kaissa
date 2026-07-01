@@ -31,7 +31,6 @@
     <span id="returnPaginationText">第1-3条/共3条</span>
   </div>
 
-  <section class="card fulfillment-note-card"><strong>回团处理重点：</strong><span id="returnNoteText">已结束的团期需完成满意度汇总、异常关闭、供应商评价、实际成本确认和资料归档。</span></section>
     </section>
 
   <div id="returnCloseModal" class="modal-overlay drawer-overlay" aria-hidden="true"><div class="modal drawer-modal fulfillment-drawer" role="dialog" aria-modal="true" aria-labelledby="returnCloseTitle"><div class="modal-header"><div id="returnCloseTitle" class="modal-title">回团处理</div><button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button></div><div class="modal-body"><div class="readonly-summary">普通团期 EU-DEU-20250620-001 | 德捷奥深度10日 | 24人</div><div class="form-group"><label class="form-label">回团检查项</label><div class="checkbox-row"><label><input type="checkbox" checked> 满意度问卷已汇总</label><label><input type="checkbox"> 实际成本已确认</label><label><input type="checkbox" checked> 领队/带队日志已提交</label><label><input type="checkbox"> 供应商评价已完成</label><label><input type="checkbox"> 出团资料已归档</label></div></div><div class="form-row"><div class="form-group"><label class="form-label" for="returnSatisfaction">满意度</label><input id="returnSatisfaction" class="form-control" type="text" value="96%"></div><div class="form-group"><label class="form-label" for="returnStatusUpdate">处理状态</label><select id="returnStatusUpdate" class="form-control"><option>待复盘</option><option>异常处理中</option><option>已归档</option></select></div></div><div class="form-group"><label class="form-label" for="returnSummary">复盘记录</label><textarea id="returnSummary" class="form-control" rows="5" placeholder="记录客户反馈、资源表现、异常处理和改进建议"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-modal>取消</button><button class="btn btn-primary" type="button">保存处理结果</button></div></div></div>
@@ -218,6 +217,74 @@
           .replace(/'/g, '&#39;');
       }
 
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeStored(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function compactDigits(value) {
+        return String(value || '').replace(/\D/g, '').slice(-8) || '00000000';
+      }
+
+      function firstCode(text, regex) {
+        var match = String(text || '').match(regex);
+        return match ? match[0] : '';
+      }
+
+      function metricValue(config, label) {
+        var found = (config.settlement.metrics || []).find(function (item) {
+          return item[0] === label;
+        });
+        return found ? found[1] : '¥0';
+      }
+
+      function upsertReturnSettlementChain(config) {
+        var sourceNo = firstCode(config.settlement.summary, /\b(?:EU|CZ|TR|ST|CR)[A-Z0-9-]*\d[A-Z0-9-]*/);
+        if (!sourceNo && config.rows && config.rows[0]) sourceNo = config.rows[0].code;
+        var digits = compactDigits(sourceNo);
+        var settlementNo = firstCode(config.settlement.resultTitle, /JS[A-Z0-9-]*\d+/) || ('JS' + digits);
+        var payableNo = firstCode(config.settlement.resultText, /(?:AP|YF)[A-Z0-9-]*\d+/) || ('YF' + digits);
+        var results = readStored('caesarScheduleFinanceChain');
+        if (!results.schedules) results.schedules = {};
+        var existing = results.schedules[sourceNo] || {};
+        results.schedules[sourceNo] = Object.assign({
+          sourceNo: sourceNo,
+          product: config.rows && config.rows[0] ? config.rows[0].product : '-',
+          route: config.settlement.summary,
+          batchType: config.selectValue,
+          productType: config.selectValue,
+          refund: metricValue(config, '退款合计'),
+          costNo: 'CB' + digits,
+          paymentApplyNo: 'PAY-REQ-' + digits,
+          ncVoucher: 'NC-JS-' + digits,
+          ncStatus: '待推送'
+        }, existing, {
+          income: metricValue(config, '收入合计'),
+          pending: metricValue(config, '应收余额'),
+          actualCost: metricValue(config, '实际成本'),
+          estimatedCost: existing.estimatedCost || metricValue(config, '实际成本'),
+          payableAmount: metricValue(config, '待付金额'),
+          profit: metricValue(config, '预估毛利'),
+          payableNo: payableNo,
+          settlementNo: settlementNo,
+          executionStatus: '已回团',
+          costStatus: '实际成本确认',
+          payableStatus: '待财务审核',
+          paymentStatus: existing.paymentStatus || '未申请',
+          settlementStatus: '结算中',
+          updatedAt: '2026-06-29 16:45'
+        });
+        writeStored('caesarScheduleFinanceChain', results);
+        return results.schedules[sourceNo];
+      }
+
       function normalizeType(value) {
         var text = String(value || '').toLowerCase();
         if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
@@ -320,6 +387,9 @@
         if (event.target.closest('[data-generate-settlement]')) {
           var currentResult = document.getElementById('settlementCreateResult');
           if (currentResult) currentResult.hidden = false;
+          var chain = upsertReturnSettlementChain(activeReturnConfig);
+          var link = currentResult && currentResult.querySelector('a.link-primary');
+          if (link) link.href = '../finance/finance-settlement.html?settlementNo=' + encodeURIComponent(chain.settlementNo) + '&sourceNo=' + encodeURIComponent(chain.sourceNo);
         }
       }, true);
     })();

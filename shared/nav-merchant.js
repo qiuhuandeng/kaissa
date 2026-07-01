@@ -13,18 +13,18 @@
         {
           title: "基础资源",
           children: [
-            { title: "POI库", href: "resource/resource-masterdata.html?type=poi" },
+            { title: "景点库", href: "resource/resource-masterdata.html?type=poi" },
             { title: "酒店库", href: "resource/resource-masterdata.html?type=hotel" },
             { title: "餐厅库", href: "resource/resource-masterdata.html?type=restaurant" },
             { title: "车型库", href: "resource/resource-masterdata.html?type=vehicle" },
-            { title: "别名标准", href: "resource/resource-masterdata.html?type=alias" },
+            { title: "别名库", href: "resource/resource-masterdata.html?type=alias" },
           ],
         },
         {
           title: "航空资源",
           children: [
             { title: "航线库", href: "resource/resource-flight-routes.html" },
-            { title: "锁位管理", href: "resource/resource-flight-block.html" },
+            { title: "航司协议", href: "resource/resource-flight-block.html" },
           ],
         },
         {
@@ -32,14 +32,14 @@
           children: [
             { title: "船公司", href: "resource/resource-cruise-companies.html" },
             { title: "船只档案", href: "resource/resource-cruise-ships.html" },
-            { title: "邮轮航线", href: "resource/resource-cruise-routes.html" },
+            { title: "邮轮模板", href: "resource/resource-cruise-routes.html" },
           ],
         },
         {
           title: "专列资源",
           children: [
             { title: "运营商", href: "resource/resource-train-operators.html" },
-            { title: "专列线路", href: "resource/resource-train-routes.html" },
+            { title: "专列模板", href: "resource/resource-train-routes.html" },
           ],
         },
         { title: "供应商", href: "resource/suppliers.html" },
@@ -394,7 +394,7 @@
     "ai/ai-assistant.html": { href: "dashboard.html", title: "工作台助手" },
     "product/product-cruise-routes.html": { href: "product/products.html", title: "邮轮方案配置" },
     "product/product-train-routes.html": { href: "product/products.html", title: "专列方案配置" },
-    "product/product-free-travel-list.html": { href: "product/products.html", title: "自由行方案配置" },
+    "product/product-free-travel-list.html": { href: "product/products.html", title: "出行日期" },
     "product/product-self-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
     "product/product-cruise-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
     "product/product-train-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
@@ -402,12 +402,12 @@
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采方案包装" },
-    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期配额" },
+    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采销售配额" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
     "system/data-scope.html": { href: "system/role-assignment.html", title: "角色授权" },
     "system/hr-requests.html": { href: "approval/approvals.html?view=mine", title: "我发起的" },
     "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学线路编辑" },
-    "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期/日期库存" },
+    "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期" },
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-batch.html": { href: "tour/schedules.html", title: "批量开排" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
@@ -427,7 +427,7 @@
     "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
     "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
-    "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队排班" },
+    "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
     "customer/customers-detail.html": { href: "customer/list.html", title: "客户详情" },
     "customer/detail.html": { href: "customer/list.html", title: "客户详情" },
     "channel/ota_products.html": { href: "channel/ota_products.html", title: "OTA线路" },
@@ -1577,7 +1577,13 @@
 
   function isEmptyListPageShell(panel) {
     if (!panel || !panel.matches(".list-page-panel")) return false;
-    return Boolean(panel.querySelector(":scope > .list-page-head"))
+    const pageHead = panel.querySelector(":scope > .list-page-head");
+    if (!pageHead) return false;
+    const hasActions = Boolean(pageHead.querySelector(
+      ".btn-group, .page-actions, .list-page-actions, button, a.btn, a[class*='btn'], .dropdown, [data-open], [data-export], [data-bulk-menu-toggle]"
+    ));
+    if (hasActions) return false;
+    return Boolean(pageHead)
       && !panel.querySelector(":scope > .filter-card, :scope > .table-wrap");
   }
 
@@ -1882,8 +1888,8 @@
 
   const metaTagTexts = new Set([
     "线路", "团期", "自由行", "单项服务", "普通团期", "邮轮团期", "专列团期", "研学团期", "邮轮航次", "专列班期", "研学营期",
-    "POI", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮航线", "运营商", "专列线路", "供应商", "领队",
-    "自营", "自营产品", "自营线路", "外采", "外采产品", "外采团期", "外采包团", "外采系列团", "邮轮", "邮轮线路", "专列", "专列线路", "研学", "研学线路", "服务单",
+    "景点", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮模板", "运营商", "专列模板", "供应商", "领队",
+    "自营", "自营产品", "自营线路", "外采", "外采产品", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮线路", "专列", "专列线路", "研学", "研学线路", "服务单",
     "出境游", "国内游", "国内跟团", "港澳台", "小包团", "定制团", "半自由行", "出境跟团", "跟团游", "普通报价", "团队报价",
     "成人/儿童结算价", "舱型库存价", "铺位/包厢结算价", "服务费/加急费",
     "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
