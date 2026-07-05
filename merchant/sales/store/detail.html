@@ -244,7 +244,10 @@
       <section class="order-desc-card">
         <div class="section-head">
           <h2 class="detail-section-title">门市成员</h2>
-          <button class="btn btn-primary" type="button" data-open-member data-member-action="新增成员">新增成员</button>
+          <div class="page-actions">
+            <a class="btn btn-secondary" href="members.html">查看全部成员</a>
+            <button class="btn btn-primary" type="button" data-open-member data-member-action="添加已有员工">添加已有员工</button>
+          </div>
         </div>
         <div class="description-grid">
           <div class="description-item"><div class="description-label">在职成员</div><div class="description-value">3人</div></div>
@@ -347,10 +350,10 @@
       <div class="modal-body">
         <section id="memberSummaryGrid" class="description-grid"></section>
         <section class="order-desc-card">
-          <h2 class="detail-section-title">成员信息</h2>
+          <h2 class="detail-section-title">门市成员身份</h2>
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label" for="memberName">成员姓名</label>
+              <label class="form-label" for="memberName">员工姓名</label>
               <input id="memberName" class="form-control" type="text" value="王芳">
             </div>
             <div class="form-group">
@@ -371,7 +374,7 @@
               <input id="memberScope" class="form-control" type="text" value="全部业务">
             </div>
             <div class="form-group">
-              <label class="form-label" for="memberStatus">账号状态</label>
+              <label class="form-label" for="memberStatus">门市成员状态</label>
               <select id="memberStatus" class="form-control">
                 <option>正常</option>
                 <option>待启用</option>
@@ -390,7 +393,7 @@
           </div>
         </section>
         <section class="order-desc-card">
-          <h2 class="detail-section-title">可操作业务</h2>
+          <h2 class="detail-section-title">门市业务权限</h2>
           <div class="checkbox-row">
             <label><input type="checkbox" checked data-member-permission-option value="下单"> 下单</label>
             <label><input type="checkbox" checked data-member-permission-option value="合同"> 合同</label>
@@ -405,14 +408,14 @@
           <h2 class="detail-section-title">变更原因</h2>
           <div class="form-group">
             <label class="form-label" for="memberReason">原因</label>
-            <textarea id="memberReason" class="form-control" rows="3">门市成员岗位或权限调整。</textarea>
+            <textarea id="memberReason" class="form-control" rows="3">员工已存在，申请调整其在本门市的成员身份或业务权限。</textarea>
           </div>
         </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-member>取消</button>
         <button class="btn btn-secondary" type="button" data-save-member-draft>保存草稿</button>
-        <button class="btn btn-primary" type="button" data-submit-member>提交审批</button>
+        <button class="btn btn-primary" type="button" data-submit-member>提交门市变更</button>
       </div>
     </div>
   </div>
@@ -746,7 +749,7 @@
       var permissionDrawer = document.getElementById('permissionDrawer');
       var pauseModal = document.getElementById('pauseModal');
       var activePermissionGroup = '全部权限';
-      var activeMemberAction = '新增成员';
+      var activeMemberAction = '添加已有员工';
       var activeMemberRow = null;
       var activeAccountAction = '新增收款账号';
       var activeAccountRow = null;
@@ -791,7 +794,7 @@
       }
 
       function openMemberDrawer(action, row) {
-        activeMemberAction = action || '新增成员';
+        activeMemberAction = action || '添加已有员工';
         activeMemberRow = row || null;
         document.getElementById('memberDrawerTitle').textContent = '门市成员 - ' + activeMemberAction;
         document.getElementById('memberName').value = row ? row.dataset.memberName : '';
@@ -799,13 +802,14 @@
         document.getElementById('memberRole').value = row ? row.dataset.memberRole : '销售顾问';
         document.getElementById('memberScope').value = row ? row.dataset.memberScope : '跟团、邮轮';
         document.getElementById('memberStatus').value = activeMemberAction === '停用成员' ? '停用待审核' : (row ? row.dataset.memberStatus : '待启用');
-        document.getElementById('memberReason').value = activeMemberAction === '停用成员' ? '成员离岗或不再负责门市业务，需停用账号。' : '门市成员岗位或权限调整。';
+        document.getElementById('memberReason').value = activeMemberAction === '停用成员' ? '成员离岗或不再负责本门市业务，停用其门市成员身份和门市业务权限。' : '员工已存在，申请调整其在本门市的成员身份或业务权限。';
         setMemberPermissions(row ? row.dataset.memberPermission : '下单、合同');
         renderSummaryGrid(memberSummaryGrid, [
           { label: '门市', value: '北京王府井旗舰店' },
           { label: '操作类型', value: escapeHtml(activeMemberAction) },
           { label: '当前角色', value: row ? escapeHtml(row.dataset.memberRole) : '待配置' },
-          { label: '当前状态', value: row ? '<span class="tag tag-blue">' + escapeHtml(row.dataset.memberStatus) + '</span>' : '<span class="tag tag-gray">未提交</span>' }
+          { label: '当前状态', value: row ? '<span class="tag tag-blue">' + escapeHtml(row.dataset.memberStatus) + '</span>' : '<span class="tag tag-gray">未提交</span>' },
+          { label: '审批承接', value: '提交后进入审批中心；入离调转回到员工任职' }
         ]);
         switchTab('member');
         window.caesarUI.openLayer(memberDrawer);
@@ -854,8 +858,8 @@
         document.getElementById('memberChangeRows').insertAdjacentHTML('afterbegin',
           '<tr><td>' + escapeHtml(rowNo) + '</td><td>' + escapeHtml(content) + '</td><td>王芳</td><td>' + escapeHtml(approval) + '</td><td><span class="' + tagClass + '">' + escapeHtml(statusText) + '</span></td><td><div class="table-action"><button class="table-action-primary" type="button">详情</button></div></td></tr>'
         );
-        if (status !== '草稿' && activeMemberAction === '新增成员') addMemberRow('待审批');
-        if (status !== '草稿' && activeMemberAction !== '新增成员') updateActiveMemberRow(activeMemberAction === '停用成员' ? '停用待审核' : '变更待审批');
+        if (status !== '草稿' && activeMemberAction === '添加已有员工') addMemberRow('待审批');
+        if (status !== '草稿' && activeMemberAction !== '添加已有员工') updateActiveMemberRow(activeMemberAction === '停用成员' ? '停用待审核' : '变更待审批');
       }
 
       function openFinanceDrawer() {
@@ -971,7 +975,7 @@
         }
         var memberButton = event.target.closest('[data-open-member]');
         if (memberButton) {
-          openMemberDrawer(memberButton.dataset.memberAction || '新增成员', memberButton.closest('tr'));
+          openMemberDrawer(memberButton.dataset.memberAction || '添加已有员工', memberButton.closest('tr'));
           return;
         }
         if (event.target.closest('[data-save-member-draft]')) {

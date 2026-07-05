@@ -152,8 +152,8 @@
 | dashboard-store.html | 工作 / 首页工作台 | 门店店长工作台 | 门店订单、顾问、资金池 | 门店订单、顾问目标、资金池 | 门店业绩、顾问排行、资金池、待办 | 达成/预警 | BF-CASH-004、BF-CASH-005 | 资金池影响 NC | sales/store/index.html、finance-reports.html?report=fund&view=pool | 门店资金节点可追踪 |
 | sales/store/index.html | 门店中心 / 门店管理 | 门店 | 组织架构、门店配置 | 门店订单、顾问、资金池、对账 | 门店、组织、账户、负责人、数据范围 | 启用/停用 | BF-CASH-004、BF-CASH-005 | 资金池收支进入 NC | sales/store/detail.html、finance-reports.html?report=fund&view=pool | 门店不等于渠道代理商 |
 | sales/store/detail.html | 门店中心 / 门店管理 | 门店详情 | 门店列表 | 门店订单、顾问、资金池 | 门店信息、订单、顾问、资金、对账 | 启用/停用/预警 | BF-CASH-004、BF-CASH-005 | 资金池和收款进 NC | sales/store/index.html、orders.html | 门店详情可追踪订单和资金 |
-| sales/consultant/index.html | 门店中心 / 顾问管理 | 顾问 | 员工账号、门店 | 意向、订单、业绩目标 | 顾问、门店、目标、订单、客户 | 在岗/停用 | 无 | 无 | sales/consultant/detail.html | 顾问是销售责任人，不是资源领队 |
-| sales/consultant/detail.html | 门店中心 / 顾问管理 | 顾问详情 | 顾问列表 | 客户、意向、订单 | 业绩、客户、跟进、订单、目标 | 在岗/停用 | 无 | 无 | orders.html、customers-detail.html | 顾问业绩可回到订单 |
+| sales/store/members.html | 门店中心 / 门市成员 | 门市成员 | 门店、员工任职 | 门店订单、合同、售后、对账 | 门市角色、负责范围、门市业务权限 | 正常/待审批/停用 | 审批中心 | 员工任职 | sales/store/detail.html | 门市成员是门店内角色和业务权限，不承担员工入离调转 |
+| sales/consultant/detail.html | 门店中心 / 顾问业绩 | 顾问详情 | 门市成员/销售顾问 | 客户、意向、订单 | 业绩、客户、跟进、订单、目标 | 在岗/停用 | 无 | 无 | orders.html、customers-detail.html | 顾问详情偏业绩和客户经营，不做员工任职主数据 |
 | customer/list.html | 客户 / 客户列表 | 客户 | 咨询、订单、导入 | 意向订单、订单、跟进 | 姓名、联系方式、标签、来源、最近互动 | 有效/沉睡/风险 | 无 | 发票抬头可关联 | customers-detail.html、orders-intent.html | 客户不直接触发财务 |
 | customer/detail.html | 客户 / 客户列表 | 客户详情 | 客户列表 | 跟进、订单、会员 | 客户、联系人、历史订单、标签、AI建议 | 活跃/沉睡/风险 | 无 | 发票抬头关联 | orders.html、orders-intent.html | 客户详情展示 AI 复购建议 |
 | customer/customers-detail.html | 客户 / 客户列表 | 客户详情 | 客户列表 | 跟进、订单、会员 | 客户、联系人、历史订单、标签、AI建议 | 活跃/沉睡/风险 | 无 | 发票抬头关联 | orders.html、orders-intent.html | 与 customer/detail.html 口径一致 |
