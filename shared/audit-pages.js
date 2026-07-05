@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "..");
 const scopes = ["merchant", "operator", "admin"];
 const excludedPages = new Set([
   "merchant/login.html",
+  "merchant/workspace.html",
   "merchant/select-workspace.html",
   "operator/login.html",
   "operator/ant_design.html",

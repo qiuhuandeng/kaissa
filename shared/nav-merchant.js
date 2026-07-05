@@ -190,8 +190,7 @@
       icon: "settings",
       children: [
         { title: "组织架构", href: "system/my-org.html" },
-        { title: "角色权限", href: "system/role-assignment.html" },
-        { title: "员工账号", href: "system/staff-management.html" },
+        { title: "员工任职", href: "system/staff-management.html" },
         { title: "基础参数", href: "system/business-params.html" },
         { title: "通知模板", href: "system/notice-templates.html" },
       ],
@@ -368,6 +367,12 @@
     return routeKeyFromUrl(new URL(window.location.href));
   }
 
+  function merchantRootHref(fileName) {
+    const file = currentFile().split("?")[0];
+    const depth = Math.max(file.split("/").length - 1, 0);
+    return "../".repeat(depth) + fileName;
+  }
+
   function readSecondaryOpenKeys() {
     try {
       const keys = JSON.parse(localStorage.getItem(secondaryOpenStorageKey) || "[]");
@@ -410,7 +415,8 @@
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采方案包装" },
     "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
-    "system/data-scope.html": { href: "system/role-assignment.html", title: "角色授权" },
+    "system/role-assignment.html": { href: "system/staff-management.html", title: "员工任职" },
+    "system/data-scope.html": { href: "system/staff-management.html", title: "员工任职" },
     "system/hr-requests.html": { href: "approval/approvals.html?view=mine", title: "我发起的" },
     "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学线路编辑" },
     "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期" },
@@ -578,6 +584,9 @@
     "center-sh-sales",
   ]);
   let currentWorkspaceId = "sub-fujian";
+  let currentScopeId = "center-fj-outbound";
+  let subjectTextNode = null;
+  let scopeTextNode = null;
 
   function workspaceRoots() {
     return organizationTree.flatMap((node) => {
@@ -1185,15 +1194,38 @@
     return current && current.type === "subsidiary" ? current : workspaceRoots()[0];
   }
 
-  function createOrgNode(node, depth, state) {
-    if (!orgNodeMatches(node, state.keyword)) return null;
+  function firstScopeForSubject(subject) {
+    if (subject && subject.children && subject.children.length) return subject.children[0];
+    return subject || workspaceRoots()[0];
+  }
 
+  function scopeRoots() {
+    const subject = currentSubject();
+    return subject && subject.children ? subject.children : [];
+  }
+
+  function currentScope() {
+    const scope = findOrgNode(scopeRoots(), currentScopeId);
+    if (scope && scope.type !== "subsidiary") return scope;
+    const fallback = firstScopeForSubject(currentSubject());
+    currentScopeId = fallback.id;
+    return fallback;
+  }
+
+  function refreshOrgTopbar() {
+    const subject = currentSubject();
+    const scope = currentScope();
+    if (subjectTextNode) subjectTextNode.textContent = subject.name;
+    if (scopeTextNode) scopeTextNode.textContent = scope.name;
+  }
+
+  function createScopeNode(node, depth, state) {
     const wrap = document.createElement("div");
     wrap.className = "org-tree-node";
 
     const row = document.createElement("div");
     row.className = "org-tree-row depth-" + Math.min(depth, 4);
-    if (node.id === currentWorkspaceId) row.classList.add("active");
+    if (node.id === currentScopeId) row.classList.add("active");
 
     const hasChildren = Boolean(node.children && node.children.length);
     const caret = document.createElement("button");
@@ -1217,28 +1249,25 @@
     select.className = "org-tree-select";
     select.type = "button";
     select.title = node.name;
-    if (node.type !== "subsidiary") {
-      select.classList.add("is-view-only");
-      select.disabled = true;
-    }
     select.addEventListener("click", () => {
-      if (node.type !== "subsidiary") return;
-      currentWorkspaceId = node.id;
-      state.workspaceText.textContent = node.name;
+      currentScopeId = node.id;
+      refreshOrgTopbar();
       state.menu.classList.remove("show");
       state.trigger.setAttribute("aria-expanded", "false");
       state.render();
     });
 
-    const tag = document.createElement("span");
-    tag.className = "org-type-tag " + node.type;
-    tag.textContent = node.typeLabel;
-
     const name = document.createElement("span");
     name.className = "org-node-name";
     name.textContent = node.name;
 
-    select.append(tag, name);
+    if (node.type === "department" || node.type === "store") {
+      const tag = document.createElement("span");
+      tag.className = "org-type-tag " + node.type;
+      tag.textContent = node.typeLabel;
+      select.append(tag);
+    }
+    select.append(name);
 
     row.append(caret, select);
     wrap.appendChild(row);
@@ -1247,7 +1276,7 @@
       const children = document.createElement("div");
       children.className = "org-tree-children";
       node.children.forEach((child) => {
-        const childNode = createOrgNode(child, depth + 1, state);
+        const childNode = createScopeNode(child, depth + 1, state);
         if (childNode) children.appendChild(childNode);
       });
       wrap.appendChild(children);
@@ -1256,81 +1285,153 @@
     return wrap;
   }
 
-  function createWorkspaceSwitcher() {
-    const current = currentSubject();
+  function createSubjectDisplay() {
+    const subject = currentSubject();
+    const wrap = document.createElement("div");
+    wrap.className = "workspace-subject-label";
+    wrap.title = "经营主体";
+
+    subjectTextNode = document.createElement("span");
+    subjectTextNode.className = "workspace-current-text";
+    subjectTextNode.textContent = subject.name;
+
+    wrap.append(subjectTextNode);
+    return wrap;
+  }
+
+  function createScopeSwitcher() {
+    const current = currentScope();
     const wrap = document.createElement("div");
     wrap.className = "workspace-switcher";
 
     const trigger = document.createElement("button");
-    trigger.className = "workspace-badge";
+    trigger.className = "workspace-badge workspace-scope-badge";
     trigger.type = "button";
     trigger.setAttribute("aria-haspopup", "true");
     trigger.setAttribute("aria-expanded", "false");
 
-    const workspaceText = document.createElement("span");
-    workspaceText.className = "workspace-current-text";
-    workspaceText.textContent = current.name;
+    scopeTextNode = document.createElement("span");
+    scopeTextNode.className = "workspace-current-text";
+    scopeTextNode.textContent = current.name;
+
     const workspaceArrow = document.createElement("span");
     workspaceArrow.className = "topbar-chevron";
     workspaceArrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
-    trigger.append(workspaceText, workspaceArrow);
+    trigger.append(scopeTextNode, workspaceArrow);
 
     const menu = document.createElement("div");
     menu.className = "workspace-menu";
 
-    const scopeHead = document.createElement("div");
-    scopeHead.className = "workspace-scope-head";
-    scopeHead.innerHTML = '<strong>经营主体</strong><span>中心、部门和门市为主体内数据范围</span>';
-
-    const searchWrap = document.createElement("div");
-    searchWrap.className = "workspace-search";
-    searchWrap.innerHTML = '<span class="workspace-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>';
-    const search = document.createElement("input");
-    search.type = "search";
-    search.placeholder = "搜索子公司/中心/部门/门市";
-    search.setAttribute("aria-label", "搜索组织节点");
-    searchWrap.appendChild(search);
-
     const tree = document.createElement("div");
     tree.className = "org-tree";
 
-    const empty = document.createElement("div");
-    empty.className = "org-tree-empty";
-    empty.textContent = "未找到匹配节点";
-
     const state = {
-      keyword: "",
       menu,
       trigger,
-      workspaceText,
       render: null,
     };
 
     state.render = () => {
-      state.keyword = search.value.trim().toLowerCase();
       tree.replaceChildren();
-      let count = 0;
-      workspaceRoots().forEach((node) => {
-        const item = createOrgNode(node, 0, state);
-        if (item) {
-          tree.appendChild(item);
-          count += 1;
-        }
+      scopeRoots().forEach((node) => {
+        const item = createScopeNode(node, 0, state);
+        if (item) tree.appendChild(item);
       });
-      empty.hidden = count > 0;
     };
 
-    search.addEventListener("input", state.render);
-    menu.append(scopeHead, searchWrap, tree, empty);
+    menu.append(tree);
     state.render();
 
     trigger.addEventListener("click", (event) => {
       event.stopPropagation();
       const opened = menu.classList.toggle("show");
       trigger.setAttribute("aria-expanded", String(opened));
-      if (opened) setTimeout(() => search.focus(), 0);
+      if (opened) {
+        state.render();
+      }
     });
 
+    menu.addEventListener("click", (event) => event.stopPropagation());
+    document.addEventListener("click", () => {
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+
+    wrap.append(trigger, menu);
+    return wrap;
+  }
+
+  function createUserMenu() {
+    const wrap = document.createElement("div");
+    wrap.className = "topbar-user topbar-user-dropdown";
+
+    const trigger = document.createElement("button");
+    trigger.className = "topbar-user-button";
+    trigger.type = "button";
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const userIcon = document.createElement("span");
+    userIcon.className = "topbar-user-icon";
+    userIcon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.user + "</svg>";
+    const name = document.createElement("span");
+    name.textContent = "张三";
+    const arrow = document.createElement("span");
+    arrow.className = "topbar-chevron";
+    arrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
+    trigger.append(userIcon, name, arrow);
+
+    const menu = document.createElement("div");
+    menu.className = "topbar-user-menu";
+    const accountTitle = document.createElement("div");
+    accountTitle.className = "topbar-user-menu-title";
+    accountTitle.textContent = "账号";
+    const accountActions = document.createElement("div");
+    accountActions.className = "topbar-account-actions";
+    const passwordAction = document.createElement("button");
+    passwordAction.type = "button";
+    passwordAction.className = "topbar-account-item";
+    passwordAction.textContent = "修改密码";
+    const switchSubjectAction = document.createElement("button");
+    switchSubjectAction.type = "button";
+    switchSubjectAction.className = "topbar-account-item";
+    switchSubjectAction.textContent = "切换公司主体";
+    const logoutAction = document.createElement("button");
+    logoutAction.type = "button";
+    logoutAction.className = "topbar-account-item danger";
+    logoutAction.textContent = "退出登录";
+    accountActions.append(passwordAction, switchSubjectAction, logoutAction);
+
+    passwordAction.addEventListener("click", () => {
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+      if (window.caesarUI && typeof window.caesarUI.toast === "function") {
+        window.caesarUI.toast("已打开修改密码入口");
+      }
+    });
+    logoutAction.addEventListener("click", () => {
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+      window.location.href = merchantRootHref("login.html");
+    });
+    switchSubjectAction.addEventListener("click", () => {
+      menu.classList.remove("show");
+      trigger.setAttribute("aria-expanded", "false");
+      window.location.href = merchantRootHref("workspace.html");
+    });
+
+    menu.append(accountTitle, accountActions);
+
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const opened = menu.classList.toggle("show");
+      trigger.setAttribute("aria-expanded", String(opened));
+    });
     menu.addEventListener("click", (event) => event.stopPropagation());
     document.addEventListener("click", () => {
       menu.classList.remove("show");
@@ -1425,18 +1526,7 @@
 
     const right = document.createElement("div");
     right.className = "topbar-right";
-    const user = document.createElement("div");
-    user.className = "topbar-user";
-    const userIcon = document.createElement("span");
-    userIcon.className = "topbar-user-icon";
-    userIcon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.user + "</svg>";
-    const name = document.createElement("span");
-    name.textContent = "张三";
-    const arrow = document.createElement("span");
-    arrow.className = "topbar-chevron";
-    arrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons.chevronDown + "</svg>";
-    user.append(userIcon, name, arrow);
-    right.append(createWorkspaceSwitcher(), createNotify(8), user);
+    right.append(createSubjectDisplay(), createScopeSwitcher(), createNotify(8), createUserMenu());
 
     topbar.append(left, right);
 
