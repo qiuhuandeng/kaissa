@@ -264,41 +264,6 @@
     </div>
   </div>
 
-  <div id="freeResourceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal drawer-lg free-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="freeResourceDrawerTitle">
-      <div class="modal-header">
-        <div id="freeResourceDrawerTitle" class="modal-title">资源状态</div>
-        <button class="modal-close" type="button" data-close-free-resource aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="description-grid free-resource-summary">
-          <div class="description-item"><div class="description-label">线路</div><div id="resourceProduct" class="description-value">-</div></div>
-          <div class="description-item"><div class="description-label">出行日期</div><div id="resourceTravelDate" class="description-value">-</div></div>
-          <div class="description-item"><div class="description-label">套餐</div><div id="resourcePackage" class="description-value">-</div></div>
-          <div class="description-item"><div class="description-label">当前状态</div><div id="resourceCurrentStatus" class="description-value">-</div></div>
-        </div>
-        <section class="table-wrap free-resource-table">
-          <table>
-            <thead>
-              <tr>
-                <th>资源项</th>
-                <th>当前记录</th>
-                <th>确认号</th>
-                <th>状态</th>
-                <th>待处理</th>
-              </tr>
-            </thead>
-            <tbody id="freeResourceRows"></tbody>
-          </table>
-        </section>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-free-resource>关闭</button>
-        <button id="viewResourceOrders" class="btn btn-primary" type="button">查看该日订单</button>
-      </div>
-    </div>
-  </div>
-
   <div id="freeBatchDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal free-date-batch-drawer" role="dialog" aria-modal="true" aria-labelledby="freeBatchDrawerTitle">
       <div class="modal-header">
@@ -373,7 +338,6 @@
     (function () {
       var params = new URLSearchParams(window.location.search);
       var dateDrawer = document.getElementById('freeDateDrawer');
-      var resourceDrawer = document.getElementById('freeResourceDrawer');
       var batchDrawer = document.getElementById('freeBatchDrawer');
       var calendarPanel = document.getElementById('freeCalendarPanel');
       var listPanel = document.getElementById('freeListPanel');
@@ -584,7 +548,7 @@
             '<td>' + escapeHtml(String(item.stopTime || '').replace('T', ' ')) + '</td>' +
             '<td><span class="tag ' + resourceClass(item.resourceStatus) + '">' + escapeHtml(item.resourceStatus) + '</span></td>' +
             '<td><span class="tag ' + channelClass(item.channelStatus) + '">' + escapeHtml(item.channelStatus) + '</span></td>' +
-            '<td><div class="table-action"><button class="table-action-primary" type="button" data-edit-free-date="' + escapeHtml(item.id) + '">维护</button><button type="button" data-open-free-orders="' + escapeHtml(item.id) + '">订单</button><button type="button" data-open-resource-status="' + escapeHtml(item.id) + '">资源状态</button><button type="button" data-toggle-free-date="' + escapeHtml(item.id) + '">' + (item.saleStatus === '停售' ? '开放' : '停售') + '</button></div></td>' +
+            '<td><div class="table-action"><button class="table-action-primary" type="button" data-edit-free-date="' + escapeHtml(item.id) + '">维护</button><button type="button" data-open-free-orders="' + escapeHtml(item.id) + '">订单</button><button type="button" data-toggle-free-date="' + escapeHtml(item.id) + '">' + (item.saleStatus === '停售' ? '开放' : '停售') + '</button></div></td>' +
           '</tr>';
         }).join('');
       }
@@ -694,33 +658,6 @@
         toast(item.saleStatus === '停售' ? '已停售' : '已重新开放');
       }
 
-      function resourceRowsForItem(item) {
-        var hotelStatus = item.resourceStatus === '需补确认' ? ['房量不足', 'tag tag-orange', '补供应商确认号或调整可售量'] : item.resourceStatus === '待确认' ? ['待确认', 'tag tag-blue', '催酒店供应商确认房态'] : ['已确认', 'tag tag-green', '无'];
-        var flightStatus = item.flightMode === '采购锁位' && item.resourceStatus !== '已确认' ? ['待出票确认', 'tag tag-orange', '确认锁位与出票时限'] : item.flightMode === '客人自理' ? ['客人自理', 'tag tag-gray', '无'] : ['已询位', 'tag tag-green', '关注航变提醒'];
-        var transferStatus = item.transfer ? ['待派车确认', item.resourceStatus === '已确认' ? 'tag tag-blue' : 'tag tag-orange', '回填用车确认号'] : ['未包含', 'tag tag-gray', '无'];
-        var activityStatus = item.activity ? ['待预约确认', 'tag tag-blue', '确认当地玩乐名额'] : ['未包含', 'tag tag-gray', '无'];
-        return [
-          ['酒店', item.hotelRoomType || '标准房型', item.resourceStatus === '已确认' ? 'HTL-' + item.date.replace(/-/g, '') : '待回传', hotelStatus[0], hotelStatus[1], hotelStatus[2]],
-          ['机票', item.flightMode || '实时询位', item.flightMode === '客人自理' ? '-' : 'FLT-' + item.date.replace(/-/g, ''), flightStatus[0], flightStatus[1], flightStatus[2]],
-          ['接送机', item.transfer ? '机场接送1车' : '不含接送机', item.transfer ? 'TRF-' + item.date.replace(/-/g, '') : '-', transferStatus[0], transferStatus[1], transferStatus[2]],
-          ['当地玩乐', item.activity ? '巴黎城市游' : '未配置', item.activity ? 'ACT-' + item.date.replace(/-/g, '') : '-', activityStatus[0], activityStatus[1], activityStatus[2]]
-        ];
-      }
-
-      function openResourceDrawer(item) {
-        if (!item) return;
-        document.getElementById('freeResourceDrawerTitle').textContent = item.date + ' 资源状态';
-        document.getElementById('resourceProduct').textContent = context.product;
-        document.getElementById('resourceTravelDate').textContent = item.date + ' ' + weekday(item.date);
-        document.getElementById('resourcePackage').textContent = item.packageName;
-        document.getElementById('resourceCurrentStatus').innerHTML = '<span class="tag ' + resourceClass(item.resourceStatus) + '">' + escapeHtml(item.resourceStatus) + '</span>';
-        document.getElementById('freeResourceRows').innerHTML = resourceRowsForItem(item).map(function (row) {
-          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><span class="' + row[4] + '">' + escapeHtml(row[3]) + '</span></td><td>' + escapeHtml(row[5]) + '</td></tr>';
-        }).join('');
-        document.getElementById('viewResourceOrders').dataset.orderUrl = orderListUrl(item);
-        openLayer(resourceDrawer);
-      }
-
       function openBatchDrawer(mode) {
         var titleMap = { open: '批量开放日期', price: '批量调价', stop: '批量停售' };
         document.getElementById('freeBatchDrawerTitle').textContent = titleMap[mode] || '批量维护出行日期';
@@ -793,12 +730,6 @@
         document.querySelectorAll('[data-close-free-batch]').forEach(function (button) {
           button.addEventListener('click', function () { closeLayer(batchDrawer); });
         });
-        document.querySelectorAll('[data-close-free-resource]').forEach(function (button) {
-          button.addEventListener('click', function () { closeLayer(resourceDrawer); });
-        });
-        document.getElementById('viewResourceOrders').addEventListener('click', function () {
-          navigateTo(this.dataset.orderUrl || '../sales/orders.html?productType=free');
-        });
         document.querySelectorAll('[data-open-batch]').forEach(function (button) {
           button.addEventListener('click', function () {
             document.querySelector('.free-batch-menu').classList.remove('open');
@@ -826,10 +757,8 @@
             var orderItem = findItem(orderButton.dataset.openFreeOrders);
             if (orderItem) navigateTo(orderListUrl(orderItem));
           }
-          var resourceButton = event.target.closest('[data-open-resource-status]');
-          if (resourceButton) openResourceDrawer(findItem(resourceButton.dataset.openResourceStatus));
         });
-        [dateDrawer, batchDrawer, resourceDrawer].forEach(function (drawer) {
+        [dateDrawer, batchDrawer].forEach(function (drawer) {
           drawer.addEventListener('click', function (event) {
             if (event.target === drawer) closeLayer(drawer);
           });

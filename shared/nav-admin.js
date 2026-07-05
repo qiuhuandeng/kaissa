@@ -163,49 +163,79 @@
       name: "凯撒旅游集团股份有限公司",
       children: [
         {
-          id: "sub-caesar-travel",
+          id: "sub-fujian",
           type: "subsidiary",
           typeLabel: "子公司",
-          name: "北京凯撒旅游集团有限公司",
+          name: "福建凯撒国际旅行社有限公司",
           children: [
             {
-              id: "center-outbound",
+              id: "center-fj-outbound",
               type: "center",
               typeLabel: "中心",
-              name: "出境游事业部",
+              name: "出境事业中心",
               children: [
-                { id: "dept-west-eu", type: "department", typeLabel: "部门", name: "西欧线路部" },
-                { id: "dept-eu", type: "department", typeLabel: "部门", name: "欧洲事业部" },
-                { id: "store-bj-chaoyang", type: "store", typeLabel: "门店", name: "北京朝阳门店" },
-                { id: "store-sh-xuhui", type: "store", typeLabel: "门店", name: "上海徐汇门店" },
+                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲线路部" },
+                { id: "dept-fj-visa", type: "department", typeLabel: "部门", name: "签证运营部" },
+                { id: "store-fz-dongbai", type: "store", typeLabel: "门市", name: "福州东百门市" },
+                { id: "store-xm-siming", type: "store", typeLabel: "门市", name: "厦门思明门市" },
               ],
             },
             {
-              id: "center-cruise",
+              id: "center-fj-sales",
               type: "center",
               typeLabel: "中心",
-              name: "邮轮中心",
+              name: "门市销售中心",
               children: [
-                { id: "dept-ideal", type: "department", typeLabel: "部门", name: "理想号运营部" },
-                { id: "store-gz-tianhe", type: "store", typeLabel: "门店", name: "广州天河门店" },
+                { id: "dept-fj-store-ops", type: "department", typeLabel: "部门", name: "门市运营部" },
+                { id: "store-qz-fengze", type: "store", typeLabel: "门市", name: "泉州丰泽门市" },
               ],
             },
           ],
         },
         {
-          id: "sub-yibu",
+          id: "sub-beijing",
           type: "subsidiary",
           typeLabel: "子公司",
-          name: "凯撒亿步旅行社有限公司",
+          name: "北京凯撒国际旅行社有限公司",
           children: [
             {
-              id: "center-mice",
+              id: "center-bj-outbound",
+              type: "center",
+              typeLabel: "中心",
+              name: "出境事业中心",
+              children: [
+                { id: "dept-bj-eu", type: "department", typeLabel: "部门", name: "西欧线路部" },
+                { id: "dept-bj-cruise", type: "department", typeLabel: "部门", name: "邮轮产品部" },
+                { id: "store-bj-chaoyang", type: "store", typeLabel: "门市", name: "北京朝阳门市" },
+              ],
+            },
+            {
+              id: "center-bj-mice",
               type: "center",
               typeLabel: "中心",
               name: "MICE会展中心",
               children: [
-                { id: "dept-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
-                { id: "store-sh-mice", type: "store", typeLabel: "门店", name: "上海会展门店" },
+                { id: "dept-bj-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
+                { id: "store-bj-wangfujing", type: "store", typeLabel: "门市", name: "北京王府井门市" },
+              ],
+            },
+          ],
+        },
+        {
+          id: "sub-shanghai",
+          type: "subsidiary",
+          typeLabel: "子公司",
+          name: "上海凯撒国际旅行社有限公司",
+          children: [
+            {
+              id: "center-sh-sales",
+              type: "center",
+              typeLabel: "中心",
+              name: "华东销售中心",
+              children: [
+                { id: "dept-sh-store", type: "department", typeLabel: "部门", name: "门市运营部" },
+                { id: "store-sh-xuhui", type: "store", typeLabel: "门市", name: "上海徐汇门市" },
+                { id: "store-hz-hubin", type: "store", typeLabel: "门市", name: "杭州湖滨合作门市" },
               ],
             },
           ],
@@ -215,13 +245,16 @@
   ];
 
   const workspaceExpandedIds = new Set([
-    "sub-caesar-travel",
-    "center-outbound",
-    "center-cruise",
-    "sub-yibu",
-    "center-mice",
+    "sub-fujian",
+    "center-fj-outbound",
+    "center-fj-sales",
+    "sub-beijing",
+    "center-bj-outbound",
+    "center-bj-mice",
+    "sub-shanghai",
+    "center-sh-sales",
   ]);
-  let currentWorkspaceId = "center-outbound";
+  let currentWorkspaceId = "sub-fujian";
 
   function workspaceRoots() {
     return organizationTree.flatMap((node) => {
@@ -829,6 +862,11 @@
     return node.children ? node.children.some((child) => orgNodeMatches(child, keyword)) : false;
   }
 
+  function currentSubject() {
+    const current = findOrgNode(organizationTree, currentWorkspaceId);
+    return current && current.type === "subsidiary" ? current : workspaceRoots()[0];
+  }
+
   function createOrgNode(node, depth, state) {
     if (!orgNodeMatches(node, state.keyword)) return null;
 
@@ -861,7 +899,12 @@
     select.className = "org-tree-select";
     select.type = "button";
     select.title = node.name;
+    if (node.type !== "subsidiary") {
+      select.classList.add("is-view-only");
+      select.disabled = true;
+    }
     select.addEventListener("click", () => {
+      if (node.type !== "subsidiary") return;
       currentWorkspaceId = node.id;
       state.workspaceText.textContent = node.name;
       state.menu.classList.remove("show");
@@ -896,7 +939,7 @@
   }
 
   function createWorkspaceSwitcher() {
-    const current = findOrgNode(organizationTree, currentWorkspaceId) || organizationTree[0];
+    const current = currentSubject();
     const wrap = document.createElement("div");
     wrap.className = "workspace-switcher";
 
@@ -917,12 +960,16 @@
     const menu = document.createElement("div");
     menu.className = "workspace-menu";
 
+    const scopeHead = document.createElement("div");
+    scopeHead.className = "workspace-scope-head";
+    scopeHead.innerHTML = '<strong>经营主体</strong><span>中心、部门和门市为主体内数据范围</span>';
+
     const searchWrap = document.createElement("div");
     searchWrap.className = "workspace-search";
     searchWrap.innerHTML = '<span class="workspace-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>';
     const search = document.createElement("input");
     search.type = "search";
-    search.placeholder = "请输入门店/部门名称";
+    search.placeholder = "搜索子公司/中心/部门/门市";
     search.setAttribute("aria-label", "搜索组织节点");
     searchWrap.appendChild(search);
 
@@ -956,7 +1003,7 @@
     };
 
     search.addEventListener("input", state.render);
-    menu.append(searchWrap, tree, empty);
+    menu.append(scopeHead, searchWrap, tree, empty);
     state.render();
 
     trigger.addEventListener("click", (event) => {

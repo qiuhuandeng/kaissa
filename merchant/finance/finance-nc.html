@@ -16,7 +16,7 @@
       </div>
       <div class="page-actions">
         <button class="btn btn-secondary" type="button" data-refresh-nc>同步结果</button>
-        <button class="btn btn-primary" type="button" data-push-pending-nc>批量推送</button>
+        <button class="btn btn-primary" type="button" data-push-checked>批量推送</button>
       </div>
     </div>
   </section>
@@ -24,320 +24,137 @@
   <section class="list-surface list-surface-tabbed finance-nc-list-surface" data-list-surface>
     <div class="list-surface-tabbar-row">
       <nav class="tab-bar nc-main-tabs list-function-tabs list-surface-tabs" aria-label="NC推送标签">
-        <button class="tab-item active" type="button" data-nc-tab="queue">推送队列</button>
-        <button class="tab-item" type="button" data-nc-tab="errors">失败处理</button>
-        <button class="tab-item" type="button" data-nc-tab="logs">推送日志</button>
+        <button class="tab-item active" type="button" data-nc-tab="queue">待推送</button>
+        <button class="tab-item" type="button" data-nc-tab="error">失败处理</button>
+        <button class="tab-item" type="button" data-nc-tab="log">推送日志</button>
       </nav>
     </div>
 
-  <section id="nc-queue" class="nc-panel active">
-    <section class="filter-card filter-card-compact nc-log-filter list-surface-filter" aria-label="NC推送筛选">
-      <div class="filter-row">
-        <div class="filter-item"><label class="sr-only" for="ncQueueKeyword">凭证号/业务单据/客户供应商</label><input id="ncQueueKeyword" type="search" placeholder="凭证号/业务单据/客户供应商"></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="ncQueueType">来源类型</label><select id="ncQueueType"><option>全部来源</option><option>退款执行</option><option>收款入账</option><option>付款执行</option><option>应付确认</option><option>发票</option><option>成本确认</option><option>结算</option></select></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="ncQueueProductType">产品类型</label><select id="ncQueueProductType"><option>全部产品</option><option>跟团游</option><option>邮轮</option><option>专列</option><option>自由行</option><option>单项服务</option><option>外采产品</option><option>MICE</option></select></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="ncQueueStatus">推送状态</label><select id="ncQueueStatus"><option>全部状态</option><option>待推送</option><option>推送中</option><option>成功</option><option>失败</option></select></div>
-        <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-nc="queue">搜索</button><button class="btn btn-secondary" type="button" data-reset-nc="queue">重置</button></div>
-      </div>
+    <section id="nc-queue" class="nc-panel active">
+      <section class="filter-card filter-card-compact nc-filter list-surface-filter" aria-label="NC推送筛选">
+        <div class="filter-row">
+          <div class="filter-item"><label class="sr-only" for="ncKeyword">凭证号/业务单据/客户供应商</label><input id="ncKeyword" type="search" placeholder="凭证号/业务单据/客户供应商"></div>
+          <div class="filter-item-sm"><label class="sr-only" for="ncSource">来源类型</label><select id="ncSource"><option>全部来源</option><option>收款入账</option><option>预存充值</option><option>预存扣款</option><option>转款核销</option><option>付款执行</option><option>分销佣金</option><option>OTA平台服务费</option><option>OTA平台结算</option><option>退款执行</option><option>发票</option><option>结算</option></select></div>
+          <div class="filter-item-sm"><label class="sr-only" for="ncStatus">推送状态</label><select id="ncStatus"><option>全部状态</option><option>待推送</option><option>推送中</option><option>成功</option><option>失败</option></select></div>
+          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-nc>查询</button><button class="btn btn-secondary" type="button" data-reset-nc>重置</button></div>
+        </div>
+      </section>
+      <section class="table-wrap nc-queue-table list-surface-table list-table-with-pagination" aria-label="NC待推送队列">
+        <table>
+          <thead><tr><th><input type="checkbox" aria-label="全选"></th><th>NC凭证</th><th>来源类型</th><th>业务单据</th><th>对象</th><th>金额</th><th>会计分录</th><th>校验</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="ncQueueRows">
+            <tr data-no="NC-SKR-20260625002" data-source="收款入账" data-business="SKR20260625002" data-object="李梅 / 理想号地中海邮轮" data-amount="¥37,100" data-entry="借：银行存款 ¥37,100 / 贷：预收账款 ¥37,100" data-check="应收、流水、认款金额一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-SKR-20260625002"></td><td>NC-SKR-20260625002</td><td>收款入账</td><td>SKR20260625002</td><td>李梅<br><span class="text-muted">理想号地中海邮轮</span></td><td class="amount-strong">¥37,100</td><td>银行存款 / 预收账款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-CZ-20260624001" data-source="预存充值" data-business="CZ20260624001" data-object="北京王府井旗舰店 / 预存账户" data-amount="¥50,000" data-entry="借：银行存款 ¥50,000 / 贷：门市预收款 ¥50,000" data-check="充值流水、门市账户、确认金额一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-CZ-20260624001"></td><td>NC-CZ-20260624001</td><td>预存充值</td><td>CZ20260624001</td><td>北京王府井旗舰店<br><span class="text-muted">预存账户</span></td><td class="amount-strong">¥50,000</td><td>银行存款 / 门市预收款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-DK-20260625001" data-source="预存扣款" data-business="DK20260625001" data-object="北京王府井旗舰店 / KS2024061809" data-amount="¥12,800" data-entry="借：门市预收款 ¥12,800 / 贷：应收账款 ¥12,800" data-check="预存余额、扣款单、订单应收一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-DK-20260625001"></td><td>NC-DK-20260625001</td><td>预存扣款</td><td>DK20260625001</td><td>北京王府井旗舰店<br><span class="text-muted">东方丝路专列订单</span></td><td class="amount-strong">¥12,800</td><td>门市预收款 / 应收账款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-ZK-20260703001" data-source="转款核销" data-business="ZK20260703001" data-object="测试客户 / 原订单转入新订单" data-amount="¥29,400" data-entry="借：预收账款-原订单 ¥29,400 / 贷：预收账款-转入订单 ¥29,400" data-check="原订单可转余额、转入订单应收、流水核销一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-ZK-20260703001"></td><td>NC-ZK-20260703001</td><td>转款核销</td><td>ZK20260703001</td><td>测试客户<br><span class="text-muted">KS202606182313306754 → KS202607010023</span></td><td class="amount-strong">¥29,400</td><td>预收账款内部核销</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-PAY-20240715003" data-source="付款执行" data-business="PAYEX-REQ-20240715-003" data-object="巴黎中餐厅Le Bonheur" data-amount="¥8,640" data-entry="借：应付账款 ¥8,640 / 贷：银行存款 ¥8,640" data-check="付款单、回单、应付单一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-PAY-20240715003"></td><td>NC-PAY-20240715003</td><td>付款执行</td><td>PAYEX-REQ-20240715-003</td><td>巴黎中餐厅Le Bonheur</td><td class="amount-strong">¥8,640</td><td>应付账款 / 银行存款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-COM-20260704008" data-source="分销佣金" data-business="PAY-20260704-008" data-object="北京远行国际代理中心 / DR202607-001" data-amount="¥22,420" data-entry="借：销售佣金 ¥22,420 / 贷：银行存款 ¥22,420" data-check="分销对账、应付单、付款单一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-COM-20260704008"></td><td>NC-COM-20260704008</td><td>分销佣金</td><td>PAY-20260704-008</td><td>北京远行国际代理中心<br><span class="text-muted">DR202607-001</span></td><td class="amount-strong">¥22,420</td><td>销售佣金 / 银行存款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-OTA-FEE-20260704003" data-source="OTA平台服务费" data-business="AP-OTA-20260704003" data-object="携程旅行网 / OTA-REC-202607-001" data-amount="¥38,896" data-entry="借：销售费用-平台服务费 ¥38,896 / 贷：应付账款 ¥38,896" data-check="OTA平台对账、应付单、平台账单一致" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-OTA-FEE-20260704003"></td><td>NC-OTA-FEE-20260704003</td><td>OTA平台服务费</td><td>AP-OTA-20260704003</td><td>携程旅行网<br><span class="text-muted">OTA-REC-202607-001</span></td><td class="amount-strong">¥38,896</td><td>销售费用 / 应付账款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-OTA-SET-20260704001" data-source="OTA平台结算" data-business="OTA-REC-202607-001" data-object="携程 / 凯撒旅游旗舰店" data-amount="¥486,900" data-entry="借：平台应收清算 ¥486,900 / 贷：主营业务收入 ¥486,900" data-check="OTA平台订单、系统订单、退款和服务费已核对" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-OTA-SET-20260704001"></td><td>NC-OTA-SET-20260704001</td><td>OTA平台结算</td><td>OTA-REC-202607-001</td><td>携程<br><span class="text-muted">凯撒旅游旗舰店</span></td><td class="amount-strong">¥486,900</td><td>平台应收清算 / 主营业务收入</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-RFD-202606210026" data-source="退款执行" data-business="RFD-20260621-0026" data-object="马晓丽 / 北欧四国15日" data-amount="¥36,000" data-entry="借：预收账款 ¥36,000 / 贷：银行存款 ¥36,000" data-check="退款审批、应收冲销、回单已核销" data-status="推送中">
+              <td><input type="checkbox" aria-label="选择NC-RFD-202606210026"></td><td>NC-RFD-202606210026</td><td>退款执行</td><td>RFD-20260621-0026</td><td>马晓丽<br><span class="text-muted">北欧四国15日</span></td><td class="amount-strong">¥36,000</td><td>预收账款 / 银行存款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-blue">推送中</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-JS-20260624001" data-source="结算" data-business="JS20260624001" data-object="欧洲十国经典游 / 法德意A线" data-amount="¥143,800" data-entry="借：主营业务成本 ¥297,800 / 贷：主营业务收入 ¥441,600" data-check="结算审批通过，收入成本已匹配" data-status="待推送">
+              <td><input type="checkbox" aria-label="选择NC-JS-20260624001"></td><td>NC-JS-20260624001</td><td>结算</td><td>JS20260624001</td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td class="amount-strong">¥143,800</td><td>成本 / 收入</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-10条/共10条</span></div>
     </section>
 
-    <nav class="tab-bar nc-status-tabs list-surface-tabs" aria-label="凭证推送状态筛选" data-filter-tabs data-filter-target="#ncQueueRows">
-      <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
-      <button class="tab-item" type="button" data-filter-value="待推送">待推送</button>
-      <button class="tab-item" type="button" data-filter-value="推送中">推送中</button>
-      <button class="tab-item" type="button" data-filter-value="成功">成功</button>
-      <button class="tab-item" type="button" data-filter-value="失败">失败</button>
-    </nav>
-
-    <section class="table-wrap nc-queue-table list-surface-table list-table-with-pagination" aria-label="NC推送队列">
-      <table>
-        <thead>
-          <tr>
-            <th>NC凭证号</th>
-            <th>业务来源</th>
-            <th>业务单据</th>
-            <th>产品/方案/来源</th>
-            <th>金额/扣损</th>
-            <th>业务校验</th>
-            <th>NC状态</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="ncQueueRows">
-          <tr data-tab-status="成功" data-source-type="收款入账" data-product-type="跟团游" data-check="收款认领完成 / 合同应收匹配" data-entry="借：银行存款 ¥25,600 / 贷：预收账款 ¥25,600" data-result="NC-VOU-20260625-1126">
-            <td>NC-SKR-20260625001</td>
-            <td>收款入账<br><span class="text-muted">认款入账</span></td>
-            <td>SKR20260625001<br><span class="text-muted">客户 张建国</span></td>
-            <td><span class="tag tag-blue">跟团游</span><br>欧洲十国经典游<br><span class="text-muted">经济款 法德意12天 / 团期 EU20240715001</span></td>
-            <td><strong class="amount-strong">¥25,600</strong><br><span class="text-muted">预收确认</span></td>
-            <td>校验通过<br><span class="text-muted">合同/订单/收款一致</span></td>
-            <td><span class="tag tag-green">成功</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="收款入账" data-product-type="邮轮" data-check="尾款已认领 / 舱房订单待出账" data-entry="借：银行存款 ¥37,100 / 贷：预收账款 ¥37,100" data-result="等待推送">
-            <td>NC-SKR-20260625002</td>
-            <td>收款入账<br><span class="text-muted">邮轮尾款入账</span></td>
-            <td>SKR20260625002<br><span class="text-muted">客户 李梅</span></td>
-            <td><span class="tag tag-purple">邮轮</span><br>理想号地中海邮轮<br><span class="text-muted">阳台舱岸上全含方案 / 团期 CR-MED-20250803-001</span></td>
-            <td><strong class="amount-strong">¥37,100</strong><br><span class="text-muted">尾款入账</span></td>
-            <td>校验通过<br><span class="text-muted">舱房订单已匹配</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="付款执行" data-product-type="跟团游" data-check="回单已核销 / 应付单和团期成本一致" data-entry="借：应付账款 ¥8,640 / 贷：银行存款 ¥8,640" data-result="等待推送">
-            <td>NC-PAY-20240715003</td>
-            <td>付款执行<br><span class="text-muted">回单核销</span></td>
-            <td>PAYEX-REQ-20240715-003<br><span class="text-muted">供应商 巴黎中餐厅Le Bonheur</span></td>
-            <td><span class="tag tag-blue">跟团游</span><br>欧洲十国经典游<br><span class="text-muted">经济款 法德意12天 / 团期 EU20240715001</span></td>
-            <td><strong class="amount-strong">¥8,640</strong><br><span class="text-muted">餐厅安排</span></td>
-            <td>校验通过<br><span class="text-muted">成本单/付款单一致</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="应付确认" data-product-type="跟团游" data-check="供应商费用已确认 / 发票已收" data-entry="借：主营业务成本 ¥8,640 / 贷：应付账款 ¥8,640" data-result="等待推送">
-            <td>NC-YF-20240715003</td>
-            <td>应付确认<br><span class="text-muted">供应商费用入账</span></td>
-            <td>YF20240715003<br><span class="text-muted">费用单 FEE20240715003</span></td>
-            <td><span class="tag tag-blue">跟团游</span><br>欧洲十国经典游<br><span class="text-muted">法德意A线 / 团期 EU-FRA-20250720-001</span></td>
-            <td><strong class="amount-strong">¥8,640</strong><br><span class="text-muted">餐厅安排</span></td>
-            <td>校验通过<br><span class="text-muted">费用单/应付单/发票一致</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="推送中" data-source-type="退款执行" data-product-type="跟团游" data-check="团期名额已释放 / 签证未送签" data-entry="借：预收账款 ¥36,000 / 贷：银行存款 ¥36,000" data-result="NC处理中">
-            <td>NC-RFD-202606210026</td>
-            <td>退款执行<br><span class="text-muted">冲减预收</span></td>
-            <td>RFD-20260621-0026<br><span class="text-muted">订单 KS2024061826</span></td>
-            <td><span class="tag tag-blue">跟团游</span><br>北欧四国15日<br><span class="text-muted">经济款 北欧峡湾线 / 团期 EU-NOR-20250725-001</span></td>
-            <td><strong class="amount-strong">¥36,000</strong><br><span class="text-muted">扣损 ¥0</span></td>
-            <td>校验通过<br><span class="text-muted">名额释放，资料停止流转</span></td>
-            <td><span class="tag tag-blue">推送中</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="推送中" data-source-type="退款执行" data-product-type="邮轮" data-check="舱房待释放 / 港口税、小费复核" data-entry="借：预收账款 ¥12,800 / 贷：银行存款 ¥12,800" data-result="NC处理中">
-            <td>NC-RFD-202606240029</td>
-            <td>退款执行<br><span class="text-muted">邮轮退款执行</span></td>
-            <td>RFD-20260624-0029<br><span class="text-muted">订单 KS2024061804</span></td>
-            <td><span class="tag tag-purple">邮轮</span><br>理想号地中海邮轮<br><span class="text-muted">阳台舱岸上全含方案 / 团期 CR-MED-20250803-001</span></td>
-            <td><strong class="amount-strong">¥12,800</strong><br><span class="text-muted">船方扣损 ¥3,200</span></td>
-            <td>需复核<br><span class="text-muted">船方扣损、港口税、小费</span></td>
-            <td><span class="tag tag-blue">推送中</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="失败" data-source-type="付款执行" data-product-type="专列" data-check="缺少班期、铺位类型和成本中心辅助核算" data-entry="借：应付账款 ¥760,000 / 贷：银行存款 ¥760,000" data-result="辅助核算缺失">
-            <td>NC-ERR-20260624-003</td>
-            <td>付款执行<br><span class="text-muted">专列运营商付款</span></td>
-            <td>PAYEX-20260622-003<br><span class="text-muted">供应商 专列运营商</span></td>
-            <td><span class="tag tag-orange">专列</span><br>东方丝路专列9日<br><span class="text-muted">软卧标准方案 / 团期 TR-SILK-20250805-001</span></td>
-            <td><strong class="amount-strong">¥760,000</strong><br><span class="text-muted">运营商付款</span></td>
-            <td>校验失败<br><span class="text-muted">辅助核算缺失</span></td>
-            <td><span class="tag tag-red">失败</span></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-nc-open-error="assist">处理</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="结算" data-product-type="跟团游" data-check="结算审批通过 / 渠道佣金已确认" data-entry="借：销售费用 ¥143,800 / 贷：应付账款 ¥143,800" data-result="等待推送">
-            <td>NC-JS-20260624001</td>
-            <td>结算<br><span class="text-muted">结算审批通过</span></td>
-            <td>JS20260624001<br><span class="text-muted">渠道 分销商A</span></td>
-            <td><span class="tag tag-blue">跟团游</span><br>欧洲十国经典游<br><span class="text-muted">法德意A线 / 团期 EU-FRA-20250720-001</span></td>
-            <td><strong class="amount-strong">¥143,800</strong><br><span class="text-muted">渠道结算</span></td>
-            <td>校验通过<br><span class="text-muted">结算单与订单匹配</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="结算" data-product-type="自由行" data-batch-code="FT-LGK-202507" data-travel-date="2026-07-18" data-check="订单收入、采购批次成本和成本分摊一致" data-entry="借：预收账款 ¥12,400 / 贷：主营业务收入 ¥12,400" data-result="等待推送">
-            <td>NC-JS-20260622004</td>
-            <td>结算<br><span class="text-muted">订单结算</span></td>
-            <td>JS20260622004<br><span class="text-muted">订单 KS2024061813 / 采购批次 FT-LGK-202507</span></td>
-            <td><span class="tag tag-green">自由行</span><br>马来西亚自由行<br><span class="text-muted">兰卡威酒店机票套餐 / 出行日期 2026-07-18</span></td>
-            <td><strong class="amount-strong">¥12,400</strong><br><span class="text-muted">采购成本 ¥8,400 / 毛利 ¥4,000</span></td>
-            <td>校验通过<br><span class="text-muted">订单收入、采购批次成本和成本分摊已匹配</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="结算" data-product-type="外采产品" data-check="全额收款、采购应付和差额收入一致" data-entry="借：预收账款 ¥25,200 / 贷：主营业务收入 ¥25,200" data-result="等待推送">
-            <td>NC-JS-OUT-111111899</td>
-            <td>结算<br><span class="text-muted">外采结算</span></td>
-	            <td>JS-OUT-111111899<br><span class="text-muted">外采销售汇总</span></td>
-            <td><span class="tag tag-purple">外采产品</span><br>西欧精华深度8日游<br><span class="text-muted">欧洲联合地接社 / 跟团</span></td>
-            <td><strong class="amount-strong">¥25,200</strong><br><span class="text-muted">销售全额 ¥201,600 / 采购应付 ¥176,400</span></td>
-            <td>校验通过<br><span class="text-muted">全额收款、采购应付和差额收入已匹配</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="待推送" data-source-type="结算" data-product-type="MICE" data-check="锁定报价、应收计划、应付成本和客户验收已匹配" data-entry="借：主营业务成本 ¥1,365,000 / 贷：项目结算 ¥1,365,000" data-result="等待推送">
-            <td>NC-JS-MICE-20250623001</td>
-            <td>结算<br><span class="text-muted">项目结算</span></td>
-            <td>JS-MICE-20250623001<br><span class="text-muted">项目 MICE-20250623-001</span></td>
-            <td><span class="tag tag-purple">MICE</span><br>某科技公司2025年会欧洲行<br><span class="text-muted">方案A - 豪华五星版 / 客户验收后出单</span></td>
-            <td><strong class="amount-strong">¥541,000</strong><br><span class="text-muted">收入 ¥1,906,000 / 成本 ¥1,365,000</span></td>
-            <td>校验通过<br><span class="text-muted">报价、应收、应付、验收单已匹配</span></td>
-            <td><span class="tag tag-orange">待推送</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button></div></td>
-          </tr>
-          <tr data-tab-status="成功" data-source-type="结算" data-product-type="单项服务" data-check="服务费收入、代收代付、应付和服务状态已匹配" data-entry="借：预收账款 ¥3,000 / 贷：主营业务收入 ¥3,000；借：其他应付款 ¥1,500 / 贷：银行存款 ¥1,500" data-result="NC-VOU-20260617-0068">
-            <td>NC-JS-SVC-20260617001</td>
-            <td>结算<br><span class="text-muted">按单结算</span></td>
-            <td>JS-SVC-20260617001<br><span class="text-muted">服务单 SVC20260617001</span></td>
-            <td><span class="tag tag-gray">单项服务</span><br>签证代办<br><span class="text-muted">日本签证5人 / 订单 KS2024061822</span></td>
-            <td><strong class="amount-strong">¥3,000</strong><br><span class="text-muted">代收代付 ¥1,500</span></td>
-            <td>校验通过<br><span class="text-muted">服务费和代收代付已拆分</span></td>
-            <td><span class="tag tag-green">成功</span></td>
-            <td><div class="table-action"><button type="button" class="table-action-primary" data-open-nc-detail>详情</button></div></td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-    <div class="pagination list-surface-pagination list-pagination-attached">
-      <span>第1-12条/共12条</span>
-    </div>
-  </section>
-
-  <section id="nc-errors" class="nc-panel">
-    <section class="nc-error-stats" aria-label="失败原因分类">
-      <span>科目映射错误：<strong>1条</strong></span>
-      <span>辅助核算缺失：<strong>1条</strong></span>
-      <span>税码缺失：<strong>1条</strong></span>
-      <span>NC接口超时：<strong>0条</strong></span>
+    <section id="nc-error" class="nc-panel">
+      <section class="table-wrap nc-error-table list-surface-table list-table-with-pagination" aria-label="NC失败处理">
+        <table>
+          <thead><tr><th>NC凭证</th><th>来源</th><th>业务单据</th><th>对象</th><th>金额</th><th>失败原因</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="ncErrorRows">
+            <tr data-no="NC-ERR-20260624-003" data-source="付款执行" data-business="PAYEX-20260622-003" data-object="专列运营商 / 东方丝路专列" data-amount="¥760,000" data-entry="借：应付账款 ¥760,000 / 贷：银行存款 ¥760,000" data-check="缺少班期、铺位类型和成本中心辅助核算" data-status="失败">
+              <td>NC-ERR-20260624-003</td><td>付款执行</td><td>PAYEX-20260622-003</td><td>专列运营商<br><span class="text-muted">东方丝路专列</span></td><td class="amount-strong">¥760,000</td><td>辅助核算缺失</td><td><span class="tag tag-red">失败</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-fix>修复</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-ERR-20260624-002" data-source="发票" data-business="INV-REQ-20260616004" data-object="刘洋 / 马来西亚自由行" data-amount="-¥3,200" data-entry="红字发票冲销分录" data-check="红字发票缺税码" data-status="失败">
+              <td>NC-ERR-20260624-002</td><td>发票</td><td>INV-REQ-20260616004</td><td>刘洋<br><span class="text-muted">马来西亚自由行</span></td><td class="amount-red">-¥3,200</td><td>税码缺失</td><td><span class="tag tag-red">失败</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-fix>修复</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+            <tr data-no="NC-ERR-20260625-009" data-source="预存充值" data-business="CZ20260625088" data-object="深圳南山门市 / 预存账户" data-amount="¥38,400" data-entry="借：银行存款 ¥38,400 / 贷：门市预收款 ¥38,400" data-check="门市辅助核算缺失" data-status="失败">
+              <td>NC-ERR-20260625-009</td><td>预存充值</td><td>CZ20260625088</td><td>深圳南山门市<br><span class="text-muted">预存账户</span></td><td class="amount-strong">¥38,400</td><td>门市辅助核算缺失</td><td><span class="tag tag-red">失败</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-fix>修复</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
     </section>
 
-    <section class="nc-error-list" aria-label="失败记录详情">
-      <article class="nc-error-card">
-        <div class="nc-error-head">
-          <h2>NC-ERR-20260624-002</h2>
-          <span class="tag tag-red">科目映射错误</span>
-        </div>
-        <div class="nc-error-grid">
-          <div><span>业务单据</span><strong>AP20260624002 / PAY-20260624-002</strong></div>
-          <div><span>线路/方案/团期</span><strong>理想号地中海邮轮 / 阳台舱岸上全含方案 / CR-MED-20250803-001</strong></div>
-          <div class="full"><span>失败原因</span><strong>费用项目“邮轮舱位包销”未匹配NC科目</strong></div>
-          <div class="full"><span>建议操作</span><strong>在系统配置中补充科目映射后重推，或由财务手动指定科目</strong></div>
-        </div>
-        <div class="nc-error-actions">
-          <button class="btn btn-secondary" type="button" data-fix-nc-error>指定科目</button>
-          <button class="btn btn-primary" type="button" data-repush-nc-error>修复后重推</button>
-          <button class="link-button" type="button" data-manual-nc-error>标记已手工录入NC</button>
-        </div>
-      </article>
-
-      <article class="nc-error-card">
-        <div class="nc-error-head">
-          <h2>NC-ERR-20260624-003</h2>
-          <span class="tag tag-red">辅助核算缺失</span>
-        </div>
-        <div class="nc-error-grid">
-          <div><span>业务单据</span><strong>AP20260623003 / PAYEX-20260622-003</strong></div>
-          <div><span>线路/方案/团期</span><strong>东方丝路专列9日 / 软卧标准方案 / TR-SILK-20250805-001</strong></div>
-          <div class="full"><span>失败原因</span><strong>专列运营商付款未带出班期、铺位类型和成本中心辅助核算</strong></div>
-          <div class="full"><span>建议操作</span><strong>补充专列班期、运营商和铺位辅助核算后重推</strong></div>
-        </div>
-        <div class="nc-error-actions">
-          <button class="btn btn-secondary" type="button" data-fix-nc-error>补辅助项</button>
-          <button class="btn btn-primary" type="button" data-repush-nc-error>修复后重推</button>
-          <button class="link-button" type="button" data-manual-nc-error>标记已手工录入NC</button>
-        </div>
-      </article>
-
-      <article class="nc-error-card">
-        <div class="nc-error-head">
-          <h2>NC-ERR-20260624-001</h2>
-          <span class="tag tag-red">税码缺失</span>
-        </div>
-        <div class="nc-error-grid">
-          <div><span>业务单据</span><strong>INV-REQ-20260616004</strong></div>
-          <div><span>线路/方案/团期</span><strong>马来西亚自由行 / 兰卡威酒店机票套餐 / FIT-LGK-20250718-001</strong></div>
-          <div class="full"><span>失败原因</span><strong>红字发票未带出税码，NC接口拒收</strong></div>
-          <div class="full"><span>建议操作</span><strong>补充红冲税码并重新推送</strong></div>
-        </div>
-        <div class="nc-error-actions">
-          <button class="btn btn-primary" type="button" data-repush-nc-error>补税码并重推</button>
-        </div>
-      </article>
+    <section id="nc-log" class="nc-panel">
+      <section class="table-wrap nc-log-table list-surface-table list-table-with-pagination" aria-label="NC推送日志">
+        <table>
+          <thead><tr><th>推送时间</th><th>NC凭证</th><th>来源</th><th>业务单据</th><th>金额</th><th>结果</th><th>NC返回号</th><th>操作</th></tr></thead>
+          <tbody id="ncLogRows">
+            <tr data-no="NC-SKR-20260625001" data-source="收款入账" data-business="SKR20260625001" data-object="张建国 / 欧洲十国经典游" data-amount="¥25,600" data-entry="借：银行存款 ¥25,600 / 贷：预收账款 ¥25,600" data-check="成功" data-status="成功">
+              <td>2026-06-25 11:26</td><td>NC-SKR-20260625001</td><td>收款入账</td><td>SKR20260625001</td><td class="amount-strong">¥25,600</td><td><span class="tag tag-green">成功</span></td><td>NC-VOU-20260625-1126</td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-1条/共1条</span></div>
     </section>
   </section>
 
-  <section id="nc-logs" class="nc-panel">
-    <section class="filter-card filter-card-compact nc-log-filter list-surface-filter" aria-label="推送历史日志筛选">
-      <div class="filter-row">
-        <div class="filter-item"><label class="sr-only" for="ncLogKeyword">凭证号/业务单据</label><input id="ncLogKeyword" type="search" placeholder="凭证号/业务单据"></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="ncLogType">来源类型</label><select id="ncLogType"><option>全部来源</option><option>收款入账</option><option>付款执行</option><option>退款执行</option><option>应付确认</option><option>结算</option><option>发票</option></select></div>
-        <div class="filter-item filter-item-sm"><label class="sr-only" for="ncLogStatus">推送状态</label><select id="ncLogStatus"><option>全部状态</option><option>成功</option><option>失败</option><option>推送中</option></select></div>
-        <div class="filter-item filter-item-wide"><label class="sr-only">时间范围</label><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
-        <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-nc="logs">搜索</button><button class="btn btn-secondary" type="button" data-reset-nc="logs">重置</button></div>
-      </div>
-    </section>
-
-    <section class="table-wrap nc-log-table list-surface-table list-table-with-pagination" aria-label="推送历史日志">
-      <table>
-        <thead>
-          <tr>
-            <th>推送时间</th>
-            <th>NC凭证号</th>
-            <th>来源类型</th>
-            <th>业务单据</th>
-            <th>线路/方案/团期</th>
-            <th>金额</th>
-            <th>推送结果</th>
-            <th>NC侧凭证号</th>
-            <th>备注</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>2026-06-25 09:20</td><td>NC-SKR-20260625001</td><td>收款入账</td><td>SKR20260625001</td><td>欧洲十国经典游 / 法德意A线 / EU-FRA-20250720-001</td><td>¥25,600</td><td><span class="tag tag-green">成功</span></td><td>NC-VOU-20260625-1126</td><td>认款入账自动推送</td></tr>
-          <tr><td>2026-06-25 09:42</td><td>NC-SKR-20260625002</td><td>收款入账</td><td>SKR20260625002</td><td>理想号地中海邮轮 / 阳台舱岸上全含方案 / CR-MED-20250803-001</td><td>¥37,100</td><td><span class="tag tag-orange">待推送</span></td><td>-</td><td>邮轮尾款入账，等待收款凭证推送</td></tr>
-          <tr><td>2026-07-15 18:10</td><td>NC-PAY-20240715003</td><td>付款执行</td><td>PAYEX-REQ-20240715-003</td><td>欧洲十国经典游 / 经济款 法德意12天 / EU20240715001</td><td>¥8,640</td><td><span class="tag tag-orange">待推送</span></td><td>-</td><td>餐厅安排回单已核销</td></tr>
-          <tr><td>2026-06-24 16:00</td><td>NC-PAY-20260622003</td><td>付款执行</td><td>PAYEX-20260622-003</td><td>东方丝路专列9日 / 软卧标准方案 / TR-SILK-20250805-001</td><td>¥760,000</td><td><span class="tag tag-red">失败</span></td><td>-</td><td>辅助核算缺失</td></tr>
-          <tr><td>2026-06-24 12:06</td><td>NC-ERR-20260624-002</td><td>付款执行</td><td>PAY-20260624-002</td><td>理想号地中海邮轮 / 阳台舱岸上全含方案 / CR-MED-20250803-001</td><td>¥996,000</td><td><span class="tag tag-red">失败</span></td><td>-</td><td>科目映射错误</td></tr>
-          <tr><td>2026-06-24 11:10</td><td>NC-RFD-202606240029</td><td>退款执行</td><td>RFD-20260624-0029</td><td>理想号地中海邮轮 / 阳台舱岸上全含方案 / CR-MED-20250803-001</td><td>¥12,800</td><td><span class="tag tag-blue">推送中</span></td><td>-</td><td>邮轮退款执行自动推送</td></tr>
-          <tr><td>2026-06-24 09:31</td><td>NC-ERR-20260624-001</td><td>发票</td><td>INV-REQ-20260616004</td><td>马来西亚自由行 / 兰卡威酒店机票套餐 / FIT-LGK-20250718-001</td><td>-¥3,200</td><td><span class="tag tag-red">失败</span></td><td>-</td><td>税码缺失</td></tr>
-          <tr><td>2026-06-20 14:35</td><td>NC-RFD-202606200025</td><td>退款执行</td><td>RFD-20260620-0025</td><td>欧洲十国经典游 / 法德意A线 / EU-FRA-20250720-001</td><td>¥6,400</td><td><span class="tag tag-green">成功</span></td><td>NC-VOU-20260620-0641</td><td>退款执行自动推送</td></tr>
-          <tr><td>2026-06-18 10:22</td><td>NC-JS-20260618006</td><td>结算</td><td>JS20260618006</td><td>欧洲十国经典游 / 法德意A线 / EU-FRA-20250720-001</td><td>¥85,000</td><td><span class="tag tag-green">成功</span></td><td>NC-VOU-20260618-0452</td><td>结算审批通过后自动推送</td></tr>
-        </tbody>
-      </table>
-    </section>
-    <div class="pagination list-surface-pagination list-pagination-attached">
-      <span>第1-9条/共9条</span>
-    </div>
-
-  </section>
-  </section>
-
-  <div id="ncDetailModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-lg nc-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ncDetailTitle">
+  <div id="ncDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="ncDetailTitle">
       <div class="modal-header">
         <div id="ncDetailTitle" class="modal-title">NC凭证详情</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-nc-detail>×</button>
+        <button class="modal-close" type="button" aria-label="关闭NC凭证详情" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <section id="ncDetailSummary" class="readonly-summary nc-detail-summary"></section>
+        <section id="ncDetailGrid" class="description-grid"></section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+      </div>
+    </div>
+  </div>
 
-        <section id="ncDetailCheckGrid" class="nc-detail-check-grid" aria-label="业务校验结果"></section>
-
-        <div class="nc-detail-layout">
-          <section>
-            <div class="form-section-title">财务分录</div>
-            <div class="table-wrap nc-entry-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>借方</th>
-                    <th>贷方</th>
-                    <th>金额</th>
-                    <th>辅助核算</th>
-                  </tr>
-                </thead>
-                <tbody id="ncEntryRows"></tbody>
-              </table>
-            </div>
-          </section>
-          <section>
-            <div class="form-section-title">NC返回</div>
-            <div id="ncResultCards" class="nc-result-cards"></div>
-          </section>
+  <div id="ncFixDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="ncFixTitle">
+      <div class="modal-header">
+        <div id="ncFixTitle" class="modal-title">NC失败修复</div>
+        <button class="modal-close" type="button" aria-label="关闭NC失败修复" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="ncFixGrid" class="description-grid"></section>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="ncSubject">NC科目/辅助项</label>
+            <input id="ncSubject" class="form-control" type="text" value="主营业务成本 / 专列成本中心">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ncTaxCode">税码</label>
+            <input id="ncTaxCode" class="form-control" type="text" value="TAX-06">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ncFixRemark">修复说明</label>
+          <textarea id="ncFixRemark" class="form-control" rows="4">补充辅助核算后重新推送。</textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-nc-detail>关闭</button>
-        <button id="ncDetailPushButton" class="btn btn-primary" type="button">推送NC</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-fix>修复并重推</button>
       </div>
     </div>
   </div>
@@ -346,13 +163,35 @@
     (function () {
       var tabs = Array.from(document.querySelectorAll('[data-nc-tab]'));
       var panels = Array.from(document.querySelectorAll('.nc-panel'));
-      var ncDetailModal = document.getElementById('ncDetailModal');
-      var ncDetailSummary = document.getElementById('ncDetailSummary');
-      var ncDetailCheckGrid = document.getElementById('ncDetailCheckGrid');
-      var ncEntryRows = document.getElementById('ncEntryRows');
-      var ncResultCards = document.getElementById('ncResultCards');
-      var ncDetailPushButton = document.getElementById('ncDetailPushButton');
-      var activeNcRow = null;
+      var detailDrawer = document.getElementById('ncDetailDrawer');
+      var fixDrawer = document.getElementById('ncFixDrawer');
+      var detailGrid = document.getElementById('ncDetailGrid');
+      var fixGrid = document.getElementById('ncFixGrid');
+      var activeRow = null;
+
+      function notify(message, type) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message, { type: type || 'success' });
+      }
+
+      function openLayer(layer) {
+        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+          window.caesarUI.openLayer(layer);
+          return;
+        }
+        layer.hidden = false;
+        layer.classList.add('show');
+        layer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLayer(layer) {
+        if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
+          window.caesarUI.closeLayer(layer);
+          return;
+        }
+        layer.hidden = true;
+        layer.classList.remove('show');
+        layer.setAttribute('aria-hidden', 'true');
+      }
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -360,1164 +199,156 @@
         });
       }
 
-      function readNcPushResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarNcPushResults') || '{}');
-        } catch (error) {
-          return {};
-        }
+      function rowText(row) {
+        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
       }
 
-      function writeNcPushResults(results) {
-        window.localStorage.setItem('caesarNcPushResults', JSON.stringify(results));
+      function switchTab(tabName) {
+        tabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.ncTab === tabName); });
+        panels.forEach(function (panel) { panel.classList.toggle('active', panel.id === 'nc-' + tabName); });
       }
 
-      function readFinanceExecutionResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarFinanceExecutionResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeFinanceExecutionResults(results) {
-        window.localStorage.setItem('caesarFinanceExecutionResults', JSON.stringify(results));
-      }
-
-      function readScheduleFinanceChain() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarScheduleFinanceChain') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeScheduleFinanceChain(results) {
-        window.localStorage.setItem('caesarScheduleFinanceChain', JSON.stringify(results));
-      }
-
-      function readRemittanceTasks() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarRemittanceTasks') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeRemittanceTasks(tasks) {
-        window.localStorage.setItem('caesarRemittanceTasks', JSON.stringify(tasks));
-      }
-
-      function readRefundResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarRefundResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeRefundResults(results) {
-        window.localStorage.setItem('caesarRefundResults', JSON.stringify(results));
-      }
-
-      function readReceivableResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarReceivableResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeReceivableResults(results) {
-        window.localStorage.setItem('caesarReceivableResults', JSON.stringify(results));
-      }
-
-      function readAfterSalesResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarOrderAfterSalesResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeAfterSalesResults(results) {
-        window.localStorage.setItem('caesarOrderAfterSalesResults', JSON.stringify(results));
-      }
-
-      function readOutsourceResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarOutsourceResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeOutsourceResults(results) {
-        window.localStorage.setItem('caesarOutsourceResults', JSON.stringify(results));
-      }
-
-      function readFreeTravelResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarFreeTravelResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeFreeTravelResults(results) {
-        window.localStorage.setItem('caesarFreeTravelResults', JSON.stringify(results));
-      }
-
-      function readCustomProjectResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarCustomProjectResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeCustomProjectResults(results) {
-        window.localStorage.setItem('caesarCustomProjectResults', JSON.stringify(results));
-      }
-
-      function readSingleServiceResults() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarSingleServiceResults') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeSingleServiceResults(results) {
-        window.localStorage.setItem('caesarSingleServiceResults', JSON.stringify(results));
-      }
-
-      function readInvoiceTasks() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarInvoiceTasks') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeInvoiceTasks(tasks) {
-        window.localStorage.setItem('caesarInvoiceTasks', JSON.stringify(tasks));
-      }
-
-      function readOrderFinanceEvents() {
-        try {
-          return JSON.parse(window.localStorage.getItem('caesarOrderFinanceEvents') || '{}');
-        } catch (error) {
-          return {};
-        }
-      }
-
-      function writeOrderFinanceEvents(results) {
-        window.localStorage.setItem('caesarOrderFinanceEvents', JSON.stringify(results));
-      }
-
-      function orderNoFromNcData(data) {
-        if (data.orderNo && data.orderNo !== '-') return data.orderNo;
-        if (data.sourceType === '收款入账') {
-          var receivableResults = readReceivableResults();
-          var receivable = receivableResults.receivables && receivableResults.receivables[data.sourceNo];
-          return receivable && receivable.orderNo ? receivable.orderNo : '-';
-        }
-        if (data.sourceType === '退款执行') {
-          var refundResults = readRefundResults();
-          var refund = refundResults.refunds && refundResults.refunds[data.businessNo];
-          return refund && refund.orderNo ? refund.orderNo : '-';
-        }
-        return '-';
-      }
-
-      function rememberOrderFinanceNcBackfill(data) {
-        var results = readOrderFinanceEvents();
-        if (!results.orders) results.orders = {};
-        if (!results.events) results.events = {};
-        if (!results.financeSources) results.financeSources = {};
-        var orderNo = orderNoFromNcData(data);
-        var eventNo = 'EVT-NC-' + String(data.businessNo || data.voucherNo || Date.now()).replace(/[^A-Z0-9]/gi, '');
-        results.events[eventNo] = {
-          eventNo: eventNo,
-          eventType: data.sourceType + 'NC推送',
-          orderNo: orderNo,
-          businessNo: data.businessNo || '-',
-          financeNo: data.voucherNo || '-',
-          amount: data.amount || '-',
-          status: '已推送',
-          ncStatus: '已推送',
-          ncSideNo: data.ncSideNo || data.result || '-',
-          createdAt: formatDateTime(new Date())
-        };
-        [data.businessNo, data.sourceNo, data.voucherNo].forEach(function (sourceNo) {
-          if (!sourceNo) return;
-          results.financeSources[sourceNo] = Object.assign({}, results.financeSources[sourceNo] || {}, {
-            sourceNo: sourceNo,
-            orderNo: orderNo,
-            eventType: data.sourceType,
-            amount: data.amount || '-',
-            productText: data.productText || '-',
-            status: '已推送',
-            ncStatus: '已推送',
-            ncVoucherNo: data.voucherNo || '-',
-            ncSideNo: data.ncSideNo || data.result || '-',
-            updatedAt: formatDateTime(new Date())
-          });
-        });
-        if (orderNo && orderNo !== '-') {
-          var updates = { ncStatus: '已推送', updatedAt: formatDateTime(new Date()) };
-          if (data.sourceType === '收款入账') updates.paymentStatus = '已收清';
-          if (data.sourceType === '退款执行') updates.afterSaleStatus = '退款已完成';
-          results.orders[orderNo] = Object.assign({}, results.orders[orderNo] || {}, updates, { orderNo: orderNo });
-        }
-        writeOrderFinanceEvents(results);
-      }
-
-      function setTab(id) {
-        tabs.forEach(function (item) {
-          item.classList.toggle('active', item.dataset.ncTab === id);
-        });
-        panels.forEach(function (panel) {
-          panel.classList.toggle('active', panel.id === 'nc-' + id);
-        });
-      }
-
-      function openNcModal() {
-        if (!ncDetailModal) return;
-        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') window.caesarUI.openLayer(ncDetailModal);
-        ncDetailModal.hidden = false;
-        ncDetailModal.classList.add('show');
-        ncDetailModal.setAttribute('aria-hidden', 'false');
-      }
-
-      function closeNcModal() {
-        if (!ncDetailModal) return;
-        ncDetailModal.classList.remove('show');
-        ncDetailModal.setAttribute('aria-hidden', 'true');
-        if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') window.caesarUI.closeLayer(ncDetailModal);
-      }
-
-      function findRowByFirstCell(body, key) {
-        if (!body) return null;
-        return Array.from(body.querySelectorAll('tr')).find(function (row) {
-          return row.children[0] && row.children[0].textContent.trim() === key;
-        }) || null;
-      }
-
-      function statusTag(status) {
-        var className = status === '成功' ? 'tag tag-green' : status === '失败' ? 'tag tag-red' : status === '推送中' ? 'tag tag-blue' : 'tag tag-orange';
-        return '<span class="' + className + '">' + escapeHtml(status) + '</span>';
-      }
-
-      function productTypeLabel(data) {
-        if (data.productTypeLabel) return data.productTypeLabel;
-        if (data.productType) return data.productType;
-        var text = data.productText || '';
-        if (text.indexOf('邮轮') >= 0 || text.indexOf('CR-') >= 0) return '邮轮';
-        if (text.indexOf('专列') >= 0 || text.indexOf('TR-') >= 0) return '专列';
-        if (text.indexOf('自由行') >= 0) return '自由行';
-        if (text.indexOf('外采') >= 0 || text.indexOf('OUT-') >= 0) return '外采产品';
-        if (text.indexOf('单项服务') >= 0 || text.indexOf('签证') >= 0) return '单项服务';
-        return '跟团游';
-      }
-
-      function productTagClass(label) {
-        return label === '邮轮' || label === '外采产品' ? 'tag-purple' : label === '专列' ? 'tag-orange' : label === '自由行' || label === '研学' ? 'tag-green' : label === '单项服务' ? 'tag-gray' : 'tag-blue';
-      }
-
-      function getPrimaryText(cell) {
-        if (!cell) return '';
-        var clone = cell.cloneNode(true);
-        clone.querySelectorAll('.text-muted').forEach(function (node) { node.remove(); });
-        return clone.textContent.trim().replace(/\s+/g, ' ');
-      }
-
-      function getMutedText(cell) {
-        if (!cell) return '';
-        var muted = cell.querySelector('.text-muted');
-        return muted ? muted.textContent.trim().replace(/\s+/g, ' ') : '';
-      }
-
-      function tagText(cell) {
-        var tag = cell && cell.querySelector('.tag');
-        return tag ? tag.textContent.trim().replace(/\s+/g, ' ') : '';
-      }
-
-      function getProductText(cell) {
-        if (!cell) return '';
-        var clone = cell.cloneNode(true);
-        clone.querySelectorAll('.tag, .text-muted').forEach(function (node) { node.remove(); });
-        var main = clone.textContent.trim().replace(/\s+/g, ' ');
-        var muted = getMutedText(cell);
-        return main + (muted ? ' / ' + muted : '');
-      }
-
-      function ncVoucherNo(businessNo) {
-        return 'NC-RFD-' + String(businessNo || '').replace(/\D/g, '');
-      }
-
-      function ncSideVoucherNo(voucherNo) {
-        var digits = String(voucherNo || '').replace(/\D/g, '');
-        return 'NC-VOU-' + digits.slice(0, 8) + '-' + digits.slice(-4);
-      }
-
-      function formatDateTime(date) {
-        function pad(value) { return String(value).padStart(2, '0'); }
-        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
-      }
-
-      function queueRowHtml(data) {
-        var productType = productTypeLabel(data);
-        var operation = data.status === '成功'
-          ? '<button type="button" class="table-action-primary" data-open-nc-detail>详情</button>'
-          : data.status === '失败'
-            ? '<button type="button" class="table-action-primary" data-nc-open-error="dynamic">处理</button><button type="button" data-open-nc-detail>详情</button>'
-            : '<button type="button" class="table-action-primary" data-push-nc-row>推送</button><button type="button" data-open-nc-detail>详情</button>';
-        return '<tr data-tab-status="' + escapeHtml(data.status || '待推送') + '" data-source-type="' + escapeHtml(data.sourceType || '') + '" data-product-type="' + escapeHtml(productType) + '" data-batch-code="' + escapeHtml(data.batchCode || '') + '" data-travel-date="' + escapeHtml(data.travelDate || '') + '" data-check="' + escapeHtml(data.check || checkText(data)) + '" data-entry="' + escapeHtml(data.entry || entryText(data)) + '" data-result="' + escapeHtml(data.ncSideNo || data.result || '等待推送') + '">' +
-          '<td>' + escapeHtml(data.voucherNo) + '</td>' +
-          '<td>' + escapeHtml(data.sourceType || '-') + '<br><span class="text-muted">' + escapeHtml(data.trigger || '-') + '</span></td>' +
-          '<td>' + escapeHtml(data.businessNo || '-') + '<br><span class="text-muted">' + escapeHtml(data.sourceNo || data.customer || '-') + '</span></td>' +
-          '<td><span class="tag ' + productTagClass(productType) + '">' + escapeHtml(productType) + '</span><br>' + escapeHtml(data.productText || '-') + '</td>' +
-          '<td><strong class="amount-strong">' + escapeHtml(data.amount || '-') + '</strong><br><span class="text-muted">' + escapeHtml(data.deduction || data.amountNote || '按业务单据出账') + '</span></td>' +
-          '<td>' + escapeHtml(data.checkTitle || checkTitle(data)) + '<br><span class="text-muted">' + escapeHtml(data.check || checkText(data)) + '</span></td>' +
-          '<td>' + statusTag(data.status || '待推送') + '</td>' +
-          '<td><div class="table-action">' + operation + '</div></td>' +
-          '</tr>';
-      }
-
-      function upsertQueueRow(data) {
-        var body = document.getElementById('ncQueueRows');
-        if (!body || !data.voucherNo) return null;
-        var row = findRowByFirstCell(body, data.voucherNo);
-        if (!row) {
-          body.insertAdjacentHTML('afterbegin', queueRowHtml(data));
-          var insertedRow = body.querySelector('tr');
-          bindQueueRow(insertedRow);
-          return insertedRow;
-        }
-        row.outerHTML = queueRowHtml(data);
-        var updatedRow = findRowByFirstCell(body, data.voucherNo);
-        bindQueueRow(updatedRow);
-        return updatedRow;
-      }
-
-      function applyScheduleChainNcRows() {
-        var results = readScheduleFinanceChain();
-        Object.keys(results.schedules || {}).forEach(function (sourceNo) {
-          var item = results.schedules[sourceNo] || {};
-          if (!item.ncVoucher || !item.settlementNo) return;
-          upsertQueueRow({
-            voucherNo: item.ncVoucher,
-            sourceType: '结算',
-            trigger: '团期结算',
-            businessNo: item.settlementNo,
-            sourceNo: sourceNo,
-            productText: (item.product || '-') + ' / ' + (item.route || '-') + ' / ' + sourceNo,
-            productTypeLabel: item.productType || item.batchType || '跟团',
-            amount: item.profit || item.income || '¥0',
-            deduction: '订单收入-退款-实际成本-应付付款',
-            status: item.ncStatus === '已推送' ? '成功' : item.ncStatus || '待推送',
-            checkTitle: '校验通过',
-            check: '结算单、应收、应付、付款和回单状态已关联',
-            entry: '借：主营业务成本 / 贷：应付账款；结转收入成本',
-            result: item.ncResult || (item.ncStatus === '已推送' ? item.ncSideNo || ncSideVoucherNo(item.ncVoucher) : '等待推送'),
-            ncSideNo: item.ncSideNo || ''
-          });
-        });
-        updatePagination('nc-queue');
-      }
-
-      function logRowHtml(data) {
-        return '<tr>' +
-          '<td>' + escapeHtml(data.pushedAt || '-') + '</td>' +
-          '<td>' + escapeHtml(data.voucherNo) + '</td>' +
-          '<td>' + escapeHtml(data.sourceType) + '</td>' +
-          '<td>' + escapeHtml(data.businessNo) + '</td>' +
-          '<td>' + escapeHtml(data.productText || '-') + '<br><span class="text-muted">' + escapeHtml(productTypeLabel(data)) + '</span></td>' +
-          '<td>' + escapeHtml(data.amount) + '</td>' +
-          '<td>' + statusTag(data.status) + '</td>' +
-          '<td>' + escapeHtml(data.ncSideNo || '-') + '</td>' +
-          '<td>' + escapeHtml(data.remark || '业务执行后推送') + '</td>' +
-          '</tr>';
-      }
-
-      function findLogRow(body, voucherNo) {
-        if (!body) return null;
-        return Array.from(body.querySelectorAll('tr')).find(function (row) {
-          return row.children[1] && row.children[1].textContent.trim() === voucherNo;
-        }) || null;
-      }
-
-      function upsertLogRow(data) {
-        var body = document.querySelector('.nc-log-table tbody');
-        if (!body || !data.voucherNo) return;
-        var row = findLogRow(body, data.voucherNo);
-        if (!row) {
-          body.insertAdjacentHTML('afterbegin', logRowHtml(data));
-          return;
-        }
-        row.children[0].textContent = data.pushedAt || '-';
-        row.children[2].textContent = data.sourceType;
-        row.children[3].textContent = data.businessNo;
-        row.children[4].innerHTML = escapeHtml(data.productText || '-') + '<br><span class="text-muted">' + escapeHtml(productTypeLabel(data)) + '</span>';
-        row.children[5].textContent = data.amount;
-        row.children[6].innerHTML = statusTag(data.status);
-        row.children[7].textContent = data.ncSideNo || '-';
-        row.children[8].textContent = data.remark || '业务执行后推送';
-      }
-
-      function checkTitle(data) {
-        return data.status === '失败' ? '校验失败' : data.status === '成功' ? '校验通过' : data.sourceType === '退款执行' ? '执行前复核' : data.sourceType === '应付确认' ? '发票入账复核' : data.sourceType === '发票' ? '税控复核' : '校验通过';
-      }
-
-      function checkText(data) {
-        var type = productTypeLabel(data);
-        if (data.sourceType === '退款执行' && type === '邮轮') return '船方扣损、港口税、小费、舱房/船票状态';
-        if (data.sourceType === '退款执行' && type === '专列') return '退铺扣损、实名制名单、包列成本';
-        if (data.sourceType === '退款执行') return '冲减预收、释放团期名额、外部成本';
-        if (data.sourceType === '应付确认') return '应付单、供应商发票和成本金额一致';
-        if (data.sourceType === '发票') return '开票申请、应收单和税控状态一致';
-        if (data.sourceType === '结算' && type === '外采产品') return '全额收款、采购应付和差额收入一致';
-        if (data.sourceType === '结算' && type === '自由行') return '订单收入、采购批次成本和成本分摊一致';
-        if (data.sourceType === '结算' && type === '单项服务') return '服务费收入、代收代付、应付和服务状态已匹配';
-        return data.trigger || '业务单据与财务单据一致';
-      }
-
-      function entryText(data) {
-        var amount = data.amount || '-';
-        if (data.sourceType === '退款执行') return '借：预收账款 ' + amount + ' / 贷：银行存款 ' + amount;
-        if (data.sourceType === '付款执行') return '借：应付账款 ' + amount + ' / 贷：银行存款 ' + amount;
-        if (data.sourceType === '收款入账') return '借：银行存款 ' + amount + ' / 贷：预收账款 ' + amount;
-        if (data.sourceType === '应付确认') return '借：主营业务成本 ' + amount + ' / 贷：应付账款 ' + amount;
-        if (data.sourceType === '发票') return '借：应收账款 ' + amount + ' / 贷：主营业务收入 ' + amount;
-        if (data.sourceType === '结算' && productTypeLabel(data) === '外采产品') return '借：预收账款 ' + amount + ' / 贷：主营业务收入 ' + amount;
-        if (data.sourceType === '结算' && productTypeLabel(data) === '自由行') return '借：预收账款 ' + amount + ' / 贷：主营业务收入 ' + amount;
-        if (data.sourceType === '结算' && productTypeLabel(data) === '单项服务') return data.entry || '借：预收账款 ' + amount + ' / 贷：主营业务收入 ' + amount;
-        if (data.sourceType === '结算') return '借：销售费用 ' + amount + ' / 贷：应付账款 ' + amount;
-        return '按业务单据生成财务分录 ' + amount;
-      }
-
-      function queueDataFromRow(row) {
-        var cells = row ? row.children : [];
-        var dataset = row ? row.dataset : {};
-        var status = cells[6] ? cells[6].textContent.trim().replace(/\s+/g, ' ') : '';
-        var productType = dataset.productType || tagText(cells[3]) || productTypeLabel({ productText: getProductText(cells[3]) });
-        return {
-          row: row,
-          voucherNo: cells[0] ? cells[0].textContent.trim() : '',
-          sourceType: dataset.sourceType || getPrimaryText(cells[1]),
-          trigger: getMutedText(cells[1]),
-          businessNo: getPrimaryText(cells[2]),
-          sourceNo: getMutedText(cells[2]),
-          productType: productType,
-          productText: getProductText(cells[3]),
-          amount: getPrimaryText(cells[4]),
-          deduction: getMutedText(cells[4]),
-          checkTitle: getPrimaryText(cells[5]),
-          check: dataset.check || getMutedText(cells[5]),
-          status: status,
-          entry: dataset.entry || '',
-          result: dataset.result || '',
-          ncSideNo: dataset.result && dataset.result.indexOf('NC-VOU') === 0 ? dataset.result : '',
-          customer: getMutedText(cells[2]),
-          batchCode: dataset.batchCode || '',
-          travelDate: dataset.travelDate || ''
-        };
-      }
-
-      function renderNcDetail(data) {
-        activeNcRow = data.row || null;
-        var productType = productTypeLabel(data);
-        var businessObject = data.businessNo + (data.sourceNo ? ' / ' + data.sourceNo : '');
-        ncDetailSummary.innerHTML = [
-          '<div>NC凭证：' + escapeHtml(data.voucherNo) + ' | 来源：' + escapeHtml(data.sourceType) + ' | 状态：' + escapeHtml(data.status) + '</div>',
-          '<div>业务单据：' + escapeHtml(businessObject) + ' | 产品类型：' + escapeHtml(productType) + '</div>',
-          '<div>线路/方案/团期：' + escapeHtml(data.productText || '-') + '</div>',
-          '<div>金额：' + escapeHtml(data.amount) + ' | 扣损/备注：' + escapeHtml(data.deduction || '按业务单据出账') + '</div>'
-        ].join('');
-        var checkItems = [
-          { label: '业务单据', value: data.businessNo || '-', note: data.trigger || '业务流程触发' },
-          { label: '业务校验', value: data.checkTitle || checkTitle(data), note: data.check || checkText(data) },
-          { label: '财务分录', value: data.status === '失败' ? '待修复' : '已生成', note: data.entry || entryText(data) },
-          { label: 'NC结果', value: data.result || data.ncSideNo || data.status, note: data.status === '失败' ? '修复后可重推' : '可查看NC侧凭证' }
-        ];
-        ncDetailCheckGrid.innerHTML = checkItems.map(function (item) {
-          return '<article class="nc-detail-check-card"><span>' + escapeHtml(item.label) + '</span><strong>' + escapeHtml(item.value) + '</strong><em>' + escapeHtml(item.note) + '</em></article>';
-        }).join('');
-        renderEntryRows(data);
-        renderResultCards(data);
-        ncDetailPushButton.hidden = data.status === '成功';
-        ncDetailPushButton.textContent = data.status === '失败' ? '修复后重推' : '推送NC';
-        openNcModal();
-      }
-
-      function renderEntryRows(data) {
-        var entry = data.entry || entryText(data);
-        var amount = data.amount || '-';
-        var assist = productTypeLabel(data) + ' / ' + (data.productText || '-');
-        ncEntryRows.innerHTML = '<tr><td>' + escapeHtml((entry.split('/')[0] || '').replace('借：', '').trim()) + '</td><td>' + escapeHtml((entry.split('/')[1] || '').replace('贷：', '').trim()) + '</td><td class="amount-strong">' + escapeHtml(amount) + '</td><td>' + escapeHtml(assist) + '</td></tr>';
-      }
-
-      function renderResultCards(data) {
-        var items = [
-          { label: 'NC侧凭证号', value: data.ncSideNo || data.result || '-', note: data.status === '成功' ? '已返回' : '待返回' },
-          { label: '失败原因', value: data.status === '失败' ? (data.result || '待处理') : '-', note: data.status === '失败' ? '修复后可重推' : '无' },
-          { label: '回写状态', value: data.status === '成功' ? '已回写' : '未完成', note: data.sourceType === '退款执行' ? '回写退款执行记录' : '回写业务单据' }
-        ];
-        ncResultCards.innerHTML = items.map(function (item) {
-          return '<article class="nc-result-card"><span>' + escapeHtml(item.label) + '</span><strong>' + escapeHtml(item.value) + '</strong><em>' + escapeHtml(item.note) + '</em></article>';
-        }).join('');
-      }
-
-      function rememberNcResult(data) {
-        var results = readNcPushResults();
-        var bucket = data.sourceType === '退款执行' ? 'refunds' : data.sourceType === '收款入账' ? 'receipts' : data.sourceType === '应付确认' ? 'payables' : data.sourceType === '发票' ? 'invoices' : data.sourceType === '结算' ? 'settlements' : 'payments';
-        var savedData = Object.assign({}, data);
-        delete savedData.row;
-        if (!results[bucket]) results[bucket] = {};
-        results[bucket][savedData.businessNo] = savedData;
-        writeNcPushResults(results);
-        rememberBusinessNcBackfill(savedData);
-        if (savedData.status === '成功') rememberOrderFinanceNcBackfill(savedData);
-      }
-
-      function rememberBusinessNcBackfill(data) {
-        if (data.status !== '成功') return;
-        if (data.sourceType === '退款执行') {
-          rememberRefundNcBackfill(data);
-          return;
-        }
-        if (data.sourceType === '付款执行') {
-          rememberPaymentNcBackfill(data);
-          return;
-        }
-        if (data.sourceType === '发票') {
-          rememberInvoiceNcBackfill(data);
-          return;
-        }
-        if (data.sourceType === '结算') {
-          rememberSettlementNcBackfill(data);
-          return;
-        }
-        if (data.sourceType !== '收款入账') return;
-        var receivableNo = data.sourceNo;
-        if (!receivableNo) return;
-        var receivableResults = readReceivableResults();
-        var receivable = receivableResults.receivables && receivableResults.receivables[receivableNo];
-        if (!receivable) return;
-        receivable.status = '已收清';
-        receivable.pending = '¥0';
-        receivable.ncStatus = '已推送';
-        receivable.receiptNo = data.businessNo;
-        receivableResults.receivables[receivableNo] = receivable;
-        writeReceivableResults(receivableResults);
-
-        if (!receivable.changeNo) return;
-        var afterSales = readAfterSalesResults();
-        if (!afterSales.changes || !afterSales.changes[receivable.changeNo]) return;
-        var change = afterSales.changes[receivable.changeNo];
-        change.status = '已完成';
-        change.node = '已归档';
-        change.finance = '补差收款已入账，NC 已推送';
-        change.nc = 'NC 已推送成功';
-        change.amount = '补差 ' + (receivable.amount || data.amount || '¥0');
-        afterSales.changes[receivable.changeNo] = change;
-        writeAfterSalesResults(afterSales);
-      }
-
-      function rememberPaymentNcBackfill(data) {
-        var recordNo = data.businessNo;
-        if (!recordNo) return;
-        var tasks = readRemittanceTasks();
-        if (tasks.payments && tasks.payments[recordNo]) {
-          tasks.payments[recordNo].status = '已核销';
-          tasks.payments[recordNo].ncStatus = '已推送';
-          tasks.payments[recordNo].ncSideNo = data.ncSideNo || data.result;
-          writeRemittanceTasks(tasks);
-        }
-
-        var financeResults = readFinanceExecutionResults();
-        var changed = false;
-        Object.keys(financeResults.payments || {}).forEach(function (applyNo) {
-          var payment = financeResults.payments[applyNo];
-          if (!payment || (payment.recordNo || '') !== recordNo) return;
-          payment.remittanceStatus = '已核销';
-          payment.ncStatus = '已推送';
-          payment.ncSideNo = data.ncSideNo || data.result;
-          financeResults.payments[applyNo] = payment;
-          changed = true;
-        });
-        if (changed) writeFinanceExecutionResults(financeResults);
-      }
-
-      function rememberRefundNcBackfill(data) {
-        var refundNo = data.businessNo;
-        if (!refundNo) return;
-        var refundResults = readRefundResults();
-        var refund = refundResults.refunds && refundResults.refunds[refundNo];
-        if (refund) {
-          refund.remittanceStatus = '已核销';
-          refund.ncStatus = '已推送';
-          refund.ncSideNo = data.ncSideNo || data.result;
-          refundResults.refunds[refundNo] = refund;
-          writeRefundResults(refundResults);
-        }
-
-        var tasks = readRemittanceTasks();
-        if (tasks.refunds && tasks.refunds[refundNo]) {
-          tasks.refunds[refundNo].status = '已核销';
-          tasks.refunds[refundNo].ncStatus = '已推送';
-          tasks.refunds[refundNo].ncSideNo = data.ncSideNo || data.result;
-          writeRemittanceTasks(tasks);
-        }
-
-        var financeResults = readFinanceExecutionResults();
-        if (financeResults.refunds && financeResults.refunds[refundNo]) {
-          financeResults.refunds[refundNo].remittanceStatus = '已核销';
-          financeResults.refunds[refundNo].ncStatus = '已推送';
-          financeResults.refunds[refundNo].ncSideNo = data.ncSideNo || data.result;
-          writeFinanceExecutionResults(financeResults);
-        }
-
-        var receivableResults = readReceivableResults();
-        var receivableChanged = false;
-        Object.keys(receivableResults.refunds || {}).forEach(function (receivableNo) {
-          var receivableRefund = receivableResults.refunds[receivableNo];
-          if (!receivableRefund || receivableRefund.refundNo !== refundNo) return;
-          receivableRefund.ncStatus = '已推送';
-          receivableRefund.ncSideNo = data.ncSideNo || data.result;
-          receivableResults.refunds[receivableNo] = receivableRefund;
-          receivableChanged = true;
-        });
-        if (receivableChanged) writeReceivableResults(receivableResults);
-
-        if (!refund || !refund.changeNo) return;
-        var afterSales = readAfterSalesResults();
-        if (!afterSales.changes || !afterSales.changes[refund.changeNo]) return;
-        var change = afterSales.changes[refund.changeNo];
-        change.status = '已完成';
-        change.node = '已归档';
-        change.finance = '退差退款已执行，回单已核销，NC 已推送';
-        change.nc = 'NC 已推送成功';
-        change.amount = '退差 ' + (refund.amount || data.amount || '¥0');
-        afterSales.changes[refund.changeNo] = change;
-        writeAfterSalesResults(afterSales);
-      }
-
-      function rememberInvoiceNcBackfill(data) {
-        var invoiceTasks = readInvoiceTasks();
-        var invoice = invoiceTasks.issued && invoiceTasks.issued[data.businessNo];
-        var red = invoice && (invoice.sourceKind === 'refund' || String(invoice.amount || '').indexOf('-') === 0);
-        if (invoice) {
-          invoice.ncStatus = '已同步';
-          invoice.ncSideNo = data.ncSideNo || data.result;
-          invoice.status = red ? '已红冲' : '已开票';
-          invoiceTasks.issued[data.businessNo] = invoice;
-          writeInvoiceTasks(invoiceTasks);
-        }
-
-        if (invoice && red && invoice.refundNo) {
-          var refundResults = readRefundResults();
-          var refund = refundResults.refunds && refundResults.refunds[invoice.refundNo];
-          if (refund) {
-            refund.invoiceStatus = '已红冲';
-            refund.invoiceNo = data.businessNo;
-            refund.invoiceNcStatus = '已同步';
-            refund.invoiceNcSideNo = data.ncSideNo || data.result;
-            refundResults.refunds[invoice.refundNo] = refund;
-            writeRefundResults(refundResults);
-          }
-          return;
-        }
-
-        var receivableNo = invoice && invoice.receivableNo ? invoice.receivableNo : data.sourceNo;
-        if (!receivableNo) return;
-        var receivableResults = readReceivableResults();
-        var receivable = receivableResults.receivables && receivableResults.receivables[receivableNo];
-        if (!receivable) return;
-        receivable.invoiceStatus = '已开票';
-        receivable.invoiceNo = data.businessNo;
-        receivable.invoiceNcStatus = '已同步';
-        receivable.invoiceNcSideNo = data.ncSideNo || data.result;
-        receivableResults.receivables[receivableNo] = receivable;
-        writeReceivableResults(receivableResults);
-      }
-
-      function rememberSettlementNcBackfill(data) {
-        rememberOutsourceNcBackfill(data);
-        rememberFreeTravelNcBackfill(data);
-
-        var customResults = readCustomProjectResults();
-        var customChanged = false;
-        Object.keys(customResults.projects || {}).forEach(function (projectNo) {
-          var project = customResults.projects[projectNo];
-          if (!project) return;
-          var matched = project.settlementNo === data.businessNo || projectNo === data.sourceNo || String(data.productText || '').indexOf(project.projectName || '') >= 0;
-          if (!matched) return;
-          project.settlementStatus = '已推送';
-          project.ncVoucher = data.voucherNo;
-          project.ncSideNo = data.ncSideNo || data.result;
-          project.financeGenerated = true;
-          customResults.projects[projectNo] = project;
-          customChanged = true;
-        });
-        if (customChanged) writeCustomProjectResults(customResults);
-
-        var serviceResults = readSingleServiceResults();
-        var serviceChanged = false;
-        Object.keys(serviceResults.services || {}).forEach(function (serviceNo) {
-          var service = serviceResults.services[serviceNo];
-          if (!service) return;
-          var matched = service.settlementNo === data.businessNo || serviceNo === data.sourceNo || String(data.productText || '').indexOf(service.serviceType || '') >= 0;
-          if (!matched) return;
-          service.financeStatus = '已闭环';
-          service.ncStatus = '已推送';
-          service.ncVoucher = data.voucherNo;
-          service.ncSideNo = data.ncSideNo || data.result;
-          serviceResults.services[serviceNo] = service;
-          serviceChanged = true;
-        });
-        if (serviceChanged) writeSingleServiceResults(serviceResults);
-      }
-
-      function rememberOutsourceNcBackfill(data) {
-        if (productTypeLabel(data) !== '外采产品') return;
-        var results = readOutsourceResults();
-        if (results.settlements && results.settlements[data.businessNo]) {
-          results.settlements[data.businessNo].settlementStatus = '已推送';
-          results.settlements[data.businessNo].ncSideNo = data.ncSideNo || data.result;
-        }
-        Object.keys(results.products || {}).forEach(function (productNo) {
-          var product = results.products[productNo];
-          if (product.lastSettlementNo === data.businessNo || String(data.productText || '').indexOf(product.productName || '') >= 0) {
-            product.financeStatus = '已推送';
-            product.ncSideNo = data.ncSideNo || data.result;
-          }
-        });
-        writeOutsourceResults(results);
-      }
-
-      function rememberFreeTravelNcBackfill(data) {
-        if (productTypeLabel(data) !== '自由行') return;
-        var results = readFreeTravelResults();
-        if (results.settlements && results.settlements[data.businessNo]) {
-          results.settlements[data.businessNo].settlementStatus = '已推送';
-          results.settlements[data.businessNo].ncVoucher = data.voucherNo;
-          results.settlements[data.businessNo].ncSideNo = data.ncSideNo || data.result;
-        }
-        Object.keys(results.batches || {}).forEach(function (batchNo) {
-          var batch = results.batches[batchNo];
-          if (!batch) return;
-          var matched = batch.settlementNo === data.businessNo || batch.batchCode === data.batchCode || String(data.sourceNo || '').indexOf(batch.batchCode || '') >= 0 || String(data.productText || '').indexOf(batch.batchCode || '') >= 0;
-          if (!matched) return;
-          batch.status = '已推送';
-          batch.ncVoucher = data.voucherNo;
-          batch.ncSideNo = data.ncSideNo || data.result;
-          results.batches[batchNo] = batch;
-        });
-        writeFreeTravelResults(results);
-      }
-
-      function rememberScheduleChainNcBackfill(data) {
-        var results = readScheduleFinanceChain();
-        if (!results.schedules) return;
-        var chain = null;
-        Object.keys(results.schedules).some(function (sourceNo) {
-          var item = results.schedules[sourceNo];
-          if (item.ncVoucher === data.voucherNo || item.settlementNo === data.businessNo || sourceNo === data.sourceNo) {
-            chain = item;
-            return true;
-          }
-          return false;
-        });
-        if (!chain) return;
-        chain.ncStatus = '已推送';
-        chain.settlementStatus = data.sourceType === '结算' ? '已结算' : chain.settlementStatus;
-        chain.ncResult = data.result || data.ncSideNo || 'NC回写成功';
-        chain.ncSideNo = data.ncSideNo || data.result || '';
-        chain.updatedAt = formatDateTime(new Date());
-        writeScheduleFinanceChain(results);
-      }
-
-      function pushQueueRow(row) {
-        if (!row) return null;
-        var data = queueDataFromRow(row);
-        if (!data.voucherNo) return null;
-        data.status = '成功';
-        data.pushedAt = formatDateTime(new Date());
-        data.ncSideNo = data.ncSideNo || ncSideVoucherNo(data.voucherNo);
-        data.result = data.ncSideNo;
-        data.remark = data.sourceType + '推送成功';
-        rememberNcResult(data);
-        rememberScheduleChainNcBackfill(data);
-        data.row = upsertQueueRow(data);
-        activeNcRow = data.row || activeNcRow;
-        upsertLogRow(data);
-        updatePagination('nc-queue');
-        updatePagination('nc-logs');
-        if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('NC凭证已推送');
-        return data;
-      }
-
-      function syntheticRefundData(data) {
-        var voucherNo = ncVoucherNo(data.refundNo);
-        var productType = productTypeLabel(data);
-        return {
-          sourceType: '退款执行',
-          businessNo: data.refundNo,
-          voucherNo: voucherNo,
-          sourceNo: data.orderNo,
-          customer: data.customer,
-          amount: data.amount,
-          deduction: data.deduction,
-          productText: data.productText,
-          productTypeLabel: productType,
-          trigger: '退款执行',
-          status: '待推送',
-          checkTitle: productType === '邮轮' ? '港口税复核' : productType === '专列' ? '退铺复核' : '校验通过',
-          check: data.resourceStatus || checkText({ sourceType: '退款执行', productText: data.productText, productTypeLabel: productType }),
-          entry: entryText({ sourceType: '退款执行', amount: data.amount }),
-          result: '等待推送',
-          remark: '退款执行后生成'
-        };
-      }
-
-      function paymentNcVoucherNo(recordNo) {
-        var digits = String(recordNo || '').replace(/\D/g, '');
-        return 'NC-PAY-' + (digits || Date.now());
-      }
-
-      function syntheticPaymentData(data) {
-        var recordNo = data.recordNo || data.paymentNo || '';
-        return {
-          sourceType: '付款执行',
-          businessNo: recordNo,
-          voucherNo: data.ncVoucher || paymentNcVoucherNo(recordNo),
-          sourceNo: data.supplier ? '供应商 ' + data.supplier : data.payableNo,
-          amount: data.amount || '¥0',
-          deduction: data.fee || data.costItem || '供应商付款',
-          productText: data.productText || data.product || '-',
-          productTypeLabel: productTypeLabel({ productText: data.productText || data.product || '-' }),
-          trigger: '回单核销',
-          status: data.ncStatus === '已推送' ? '成功' : '待推送',
-          checkTitle: '校验通过',
-          check: '应付单、付款单、回单和团期成本一致',
-          entry: entryText({ sourceType: '付款执行', amount: data.amount || '¥0' }),
-          result: data.ncSideNo || (data.ncStatus === '已推送' ? ncSideVoucherNo(data.ncVoucher || paymentNcVoucherNo(recordNo)) : '等待推送'),
-          ncSideNo: data.ncSideNo || '',
-          remark: '付款回单核销后生成'
-        };
-      }
-
-      function updatePagination(panelId) {
-        var panel = document.getElementById(panelId);
-        if (!panel) return;
-        var rows = panel.querySelectorAll('tbody tr').length;
-        var pagination = panel.querySelector('.pagination span');
-        if (pagination) pagination.textContent = '第1-' + rows + '条/共' + rows + '条';
-      }
-
-      function applyNcPushResults() {
-        var results = readNcPushResults();
-        var items = [];
-        Object.keys(results.payments || {}).forEach(function (recordNo) {
-          items.push(results.payments[recordNo]);
-        });
-        Object.keys(results.receipts || {}).forEach(function (receiptNo) {
-          items.push(results.receipts[receiptNo]);
-        });
-        Object.keys(results.refunds || {}).forEach(function (refundNo) {
-          items.push(results.refunds[refundNo]);
-        });
-        Object.keys(results.payables || {}).forEach(function (payableNo) {
-          items.push(results.payables[payableNo]);
-        });
-        Object.keys(results.invoices || {}).forEach(function (invoiceNo) {
-          items.push(results.invoices[invoiceNo]);
-        });
-        Object.keys(results.settlements || {}).forEach(function (settlementNo) {
-          items.push(results.settlements[settlementNo]);
-        });
-        items.forEach(function (data) {
-          upsertQueueRow(data);
-          upsertLogRow(data);
-        });
-        var financeResults = readFinanceExecutionResults();
-        var remittanceTasks = readRemittanceTasks();
-        Object.keys(financeResults.refunds || {}).forEach(function (refundNo) {
-          if (results.refunds && results.refunds[refundNo]) return;
-          if (!remittanceTasks.refunds || !remittanceTasks.refunds[refundNo] || remittanceTasks.refunds[refundNo].status !== '已核销') return;
-          upsertQueueRow(syntheticRefundData(financeResults.refunds[refundNo]));
-        });
-        Object.keys(financeResults.payments || {}).forEach(function (applyNo) {
-          var payment = financeResults.payments[applyNo] || {};
-          var recordNo = payment.recordNo || payment.paymentNo || '';
-          if (!recordNo || (results.payments && results.payments[recordNo])) return;
-          var remittance = remittanceTasks.payments && remittanceTasks.payments[recordNo];
-          if (payment.remittanceStatus !== '已核销' && (!remittance || remittance.status !== '已核销')) return;
-          upsertQueueRow(syntheticPaymentData(Object.assign({}, payment, remittance || {})));
-        });
-        updatePagination('nc-queue');
-        updatePagination('nc-logs');
-      }
-
-      function bindQueueRow(row) {
-        if (!row) return;
-        row.querySelectorAll('[data-open-nc-detail]').forEach(function (button) {
-          if (button.dataset.bound === 'true') return;
-          button.dataset.bound = 'true';
-          button.addEventListener('click', function () {
-            renderNcDetail(queueDataFromRow(row));
-          });
-        });
-        row.querySelectorAll('[data-push-nc-row]').forEach(function (button) {
-          if (button.dataset.bound === 'true') return;
-          button.dataset.bound = 'true';
-          button.addEventListener('click', function () {
-            pushQueueRow(row);
-          });
-        });
-        row.querySelectorAll('[data-nc-open-error]').forEach(function (button) {
-          if (button.dataset.bound === 'true') return;
-          button.dataset.bound = 'true';
-          button.addEventListener('click', function () {
-            setTab('errors');
-            var content = document.querySelector('.content');
-            if (content) content.scrollTop = 0;
-          });
-        });
-      }
-
-      function rowMatchesValues(row, values) {
-        var text = row ? row.textContent.replace(/\s+/g, ' ') : '';
-        return values.some(function (value) {
-          return value && text.indexOf(value) >= 0;
-        });
-      }
-
-      function ncFieldValue(id) {
-        var field = document.getElementById(id);
-        return field ? field.value.trim() : '';
-      }
-
-      function ncOptionEnabled(value) {
-        return value && value.indexOf('全部') < 0;
-      }
-
-      function activeNcStatusFilter() {
-        var active = document.querySelector('.nc-status-tabs .tab-item.active');
-        return active ? active.dataset.filterValue || '全部' : '全部';
-      }
-
-      function applyNcQueueFilters() {
-        var keyword = ncFieldValue('ncQueueKeyword').toLowerCase();
-        var type = ncFieldValue('ncQueueType');
-        var productType = ncFieldValue('ncQueueProductType');
-        var status = ncFieldValue('ncQueueStatus');
-        var tabStatus = activeNcStatusFilter();
+      function applyFilters() {
+        var keyword = (document.getElementById('ncKeyword').value || '').trim().toLowerCase();
+        var source = document.getElementById('ncSource').value;
+        var status = document.getElementById('ncStatus').value;
         document.querySelectorAll('#ncQueueRows tr').forEach(function (row) {
-          var text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
           var visible = true;
-          if (keyword && text.indexOf(keyword) < 0) visible = false;
-          if (ncOptionEnabled(type) && row.dataset.sourceType !== type) visible = false;
-          if (ncOptionEnabled(productType) && row.dataset.productType !== productType) visible = false;
-          if (ncOptionEnabled(status) && row.dataset.tabStatus !== status) visible = false;
-          if (tabStatus !== '全部' && row.dataset.tabStatus !== tabStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (source.indexOf('全部') !== 0 && row.dataset.source !== source) visible = false;
+          if (status.indexOf('全部') !== 0 && row.dataset.status !== status) visible = false;
           row.hidden = !visible;
         });
       }
 
-      function applyNcLogFilters() {
-        var keyword = ncFieldValue('ncLogKeyword').toLowerCase();
-        var type = ncFieldValue('ncLogType');
-        var status = ncFieldValue('ncLogStatus');
-        document.querySelectorAll('.nc-log-table tbody tr').forEach(function (row) {
-          var text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
-          var visible = true;
-          if (keyword && text.indexOf(keyword) < 0) visible = false;
-          if (ncOptionEnabled(type) && row.children[2] && row.children[2].textContent.trim() !== type) visible = false;
-          if (ncOptionEnabled(status) && row.children[6] && row.children[6].textContent.trim().indexOf(status) < 0) visible = false;
-          row.hidden = !visible;
-        });
+      function resetFilters() {
+        document.querySelectorAll('.nc-filter input').forEach(function (input) { input.value = ''; });
+        document.querySelectorAll('.nc-filter select').forEach(function (select) { select.selectedIndex = 0; });
+        applyFilters();
       }
 
-      function resetNcFilters(scope) {
-        var ids = scope === 'logs' ? ['ncLogKeyword', 'ncLogType', 'ncLogStatus'] : ['ncQueueKeyword', 'ncQueueType', 'ncQueueProductType', 'ncQueueStatus'];
-        ids.forEach(function (id) {
-          var field = document.getElementById(id);
-          if (field) field.value = field.tagName === 'SELECT' ? field.options[0].value : '';
-        });
-        if (scope === 'logs') {
-          document.querySelectorAll('.nc-log-table tbody tr').forEach(function (row) { row.hidden = false; });
-          return;
-        }
-        var allTab = document.querySelector('.nc-status-tabs .tab-item[data-filter-value="全部"]');
-        if (allTab) allTab.click();
-        document.querySelectorAll('#ncQueueRows tr').forEach(function (row) { row.hidden = false; });
-      }
-
-      function errorCardValues(card) {
-        if (!card) return [];
-        var values = [];
-        var title = card.querySelector('h2');
-        var doc = card.querySelector('.nc-error-grid strong');
-        if (title) values.push(title.textContent.trim());
-        if (doc) {
-          doc.textContent.split('/').forEach(function (item) {
-            var value = item.trim();
-            if (value) values.push(value);
-          });
-        }
-        return values;
-      }
-
-      function queueRowForErrorCard(card) {
-        var values = errorCardValues(card);
-        return Array.from(document.querySelectorAll('#ncQueueRows tr')).find(function (row) {
-          return rowMatchesValues(row, values);
-        }) || null;
-      }
-
-      function markNcErrorReady(card) {
-        var tag = card && card.querySelector('.nc-error-head .tag');
-        if (tag) {
-          tag.className = 'tag tag-orange';
-          tag.textContent = '待重推';
-        }
-      }
-
-      function finishNcErrorCard(card, manual) {
-        var row = queueRowForErrorCard(card);
-        if (row) {
-          var data = pushQueueRow(row);
-          if (manual && data && data.row) {
-            data.row.children[5].innerHTML = '校验通过<br><span class="text-muted">手工录入NC</span>';
-          }
-        }
-        if (card) card.remove();
-        updatePagination('nc-queue');
-        updatePagination('nc-logs');
-      }
-
-      function locateNcFromParams() {
+      function openFromParams() {
         var params = new URLSearchParams(window.location.search);
-        var targetTab = params.get('tab');
-        var values = [
-          params.get('voucherNo'),
-          params.get('businessNo'),
-          params.get('sourceNo'),
-          params.get('recordNo'),
-          params.get('remittanceNo'),
-          params.get('settlementNo'),
-          params.get('applyNo'),
-          params.get('payableNo')
-        ].filter(Boolean);
-        if (targetTab) setTab(targetTab);
-        if (!values.length) return;
-        var queueRow = Array.from(document.querySelectorAll('#ncQueueRows tr')).find(function (row) {
-          return rowMatchesValues(row, values);
-        });
-        if (queueRow) {
-          setTab('queue');
-          queueRow.scrollIntoView({ block: 'center' });
-          if (params.get('open') !== 'none') renderNcDetail(queueDataFromRow(queueRow));
-          return;
+        var source = params.get('source');
+        var businessNo = params.get('businessNo');
+        if (source) {
+          document.getElementById('ncSource').value = source;
+          applyFilters();
         }
-        var logRow = Array.from(document.querySelectorAll('.nc-log-table tbody tr')).find(function (row) {
-          return rowMatchesValues(row, values);
+        if (!businessNo) return;
+        var row = Array.from(document.querySelectorAll('#ncQueueRows tr, #ncErrorRows tr, #ncLogRows tr')).find(function (item) {
+          return rowText(item).indexOf(businessNo) >= 0;
         });
-        if (logRow) {
-          setTab('logs');
-          logRow.scrollIntoView({ block: 'center' });
+        if (row) {
+          if (row.closest('#nc-error')) switchTab('error');
+          if (row.closest('#nc-log')) switchTab('log');
+          activeRow = row;
+          document.getElementById('ncDetailTitle').textContent = 'NC凭证详情 - ' + activeRow.dataset.no;
+          renderGrid(detailGrid, activeRow);
+          openLayer(detailDrawer);
         }
       }
 
-      tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-          setTab(tab.dataset.ncTab);
-        });
-      });
-
-      document.querySelectorAll('.nc-status-tabs .tab-item').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-          setTimeout(applyNcQueueFilters, 0);
-        });
-      });
-
-      document.querySelectorAll('#ncQueueRows tr').forEach(bindQueueRow);
-
-      document.querySelectorAll('[data-close-nc-detail]').forEach(function (button) {
-        button.addEventListener('click', closeNcModal);
-      });
-
-      if (ncDetailModal) {
-        ncDetailModal.addEventListener('click', function (event) {
-          if (event.target === ncDetailModal) closeNcModal();
-        });
+      function renderGrid(target, row) {
+        var data = row.dataset;
+        var items = [
+          ['NC凭证号', escapeHtml(data.no)],
+          ['来源类型', escapeHtml(data.source)],
+          ['业务单据', escapeHtml(data.business)],
+          ['对象', escapeHtml(data.object), true],
+          ['金额', '<span class="amount-strong">' + escapeHtml(data.amount) + '</span>'],
+          ['会计分录', escapeHtml(data.entry), true],
+          ['校验结果', escapeHtml(data.check), true],
+          ['状态', escapeHtml(data.status)]
+        ];
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item[2] ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>';
+        }).join('');
       }
 
-      if (ncDetailPushButton) {
-        ncDetailPushButton.addEventListener('click', function () {
-          if (!activeNcRow) return;
-          var pushedData = pushQueueRow(activeNcRow);
-          if (pushedData) renderNcDetail(pushedData);
-        });
+      function markPushed(row) {
+        if (!row) return;
+        row.dataset.status = '成功';
+        var statusCell = row.children[row.children.length - 2];
+        statusCell.innerHTML = '<span class="tag tag-green">成功</span>';
+        row.children[row.children.length - 1].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
+        document.getElementById('ncLogRows').insertAdjacentHTML('afterbegin', '<tr data-no="' + escapeHtml(row.dataset.no) + '" data-source="' + escapeHtml(row.dataset.source) + '" data-business="' + escapeHtml(row.dataset.business) + '" data-object="' + escapeHtml(row.dataset.object) + '" data-amount="' + escapeHtml(row.dataset.amount) + '" data-entry="' + escapeHtml(row.dataset.entry) + '" data-check="成功" data-status="成功"><td>2026-07-04 16:30</td><td>' + escapeHtml(row.dataset.no) + '</td><td>' + escapeHtml(row.dataset.source) + '</td><td>' + escapeHtml(row.dataset.business) + '</td><td class="amount-strong">' + escapeHtml(row.dataset.amount) + '</td><td><span class="tag tag-green">成功</span></td><td>NC-VOU-' + escapeHtml(row.dataset.no.replace(/\D/g, '').slice(-8)) + '</td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td></tr>');
       }
 
-      var refreshButton = document.querySelector('[data-refresh-nc]');
-      if (refreshButton) {
-        refreshButton.addEventListener('click', function () {
-          applyNcPushResults();
-          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('NC结果已同步');
-        });
-      }
-
-      var batchPushButton = document.querySelector('[data-push-pending-nc]');
-      if (batchPushButton) {
-        batchPushButton.addEventListener('click', function () {
-          var rows = Array.from(document.querySelectorAll('#ncQueueRows tr')).filter(function (row) {
-            return row.dataset.tabStatus === '待推送';
-          });
-          rows.forEach(pushQueueRow);
-          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('待推送NC凭证已批量推送');
-        });
+      function moveFixedToQueue(row) {
+        if (!row) return;
+        var data = row.dataset;
+        document.getElementById('ncQueueRows').insertAdjacentHTML('afterbegin', '<tr data-no="' + escapeHtml(data.no) + '" data-source="' + escapeHtml(data.source) + '" data-business="' + escapeHtml(data.business) + '" data-object="' + escapeHtml(data.object) + '" data-amount="' + escapeHtml(data.amount) + '" data-entry="' + escapeHtml(data.entry) + '" data-check="' + escapeHtml(data.check) + '" data-status="待推送"><td><input type="checkbox" aria-label="选择' + escapeHtml(data.no) + '"></td><td>' + escapeHtml(data.no) + '</td><td>' + escapeHtml(data.source) + '</td><td>' + escapeHtml(data.business) + '</td><td>' + escapeHtml(data.object) + '</td><td class="amount-strong">' + escapeHtml(data.amount) + '</td><td>' + escapeHtml(data.entry.split('/')[0] || data.entry) + '</td><td><span class="tag tag-green">已修复</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td></tr>');
+        row.remove();
       }
 
       document.addEventListener('click', function (event) {
-        var searchButton = event.target.closest('[data-search-nc]');
-        if (searchButton) {
-          if (searchButton.dataset.searchNc === 'logs') applyNcLogFilters();
-          else applyNcQueueFilters();
+        var tab = event.target.closest('[data-nc-tab]');
+        if (tab) {
+          switchTab(tab.dataset.ncTab);
           return;
         }
-        var resetButton = event.target.closest('[data-reset-nc]');
-        if (resetButton) {
-          resetNcFilters(resetButton.dataset.resetNc);
+        var pushButton = event.target.closest('[data-push-row]');
+        if (pushButton) {
+          markPushed(pushButton.closest('tr'));
+          notify('NC凭证已推送成功');
           return;
         }
-        var fixButton = event.target.closest('[data-fix-nc-error]');
+        if (event.target.closest('[data-push-checked]')) {
+          document.querySelectorAll('#ncQueueRows input[type="checkbox"]:checked').forEach(function (box) {
+            markPushed(box.closest('tr'));
+          });
+          notify('已批量推送选中凭证');
+          return;
+        }
+        var detailButton = event.target.closest('[data-open-detail]');
+        if (detailButton) {
+          activeRow = detailButton.closest('tr');
+          document.getElementById('ncDetailTitle').textContent = 'NC凭证详情 - ' + activeRow.dataset.no;
+          renderGrid(detailGrid, activeRow);
+          openLayer(detailDrawer);
+          return;
+        }
+        var fixButton = event.target.closest('[data-open-fix]');
         if (fixButton) {
-          markNcErrorReady(fixButton.closest('.nc-error-card'));
-          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('修复项已保存');
+          activeRow = fixButton.closest('tr');
+          document.getElementById('ncFixTitle').textContent = 'NC失败修复 - ' + activeRow.dataset.no;
+          renderGrid(fixGrid, activeRow);
+          openLayer(fixDrawer);
           return;
         }
-        var repushButton = event.target.closest('[data-repush-nc-error]');
-        if (repushButton) {
-          finishNcErrorCard(repushButton.closest('.nc-error-card'), false);
-          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('NC凭证已重推');
+        if (event.target.closest('[data-confirm-fix]')) {
+          if (activeRow) {
+            moveFixedToQueue(activeRow);
+          }
+          closeLayer(fixDrawer);
+          switchTab('queue');
+          notify('失败凭证已修复，已返回待推送队列');
           return;
         }
-        var manualButton = event.target.closest('[data-manual-nc-error]');
-        if (manualButton) {
-          finishNcErrorCard(manualButton.closest('.nc-error-card'), true);
-          if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast('NC手工录入状态已回写');
+        if (event.target.closest('[data-refresh-nc]')) {
+          notify('NC推送结果已同步');
+          return;
         }
+        if (event.target.closest('[data-search-nc]')) {
+          applyFilters();
+          return;
+        }
+        if (event.target.closest('[data-reset-nc]')) {
+          resetFilters();
+          return;
+        }
+        var closeButton = event.target.closest('[data-close-layer]');
+        if (closeButton) closeLayer(closeButton.closest('.modal-overlay'));
       });
 
-      applyNcPushResults();
-      applyScheduleChainNcRows();
-      locateNcFromParams();
+      document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (event) {
+          if (event.target === overlay) closeLayer(overlay);
+        });
+      });
+
+      openFromParams();
     })();
   </script>
 </body>

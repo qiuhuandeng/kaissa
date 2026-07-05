@@ -3,6 +3,7 @@
   if (!page) return;
 
   var mode = page.getAttribute('data-schedule-builder');
+  var isSupplierSchedule = page.hasAttribute('data-supplier-schedule-builder');
   var params = new URLSearchParams(window.location.search);
   var currentStep = 0;
   var dirty = false;
@@ -58,6 +59,58 @@
         ['尾款截止日期', 'date', '2026-06-25'],
         ['最低成团人数', 'number', '16'],
         ['单房差', 'text', '¥4,800']
+      ]
+    },
+    free: {
+      label: '自由行',
+      scheduleType: '自由行出行日期',
+      objectName: '出行日期',
+      tagClass: 'tag tag-green',
+      prefix: 'FT',
+      unit: '套',
+      planLabel: '套餐方案',
+      departLabel: '出行开始',
+      returnLabel: '出行结束',
+      startLabel: '出发城市',
+      endLabel: '目的地',
+      startValue: '全国',
+      endValue: '兰卡威',
+      deadlineLabel: '确认截止日期',
+      defaultPrice: 3680,
+      defaultStock: 36,
+      approvalNo: 'SUP-SCH-20260702-041',
+      approvalNode: '凯撒外采运营',
+      products: [
+        {
+          name: '兰卡威机票酒店套餐',
+          meta: '全国出发，按出行日期维护机票、酒店房晚与接送机余量。',
+          plans: [
+            { name: '机票+酒店5天4晚', days: 5, basis: '含往返机票、四星海边酒店、接送机，成人供应商价 ¥3,680' },
+            { name: '酒店+接送机4晚', days: 5, basis: '四星酒店房晚+接送机，房态按每日回传' }
+          ]
+        },
+        {
+          name: '巴黎自由行套餐',
+          meta: '巴黎市区酒店、国际机票和当地玩乐可选组合。',
+          plans: [
+            { name: '机票+酒店5晚', days: 6, basis: '国际机票+巴黎四星酒店，成人供应商价 ¥6,980' },
+            { name: '纯酒店5晚', days: 6, basis: '巴黎四星酒店5晚，可加购接送机' }
+          ]
+        }
+      ],
+      matrixColumns: ['套餐项', '总余量', '预留', '可售', '供应商价', '儿童价', '备注'],
+      matrix: [
+        ['成人套餐', 36, 4, 3680, 3380, '主套餐'],
+        ['儿童占床', 12, 0, 3280, 2980, '按酒店政策'],
+        ['儿童不占床', 12, 0, 2680, 2380, '不含早餐'],
+        ['单房差', 8, 0, 900, 780, '按晚核算'],
+        ['接送机加购', 20, 0, 480, 320, '按车']
+      ],
+      nodes: [
+        ['房态回传截止', 'date', '2026-07-10'],
+        ['出票确认时限', 'text', '名单齐后24小时'],
+        ['酒店保留时效', 'text', '确认后48小时'],
+        ['旺季二次确认', 'text', '周末与节假日需询房']
       ]
     },
     cruise: {
@@ -271,6 +324,7 @@
     if (matched) return matched;
     if (/邮轮/.test(name)) return 'cruise';
     if (/专列/.test(name)) return 'train';
+    if (/自由行|机票|酒店|套餐/.test(name)) return 'free';
     if (/研学/.test(name)) return 'study';
     return '';
   }
@@ -314,6 +368,7 @@
 
   function defaultPlanDays(type) {
     if (type.scheduleType === '邮轮航次') return 8;
+    if (type.scheduleType === '自由行出行日期') return 5;
     if (type.scheduleType === '研学营期') return 7;
     return 12;
   }
@@ -578,7 +633,7 @@
     });
     var next = $('[data-next-step]');
     if (next) {
-      next.textContent = currentStep === panels.length - 1 ? (mode === 'batch' ? '确认开排' : '生成' + selectedType().objectName) : '下一步';
+      next.textContent = currentStep === panels.length - 1 ? (isSupplierSchedule ? '提交凯撒确认' : (mode === 'batch' ? '确认开排' : '生成' + selectedType().objectName)) : '下一步';
     }
     if (mode === 'batch' && currentStep === panels.length - 1) renderPreview();
     if (mode === 'single' && currentStep === panels.length - 1) renderSummary();
@@ -675,10 +730,10 @@
     renderSummary();
     var type = selectedType();
     writePending(schedulePayload(null, 1));
-    $('#successTitle').textContent = type.objectName + '已提交';
-    $('#successText').textContent = type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
-    $('#approvalNo').textContent = type.approvalNo;
-    $('#approvalNode').textContent = type.approvalNode;
+    $('#successTitle').textContent = isSupplierSchedule ? type.objectName + '已提交凯撒确认' : type.objectName + '已提交';
+    $('#successText').textContent = isSupplierSchedule ? type.label + '已提交凯撒确认，凯撒采用后生成外采销售' + type.objectName + '。' : type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
+    $('#approvalNo').textContent = isSupplierSchedule ? 'SUP-' + scheduleCode(1, $('#departDate').value) : type.approvalNo;
+    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒外采运营' : type.approvalNode;
     $('#approvalLink').href = scheduleListHref();
     $('#approvalLink').textContent = '返回列表';
     dirty = false;
@@ -737,10 +792,10 @@
       return schedulePayload(row.children[2].textContent.trim(), index + 1);
     });
     writeBatch(items);
-    $('#successTitle').textContent = '批量开排完成';
-    $('#successText').textContent = '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
-    $('#approvalNo').textContent = '无需审批';
-    $('#approvalNode').textContent = '已进入团期列表';
+    $('#successTitle').textContent = isSupplierSchedule ? '批量团期已提交凯撒确认' : '批量开排完成';
+    $('#successText').textContent = isSupplierSchedule ? '已生成' + items.length + '个供应商' + selectedType().objectName + '草稿并提交凯撒确认。' : '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
+    $('#approvalNo').textContent = isSupplierSchedule ? '待凯撒确认' : '无需审批';
+    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒外采运营' : '已进入团期列表';
     $('#approvalLink').style.display = 'none';
     dirty = false;
     openModal();
@@ -878,7 +933,7 @@
     var requestedProduct = params.get('product') || params.get('productName') || (fromProduct ? routeContext.product : '') || '';
     var requestedRoute = params.get('route') || (fromProduct ? routeContext.route : '') || '';
     var type = params.get('type') || (fromProduct && routeContext.type) || inferTypeFromProductName(requestedProduct) || 'group';
-    if (type === 'free') {
+    if (type === 'free' && !isSupplierSchedule) {
       var url = '../product/product-free-travel-list.html?tab=calendar&product=' + encodeURIComponent(requestedProduct) + '&route=' + encodeURIComponent(requestedRoute);
       if (window.caesarNavigateTo) window.caesarNavigateTo(url);
       else window.location.replace(url);

@@ -7,6 +7,7 @@
   var currentStep = 0;
   var formDirty = false;
   var currentKind = page.getAttribute('data-route-kind') || 'group';
+  var isSupplierRoute = page.hasAttribute('data-supplier-route-edit');
 
   function $(selector, root) {
     return (root || document).querySelector(selector);
@@ -53,7 +54,7 @@
       prevButton.disabled = currentStep === 0;
     });
     page.querySelectorAll('[data-route-next]').forEach(function (nextButton) {
-      nextButton.textContent = currentStep === panels.length - 1 ? '提交审核' : '下一步';
+      nextButton.textContent = currentStep === panels.length - 1 ? (isSupplierRoute ? '提交凯撒处理' : '提交审核') : '下一步';
     });
   }
 
@@ -210,7 +211,7 @@
       '<div class="route-tab-actions">',
       '<button class="btn btn-secondary" type="button" data-route-prev>上一步</button>',
       '<button class="btn btn-primary" type="button" data-route-next>',
-      isLastStep ? '提交审核' : '下一步',
+      isLastStep ? (isSupplierRoute ? '提交凯撒处理' : '提交审核') : '下一步',
       '</button>',
       '</div>'
     ].join('');
@@ -399,9 +400,9 @@
       extraHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">目的地与资源组合</h2></div>',
         '<div class="route-field-grid three">',
-        '<div class="form-group"><label class="form-label" for="departCity">出发城市 <span class="req">*</span></label><input id="departCity" class="form-control" type="text" value="全国"></div>',
-        '<div class="form-group"><label class="form-label" for="destinationCountry">目的地国家/地区 <span class="req">*</span></label><input id="destinationCountry" class="form-control" type="text" value="法国"></div>',
-        '<div class="form-group"><label class="form-label" for="destinationCity">目的地城市 <span class="req">*</span></label><input id="destinationCity" class="form-control" type="text" value="巴黎"></div>',
+        '<div class="form-group"><label class="form-label" for="departCity">出发城市 <span class="req">*</span></label><select id="departCity" class="form-control"><option selected>全国</option><option>北京</option><option>上海</option><option>广州</option><option>成都</option></select></div>',
+        '<div class="form-group"><label class="form-label" for="destinationCountry">目的地国家/地区 <span class="req">*</span></label><select id="destinationCountry" class="form-control"><option selected>欧洲 / 法国</option><option>东南亚 / 泰国</option><option>东南亚 / 新加坡</option><option>国内 / 海南</option></select></div>',
+        '<div class="form-group"><label class="form-label" for="destinationCity">目的地城市 <span class="req">*</span></label><select id="destinationCity" class="form-control"><option selected>巴黎</option><option>曼谷 / 清迈</option><option>新加坡</option><option>三亚</option></select></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="resourcePool">资源组合</label><select id="resourcePool" class="form-control" data-resource-ref><option selected>国际航空CA协议 + 巴黎四星酒店池 + 接送机服务 + 卢浮宫门票</option><option>巴黎酒店直采 + 接送机服务</option><option>国际航空CA协议 + 巴黎酒店直采</option><option>直接填写</option></select></div>',
         '</div>'
       ].join(''),
@@ -435,7 +436,7 @@
     currentKind = normalizeKind(kind);
     var preset = routePresets[currentKind] || routePresets.group;
     page.setAttribute('data-route-kind', currentKind);
-    page.setAttribute('data-schedule-href', preset.scheduleHref || 'products.html');
+    page.setAttribute('data-schedule-href', isSupplierRoute ? 'schedule-create.html' : (preset.scheduleHref || 'products.html'));
 
     var title = page.querySelector('.route-hero-title');
     var desc = page.querySelector('.route-hero-desc');
@@ -451,19 +452,26 @@
       typeTag.className = preset.tagClass;
       typeTag.textContent = preset.tagText;
     }
-    if (chips) chips.innerHTML = renderKeyValueList(preset.chips, 'route-chip');
+    var heroChips = isSupplierRoute ? [['供应商', '欧洲联合地接社'], ['凯撒对接', '欧洲线路中心'], ['出发城市', '北京']] : preset.chips;
+    if (chips) chips.innerHTML = renderKeyValueList(heroChips, 'route-chip');
     if (heroTags) heroTags.innerHTML = renderHeroTags(preset.heroTags || []);
     if (readiness) readiness.innerHTML = renderReadiness(preset.readiness);
     var navigateButton = page.querySelector('[data-route-navigate]');
-    if (navigateButton) navigateButton.textContent = preset.navigateText || '开排团期';
+    if (navigateButton) navigateButton.textContent = isSupplierRoute ? '维护团期' : (preset.navigateText || '开排团期');
 
     setFieldValue('lineName', preset.title);
     setFieldValue('subTitle', preset.subtitle);
 
     var supplier = document.getElementById('supplier');
-    if (supplier) supplier.innerHTML = selectedOptionHtml(preset.supplier, preset.supplier[0]);
+    if (supplier) {
+      var supplierOptions = isSupplierRoute ? ['欧洲联合地接社'] : preset.supplier;
+      supplier.innerHTML = selectedOptionHtml(supplierOptions, supplierOptions[0]);
+    }
     var ownerOrg = document.getElementById('ownerOrg');
-    if (ownerOrg) ownerOrg.innerHTML = selectedOptionHtml(preset.ownerOrg, preset.ownerOrg[0]);
+    if (ownerOrg) {
+      var ownerOptions = isSupplierRoute ? ['凯撒欧洲线路中心', '凯撒外采运营'] : preset.ownerOrg;
+      ownerOrg.innerHTML = selectedOptionHtml(ownerOptions, ownerOptions[0]);
+    }
 
     var basicExtraSection = panels[0] && panels[0].querySelector('[data-route-basic-extra]');
     if (basicExtraSection) basicExtraSection.innerHTML = preset.extraHtml;
@@ -495,11 +503,11 @@
 
     var modalTitle = document.querySelector('.route-submit-modal .modal-title');
     var modalItems = document.querySelectorAll('.route-success-summary > div');
-    if (modalTitle) modalTitle.textContent = preset.modalTitle;
+    if (modalTitle) modalTitle.textContent = isSupplierRoute ? '已提交凯撒处理' : preset.modalTitle;
     if (modalItems[0]) modalItems[0].innerHTML = '<span>产品类型</span><strong>' + htmlEscape(preset.tagText) + '</strong>';
-    if (modalItems[1]) modalItems[1].innerHTML = '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
+    if (modalItems[1]) modalItems[1].innerHTML = isSupplierRoute ? '<span>处理方式</span><strong>凯撒外采采用确认</strong>' : '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
     if (modalItems[2]) modalItems[2].innerHTML = '<span>行程方案</span><strong>' + htmlEscape(String(preset.plans.length)) + '个</strong>';
-    if (modalItems[3]) modalItems[3].innerHTML = '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后可开排团期') + '</strong>';
+    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可包装销售</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后可开排团期') + '</strong>';
 
     page.querySelectorAll('input, textarea').forEach(updateCounter);
   }
@@ -621,7 +629,7 @@
       freeQuery.set('route', context.route);
       return freeParts[0] + '?' + freeQuery.toString();
     }
-    if (!href || href.indexOf('team-create.html') < 0) return href;
+    if (!href || (href.indexOf('team-create.html') < 0 && href.indexOf('schedule-create.html') < 0)) return href;
     var parts = href.split('?');
     var query = new URLSearchParams(parts[1] || '');
     query.set('source', 'product');

@@ -29,16 +29,25 @@
           <input id="studyProjectName" type="search" placeholder="线路/项目名称搜索">
         </div>
         <div class="filter-item filter-item-sm">
-          <label class="sr-only" for="studyDestination">目的地</label>
-          <select id="studyDestination">
-            <option value="">全部目的地</option>
-            <option value="北京">北京</option>
-            <option value="敦煌">敦煌</option>
-            <option value="上海">上海</option>
-            <option value="新加坡">新加坡</option>
-            <option value="英国">英国</option>
-            <option value="德国">德国</option>
-            <option value="日本">日本</option>
+          <label class="sr-only" for="studyDestinationRegion">目的地区域</label>
+          <select id="studyDestinationRegion">
+            <option value="">全部区域</option>
+            <option>国内</option>
+            <option>欧洲</option>
+            <option>东南亚</option>
+            <option>亚洲</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="studyDestinationCountry">国家/区域</label>
+          <select id="studyDestinationCountry">
+            <option value="">全部国家/区域</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="studyDestinationCity">城市/目的地</label>
+          <select id="studyDestinationCity">
+            <option value="">全部城市/目的地</option>
           </select>
         </div>
         <div class="filter-item filter-item-wide">
@@ -266,6 +275,38 @@
       var label = multiSelect.querySelector('[data-multi-label]');
       var checkboxes = Array.from(multiSelect.querySelectorAll('input[type="checkbox"]'));
       var rows = Array.from(document.querySelectorAll('#studyProductsRows tr'));
+      var studyDestinationTree = {
+        国内: { countries: ['西北', '北京', '上海'], cities: { 西北: ['敦煌'], 北京: ['北京'], 上海: ['上海'] } },
+        欧洲: { countries: ['德国', '英国'], cities: { 德国: ['德国'], 英国: ['英国'] } },
+        东南亚: { countries: ['新加坡'], cities: { 新加坡: ['新加坡'] } },
+        亚洲: { countries: ['日本'], cities: { 日本: ['日本'] } }
+      };
+
+      function renderOptions(select, values, placeholder) {
+        select.innerHTML = '';
+        var first = document.createElement('option');
+        first.value = '';
+        first.textContent = placeholder;
+        select.appendChild(first);
+        values.forEach(function (value) {
+          var option = document.createElement('option');
+          option.textContent = value;
+          select.appendChild(option);
+        });
+      }
+
+      function syncStudyDestinationFilters() {
+        var region = document.getElementById('studyDestinationRegion').value;
+        var countrySelect = document.getElementById('studyDestinationCountry');
+        var citySelect = document.getElementById('studyDestinationCity');
+        var country = countrySelect.value;
+        var countries = region && studyDestinationTree[region] ? studyDestinationTree[region].countries : [];
+        renderOptions(countrySelect, countries, '全部国家/区域');
+        if (countries.indexOf(country) >= 0) countrySelect.value = country;
+        country = countrySelect.value;
+        var cities = region && country && studyDestinationTree[region] && studyDestinationTree[region].cities[country] ? studyDestinationTree[region].cities[country] : [];
+        renderOptions(citySelect, cities, '全部城市/目的地');
+      }
 
       function selectedThemes() {
         return checkboxes.filter(function (item) {
@@ -287,7 +328,9 @@
 
       function filterRows() {
         var keyword = document.getElementById('studyProjectName').value.trim();
-        var destination = document.getElementById('studyDestination').value;
+        var region = document.getElementById('studyDestinationRegion').value;
+        var country = document.getElementById('studyDestinationCountry').value;
+        var city = document.getElementById('studyDestinationCity').value;
         var grade = document.getElementById('studyGrade').value;
         var status = document.getElementById('studyStatus').value;
         var themes = selectedThemes();
@@ -295,7 +338,12 @@
         rows.forEach(function (row) {
           var matched = true;
           if (keyword && row.dataset.name.indexOf(keyword) === -1) matched = false;
-          if (destination && row.dataset.destination !== destination) matched = false;
+          if (region && region === '国内' && ['北京', '上海', '敦煌'].indexOf(row.dataset.destination) < 0) matched = false;
+          if (region && region === '欧洲' && ['德国', '英国'].indexOf(row.dataset.destination) < 0) matched = false;
+          if (region && region === '东南亚' && row.dataset.destination !== '新加坡') matched = false;
+          if (region && region === '亚洲' && row.dataset.destination !== '日本') matched = false;
+          if (country && row.dataset.destination !== country && !(country === '西北' && row.dataset.destination === '敦煌')) matched = false;
+          if (city && row.dataset.destination !== city) matched = false;
           if (grade && row.dataset.grade.indexOf(grade) === -1) matched = false;
           if (status && row.dataset.status !== status) matched = false;
           if (themes.length && !themes.every(function (theme) {
@@ -327,6 +375,15 @@
       });
 
       document.getElementById('queryStudyProducts').addEventListener('click', filterRows);
+      document.getElementById('studyDestinationRegion').addEventListener('change', function () {
+        syncStudyDestinationFilters();
+        filterRows();
+      });
+      document.getElementById('studyDestinationCountry').addEventListener('change', function () {
+        syncStudyDestinationFilters();
+        filterRows();
+      });
+      document.getElementById('studyDestinationCity').addEventListener('change', filterRows);
 
 
 

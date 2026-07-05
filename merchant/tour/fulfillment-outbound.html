@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>团队执行 - 凯撒旅游</title>
+  <title>出团执行 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
@@ -12,297 +12,146 @@
   <section class="list-page-panel">
     <div class="list-page-head">
       <div>
-        <h1 class="page-title">团队执行</h1>
+        <h1 class="page-title">出团执行</h1>
       </div>
     </div>
   </section>
 
   <section class="list-surface fulfillment-outbound-list-surface" data-list-surface>
-    <nav class="tab-bar list-surface-tabs list-function-tabs" aria-label="团队执行事项">
-      <button class="tab-item active" type="button" data-execution-tab="overview">执行总览</button>
-      <button class="tab-item" type="button" data-execution-tab="roster">名单</button>
-      <button class="tab-item" type="button" data-execution-tab="documents">证件</button>
-      <button class="tab-item" type="button" data-execution-tab="visa">签证</button>
-      <button class="tab-item" type="button" data-execution-tab="notice">通知</button>
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="出团执行筛选">
+      <div class="list-surface-filter-actions list-filter-pinned-actions">
+        <div class="btn-group">
+          <button id="openAiOutboundRisk" class="btn btn-ai" type="button">🤖 AI出团风险扫描</button>
+          <button id="exportExecutionPlan" class="btn btn-secondary" type="button">导出执行计划</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="executionKeyword">团号/线路名称</label>
+          <input id="executionKeyword" type="search" placeholder="团号/线路名称">
+        </div>
+        <div class="filter-item filter-item-wide filter-item-date-range">
+          <label class="sr-only">出发日期范围</label>
+          <div class="date-range">
+            <input id="executionStartDate" type="date" aria-label="出发开始日期">
+            <span>至</span>
+            <input id="executionEndDate" type="date" aria-label="出发结束日期">
+          </div>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="executionType">线路类型</label>
+          <select id="executionType">
+            <option value="全部类型">全部类型</option>
+            <option value="普通团期">普通团期</option>
+            <option value="邮轮团期">邮轮团期</option>
+            <option value="专列团期">专列团期</option>
+            <option value="研学团期">研学团期</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="executionStatus">执行状态</label>
+          <select id="executionStatus">
+            <option value="全部状态">全部状态</option>
+            <option value="待出团">待出团</option>
+            <option value="登船准备">登船准备</option>
+            <option value="发车准备">发车准备</option>
+            <option value="出团中">出团中</option>
+            <option value="已回团">已回团</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="executionRisk">风险类型</label>
+          <select id="executionRisk">
+            <option value="全部风险">全部风险</option>
+            <option value="名单待补">名单待补</option>
+            <option value="证件/签证异常">证件/签证异常</option>
+            <option value="资源待确认">资源待确认</option>
+            <option value="通知待发">通知待发</option>
+            <option value="领队待安排">领队待安排</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="searchExecution" class="btn btn-secondary" type="button">搜索</button>
+          <button id="resetExecution" class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <nav id="executionQueueTabs" class="tab-bar list-surface-tabs" aria-label="出团执行队列筛选">
+      <button class="tab-item active" type="button" data-queue-filter="全部">全部</button>
+      <button class="tab-item outbound-tab-danger" type="button" data-queue-filter="本周出团">本周出团</button>
+      <button class="tab-item" type="button" data-queue-filter="名单待补">名单待补</button>
+      <button class="tab-item" type="button" data-queue-filter="证件/签证异常">证件/签证异常</button>
+      <button class="tab-item" type="button" data-queue-filter="资源待确认">资源待确认</button>
+      <button class="tab-item" type="button" data-queue-filter="通知待发">通知待发</button>
+      <button class="tab-item" type="button" data-queue-filter="领队待安排">领队待安排</button>
+      <button class="tab-item" type="button" data-queue-filter="已出发">已出发</button>
     </nav>
 
-    <section id="executionOverviewPanel" data-execution-panel="overview">
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar outbound-tabs list-surface-tabs" aria-label="出团时间筛选" data-filter-tabs data-filter-target="#outboundRows">
-        <button class="tab-item outbound-tab-danger active" type="button" data-filter-value="本周出团">本周出团(5)<span class="tab-corner-badge">5</span></button>
-        <button class="tab-item" type="button" data-filter-value="下周出团">下周出团(8)</button>
-        <button class="tab-item" type="button" data-filter-value="本月出团">本月出团(32)</button>
-        <button class="tab-item" type="button" data-filter-value="历史出团">历史出团</button>
-      </nav>
-      <div class="list-surface-tabbar-actions">
-        <button id="openAiOutboundRisk" class="btn btn-ai" type="button">🤖 AI出团风险扫描</button>
-        <button class="btn btn-secondary" type="button">导出执行计划</button>
-      </div>
-    </div>
-
-  <section class="table-wrap outbound-table-wrap list-surface-table list-table-with-pagination" aria-label="本周出团列表">
-    <table>
-      <thead>
-        <tr>
-          <th>团号</th>
-          <th>线路名称</th>
-          <th>线路类型</th>
-          <th>执行方案</th>
-          <th>出发日期</th>
-          <th>出行人数</th>
-          <th>领队</th>
-          <th>名单状态</th>
-          <th>资源状态</th>
-          <th>出团状态</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="outboundRows">
-        <tr data-tab-status="本周出团 本月出团">
-          <td>EU20240715001</td>
-          <td>欧洲十国经典游</td>
-          <td><span class="tag tag-blue">普通团期</span></td>
-          <td>A线 法德意12天</td>
-          <td>2024-07-15后天<span class="outbound-urgent">🔴紧急</span></td>
-          <td>27人</td>
-          <td>李导138****8800</td>
-          <td><span class="tag tag-green">完整</span></td>
-          <td><span class="tag tag-green">已确认</span></td>
-          <td><span class="tag tag-orange">待出团</span></td>
-          <td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="roster">名单</button><button type="button" data-execution-open="documents">证件</button><button type="button" data-execution-open="notice">通知</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-execution-open="visa">签证</button><button class="dropdown-item" type="button" data-open-resource>资源</button></span></span></div></td>
-        </tr>
-        <tr data-tab-status="本周出团 本月出团">
-          <td>CR-MED-20240716001</td>
-          <td>理想号地中海邮轮</td>
-          <td><span class="tag tag-purple">邮轮团期</span></td>
-          <td>地中海西线 / 阳台舱</td>
-          <td>2024-07-16登船</td>
-          <td>22人</td>
-          <td>王导139****9900</td>
-          <td><span class="tag tag-red">缺2份船票</span></td>
-          <td><span class="tag tag-orange">部分确认</span></td>
-          <td><span class="tag tag-orange">待出团</span></td>
-          <td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="roster">游客</button><button type="button" data-execution-open="documents">登船资料</button><button type="button" data-execution-open="notice">通知</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-execution-open="visa">签证</button><button class="dropdown-item" type="button" data-open-resource>资源</button></span></span></div></td>
-        </tr>
-        <tr data-tab-status="本周出团 本月出团">
-          <td>HN20240714001</td>
-          <td>三亚亲子5日游</td>
-          <td><span class="tag tag-blue">普通团期</span></td>
-          <td>亚特兰蒂斯亲子线</td>
-          <td>2024-07-14明天<span class="outbound-urgent">🔴极紧急</span></td>
-          <td>38人</td>
-          <td>张导137****7700</td>
-          <td><span class="tag tag-green">完整</span></td>
-          <td><span class="tag tag-green">已确认</span></td>
-          <td><span class="tag tag-orange">待出团</span></td>
-          <td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="roster">名单</button><button type="button" data-execution-open="documents">证件</button><button type="button" data-execution-open="notice">通知</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-open-resource>资源</button></span></span></div></td>
-        </tr>
-        <tr data-tab-status="本周出团 本月出团">
-          <td>XY20240713001</td>
-          <td>北京航天研学营</td>
-          <td><span class="tag tag-green">研学团期</span></td>
-          <td>航天科技7日</td>
-          <td>2024-07-13今天开营</td>
-          <td>38人</td>
-          <td>陈老师135****5500</td>
-          <td><span class="tag tag-green">完整</span></td>
-          <td><span class="tag tag-green">已确认</span></td>
-          <td><span class="tag tag-purple">出团中</span></td>
-          <td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="roster">查看进度</button><button type="button" data-execution-open="documents">资料</button><button type="button" data-execution-open="notice">通知</button></div></td>
-        </tr>
-        <tr data-tab-status="本周出团 本月出团">
-          <td>TR20240718001</td>
-          <td>东方丝路专列</td>
-          <td><span class="tag tag-orange">专列团期</span></td>
-          <td>西安敦煌乌鲁木齐线 / 软卧</td>
-          <td>2024-07-18</td>
-          <td>96人</td>
-          <td><span class="text-danger">待安排⚠</span></td>
-          <td><span class="tag tag-green">完整</span></td>
-          <td><span class="tag tag-orange">部分确认</span></td>
-          <td><span class="tag tag-orange">待出团</span></td>
-          <td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="roster">名单</button><button type="button" data-execution-open="documents">实名制</button><button type="button" data-execution-open="notice">通知</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-open-leader>安排领队</button></span></span></div></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-  <div class="pagination list-surface-pagination list-pagination-attached">
-    <span>第1-5条/共5条</span>
-  </div>
-
-  <section class="card outbound-task-card" aria-label="出团前任务检查清单">
-    <div class="card-title outbound-task-title">出团前任务检查清单</div>
-    <div class="outbound-task-subtitle">EU20240715001 欧洲十国（后天出团⚠）</div>
-    <div class="outbound-task-list">
-      <div class="outbound-task-item done">☑ 27人名单已完整</div>
-      <div class="outbound-task-item done">☑ 申根签证全部办好</div>
-      <div class="outbound-task-item done">☑ 国际机票已出票</div>
-      <div class="outbound-task-item warning">☐ 酒店确认号8/14间</div>
-      <div class="outbound-task-item warning">☐ 车辆司机和车牌待回传</div>
-      <button class="outbound-task-item danger" type="button" data-open-notice>☐ 出团通知未发送</button>
-      <button class="outbound-task-item warning" type="button">☐ 行前资料包未发送给领队</button>
+    <section class="table-wrap outbound-table-wrap list-surface-table list-table-with-pagination" aria-label="出团执行列表">
+      <table>
+        <thead>
+          <tr>
+            <th>团号/线路</th>
+            <th>出发节点</th>
+            <th>人数/名单</th>
+            <th>证件/签证</th>
+            <th>资源/票务</th>
+            <th>通知/确认</th>
+            <th>责任人/领队</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="executionRows"></tbody>
+      </table>
+    </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="executionPagination">第0-0条/共0条</span>
     </div>
   </section>
-    </section>
 
-    <section id="executionRosterPanel" data-execution-panel="roster" hidden>
-      <section class="filter-card filter-card-compact list-surface-filter" aria-label="名单筛选">
-        <input class="form-control filter-item" type="text" placeholder="团号/游客姓名/手机号">
-        <select class="form-control filter-item-sm">
-          <option>全部类型</option>
-          <option>普通团期</option>
-          <option>邮轮团期</option>
-          <option>专列团期</option>
-          <option>研学团期</option>
-        </select>
-        <select class="form-control filter-item-sm filter-item-status">
-          <option>全部状态</option>
-          <option>已确认</option>
-          <option>待补充</option>
-          <option>待分配</option>
-        </select>
-        <button class="btn btn-secondary" type="button">查询</button>
-        <button class="btn btn-secondary" type="button">重置</button>
-      </section>
-      <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="团队执行名单">
-        <table>
-          <thead><tr><th>团号</th><th>游客</th><th>手机号</th><th>证件/实名</th><th>房型/铺位</th><th>特殊要求</th><th>确认状态</th><th>操作</th></tr></thead>
-          <tbody>
-            <tr><td>EU20240715001</td><td>张建国</td><td>138****8899</td><td>护照已收</td><td>双人间</td><td>低盐餐</td><td><span class="tag tag-green">已确认</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="documents">证件</button><button type="button" data-execution-open="notice">通知</button></div></td></tr>
-            <tr><td>CR-MED-20240716001</td><td>李梅</td><td>186****2234</td><td>护照已收</td><td>阳台舱 8266</td><td>岸上游A线</td><td><span class="tag tag-orange">待船票</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="documents">登船资料</button><button type="button" data-open-notice>催办</button></div></td></tr>
-            <tr><td>TR20240718001</td><td>王强</td><td>135****6677</td><td>身份证已核验</td><td>6车软卧上铺</td><td>西安上/敦煌下</td><td><span class="tag tag-blue">待分铺</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="documents">实名制</button><button type="button" data-open-leader>领队</button></div></td></tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
-    </section>
-
-    <section id="executionDocumentsPanel" data-execution-panel="documents" hidden>
-      <section class="filter-card filter-card-compact list-surface-filter" aria-label="证件资料筛选">
-        <input class="form-control filter-item" type="text" placeholder="团号/游客姓名/证件号">
-        <select class="form-control filter-item-sm filter-item-status">
-          <option>全部状态</option>
-          <option>完整</option>
-          <option>缺失</option>
-          <option>异常</option>
-        </select>
-        <button class="btn btn-secondary" type="button">查询</button>
-        <button class="btn btn-secondary" type="button">重置</button>
-      </section>
-      <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="团队执行证件资料">
-        <table>
-          <thead><tr><th>团号</th><th>游客</th><th>证件类型</th><th>有效期</th><th>签证/实名</th><th>保险</th><th>资料状态</th><th>操作</th></tr></thead>
-          <tbody>
-            <tr><td>EU20240715001</td><td>张建国</td><td>护照</td><td>2029-05-18</td><td><span class="tag tag-green">已获签</span></td><td>已投保</td><td><span class="tag tag-green">完整</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="visa">签证</button></div></td></tr>
-            <tr><td>CR-MED-20240716001</td><td>李梅</td><td>护照</td><td>2027-11-09</td><td><span class="tag tag-orange">船票待出</span></td><td>已投保</td><td><span class="tag tag-orange">待补船票</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-notice>提醒</button></div></td></tr>
-            <tr><td>TR20240718001</td><td>王强</td><td>身份证</td><td>2032-04-21</td><td><span class="tag tag-blue">实名已核验</span></td><td>已投保</td><td><span class="tag tag-green">完整</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="roster">名单</button></div></td></tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
-    </section>
-
-    <section id="executionVisaPanel" data-execution-panel="visa" hidden>
-      <section class="filter-card filter-card-compact list-surface-filter" aria-label="签证进度筛选">
-        <input class="form-control filter-item" type="text" placeholder="团号/游客姓名/国家">
-        <select class="form-control filter-item-sm filter-item-status">
-          <option>全部进度</option>
-          <option>待送签</option>
-          <option>使馆受理</option>
-          <option>已出签</option>
-          <option>需补件</option>
-        </select>
-        <button class="btn btn-secondary" type="button">查询</button>
-        <button class="btn btn-secondary" type="button">重置</button>
-      </section>
-      <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="团队执行签证进度">
-        <table>
-          <thead><tr><th>团号</th><th>游客</th><th>目的地</th><th>材料状态</th><th>送签日期</th><th>预计出签</th><th>进度</th><th>操作</th></tr></thead>
-          <tbody>
-            <tr><td>EU20240715001</td><td>张建国</td><td>申根</td><td>完整</td><td>2024-06-20</td><td>2024-07-08</td><td><span class="tag tag-green">已出签</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="documents">证件</button></div></td></tr>
-            <tr><td>EU20240715001</td><td>李梅</td><td>申根</td><td>完整</td><td>2024-06-20</td><td>2024-07-08</td><td><span class="tag tag-green">已出签</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-execution-open="notice">通知</button></div></td></tr>
-            <tr><td>CR-MED-20240716001</td><td>吴芳</td><td>西班牙</td><td>需补银行流水</td><td>2024-06-28</td><td>2024-07-12</td><td><span class="tag tag-orange">需补件</span></td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-notice>补件提醒</button></div></td></tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
-    </section>
-
-    <section id="executionNoticePanel" data-execution-panel="notice" hidden>
-      <section class="filter-card filter-card-compact list-surface-filter" aria-label="通知筛选">
-        <input class="form-control filter-item" type="text" placeholder="团号/线路名称/负责人">
-        <select class="form-control filter-item-sm filter-item-status">
-          <option>全部状态</option>
-          <option>待发送</option>
-          <option>部分确认</option>
-          <option>已确认</option>
-        </select>
-        <button class="btn btn-secondary" type="button">查询</button>
-        <button class="btn btn-secondary" type="button">重置</button>
-      </section>
-      <section class="table-wrap fulfillment-table list-surface-table list-table-with-pagination" aria-label="团队执行通知">
-        <table>
-          <thead><tr><th>团号</th><th>通知类型</th><th>发送对象</th><th>发送渠道</th><th>发送状态</th><th>确认人数</th><th>最近发送</th><th>操作</th></tr></thead>
-          <tbody>
-            <tr><td>EU20240715001</td><td>出团通知</td><td>27位游客</td><td>短信/站内信</td><td><span class="tag tag-red">待发送</span></td><td>0/27</td><td>-</td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-notice>发送</button></div></td></tr>
-            <tr><td>CR-MED-20240716001</td><td>登船通知</td><td>22位游客</td><td>短信/邮件</td><td><span class="tag tag-orange">部分确认</span></td><td>18/22</td><td>2024-07-12 10:30</td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-notice>补发</button></div></td></tr>
-            <tr><td>TR20240718001</td><td>发车通知</td><td>96位游客</td><td>短信/企微</td><td><span class="tag tag-gray">待生成</span></td><td>0/96</td><td>-</td><td><div class="table-action"><button type="button" class="table-action-primary" data-open-notice>生成</button></div></td></tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
-    </section>
-  </section>
-
-  <div id="noticeModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-md" role="dialog" aria-modal="true" aria-labelledby="noticeModalTitle">
+  <div id="rosterDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="rosterDrawerTitle">
       <div class="modal-header">
-        <div id="noticeModalTitle" class="modal-title">发送出团通知</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-notice>×</button>
+        <div id="rosterDrawerTitle" class="modal-title">名单</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <div class="outbound-notice-head">
-            <label class="form-label">通知对象</label>
-            <label class="outbound-check-all"><input id="checkAllGuests" type="checkbox" checked> 全选 共27位游客</label>
-          </div>
-          <div class="outbound-guest-list">
-            <label><input type="checkbox" checked> 张建国 138****8899</label>
-            <label><input type="checkbox" checked> 张晓红 138****0011</label>
-            <label><input type="checkbox" checked> 李梅 186****2234</label>
-            <label><input type="checkbox" checked> 李大明 186****2235</label>
-            <label><input type="checkbox" checked> 王强 135****6677</label>
-            <label><input type="checkbox" checked> 刘洋 135****7766</label>
-            <label><input type="checkbox" checked> 陈红 137****8891</label>
-            <label><input type="checkbox" checked> 赵明 139****5512</label>
-            <label><input type="checkbox" checked> 孙丽 136****7788</label>
-            <label><input type="checkbox" checked> 周伟 137****5521</label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">通知方式</label>
-          <div class="outbound-method-row">
-            <label><input type="checkbox" checked> 短信（¥0.05/条）</label>
-            <label><input type="checkbox" checked> 系统消息推送</label>
-            <label><input type="checkbox"> 邮件</label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="noticeContent">通知内容预览</label>
-          <textarea id="noticeContent" class="form-control outbound-notice-text" rows="12">尊敬的张建国先生/女士，您好！
-您预订的【欧洲十国经典游·12天11晚】将于2024年7月15日出发。
-📍 集合时间：2024-07-15 07:30
-📍 集合地点：北京首都国际机场T3航站楼出发大厅F区
-✈ 航班：CA937 北京→巴黎 09:00起飞
-👤 领队：李导 联系方式：138-****-8800
-如有疑问请联系客服：400-XXX-XXXX
-祝您旅途愉快！凯撒旅游</textarea>
-        </div>
-        <div class="outbound-fee">预计费用：27条短信 ¥1.35</div>
+        <div id="rosterSummary" class="readonly-summary"></div>
+        <section class="table-wrap fulfillment-table" aria-label="团期名单">
+          <table>
+            <thead><tr><th>游客</th><th>手机号</th><th>订单号</th><th>证件/实名</th><th>房型/舱房/铺位</th><th>特殊需求</th><th>确认状态</th><th>操作</th></tr></thead>
+            <tbody id="rosterRows"></tbody>
+          </table>
+        </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-notice>取消</button>
-        <button class="btn btn-primary" type="button" data-close-notice>确认发送</button>
+        <button class="btn btn-secondary" type="button">导出名单</button>
+        <button class="btn btn-primary" type="button">同步领队名单</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="documentsDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="documentsDrawerTitle">
+      <div class="modal-header">
+        <div id="documentsDrawerTitle" class="modal-title">证件/签证</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="documentsSummary" class="readonly-summary"></div>
+        <section class="table-wrap fulfillment-table" aria-label="证件签证资料">
+          <table>
+            <thead><tr><th>游客</th><th>资料类型</th><th>有效期/节点</th><th>签证/实名状态</th><th>缺失项</th><th>最近跟进</th><th>操作</th></tr></thead>
+            <tbody id="documentsRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button">批量补件提醒</button>
+        <button class="btn btn-primary" type="button">标记资料已收</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
       </div>
     </div>
   </div>
@@ -311,53 +160,57 @@
     <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="resourceDrawerTitle">
       <div class="modal-header">
         <div id="resourceDrawerTitle" class="modal-title">资源确认</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-resource>×</button>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <div id="resourceReadonly" class="readonly-summary">EU20240715001 | 欧洲十国经典游 | 27人 | 2024-07-15出发</div>
-        <div class="outbound-resource-overview">
-          <div><span>资源完成度</span><strong>4/7项</strong></div>
-          <div><span>待确认</span><strong class="amount-orange">3项</strong></div>
-          <div><span>风险提示</span><strong>酒店确认号和车辆司机待回传</strong></div>
-        </div>
-        <section class="outbound-resource-list">
-          <article class="outbound-resource-item done">
-            <div><strong>国际航班</strong><span>CA937 北京首都T3 → 巴黎戴高乐T1</span></div>
-            <span class="tag tag-green">已确认</span>
-          </article>
-          <article class="outbound-resource-item warning">
-            <div><strong>酒店住宿</strong><span>巴黎2晚、卢塞恩2晚、罗马3晚，确认号8/14间</span></div>
-            <span class="tag tag-orange">部分确认</span>
-          </article>
-          <article class="outbound-resource-item warning">
-            <div><strong>POI门票</strong><span>卢浮宫预约号已回传，罗马斗兽场待回传</span></div>
-            <span class="tag tag-orange">待确认</span>
-          </article>
-          <article class="outbound-resource-item done">
-            <div><strong>餐厅安排</strong><span>巴黎中餐厅Le Bonheur，3人特殊餐已同步</span></div>
-            <span class="tag tag-green">已确认</span>
-          </article>
-          <article class="outbound-resource-item warning">
-            <div><strong>用车安排</strong><span>Volvo 45座大巴，司机姓名和车牌待回传</span></div>
-            <span class="tag tag-orange">待确认</span>
-          </article>
-          <article class="outbound-resource-item done">
-            <div><strong>旅游保险</strong><span>太平洋境外旅行险，27人保单已生成</span></div>
-            <span class="tag tag-green">已确认</span>
-          </article>
-          <article class="outbound-resource-item done">
-            <div><strong>出团文件</strong><span>行程单、签证材料清单、保险清单已生成</span></div>
-            <span class="tag tag-green">已确认</span>
-          </article>
-        </section>
+        <div id="resourceSummary" class="readonly-summary"></div>
+        <div class="outbound-resource-overview" id="resourceOverview"></div>
+        <section class="outbound-resource-list" id="resourceItems" aria-label="资源确认项"></section>
         <div class="form-group">
           <label class="form-label" for="resourceRemark">确认备注</label>
-          <textarea id="resourceRemark" class="form-control" rows="4" placeholder="记录资源确认补充说明">已催促酒店确认号、斗兽场预约号和司机车牌，预计今日18:00前回传。</textarea>
+          <textarea id="resourceRemark" class="form-control" rows="4" placeholder="记录供应商确认号、异常说明或催办结果"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-resource>关闭</button>
-        <button id="confirmResources" class="btn btn-primary" type="button">标记为已确认</button>
+        <a id="resourceCostLink" class="btn btn-secondary" href="fulfillment-cost.html">成本复核</a>
+        <button id="confirmResources" class="btn btn-primary" type="button">标记资源已确认</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="noticeDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="noticeDrawerTitle">
+      <div class="modal-header">
+        <div id="noticeDrawerTitle" class="modal-title">出团通知</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="noticeSummary" class="readonly-summary"></div>
+        <div class="form-group">
+          <div class="outbound-notice-head">
+            <label class="form-label">通知对象</label>
+            <label class="outbound-check-all"><input id="checkAllGuests" type="checkbox" checked> 全选</label>
+          </div>
+          <div class="outbound-guest-list" id="noticeGuestList"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">通知方式</label>
+          <div class="outbound-method-row">
+            <label><input type="checkbox" checked> 短信</label>
+            <label><input type="checkbox" checked> 系统消息</label>
+            <label><input type="checkbox"> 邮件</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="noticeContent">通知内容</label>
+          <textarea id="noticeContent" class="form-control outbound-notice-text" rows="12"></textarea>
+        </div>
+        <div id="noticeFee" class="outbound-fee"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="sendNotice" class="btn btn-primary" type="button">确认发送</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
       </div>
     </div>
   </div>
@@ -366,49 +219,33 @@
     <div class="modal drawer-modal outbound-leader-drawer" role="dialog" aria-modal="true" aria-labelledby="leaderDrawerTitle">
       <div class="modal-header">
         <div id="leaderDrawerTitle" class="modal-title">安排领队</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-leader>×</button>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <div id="leaderReadonly" class="readonly-summary">TH20240718001 | 泰国曼谷清迈游 | 16人 | 2024-07-18出发</div>
+        <div id="leaderSummary" class="readonly-summary"></div>
         <section class="outbound-leader-alert">
-          <strong>推荐规则</strong>
-          <span>优先匹配：泰语/英语能力、东南亚带团经验、出发日期无冲突、满意度高于95%。</span>
+          <strong>匹配规则</strong>
+          <span id="leaderRule"></span>
         </section>
-        <div class="outbound-leader-list" role="radiogroup" aria-label="可安排领队">
-          <label class="outbound-leader-card selected">
-            <input type="radio" name="leaderOption" value="黄导 138****6688" checked>
-            <span><strong>黄导 138****6688</strong><em>泰国线经验36团 | 英语/泰语 | 满意度98%</em></span>
-            <b class="tag tag-green">推荐</b>
-          </label>
-          <label class="outbound-leader-card">
-            <input type="radio" name="leaderOption" value="林导 136****7711">
-            <span><strong>林导 136****7711</strong><em>东南亚经验22团 | 英语 | 满意度96%</em></span>
-            <b class="tag tag-blue">可用</b>
-          </label>
-          <label class="outbound-leader-card disabled">
-            <input type="radio" name="leaderOption" value="张导 137****7700" disabled>
-            <span><strong>张导 137****7700</strong><em>同日三亚团已占用，不可安排</em></span>
-            <b class="tag tag-gray">冲突</b>
-          </label>
-        </div>
+        <div class="outbound-leader-list" id="leaderOptions" role="radiogroup" aria-label="可安排领队"></div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="leaderMeetTime">领队集合时间</label>
-            <input id="leaderMeetTime" class="form-control" type="datetime-local" value="2024-07-18T07:30">
+            <label class="form-label" for="leaderMeetTime">集合时间</label>
+            <input id="leaderMeetTime" class="form-control" type="datetime-local">
           </div>
           <div class="form-group">
             <label class="form-label" for="leaderMeetPlace">集合地点</label>
-            <input id="leaderMeetPlace" class="form-control" type="text" value="北京首都机场T3航站楼F区">
+            <input id="leaderMeetPlace" class="form-control" type="text">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="leaderRemark">安排备注</label>
-          <textarea id="leaderRemark" class="form-control" rows="4" placeholder="给领队的补充说明">请提前核对16名游客名单、机票信息和泰国入境注意事项。</textarea>
+          <label class="form-label" for="leaderRemark">领队备注</label>
+          <textarea id="leaderRemark" class="form-control" rows="4" placeholder="给领队的补充说明"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-leader>取消</button>
         <button id="saveLeaderAssign" class="btn btn-primary" type="button">确认安排</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
       </div>
     </div>
   </div>
@@ -417,267 +254,259 @@
     <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="aiOutboundRiskTitle">
       <div class="modal-header">
         <div id="aiOutboundRiskTitle" class="modal-title">AI出团风险扫描</div>
-        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-ai-outbound>×</button>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
       </div>
       <div class="modal-body">
         <div class="ai-embedded-summary">
-          <span class="tag tag-orange">5项风险</span>
-          <strong>已扫描本周5个团期，发现通知、名单、资源和领队安排风险。</strong>
+          <span id="aiRiskCount" class="tag tag-orange">0项风险</span>
+          <strong id="aiRiskSummary">已扫描当前执行队列。</strong>
         </div>
         <section class="table-wrap ai-embedded-table" aria-label="AI出团风险明细">
           <table>
             <thead><tr><th>团号</th><th>风险类型</th><th>AI判断</th><th>建议动作</th></tr></thead>
-            <tbody>
-              <tr><td>EU20240715001</td><td>出团通知</td><td><span class="tag tag-red">未发送</span></td><td>立即生成并发送通知</td></tr>
-              <tr><td>CR-MED-20240716001</td><td>名单资料</td><td><span class="tag tag-orange">缺2份船票</span></td><td>发起补资料提醒</td></tr>
-              <tr><td>CR-MED-20240716001</td><td>资源确认</td><td><span class="tag tag-orange">部分确认</span></td><td>催促舱号和船票回传</td></tr>
-              <tr><td>TR20240718001</td><td>领队安排</td><td><span class="tag tag-red">待安排</span></td><td>按线路经验推荐领队</td></tr>
-              <tr><td>HN20240714001</td><td>出发时效</td><td><span class="tag tag-red">明天出发</span></td><td>复核游客通知确认状态</td></tr>
-            </tbody>
+            <tbody id="aiRiskRows"></tbody>
           </table>
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-ai-outbound>关闭</button>
         <button id="createOutboundRiskTasks" class="btn btn-primary" type="button">生成待办任务</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="executionToastModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="executionToastTitle">
+      <div class="modal-header">
+        <div id="executionToastTitle" class="modal-title">操作已记录</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="executionToastText" class="modal-center-text"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-layer>知道了</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var noticeModal = document.getElementById('noticeModal');
-      var resourceDrawer = document.getElementById('resourceDrawer');
-      var leaderDrawer = document.getElementById('leaderDrawer');
-      var aiOutboundRiskModal = document.getElementById('aiOutboundRiskModal');
-      var checkAllGuests = document.getElementById('checkAllGuests');
-      var guestList = document.querySelector('.outbound-guest-list');
-      var outboundRows = document.getElementById('outboundRows');
       var pageParams = new URLSearchParams(window.location.search);
-      var activeOutboundConfig = null;
-      var currentResourceRow = null;
-      var currentLeaderRow = null;
+      var activeQueue = '全部';
+      var currentRecord = null;
 
-      var outboundConfigs = {
-        group: {
+      var executionRows = [
+        {
+          code: 'EU20260705001',
           typeKey: 'group',
-          row: {
-            tabStatus: '本周出团 本月出团',
-            code: 'EU20240715001',
-            product: '欧洲十国经典游',
-            type: '普通团期',
-            tagClass: 'tag tag-blue',
-            plan: 'A线 法德意12天',
-            depart: '2024-07-15后天',
-            urgent: '紧急',
-            people: '27人',
-            owner: '李导138****8800',
-            rosterStatus: '完整',
-            rosterClass: 'tag tag-green',
-            resourceStatus: '已确认',
-            resourceClass: 'tag tag-green',
-            outboundStatus: '待出团',
-            outboundClass: 'tag tag-orange'
-          },
-          actions: [
-            ['名单', 'roster', 'primary'],
-            ['证件', 'documents'],
-            ['通知', 'notice'],
-            ['签证', 'visa']
+          type: '普通团期',
+          tagClass: 'tag tag-blue',
+          product: '欧洲十国经典游',
+          plan: 'A线 法德意12天',
+          departDate: '2026-07-05',
+          departText: '07-05 后天',
+          people: '27人',
+          owner: '王芳',
+          leader: '李导 138****8800',
+          rosterStatus: '完整',
+          rosterClass: 'tag tag-green',
+          documentsStatus: '签证已齐',
+          documentsClass: 'tag tag-green',
+          resourceStatus: '酒店/车辆待回传',
+          resourceClass: 'tag tag-orange',
+          noticeStatus: '未发送',
+          noticeClass: 'tag tag-red',
+          executionStatus: '待出团',
+          executionClass: 'tag tag-orange',
+          riskText: '通知未发 · 资源待确认',
+          queue: ['本周出团', '资源待确认', '通知待发'],
+          checklist: [
+            ['名单完整', true],
+            ['证件签证完整', true],
+            ['酒店确认号回传', false],
+            ['车辆司机和车牌回传', false],
+            ['出团通知发送', false],
+            ['领队资料包同步', false]
           ],
-          extraButtons: ['resource'],
-          taskSubtitle: 'EU20240715001 欧洲十国（后天出团）',
-          tasks: [
-            ['done', '27人名单已完整'],
-            ['done', '申根签证全部办好'],
-            ['done', '国际机票已出票'],
-            ['warning', '酒店确认号8/14间'],
-            ['warning', '罗马斗兽场预约号待回传'],
-            ['done', '团队餐和特殊餐已确认'],
-            ['warning', '车辆司机和车牌待回传'],
-            ['danger', '出团通知未发送', 'notice'],
-            ['warning', '行前资料包未发送给领队']
+          risks: [
+            ['出团通知', '未发送', '生成通知并发送游客、领队'],
+            ['酒店确认号', '6间待回传', '催地接今日18:00前回传'],
+            ['车辆安排', '司机车牌待确认', '催车队回传司机姓名和车牌']
           ],
+          roster: [
+            ['张建国', '138****8899', 'KS20260701001', '护照已收', '双人间', '低盐餐', '已确认', '查看'],
+            ['李梅', '186****2234', 'KS20260701002', '护照已收', '双人间', '无', '已确认', '查看'],
+            ['王强', '135****6677', 'KS20260701003', '护照已收', '单房差已确认', '靠走道座位', '已确认', '查看']
+          ],
+          documents: [
+            ['张建国', '护照', '2029-05-18', '申根已出签', '无', '2026-06-25 已复核', '查看'],
+            ['李梅', '护照', '2028-11-09', '申根已出签', '无', '2026-06-25 已复核', '查看'],
+            ['王强', '护照', '2030-04-21', '申根已出签', '无', '2026-06-25 已复核', '查看']
+          ],
+          resources: [
+            ['国际航班', 'CA937 北京首都T3 -> 巴黎戴高乐T1', '已确认', 'tag tag-green', 'done'],
+            ['酒店住宿', '巴黎2晚、卢塞恩2晚、罗马3晚，确认号8/14间', '部分确认', 'tag tag-orange', 'warning'],
+            ['POI门票', '卢浮宫已确认，罗马斗兽场待回传', '待确认', 'tag tag-orange', 'warning'],
+            ['团队餐', '特殊餐3人已同步餐厅', '已确认', 'tag tag-green', 'done'],
+            ['用车安排', 'Volvo 45座大巴，司机姓名和车牌待回传', '待确认', 'tag tag-orange', 'warning']
+          ],
+          resourceRemark: '已催促酒店确认号、斗兽场预约号和司机车牌，预计今日18:00前回传。',
           notice: {
             title: '发送出团通知',
-            checkAll: '全选 共27位游客',
-            guests: ['张建国 138****8899', '李梅 138****0011', '王强 135****6677', '陈红 137****8891', '赵明 139****5512'],
-            content: '尊敬的游客，您好！\n您预订的【欧洲十国经典游】将于2024年7月15日出发。\n集合时间：2024-07-15 07:30\n集合地点：北京首都国际机场T3航站楼F区\n领队：李导 联系方式：138-****-8800\n请携带护照原件、签证页和出团通知书。',
+            guests: ['张建国 138****8899', '李梅 186****2234', '王强 135****6677', '陈红 137****8891', '赵明 139****5512'],
+            content: '尊敬的游客，您好！\n您报名的【欧洲十国经典游】将于2026年07月05日出发。\n集合时间：2026-07-05 07:30\n集合地点：北京首都国际机场T3航站楼F区\n领队：李导 138****8800\n请携带护照原件、签证页和出团通知书。',
             fee: '预计费用：27条短信 ¥1.35'
           },
-          resource: {
-            readonly: 'EU20240715001 | 欧洲十国经典游 | A线 法德意12天 | 27人 | 2024-07-15出发',
-            overview: ['4/7项', '3项', '酒店确认号、门票预约号和司机车牌待回传'],
-            remark: '已催促酒店确认号、斗兽场预约号和司机车牌，预计今日18:00前回传。',
-            items: [
-              ['国际航班', 'CA937 北京首都T3 → 巴黎戴高乐T1', '已确认', 'tag tag-green', 'done'],
-              ['酒店住宿', '巴黎2晚、卢塞恩2晚、罗马3晚，确认号8/14间', '部分确认', 'tag tag-orange', 'warning'],
-              ['POI门票', '卢浮宫预约号已回传，罗马斗兽场待回传', '待确认', 'tag tag-orange', 'warning'],
-              ['餐厅安排', '巴黎中餐厅Le Bonheur，3人特殊餐已同步', '已确认', 'tag tag-green', 'done'],
-              ['用车安排', 'Volvo 45座大巴，司机姓名和车牌待回传', '待确认', 'tag tag-orange', 'warning'],
-              ['旅游保险', '太平洋境外旅行险，27人保单已生成', '已确认', 'tag tag-green', 'done']
-            ]
-          },
-          leader: {
+          leaderPlan: {
             title: '安排领队',
-            readonly: 'EU20240715001 | 欧洲十国经典游 | A线 法德意12天 | 27人 | 2024-07-15出发',
-            rule: '优先匹配：欧洲带团经验、申根签证材料熟悉度、出发日期无冲突、满意度高于95%。',
-            meetTime: '2024-07-15T07:30',
+            rule: '优先匹配欧洲带团经验、申根材料熟悉度、出发日期无冲突、满意度高于95%。',
+            meetTime: '2026-07-05T07:30',
             meetPlace: '北京首都机场T3航站楼F区',
             remark: '请提前核对27名游客名单、机票信息和申根入境注意事项。',
             options: [
               ['李导 138****8800', '欧洲线经验42团 | 英语/法语 | 满意度98%', '推荐', 'tag tag-green', true, false],
-              ['林导 136****7711', '欧洲经验26团 | 英语 | 满意度96%', '可用', 'tag tag-blue', false, false]
-            ]
-          },
-          ai: {
-            summary: '已扫描当前跟团执行节点，发现酒店确认号、POI预约号、车辆司机和出团通知风险。',
-            rows: [
-              ['EU20240715001', '酒店确认号', '6间待回传', 'tag tag-orange', '催促酒店或地接回传确认号'],
-              ['EU20240715001', 'POI门票', '斗兽场待确认', 'tag tag-orange', '催促票务供应商回传预约号'],
-              ['EU20240715001', '用车安排', '司机车牌待回传', 'tag tag-orange', '催促车队确认司机和车牌'],
-              ['EU20240715001', '出团通知', '未发送', 'tag tag-red', '立即生成并发送通知'],
-              ['EU20240715001', '行前资料', '待发送', 'tag tag-orange', '补发给领队和游客']
+              ['林导 136****7711', '欧洲线经验26团 | 英语 | 满意度96%', '可用', 'tag tag-blue', false, false]
             ]
           }
         },
-        cruise: {
+        {
+          code: 'CR20260706001',
           typeKey: 'cruise',
-          row: {
-            tabStatus: '本周出团 本月出团',
-            code: 'CZ20240801001',
-            product: '理想号地中海邮轮',
-            type: '邮轮团期',
-            tagClass: 'tag tag-purple',
-            plan: '地中海西线14天',
-            depart: '2024-08-01登船',
-            urgent: '',
-            people: '68人',
-            owner: '王导139****2200',
-            rosterStatus: '待出票10人',
-            rosterClass: 'tag tag-orange',
-            resourceStatus: '岸上游待确认',
-            resourceClass: 'tag tag-orange',
-            outboundStatus: '登船准备',
-            outboundClass: 'tag tag-blue'
-          },
-          actions: [
-            ['游客', 'roster', 'primary'],
-            ['登船资料', 'documents'],
-            ['登船通知', 'notice'],
-            ['签证', 'visa']
+          type: '邮轮团期',
+          tagClass: 'tag tag-purple',
+          product: '理想号地中海邮轮',
+          plan: '地中海西线 / 阳台舱',
+          departDate: '2026-07-06',
+          departText: '07-06 登船',
+          people: '68人',
+          owner: '赵明',
+          leader: '王导 139****2200',
+          rosterStatus: '待出票10人',
+          rosterClass: 'tag tag-orange',
+          documentsStatus: '船票待出',
+          documentsClass: 'tag tag-orange',
+          resourceStatus: '岸上游待确认',
+          resourceClass: 'tag tag-orange',
+          noticeStatus: '部分确认',
+          noticeClass: 'tag tag-orange',
+          executionStatus: '登船准备',
+          executionClass: 'tag tag-blue',
+          riskText: '船票待出 · 岸上游待确认',
+          queue: ['本周出团', '名单待补', '证件/签证异常', '资源待确认'],
+          checklist: [
+            ['游客名单完整', true],
+            ['舱房确认', true],
+            ['船票全部生成', false],
+            ['岸上观光确认', false],
+            ['登船通知确认', false],
+            ['港口接送确认', true]
           ],
-          extraButtons: ['resource'],
-          taskSubtitle: 'CZ20240801001 理想号地中海邮轮（登船准备）',
-          tasks: [
-            ['done', '68人游客名单已导入'],
-            ['warning', '10人船票待生成'],
-            ['done', '舱房已确认'],
-            ['warning', '岸上观光马赛站待确认'],
-            ['done', '港口接送车辆已确认'],
-            ['danger', '登船通知待发送', 'notice'],
-            ['warning', '登船资料表待船方回传']
+          risks: [
+            ['船票资料', '10人船票待生成', '催船方回传票号'],
+            ['岸上观光', '马赛站车辆待确认', '催港口地接确认'],
+            ['登船通知', '18/68已确认', '补发未确认游客']
           ],
+          roster: [
+            ['吴芳', '136****7788', 'KS20260702001', '护照已收', '阳台舱 8266', '岸上游A线', '待船票', '催办'],
+            ['周伟', '137****5521', 'KS20260702002', '护照已收', '阳台舱 8268', '无', '待船票', '催办'],
+            ['陈红', '137****8891', 'KS20260702003', '护照已收', '海景舱 5160', '儿童餐', '已确认', '查看']
+          ],
+          documents: [
+            ['吴芳', '登船资料', '07-04前回传', '船票待出', '船票号', '2026-07-03 已催船方', '提醒'],
+            ['周伟', '登船资料', '07-04前回传', '船票待出', '船票号', '2026-07-03 已催船方', '提醒'],
+            ['陈红', '护照/船票', '2031-09-10', '已确认', '无', '2026-07-02 已复核', '查看']
+          ],
+          resources: [
+            ['船方舱房', '内舱/海景/阳台舱库存已确认', '已确认', 'tag tag-green', 'done'],
+            ['船票生成', '10人待船方回传票号', '部分确认', 'tag tag-orange', 'warning'],
+            ['岸上观光', '马赛A线车辆和导游待确认', '待确认', 'tag tag-orange', 'warning'],
+            ['港口接送', '巴塞罗那港接送车辆已确认', '已确认', 'tag tag-green', 'done']
+          ],
+          resourceRemark: '船方已确认舱房，需催促船票号和马赛岸上观光车辆回传。',
           notice: {
             title: '发送登船通知',
-            checkAll: '全选 共68位游客',
-            guests: ['张建国 138****8899', '李梅 138****0011', '王强 135****6677', '吴芳 136****7788', '周伟 137****5521'],
-            content: '尊敬的游客，您好！\n您报名的【理想号地中海邮轮】将于2024年08月01日登船。\n登船时间：13:30\n登船地点：巴塞罗那港邮轮码头B区\n邮轮管家：王导 139****2200\n请携带护照原件、船票、登船表和岸上观光确认单。',
+            guests: ['吴芳 136****7788', '周伟 137****5521', '陈红 137****8891', '赵明 139****5512', '孙丽 136****7788'],
+            content: '尊敬的游客，您好！\n您报名的【理想号地中海邮轮】将于2026年07月06日登船。\n登船时间：13:30\n登船地点：巴塞罗那港邮轮码头B区\n邮轮管家：王导 139****2200\n请携带护照原件、船票、登船表和岸上观光确认单。',
             fee: '预计费用：68条短信 ¥3.40'
           },
-          resource: {
-            readonly: 'CZ20240801001 | 理想号地中海邮轮 | 地中海西线14天 | 68人 | 2024-08-01登船',
-            overview: ['4/6项', '2项', '船票和岸上游待确认'],
-            remark: '船方已确认舱房，需催促船票号和马赛岸上观光车辆回传。',
-            items: [
-              ['船方舱房', '理想号内舱/海景/阳台/套房库存', '已确认', 'tag tag-green', 'done'],
-              ['船票生成', '10人船票待船方回传票号', '部分确认', 'tag tag-orange', 'warning'],
-              ['岸上观光', '马赛A线车辆和导游待二次确认', '待确认', 'tag tag-orange', 'warning'],
-              ['港口接送', '巴塞罗那港接送车辆已确认', '已确认', 'tag tag-green', 'done'],
-              ['登船资料', '登船表、紧急联系人、护照信息', '处理中', 'tag tag-blue', 'warning']
-            ]
-          },
-          leader: {
+          leaderPlan: {
             title: '安排邮轮管家',
-            readonly: 'CZ20240801001 | 理想号地中海邮轮 | 地中海西线14天 | 68人 | 2024-08-01登船',
-            rule: '优先匹配：邮轮登船经验、港口协调能力、岸上观光供应商熟悉度。',
-            meetTime: '2024-08-01T11:30',
+            rule: '优先匹配邮轮登船经验、港口协调能力、岸上观光供应商熟悉度。',
+            meetTime: '2026-07-06T11:30',
             meetPlace: '巴塞罗那港邮轮码头B区',
             remark: '请提前核对船票、舱号、登船表和岸上观光名单。',
             options: [
               ['王导 139****2200', '邮轮经验28航次 | 英语/西语 | 满意度98%', '推荐', 'tag tag-green', true, false],
               ['赵导 138****6633', '欧洲港口经验16航次 | 英语 | 满意度96%', '可用', 'tag tag-blue', false, false]
             ]
-          },
-          ai: {
-            summary: '已扫描当前邮轮执行节点，发现船票、岸上观光和登船通知风险。',
-            rows: [
-              ['CZ20240801001', '船票资料', '待出票10人', 'tag tag-orange', '催促船方回传票号'],
-              ['CZ20240801001', '岸上观光', '马赛站待确认', 'tag tag-orange', '催促港口地接确认车辆'],
-              ['CZ20240801001', '登船通知', '待发送', 'tag tag-red', '生成登船通知并发送游客']
-            ]
           }
         },
-        train: {
+        {
+          code: 'TR20260708001',
           typeKey: 'train',
-          row: {
-            tabStatus: '本周出团 本月出团',
-            code: 'TR20240805001',
-            product: '东方丝路专列',
-            type: '专列团期',
-            tagClass: 'tag tag-orange',
-            plan: '西安敦煌乌鲁木齐线9天',
-            depart: '2024-08-05发车',
-            urgent: '',
-            people: '52人',
-            owner: '郑导139****9900',
-            rosterStatus: '待分铺8人',
-            rosterClass: 'tag tag-orange',
-            resourceStatus: '沿途地接待确认',
-            resourceClass: 'tag tag-orange',
-            outboundStatus: '发车准备',
-            outboundClass: 'tag tag-blue'
-          },
-          actions: [
-            ['名单', 'roster', 'primary'],
-            ['实名制', 'documents'],
-            ['发车通知', 'notice']
+          type: '专列团期',
+          tagClass: 'tag tag-orange',
+          product: '东方丝路专列',
+          plan: '西安敦煌乌鲁木齐线 / 软卧',
+          departDate: '2026-07-08',
+          departText: '07-08 发车',
+          people: '52人',
+          owner: '李铭',
+          leader: '待安排',
+          rosterStatus: '待分铺8人',
+          rosterClass: 'tag tag-orange',
+          documentsStatus: '实名已核验',
+          documentsClass: 'tag tag-green',
+          resourceStatus: '沿途地接待确认',
+          resourceClass: 'tag tag-orange',
+          noticeStatus: '待生成',
+          noticeClass: 'tag tag-gray',
+          executionStatus: '发车准备',
+          executionClass: 'tag tag-blue',
+          riskText: '铺位待分 · 领队待安排',
+          queue: ['本周出团', '名单待补', '资源待确认', '通知待发', '领队待安排'],
+          checklist: [
+            ['实名名单核验', true],
+            ['铺位分配完成', false],
+            ['沿途地接确认', false],
+            ['随车领队安排', false],
+            ['发车通知发送', false],
+            ['随车餐饮复核', false]
           ],
-          extraButtons: ['resource', 'leader'],
-          taskSubtitle: 'TR20240805001 东方丝路专列（发车准备）',
-          tasks: [
-            ['done', '52人名单已导入'],
-            ['warning', '8人铺位待分配'],
-            ['done', '实名制资料48人完成'],
-            ['warning', '沿途地接敦煌站待确认'],
-            ['done', '西安站集合区已确认'],
-            ['danger', '发车通知待发送', 'notice'],
-            ['warning', '随车餐饮需求待复核']
+          risks: [
+            ['铺位分配', '8人待分铺', '按同行人合并分配铺位'],
+            ['领队安排', '随车领队待安排', '选择专列经验领队'],
+            ['沿途地接', '敦煌站车辆待确认', '催地接确认车辆和导游']
           ],
+          roster: [
+            ['郑华', '136****3300', 'KS20260703001', '身份证已核验', '待分铺', '西安上/乌鲁木齐下', '待分配', '分铺'],
+            ['周伟', '137****5521', 'KS20260703002', '身份证已核验', '6车软卧上铺', '低盐餐', '已确认', '查看'],
+            ['孙丽', '136****7788', 'KS20260703003', '身份证已核验', '待分铺', '靠下铺', '待分配', '分铺']
+          ],
+          documents: [
+            ['郑华', '身份证实名制', '2034-06-01', '已核验', '无', '2026-07-02 已复核', '查看'],
+            ['周伟', '身份证实名制', '2032-04-21', '已核验', '无', '2026-07-02 已复核', '查看'],
+            ['孙丽', '身份证实名制', '2031-08-18', '已核验', '无', '2026-07-02 已复核', '查看']
+          ],
+          resources: [
+            ['包列资源', '西部文旅专列 TR-SR-20260708', '已确认', 'tag tag-green', 'done'],
+            ['铺位分配', '8人待分铺，1个包厢待确认', '部分确认', 'tag tag-orange', 'warning'],
+            ['上下车站', '西安上/敦煌下/乌鲁木齐下规则已确认', '已确认', 'tag tag-green', 'done'],
+            ['沿途地接', '敦煌站车辆和导游待确认', '待确认', 'tag tag-orange', 'warning'],
+            ['随车餐饮', '清真餐、低盐餐需求待复核', '处理中', 'tag tag-blue', 'warning']
+          ],
+          resourceRemark: '包列资源已确认，需复核8人铺位和敦煌站地接车辆。',
           notice: {
             title: '发送专列发车通知',
-            checkAll: '全选 共52位游客',
-            guests: ['郑华 136****3300', '周伟 137****5521', '王强 135****6677', '孙丽 136****7788', '陈红 137****8891'],
-            content: '尊敬的游客，您好！\n您报名的【东方丝路专列】将于2024年08月05日发车。\n集合时间：08:10\n集合地点：西安站北广场团队集合区\n随车领队：郑导 139****9900\n请携带身份证原件，并提前确认车厢铺位、上下车站和随车餐饮安排。',
+            guests: ['郑华 136****3300', '周伟 137****5521', '孙丽 136****7788', '陈红 137****8891', '王强 135****6677'],
+            content: '尊敬的游客，您好！\n您报名的【东方丝路专列】将于2026年07月08日发车。\n集合时间：08:10\n集合地点：西安站北广场团队集合区\n请携带身份证原件，并提前确认车厢铺位、上下车站和随车餐饮安排。',
             fee: '预计费用：52条短信 ¥2.60'
           },
-          resource: {
-            readonly: 'TR20240805001 | 东方丝路专列 | 西安敦煌乌鲁木齐线9天 | 52人 | 2024-08-05发车',
-            overview: ['4/6项', '2项', '沿途地接和铺位待确认'],
-            remark: '包列资源已确认，需复核8人铺位和敦煌站地接车辆。',
-            items: [
-              ['包列资源', '西部文旅专列 TR-SR-20240805', '已确认', 'tag tag-green', 'done'],
-              ['铺位分配', '8人待分铺，1个包厢待确认', '部分确认', 'tag tag-orange', 'warning'],
-              ['上下车站', '西安上/敦煌下/乌鲁木齐下规则已确认', '已确认', 'tag tag-green', 'done'],
-              ['沿途地接', '敦煌站车辆和导游待确认', '待确认', 'tag tag-orange', 'warning'],
-              ['随车餐饮', '清真餐、低盐餐需求待复核', '处理中', 'tag tag-blue', 'warning']
-            ]
-          },
-          leader: {
+          leaderPlan: {
             title: '安排随车领队',
-            readonly: 'TR20240805001 | 东方丝路专列 | 西安敦煌乌鲁木齐线9天 | 52人 | 2024-08-05发车',
-            rule: '优先匹配：专列带团经验、铁路站点协调能力、西北线路熟悉度。',
-            meetTime: '2024-08-05T07:30',
+            rule: '优先匹配专列带团经验、铁路站点协调能力、西北线路熟悉度。',
+            meetTime: '2026-07-08T07:30',
             meetPlace: '西安站北广场团队集合区',
             remark: '请提前核对52名游客实名制资料、铺位分配、上下车站和随车餐饮需求。',
             options: [
@@ -685,17 +514,155 @@
               ['黄导 138****6688', '西北线经验24团 | 满意度96%', '可用', 'tag tag-blue', false, false],
               ['张导 137****7700', '同日其他团占用，不可安排', '冲突', 'tag tag-gray', false, true]
             ]
+          }
+        },
+        {
+          code: 'ST20260709001',
+          typeKey: 'study',
+          type: '研学团期',
+          tagClass: 'tag tag-green',
+          product: '新加坡科技创新研学',
+          plan: '科技创新6日',
+          departDate: '2026-07-09',
+          departText: '07-09 开营',
+          people: '26人',
+          owner: '陈刚',
+          leader: '陈老师 135****5500',
+          rosterStatus: '完整',
+          rosterClass: 'tag tag-green',
+          documentsStatus: '安全材料完整',
+          documentsClass: 'tag tag-green',
+          resourceStatus: '课程已确认',
+          resourceClass: 'tag tag-green',
+          noticeStatus: '已发送',
+          noticeClass: 'tag tag-green',
+          executionStatus: '出团中',
+          executionClass: 'tag tag-purple',
+          riskText: '夜间点名待回传',
+          queue: ['已出发'],
+          checklist: [
+            ['学生名单完整', true],
+            ['老师联系人完整', true],
+            ['安全材料完整', true],
+            ['课程导师确认', true],
+            ['开营通知发送', true],
+            ['夜间点名回传', false]
+          ],
+          risks: [
+            ['夜间点名', '今日未回传', '提醒带队老师回传点名记录']
+          ],
+          roster: [
+            ['刘一诺', '138****1101', 'KS20260704001', '护照已收', '学生营房A组', '过敏信息已备注', '已确认', '查看'],
+            ['张可欣', '138****1102', 'KS20260704002', '护照已收', '学生营房A组', '无', '已确认', '查看'],
+            ['王子涵', '138****1103', 'KS20260704003', '护照已收', '学生营房B组', '家长联系人已确认', '已确认', '查看']
+          ],
+          documents: [
+            ['刘一诺', '护照/保险/安全告知', '2029-03-08', '已确认', '无', '2026-07-01 已复核', '查看'],
+            ['张可欣', '护照/保险/安全告知', '2030-12-11', '已确认', '无', '2026-07-01 已复核', '查看'],
+            ['王子涵', '护照/保险/安全告知', '2028-05-20', '已确认', '无', '2026-07-01 已复核', '查看']
+          ],
+          resources: [
+            ['课程导师', 'AI实验课、机器人课程导师已确认', '已确认', 'tag tag-green', 'done'],
+            ['营地住宿', '新加坡研学营地A栋', '已确认', 'tag tag-green', 'done'],
+            ['安全保障', '保险、应急预案、老师名单已归档', '已确认', 'tag tag-green', 'done'],
+            ['每日点名', '今日夜间点名待老师回传', '待回传', 'tag tag-orange', 'warning']
+          ],
+          resourceRemark: '课程和营地已确认，等待今日夜间点名回传。',
+          notice: {
+            title: '发送研学提醒',
+            guests: ['刘一诺家长 138****1101', '张可欣家长 138****1102', '王子涵家长 138****1103'],
+            content: '尊敬的家长，您好！\n【新加坡科技创新研学】今日课程已结束，请关注晚间点名和课程照片回传。\n带队老师：陈老师 135****5500。',
+            fee: '预计费用：26条短信 ¥1.30'
           },
-          ai: {
-            summary: '已扫描当前专列执行节点，发现铺位、沿途地接、发车通知和随车服务风险。',
-            rows: [
-              ['TR20240805001', '铺位分配', '待分铺8人', 'tag tag-orange', '完成车厢铺位分配'],
-              ['TR20240805001', '沿途地接', '敦煌站待确认', 'tag tag-orange', '催促地接确认车辆和导游'],
-              ['TR20240805001', '发车通知', '待发送', 'tag tag-red', '生成发车通知并发送游客']
+          leaderPlan: {
+            title: '调整带队老师',
+            rule: '优先匹配未成年人带队经验、课程沟通能力和应急处理经验。',
+            meetTime: '2026-07-09T08:00',
+            meetPlace: '新加坡研学营地A栋大厅',
+            remark: '请保持每日点名、课程成果和家长沟通记录完整。',
+            options: [
+              ['陈老师 135****5500', '研学带队32期 | 科技主题 | 满意度98%', '当前', 'tag tag-green', true, false],
+              ['林老师 136****7711', '研学带队18期 | 安全员资质', '可用', 'tag tag-blue', false, false]
+            ]
+          }
+        },
+        {
+          code: 'JP20260701001',
+          typeKey: 'group',
+          type: '普通团期',
+          tagClass: 'tag tag-blue',
+          product: '日本关西深度游',
+          plan: '关西古都7日',
+          departDate: '2026-07-01',
+          departText: '07-01 已出发',
+          people: '25人',
+          owner: '刘洋',
+          leader: '张导 137****7700',
+          rosterStatus: '完整',
+          rosterClass: 'tag tag-green',
+          documentsStatus: '完整',
+          documentsClass: 'tag tag-green',
+          resourceStatus: '已确认',
+          resourceClass: 'tag tag-green',
+          noticeStatus: '已确认',
+          noticeClass: 'tag tag-green',
+          executionStatus: '已回团',
+          executionClass: 'tag tag-green',
+          riskText: '待回团结算',
+          queue: ['已出发'],
+          checklist: [
+            ['游客名单完整', true],
+            ['出团通知确认', true],
+            ['资源确认', true],
+            ['领队日志提交', true],
+            ['回团结算发起', false]
+          ],
+          risks: [
+            ['回团结算', '待发起', '进入回团结算完成复盘、归档和结算准备']
+          ],
+          roster: [
+            ['赵明', '139****5512', 'KS20260705001', '护照已收', '双人间', '无', '已确认', '查看'],
+            ['孙丽', '136****7788', 'KS20260705002', '护照已收', '双人间', '无', '已确认', '查看']
+          ],
+          documents: [
+            ['赵明', '护照', '2028-09-08', '资料完整', '无', '2026-06-26 已复核', '查看'],
+            ['孙丽', '护照', '2029-01-11', '资料完整', '无', '2026-06-26 已复核', '查看']
+          ],
+          resources: [
+            ['航班', 'CA927 北京 -> 大阪', '已确认', 'tag tag-green', 'done'],
+            ['酒店住宿', '大阪2晚、京都2晚、奈良1晚', '已确认', 'tag tag-green', 'done'],
+            ['用车安排', '当地巴士和司机已确认', '已确认', 'tag tag-green', 'done']
+          ],
+          resourceRemark: '资源执行已完成，待回团结算复盘。',
+          notice: {
+            title: '查看出团通知',
+            guests: ['赵明 139****5512', '孙丽 136****7788'],
+            content: '【日本关西深度游】出团通知已发送并确认，当前团期已回团。',
+            fee: '通知已确认'
+          },
+          leaderPlan: {
+            title: '查看领队安排',
+            rule: '已安排日本线领队。',
+            meetTime: '2026-07-01T07:30',
+            meetPlace: '北京首都机场T3航站楼F区',
+            remark: '领队日志已提交，待回团结算复核。',
+            options: [
+              ['张导 137****7700', '日本线经验30团 | 日语 | 满意度97%', '当前', 'tag tag-green', true, false]
             ]
           }
         }
-      };
+      ];
+
+      var executionRowsBody = document.getElementById('executionRows');
+      var executionPagination = document.getElementById('executionPagination');
+      var keywordInput = document.getElementById('executionKeyword');
+      var startDateInput = document.getElementById('executionStartDate');
+      var endDateInput = document.getElementById('executionEndDate');
+      var typeSelect = document.getElementById('executionType');
+      var statusSelect = document.getElementById('executionStatus');
+      var riskSelect = document.getElementById('executionRisk');
+      var checkAllGuests = document.getElementById('checkAllGuests');
+      var noticeGuestList = document.getElementById('noticeGuestList');
 
       function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -706,264 +673,411 @@
           .replace(/'/g, '&#39;');
       }
 
-      function normalizeType(value) {
-        var text = String(value || '').toLowerCase();
-        if (text.indexOf('cruise') >= 0 || text.indexOf('邮轮') >= 0 || text.indexOf('cz') === 0) return 'cruise';
-        if (text.indexOf('train') >= 0 || text.indexOf('专列') >= 0 || text.indexOf('tr') === 0) return 'train';
-        return 'group';
+      function openLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && window.caesarUI.openLayer) {
+          window.caesarUI.openLayer(layer);
+        } else {
+          layer.classList.add('show');
+          layer.setAttribute('aria-hidden', 'false');
+        }
       }
 
-      function setExecutionTab(tabValue) {
-        var allowed = { overview: true, roster: true, documents: true, visa: true, notice: true };
-        var tab = allowed[tabValue] ? tabValue : 'overview';
-        document.querySelectorAll('[data-execution-tab]').forEach(function (button) {
-          button.classList.toggle('active', button.dataset.executionTab === tab);
+      function closeLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && window.caesarUI.closeLayer) {
+          window.caesarUI.closeLayer(layer);
+        } else {
+          layer.classList.remove('show');
+          layer.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      function closeMenus() {
+        document.querySelectorAll('.table-action-more .dropdown-menu.show').forEach(function (menu) {
+          menu.classList.remove('show');
         });
-        document.querySelectorAll('[data-execution-panel]').forEach(function (panel) {
-          panel.hidden = panel.dataset.executionPanel !== tab;
+        document.querySelectorAll('[data-row-more][aria-expanded="true"]').forEach(function (button) {
+          button.setAttribute('aria-expanded', 'false');
         });
       }
 
-      function rowActionHtml(config) {
-        var links = config.actions.map(function (item) {
-          return '<button type="button" data-execution-open="' + escapeHtml(item[1]) + '"' + (item[2] === 'primary' ? ' class="table-action-primary"' : '') + '>' + escapeHtml(item[0]) + '</button>';
-        }).join('');
-        var buttons = (config.extraButtons || []).map(function (type) {
-          if (type === 'resource') return '<button type="button" data-open-resource>资源</button>';
-          if (type === 'leader') return '<button type="button" data-open-leader>安排领队</button>';
-          return '';
-        }).join('');
-        return '<div class="table-action">' + links + buttons + '</div>';
+      function findRecord(code) {
+        return executionRows.find(function (item) { return item.code === code; }) || executionRows[0];
       }
 
-      function renderOutboundRow(config) {
-        var row = config.row;
-        var urgent = row.urgent ? '<span class="outbound-urgent">' + escapeHtml(row.urgent) + '</span>' : '';
-        outboundRows.innerHTML = '<tr data-tab-status="' + escapeHtml(row.tabStatus) + '">' +
-          '<td>' + escapeHtml(row.code) + '</td>' +
-          '<td>' + escapeHtml(row.product) + '</td>' +
-          '<td><span class="' + escapeHtml(row.tagClass) + '">' + escapeHtml(row.type) + '</span></td>' +
-          '<td>' + escapeHtml(row.plan) + '</td>' +
-          '<td>' + escapeHtml(row.depart) + urgent + '</td>' +
-          '<td>' + escapeHtml(row.people) + '</td>' +
-          '<td>' + escapeHtml(row.owner) + '</td>' +
-          '<td><span class="' + escapeHtml(row.rosterClass) + '">' + escapeHtml(row.rosterStatus) + '</span></td>' +
-          '<td><span class="' + escapeHtml(row.resourceClass) + '">' + escapeHtml(row.resourceStatus) + '</span></td>' +
-          '<td><span class="' + escapeHtml(row.outboundClass) + '">' + escapeHtml(row.outboundStatus) + '</span></td>' +
-          '<td>' + rowActionHtml(config) + '</td>' +
-          '</tr>';
-        var pagination = document.querySelector('.fulfillment-outbound-list-surface > .pagination span');
-        if (pagination) pagination.textContent = '第1-1条/共1条';
+      function recordSummary(record) {
+        return record.code + ' | ' + record.product + ' | ' + record.plan + ' | ' + record.people + ' | ' + record.departText;
       }
 
-      function renderTasks(config) {
-        var subtitle = document.querySelector('.outbound-task-subtitle');
-        var taskList = document.querySelector('.outbound-task-list');
-        if (subtitle) subtitle.textContent = config.taskSubtitle;
-        taskList.innerHTML = config.tasks.map(function (task) {
-          var mark = task[0] === 'done' ? '☑ ' : '☐ ';
-          if (task[2] === 'notice') {
-            return '<button class="outbound-task-item ' + escapeHtml(task[0]) + '" type="button" data-open-notice>' + mark + escapeHtml(task[1]) + '</button>';
-          }
-          return '<div class="outbound-task-item ' + escapeHtml(task[0]) + '">' + mark + escapeHtml(task[1]) + '</div>';
-        }).join('');
+      function queueMatches(record) {
+        return activeQueue === '全部' || record.queue.indexOf(activeQueue) >= 0;
       }
 
-      function renderNotice(config) {
-        var notice = config.notice;
-        document.getElementById('noticeModalTitle').textContent = notice.title;
-        document.querySelector('.outbound-check-all').innerHTML = '<input id="checkAllGuests" type="checkbox" checked> ' + escapeHtml(notice.checkAll);
-        checkAllGuests = document.getElementById('checkAllGuests');
-        guestList = document.querySelector('.outbound-guest-list');
-        guestList.innerHTML = notice.guests.map(function (guest) {
-          return '<label><input type="checkbox" checked> ' + escapeHtml(guest) + '</label>';
-        }).join('');
-        document.getElementById('noticeContent').value = notice.content;
-        document.querySelector('.outbound-fee').textContent = notice.fee;
+      function filtersMatch(record) {
+        var keyword = keywordInput.value.trim().toLowerCase();
+        var risk = riskSelect.value;
+        if (keyword && [record.code, record.product, record.plan, record.owner, record.leader].join(' ').toLowerCase().indexOf(keyword) < 0) return false;
+        if (startDateInput.value && record.departDate < startDateInput.value) return false;
+        if (endDateInput.value && record.departDate > endDateInput.value) return false;
+        if (typeSelect.value !== '全部类型' && record.type !== typeSelect.value) return false;
+        if (statusSelect.value !== '全部状态' && record.executionStatus !== statusSelect.value) return false;
+        if (risk !== '全部风险' && record.queue.indexOf(risk) < 0) return false;
+        return true;
       }
 
-      function renderResource(config) {
-        var resource = config.resource;
-        document.getElementById('resourceReadonly').textContent = resource.readonly;
-        var overviewItems = document.querySelectorAll('.outbound-resource-overview strong');
-        resource.overview.forEach(function (value, index) {
-          if (overviewItems[index]) overviewItems[index].textContent = value;
+      function mutedLine(text) {
+        return '<span class="text-muted schedule-route-name">' + escapeHtml(text) + '</span>';
+      }
+
+      function statusTag(status, className) {
+        return '<span class="' + escapeHtml(className) + '">' + escapeHtml(status) + '</span>';
+      }
+
+      function scheduleCell(record) {
+        return '<a class="table-link table-main-link" href="schedules-detail.html?scheduleNo=' + encodeURIComponent(record.code) + '">' + escapeHtml(record.code) + '</a>' +
+          mutedLine(record.product + ' / ' + record.plan) +
+          statusTag(record.type, record.tagClass);
+      }
+
+      function peopleRosterCell(record) {
+        return '<span class="schedule-product-name">' + escapeHtml(record.people) + '</span>' +
+          '<span class="' + escapeHtml(record.rosterClass) + '">' + escapeHtml(record.rosterStatus) + '</span>';
+      }
+
+      function ownerLeaderCell(record) {
+        return '<span class="schedule-product-name">' + escapeHtml(record.owner) + '</span>' +
+          mutedLine(record.leader);
+      }
+
+      function executionActionHtml(record) {
+        if (record.executionStatus === '已回团') {
+          return '<div class="table-action">' +
+            '<a class="table-action-primary" href="fulfillment-return.html?scheduleNo=' + encodeURIComponent(record.code) + '&type=' + encodeURIComponent(record.typeKey) + '">去结算</a>' +
+            '<a href="schedules-detail.html?scheduleNo=' + encodeURIComponent(record.code) + '">详情</a>' +
+            '</div>';
+        }
+        return '<div class="table-action">' +
+          '<button class="table-action-primary" type="button" data-open-roster>名单</button>' +
+          '<button type="button" data-open-documents>证件</button>' +
+          '<button type="button" data-open-resource>资源</button>' +
+          '<button type="button" data-open-notice>通知</button>' +
+          '<span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-open-leader>领队安排</button>' + markActionHtml(record) + '<a class="dropdown-item" href="schedules-detail.html?scheduleNo=' + encodeURIComponent(record.code) + '">团期详情</a></span></span>' +
+          '</div>';
+      }
+
+      function markActionHtml(record) {
+        if (record.executionStatus === '待出团' || record.executionStatus === '登船准备' || record.executionStatus === '发车准备') {
+          return '<button class="dropdown-item" type="button" data-mark-departed>标记已出发</button>';
+        }
+        if (record.executionStatus === '出团中') {
+          return '<button class="dropdown-item" type="button" data-mark-returned>标记已回团</button>';
+        }
+        return '';
+      }
+
+      function rowHtml(record) {
+        return '<tr data-code="' + escapeHtml(record.code) + '" data-tab-status="' + escapeHtml(record.queue.join(' ')) + '">' +
+          '<td>' + scheduleCell(record) + '</td>' +
+          '<td><span class="schedule-product-name">' + escapeHtml(record.departText) + '</span>' + mutedLine(record.departDate) + '</td>' +
+          '<td>' + peopleRosterCell(record) + '</td>' +
+          '<td><span class="' + escapeHtml(record.documentsClass) + '">' + escapeHtml(record.documentsStatus) + '</span></td>' +
+          '<td><span class="' + escapeHtml(record.resourceClass) + '">' + escapeHtml(record.resourceStatus) + '</span></td>' +
+          '<td><span class="' + escapeHtml(record.noticeClass) + '">' + escapeHtml(record.noticeStatus) + '</span></td>' +
+          '<td>' + ownerLeaderCell(record) + '</td>' +
+          '<td>' + executionActionHtml(record) + '</td>' +
+        '</tr>';
+      }
+
+      function renderRows() {
+        var rows = executionRows.filter(function (record) {
+          return queueMatches(record) && filtersMatch(record);
         });
-        document.querySelector('.outbound-resource-list').innerHTML = resource.items.map(function (item) {
+        executionRowsBody.innerHTML = rows.length ? rows.map(rowHtml).join('') : '<tr><td colspan="8" class="table-empty">暂无符合条件的出团执行事项</td></tr>';
+        executionPagination.textContent = rows.length ? '第1-' + rows.length + '条/共' + rows.length + '条' : '第0-0条/共0条';
+        closeMenus();
+      }
+
+      function currentFromTrigger(trigger) {
+        var row = trigger.closest('tr');
+        currentRecord = findRecord(row ? row.dataset.code : pageParams.get('scheduleNo'));
+        return currentRecord;
+      }
+
+      function renderRosterDrawer(record) {
+        document.getElementById('rosterDrawerTitle').textContent = record.typeKey === 'cruise' ? '游客名单' : '名单';
+        document.getElementById('rosterSummary').textContent = recordSummary(record);
+        document.getElementById('rosterRows').innerHTML = record.roster.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td><td>' + escapeHtml(item[4]) + '</td><td>' + escapeHtml(item[5]) + '</td><td>' + escapeHtml(item[6]) + '</td><td><div class="table-action"><button class="table-action-primary" type="button">' + escapeHtml(item[7]) + '</button></div></td></tr>';
+        }).join('');
+      }
+
+      function renderDocumentsDrawer(record) {
+        document.getElementById('documentsDrawerTitle').textContent = record.typeKey === 'train' ? '实名制资料' : record.typeKey === 'cruise' ? '登船资料' : '证件/签证';
+        document.getElementById('documentsSummary').textContent = recordSummary(record);
+        document.getElementById('documentsRows').innerHTML = record.documents.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td><td>' + escapeHtml(item[4]) + '</td><td>' + escapeHtml(item[5]) + '</td><td><div class="table-action"><button class="table-action-primary" type="button">' + escapeHtml(item[6]) + '</button></div></td></tr>';
+        }).join('');
+      }
+
+      function renderResourceDrawer(record) {
+        document.getElementById('resourceSummary').textContent = recordSummary(record);
+        var pendingCount = record.resources.filter(function (item) { return item[4] === 'warning'; }).length;
+        document.getElementById('resourceOverview').innerHTML =
+          '<div><span>资源完成度</span><strong>' + escapeHtml((record.resources.length - pendingCount) + '/' + record.resources.length + '项') + '</strong></div>' +
+          '<div><span>待确认</span><strong class="amount-orange">' + escapeHtml(pendingCount + '项') + '</strong></div>' +
+          '<div><span>风险提示</span><strong>' + escapeHtml(record.riskText) + '</strong></div>';
+        document.getElementById('resourceItems').innerHTML = record.resources.map(function (item) {
           return '<article class="outbound-resource-item ' + escapeHtml(item[4]) + '"><div><strong>' + escapeHtml(item[0]) + '</strong><span>' + escapeHtml(item[1]) + '</span></div><span class="' + escapeHtml(item[3]) + '">' + escapeHtml(item[2]) + '</span></article>';
         }).join('');
-        document.getElementById('resourceRemark').value = resource.remark;
+        document.getElementById('resourceRemark').value = record.resourceRemark;
+        document.getElementById('resourceCostLink').href = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(record.code) + '&type=' + encodeURIComponent(record.typeKey);
       }
 
-      function renderLeader(config) {
-        var leader = config.leader;
-        document.getElementById('leaderDrawerTitle').textContent = leader.title;
-        document.getElementById('leaderReadonly').textContent = leader.readonly;
-        document.querySelector('.outbound-leader-alert span').textContent = leader.rule;
-        document.getElementById('leaderMeetTime').value = leader.meetTime;
-        document.getElementById('leaderMeetPlace').value = leader.meetPlace;
-        document.getElementById('leaderRemark').value = leader.remark;
-        document.querySelector('.outbound-leader-list').innerHTML = leader.options.map(function (item) {
+      function renderNoticeDrawer(record) {
+        document.getElementById('noticeDrawerTitle').textContent = record.notice.title;
+        document.getElementById('noticeSummary').textContent = recordSummary(record);
+        noticeGuestList.innerHTML = record.notice.guests.map(function (guest) {
+          return '<label><input type="checkbox" checked> ' + escapeHtml(guest) + '</label>';
+        }).join('');
+        checkAllGuests.checked = true;
+        document.querySelector('.outbound-check-all').innerHTML = '<input id="checkAllGuests" type="checkbox" checked> 全选 共' + escapeHtml(record.people.replace('人', '位游客'));
+        checkAllGuests = document.getElementById('checkAllGuests');
+        checkAllGuests.addEventListener('change', syncGuestChecks);
+        document.getElementById('noticeContent').value = record.notice.content;
+        document.getElementById('noticeFee').textContent = record.notice.fee;
+      }
+
+      function renderLeaderDrawer(record) {
+        document.getElementById('leaderDrawerTitle').textContent = record.leaderPlan.title;
+        document.getElementById('leaderSummary').textContent = recordSummary(record);
+        document.getElementById('leaderRule').textContent = record.leaderPlan.rule;
+        document.getElementById('leaderMeetTime').value = record.leaderPlan.meetTime;
+        document.getElementById('leaderMeetPlace').value = record.leaderPlan.meetPlace;
+        document.getElementById('leaderRemark').value = record.leaderPlan.remark;
+        document.getElementById('leaderOptions').innerHTML = record.leaderPlan.options.map(function (item) {
           return '<label class="outbound-leader-card' + (item[4] ? ' selected' : '') + (item[5] ? ' disabled' : '') + '"><input type="radio" name="leaderOption" value="' + escapeHtml(item[0]) + '"' + (item[4] ? ' checked' : '') + (item[5] ? ' disabled' : '') + '><span><strong>' + escapeHtml(item[0]) + '</strong><em>' + escapeHtml(item[1]) + '</em></span><b class="' + escapeHtml(item[3]) + '">' + escapeHtml(item[2]) + '</b></label>';
         }).join('');
       }
 
-      function renderAi(config) {
-        var ai = config.ai;
-        var summary = document.querySelector('#aiOutboundRiskModal .ai-embedded-summary strong');
-        if (summary) summary.textContent = ai.summary;
-        var badge = document.querySelector('#aiOutboundRiskModal .ai-embedded-summary .tag');
-        if (badge) badge.textContent = ai.rows.length + '项风险';
-        var body = document.querySelector('#aiOutboundRiskModal tbody');
-        body.innerHTML = ai.rows.map(function (row) {
-          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td><span class="' + escapeHtml(row[3]) + '">' + escapeHtml(row[2]) + '</span></td><td>' + escapeHtml(row[4]) + '</td></tr>';
+      function renderAiRisk() {
+        var risks = executionRows.reduce(function (items, record) {
+          record.risks.forEach(function (risk) {
+            items.push([record.code, risk[0], risk[1], risk[2]]);
+          });
+          return items;
+        }, []);
+        document.getElementById('aiRiskCount').textContent = risks.length + '项风险';
+        document.getElementById('aiRiskSummary').textContent = '已扫描当前出团执行队列，发现名单、证件、资源、通知和领队安排风险。';
+        document.getElementById('aiRiskRows').innerHTML = risks.map(function (row) {
+          var cls = /未|待|缺|回传/.test(row[2]) ? 'tag tag-orange' : 'tag tag-blue';
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td><span class="' + cls + '">' + escapeHtml(row[2]) + '</span></td><td>' + escapeHtml(row[3]) + '</td></tr>';
         }).join('');
       }
 
-      function applyOutboundConfig(typeValue) {
-        activeOutboundConfig = outboundConfigs[normalizeType(typeValue)] || outboundConfigs.group;
-        renderOutboundRow(activeOutboundConfig);
-        renderTasks(activeOutboundConfig);
-        renderNotice(activeOutboundConfig);
-        renderResource(activeOutboundConfig);
-        renderLeader(activeOutboundConfig);
-        renderAi(activeOutboundConfig);
-        document.querySelectorAll('.tab-bar[data-filter-tabs]').forEach(function (tabBar) { delete tabBar.dataset.filterTabsReady; });
-        if (window.caesarRefreshListSurfaces) window.caesarRefreshListSurfaces();
+      function primaryDrawer(record) {
+        if (record.queue.indexOf('名单待补') >= 0) return 'roster';
+        if (record.queue.indexOf('证件/签证异常') >= 0) return 'documents';
+        if (record.queue.indexOf('资源待确认') >= 0) return 'resource';
+        if (record.queue.indexOf('领队待安排') >= 0) return 'leader';
+        if (record.queue.indexOf('通知待发') >= 0) return 'notice';
+        if (record.executionStatus === '出团中') return 'resource';
+        return 'notice';
       }
 
-      if (pageParams.has('type')) {
-        applyOutboundConfig(pageParams.get('type'));
+      function openFor(record, drawerName) {
+        currentRecord = record;
+        if (drawerName === 'roster') {
+          renderRosterDrawer(record);
+          openLayer(document.getElementById('rosterDrawer'));
+        } else if (drawerName === 'documents') {
+          renderDocumentsDrawer(record);
+          openLayer(document.getElementById('documentsDrawer'));
+        } else if (drawerName === 'resource') {
+          renderResourceDrawer(record);
+          openLayer(document.getElementById('resourceDrawer'));
+        } else if (drawerName === 'notice') {
+          renderNoticeDrawer(record);
+          openLayer(document.getElementById('noticeDrawer'));
+        } else if (drawerName === 'leader') {
+          renderLeaderDrawer(record);
+          openLayer(document.getElementById('leaderDrawer'));
+        }
       }
 
-      setExecutionTab(pageParams.get('tab') || 'overview');
-
-      function buildExecutionReadonly(row) {
-        if (!row || !row.children || row.children.length < 6) return '';
-        return row.children[0].textContent.trim() + ' | ' + row.children[1].textContent.trim() + ' | ' + row.children[3].textContent.trim() + ' | ' + row.children[5].textContent.trim() + ' | ' + row.children[4].textContent.trim();
+      function showResult(message) {
+        document.getElementById('executionToastText').textContent = message;
+        openLayer(document.getElementById('executionToastModal'));
       }
 
+      function syncGuestChecks() {
+        noticeGuestList.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
+          checkbox.checked = checkAllGuests.checked;
+        });
+      }
 
+      document.getElementById('executionQueueTabs').addEventListener('click', function (event) {
+        var button = event.target.closest('[data-queue-filter]');
+        if (!button) return;
+        activeQueue = button.dataset.queueFilter;
+        document.querySelectorAll('[data-queue-filter]').forEach(function (item) {
+          item.classList.toggle('active', item === button);
+        });
+        renderRows();
+      });
 
-
+      document.getElementById('searchExecution').addEventListener('click', renderRows);
+      [keywordInput, startDateInput, endDateInput, typeSelect, statusSelect, riskSelect].forEach(function (field) {
+        field.addEventListener('change', renderRows);
+      });
+      keywordInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') renderRows();
+      });
+      document.getElementById('resetExecution').addEventListener('click', function () {
+        keywordInput.value = '';
+        startDateInput.value = '';
+        endDateInput.value = '';
+        typeSelect.value = '全部类型';
+        statusSelect.value = '全部状态';
+        riskSelect.value = '全部风险';
+        renderRows();
+      });
 
       document.addEventListener('click', function (event) {
-        var tabButton = event.target.closest('[data-execution-tab]');
-        if (tabButton) {
-          setExecutionTab(tabButton.dataset.executionTab);
-          return;
-        }
-
-        var executionButton = event.target.closest('[data-execution-open]');
-        if (executionButton) {
+        var moreButton = event.target.closest('[data-row-more]');
+        if (moreButton) {
           event.preventDefault();
-          setExecutionTab(executionButton.dataset.executionOpen);
+          event.stopPropagation();
+          var menu = moreButton.nextElementSibling;
+          var willShow = !menu.classList.contains('show');
+          closeMenus();
+          menu.classList.toggle('show', willShow);
+          moreButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
           return;
         }
 
-        var noticeButton = event.target.closest('[data-open-notice]');
-        if (noticeButton) {
-          window.caesarUI.openLayer(noticeModal);
+        var triggerMap = [
+          ['[data-open-roster]', 'roster'],
+          ['[data-open-documents]', 'documents'],
+          ['[data-open-resource]', 'resource'],
+          ['[data-open-notice]', 'notice'],
+          ['[data-open-leader]', 'leader']
+        ];
+        for (var i = 0; i < triggerMap.length; i += 1) {
+          var trigger = event.target.closest(triggerMap[i][0]);
+          if (trigger) {
+            event.preventDefault();
+            closeMenus();
+            openFor(currentFromTrigger(trigger), triggerMap[i][1]);
+            return;
+          }
+        }
+
+        var departedAction = event.target.closest('[data-mark-departed]');
+        if (departedAction) {
+          event.preventDefault();
+          closeMenus();
+          var departedRecord = currentFromTrigger(departedAction);
+          departedRecord.executionStatus = '出团中';
+          departedRecord.executionClass = 'tag tag-purple';
+          departedRecord.queue = departedRecord.queue.concat(departedRecord.queue.indexOf('已出发') >= 0 ? [] : ['已出发']);
+          renderRows();
+          showResult('已将 ' + departedRecord.code + ' 标记为出团中。');
           return;
         }
 
-        var resourceButton = event.target.closest('[data-open-resource]');
-        if (resourceButton) {
-          var resourceRow = resourceButton.closest('tr');
-          currentResourceRow = resourceRow;
-          var resourceReadonly = buildExecutionReadonly(resourceRow);
-          if (resourceReadonly) document.getElementById('resourceReadonly').textContent = resourceReadonly;
-          window.caesarUI.openLayer(resourceDrawer);
+        var returnedAction = event.target.closest('[data-mark-returned]');
+        if (returnedAction) {
+          event.preventDefault();
+          closeMenus();
+          var returnedRecord = currentFromTrigger(returnedAction);
+          returnedRecord.executionStatus = '已回团';
+          returnedRecord.executionClass = 'tag tag-green';
+          returnedRecord.riskText = '待回团结算';
+          returnedRecord.queue = ['已出发'];
+          renderRows();
+          showResult('已将 ' + returnedRecord.code + ' 标记为已回团。');
           return;
         }
 
-        var leaderButton = event.target.closest('[data-open-leader]');
-        if (leaderButton) {
-          var leaderRow = leaderButton.closest('tr');
-          currentLeaderRow = leaderRow;
-          var leaderReadonly = buildExecutionReadonly(leaderRow);
-          if (leaderReadonly) document.getElementById('leaderReadonly').textContent = leaderReadonly;
-          window.caesarUI.openLayer(leaderDrawer);
+        var closeButton = event.target.closest('[data-close-layer]');
+        if (closeButton) {
+          closeLayer(closeButton.closest('.modal-overlay'));
+          return;
         }
-      });
 
-      document.getElementById('openAiOutboundRisk').addEventListener('click', function () {
-        window.caesarUI.openLayer(aiOutboundRiskModal);
-      });
+        if (event.target.classList.contains('modal-overlay')) {
+          closeLayer(event.target);
+          return;
+        }
 
-      document.querySelectorAll('input[name="leaderOption"]').forEach(function (radio) {
-        radio.addEventListener('change', function () {
-          document.querySelectorAll('.outbound-leader-card').forEach(function (card) {
-            card.classList.toggle('selected', card.contains(radio) && radio.checked);
-          });
-        });
+        closeMenus();
       });
 
       document.getElementById('confirmResources').addEventListener('click', function () {
-        if (currentResourceRow) {
-          currentResourceRow.children[8].innerHTML = '<span class="tag tag-green">已确认</span>';
-        }
-        window.caesarUI.closeLayer(resourceDrawer);
+        if (!currentRecord) return;
+        currentRecord.resourceStatus = '已确认';
+        currentRecord.resourceClass = 'tag tag-green';
+        currentRecord.queue = currentRecord.queue.filter(function (item) { return item !== '资源待确认'; });
+        renderRows();
+        closeLayer(document.getElementById('resourceDrawer'));
+        showResult('资源确认结果已写入当前团期。');
+      });
+
+      document.getElementById('sendNotice').addEventListener('click', function () {
+        if (!currentRecord) return;
+        currentRecord.noticeStatus = '已发送';
+        currentRecord.noticeClass = 'tag tag-green';
+        currentRecord.queue = currentRecord.queue.filter(function (item) { return item !== '通知待发'; });
+        renderRows();
+        closeLayer(document.getElementById('noticeDrawer'));
+        showResult('出团通知已发送，列表状态已更新。');
       });
 
       document.getElementById('saveLeaderAssign').addEventListener('click', function () {
-        var selectedLeader = document.querySelector('input[name="leaderOption"]:checked');
-        if (!selectedLeader || !currentLeaderRow) return;
-        currentLeaderRow.children[6].innerHTML = selectedLeader.value;
-        var actionButton = currentLeaderRow.querySelector('[data-open-leader]');
-        if (actionButton) actionButton.textContent = '调整领队';
-        window.caesarUI.closeLayer(leaderDrawer);
+        if (!currentRecord) return;
+        var selected = document.querySelector('input[name="leaderOption"]:checked');
+        if (selected) currentRecord.leader = selected.value;
+        currentRecord.queue = currentRecord.queue.filter(function (item) { return item !== '领队待安排'; });
+        renderRows();
+        closeLayer(document.getElementById('leaderDrawer'));
+        showResult('领队安排已保存。');
       });
 
-      document.querySelectorAll('[data-close-notice]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.closeLayer(noticeModal);
+      document.getElementById('leaderOptions').addEventListener('change', function (event) {
+        var radio = event.target.closest('input[name="leaderOption"]');
+        if (!radio) return;
+        document.querySelectorAll('.outbound-leader-card').forEach(function (card) {
+          card.classList.toggle('selected', card.contains(radio) && radio.checked);
         });
       });
 
-      document.querySelectorAll('[data-close-resource]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.closeLayer(resourceDrawer);
-        });
-      });
-
-      document.querySelectorAll('[data-close-leader]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.closeLayer(leaderDrawer);
-        });
-      });
-
-      document.querySelectorAll('[data-close-ai-outbound]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          window.caesarUI.closeLayer(aiOutboundRiskModal);
-        });
+      document.getElementById('openAiOutboundRisk').addEventListener('click', function () {
+        renderAiRisk();
+        openLayer(document.getElementById('aiOutboundRiskModal'));
       });
 
       document.getElementById('createOutboundRiskTasks').addEventListener('click', function () {
-        window.caesarUI.closeLayer(aiOutboundRiskModal);
+        closeLayer(document.getElementById('aiOutboundRiskModal'));
+        showResult('AI风险已生成待办任务。');
       });
 
-      noticeModal.addEventListener('click', function (event) {
-        if (event.target === noticeModal) window.caesarUI.closeLayer(noticeModal);
+      document.getElementById('exportExecutionPlan').addEventListener('click', function () {
+        showResult('执行计划导出任务已创建。');
       });
 
-      resourceDrawer.addEventListener('click', function (event) {
-        if (event.target === resourceDrawer) window.caesarUI.closeLayer(resourceDrawer);
-      });
+      renderRows();
 
-      leaderDrawer.addEventListener('click', function (event) {
-        if (event.target === leaderDrawer) window.caesarUI.closeLayer(leaderDrawer);
-      });
+      if (pageParams.has('type')) {
+        var targetType = pageParams.get('type');
+        var matchedType = executionRows.find(function (record) { return record.typeKey === targetType; });
+        if (matchedType) openFor(matchedType, primaryDrawer(matchedType));
+      }
 
-      aiOutboundRiskModal.addEventListener('click', function (event) {
-        if (event.target === aiOutboundRiskModal) window.caesarUI.closeLayer(aiOutboundRiskModal);
-      });
-
-      checkAllGuests.addEventListener('change', function () {
-        guestList.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
-          checkbox.checked = checkAllGuests.checked;
-        });
-      });
+      if (pageParams.has('scheduleNo')) {
+        var matchedSchedule = findRecord(pageParams.get('scheduleNo'));
+        openFor(matchedSchedule, primaryDrawer(matchedSchedule));
+      }
     })();
   </script>
 </body>

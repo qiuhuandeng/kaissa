@@ -42,6 +42,13 @@
             { title: "专列模板", href: "resource/resource-train-routes.html" },
           ],
         },
+        {
+          title: "产品配置",
+          children: [
+            { title: "目的地分类", href: "product/product-destination-config.html" },
+            { title: "出发地配置", href: "product/product-departure-config.html" },
+          ],
+        },
         { title: "供应商", href: "resource/suppliers.html" },
         { title: "领队资源", href: "resource/resource-tour-leaders.html" },
       ],
@@ -52,59 +59,47 @@
       children: [
         { title: "线路市场", href: "product/product-market.html" },
         {
-          title: "自营产品",
+          title: "产品管理",
           children: [
             { title: "旅游线路", href: "product/products.html" },
             { title: "研学线路", href: "product/product-study-products.html" },
             { title: "单项服务", href: "product/product-single-orders.html" },
+            { title: "外采产品", href: "product/product-outsource-list.html" },
           ],
         },
         {
-          title: "外采产品",
+          title: "团期管理",
           children: [
-            { title: "产品列表", href: "product/product-outsource-list.html" },
-            { title: "方案包装", href: "product/product-outsource-package.html" },
-          ],
-        },
-        {
-          title: "团期团控",
-          children: [
-            { title: "团期列表", href: "tour/schedules.html" },
-            { title: "成本付款", href: "tour/fulfillment-cost.html" },
-            { title: "团队执行", href: "tour/fulfillment-outbound.html" },
-            { title: "回团处理", href: "tour/fulfillment-return.html" },
+            { title: "团期管控", href: "tour/schedules.html" },
+            { title: "团期成本", href: "tour/fulfillment-cost.html" },
+            { title: "出团执行", href: "tour/fulfillment-outbound.html" },
+            { title: "回团结算", href: "tour/fulfillment-return.html" },
           ],
         },
         { title: "单团自组", href: "tour/product-custom-list.html" },
         { title: "定价策略", href: "product/product-pricing.html" },
-        { title: "渠道授权", href: "product/product-channel-auth.html" },
       ],
     },
     {
       title: "订单中心",
       icon: "clipboard",
       children: [
-        { title: "线路浏览与报价", href: "sales/sales-product-quote.html" },
+        { title: "产品预订", href: "sales/sales-product-quote.html" },
         { title: "意向订单", href: "sales/orders-intent.html" },
         { title: "订单管理", href: "sales/orders.html" },
         { title: "收款认领", href: "sales/payment-claim.html" },
         { title: "合同管理", href: "sales/contracts.html" },
-        {
-          title: "售后处理",
-          children: [
-            { title: "售后总览", href: "sales/orders-after-sales.html" },
-            { title: "转团/改期", href: "sales/orders-transfer.html" },
-            { title: "退款申请", href: "sales/orders-refund.html" },
-          ],
-        },
+        { title: "售后处理", href: "sales/orders-after-sales.html" },
       ],
     },
     {
-      title: "门店中心",
+      title: "门市中心",
       icon: "target",
       children: [
-        { title: "门店管理", href: "sales/store/index.html" },
-        { title: "顾问管理", href: "sales/consultant/index.html" },
+        { title: "门市管理", href: "sales/store/index.html" },
+        { title: "门市成员", href: "sales/consultant/index.html" },
+        { title: "预存余额", href: "sales/store/predeposit.html" },
+        { title: "门市对账", href: "sales/store/reconciliation.html" },
       ],
     },
     {
@@ -112,17 +107,23 @@
       icon: "handshake",
       children: [
         {
-          title: "OTA运营",
+          title: "分销合作",
           children: [
-            { title: "OTA线路", href: "channel/ota_products.html" },
-            { title: "OTA订单", href: "channel/ota_orders.html" },
-            { title: "OTA退款", href: "channel/ota_refunds.html" },
-            { title: "OTA对账", href: "channel/ota_reconcile.html" },
+            { title: "分销渠道", href: "channel/distributors.html" },
+            { title: "佣金规则", href: "channel/commission_rules.html" },
+            { title: "分销台账", href: "channel/distribution-orders.html" },
+            { title: "分销对账", href: "channel/distribution-reconciliation.html" },
           ],
         },
-        { title: "分销商管理", href: "channel/distributors.html" },
-        { title: "代理商管理", href: "channel/agents.html" },
-        { title: "佣金规则", href: "channel/commission_rules.html" },
+        {
+          title: "OTA平台",
+          children: [
+            { title: "店铺配置", href: "channel/ota_shops.html" },
+            { title: "商品映射", href: "channel/ota_products.html" },
+            { title: "平台对账", href: "channel/ota_reconcile.html" },
+            { title: "异常日志", href: "channel/ota_exceptions.html" },
+          ],
+        },
       ],
     },
     {
@@ -137,7 +138,9 @@
       icon: "wallet",
       children: [
         { title: "收款管理", href: "finance/receipts.html" },
-        { title: "认款管理", href: "finance/finance-matching.html" },
+        { title: "订单认款", href: "finance/finance-matching.html" },
+        { title: "预存账户", href: "finance/finance-predeposit.html" },
+        { title: "转款记录", href: "finance/finance-transfer-records.html" },
         { title: "应收管理", href: "finance/finance-receivable.html" },
         { title: "应付管理", href: "finance/finance-payable.html" },
         { title: "付款执行", href: "finance/finance-payment.html" },
@@ -145,7 +148,7 @@
         { title: "对账结算", href: "finance/finance-settlement.html" },
         { title: "发票管理", href: "finance/finance-invoice.html" },
         { title: "回单管理", href: "finance/finance-remittance.html" },
-        { title: "资金池", href: "finance/finance-reports.html?report=fund&view=pool" },
+        { title: "资金池", href: "finance/finance-fund-pool.html" },
         { title: "汇率币种", href: "finance/finance-currency.html" },
         { title: "NC推送", href: "finance/finance-nc.html" },
         {
@@ -223,7 +226,7 @@
     资源: "资源",
     产品中心: "产品",
     订单中心: "订单",
-    门店中心: "门店",
+    门市中心: "门市",
     渠道中心: "渠道",
     客户: "客户",
     财务: "财务",
@@ -237,7 +240,7 @@
     资源: "资源管理",
     产品中心: "产品中心",
     订单中心: "订单中心",
-    门店中心: "门店中心",
+    门市中心: "门市中心",
     渠道中心: "渠道中心",
     客户: "客户管理",
     财务: "财务管理",
@@ -350,7 +353,7 @@
     if (file === "finance/finance-reports.html") {
       const report = url.searchParams.get("report") || "profit";
       if (report === "fund" && url.searchParams.get("view") === "pool") {
-        return "finance/finance-reports.html?report=fund&view=pool";
+        return "finance/finance-fund-pool.html";
       }
       return "finance/finance-reports.html?report=" + (reportRouteKeys.has(report) ? report : "profit");
     }
@@ -399,10 +402,13 @@
     "product/product-cruise-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
     "product/product-train-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
     "product/products-detail.html": { href: "product/products.html", title: "线路详情" },
+    "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
+    "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
+    "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "外采产品详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采方案包装" },
-    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采销售配额" },
+    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
     "system/data-scope.html": { href: "system/role-assignment.html", title: "角色授权" },
     "system/hr-requests.html": { href: "approval/approvals.html?view=mine", title: "我发起的" },
@@ -411,32 +417,40 @@
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-batch.html": { href: "tour/schedules.html", title: "批量开排" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
-    "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "成本付款" },
-    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "成本付款" },
-    "tour/fulfillment-roster.html": { href: "tour/fulfillment-outbound.html", title: "团队执行" },
-    "tour/fulfillment-documents.html": { href: "tour/fulfillment-outbound.html", title: "团队执行" },
-    "tour/fulfillment-visa.html": { href: "tour/fulfillment-outbound.html", title: "团队执行" },
-    "tour/fulfillment-notice.html": { href: "tour/fulfillment-outbound.html", title: "团队执行" },
+    "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
+    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
+    "tour/fulfillment-roster.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
+    "tour/fulfillment-documents.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
+    "tour/fulfillment-visa.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
+    "tour/fulfillment-notice.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
     "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
     "sales/booking.html": { href: "sales/orders.html", title: "新建订单" },
     "sales/orders-transfer.html": { href: "sales/orders-after-sales.html", title: "变更申请" },
+    "sales/orders-cancel.html": { href: "sales/orders-after-sales.html", title: "退团退订" },
+    "sales/orders-payment-transfer.html": { href: "sales/orders-after-sales.html", title: "转款申请" },
     "sales/orders-refund.html": { href: "sales/orders-after-sales.html", title: "退款申请" },
-    "sales/store/detail.html": { href: "sales/store/index.html", title: "门店详情" },
-    "sales/consultant/detail.html": { href: "sales/consultant/index.html", title: "顾问详情" },
+    "sales/store/detail.html": { href: "sales/store/index.html", title: "门市详情" },
+    "sales/consultant/detail.html": { href: "sales/consultant/index.html", title: "门市成员详情" },
     "tour/projects.html": { href: "tour/product-custom-list.html", title: "单团自组" },
     "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
+    "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转款记录" },
     "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
     "customer/customers-detail.html": { href: "customer/list.html", title: "客户详情" },
     "customer/detail.html": { href: "customer/list.html", title: "客户详情" },
-    "channel/ota_products.html": { href: "channel/ota_products.html", title: "OTA线路" },
-    "channel/ota_orders.html": { href: "channel/ota_orders.html", title: "OTA订单" },
-    "channel/ota_refunds.html": { href: "channel/ota_refunds.html", title: "OTA退款" },
-    "channel/ota_reconcile.html": { href: "channel/ota_reconcile.html", title: "OTA对账" },
+    "channel/ota_shops.html": { href: "channel/ota_shops.html", title: "店铺配置" },
+    "channel/ota_products.html": { href: "channel/ota_products.html", title: "商品映射" },
+    "channel/ota_orders.html": { href: "sales/orders.html", title: "订单管理" },
+    "channel/ota_refunds.html": { href: "sales/orders-after-sales.html", title: "售后处理" },
+    "channel/ota_reconcile.html": { href: "channel/ota_reconcile.html", title: "平台对账" },
+    "channel/ota_exceptions.html": { href: "channel/ota_exceptions.html", title: "异常日志" },
     "channel/distributors.html": { href: "channel/distributors.html", title: "分销渠道" },
-    "channel/agents.html": { href: "channel/agents.html", title: "同业代理" },
+    "channel/agents.html": { href: "channel/distributors.html", title: "分销渠道" },
     "channel/commission_rules.html": { href: "channel/commission_rules.html", title: "佣金规则" },
+    "channel/distribution-orders.html": { href: "channel/distribution-orders.html", title: "分销台账" },
+    "channel/distribution-reconciliation.html": { href: "channel/distribution-reconciliation.html", title: "分销对账" },
+    "channel/sync_logs.html": { href: "channel/ota_exceptions.html", title: "异常日志" },
   };
 
   function demoConfig() {
@@ -472,49 +486,79 @@
       name: "凯撒旅游集团股份有限公司",
       children: [
         {
-          id: "sub-caesar-travel",
+          id: "sub-fujian",
           type: "subsidiary",
           typeLabel: "子公司",
-          name: "北京凯撒旅游集团有限公司",
+          name: "福建凯撒国际旅行社有限公司",
           children: [
             {
-              id: "center-outbound",
+              id: "center-fj-outbound",
               type: "center",
               typeLabel: "中心",
-              name: "出境游事业部",
+              name: "出境事业中心",
               children: [
-                { id: "dept-west-eu", type: "department", typeLabel: "部门", name: "西欧线路部" },
-                { id: "dept-eu", type: "department", typeLabel: "部门", name: "欧洲事业部" },
-                { id: "store-bj-chaoyang", type: "store", typeLabel: "门店", name: "北京朝阳门店" },
-                { id: "store-sh-xuhui", type: "store", typeLabel: "门店", name: "上海徐汇门店" },
+                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲线路部" },
+                { id: "dept-fj-visa", type: "department", typeLabel: "部门", name: "签证运营部" },
+                { id: "store-fz-dongbai", type: "store", typeLabel: "门市", name: "福州东百门市" },
+                { id: "store-xm-siming", type: "store", typeLabel: "门市", name: "厦门思明门市" },
               ],
             },
             {
-              id: "center-cruise",
+              id: "center-fj-sales",
               type: "center",
               typeLabel: "中心",
-              name: "邮轮中心",
+              name: "门市销售中心",
               children: [
-                { id: "dept-ideal", type: "department", typeLabel: "部门", name: "理想号运营部" },
-                { id: "store-gz-tianhe", type: "store", typeLabel: "门店", name: "广州天河门店" },
+                { id: "dept-fj-store-ops", type: "department", typeLabel: "部门", name: "门市运营部" },
+                { id: "store-qz-fengze", type: "store", typeLabel: "门市", name: "泉州丰泽门市" },
               ],
             },
           ],
         },
         {
-          id: "sub-yibu",
+          id: "sub-beijing",
           type: "subsidiary",
           typeLabel: "子公司",
-          name: "凯撒亿步旅行社有限公司",
+          name: "北京凯撒国际旅行社有限公司",
           children: [
             {
-              id: "center-mice",
+              id: "center-bj-outbound",
+              type: "center",
+              typeLabel: "中心",
+              name: "出境事业中心",
+              children: [
+                { id: "dept-bj-eu", type: "department", typeLabel: "部门", name: "西欧线路部" },
+                { id: "dept-bj-cruise", type: "department", typeLabel: "部门", name: "邮轮产品部" },
+                { id: "store-bj-chaoyang", type: "store", typeLabel: "门市", name: "北京朝阳门市" },
+              ],
+            },
+            {
+              id: "center-bj-mice",
               type: "center",
               typeLabel: "中心",
               name: "MICE会展中心",
               children: [
-                { id: "dept-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
-                { id: "store-sh-mice", type: "store", typeLabel: "门店", name: "上海会展门店" },
+                { id: "dept-bj-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
+                { id: "store-bj-wangfujing", type: "store", typeLabel: "门市", name: "北京王府井门市" },
+              ],
+            },
+          ],
+        },
+        {
+          id: "sub-shanghai",
+          type: "subsidiary",
+          typeLabel: "子公司",
+          name: "上海凯撒国际旅行社有限公司",
+          children: [
+            {
+              id: "center-sh-sales",
+              type: "center",
+              typeLabel: "中心",
+              name: "华东销售中心",
+              children: [
+                { id: "dept-sh-store", type: "department", typeLabel: "部门", name: "门市运营部" },
+                { id: "store-sh-xuhui", type: "store", typeLabel: "门市", name: "上海徐汇门市" },
+                { id: "store-hz-hubin", type: "store", typeLabel: "门市", name: "杭州湖滨合作门市" },
               ],
             },
           ],
@@ -524,13 +568,16 @@
   ];
 
   const workspaceExpandedIds = new Set([
-    "sub-caesar-travel",
-    "center-outbound",
-    "center-cruise",
-    "sub-yibu",
-    "center-mice",
+    "sub-fujian",
+    "center-fj-outbound",
+    "center-fj-sales",
+    "sub-beijing",
+    "center-bj-outbound",
+    "center-bj-mice",
+    "sub-shanghai",
+    "center-sh-sales",
   ]);
-  let currentWorkspaceId = "center-outbound";
+  let currentWorkspaceId = "sub-fujian";
 
   function workspaceRoots() {
     return organizationTree.flatMap((node) => {
@@ -1133,6 +1180,11 @@
     return node.children ? node.children.some((child) => orgNodeMatches(child, keyword)) : false;
   }
 
+  function currentSubject() {
+    const current = findOrgNode(organizationTree, currentWorkspaceId);
+    return current && current.type === "subsidiary" ? current : workspaceRoots()[0];
+  }
+
   function createOrgNode(node, depth, state) {
     if (!orgNodeMatches(node, state.keyword)) return null;
 
@@ -1165,7 +1217,12 @@
     select.className = "org-tree-select";
     select.type = "button";
     select.title = node.name;
+    if (node.type !== "subsidiary") {
+      select.classList.add("is-view-only");
+      select.disabled = true;
+    }
     select.addEventListener("click", () => {
+      if (node.type !== "subsidiary") return;
       currentWorkspaceId = node.id;
       state.workspaceText.textContent = node.name;
       state.menu.classList.remove("show");
@@ -1200,7 +1257,7 @@
   }
 
   function createWorkspaceSwitcher() {
-    const current = findOrgNode(organizationTree, currentWorkspaceId) || organizationTree[0];
+    const current = currentSubject();
     const wrap = document.createElement("div");
     wrap.className = "workspace-switcher";
 
@@ -1221,12 +1278,16 @@
     const menu = document.createElement("div");
     menu.className = "workspace-menu";
 
+    const scopeHead = document.createElement("div");
+    scopeHead.className = "workspace-scope-head";
+    scopeHead.innerHTML = '<strong>经营主体</strong><span>中心、部门和门市为主体内数据范围</span>';
+
     const searchWrap = document.createElement("div");
     searchWrap.className = "workspace-search";
     searchWrap.innerHTML = '<span class="workspace-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>';
     const search = document.createElement("input");
     search.type = "search";
-    search.placeholder = "请输入门店/部门名称";
+    search.placeholder = "搜索子公司/中心/部门/门市";
     search.setAttribute("aria-label", "搜索组织节点");
     searchWrap.appendChild(search);
 
@@ -1260,7 +1321,7 @@
     };
 
     search.addEventListener("input", state.render);
-    menu.append(searchWrap, tree, empty);
+    menu.append(scopeHead, searchWrap, tree, empty);
     state.render();
 
     trigger.addEventListener("click", (event) => {
@@ -1889,23 +1950,23 @@
   const metaTagTexts = new Set([
     "线路", "团期", "自由行", "单项服务", "普通团期", "邮轮团期", "专列团期", "研学团期", "邮轮航次", "专列班期", "研学营期",
     "景点", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮模板", "运营商", "专列模板", "供应商", "领队",
-    "自营", "自营产品", "自营线路", "外采", "外采产品", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮线路", "专列", "专列线路", "研学", "研学线路", "服务单",
+    "产品管理", "自营", "自营产品", "自营线路", "外采", "外采产品", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮线路", "专列", "专列线路", "研学", "研学线路", "服务单",
     "出境游", "国内游", "国内跟团", "港澳台", "小包团", "定制团", "半自由行", "出境跟团", "跟团游", "普通报价", "团队报价",
     "成人/儿童结算价", "舱型库存价", "铺位/包厢结算价", "服务费/加急费",
-    "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
+    "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA平台", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
     "欧洲", "东南亚", "国内", "法国", "德国", "意大利", "荷兰", "比利时", "日本", "英国", "MICE", "全线路",
-    "资源", "产品中心", "团期团控", "订单中心", "门店中心", "渠道中心", "客户", "财务", "审批", "AI", "系统设置",
+    "资源", "产品中心", "团期管理", "订单中心", "门市中心", "门店中心", "渠道中心", "客户", "财务", "审批", "AI", "系统设置",
     "线路发布", "价格调整", "渠道授权", "成本差异", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
     "线路经理", "线路总监", "销售顾问", "高级顾问", "顾问", "计调", "财务", "管理层", "门店店长", "审批管理员", "超管",
     "专业版", "旗舰版", "基础版", "组织账号", "权限安全", "AI模型", "系统配置", "审计只读", "线路文案生成", "行程生成", "话术建议", "财务异常分析", "客户洞察", "其他"
   ]);
 
   const metaTagPatterns = [
-    /^(自营|外采|邮轮|专列|研学|自由行|单项服务|跟团游|出境游|国内游|MICE)(产品|线路|团期)?$/,
+    /^(产品管理|自营|外采|邮轮|专列|研学|自由行|单项服务|跟团游|出境游|国内游|MICE)(产品|线路|团期)?$/,
     /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
     /^(门市|门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
-    /^(资源|产品中心|团期团控|订单中心|门店中心|渠道中心|客户|财务|审批|AI|系统设置)$/,
+    /^(资源|产品中心|团期管理|订单中心|门市中心|门店中心|渠道中心|客户|财务|审批|AI|系统设置)$/,
     /^(线路发布|价格调整|渠道授权|成本差异|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
     /^(线路经理|线路总监|销售顾问|高级顾问|顾问|计调|财务|管理层|门店店长|审批管理员|超管)$/,
     /^(专业版|旗舰版|基础版|组织账号|权限安全|AI模型|系统配置|审计只读)$/,
