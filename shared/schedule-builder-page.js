@@ -98,13 +98,12 @@
           ]
         }
       ],
-      matrixColumns: ['套餐项', '总余量', '预留', '可售', '供应商价', '儿童价', '备注'],
+      matrixColumns: ['套餐项', '总余量', '预留', '可售', '成人价', '儿童占位价', '儿童不占位价'],
       matrix: [
-        ['成人套餐', 36, 4, 3680, 3380, '主套餐'],
-        ['儿童占床', 12, 0, 3280, 2980, '按酒店政策'],
-        ['儿童不占床', 12, 0, 2680, 2380, '不含早餐'],
-        ['单房差', 8, 0, 900, 780, '按晚核算'],
-        ['接送机加购', 20, 0, 480, 320, '按车']
+        ['机票酒店套餐', 36, 4, 3680, 3280, 2680],
+        ['纯酒店套餐', 18, 2, 2980, 2680, 1980],
+        ['当地玩乐套餐', 24, 0, 980, 780, 480],
+        ['接送机加购', 20, 0, 480, 320, 0]
       ],
       nodes: [
         ['房态回传截止', 'date', '2026-07-10'],
@@ -149,21 +148,78 @@
           ]
         }
       ],
-      matrixColumns: ['舱型', '总舱房', '预留', '可售', '成人价', '单人附加', '港口税费'],
+      matrixColumns: ['舱型', '入住规则', '借调舱房', '预留', '可售', '成人占位价', '儿童占位价', '儿童不占位价', '第三/第四人价', '单房差'],
       matrix: [
-        ['内舱房', 42, 4, 12800, 4800, 980],
-        ['海景房', 36, 3, 15800, 5800, 980],
-        ['阳台房', 36, 4, 18800, 6800, 980],
-        ['套房', 12, 2, 26800, 9800, 980],
-        ['豪华套房', 6, 1, 58800, 18800, 980],
-        ['岸上游加购', 60, 0, 1280, 920, '按人'],
-        ['餐饮升级', 40, 0, 680, 420, '按人'],
-        ['接送机加购', 30, 0, 980, 650, '按车']
+        {
+          label: '内舱房',
+          total: 42,
+          reserve: 4,
+          cells: [
+            { type: 'text', value: '2人/最多4人，儿童可不占位' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 12800 },
+            { type: 'number', value: 9800 },
+            { type: 'number', value: 5800 },
+            { type: 'number', value: 8800 },
+            { type: 'number', value: 4800 }
+          ]
+        },
+        {
+          label: '海景房',
+          total: 36,
+          reserve: 3,
+          cells: [
+            { type: 'text', value: '2人/最多4人，儿童可不占位' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 15800 },
+            { type: 'number', value: 12800 },
+            { type: 'number', value: 6800 },
+            { type: 'number', value: 10800 },
+            { type: 'number', value: 5800 }
+          ]
+        },
+        {
+          label: '阳台房',
+          total: 36,
+          reserve: 4,
+          cells: [
+            { type: 'text', value: '2人/最多4人，儿童可不占位' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 18800 },
+            { type: 'number', value: 14800 },
+            { type: 'number', value: 7800 },
+            { type: 'number', value: 12800 },
+            { type: 'number', value: 6800 }
+          ]
+        },
+        {
+          label: '套房',
+          total: 12,
+          reserve: 2,
+          cells: [
+            { type: 'text', value: '2人/最多3人，儿童可不占位' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 26800 },
+            { type: 'number', value: 21800 },
+            { type: 'number', value: 9800 },
+            { type: 'number', value: 18800 },
+            { type: 'number', value: 9800 }
+          ]
+        }
       ],
       nodes: [
-	        ['航次名称', 'text', '地中海7月1日航次'],
+        ['航次名称', 'text', '地中海7月1日航次'],
         ['乘客名单提交截止', 'date', '2026-06-18'],
         ['护照/签证资料截止', 'date', '2026-06-15'],
+        ['Final Payment Date', 'date', '2026-06-01'],
         ['在线登船值机开放', 'date', '2026-06-24']
       ]
     },
@@ -203,18 +259,69 @@
           ]
         }
       ],
-      matrixColumns: ['车厢/铺位', '总铺位', '预留', '可售', '成人价', '儿童占铺', '附加费'],
+      matrixColumns: ['席别', '铺位', '借调铺位', '预留', '可售', '成人占位价', '儿童占位价', '儿童不占位价'],
       matrix: [
-        ['四人软卧', 64, 6, 18800, 16800, 0],
-        ['双人包厢', 24, 4, 26800, 23800, 6800],
-        ['硬卧铺位', 32, 4, 15800, 13800, 0],
-        ['高铁商务座', 12, 0, 24800, 21800, 0],
-        ['高铁一等座', 20, 2, 18800, 16800, 0],
-        ['单人包间差价', 8, 0, 6800, 5800, '差价']
+        {
+          label: '软卧',
+          total: 48,
+          reserve: 4,
+          cells: [
+            { type: 'text', value: '下铺' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 19800 },
+            { type: 'number', value: 17800 },
+            { type: 'number', value: 7800 }
+          ]
+        },
+        {
+          label: '软卧',
+          total: 36,
+          reserve: 4,
+          cells: [
+            { type: 'text', value: '上铺' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 18800 },
+            { type: 'number', value: 16800 },
+            { type: 'number', value: 7800 }
+          ]
+        },
+        {
+          label: '硬卧',
+          total: 32,
+          reserve: 4,
+          cells: [
+            { type: 'text', value: '中铺' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 15800 },
+            { type: 'number', value: 13800 },
+            { type: 'number', value: 6800 }
+          ]
+        },
+        {
+          label: '软卧包厢',
+          total: 12,
+          reserve: 2,
+          cells: [
+            { type: 'text', value: '整包厢' },
+            { kind: 'total' },
+            { kind: 'reserve' },
+            { kind: 'saleable' },
+            { kind: 'primaryPrice', value: 36800 },
+            { type: 'number', value: 32800 },
+            { type: 'number', value: 8800 }
+          ]
+        }
       ],
       nodes: [
-	        ['班期名称', 'text', '丝路7月班期'],
+        ['班期名称', 'text', '丝路7月班期'],
         ['购票名单提交截止', 'date', '2026-06-18'],
+        ['铺位确认回传', 'date', '2026-06-22'],
         ['集合站及时间', 'text', '西安站 18:30'],
         ['包列固定成本', 'text', '¥620,000']
       ]
@@ -408,7 +515,7 @@
     if (typeKey === 'train') {
       return {
         demand: '需要专列铺位',
-        route: 'Y653 东方丝路专列 / 软卧、硬卧',
+        route: 'Y653 东方丝路专列 / 软卧、硬卧、包厢',
         next: '开团前借调铺位库存'
       };
     }
@@ -423,16 +530,16 @@
     var typeKey = selectedTypeKey();
     if (typeKey === 'cruise') {
       return [
-        { value: 'CG-CRU-20260622-003 / 内舱20间', depart: '2026-09-12', back: '2026-09-19', qty: 20 },
-        { value: 'CG-CRU-20260622-003 / 海景18间', depart: '2026-09-12', back: '2026-09-19', qty: 18 },
-        { value: 'CG-CRU-20260622-003 / 阳台22间', depart: '2026-09-12', back: '2026-09-19', qty: 22 }
+        { value: 'CRU-BLK-20260622-003 / 理想号 MED-20260912 内舱20间', depart: '2026-09-12', back: '2026-09-19', qty: 20 },
+        { value: 'CRU-BLK-20260622-003 / 理想号 MED-20260912 海景18间', depart: '2026-09-12', back: '2026-09-19', qty: 18 },
+        { value: 'CRU-BLK-20260622-003 / 理想号 MED-20260912 阳台22间', depart: '2026-09-12', back: '2026-09-19', qty: 22 }
       ];
     }
     if (typeKey === 'train') {
       return [
-        { value: 'CG-TRN-20260628-002 / 软卧下铺48铺', depart: '2026-09-20', back: '2026-09-28', qty: 48 },
-        { value: 'CG-TRN-20260628-002 / 硬卧中铺28铺', depart: '2026-09-20', back: '2026-09-28', qty: 28 },
-        { value: 'CG-TRN-20260628-002 / 硬卧上铺20铺', depart: '2026-09-20', back: '2026-09-28', qty: 20 }
+        { value: 'TRN-BLK-20260628-004 / Y653 软卧下铺48铺', depart: '2026-09-20', back: '2026-09-28', qty: 48 },
+        { value: 'TRN-BLK-20260628-004 / Y653 硬卧中铺28铺', depart: '2026-09-20', back: '2026-09-28', qty: 28 },
+        { value: 'TRN-BLK-20260628-004 / Y653 软卧包厢12间', depart: '2026-09-20', back: '2026-09-28', qty: 12 }
       ];
     }
     return [
@@ -451,7 +558,7 @@
       return '<option value="' + option.value + '" data-depart="' + option.depart + '" data-back="' + option.back + '" data-qty="' + option.qty + '">' + option.value + ' | 可用' + option.qty + selectedType().unit + '</option>';
     }).join('');
     if (qty && options[0]) qty.value = Math.min(options[0].qty, Number(selectedType().defaultStock || options[0].qty));
-    if (status) status.value = '已满足';
+    if (status) status.value = options.length ? '已满足' : '暂不借调';
     applyResourceBorrowDates();
   }
 
@@ -629,7 +736,37 @@
     }).join('');
   }
 
+  function matrixInputCell(cell) {
+    var type = cell.type || (typeof cell.value === 'number' ? 'number' : 'text');
+    var min = type === 'number' ? ' min="0"' : '';
+    return '<td><input class="table-input" type="' + type + '"' + min + ' value="' + cell.value + '"></td>';
+  }
+
+  function matrixObjectCell(cell, row) {
+    if (cell.kind === 'total') {
+      return '<td><input class="table-input" type="number" min="0" value="' + row.total + '" data-total></td>';
+    }
+    if (cell.kind === 'reserve') {
+      return '<td><input class="table-input" type="number" min="0" value="' + row.reserve + '" data-reserve></td>';
+    }
+    if (cell.kind === 'saleable') {
+      return '<td><span data-saleable>' + Math.max(row.total - row.reserve, 0) + '</span></td>';
+    }
+    if (cell.kind === 'primaryPrice') {
+      return '<td><input class="table-input" type="number" min="0" value="' + cell.value + '" data-primary-price></td>';
+    }
+    return matrixInputCell(cell);
+  }
+
   function matrixRow(row) {
+    if (!Array.isArray(row)) {
+      return '<tr data-matrix-row>' +
+        '<td><strong>' + row.label + '</strong></td>' +
+        row.cells.map(function (cell) { return matrixObjectCell(cell, row); }).join('') +
+        '</tr>';
+    }
+    var lastType = typeof row[5] === 'number' ? 'number' : 'text';
+    var lastMin = lastType === 'number' ? ' min="0"' : '';
     return '<tr data-matrix-row>' +
       '<td><strong>' + row[0] + '</strong></td>' +
       '<td><input class="table-input" type="number" min="0" value="' + row[1] + '" data-total></td>' +
@@ -637,7 +774,7 @@
       '<td><span data-saleable>' + Math.max(row[1] - row[2], 0) + '</span></td>' +
       '<td><input class="table-input" type="number" min="0" value="' + row[3] + '" data-primary-price></td>' +
       '<td><input class="table-input" type="number" min="0" value="' + row[4] + '"></td>' +
-      '<td><input class="table-input" type="text" value="' + row[5] + '"></td>' +
+      '<td><input class="table-input" type="' + lastType + '"' + lastMin + ' value="' + row[5] + '"></td>' +
       '</tr>';
   }
 
@@ -769,17 +906,6 @@
   }
 
   function validateResourceBorrow() {
-    if (isSupplierSchedule || !requiresProcurementInventory(selectedTypeKey())) return true;
-    var demand = selectedResourceDemand();
-    if (!demand) return true;
-    var check = resourceBorrowCheckText();
-    if (demand.borrowStatus !== '已满足' || check !== '日期与数量匹配') {
-      if (window.caesarUI && window.caesarUI.toast) {
-        window.caesarUI.toast('自营团期必须先完成资源采购库存借调：' + check, { type: 'warning' });
-      }
-      setStep(1);
-      return false;
-    }
     return true;
   }
 

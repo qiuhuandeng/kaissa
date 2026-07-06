@@ -43,7 +43,7 @@
           </select>
         </div>
         <div class="filter-item-sm">
-          <label class="sr-only" for="claimFinanceStatus">财务状态</label>
+          <label class="sr-only" for="claimFinanceStatus">认领状态</label>
           <select id="claimFinanceStatus">
             <option>全部状态</option>
             <option>待销售认领</option>
@@ -93,11 +93,10 @@
         <tr>
           <th>流水/申请</th>
           <th>到账金额</th>
-          <th>到账时间</th>
           <th>付款方/来源</th>
           <th>关联订单</th>
-          <th>认款方式</th>
-          <th>财务状态</th>
+          <th>认领状态</th>
+          <th>到账时间</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -519,6 +518,74 @@
       var otaResultArea = document.getElementById('otaResultArea');
       var currentFlowAmount = 25600;
 
+      function plainText(node) {
+        return (node ? node.textContent : '').replace(/\s+/g, ' ').trim();
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function tagClass(text) {
+        if (/退回|不清|不一致|未匹配/.test(text)) return 'tag tag-red';
+        if (/已确认|成功/.test(text)) return 'tag tag-green';
+        if (/待|补充/.test(text)) return 'tag tag-orange';
+        return 'tag tag-blue';
+      }
+
+      function splitCellByTag(cell) {
+        var clone = cell.cloneNode(true);
+        var tagText = Array.from(clone.querySelectorAll('.tag')).map(function (tag) {
+          var text = plainText(tag);
+          tag.remove();
+          return text;
+        }).filter(Boolean).join(' · ');
+        return {
+          main: clone.innerHTML,
+          tagText: tagText
+        };
+      }
+
+      function claimStatusHtml(tabStatus, methodCell, statusCell) {
+        var methodText = plainText(methodCell);
+        var rawStatus = plainText(statusCell);
+        var mainStatus = rawStatus || tabStatus;
+        var detail = methodText;
+        if (tabStatus === '待认领流水') {
+          mainStatus = '待销售认领';
+          detail = '待匹配订单应收';
+        }
+        if (tabStatus === '退回补充') {
+          mainStatus = '退回补充';
+          detail = rawStatus;
+        }
+        return '<span class="' + tagClass(mainStatus) + '">' + escapeHtml(mainStatus) + '</span>' +
+          (detail ? '<br><span class="text-muted">' + escapeHtml(detail) + '</span>' : '');
+      }
+
+      function normalizeClaimRows() {
+        document.querySelectorAll('#claimRows tr').forEach(function (row) {
+          if (row.children.length !== 8) return;
+          var cells = Array.from(row.children);
+          var source = splitCellByTag(cells[3]);
+          var order = splitCellByTag(cells[4]);
+          row.innerHTML = [
+            cells[0].outerHTML,
+            cells[1].outerHTML,
+            '<td>' + source.main + (source.tagText ? '<br><span class="text-muted">' + escapeHtml(source.tagText) + '</span>' : '') + '</td>',
+            '<td>' + order.main + '</td>',
+            '<td>' + claimStatusHtml(row.dataset.tabStatus || '', cells[5], cells[6]) + '</td>',
+            cells[2].outerHTML,
+            cells[7].outerHTML
+          ].join('');
+        });
+      }
+
       function showToast(message) {
         toast.textContent = message;
         toast.hidden = false;
@@ -583,6 +650,8 @@
       document.getElementById('openManualClaim').addEventListener('click', function () {
         openManualClaim(null);
       });
+
+      normalizeClaimRows();
 
       document.querySelectorAll('[data-open-manual-claim]').forEach(function (button) {
         button.addEventListener('click', function () {

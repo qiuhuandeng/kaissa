@@ -306,15 +306,15 @@
       ].join(''),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">方案舱型结构</h2><button class="btn btn-secondary" type="button" data-add-row="#cabinMatrix">新增舱型</button></div>',
-        '<div class="table-wrap"><table id="cabinMatrix" data-matrix-type="cabin"><thead><tr><th>舱型</th><th>舱位面积</th><th>床型配置</th><th>窗/阳台</th><th>最大入住</th><th>操作</th></tr></thead><tbody>',
-        '<tr><td><input class="form-control" type="text" value="内舱房"></td><td><input class="form-control" type="text" value="16㎡"></td><td><input class="form-control" type="text" value="双床/大床"></td><td><select class="form-control"><option selected>无窗</option><option>海景窗</option><option>阳台</option></select></td><td><input class="form-control" type="number" value="2"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
-        '<tr><td><input class="form-control" type="text" value="阳台房"></td><td><input class="form-control" type="text" value="24㎡"></td><td><input class="form-control" type="text" value="大床+沙发床"></td><td><select class="form-control"><option>无窗</option><option>海景窗</option><option selected>阳台</option></select></td><td><input class="form-control" type="number" value="4"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<div class="table-wrap"><table id="cabinMatrix" data-matrix-type="cabin"><thead><tr><th>舱型</th><th>窗/阳台</th><th>标准入住</th><th>最大入住</th><th>第三/第四人</th><th>儿童不占位</th><th>操作</th></tr></thead><tbody>',
+        '<tr><td><input class="form-control" type="text" value="内舱房"></td><td><select class="form-control"><option selected>无窗</option><option>海景窗</option><option>阳台</option></select></td><td><input class="form-control" type="number" value="2"></td><td><input class="form-control" type="number" value="4"></td><td><select class="form-control"><option selected>支持</option><option>不支持</option></select></td><td><select class="form-control"><option selected>支持</option><option>需确认</option><option>不支持</option></select></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<tr><td><input class="form-control" type="text" value="阳台房"></td><td><select class="form-control"><option>无窗</option><option>海景窗</option><option selected>阳台</option></select></td><td><input class="form-control" type="number" value="2"></td><td><input class="form-control" type="number" value="4"></td><td><select class="form-control"><option selected>支持</option><option>不支持</option></select></td><td><select class="form-control"><option>支持</option><option selected>需确认</option><option>不支持</option></select></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
         '</tbody></table></div>'
       ].join(''),
       costHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">费用说明</h2></div>',
         '<div class="route-field-grid">',
-        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="2-12岁与成人同舱按儿童同舱价核算"></div>',
+        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="儿童占位按所选舱型计价，儿童不占位使用独立儿童不占位价且不扣舱室库存"></div>',
         '<div class="form-group"><label class="form-label" for="taxIncluded">港口税费是否已含 <span class="req">*</span></label><select id="taxIncluded" class="form-control"><option selected>已含</option><option>未含</option></select></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="includeFee">船票通常包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">指定舱型住宿、船上主餐厅与自助餐厅、船上基础娱乐活动、港口税费。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">船票通常不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">个人消费、收费餐厅、SPA、部分船上活动、岸上自费项目、签证及保险差额。</textarea></div>',
@@ -364,15 +364,15 @@
       ].join(''),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">方案车厢/铺位结构</h2><button class="btn btn-secondary" type="button" data-add-row="#berthMatrix">新增结构</button></div>',
-        '<div class="table-wrap"><table id="berthMatrix" data-matrix-type="berth"><thead><tr><th>车厢类型</th><th>铺位类型</th><th>车厢位置</th><th>单元人数</th><th>设施配置</th><th>操作</th></tr></thead><tbody>',
-        '<tr><td><input class="form-control" type="text" value="软卧车厢"></td><td><input class="form-control" type="text" value="四人软卧"></td><td><input class="form-control" type="text" value="3-8号车厢"></td><td><input class="form-control" type="number" value="4"></td><td><input class="form-control" type="text" value="空调/充电/储物"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
-        '<tr><td><input class="form-control" type="text" value="高包车厢"></td><td><input class="form-control" type="text" value="双人包厢"></td><td><input class="form-control" type="text" value="9-10号车厢"></td><td><input class="form-control" type="number" value="2"></td><td><input class="form-control" type="text" value="独立门锁/软卧床品"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<div class="table-wrap"><table id="berthMatrix" data-matrix-type="berth"><thead><tr><th>席别</th><th>铺位</th><th>车厢位置</th><th>包厢</th><th>儿童不占位</th><th>设施配置</th><th>操作</th></tr></thead><tbody>',
+        '<tr><td><input class="form-control" type="text" value="软卧"></td><td><input class="form-control" type="text" value="下铺"></td><td><input class="form-control" type="text" value="3-8号车厢"></td><td><select class="form-control"><option>是</option><option selected>否</option></select></td><td><select class="form-control"><option selected>支持</option><option>需确认</option><option>不支持</option></select></td><td><input class="form-control" type="text" value="空调/充电/储物"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<tr><td><input class="form-control" type="text" value="软卧"></td><td><input class="form-control" type="text" value="包厢"></td><td><input class="form-control" type="text" value="9-10号车厢"></td><td><select class="form-control"><option selected>是</option><option>否</option></select></td><td><select class="form-control"><option>支持</option><option selected>需确认</option><option>不支持</option></select></td><td><input class="form-control" type="text" value="独立门锁/软卧床品"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
         '</tbody></table></div>'
       ].join(''),
       costHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">费用说明</h2></div>',
         '<div class="route-field-grid">',
-        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="儿童按占铺/不占铺两类核价"></div>',
+        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="儿童占位按所选席别/铺位计价，儿童不占位使用独立儿童不占位价且不扣铺位库存"></div>',
         '<div class="form-group"><label class="form-label" for="serviceStaff">随车服务人员 <span class="req">*</span></label><input id="serviceStaff" class="form-control" type="text" value="随车领队、管家、目的地地接导游"></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="includeFee">通用费用包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">专列铺位、行程内地接交通、景区首道门票、导游服务、随车服务、行程所列餐食。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">通用费用不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">出发地至出发站交通、终到站返程交通、个人消费、单人占包厢附加费、自费项目。</textarea></div>',
@@ -550,10 +550,11 @@
       return [
         '<tr>',
         '<td><input class="form-control" type="text" value="新增舱型"></td>',
-        '<td><input class="form-control" type="text" value="18㎡"></td>',
-        '<td><input class="form-control" type="text" value="双床/大床"></td>',
         '<td><select class="form-control"><option>无窗</option><option>海景窗</option><option>阳台</option></select></td>',
+        '<td><input class="form-control" type="number" value="4"></td>',
         '<td><input class="form-control" type="number" value="2"></td>',
+        '<td><select class="form-control"><option selected>支持</option><option>不支持</option></select></td>',
+        '<td><select class="form-control"><option selected>支持</option><option>需确认</option><option>不支持</option></select></td>',
         '<td><button class="table-link danger" type="button" data-remove-row>删除</button></td>',
         '</tr>'
       ].join('');
@@ -562,10 +563,11 @@
     if (type === 'berth') {
       return [
         '<tr>',
-        '<td><input class="form-control" type="text" value="新增车厢"></td>',
         '<td><input class="form-control" type="text" value="软卧"></td>',
+        '<td><input class="form-control" type="text" value="下铺"></td>',
         '<td><input class="form-control" type="text" value="待维护"></td>',
-        '<td><input class="form-control" type="number" value="4"></td>',
+        '<td><select class="form-control"><option>是</option><option selected>否</option></select></td>',
+        '<td><select class="form-control"><option selected>支持</option><option>需确认</option><option>不支持</option></select></td>',
         '<td><input class="form-control" type="text" value="空调/充电/储物"></td>',
         '<td><button class="table-link danger" type="button" data-remove-row>删除</button></td>',
         '</tr>'

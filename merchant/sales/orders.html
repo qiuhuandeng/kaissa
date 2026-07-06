@@ -130,10 +130,10 @@
           <th>订单编号</th>
           <th>产品类型/线路</th>
           <th>方案/团期/出行</th>
-          <th>联系人/人数</th>
+          <th>联系人/资料</th>
           <th>来源/归属</th>
           <th>应收/收款</th>
-          <th>状态</th>
+          <th>资源确认</th>
           <th>下单时间</th>
           <th>操作</th>
         </tr>
@@ -1404,6 +1404,7 @@
 
       function orderStatusCell(row) {
         if (!row) return null;
+        if (row.children.length === 10) return null;
         return row.children.length >= 13 ? row.children[10] : row.children[7];
       }
 
@@ -1415,6 +1416,7 @@
       function orderTimeCell(row) {
         if (!row) return null;
         if (row.children.length >= 13) return row.children[11];
+        if (row.children.length === 10) return row.children[8];
         return row.children.length === 11 ? row.children[9] : row.children[8];
       }
 
@@ -1507,47 +1509,60 @@
         return tagHtml(orderStatus, statusTag(orderStatus)) + '<br>' + tagHtml(paymentStatus, statusTag(paymentStatus));
       }
 
+      function secondaryText(cell) {
+        var meta = cell && cell.querySelector('.text-muted');
+        return plainText(meta);
+      }
+
+      function contactDocHtml(customerCell, docCell, docStatus) {
+        var docMain = docStatus || (docCell ? plainText(docCell).split(/\s+/)[0] : '');
+        var docMeta = secondaryText(docCell);
+        var docLine = [docMain, docMeta].filter(Boolean).join(' · ');
+        return (customerCell ? customerCell.innerHTML : '-') + (docLine ? '<br><span class="text-muted">' + escapeHtml(docLine) + '</span>' : '');
+      }
+
+      function sourceHtml(sourceCell) {
+        if (!sourceCell) return '-';
+        var clone = sourceCell.cloneNode(true);
+        var sourceMeta = Array.from(clone.querySelectorAll('.tag')).map(function (tag) {
+          var text = plainText(tag);
+          tag.remove();
+          return text;
+        }).filter(Boolean).join(' · ');
+        return clone.innerHTML + (sourceMeta ? '<br><span class="text-muted">' + escapeHtml(sourceMeta) + '</span>' : '');
+      }
+
+      function resourceConfirmHtml(row, resourceCell, purchaseCell) {
+        var resourceStatus = row.dataset.resourceStatus || (resourceCell ? plainText(resourceCell).split(/\s+/)[0] : '');
+        var resourceMeta = secondaryText(resourceCell);
+        var purchaseStatus = row.dataset.purchaseStatus || (purchaseCell ? plainText(purchaseCell).split(/\s+/)[0] : '');
+        var batchCode = row.dataset.batchCode || '';
+        var secondLine = [resourceMeta, purchaseStatus, batchCode].filter(Boolean).join(' · ');
+        return '<strong>' + escapeHtml(resourceStatus || '-') + '</strong>' + (secondLine ? '<br><span class="text-muted">' + escapeHtml(secondLine) + '</span>' : '');
+      }
+
       function normalizeOrderColumns() {
         orderRows.querySelectorAll('tr').forEach(function (row) {
-          if (row.children.length < 13) {
-            var currentOrderStatus = row.dataset.orderStatus || inferOrderStatus(row);
+          if (row.children.length === 10) {
             var currentPaymentStatus = row.dataset.paymentStatus || inferPaymentStatus(row);
-            if (row.children.length === 11) {
-              var oldCells = Array.from(row.children);
-              row.innerHTML = [
-                oldCells[0].outerHTML,
-                oldCells[1].outerHTML,
-                oldCells[2].outerHTML,
-                oldCells[3].outerHTML,
-                oldCells[4].outerHTML,
-                oldCells[5].outerHTML,
-                '<td>' + amountSummaryHtml(row, currentPaymentStatus) + '</td>',
-                '<td>' + combinedStatusHtml(currentOrderStatus, currentPaymentStatus) + '</td>',
-                oldCells[9].outerHTML,
-                oldCells[10].outerHTML
-              ].join('');
-              return;
-            }
             var amountCell = orderAmountCell(row);
-            var orderCell = orderStatusCell(row);
             if (amountCell) amountCell.innerHTML = amountSummaryHtml(row, currentPaymentStatus);
-            if (orderCell) orderCell.innerHTML = combinedStatusHtml(currentOrderStatus, currentPaymentStatus);
             return;
           }
           var cells = Array.from(row.children);
-          var orderStatus = row.dataset.orderStatus || inferOrderStatus(row);
           var paymentStatus = row.dataset.paymentStatus || inferPaymentStatus(row);
-          var timeHtml = cells[11] ? cells[11].innerHTML : '';
-          var actionHtml = cells[12] ? cells[12].innerHTML : '';
+          var isFullRow = cells.length >= 13;
+          var timeHtml = isFullRow ? (cells[11] ? cells[11].innerHTML : '') : (cells[cells.length - 2] ? cells[cells.length - 2].innerHTML : '');
+          var actionHtml = cells[cells.length - 1] ? cells[cells.length - 1].innerHTML : '';
           row.innerHTML = [
             cells[0].outerHTML,
             cells[1].outerHTML,
             cells[2].outerHTML,
             cells[3].outerHTML,
-            cells[4].outerHTML,
-            cells[5].outerHTML,
+            '<td>' + contactDocHtml(cells[4], isFullRow ? cells[8] : null, row.dataset.docStatus) + '</td>',
+            '<td>' + sourceHtml(cells[5]) + '</td>',
             '<td>' + amountSummaryHtml(row, paymentStatus) + '</td>',
-            '<td>' + combinedStatusHtml(orderStatus, paymentStatus) + '</td>',
+            '<td>' + resourceConfirmHtml(row, isFullRow ? cells[6] : cells[7], isFullRow ? cells[7] : null) + '</td>',
             '<td>' + timeHtml + '</td>',
             '<td>' + actionHtml + '</td>'
           ].join('');
@@ -1753,7 +1768,7 @@
       }
 
       function manualConfirmActionHtml(row) {
-        var text = rowStateText(row);
+        var text = row.dataset.orderStatus || rowStateText(row);
         if (/已确认|已完成|已取消|退款中/.test(text)) return '';
         if (/预留|占位|未确认/.test(text)) {
           return '<button type="button" data-order-quick-action="转确认">转确认</button>';
@@ -1764,7 +1779,6 @@
       function unifiedOrderActionHtml(row) {
         return '<div class="table-action">' +
           '<a href="' + escapeHtml(normalizedDetailHref(row)) + '" class="table-action-primary">详情</a>' +
-          todoActionHtml(row) +
           manualConfirmActionHtml(row) +
           orderMoreHtml(row) +
           '</div>';
@@ -1891,15 +1905,12 @@
           row.innerHTML =
             '<td><input type="checkbox" aria-label="选择订单' + escapeHtml(orderNo) + '"></td>' +
             '<td><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(orderNo) + '</a></td>' +
-            '<td><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(order.productName || '-') + '</a><br><span class="' + productTag(type) + '">' + escapeHtml(type) + '</span></td>' +
+            '<td><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(order.productName || '-') + '</a><br><span class="text-muted">' + escapeHtml(type) + '</span></td>' +
             '<td>' + escapeHtml(order.routeText || '-') + '<br><span class="text-muted">' + escapeHtml(type === '单项服务' ? ('服务单 ' + (serviceNo || '-')) : ((order.sourceLabel || '团期') + ' ' + (order.sourceNo || '-') + ' / ' + (order.sourceDate || '-'))) + '</span></td>' +
-            '<td>' + escapeHtml(order.customer || '-') + '<br><span class="text-muted">' + escapeHtml(order.contactPhone || order.travelerCount || '-') + '</span></td>' +
-            '<td>' + escapeHtml(storeName) + '<br><span class="' + storeRuleTag + '">' + escapeHtml(storeRule) + '</span></td>' +
-            '<td><span class="' + statusTag(resourceStatus) + '">' + escapeHtml(resourceStatus) + '</span><br><span class="text-muted">' + escapeHtml(resourceMeta) + '</span></td>' +
-            '<td><span class="' + statusTag(purchaseStatus) + '"' + (type === '自由行' ? ' data-purchase-status-tag' : '') + '>' + escapeHtml(purchaseStatus) + '</span>' + (purchaseMeta ? '<br><span class="text-muted">' + escapeHtml(purchaseMeta) + '</span>' : '') + '</td>' +
-            '<td><span class="' + statusTag(order.docStatus || '待补资料') + '">' + escapeHtml(order.docStatus || '待补资料') + '</span><br><span class="text-muted">' + escapeHtml(order.docMeta || '订单资料待跟进') + '</span></td>' +
+            '<td>' + escapeHtml(order.customer || '-') + '<br><span class="text-muted">' + escapeHtml(order.contactPhone || order.travelerCount || '-') + '</span><br><span class="text-muted">' + escapeHtml((order.docStatus || '待补资料') + ' · ' + (order.docMeta || '订单资料待跟进')) + '</span></td>' +
+            '<td>' + escapeHtml(storeName) + '<br><span class="text-muted">' + escapeHtml(storeRule) + '</span></td>' +
             '<td><strong>' + escapeHtml(order.amount || '¥0') + '</strong><br><span class="text-muted">' + escapeHtml((order.paymentStatus || '未收款') === '未收款' ? ('未收款 ' + (order.pending || order.amount || '¥0')) : ('已收金额 ' + (order.received || '¥0'))) + '</span></td>' +
-            '<td><span class="' + statusTag(order.orderStatus || '预留') + '">' + escapeHtml(order.orderStatus || '预留') + '</span><br><span class="' + statusTag(order.paymentStatus || '未收款') + '">' + escapeHtml(order.paymentStatus || '未收款') + '</span></td>' +
+            '<td><strong>' + escapeHtml(resourceStatus) + '</strong><br><span class="text-muted">' + escapeHtml([resourceMeta, purchaseStatus, purchaseMeta].filter(Boolean).join(' · ')) + '</span></td>' +
             '<td>' + escapeHtml(order.createdAt || '06-29 10:30') + '</td>' +
             '<td>' + (type === '自由行'
               ? freeOrderActionHtml(href)

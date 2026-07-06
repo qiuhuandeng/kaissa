@@ -16,11 +16,6 @@
       </div>
     </div>
 
-    <section class="alert alert-orange contracts-overdue-alert" aria-label="超期预警提示">
-      <div>注意：当前有23份合同/确认书在服务开始前7天内仍未签署，请尽快处理</div>
-      <div>最紧急：CTR-20250620-01045（李大伟，法瑞意15日，06-25出发，距今仅2天） | <button class="link-button warning" type="button" data-open-batch-remind>立即催签</button></div>
-    </section>
-
         </section>
 
     <section class="list-surface contracts-list-surface" data-list-surface>
@@ -108,12 +103,11 @@
       <thead>
         <tr>
           <th>合同/订单</th>
-          <th>产品类型/线路</th>
-          <th>方案/团期</th>
-          <th>合同类型/条款</th>
+          <th>线路/团期</th>
           <th>客户/出行人</th>
-          <th>门市规则</th>
+          <th>合同类型</th>
           <th>金额/财务</th>
+          <th>归属门市</th>
           <th>签署状态</th>
           <th>操作</th>
         </tr>
@@ -454,6 +448,51 @@
         }).filter(Boolean);
       }
 
+      function plainText(node) {
+        return (node ? node.textContent : '').replace(/\s+/g, ' ').trim();
+      }
+
+      function cleanCellHtml(cell) {
+        var clone = cell.cloneNode(true);
+        clone.querySelectorAll('.tag').forEach(function (tag) {
+          tag.remove();
+        });
+        return clone.innerHTML;
+      }
+
+      function contractLineHtml(row, productCell, scheduleCell) {
+        return cleanCellHtml(productCell) +
+          '<br><span class="text-muted">' + escapeHtml(row.dataset.productType || '') + '</span>' +
+          '<br>' + (scheduleCell ? scheduleCell.innerHTML : '');
+      }
+
+      function contractTypeHtml(row, typeCell) {
+        var supplement = row.dataset.supplementStatus || '';
+        return cleanCellHtml(typeCell) + (supplement ? '<br><span class="text-muted">条款：' + escapeHtml(supplement) + '</span>' : '');
+      }
+
+      function storeRuleHtml(row, storeCell) {
+        return escapeHtml(row.dataset.store || plainText(storeCell)) +
+          (row.dataset.storeRule ? '<br><span class="text-muted">' + escapeHtml(row.dataset.storeRule) + '</span>' : '');
+      }
+
+      function normalizeContractRows() {
+        document.querySelectorAll('#contractRows tr').forEach(function (row) {
+          if (row.children.length !== 9) return;
+          var cells = Array.from(row.children);
+          row.innerHTML = [
+            cells[0].outerHTML,
+            '<td>' + contractLineHtml(row, cells[1], cells[2]) + '</td>',
+            cells[4].outerHTML,
+            '<td>' + contractTypeHtml(row, cells[3]) + '</td>',
+            cells[6].outerHTML,
+            '<td>' + storeRuleHtml(row, cells[5]) + '</td>',
+            cells[7].outerHTML,
+            cells[8].outerHTML
+          ].join('');
+        });
+      }
+
       function buildContractConfig(button) {
         var row = button ? button.closest('tr') : null;
         var type = getTypeFromRow(row);
@@ -624,6 +663,8 @@
           row.hidden = !matched;
         });
       }
+
+      normalizeContractRows();
 
       document.querySelectorAll('[data-open-contract-view]').forEach(function (button) {
         button.addEventListener('click', function () {

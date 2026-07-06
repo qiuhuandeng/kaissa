@@ -21,7 +21,7 @@
     <section class="filter-card filter-card-compact settlement-filter list-surface-filter" aria-label="结算单筛选">
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="settlementKeyword">结算单/订单/团期/项目/客户</label><input id="settlementKeyword" type="search" placeholder="结算单/订单/团期/项目/客户"></div>
-        <div class="filter-item-sm"><label class="sr-only" for="settlementMode">结算方式</label><select id="settlementMode"><option>全部方式</option><option>团期结算</option><option>订单结算</option><option>项目结算</option><option>供应商结算</option><option>渠道结算</option><option>OTA平台结算</option><option>门市对账</option><option>外采结算</option><option>单项服务结算</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="settlementMode">结算方式</label><select id="settlementMode"><option>全部方式</option><option>团期结算</option><option>订单结算</option><option>项目结算</option><option>供应商结算</option><option>BSP散票结算</option><option>渠道结算</option><option>OTA平台结算</option><option>门市对账</option><option>外采结算</option><option>单项服务结算</option></select></div>
         <div class="filter-item-sm"><label class="sr-only" for="settlementStatus">结算状态</label><select id="settlementStatus"><option>全部状态</option><option>待生成</option><option>待核对</option><option>差异处理中</option><option>待确认</option><option>已结算</option><option>待推送</option></select></div>
         <div class="filter-item-wide filter-item-date-range"><label class="sr-only">结算周期</label><div class="date-range"><input type="month" aria-label="结算周期开始"><span>至</span><input type="month" aria-label="结算周期结束"></div></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-settlement>查询</button><button class="btn btn-secondary" type="button" data-reset-settlement>重置</button></div>
@@ -55,6 +55,18 @@
           </tr>
         </thead>
         <tbody id="settlementRows">
+          <tr data-tab-status="差异处理中" data-settlement-no="JS-BSP-20260630001" data-mode="BSP散票结算" data-source="BSP-SET-202606-02" data-product="BSP散票账单" data-plan="2026年6月下半月" data-income="¥0" data-refund="¥0" data-receivable="无应收" data-payable="散票应付 ¥286,400 / 差异 ¥180" data-diff="¥180" data-invoice="BSP电子账单" data-remit="待付款" data-profit="-¥286,400" data-owner="票务财务" data-status="差异处理中" data-nc="未生成">
+            <td><button class="table-main-link" type="button" data-open-detail>JS-BSP-20260630001</button><br><span class="text-muted">BSP散票结算</span></td>
+            <td>BSP BSP-SET-202606-02<br><span class="text-muted">散票账单</span></td>
+            <td>BSP散票账单<br><span class="text-muted">2026年6月下半月</span></td>
+            <td>收入 ¥0<br><span class="text-muted">退款 ¥0</span></td>
+            <td><span class="tag tag-gray">无应收</span></td>
+            <td>散票应付 ¥286,400<br><span class="text-muted">差异 ¥180</span></td>
+            <td><span class="tag tag-red">差异 ¥180</span></td>
+            <td>BSP电子账单 / 待付款</td>
+            <td><span class="tag tag-red">差异处理中</span></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-bsp>比对</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
           <tr data-tab-status="待生成" data-settlement-no="待生成" data-mode="OTA平台结算" data-source="OTA-CTRIP-202606" data-product="携程6月订单结算" data-plan="OTA渠道月结" data-income="¥286,400" data-refund="¥12,000" data-receivable="已收 ¥274,400 / 待收 ¥0" data-payable="平台服务费 ¥18,600 / 待确认" data-diff="待核对" data-invoice="待开票" data-remit="收款已入账" data-profit="¥255,800" data-owner="渠道财务" data-status="待生成" data-nc="未生成">
             <td><button class="table-main-link" type="button" data-open-detail>待生成</button><br><span class="text-muted">OTA平台结算</span></td>
             <td>OTA OTA-CTRIP-202606<br><span class="text-muted">平台对账</span></td>
@@ -167,7 +179,7 @@
       </table>
     </section>
     <div class="pagination list-surface-pagination list-pagination-attached">
-      <span>第1-9条/共9条</span>
+      <span>第1-10条/共10条</span>
     </div>
   </section>
 
@@ -188,6 +200,52 @@
             <table>
               <thead><tr><th>项目</th><th>金额</th><th>状态</th><th>来源</th></tr></thead>
               <tbody id="settlementDetailRows"></tbody>
+            </table>
+          </section>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bspCompareDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-xl" role="dialog" aria-modal="true" aria-labelledby="bspCompareTitle">
+      <div class="modal-header">
+        <div id="bspCompareTitle" class="modal-title">BSP散票比对</div>
+        <button class="modal-close" type="button" aria-label="关闭BSP散票比对" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="order-desc-card">
+          <h2 class="detail-section-title">账单概览</h2>
+          <div id="bspCompareSummaryGrid" class="description-grid"></div>
+        </section>
+        <section class="order-desc-card">
+          <h2 class="detail-section-title">出票比对</h2>
+          <section class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>BSP票号</th>
+                  <th>ERP出票记录</th>
+                  <th>票价</th>
+                  <th>税费</th>
+                  <th>退改签费</th>
+                  <th>差异状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="bspCompareRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="order-desc-card">
+          <h2 class="detail-section-title">财务承接</h2>
+          <section class="table-wrap">
+            <table>
+              <thead><tr><th>环节</th><th>单据</th><th>金额</th><th>状态</th><th>入口</th></tr></thead>
+              <tbody id="bspFinanceRows"></tbody>
             </table>
           </section>
         </section>
@@ -249,15 +307,24 @@
   <script>
     (function () {
       var detailDrawer = document.getElementById('settlementDetailDrawer');
+      var bspCompareDrawer = document.getElementById('bspCompareDrawer');
       var confirmDrawer = document.getElementById('settlementConfirmDrawer');
       var diffDrawer = document.getElementById('settlementDiffDrawer');
       var detailGrid = document.getElementById('settlementDetailGrid');
       var detailRows = document.getElementById('settlementDetailRows');
+      var bspCompareSummaryGrid = document.getElementById('bspCompareSummaryGrid');
+      var bspCompareRows = document.getElementById('bspCompareRows');
+      var bspFinanceRows = document.getElementById('bspFinanceRows');
       var confirmGrid = document.getElementById('settlementConfirmGrid');
       var diffGrid = document.getElementById('settlementDiffGrid');
       var confirmButton = document.getElementById('settlementConfirmButton');
       var activeRow = null;
       var confirmMode = 'confirm';
+      var bspCompareData = [
+        { ticketNo: '999-2406180010', erpRecord: 'TK-EU20260818001-001', orderNo: 'KS2026061801', passenger: '张敏', fare: 'BSP ¥8,600 / ERP ¥8,600', tax: 'BSP ¥1,260 / ERP ¥1,260', changeFee: '¥0', diff: '¥0', status: '一致' },
+        { ticketNo: '999-2406180011', erpRecord: 'TK-EU20260818001-002', orderNo: 'KS2026061802', passenger: '李清', fare: 'BSP ¥8,780 / ERP ¥8,600', tax: 'BSP ¥1,260 / ERP ¥1,260', changeFee: '¥0', diff: '¥180', status: '待人工确认' },
+        { ticketNo: '999-2406280098', erpRecord: 'RF-FIT20260628001-001', orderNo: 'KS2026062807', passenger: '王浩', fare: 'BSP -¥2,800 / ERP -¥2,800', tax: 'BSP -¥320 / ERP -¥320', changeFee: '¥400', diff: '¥0', status: '一致' }
+      ];
 
       function notify(message, type) {
         if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message, { type: type || 'success' });
@@ -400,6 +467,69 @@
         openLayer(diffDrawer);
       }
 
+      function bspStatusTag(status) {
+        if (status === '一致') return '<span class="tag tag-green">一致</span>';
+        if (status === '已人工确认') return '<span class="tag tag-orange">已人工确认</span>';
+        return '<span class="tag tag-red">' + escapeHtml(status) + '</span>';
+      }
+
+      function renderBspRows() {
+        bspCompareRows.innerHTML = bspCompareData.map(function (item) {
+          var action = item.status === '待人工确认'
+            ? '<button class="table-action-primary" type="button" data-confirm-bsp-diff data-ticket-no="' + escapeHtml(item.ticketNo) + '">确认差异</button>'
+            : '<button type="button" disabled>已核对</button>';
+          return '<tr><td>' + escapeHtml(item.ticketNo) + '</td><td>' + escapeHtml(item.erpRecord) + '<br><span class="text-muted">' + escapeHtml(item.orderNo + ' / ' + item.passenger) + '</span></td><td>' + escapeHtml(item.fare) + '</td><td>' + escapeHtml(item.tax) + '</td><td>' + escapeHtml(item.changeFee) + '</td><td>' + bspStatusTag(item.status) + '<br><span class="text-muted">差异 ' + escapeHtml(item.diff) + '</span></td><td><div class="table-action">' + action + '</div></td></tr>';
+        }).join('');
+      }
+
+      function renderBspFinanceRows(row) {
+        var settlementNo = row.dataset.settlementNo;
+        var sourceNo = row.dataset.source;
+        bspFinanceRows.innerHTML = [
+          ['BSP账单', sourceNo, '¥286,400', '已导入', '-'],
+          ['付款执行', 'PAY-BSP-20260630001', '¥286,400', '待付款', '<a class="link-primary" href="finance-payment.html?paymentNo=PAY-BSP-20260630001">查看付款单</a>'],
+          ['NC推送', 'NC-BSP-20260630001', '¥286,400', '待推送', '<a class="link-primary" href="finance-nc.html?source=' + encodeURIComponent('BSP散票结算') + '&businessNo=' + encodeURIComponent(sourceNo) + '">查看NC</a>'],
+          ['结算单', settlementNo, row.dataset.profit, row.dataset.status, '-']
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td class="amount-strong">' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td><td>' + item[4] + '</td></tr>';
+        }).join('');
+      }
+
+      function openBspCompare(row) {
+        activeRow = row;
+        document.getElementById('bspCompareTitle').textContent = 'BSP散票比对 - ' + row.dataset.source;
+        renderGrid(bspCompareSummaryGrid, [
+          ['结算单号', escapeHtml(row.dataset.settlementNo)],
+          ['BSP账单号', escapeHtml(row.dataset.source)],
+          ['账期', escapeHtml(row.dataset.plan)],
+          ['采购方式', '散票采购'],
+          ['ERP出票记录', '已匹配 31 / 32'],
+          ['本期应付', '<span class="amount-strong">¥286,400</span>'],
+          ['差异', escapeHtml(row.dataset.diff)],
+          ['NC状态', escapeHtml(row.dataset.nc)]
+        ]);
+        renderBspRows();
+        renderBspFinanceRows(row);
+        openLayer(bspCompareDrawer);
+      }
+
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var mode = params.get('mode');
+        var source = params.get('source');
+        if (mode) document.getElementById('settlementMode').value = mode;
+        if (source) document.getElementById('settlementKeyword').value = source;
+        if (mode || source) applyFilters();
+        if (!source) return;
+        var row = Array.from(document.querySelectorAll('#settlementRows tr')).find(function (item) {
+          return rowText(item).indexOf(source) >= 0;
+        });
+        if (row) {
+          if (row.dataset.mode === 'BSP散票结算') openBspCompare(row);
+          else openDetail(row);
+        }
+      }
+
       document.addEventListener('click', function (event) {
         var tab = event.target.closest('.finance-settlement-list-surface .tab-item');
         if (tab) {
@@ -410,6 +540,11 @@
         var detailButton = event.target.closest('[data-open-detail]');
         if (detailButton) {
           openDetail(detailButton.closest('tr'));
+          return;
+        }
+        var bspButton = event.target.closest('[data-open-bsp]');
+        if (bspButton) {
+          openBspCompare(bspButton.closest('tr'));
           return;
         }
         var confirmButton = event.target.closest('[data-open-confirm]');
@@ -430,7 +565,9 @@
         var ncButton = event.target.closest('[data-open-nc]');
         if (ncButton) {
           var ncRow = ncButton.closest('tr');
-          window.location.href = 'finance-nc.html?source=结算&businessNo=' + encodeURIComponent(ncRow.dataset.settlementNo || '');
+          var ncSource = ncRow.dataset.mode === 'BSP散票结算' ? 'BSP散票结算' : '结算';
+          var businessNo = ncRow.dataset.mode === 'BSP散票结算' ? ncRow.dataset.source : ncRow.dataset.settlementNo;
+          window.location.href = 'finance-nc.html?source=' + encodeURIComponent(ncSource) + '&businessNo=' + encodeURIComponent(businessNo || '');
           return;
         }
         if (event.target.closest('[data-confirm-settlement]')) {
@@ -469,6 +606,26 @@
           notify('结算差异已处理');
           return;
         }
+        var bspDiffButton = event.target.closest('[data-confirm-bsp-diff]');
+        if (bspDiffButton) {
+          var ticketNo = bspDiffButton.dataset.ticketNo;
+          bspCompareData.forEach(function (item) {
+            if (item.ticketNo === ticketNo) item.status = '已人工确认';
+          });
+          renderBspRows();
+          if (activeRow && !bspCompareData.some(function (item) { return item.status === '待人工确认'; })) {
+            activeRow.dataset.status = '待确认';
+            activeRow.dataset.tabStatus = '待确认';
+            activeRow.dataset.diff = '已确认 ¥180';
+            activeRow.children[6].innerHTML = '<span class="tag tag-orange">差异已确认</span>';
+            activeRow.children[8].innerHTML = '<span class="tag tag-blue">待确认</span>';
+            activeRow.children[9].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-confirm>核对确认</button><button type="button" data-open-bsp>比对</button></div>';
+            renderBspFinanceRows(activeRow);
+          }
+          applyFilters();
+          notify('BSP差异已人工确认');
+          return;
+        }
         if (event.target.closest('[data-search-settlement]')) {
           applyFilters();
           return;
@@ -486,6 +643,8 @@
           if (event.target === overlay) closeLayer(overlay);
         });
       });
+
+      openFromParams();
     })();
   </script>
 </body>

@@ -182,13 +182,13 @@
           </div>
         </article>
 
-        <article class="market-product-card" data-product="西欧精选8日" data-supplier="欧洲精品地接" data-type="外采产品" data-tourism-type="出境游" data-theme-tags="深度 / 高性价比" data-model="甄选代理" data-sale-status="可预订" data-destination="欧洲" data-depart-city="广州" data-days="8" data-kind="standard" data-price-model="成人/儿童结算价" data-price="¥15,600" data-price-value="15600" data-price-unit="起/人" data-schedule-date="2026-07-28" data-stock-level="余位充足">
+        <article class="market-product-card" data-product="西欧精选8日" data-supplier="欧洲联合地接社" data-type="外采产品" data-tourism-type="出境游" data-theme-tags="深度 / 高性价比" data-model="外采代理" data-agency-status="已入库" data-sale-scope="门店/官网/小程序" data-source-product="OUT-EU-0001" data-sale-status="可预订" data-destination="欧洲" data-depart-city="广州" data-days="8" data-kind="standard" data-price-model="成人/儿童销售价" data-price="¥15,600" data-price-value="15600" data-price-unit="起/人" data-schedule-date="2026-07-28" data-stock-level="余位充足">
           <div class="market-product-cover cover-europe"></div>
           <div class="market-product-body">
             <h2>西欧精选8日</h2>
-            <p>欧洲精品地接</p>
+            <p>欧洲联合地接社 · 外采代理</p>
             <div class="market-product-info"><span>法国/瑞士</span><span>8天7晚</span><span>广州出发</span></div>
-            <div class="market-product-schedule">最近可售团期：7月28日 / 剩余12席</div>
+            <div class="market-product-schedule">代理团期：7月28日 / 剩余12席</div>
           </div>
         </article>
 
@@ -577,17 +577,23 @@
         var type = card.dataset.type || '';
         var isService = type === '单项服务';
         var scheduleTitle = isService ? '可售服务项' : type === '邮轮' ? '可售航次' : type === '自由行' ? '可售出行日期' : type === '专列' ? '可售班期' : type === '研学' ? '可售营期' : '可售团期';
+        var facts = [
+          ['目的地/地区', info.destination],
+          ['行程/时效', info.duration],
+          ['出发/受理', info.depart],
+          ['供货方', card.dataset.supplier],
+          ['产品类型', travelTypeText(card)],
+          ['主题标签', themeTagText(card)],
+          ['参考价格', referencePrice(card)]
+        ];
+        if (type === '外采产品') {
+          facts.push(['入库状态', card.dataset.agencyStatus || '已入库']);
+          facts.push(['可售范围', card.dataset.saleScope || '按产品设置']);
+          facts.push(['来源单号', card.dataset.sourceProduct || '-']);
+        }
         return {
           tags: [card.dataset.type, card.dataset.model || '自营', productSaleStatus(card)],
-          facts: [
-            ['目的地/地区', info.destination],
-            ['行程/时效', info.duration],
-            ['出发/受理', info.depart],
-            ['供货方', card.dataset.supplier],
-            ['产品类型', travelTypeText(card)],
-            ['主题标签', themeTagText(card)],
-            ['参考价格', referencePrice(card)]
-          ],
+          facts: facts,
           planTitle: isService ? '服务方案' : '行程方案',
           plans: plans,
           scheduleTitle: scheduleTitle,
@@ -737,7 +743,10 @@
           statusWrap.dataset.marketSaleStatusWrap = '';
           body.appendChild(statusWrap);
         }
-        statusWrap.innerHTML = '<span class="market-card-meta">' + escapeHtml(card.dataset.type) + ' · ' + escapeHtml(card.dataset.model || '自营') + '</span>';
+        var modelText = card.dataset.type === '外采产品'
+          ? (card.dataset.model || '外采代理') + ' · ' + (card.dataset.agencyStatus || '已入库')
+          : card.dataset.type + ' · ' + (card.dataset.model || '自营');
+        statusWrap.innerHTML = '<span class="market-card-meta">' + escapeHtml(modelText) + '</span>';
         var statusActions = document.createElement('span');
         statusActions.className = 'market-card-status-actions';
         statusActions.innerHTML = '<span class="' + saleStatusTagClass(productSaleStatus(card)) + '">' + escapeHtml(productSaleStatus(card)) + '</span><button class="market-card-text-action" type="button" data-open-market-detail>查看班期</button>';

@@ -115,7 +115,6 @@
                 </div>
                 <div id="stockSelectSection" class="booking-object-stock-block" aria-labelledby="bookingStockTitle">
                   <h3 id="bookingStockTitle" class="booking-plan-title">团期 / 航次 / 出行日期</h3>
-                  <div id="coreFields" class="form-grid booking-core-grid"></div>
                   <div class="table-wrap booking-stock-table">
                     <table>
                       <thead>
@@ -138,7 +137,9 @@
                 <h2 id="bookingPeopleTitle" class="booking-section-title">人数与价格</h2>
                 <span id="inventoryHint" class="tag tag-green">可售</span>
               </div>
+              <div id="coreFields" class="form-grid booking-core-grid"></div>
               <div id="countRows" class="booking-count-grid booking-compact-counts"></div>
+              <div id="occupancySummary" class="booking-occupancy-summary"></div>
             </section>
 
             <section class="booking-section" aria-labelledby="bookingContactTitle">
@@ -337,20 +338,54 @@
           core: [
             { id: 'plan', label: '方案', type: 'select', options: ['阳台舱岸上全含方案', '家庭亲子舱方案'] },
             { id: 'schedule', label: '航次', type: 'select', options: ['CR-MED-20250720-001 / 2025-07-20', 'CR-MED-20250803-001 / 2025-08-03'] },
-            { id: 'cabin', label: '舱型', type: 'select', options: ['阳台舱 BA', '海景房', '内舱房', '套房'] },
+            { id: 'cabin', label: '舱型', type: 'select', options: ['阳台舱 BA', '海景 OV', '内舱 IC', '套房 SU'], required: true },
             { id: 'cabinCount', label: '舱房数', type: 'number', value: 1, min: 1 }
           ],
           stocks: [
-            ['2025-07-20', 'CR-MED-20250720-001', '阳台房余8间', 28800, '可锁舱', 'tag tag-green'],
-            ['2025-08-03', 'CR-MED-20250803-001', '海景房余12间', 27500, '可售', 'tag tag-green'],
+            ['2025-07-20', 'CR-MED-20250720-001', '阳台舱余8间', 28800, '可锁舱', 'tag tag-green'],
+            ['2025-08-03', 'CR-MED-20250803-001', '海景舱余12间', 27500, '可售', 'tag tag-green'],
             ['2025-09-01', 'CR-MED-20250901-001', '套房余2间', 42800, '紧张', 'tag tag-orange']
           ],
           counts: [
-            { id: 'adult', label: '成人', price: 28800, value: 2, min: 1 },
-            { id: 'child', label: '儿童', price: 19800, value: 0, min: 0 },
-            { id: 'third', label: '第三/四人', price: 12800, value: 0, min: 0 },
-            { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0 }
+            { id: 'adultOccupancy', label: '成人占位', price: 28800, value: 2, min: 1, hint: '占用舱位容量' },
+            { id: 'childOccupancy', label: '儿童占位', price: 23800, value: 0, min: 0, hint: '占用舱位容量' },
+            { id: 'childNoBerth', label: '儿童不占位', price: 10800, value: 0, min: 0, hint: '不扣舱房库存' },
+            { id: 'thirdFourth', label: '第三/第四人', price: 20800, value: 0, min: 0, hint: '同舱加人' },
+            { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
           ],
+          priceMatrix: {
+            field: 'cabin',
+            rows: {
+              '阳台舱 BA': [
+                { id: 'adultOccupancy', label: '成人占位', price: 28800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 23800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 10800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三/第四人', price: 20800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ],
+              '海景 OV': [
+                { id: 'adultOccupancy', label: '成人占位', price: 26800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 21800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 9800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三/第四人', price: 18800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ],
+              '内舱 IC': [
+                { id: 'adultOccupancy', label: '成人占位', price: 23800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 18800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 8800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三/第四人', price: 16800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ],
+              '套房 SU': [
+                { id: 'adultOccupancy', label: '成人占位', price: 42800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 35800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 12800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三人', price: 32800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ]
+            }
+          },
           after: ['补充护照英文名', '确认舱房/船票', '收款或认款', '生成邮轮合同']
         },
         {
@@ -366,7 +401,7 @@
           core: [
             { id: 'plan', label: '方案', type: 'select', options: ['软卧标准方案', '包厢品质方案'] },
             { id: 'schedule', label: '班期', type: 'select', options: ['TR-SILK-20250805-001 / 2025-08-05', 'TR-SILK-20250822-001 / 2025-08-22'] },
-            { id: 'berth', label: '席别/铺位', type: 'select', options: ['软卧下铺', '软卧上铺', '高级双人包厢'] },
+            { id: 'berth', label: '席别/铺位', type: 'select', options: ['软卧下铺', '软卧上铺', '硬卧中铺', '软卧包厢'], required: true },
             { id: 'board', label: '上车站', type: 'select', options: ['西安', '兰州', '乌鲁木齐'] },
             { id: 'off', label: '下车站', type: 'select', options: ['乌鲁木齐', '敦煌', '西安'] }
           ],
@@ -376,10 +411,35 @@
             ['2025-09-10', 'TR-SILK-20250910-001', '包厢余6间', 22600, '可售', 'tag tag-green']
           ],
           counts: [
-            { id: 'adult', label: '成人铺位', price: 19800, value: 2, min: 1 },
-            { id: 'child', label: '儿童铺位', price: 16800, value: 0, min: 0 },
-            { id: 'upgrade', label: '铺位升级', price: 680, value: 0, min: 0 }
+            { id: 'adultOccupancy', label: '成人占位', price: 21800, value: 2, min: 1, hint: '占用铺位库存' },
+            { id: 'childOccupancy', label: '儿童占位', price: 18800, value: 0, min: 0, hint: '占用铺位库存' },
+            { id: 'childNoBerth', label: '儿童不占位', price: 7800, value: 0, min: 0, hint: '不扣铺位库存' }
           ],
+          priceMatrix: {
+            field: 'berth',
+            rows: {
+              '软卧下铺': [
+                { id: 'adultOccupancy', label: '成人占位', price: 21800, value: 2, min: 1, hint: '占用铺位库存' },
+                { id: 'childOccupancy', label: '儿童占位', price: 18800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 7800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ],
+              '软卧上铺': [
+                { id: 'adultOccupancy', label: '成人占位', price: 19800, value: 2, min: 1, hint: '占用铺位库存' },
+                { id: 'childOccupancy', label: '儿童占位', price: 16800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 7800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ],
+              '硬卧中铺': [
+                { id: 'adultOccupancy', label: '成人占位', price: 16800, value: 2, min: 1, hint: '占用铺位库存' },
+                { id: 'childOccupancy', label: '儿童占位', price: 13800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 6800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ],
+              '软卧包厢': [
+                { id: 'adultOccupancy', label: '成人占位', price: 36800, value: 2, min: 1, hint: '整厢计价' },
+                { id: 'childOccupancy', label: '儿童占位', price: 32800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 8800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ]
+            }
+          },
           after: ['补充实名资料', '确认铺位分配', '收款或认款', '进入团队执行']
         },
         {
@@ -588,7 +648,35 @@
       }
 
       function renderCoreFields() {
-        coreFields.innerHTML = '';
+        const hiddenIds = ['plan', 'package', 'line', 'service', 'schedule'];
+        const fields = currentProduct.core.filter(function (field) {
+          return hiddenIds.indexOf(field.id) < 0;
+        });
+        coreFields.hidden = !fields.length;
+        coreFields.innerHTML = fields.map(function (field) {
+          const required = field.required ? ' <span class="req">*</span>' : '';
+          if (field.type === 'select') {
+            const blank = field.required ? '<option value="">请选择' + escapeHtml(field.label) + '</option>' : '';
+            return '<div class="form-group"><label class="form-label" for="core_' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label><select id="core_' + escapeHtml(field.id) + '" class="form-control" data-core-field="' + escapeHtml(field.id) + '" data-core-label="' + escapeHtml(field.label) + '" data-core-required="' + (field.required ? 'true' : 'false') + '">' + blank + (field.options || []).map(function (option) { return '<option>' + escapeHtml(option) + '</option>'; }).join('') + '</select></div>';
+          }
+          return '<div class="form-group"><label class="form-label" for="core_' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label><input id="core_' + escapeHtml(field.id) + '" class="form-control" type="' + escapeHtml(field.type || 'text') + '" min="' + escapeHtml(field.min || 0) + '" value="' + escapeHtml(field.value || '') + '" data-core-field="' + escapeHtml(field.id) + '" data-core-label="' + escapeHtml(field.label) + '" data-core-required="' + (field.required ? 'true' : 'false') + '"></div>';
+        }).join('');
+      }
+
+      function coreFieldValue(id) {
+        const field = coreFields.querySelector('[data-core-field="' + id + '"]');
+        return field ? field.value : '';
+      }
+
+      function applySelectedPriceMatrix() {
+        const matrix = currentProduct.priceMatrix;
+        if (!matrix || !matrix.rows) return;
+        const selected = coreFieldValue(matrix.field);
+        const counts = matrix.rows[selected] || matrix.rows[Object.keys(matrix.rows)[0]];
+        if (!counts) return;
+        currentProduct.counts = counts.map(function (count) {
+          return Object.assign({}, count);
+        });
       }
 
       function renderStocks() {
@@ -609,6 +697,7 @@
 
       function renderCounts() {
         countRows.innerHTML = currentProduct.counts.map(function (item) {
+          const hint = item.hint ? '<em>' + escapeHtml(item.hint) + '</em>' : '';
           return '<div class="booking-count-item">' +
             '<span class="booking-count-label">' + escapeHtml(item.label) + '</span>' +
             '<span class="booking-stepper" data-stepper>' +
@@ -616,9 +705,36 @@
               '<input type="text" value="' + item.value + '" readonly data-count-input data-price="' + item.price + '" data-min="' + item.min + '">' +
               '<button type="button" data-step="1" aria-label="增加' + escapeHtml(item.label) + '">+</button>' +
             '</span>' +
-            '<span class="booking-count-hint">' + money(item.price) + '</span>' +
+            '<span class="booking-count-hint">' + money(item.price) + hint + '</span>' +
           '</div>';
         }).join('');
+        renderOccupancySummary();
+      }
+
+      function countValue(id) {
+        const row = currentProduct.counts.find(function (item) { return item.id === id; });
+        return row ? Number(row.value || 0) : 0;
+      }
+
+      function selectedSaleStructureText() {
+        if (currentProduct.type === 'cruise') return coreFieldValue('cabin') || '未选择舱型';
+        if (currentProduct.type === 'train') return coreFieldValue('berth') || '未选择席别/铺位';
+        return '';
+      }
+
+      function renderOccupancySummary() {
+        const box = document.getElementById('occupancySummary');
+        if (!box) return;
+        if (currentProduct.type !== 'cruise' && currentProduct.type !== 'train') {
+          box.innerHTML = '';
+          return;
+        }
+        const occupied = countValue('adultOccupancy') + countValue('childOccupancy') + countValue('thirdFourth');
+        const noBerth = countValue('childNoBerth');
+        const unit = currentProduct.type === 'cruise' ? '舱房' : '铺位';
+        box.innerHTML = '<span>销售结构：' + escapeHtml(selectedSaleStructureText()) + '</span>' +
+          '<span>占位人数 ' + occupied + ' 人，扣' + unit + '库存</span>' +
+          '<span>儿童不占位 ' + noBerth + ' 人，只计费不扣库存</span>';
       }
 
       function renderAfterCreate() {
@@ -699,6 +815,7 @@
       function renderAll() {
         renderPlanCards();
         renderCoreFields();
+        applySelectedPriceMatrix();
         renderStocks();
         renderCounts();
         renderAfterCreate();
@@ -827,9 +944,15 @@
       function validate() {
         const missing = [];
         if (!hasSaleObject) missing.push('可售对象');
+        Array.from(coreFields.querySelectorAll('[data-core-required="true"]')).forEach(function (field) {
+          if (!field.value) missing.push(field.dataset.coreLabel || '必填项');
+        });
         if (!document.getElementById('contactName').value.trim()) missing.push('联系人');
         if (!document.getElementById('contactPhone').value.trim()) missing.push('手机号');
         if (calcTotal() <= 0) missing.push('人数/份数');
+        if ((currentProduct.type === 'cruise' || currentProduct.type === 'train') && countValue('adultOccupancy') + countValue('childOccupancy') <= 0) {
+          missing.push(currentProduct.type === 'cruise' ? '占位乘客' : '占位乘客');
+        }
         return missing;
       }
 
@@ -903,7 +1026,19 @@
         if (!button) return;
         const input = button.closest('[data-stepper]').querySelector('[data-count-input]');
         input.value = Math.max(Number(input.dataset.min || 0), Number(input.value || 0) + Number(button.dataset.step));
+        const label = input.closest('.booking-count-item').querySelector('.booking-count-label').textContent;
+        const count = currentProduct.counts.find(function (item) { return item.label === label; });
+        if (count) count.value = Number(input.value || 0);
         renderFee();
+        renderOccupancySummary();
+      });
+
+      coreFields.addEventListener('change', function () {
+        applySelectedPriceMatrix();
+        renderCounts();
+        renderFee();
+        syncSummary();
+        syncPresetPanel();
       });
 
       channelSource.addEventListener('change', updateChannelFields);

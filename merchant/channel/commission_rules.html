@@ -71,11 +71,10 @@
               <th>规则名称</th>
               <th>产品/目的地范围</th>
               <th>计算方式</th>
-              <th>阶梯规则</th>
-              <th>绑定情况</th>
+              <th>佣金规则</th>
+              <th>绑定分销商</th>
               <th>结算节点</th>
-              <th>审批状态</th>
-              <th>生效状态</th>
+              <th>规则状态</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -407,6 +406,53 @@
       var detailDrawer = document.getElementById('ruleDetailDrawer');
       var rows = Array.prototype.slice.call(document.querySelectorAll('tbody tr[data-name]'));
 
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function statusTagClass(status) {
+        if (/已生效/.test(status)) return 'tag tag-green';
+        if (/已停用|草稿/.test(status)) return 'tag tag-gray';
+        if (/审批|待生效/.test(status)) return 'tag tag-orange';
+        return 'tag tag-blue';
+      }
+
+      function actionHtmlByStatus(row) {
+        var status = row.dataset.status || '';
+        if (status === '草稿') {
+          return '<div class="table-action"><button type="button" class="table-action-primary" data-open-rule-drawer>编辑规则</button><button type="button" data-open-rule-detail>详情</button></div>';
+        }
+        if (status === '审批中') {
+          return '<div class="table-action"><button type="button" class="table-action-primary" data-open-rule-detail>详情</button></div>';
+        }
+        if (status === '已停用') {
+          return '<div class="table-action"><button type="button" class="table-action-primary" data-open-rule-detail>详情</button><button type="button" data-toggle-rule>启用</button></div>';
+        }
+        return '<div class="table-action"><button type="button" class="table-action-primary" data-open-bind-drawer>指定分销商</button><button type="button" data-open-rule-detail>详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-open-rule-drawer>编辑规则</button><button class="dropdown-item danger" type="button" data-toggle-rule>停用</button></span></span></div>';
+      }
+
+      function normalizeRuleRows() {
+        rows.forEach(function (row) {
+          if (row.children.length !== 9) return;
+          var cells = Array.from(row.children);
+          var approval = row.dataset.approval || '';
+          row.innerHTML = [
+            cells[0].outerHTML,
+            cells[1].outerHTML,
+            cells[2].outerHTML,
+            cells[3].outerHTML,
+            cells[4].outerHTML,
+            cells[5].outerHTML,
+            '<td><span class="' + statusTagClass(row.dataset.status) + '" data-rule-status-tag>' + escapeHtml(row.dataset.status || '-') + '</span>' + (approval && approval !== '已通过' && approval !== '未提交' ? '<div class="table-cell-sub">' + escapeHtml(approval) + '</div>' : '') + '</td>',
+            '<td>' + actionHtmlByStatus(row) + '</td>'
+          ].join('');
+        });
+      }
+
+      normalizeRuleRows();
+
       function openLayer(layer) {
         window.caesarUI.openLayer(layer);
       }
@@ -515,7 +561,7 @@
           var row = button.closest('tr');
           var disabled = row.dataset.status === '已停用';
           row.dataset.status = disabled ? '已生效' : '已停用';
-          var statusTag = row.querySelector('td:nth-child(8) .tag');
+          var statusTag = row.querySelector('[data-rule-status-tag]');
           if (statusTag) {
             statusTag.textContent = row.dataset.status;
             statusTag.className = disabled ? 'tag tag-green' : 'tag tag-gray';

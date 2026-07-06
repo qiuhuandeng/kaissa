@@ -37,6 +37,14 @@
             <button class="dropdown-item" type="button" data-batch-action="批量导出">批量导出</button>
           </span>
         </span>
+        <span class="dropdown schedule-export-dropdown">
+          <button id="scheduleToolToggle" class="btn btn-secondary" type="button" aria-expanded="false">工具</button>
+          <span id="scheduleToolMenu" class="dropdown-menu action-dropdown-menu">
+            <button class="dropdown-item" type="button" data-schedule-tool="aiRisk">🤖 AI出团风险扫描</button>
+            <button class="dropdown-item" type="button" data-schedule-tool="exportExecution">导出执行计划</button>
+            <button class="dropdown-item" type="button" data-schedule-tool="exportRoster">导出名单</button>
+          </span>
+        </span>
         </div>
       </div>
       <div class="filter-row">
@@ -70,33 +78,43 @@
           <label class="sr-only" for="scheduleStatus">销售状态</label>
           <select id="scheduleStatus">
             <option>全部</option>
+            <option>待发布</option>
             <option>筹备中</option>
             <option>开放报名</option>
             <option>已截止</option>
+            <option>已关闭</option>
             <option>售罄</option>
             <option>已取消</option>
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
-          <label class="sr-only" for="executionStatusFilter">执行状态</label>
+          <label class="sr-only" for="executionStatusFilter">执行阶段</label>
           <select id="executionStatusFilter">
-            <option>全部执行</option>
+            <option>全部阶段</option>
             <option>未出团</option>
-            <option>操作中</option>
-            <option>已出发</option>
+            <option>出发准备</option>
+            <option>出团中</option>
             <option>已回团</option>
-            <option>已归档</option>
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
-          <label class="sr-only" for="settlementStatusFilter">结算状态</label>
-          <select id="settlementStatusFilter">
-            <option>全部结算</option>
-            <option>未维护成本</option>
-            <option>预估成本</option>
-            <option>实际成本确认</option>
-            <option>结算中</option>
-            <option>已结算</option>
+          <label class="sr-only" for="currentTodoFilter">关键缺口</label>
+          <select id="currentTodoFilter">
+            <option>全部缺口</option>
+            <option>尾款未收</option>
+            <option>证件资料缺失</option>
+            <option>交通确认缺失</option>
+            <option>成本未确认</option>
+            <option>名额超售</option>
+            <option>无缺口</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="riskStatusFilter">风险状态</label>
+          <select id="riskStatusFilter">
+            <option>全部风险</option>
+            <option>有风险</option>
+            <option>无风险</option>
           </select>
         </div>
         <div class="filter-actions">
@@ -117,29 +135,27 @@
 
   <section id="scheduleListPanel" data-schedule-panel="list">
 
-  <nav class="tab-bar list-surface-tabs" aria-label="团控处理队列筛选" data-filter-tabs data-filter-target="#scheduleRows">
+  <nav class="tab-bar list-surface-tabs" aria-label="团期生命周期筛选" data-filter-tabs data-filter-target="#scheduleRows">
     <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
-    <button class="tab-item" type="button" data-filter-value="待开售">待开售</button>
+    <button class="tab-item" type="button" data-filter-value="待发布">待发布</button>
     <button class="tab-item" type="button" data-filter-value="销售中">销售中</button>
-    <button class="tab-item" type="button" data-filter-value="临近截止">临近截止</button>
-    <button class="tab-item" type="button" data-filter-value="资源待确认">资源待确认</button>
-    <button class="tab-item" type="button" data-filter-value="名单待处理">名单待处理</button>
-    <button class="tab-item" type="button" data-filter-value="已出团">已出团</button>
-    <button class="tab-item" type="button" data-filter-value="异常">异常</button>
+    <button class="tab-item" type="button" data-filter-value="出发准备">出发准备</button>
+    <button class="tab-item" type="button" data-filter-value="出团中">出团中</button>
+    <button class="tab-item" type="button" data-filter-value="已回团">已回团</button>
   </nav>
 
   <section class="table-wrap schedule-list-table list-surface-table list-table-with-pagination" aria-label="团期管控">
     <table>
       <thead>
         <tr>
-          <th>团期编号</th>
-          <th>线路/方案</th>
-          <th>出发/截止</th>
-          <th>报名/订单</th>
-          <th>资源占用</th>
-          <th>销售状态</th>
-          <th>成本状态</th>
+          <th>团期/线路</th>
+          <th>日期节点</th>
+          <th>销售/名额</th>
+          <th>订单/名单</th>
+          <th>交通/确认</th>
+          <th>关键缺口</th>
           <th>负责人</th>
+          <th>主状态</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -745,7 +761,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-cost>关闭</button>
-        <a id="costWorktopLink" class="btn btn-primary" href="fulfillment-cost.html">进入团期成本</a>
+        <a id="costWorktopLink" class="btn btn-primary" href="fulfillment-cost.html">进入成本结算</a>
       </div>
     </div>
   </div>
@@ -1404,7 +1420,165 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-resource-drawer>关闭</button>
+        <button id="confirmScheduleResource" class="btn btn-secondary" type="button">标记资源已确认</button>
         <a id="resourceDetailLink" class="btn btn-primary" href="schedules-detail.html?tab=resource">进入团期详情</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="executionRosterDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="executionRosterTitle">
+      <div class="modal-header">
+        <div id="executionRosterTitle" class="modal-title">名单管理</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-execution-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="executionRosterSummary" class="readonly-summary"></div>
+        <section class="table-wrap fulfillment-table" aria-label="团期名单">
+          <table>
+            <thead><tr><th>游客/订单</th><th>手机</th><th>人数</th><th>收款</th><th>证件/实名</th><th>资源安排</th><th>确认状态</th><th>操作</th></tr></thead>
+            <tbody id="executionRosterRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button id="exportScheduleRoster" class="btn btn-secondary" type="button">导出名单</button>
+        <button id="syncLeaderRoster" class="btn btn-primary" type="button">同步领队名单</button>
+        <button class="btn btn-secondary" type="button" data-close-execution-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="executionDocumentsDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="executionDocumentsTitle">
+      <div class="modal-header">
+        <div id="executionDocumentsTitle" class="modal-title">证件/签证</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-execution-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="executionDocumentsSummary" class="readonly-summary"></div>
+        <section class="table-wrap fulfillment-table" aria-label="证件签证资料">
+          <table>
+            <thead><tr><th>游客/订单</th><th>资料类型</th><th>有效期/节点</th><th>资料状态</th><th>缺失项</th><th>最近跟进</th><th>操作</th></tr></thead>
+            <tbody id="executionDocumentsRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button id="sendDocumentReminder" class="btn btn-secondary" type="button">批量补件提醒</button>
+        <button id="confirmDocumentsReady" class="btn btn-primary" type="button">标记资料已收</button>
+        <button class="btn btn-secondary" type="button" data-close-execution-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="executionNoticeDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-resource-drawer" role="dialog" aria-modal="true" aria-labelledby="executionNoticeTitle">
+      <div class="modal-header">
+        <div id="executionNoticeTitle" class="modal-title">出团通知</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-execution-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="executionNoticeSummary" class="readonly-summary"></div>
+        <div class="form-group">
+          <div class="outbound-notice-head">
+            <label class="form-label">通知对象</label>
+            <label class="outbound-check-all"><input id="executionCheckAllGuests" type="checkbox" checked> 全选</label>
+          </div>
+          <div id="executionNoticeGuestList" class="outbound-guest-list"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">通知方式</label>
+          <div class="outbound-method-row">
+            <label><input type="checkbox" checked> 短信</label>
+            <label><input type="checkbox" checked> 系统消息</label>
+            <label><input type="checkbox"> 邮件</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="executionNoticeContent">通知内容</label>
+          <textarea id="executionNoticeContent" class="form-control outbound-notice-text" rows="10"></textarea>
+        </div>
+        <div id="executionNoticeFee" class="outbound-fee"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="sendScheduleNotice" class="btn btn-primary" type="button">确认发送</button>
+        <button class="btn btn-secondary" type="button" data-close-execution-layer>取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="executionLeaderDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outbound-leader-drawer" role="dialog" aria-modal="true" aria-labelledby="executionLeaderTitle">
+      <div class="modal-header">
+        <div id="executionLeaderTitle" class="modal-title">安排领队</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-execution-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="executionLeaderSummary" class="readonly-summary"></div>
+        <section class="outbound-leader-alert">
+          <strong>匹配规则</strong>
+          <span id="executionLeaderRule"></span>
+        </section>
+        <div id="executionLeaderOptions" class="outbound-leader-list" role="radiogroup" aria-label="可安排领队"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="executionLeaderMeetTime">集合时间</label>
+            <input id="executionLeaderMeetTime" class="form-control" type="datetime-local">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="executionLeaderMeetPlace">集合地点</label>
+            <input id="executionLeaderMeetPlace" class="form-control" type="text">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="executionLeaderRemark">领队备注</label>
+          <textarea id="executionLeaderRemark" class="form-control" rows="4" placeholder="给领队的补充说明"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveScheduleLeader" class="btn btn-primary" type="button">确认安排</button>
+        <button class="btn btn-secondary" type="button" data-close-execution-layer>取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scheduleAiRiskModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="scheduleAiRiskTitle">
+      <div class="modal-header">
+        <div id="scheduleAiRiskTitle" class="modal-title">AI出团风险扫描</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-execution-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-embedded-summary">
+          <span id="scheduleAiRiskCount" class="tag tag-orange">0项风险</span>
+          <strong id="scheduleAiRiskSummary">已扫描当前筛选结果。</strong>
+        </div>
+        <section class="table-wrap ai-embedded-table" aria-label="AI出团风险明细">
+          <table>
+            <thead><tr><th>团期</th><th>风险类型</th><th>AI判断</th><th>建议动作</th></tr></thead>
+            <tbody id="scheduleAiRiskRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button id="createScheduleRiskTasks" class="btn btn-primary" type="button">生成待办任务</button>
+        <button class="btn btn-secondary" type="button" data-close-execution-layer>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scheduleExecutionToastModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="scheduleExecutionToastTitle">
+      <div class="modal-header">
+        <div id="scheduleExecutionToastTitle" class="modal-title">操作已记录</div>
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-execution-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="scheduleExecutionToastText" class="modal-center-text"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-execution-layer>知道了</button>
       </div>
     </div>
   </div>
@@ -1461,6 +1635,12 @@
       var copyModal = document.getElementById('copyScheduleModal');
       var stockLineageDrawer = document.getElementById('stockLineageDrawer');
       var scheduleResourceDrawer = document.getElementById('scheduleResourceDrawer');
+      var executionRosterDrawer = document.getElementById('executionRosterDrawer');
+      var executionDocumentsDrawer = document.getElementById('executionDocumentsDrawer');
+      var executionNoticeDrawer = document.getElementById('executionNoticeDrawer');
+      var executionLeaderDrawer = document.getElementById('executionLeaderDrawer');
+      var scheduleAiRiskModal = document.getElementById('scheduleAiRiskModal');
+      var scheduleExecutionToastModal = document.getElementById('scheduleExecutionToastModal');
       var cancelModal = document.getElementById('cancelScheduleModal');
       var lockModal = document.getElementById('lockScheduleModal');
       var scheduleListPanel = document.getElementById('scheduleListPanel');
@@ -1539,7 +1719,8 @@
       var batchTypeFilter = document.getElementById('batchTypeFilter');
       var scheduleStatusFilter = document.getElementById('scheduleStatus');
       var executionStatusFilter = document.getElementById('executionStatusFilter');
-      var settlementStatusFilter = document.getElementById('settlementStatusFilter');
+      var currentTodoFilter = document.getElementById('currentTodoFilter');
+      var riskStatusFilter = document.getElementById('riskStatusFilter');
       var copyScheduleText = document.getElementById('copyScheduleText');
       var cancelScheduleText = document.getElementById('cancelScheduleText');
       var cancelReason = document.getElementById('cancelReason');
@@ -1562,6 +1743,8 @@
       var openCreateSchedule = document.getElementById('openCreateSchedule');
       var scheduleBatchActionToggle = document.getElementById('scheduleBatchActionToggle');
       var scheduleBatchActionMenu = document.getElementById('scheduleBatchActionMenu');
+      var scheduleToolToggle = document.getElementById('scheduleToolToggle');
+      var scheduleToolMenu = document.getElementById('scheduleToolMenu');
       var scheduleBatchActionTitle = document.getElementById('scheduleBatchActionTitle');
       var scheduleBatchActionScope = document.getElementById('scheduleBatchActionScope');
       var confirmScheduleBatchAction = document.getElementById('confirmScheduleBatchAction');
@@ -1576,6 +1759,8 @@
       var currentRouteFilter = document.getElementById('currentRouteFilter');
       var currentRouteFilterName = document.getElementById('currentRouteFilterName');
       var currentRouteFilterCount = document.getElementById('currentRouteFilterCount');
+      var executionCheckAllGuests = document.getElementById('executionCheckAllGuests');
+      var executionNoticeGuestList = document.getElementById('executionNoticeGuestList');
       var pageParams = new URLSearchParams(window.location.search);
       var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
       var routeFilterType = pageParams.get('type') || '';
@@ -1601,6 +1786,7 @@
       var batchCreated = false;
       var pendingSaleStatus = '';
       var currentBatchAction = '';
+      var currentExecutionSchedule = null;
 
       var productDays = {
         '欧洲十国经典游': 12,
@@ -1911,16 +2097,18 @@
 
       function statusClass(status) {
         if (status === '开放报名') return 'tag tag-blue';
+        if (status === '待发布') return 'tag tag-gray';
         if (status === '筹备中') return 'tag tag-gray';
         if (status === '已截止') return 'tag tag-orange';
+        if (status === '已关闭') return 'tag tag-orange';
         if (status === '售罄') return 'tag tag-red';
         if (status === '已取消') return 'tag tag-red';
         return 'tag tag-gray';
       }
 
       function executionStatusClass(status) {
-        if (status === '操作中') return 'tag tag-blue';
-        if (status === '已出发') return 'tag tag-purple';
+        if (status === '操作中' || status === '出发准备') return 'tag tag-blue';
+        if (status === '已出发' || status === '出团中') return 'tag tag-purple';
         if (status === '已回团') return 'tag tag-green';
         if (status === '已归档') return 'tag tag-gray';
         return 'tag tag-gray';
@@ -1947,8 +2135,8 @@
         var text = [status, tabStatus, value].join(' ');
         if (text.indexOf('已归档') >= 0) return '已归档';
         if (text.indexOf('已回团') >= 0) return '已回团';
-        if (text.indexOf('已出发') >= 0 || text.indexOf('出团中') >= 0 || text.indexOf('本周出团') >= 0) return '已出发';
-        if (text.indexOf('操作中') >= 0) return '操作中';
+        if (text.indexOf('已出发') >= 0 || text.indexOf('出团中') >= 0) return '出团中';
+        if (text.indexOf('操作中') >= 0 || text.indexOf('本周出团') >= 0 || text.indexOf('临近出团') >= 0) return '出发准备';
         return '未出团';
       }
 
@@ -2090,20 +2278,123 @@
         return stockText(item.sold, item.unit) + '已报名';
       }
 
+      function executionStage(item) {
+        if (item.executionStatus === '已回团' || item.executionStatus === '已归档') return '已回团';
+        if (item.executionStatus === '出团中' || item.executionStatus === '已出发') return '出团中';
+        if (item.executionStatus === '操作中' || item.executionStatus === '出发准备' || dateDistance(item.depart) <= 7 || String(item.tabStatus || '').indexOf('本周出团') >= 0) return '出发准备';
+        return '未出团';
+      }
+
+      function scheduleMainStage(item) {
+        var stage = executionStage(item);
+        if (item.saleStatus === '已取消' || item.approvalStatus === '已驳回') return '已终止';
+        if (stage === '已回团') return '已回团';
+        if (stage === '出团中') return '出团中';
+        if (stage === '出发准备' || item.saleStatus === '已截止' || item.saleStatus === '已关闭') return '出发准备';
+        if (item.saleStatus === '开放报名' || item.saleStatus === '售罄') return '销售中';
+        return '待发布';
+      }
+
+      function documentsStatusText(item) {
+        if (item.documentsStatus) return item.documentsStatus;
+        var roster = rosterStatusText(item);
+        if (roster === '待补资料') return normalizeBatchType(item.batchType) === '专列班期' ? '实名待补' : normalizeBatchType(item.batchType) === '邮轮航次' ? '登船资料待补' : '证件签证待补';
+        if (roster === '已齐' || roster === '已归档') return normalizeBatchType(item.batchType) === '专列班期' ? '实名已核验' : '资料完整';
+        return '收集中';
+      }
+
+      function documentsStatusClass(status) {
+        if (/完整|已齐|已核验|已确认/.test(status)) return 'tag tag-green';
+        if (/异常|过期|缺/.test(status)) return 'tag tag-red';
+        if (/待|收集|补|船票/.test(status)) return 'tag tag-orange';
+        return 'tag tag-blue';
+      }
+
+      function noticeStatusText(item) {
+        if (item.noticeStatus) return item.noticeStatus;
+        var stage = executionStage(item);
+        if (stage === '已回团' || stage === '出团中') return '已发送';
+        if (stage === '出发准备') return '待发送';
+        return '未到节点';
+      }
+
+      function noticeStatusClass(status) {
+        if (/已/.test(status)) return 'tag tag-green';
+        if (/未到/.test(status)) return 'tag tag-gray';
+        return 'tag tag-orange';
+      }
+
+      function leaderStatusText(item) {
+        if (item.leaderStatus) return item.leaderStatus;
+        if (item.leader && item.leader !== '待分配') return '已安排';
+        if (executionStage(item) === '出发准备' || executionStage(item) === '出团中') return '待安排';
+        return '未到节点';
+      }
+
+      function leaderStatusClass(status) {
+        if (/已/.test(status)) return 'tag tag-green';
+        if (/未到/.test(status)) return 'tag tag-gray';
+        return 'tag tag-orange';
+      }
+
+      function executionTodoItems(item) {
+        var todos = [];
+        var stage = executionStage(item);
+        var rosterStatus = rosterStatusText(item);
+        var docStatus = documentsStatusText(item);
+        var resourceStatus = resourceStatusText(item);
+        var noticeStatus = noticeStatusText(item);
+        var leaderStatus = leaderStatusText(item);
+        if (rosterStatus === '待补资料' || rosterStatus === '收集中') todos.push({ key: 'roster', label: '名单待补', className: 'tag tag-orange', action: '处理名单' });
+        if (/待|异常|缺|补|船票/.test(docStatus) && !/未到/.test(docStatus)) todos.push({ key: 'documents', label: '证件签证异常', className: documentsStatusClass(docStatus), action: '处理证件' });
+        if (['待确认', '部分确认', '处理中', '异常'].indexOf(resourceStatus) > -1) todos.push({ key: 'resource', label: '资源票务待确认', className: resourceStatusClass(resourceStatus), action: '确认资源' });
+        if (noticeStatus === '待发送' || noticeStatus === '部分确认') todos.push({ key: 'notice', label: '通知待发', className: noticeStatusClass(noticeStatus), action: '发通知' });
+        if (leaderStatus === '待安排') todos.push({ key: 'leader', label: '领队待安排', className: leaderStatusClass(leaderStatus), action: '安排领队' });
+        if (stage === '已回团' && item.settlementStatus !== '已结算') todos.push({ key: 'settlement', label: '成本待复核', className: 'tag tag-orange', action: '去成本结算' });
+        return todos;
+      }
+
+      function primaryTodo(item) {
+        var stage = executionStage(item);
+        var todos = executionTodoItems(item);
+        if (todos.length) return todos[0];
+        if (stage === '出团中') return { key: 'markReturned', label: '出团中', className: 'tag tag-purple', action: '标记回团' };
+        if (stage === '出发准备') return { key: 'markDeparted', label: '待出发', className: 'tag tag-blue', action: '标记出发' };
+        if (stage === '已回团') return { key: 'settlement', label: '待成本结算', className: 'tag tag-orange', action: '去成本结算' };
+        return { key: 'detail', label: '暂无待办', className: 'tag tag-green', action: '查看详情' };
+      }
+
+      function todoLabels(item) {
+        return executionTodoItems(item).map(function (todo) { return todo.label; });
+      }
+
+      function keyGapLabels(item) {
+        return keyGapItems(item).map(function (gap) { return gap.category; });
+      }
+
       function isNearDeadline(item) {
         var distance = dateDistance(item.deadline || addDays(item.depart, -5));
         return distance >= 0 && distance <= 7 || stockNumber(item.left) <= 3 || String(item.tabStatus || '').indexOf('本周出团') >= 0 || String(item.tabStatus || '').indexOf('即将售罄') >= 0;
       }
 
+      function hasScheduleRisk(item) {
+        var rawStatus = String(item.tabStatus || '');
+        var docStatus = documentsStatusText(item);
+        var resourceStatus = resourceStatusText(item);
+        var rosterStatus = rosterStatusText(item);
+        var stage = executionStage(item);
+        if (rawStatus.indexOf('异常') >= 0 || rawStatus.indexOf('驳回') >= 0) return true;
+        if (stockNumber(item.sold) > stockNumber(item.stock)) return true;
+        if (/异常|过期|缺/.test(docStatus) || resourceStatus === '异常') return true;
+        if ((stage === '出发准备' || stage === '出团中') && (rosterStatus === '待补资料' || resourceStatus !== '已确认')) return true;
+        return false;
+      }
+
       function scheduleQueueTokens(item) {
         var tokens = [];
-        if (item.saleStatus === '筹备中') tokens.push('待开售');
-        if (item.saleStatus === '开放报名') tokens.push('销售中');
-        if (isNearDeadline(item)) tokens.push('临近截止');
-        if (['待确认', '部分确认'].indexOf(resourceStatusText(item)) > -1) tokens.push('资源待确认');
-        if (['收集中', '待补资料'].indexOf(rosterStatusText(item)) > -1) tokens.push('名单待处理');
-        if (['已出发', '已回团', '已归档'].indexOf(item.executionStatus) > -1) tokens.push('已出团');
-        if (item.saleStatus === '已取消' || String(item.tabStatus || '').indexOf('异常') >= 0) tokens.push('异常');
+        var mainStage = scheduleMainStage(item);
+        tokens.push(mainStage);
+        keyGapLabels(item).forEach(function (label) { tokens.push(label); });
         return tokens;
       }
 
@@ -2345,7 +2636,7 @@
       function renderCostRows(item) {
         var rows = scheduleCostItems(item);
         if (!rows.length) {
-          costRows.innerHTML = '<tr><td colspan="6" class="text-muted">暂无成本项，请进入团期成本页面处理。</td></tr>';
+          costRows.innerHTML = '<tr><td colspan="6" class="text-muted">暂无成本项，请进入成本结算页面处理。</td></tr>';
           return rows;
         }
         costRows.innerHTML = rows.map(function (row) {
@@ -2426,12 +2717,12 @@
         updateCostTotal(item, status, rows);
         var aiContent = costModal.querySelector('.ai-suggestion-content');
         if (aiContent) {
-          aiContent.textContent = rows.length ? '当前成本可进入团期成本继续维护、确认和复核。' : '尚未维护成本，建议先按机票、地接、酒店、用车等科目初始化预算。';
+          aiContent.textContent = rows.length ? '当前成本可进入成本结算继续维护、确认和复核。' : '尚未维护成本，建议先按机票、地接、酒店、用车等科目初始化预算。';
         }
         var costWorktopLink = document.getElementById('costWorktopLink');
         if (costWorktopLink) {
           costWorktopLink.href = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&mode=' + (rows.length ? 'maintainCost' : 'initCost');
-          costWorktopLink.textContent = rows.length ? '进入团期成本' : '初始化成本';
+          costWorktopLink.textContent = rows.length ? '进入成本结算' : '初始化成本';
         }
       }
 
@@ -2503,7 +2794,7 @@
       }
 
       function fillScheduleResourceDrawer(item) {
-        document.getElementById('scheduleResourceTitle').textContent = '资源确认 - ' + item.code;
+        document.getElementById('scheduleResourceTitle').textContent = '资源/票务确认 - ' + item.code;
         document.getElementById('resourceScheduleName').textContent = item.product + ' / ' + (item.route || '-');
         document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (item.planner || '-');
         document.getElementById('resourceRosterText').textContent = stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
@@ -2516,6 +2807,140 @@
         document.getElementById('scheduleResourceRows').innerHTML = rows.map(function (row) {
           return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td><td><span class="' + resourceStatusClass(row[4]) + '">' + escapeHtml(row[4]) + '</span></td><td>' + escapeHtml(row[5]) + '</td><td><div class="table-action"><button type="button" data-resource-action class="table-action-primary">' + escapeHtml(row[6]) + '</button></div></td></tr>';
         }).join('');
+      }
+
+      function scheduleExecutionSummary(item) {
+        return item.code + ' | ' + item.product + ' | ' + (item.route || '-') + ' | 出发 ' + (item.depart || '-') + ' | 已售 ' + stockText(item.sold, item.unit);
+      }
+
+      function scheduleGuestRows(item) {
+        var rows = orderRowsForSchedule(item);
+        if (rows.length) return rows;
+        return [
+          { no: 'KS' + String(item.code || '00000000').replace(/\D/g, '').slice(-8) + '001', customer: '待报名游客 / 门市', sales: item.planner || '-', qty: '0' + (item.unit || '人'), amount: item.price || '-', pay: '未收款', payTag: 'tag tag-gray', roster: '未开始', rosterTag: 'tag tag-gray', status: '待确认', statusTag: 'tag tag-gray' }
+        ];
+      }
+
+      function fillExecutionRosterDrawer(item) {
+        currentExecutionSchedule = item;
+        var type = normalizeBatchType(item.batchType);
+        document.getElementById('executionRosterTitle').textContent = type === '邮轮航次' ? '游客名单' : type === '专列班期' ? '实名名单' : '名单管理';
+        document.getElementById('executionRosterSummary').textContent = scheduleExecutionSummary(item);
+        document.getElementById('executionRosterRows').innerHTML = scheduleGuestRows(item).map(function (row, index) {
+          var phone = index === 0 ? '138****8899' : index === 1 ? '186****2234' : '135****6677';
+          var resourceText = row.resource || (type === '邮轮航次' ? '舱房/船票' : type === '专列班期' ? '铺位/车厢' : '房型/交通');
+          return '<tr><td>' + escapeHtml(row.customer) + '<br><span class="text-muted">' + escapeHtml(row.no) + '</span></td><td>' + phone + '</td><td>' + escapeHtml(row.qty) + '</td><td><span class="' + row.payTag + '">' + escapeHtml(row.pay) + '</span></td><td><span class="' + row.rosterTag + '">' + escapeHtml(row.roster) + '</span></td><td>' + escapeHtml(resourceText) + '</td><td><span class="' + row.statusTag + '">' + escapeHtml(row.status) + '</span></td><td><div class="table-action"><button class="table-action-primary" type="button">查看</button></div></td></tr>';
+        }).join('');
+      }
+
+      function fillExecutionDocumentsDrawer(item) {
+        currentExecutionSchedule = item;
+        var type = normalizeBatchType(item.batchType);
+        var title = type === '邮轮航次' ? '登船资料' : type === '专列班期' ? '实名制资料' : '证件/签证';
+        document.getElementById('executionDocumentsTitle').textContent = title;
+        document.getElementById('executionDocumentsSummary').textContent = scheduleExecutionSummary(item);
+        document.getElementById('executionDocumentsRows').innerHTML = scheduleGuestRows(item).map(function (row, index) {
+          var pending = row.roster !== '已齐' || index === 1 && rosterStatusText(item) !== '已齐';
+          var status = pending ? (type === '专列班期' ? '实名待补' : type === '邮轮航次' ? '船票待出' : '证件待补') : '资料完整';
+          var missing = pending ? (type === '邮轮航次' ? '船票号' : type === '专列班期' ? '身份证影像' : '护照/签证页') : '无';
+          return '<tr><td>' + escapeHtml(row.customer) + '<br><span class="text-muted">' + escapeHtml(row.no) + '</span></td><td>' + escapeHtml(title) + '</td><td>' + escapeHtml(pending ? '出发前3天' : '2029-12-31') + '</td><td><span class="' + documentsStatusClass(status) + '">' + escapeHtml(status) + '</span></td><td>' + escapeHtml(missing) + '</td><td>' + escapeHtml(pending ? '今日待跟进' : '已复核') + '</td><td><div class="table-action"><button class="table-action-primary" type="button">' + escapeHtml(pending ? '提醒' : '查看') + '</button></div></td></tr>';
+        }).join('');
+      }
+
+      function fillExecutionNoticeDrawer(item) {
+        currentExecutionSchedule = item;
+        var rows = scheduleGuestRows(item);
+        document.getElementById('executionNoticeTitle').textContent = normalizeBatchType(item.batchType) === '邮轮航次' ? '发送登船通知' : normalizeBatchType(item.batchType) === '专列班期' ? '发送发车通知' : '发送出团通知';
+        document.getElementById('executionNoticeSummary').textContent = scheduleExecutionSummary(item);
+        executionCheckAllGuests.checked = true;
+        executionNoticeGuestList.innerHTML = rows.map(function (row) {
+          return '<label><input type="checkbox" checked> ' + escapeHtml(row.customer.replace(/\s*\/.*/, '') + ' ' + row.no) + '</label>';
+        }).join('');
+        document.getElementById('executionNoticeContent').value = '尊敬的游客，您好！\n您报名的【' + item.product + '】将于' + (item.depart || '-') + '出发。\n集合地点：' + (meetingPlace && meetingPlace.value || '以出团通知为准') + '\n请携带有效证件，并按领队通知准时集合。';
+        document.getElementById('executionNoticeFee').textContent = '预计费用：' + stockNumber(item.sold) + '条短信 ¥' + (stockNumber(item.sold) * 0.05).toFixed(2);
+      }
+
+      function leaderOptionsFor(item) {
+        var type = normalizeBatchType(item.batchType);
+        if (type === '邮轮航次') {
+          return [
+            ['王导 139****2200', '邮轮经验28航次 | 港口协调 | 满意度98%', '推荐', 'tag tag-green', true, false],
+            ['赵导 138****6633', '欧洲港口经验16航次', '可用', 'tag tag-blue', false, false]
+          ];
+        }
+        if (type === '专列班期') {
+          return [
+            ['郑导 139****9900', '专列经验18列 | 西北线 | 满意度98%', '推荐', 'tag tag-green', true, false],
+            ['黄导 138****6688', '西北线经验24团', '可用', 'tag tag-blue', false, false],
+            ['张导 137****7700', '同日其他团占用', '冲突', 'tag tag-gray', false, true]
+          ];
+        }
+        return [
+          ['李导 138****8800', '欧洲线经验42团 | 英语/法语 | 满意度98%', '推荐', 'tag tag-green', true, false],
+          ['林导 136****7711', '欧洲线经验26团 | 英语 | 满意度96%', '可用', 'tag tag-blue', false, false]
+        ];
+      }
+
+      function fillExecutionLeaderDrawer(item) {
+        currentExecutionSchedule = item;
+        var type = normalizeBatchType(item.batchType);
+        document.getElementById('executionLeaderTitle').textContent = type === '邮轮航次' ? '安排邮轮管家' : type === '专列班期' ? '安排随车领队' : '安排领队';
+        document.getElementById('executionLeaderSummary').textContent = scheduleExecutionSummary(item);
+        document.getElementById('executionLeaderRule').textContent = type === '邮轮航次' ? '优先匹配邮轮登船经验、港口协调能力和岸上观光供应商熟悉度。' : type === '专列班期' ? '优先匹配专列带团经验、铁路站点协调能力和沿途地接熟悉度。' : '优先匹配线路经验、语言能力、出发日期无冲突和满意度。';
+        document.getElementById('executionLeaderMeetTime').value = (item.depart || businessToday) + 'T07:30';
+        document.getElementById('executionLeaderMeetPlace').value = type === '专列班期' ? '始发站团队集合区' : type === '邮轮航次' ? '邮轮码头团队集合区' : '北京首都机场T3航站楼F区';
+        document.getElementById('executionLeaderRemark').value = '请提前核对名单、证件资料、交通资源和出团通知。';
+        document.getElementById('executionLeaderOptions').innerHTML = leaderOptionsFor(item).map(function (option) {
+          return '<label class="outbound-leader-card' + (option[4] ? ' selected' : '') + (option[5] ? ' disabled' : '') + '"><input type="radio" name="scheduleLeaderOption" value="' + escapeHtml(option[0]) + '"' + (option[4] ? ' checked' : '') + (option[5] ? ' disabled' : '') + '><span><strong>' + escapeHtml(option[0]) + '</strong><em>' + escapeHtml(option[1]) + '</em></span><b class="' + escapeHtml(option[3]) + '">' + escapeHtml(option[2]) + '</b></label>';
+        }).join('');
+      }
+
+      function openExecutionDrawer(item, key) {
+        currentExecutionSchedule = item;
+        currentSchedule = item;
+        if (key === 'roster') {
+          fillExecutionRosterDrawer(item);
+          window.caesarUI.openLayer(executionRosterDrawer);
+        } else if (key === 'documents') {
+          fillExecutionDocumentsDrawer(item);
+          window.caesarUI.openLayer(executionDocumentsDrawer);
+        } else if (key === 'resource') {
+          fillScheduleResourceDrawer(item);
+          window.caesarUI.openLayer(scheduleResourceDrawer);
+        } else if (key === 'notice') {
+          fillExecutionNoticeDrawer(item);
+          window.caesarUI.openLayer(executionNoticeDrawer);
+        } else if (key === 'leader') {
+          fillExecutionLeaderDrawer(item);
+          window.caesarUI.openLayer(executionLeaderDrawer);
+        }
+      }
+
+      function showScheduleExecutionResult(message) {
+        var target = document.getElementById('scheduleExecutionToastText');
+        if (target) target.textContent = message;
+        if (scheduleExecutionToastModal) window.caesarUI.openLayer(scheduleExecutionToastModal);
+        else if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+      }
+
+      function renderScheduleAiRisk() {
+        var risks = batchActionItems().reduce(function (items, item) {
+          executionTodoItems(item).forEach(function (todo) {
+            items.push([item.code, todo.label, todo.action, todo.key === 'resource' ? '优先核对供应商确认与交通票务' : '按当前待办处理']);
+          });
+          return items;
+        }, []);
+        document.getElementById('scheduleAiRiskCount').textContent = risks.length + '项风险';
+        document.getElementById('scheduleAiRiskSummary').textContent = risks.length ? '已扫描当前筛选结果，建议优先处理名单、证件、资源、通知和领队待办。' : '当前筛选结果暂无出团执行风险。';
+        document.getElementById('scheduleAiRiskRows').innerHTML = risks.length ? risks.map(function (risk) {
+          return '<tr><td>' + escapeHtml(risk[0]) + '</td><td>' + escapeHtml(risk[1]) + '</td><td><span class="tag tag-orange">' + escapeHtml(risk[2]) + '</span></td><td>' + escapeHtml(risk[3]) + '</td></tr>';
+        }).join('') : '<tr><td colspan="4" class="table-empty">暂无风险</td></tr>';
+      }
+
+      function syncExecutionGuestChecks() {
+        executionNoticeGuestList.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
+          checkbox.checked = executionCheckAllGuests.checked;
+        });
       }
 
       function readRow(row) {
@@ -2759,6 +3184,98 @@
         schedules.unshift(item);
       }
 
+      function applyLifecycleSampleSchedules() {
+        [
+          {
+            code: 'EU20260701001',
+            product: '欧洲十国经典游',
+            route: 'A线 法德意12天',
+            batchType: '普通团期',
+            depart: '2026-07-01',
+            back: '2026-07-12',
+            stock: 32,
+            sold: 30,
+            left: 2,
+            unit: '人',
+            channelSeats: { 门: 8, 携: 10, 猪: 4, 同: 3, 直: 4, 协: 3 },
+            price: '¥12,800',
+            planner: '周伟',
+            leader: '张敏',
+            saleStatus: '已截止',
+            executionStatus: '出团中',
+            settlementStatus: '预估成本',
+            status: '已截止',
+            costStatus: '预估成本',
+            rosterStatus: '已齐',
+            documentsStatus: '资料完整',
+            resourceStatus: '已确认',
+            noticeStatus: '已发送',
+            leaderStatus: '已安排',
+            tabStatus: '已截止 出团中 预估成本',
+            remark: '样例：出团中，用于查看执行记录按钮',
+            deadline: '2026-06-24'
+          },
+          {
+            code: 'CR20260618001',
+            product: '理想号地中海邮轮',
+            route: '地中海东线7晚',
+            batchType: '邮轮航次',
+            depart: '2026-06-18',
+            back: '2026-06-25',
+            stock: 80,
+            sold: 76,
+            left: 4,
+            unit: '间',
+            channelSeats: { 门: 20, 携: 24, 猪: 10, 同: 8, 直: 10, 协: 8 },
+            price: '¥13,600',
+            planner: '赵明',
+            leader: '李娜',
+            saleStatus: '已截止',
+            executionStatus: '已回团',
+            settlementStatus: '结算中',
+            status: '已截止',
+            costStatus: '结算中',
+            rosterStatus: '已归档',
+            documentsStatus: '资料完整',
+            resourceStatus: '已确认',
+            noticeStatus: '已发送',
+            leaderStatus: '已安排',
+            tabStatus: '已截止 已回团 结算中',
+            remark: '样例：已回团，用于查看成本结算按钮',
+            deadline: '2026-06-01'
+          },
+          {
+            code: 'TR20260708001',
+            product: '东方丝路专列9日',
+            route: '丝路经典线',
+            batchType: '专列班期',
+            depart: '2026-08-08',
+            back: '2026-08-16',
+            stock: 96,
+            sold: 88,
+            left: 8,
+            unit: '铺',
+            channelSeats: { 门: 28, 携: 22, 猪: 12, 同: 8, 直: 14, 协: 12 },
+            price: '¥13,000',
+            planner: '李铭',
+            leader: '待分配',
+            saleStatus: '开放报名',
+            executionStatus: '未出团',
+            settlementStatus: '未维护成本',
+            status: '开放报名',
+            costStatus: '未维护成本',
+            rosterStatus: '待补资料',
+            documentsStatus: '实名异常',
+            resourceStatus: '异常',
+            noticeStatus: '未到节点',
+            leaderStatus: '待安排',
+            tabStatus: '开放报名 未出团 异常 未维护成本',
+            remark: '样例：销售中但有风险，用于验证风险状态筛选',
+            deadline: '2026-07-28'
+          }
+        ].forEach(addScheduleIfUnique);
+      }
+
       function addApprovedSchedule(approvalNo, schedule) {
         var approvals = readApprovalResults();
         if (!approvals[approvalNo] || approvals[approvalNo].status !== 'approved') return;
@@ -2882,6 +3399,14 @@
           '<span class="' + batchTypeClass(item.batchType) + '">' + escapeHtml(batchTypeDisplay(item.batchType)) + '</span></span>';
       }
 
+      function scheduleObjectCell(item, href) {
+        return '<span class="schedule-batch-cell">' +
+          '<span class="schedule-order-line"><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(item.code) + '</a><span class="' + batchTypeClass(item.batchType) + '">' + escapeHtml(batchTypeDisplay(item.batchType)) + '</span></span>' +
+          '<span class="schedule-product-name">' + escapeHtml(item.product || '-') + '</span>' +
+          '<span class="text-muted schedule-route-name">' + escapeHtml(item.route || '-') + '</span>' +
+          '</span>';
+      }
+
       function departCell(item) {
         var deadline = item.deadline || addDays(item.depart, -5) || '-';
         return '<span class="schedule-product-name">出发 ' + escapeHtml(item.depart || '-') + '</span>' +
@@ -2905,16 +3430,16 @@
         if (!sold) return [];
         if (type === '邮轮航次') {
           return [
-            { no: 'KS' + baseCode + '018', customer: '张建国 / 携程邮轮', sales: '刘洋', qty: '2间', amount: '¥57,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', status: '已确认', statusTag: 'tag tag-green' },
-            { no: 'KS' + baseCode + '026', customer: '李梅 / 门市', sales: '陈红', qty: '1间', amount: '¥28,800', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补护照', rosterTag: 'tag tag-orange', status: '已确认', statusTag: 'tag tag-green' },
-            { no: 'KS' + baseCode + '031', customer: '王强 / 直客', sales: '赵明', qty: '1间', amount: '¥42,800', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', status: '已确认', statusTag: 'tag tag-green' }
+            { no: 'KS' + baseCode + '018', customer: '张建国 / 携程邮轮', sales: '刘洋', qty: '1间2人', amount: '¥57,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '阳台舱BA-9232 / 成人占位2', status: '已确认', statusTag: 'tag tag-green' },
+            { no: 'KS' + baseCode + '026', customer: '李梅 / 门市', sales: '陈红', qty: '1间3人', amount: '¥31,600', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补护照', rosterTag: 'tag tag-orange', resource: '海景舱OV待回填 / 儿童不占位1', status: '已确认', statusTag: 'tag tag-green' },
+            { no: 'KS' + baseCode + '031', customer: '王强 / 直客', sales: '赵明', qty: '1间2人', amount: '¥42,800', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '套房SU-1102 / 成人占位2', status: '已确认', statusTag: 'tag tag-green' }
           ];
         }
         if (type === '专列班期') {
           return [
-            { no: 'KS' + baseCode + '021', customer: '周伟 / 门市', sales: '孙丽', qty: '2铺', amount: '¥43,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', status: '已确认', statusTag: 'tag tag-green' },
-            { no: 'KS' + baseCode + '032', customer: '吴芳 / 分销', sales: '郑华', qty: '6铺', amount: '¥100,800', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补身份证', rosterTag: 'tag tag-orange', status: '确认中', statusTag: 'tag tag-blue' },
-            { no: 'KS' + baseCode + '041', customer: '郑华 / 直客', sales: '刘洋', qty: '1间', amount: '¥26,800', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', status: '已确认', statusTag: 'tag tag-green' }
+            { no: 'KS' + baseCode + '021', customer: '周伟 / 门市', sales: '孙丽', qty: '2铺', amount: '¥43,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '03车12下/13下 · 成人占位2', status: '已确认', statusTag: 'tag tag-green' },
+            { no: 'KS' + baseCode + '032', customer: '吴芳 / 分销', sales: '郑华', qty: '6铺+1儿童', amount: '¥102,600', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补身份证', rosterTag: 'tag tag-orange', resource: '软卧下铺6 · 儿童不占位1', status: '确认中', statusTag: 'tag tag-blue' },
+            { no: 'KS' + baseCode + '041', customer: '郑华 / 直客', sales: '刘洋', qty: '1包厢', amount: '¥26,800', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '豪华包厢1间', status: '已确认', statusTag: 'tag tag-green' }
           ];
         }
         if (type === '研学营期') {
@@ -2945,6 +3470,51 @@
         };
       }
 
+      function trafficConfirmName(item) {
+        var type = normalizeBatchType(item.batchType);
+        if (type === '邮轮航次') return { name: '舱号', unit: '间' };
+        if (type === '专列班期') return { name: '铺位', unit: '铺' };
+        if (type === '研学营期') return { name: '实名交通', unit: item.unit || '名' };
+        return { name: '票号', unit: item.unit || '人' };
+      }
+
+      function trafficConfirmSummary(item) {
+        var total = Math.max(stockNumber(item.sold), 0);
+        var status = resourceStatusText(item);
+        var missing = 0;
+        if (!total) missing = 0;
+        else if (/已确认|已完成|已出票|已录入/.test(status)) missing = 0;
+        else if (/部分|处理中/.test(status)) missing = Math.max(1, Math.min(total, Math.ceil(total * 0.18)));
+        else if (/异常/.test(status)) missing = Math.max(1, Math.min(total, Math.ceil(total * 0.25)));
+        else if (/待确认|待处理|未确认/.test(status)) missing = total;
+        var confirmed = Math.max(total - missing, 0);
+        return {
+          total: total,
+          confirmed: confirmed,
+          missing: missing,
+          label: trafficConfirmName(item)
+        };
+      }
+
+      function keyGapItems(item) {
+        var gaps = [];
+        var stock = stockNumber(item.stock);
+        var sold = stockNumber(item.sold);
+        var orderSummary = scheduleOrderSummary(item);
+        var trafficSummary = trafficConfirmSummary(item);
+        var mainStage = scheduleMainStage(item);
+        var settlementStatus = item.settlementStatus || item.costStatus || '';
+        if (stock && sold > stock) gaps.push({ category: '名额超售', text: '名额超售' + (sold - stock) + (item.unit || '人') });
+        if (orderSummary.pendingPay > 0) gaps.push({ category: '尾款未收', text: '尾款未收' + orderSummary.pendingPay + '单' });
+        if (orderSummary.rosterPending > 0) gaps.push({ category: '证件资料缺失', text: '证件资料缺' + orderSummary.rosterPending + '单' });
+        if (trafficSummary.missing > 0) gaps.push({ category: '交通确认缺失', text: trafficSummary.label.name + '缺' + trafficSummary.missing + trafficSummary.label.unit });
+        if ((mainStage === '出发准备' || mainStage === '已回团') && settlementStatus && settlementStatus !== '已结算' && settlementStatus !== '成本已确认') {
+          gaps.push({ category: '成本未确认', text: mainStage === '已回团' ? '成本结算未完成' : '成本未确认' });
+        }
+        if (!gaps.length) gaps.push({ category: '无缺口', text: '无关键缺口' });
+        return gaps;
+      }
+
       function signupOrderCell(item) {
         var stock = stockNumber(item.stock);
         var sold = stockNumber(item.sold);
@@ -2957,6 +3527,44 @@
           mutedLine(leftText + ' · ' + price);
       }
 
+      function salesRosterCell(item) {
+        var stock = stockNumber(item.stock);
+        var sold = stockNumber(item.sold);
+        var left = stockNumber(item.left);
+        var summary = scheduleOrderSummary(item);
+        var rosterStatus = rosterStatusText(item);
+        return '<span class="schedule-product-name">' + escapeHtml('已售 ' + sold + '/' + stock + item.unit) + '</span>' +
+          '<span class="schedule-order-line"><button class="table-link schedule-order-link" type="button" data-open-schedule-orders>' + escapeHtml(summary.totalOrders + '单') + '</button><span class="text-muted">' + escapeHtml(summary.pendingPay + '待收 · 余 ' + left + item.unit) + '</span></span>' +
+          '<span class="' + rosterStatusClass(rosterStatus) + '">' + escapeHtml(rosterStatus) + '</span>';
+      }
+
+      function usageBucketClass(sold, stock) {
+        var percent = stock > 0 ? Math.round(sold / stock * 100) : 0;
+        var bucket = Math.max(0, Math.min(100, Math.round(percent / 10) * 10));
+        return {
+          percent: percent,
+          className: 'usage-' + bucket
+        };
+      }
+
+      function salesQuotaCell(item) {
+        var stock = stockNumber(item.stock);
+        var sold = stockNumber(item.sold);
+        var left = stockNumber(item.left);
+        var usage = usageBucketClass(sold, stock);
+        return '<span class="schedule-product-name">' + escapeHtml('已售 ' + sold + '/' + stock + item.unit) + '</span>' +
+          '<span class="schedule-order-line"><span class="schedule-traffic-meter ' + usage.className + '"><i></i></span><span class="text-muted">' + escapeHtml(usage.percent + '%') + '</span></span>' +
+          mutedLine('余 ' + left + item.unit);
+      }
+
+      function orderRosterCell(item) {
+        var summary = scheduleOrderSummary(item);
+        var sold = stockNumber(item.sold);
+        var rosterText = sold ? (summary.rosterPending > 0 ? '资料缺' + summary.rosterPending + '单' : '名单资料完整') : '暂无报名名单';
+        return '<span class="schedule-order-line"><button class="table-link schedule-order-link" type="button" data-open-schedule-orders>' + escapeHtml(summary.totalOrders + '单') + '</button><span class="text-muted">' + escapeHtml('尾款未收' + summary.pendingPay + '单') + '</span></span>' +
+          mutedLine(rosterText);
+      }
+
       function priceCell(item) {
         var status = priceStatusText(item);
         return '<span class="schedule-product-name">' + escapeHtml(item.price || '-') + '</span>' +
@@ -2967,6 +3575,14 @@
         var status = resourceStatusText(item);
         return '<span class="' + resourceStatusClass(status) + '">' + escapeHtml(status) + '</span>' +
           mutedLine(resourceNoteText(item));
+      }
+
+      function trafficConfirmCell(item) {
+        var summary = trafficConfirmSummary(item);
+        var totalText = summary.total ? summary.confirmed + '/' + summary.total + (summary.label.unit || '') : '0/0';
+        var missingText = summary.missing > 0 ? summary.label.name + '缺' + summary.missing + summary.label.unit : summary.label.name + '完整';
+        return '<span class="schedule-product-name">' + escapeHtml(summary.label.name + ' ' + totalText) + '</span>' +
+          mutedLine(missingText);
       }
 
       function rosterCell(item) {
@@ -2985,27 +3601,120 @@
         return '<span class="' + settlementStatusClass(status) + '">' + escapeHtml(status) + '</span>';
       }
 
+      function keyGapCell(item) {
+        var gaps = keyGapItems(item);
+        var first = gaps[0];
+        var rest = gaps.slice(1).map(function (entry) { return entry.text; }).join('、');
+        var mainClass = first.category === '无缺口' ? 'text-muted schedule-route-name' : 'schedule-product-name';
+        return '<span class="' + mainClass + '">' + escapeHtml(first.text) + '</span>' +
+          (rest ? mutedLine('另' + (gaps.length - 1) + '项：' + rest) : '');
+      }
+
+      function ownerCell(item) {
+        return '<span class="schedule-product-name">' + escapeHtml(item.planner || '-') + '</span>';
+      }
+
+      function mainStageClass(stage) {
+        if (stage === '销售中') return 'tag tag-blue';
+        if (stage === '出发准备') return 'tag tag-orange';
+        if (stage === '出团中') return 'tag tag-purple';
+        if (stage === '已回团') return 'tag tag-green';
+        if (stage === '已终止') return 'tag tag-gray';
+        return 'tag tag-gray';
+      }
+
+      function mainStatusCell(item) {
+        var stage = scheduleMainStage(item);
+        var saleText = item.saleStatus === '筹备中' ? '待发布' : item.saleStatus;
+        return '<span class="' + mainStageClass(stage) + '">' + escapeHtml(stage) + '</span>' +
+          mutedLine('销售 ' + saleText);
+      }
+
+      function dropdownItem(label, attr, danger) {
+        return '<button class="dropdown-item' + (danger ? ' danger' : '') + '" type="button" ' + attr + '>' + escapeHtml(label) + '</button>';
+      }
+
+      function saleToggleLabel(item) {
+        if (item.saleStatus === '开放报名') return '关闭销售';
+        if (item.saleStatus === '筹备中' || item.saleStatus === '待发布') return '发布销售';
+        return '开放报名';
+      }
+
+      function moreActionsHtml(item) {
+        var mainStage = scheduleMainStage(item);
+        var items = [];
+        if (mainStage === '待发布') {
+          items.push(dropdownItem('编辑团期', 'data-edit-schedule'));
+          items.push(dropdownItem('名额/价格', 'data-open-quota-price'));
+          items.push(dropdownItem('复制团期', 'data-copy-schedule'));
+          items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
+        } else if (mainStage === '销售中') {
+          items.push(dropdownItem('编辑团期', 'data-edit-schedule'));
+          items.push(dropdownItem(saleToggleLabel(item), 'data-toggle-sale'));
+          items.push(dropdownItem('调整截止日', 'data-adjust-deadline'));
+          items.push(dropdownItem('复制团期', 'data-copy-schedule'));
+          items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
+        } else if (mainStage === '出发准备') {
+          items.push(dropdownItem('名单管理', 'data-open-roster'));
+          items.push(dropdownItem('证件/签证', 'data-open-documents'));
+          items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
+          items.push(dropdownItem('出团通知', 'data-open-notice'));
+          items.push(dropdownItem('领队安排', 'data-open-leader'));
+          items.push(dropdownItem('标记已出发', 'data-mark-departed'));
+          items.push(dropdownItem('调整截止日', 'data-adjust-deadline'));
+          items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
+        } else if (mainStage === '出团中') {
+          items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
+          items.push(dropdownItem('出团通知', 'data-open-notice'));
+          items.push(dropdownItem('领队安排', 'data-open-leader'));
+          items.push(dropdownItem('标记已回团', 'data-mark-returned'));
+        } else if (mainStage === '已回团') {
+          items.push(dropdownItem('复制团期', 'data-copy-schedule'));
+        } else if (mainStage === '已终止') {
+          items.push(dropdownItem('复制团期', 'data-copy-schedule'));
+        } else {
+          items.push(dropdownItem('编辑团期', 'data-edit-schedule'));
+          items.push(dropdownItem('名额/价格', 'data-open-quota-price'));
+          items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
+          items.push(dropdownItem('复制团期', 'data-copy-schedule'));
+        }
+        return items.join('');
+      }
+
       function actionHtml(item) {
         var href = detailHref(item);
-        var saleToggleText = item.saleStatus === '开放报名' ? '关闭销售' : '开放报名';
+        var settlementHref = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&tab=settlement';
         if (item.approvalStatus === '待审批' || (item.tabStatus || '').split(/\s+/).indexOf('待审批') > -1) {
-          return '<div class="table-action"><button type="button" class="table-action-primary" disabled>审批中</button><a href="' + href + '">详情</a><button type="button" disabled>名额/价格</button></div>';
+          return '<div class="table-action"><button type="button" class="table-action-primary" disabled>审批中</button><a href="' + href + '">详情</a></div>';
         }
-        return '<div class="table-action"><a class="table-action-primary" href="' + href + '">详情</a><button type="button" data-open-quota-price>名额/价格</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button" data-edit-schedule>编辑</button><button class="dropdown-item" type="button" data-toggle-sale>' + saleToggleText + '</button><button class="dropdown-item" type="button" data-adjust-deadline>调整截止日</button><button class="dropdown-item" type="button" data-copy-schedule>复制团期</button><button class="dropdown-item danger" type="button" data-cancel-schedule>取消团期</button></span></span></div>';
+        var mainStage = scheduleMainStage(item);
+        var primaryAction = '<a class="table-action-primary" href="' + href + '">查看详情</a>';
+        if (mainStage === '待发布') {
+          primaryAction = '<button class="table-action-primary" type="button" data-toggle-sale>发布销售</button>';
+        } else if (mainStage === '销售中') {
+          primaryAction = '<button class="table-action-primary" type="button" data-open-quota-price>名额/价格</button>';
+        } else if (mainStage === '出发准备') {
+          primaryAction = '<button class="table-action-primary" type="button" data-open-primary-action="preparation">出团准备</button>';
+        } else if (mainStage === '出团中') {
+          primaryAction = '<button class="table-action-primary" type="button" data-open-primary-action="execution">执行记录</button>';
+        } else if (mainStage === '已回团') {
+          primaryAction = '<a class="table-action-primary" href="' + settlementHref + '">成本结算</a>';
+        }
+        return '<div class="table-action">' + primaryAction + '<a href="' + href + '">详情</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu">' + moreActionsHtml(item) + '</span></span></div>';
       }
 
       function rowHtml(item, index) {
         var href = detailHref(item);
         var actions = actionHtml(item);
         return '<tr data-index="' + index + '" data-href="' + href + '" data-tab-status="' + escapeHtml(item.tabStatus) + '" data-deadline="' + escapeHtml(item.deadline || '') + '" data-remark="' + escapeHtml(item.remark || '') + '" data-locked="' + (item.locked ? 'true' : 'false') + '">' +
-          '<td>' + batchCodeCell(item, href) + '</td>' +
-          '<td data-product="' + escapeHtml(item.product) + '" data-route="' + escapeHtml(item.route || '-') + '"><span class="schedule-product-name">' + escapeHtml(item.product) + '</span><span class="text-muted schedule-route-name">' + escapeHtml(item.route || '-') + '</span></td>' +
+          '<td data-product="' + escapeHtml(item.product) + '" data-route="' + escapeHtml(item.route || '-') + '">' + scheduleObjectCell(item, href) + '</td>' +
           '<td>' + departCell(item) + '</td>' +
-          '<td>' + signupOrderCell(item) + '</td>' +
-          '<td>' + procurementOccupancyCell(item) + '</td>' +
-          '<td><span class="' + statusClass(item.saleStatus) + '">' + escapeHtml(item.saleStatus) + '</span></td>' +
-          '<td>' + costStatusCell(item) + '</td>' +
-          '<td>' + escapeHtml(item.planner || '周伟') + '</td>' +
+          '<td>' + salesQuotaCell(item) + '</td>' +
+          '<td>' + orderRosterCell(item) + '</td>' +
+          '<td>' + trafficConfirmCell(item) + '</td>' +
+          '<td>' + keyGapCell(item) + '</td>' +
+          '<td>' + ownerCell(item) + '</td>' +
+          '<td>' + mainStatusCell(item) + '</td>' +
           '<td>' + actions + '</td>' +
           '</tr>';
       }
@@ -3021,16 +3730,22 @@
         var codeQuery = scheduleCodeFilter.value.trim().toUpperCase();
         var status = scheduleStatusFilter.value;
         var executionStatus = executionStatusFilter.value;
-        var settlementStatus = settlementStatusFilter.value;
+        var currentTodo = currentTodoFilter.value;
+        var riskStatus = riskStatusFilter.value;
         var batchType = batchTypeFilter.value;
         if (productQuery && item.product.indexOf(productQuery) === -1) return false;
         if (codeQuery && item.code.toUpperCase().indexOf(codeQuery) === -1) return false;
         if (batchType && batchType !== '全部' && item.batchType !== batchType) return false;
         if (departStartDate.value && item.depart < departStartDate.value) return false;
         if (departEndDate.value && item.depart > departEndDate.value) return false;
-        if (status && status !== '全部' && item.saleStatus !== status) return false;
-        if (executionStatus && executionStatus !== '全部执行' && item.executionStatus !== executionStatus) return false;
-        if (settlementStatus && settlementStatus !== '全部结算' && item.settlementStatus !== settlementStatus) return false;
+        if (status && status !== '全部') {
+          var saleText = item.saleStatus === '筹备中' ? '待发布' : item.saleStatus;
+          if (status !== item.saleStatus && status !== saleText) return false;
+        }
+        if (executionStatus && executionStatus !== '全部阶段' && executionStage(item) !== executionStatus) return false;
+        if (currentTodo && currentTodo !== '全部缺口' && keyGapLabels(item).indexOf(currentTodo) === -1) return false;
+        if (riskStatus === '有风险' && !hasScheduleRisk(item)) return false;
+        if (riskStatus === '无风险' && hasScheduleRisk(item)) return false;
         if (activeTabValue && activeTabValue !== '全部' && item.tabStatus.split(/\s+/).indexOf(activeTabValue) === -1) return false;
         return true;
       }
@@ -3125,6 +3840,8 @@
         });
         if (scheduleBatchActionMenu) scheduleBatchActionMenu.classList.remove('show');
         if (scheduleBatchActionToggle) scheduleBatchActionToggle.setAttribute('aria-expanded', 'false');
+        if (scheduleToolMenu) scheduleToolMenu.classList.remove('show');
+        if (scheduleToolToggle) scheduleToolToggle.setAttribute('aria-expanded', 'false');
       }
 
       function setScheduleView(view) {
@@ -4055,6 +4772,30 @@
         closeMenus();
         openScheduleBatchAction(action);
       });
+      scheduleToolToggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var willShow = !scheduleToolMenu.classList.contains('show');
+        closeMenus();
+        scheduleToolMenu.classList.toggle('show', willShow);
+        scheduleToolToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+      });
+      scheduleToolMenu.addEventListener('click', function (event) {
+        var toolButton = event.target.closest('[data-schedule-tool]');
+        if (!toolButton) return;
+        event.preventDefault();
+        event.stopPropagation();
+        var tool = toolButton.dataset.scheduleTool;
+        closeMenus();
+        if (tool === 'aiRisk') {
+          renderScheduleAiRisk();
+          window.caesarUI.openLayer(scheduleAiRiskModal);
+        } else if (tool === 'exportExecution') {
+          showScheduleExecutionResult('执行计划导出任务已创建。');
+        } else if (tool === 'exportRoster') {
+          showScheduleExecutionResult('名单导出任务已创建。');
+        }
+      });
 
       saveSchedule.addEventListener('click', function () {
         if (!scheduleProduct.value.trim()) return;
@@ -4106,6 +4847,11 @@
       document.querySelectorAll('[data-close-lock]').forEach(function (button) {
         button.addEventListener('click', function () { window.caesarUI.closeLayer(lockModal); });
       });
+      document.querySelectorAll('[data-close-execution-layer]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          window.caesarUI.closeLayer(button.closest('.modal-overlay'));
+        });
+      });
 
       [quotaTotalStock, quotaPriceInput].forEach(function (input) {
         input.addEventListener('input', updateQuotaAllocation);
@@ -4142,7 +4888,7 @@
 
       confirmScheduleBatchAction.addEventListener('click', confirmScheduleBatchActionApply);
 
-      [createModal, costModal, scheduleOrderDrawer, batchScheduleDrawer, batchPreviewEditModal, scheduleBatchActionModal, copyModal, stockLineageDrawer, scheduleResourceDrawer, cancelModal, lockModal].forEach(function (modal) {
+      [createModal, costModal, scheduleOrderDrawer, batchScheduleDrawer, batchPreviewEditModal, scheduleBatchActionModal, copyModal, stockLineageDrawer, scheduleResourceDrawer, executionRosterDrawer, executionDocumentsDrawer, executionNoticeDrawer, executionLeaderDrawer, scheduleAiRiskModal, scheduleExecutionToastModal, cancelModal, lockModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
@@ -4178,6 +4924,14 @@
         var scheduleOrderButton = event.target.closest('[data-open-schedule-orders]');
         var quotaPriceButton = event.target.closest('[data-open-quota-price]');
         var resourceActionButton = event.target.closest('[data-resource-action]');
+        var primaryActionButton = event.target.closest('[data-open-primary-action]');
+        var rosterButton = event.target.closest('[data-open-roster]');
+        var documentsButton = event.target.closest('[data-open-documents]');
+        var executionResourceButton = event.target.closest('[data-open-execution-resource]');
+        var noticeButton = event.target.closest('[data-open-notice]');
+        var leaderButton = event.target.closest('[data-open-leader]');
+        var markDepartedButton = event.target.closest('[data-mark-departed]');
+        var markReturnedButton = event.target.closest('[data-mark-returned]');
 
         if (moreButton) {
           event.preventDefault();
@@ -4235,6 +4989,95 @@
           closeMenus();
           fillStockLineage(item);
           window.caesarUI.openLayer(stockLineageDrawer);
+          return;
+        }
+        if (primaryActionButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          var actionKey = primaryActionButton.dataset.openPrimaryAction;
+          if (actionKey === 'markDeparted') {
+            item.executionStatus = '出团中';
+            item.saleStatus = '已截止';
+            item.tabStatus = stateTokens(item);
+            renderRows();
+            showScheduleExecutionResult('已将 ' + item.code + ' 标记为出团中。');
+            return;
+          }
+          if (actionKey === 'markReturned') {
+            item.executionStatus = '已回团';
+            item.settlementStatus = item.settlementStatus === '已结算' ? '已结算' : '结算中';
+            item.tabStatus = stateTokens(item);
+            renderRows();
+            showScheduleExecutionResult('已将 ' + item.code + ' 标记为已回团，可进入成本结算复核。');
+            return;
+          }
+          if (actionKey === 'preparation') {
+            openExecutionDrawer(item, 'roster');
+            return;
+          }
+          if (actionKey === 'execution') {
+            openExecutionDrawer(item, 'resource');
+            return;
+          }
+          openExecutionDrawer(item, actionKey);
+          return;
+        }
+        if (rosterButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          openExecutionDrawer(item, 'roster');
+          return;
+        }
+        if (documentsButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          openExecutionDrawer(item, 'documents');
+          return;
+        }
+        if (executionResourceButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          openExecutionDrawer(item, 'resource');
+          return;
+        }
+        if (noticeButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          openExecutionDrawer(item, 'notice');
+          return;
+        }
+        if (leaderButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          openExecutionDrawer(item, 'leader');
+          return;
+        }
+        if (markDepartedButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          item.executionStatus = '出团中';
+          item.saleStatus = '已截止';
+          item.tabStatus = stateTokens(item);
+          renderRows();
+          showScheduleExecutionResult('已将 ' + item.code + ' 标记为出团中。');
+          return;
+        }
+        if (markReturnedButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          item.executionStatus = '已回团';
+          item.settlementStatus = item.settlementStatus === '已结算' ? '已结算' : '结算中';
+          item.tabStatus = stateTokens(item);
+          renderRows();
+          showScheduleExecutionResult('已将 ' + item.code + ' 标记为已回团，可进入成本结算复核。');
           return;
         }
         if (resourceActionButton) {
@@ -4501,6 +5344,78 @@
         renderRows();
       });
 
+      document.getElementById('exportScheduleRoster').addEventListener('click', function () {
+        showScheduleExecutionResult('当前团期名单导出任务已创建。');
+      });
+
+      document.getElementById('syncLeaderRoster').addEventListener('click', function () {
+        if (!currentExecutionSchedule) return;
+        currentExecutionSchedule.rosterStatus = '已齐';
+        currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
+        window.caesarUI.closeLayer(executionRosterDrawer);
+        renderRows();
+        showScheduleExecutionResult('名单已同步给领队，当前团期名单状态已更新。');
+      });
+
+      document.getElementById('sendDocumentReminder').addEventListener('click', function () {
+        showScheduleExecutionResult('补件提醒已生成，待发送给证件资料未齐的游客。');
+      });
+
+      document.getElementById('confirmDocumentsReady').addEventListener('click', function () {
+        if (!currentExecutionSchedule) return;
+        currentExecutionSchedule.rosterStatus = '已齐';
+        currentExecutionSchedule.documentsStatus = '资料完整';
+        currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
+        window.caesarUI.closeLayer(executionDocumentsDrawer);
+        renderRows();
+        showScheduleExecutionResult('证件/资料已标记为完整。');
+      });
+
+      document.getElementById('confirmScheduleResource').addEventListener('click', function () {
+        if (!currentSchedule && currentExecutionSchedule) currentSchedule = currentExecutionSchedule;
+        if (!currentSchedule) return;
+        currentSchedule.resourceStatus = '已确认';
+        currentSchedule.tabStatus = stateTokens(currentSchedule);
+        window.caesarUI.closeLayer(scheduleResourceDrawer);
+        renderRows();
+        showScheduleExecutionResult('资源/票务确认结果已写入当前团期。');
+      });
+
+      document.getElementById('sendScheduleNotice').addEventListener('click', function () {
+        if (!currentExecutionSchedule) return;
+        currentExecutionSchedule.noticeStatus = '已发送';
+        currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
+        window.caesarUI.closeLayer(executionNoticeDrawer);
+        renderRows();
+        showScheduleExecutionResult('出团通知已发送，当前团期通知状态已更新。');
+      });
+
+      document.getElementById('saveScheduleLeader').addEventListener('click', function () {
+        if (!currentExecutionSchedule) return;
+        var selected = document.querySelector('input[name="scheduleLeaderOption"]:checked');
+        if (selected) currentExecutionSchedule.leader = selected.value;
+        currentExecutionSchedule.leaderStatus = '已安排';
+        currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
+        window.caesarUI.closeLayer(executionLeaderDrawer);
+        renderRows();
+        showScheduleExecutionResult('领队安排已保存。');
+      });
+
+      document.getElementById('executionLeaderOptions').addEventListener('change', function (event) {
+        var radio = event.target.closest('input[name="scheduleLeaderOption"]');
+        if (!radio) return;
+        document.querySelectorAll('#executionLeaderOptions .outbound-leader-card').forEach(function (card) {
+          card.classList.toggle('selected', card.contains(radio) && radio.checked);
+        });
+      });
+
+      executionCheckAllGuests.addEventListener('change', syncExecutionGuestChecks);
+
+      document.getElementById('createScheduleRiskTasks').addEventListener('click', function () {
+        window.caesarUI.closeLayer(scheduleAiRiskModal);
+        showScheduleExecutionResult('AI风险已生成团期待办，可通过“当前待办”筛选继续处理。');
+      });
+
       document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (button) {
         button.addEventListener('click', function (event) {
           event.stopImmediatePropagation();
@@ -4523,7 +5438,8 @@
         batchTypeFilter.selectedIndex = 0;
         scheduleStatusFilter.selectedIndex = 0;
         executionStatusFilter.selectedIndex = 0;
-        settlementStatusFilter.selectedIndex = 0;
+        currentTodoFilter.selectedIndex = 0;
+        riskStatusFilter.selectedIndex = 0;
         activeTabValue = '全部';
         document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
           item.classList.toggle('active', item.dataset.filterValue === '全部');
@@ -4585,10 +5501,23 @@
       applyApprovedScheduleResults();
       applyPendingScheduleResults();
       applyStoredBatchScheduleResults();
+      applyLifecycleSampleSchedules();
       renderRows();
 
       if (routeFilterProduct) {
         productNameFilter.value = routeFilterProduct;
+        applyFilters();
+      }
+      if (pageParams.get('stage')) {
+        executionStatusFilter.value = pageParams.get('stage');
+        applyFilters();
+      }
+      if (pageParams.get('todo')) {
+        currentTodoFilter.value = pageParams.get('todo');
+        activeTabValue = pageParams.get('tab') || '全部';
+        document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
+          item.classList.toggle('active', item.dataset.filterValue === activeTabValue);
+        });
         applyFilters();
       }
       var prefill = {

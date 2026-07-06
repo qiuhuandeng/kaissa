@@ -83,6 +83,24 @@
           <div id="overviewCustomerGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">报名信息</div>
           <div id="overviewBookingGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">交通资源占用</div>
+          <div class="table-wrap order-detail-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>团期/资源</th>
+                  <th>占用对象</th>
+                  <th>占用子类型</th>
+                  <th>锁位状态</th>
+                  <th>出票/确认</th>
+                  <th>来源</th>
+                </tr>
+              </thead>
+              <tbody id="trafficOccupancyRows">
+                <tr><td class="table-empty-cell" colspan="6">暂无交通资源占用记录</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -405,8 +423,8 @@
           travelers: {
             summary: '2人，登船表和护照有效期待复核',
             statuses: [['资料完整度', '70%', 'tag tag-orange'], ['船票资料', '待船方确认', 'tag tag-orange'], ['AI预检', '英文姓名待核对', 'tag tag-orange']],
-            head: ['乘客', '证件', '英文姓名', '舱型/舱号', '登船资料', '状态'],
-            rows: [['刘洋', '护照E****621', 'LIU/YANG', '阳台舱 / 待回传', '登船表待补', ['待补', 'tag tag-orange']], ['周丽', '护照E****712', 'ZHOU/LI', '阳台舱 / 待回传', '护照已上传', ['待确认', 'tag tag-blue']]],
+            head: ['乘客', '证件', '英文姓名', '类型/占位', '舱型/舱号', '状态'],
+            rows: [['刘洋', '护照E****621', 'LIU/YANG', '成人占位', '阳台舱BA / 待回传', ['待补', 'tag tag-orange']], ['周丽', '护照E****712', 'ZHOU/LI', '成人占位', '阳台舱BA / 待回传', ['待确认', 'tag tag-blue']]],
             drawer: [['登船资料', '英文姓名、国籍、出生日期、护照有效期'], ['舱房资料', '舱型、床型、同住人、舱号'], ['岸上项目', '岸上观光选择、餐食禁忌、保险信息']],
             ai: ['英文姓名需与护照 MRZ 区一致。', '登船资料未完整前，不建议提交船票确认。']
           },
@@ -420,7 +438,7 @@
           contract: [['邮轮合同', '已生成', '合同'], ['舱房补充条款', '待船票确认', '补充协议']],
           aftersales: [
             ['SH20260704011', '退款', '2026-07-04 14:10', '周丽取消岸上项目', '退款 ¥1,200', '待复核', '待财务退款'],
-            ['SH20260703012', '改舱', '2026-07-03 09:30', '阳台舱调整为海景房', '退差 ¥3,600', '已通过', '待财务核对']
+            ['SH20260703012', '改舱', '2026-07-03 09:30', '阳台舱调整为海景舱', '退差 ¥3,600', '已通过', '待财务核对']
           ]
         },
         train: {
@@ -441,8 +459,8 @@
           travelers: {
             summary: '2人，实名资料和上下车站待确认',
             statuses: [['资料完整度', '50%', 'tag tag-orange'], ['铺位资料', '待分铺', 'tag tag-orange'], ['实名检查', '待检查', 'tag tag-gray']],
-            head: ['乘客', '证件', '上下车站', '铺位', '联系电话', '状态'],
-            rows: [['赵明', '身份证待补', '西安上/乌鲁木齐下', '下铺待分配', '138****5500', ['待补', 'tag tag-orange']], ['陈芳', '身份证待补', '西安上/乌鲁木齐下', '下铺待分配', '139****6600', ['待补', 'tag tag-orange']]],
+            head: ['乘客', '证件', '类型/占位', '席别/铺位', '上下车站', '状态'],
+            rows: [['赵明', '身份证待补', '成人占位', '软卧下铺待分配', '西安上/乌鲁木齐下', ['待补', 'tag tag-orange']], ['陈芳', '身份证待补', '成人占位', '软卧下铺待分配', '西安上/乌鲁木齐下', ['待补', 'tag tag-orange']]],
             drawer: [['实名资料', '身份证号、手机号、紧急联系人'], ['铺位细节', '车厢、席别、上下铺、同住关系'], ['乘车信息', '上下车站、集合时间、特殊照顾']],
             ai: ['实名资料不完整，无法提交专列铺位确认。', '下铺余量紧张，建议先确认付款和铺位。']
           },
@@ -570,6 +588,7 @@
         ]
       };
       const config = configs[type] || configs.group;
+      if (params.get('orderNo')) config.orderNo = params.get('orderNo');
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -646,12 +665,34 @@
         return typeMeta[config.productType] || typeMeta['出境游'];
       }
       function bookingStructure() {
-        if (config.productType === '邮轮') return [['成人人数', '2'], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['舱房类型', '阳台舱'], ['单房差数量', '0']];
-        if (config.productType === '专列') return [['成人人数', '2'], ['儿童人数', '0'], ['老人人数', '0'], ['铺位数量', '2'], ['席别结构', '下铺待分配'], ['单房差数量', '0']];
+        if (config.productType === '邮轮') return [['占用航次', scheduleValue()], ['占用舱型', '阳台舱BA'], ['成人占位', '2'], ['儿童占位', '1'], ['儿童不占位', '1（不扣舱房）'], ['舱房数量', '1间'], ['第三/第四人', '1'], ['库存状态', '已占用1间阳台舱']];
+        if (config.productType === '专列') return [['占用班期', scheduleValue()], ['席别/铺位', '软卧下铺'], ['成人占位', '2'], ['儿童占位', '1'], ['儿童不占位', '1（不扣铺位）'], ['铺位数量', '3铺'], ['包厢占用', '0'], ['库存状态', '已占用3个下铺']];
         if (config.productType === '自由行') return [['成人人数', '2'], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['单房差数量', '0'], ['出行人数', '2']];
         if (config.productType === '单项服务') return [['委托人数', String(config.travelers.rows.length)], ['儿童人数', '0'], ['老人人数', '0'], ['服务数量', '2'], ['材料份数', '2'], ['加急数量', '0']];
         if (config.productType === '研学') return [['学员人数', String(config.travelers.rows.length)], ['成人陪同', '0'], ['老师人数', '1'], ['房间数量', '-'], ['特殊材料', '监护人授权书'], ['出行人数', String(config.travelers.rows.length)]];
         return [['成人人数', String(config.travelers.rows.length)], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['单房差数量', '0'], ['出行人数', String(config.travelers.rows.length)]];
+      }
+      function trafficOccupancyData() {
+        const scheduleNo = params.get('scheduleNo') || scheduleValue();
+        const byOrder = {
+          KS202607010018: [['EU20260818001', 'CA937去程 / CA938返程', '张建国', '经济舱G舱座位', '已锁位', '已出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊 ¥6,666 · 转团调整 ¥666']],
+          KS202607030025: [['EU20260818001', 'CA937去程 / CA938返程', '王敏', '经济舱G舱座位', '已占用', '待出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊 ¥6,666 · 待出票']],
+          KS202607030026: [['EU20260818001', 'CA937去程 / CA938返程', '李梅', '经济舱K舱座位', '待资料补齐', '待出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊待确认']],
+          KS202607020039: [['TR-SILK-20250822-001', 'Y653 东方丝路专列', '李建军', '软卧下铺', '已锁位', '已确认', 'TRN-BLK-20260628-004']],
+          KS202607020040: [['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵琳', '软卧下铺', '已占用', '待确认', 'TRN-BLK-20260628-004']],
+          KSCZ20260704002: [['CR-MED-20250720-001', '理想号 MED-20260912', '刘洋', '阳台舱BA / 成人占位', '已占用', '待确认', 'CRU-BLK-20260622-003', '占用同一间阳台舱'], ['CR-MED-20250720-001', '理想号 MED-20260912', '周丽', '阳台舱BA / 儿童占位', '已占用', '待确认', 'CRU-BLK-20260622-003', '占用舱位容量'], ['CR-MED-20250720-001', '理想号 MED-20260912', '刘小小', '儿童不占位', '已计费', '待确认', 'CRU-BLK-20260622-003', '不扣舱房库存'], ['CR-MED-20250720-001', '理想号 MED-20260912', '陈明', '第三/第四人', '已计费', '待确认', 'CRU-BLK-20260622-003', '同舱加人，不新增舱房']],
+          KSTR20260704003: [['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵明', '软卧下铺 / 成人占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用1个下铺'], ['TR-SILK-20250822-001', 'Y653 东方丝路专列', '陈芳', '软卧下铺 / 成人占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用1个下铺'], ['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵小雨', '软卧下铺 / 儿童占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用1个下铺'], ['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵小明', '儿童不占位', '已计费', '待确认', 'TRN-BLK-20260628-004', '不扣铺位库存']]
+        };
+        if (byOrder[config.orderNo]) return byOrder[config.orderNo];
+        if (config.productType === '邮轮') return [[scheduleNo, '理想号 MED-20260912', contactParts().name, '阳台舱BA / 成人占位', '已占用', '待确认', 'CRU-BLK-20260622-003', '占用舱房容量']];
+        if (config.productType === '专列') return [[scheduleNo, 'Y653 东方丝路专列', contactParts().name, '软卧下铺 / 成人占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用铺位库存']];
+        if (config.productType === '出境游') return [[scheduleNo, 'CA937去程 / CA938返程', contactParts().name, '经济舱G舱座位', '已占用', '待出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊随团期应付扣减']];
+        return [];
+      }
+      function trafficOccupancyRow(row) {
+        const scheduleNo = row[0] || scheduleValue();
+        const scheduleHref = '../tour/schedules-detail.html?scheduleNo=' + encodeURIComponent(scheduleNo) + '&tab=resource';
+        return '<tr><td><a class="link-primary table-main-link" href="' + scheduleHref + '">' + escapeHtml(scheduleNo) + '</a><span class="text-muted">' + escapeHtml(row[1]) + '</span></td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td><td>' + tagHtml([row[4], statusClass(row[4])]) + '</td><td>' + tagHtml([row[5], statusClass(row[5])]) + '</td><td>' + escapeHtml(row[6]) + '<span class="text-muted">' + escapeHtml(row[7] || '从团期交通资源占用生成') + '</span></td></tr>';
       }
       function descriptionItem(item) {
         const value = item[2] === 'html' ? item[1] : escapeHtml(item[1]);
@@ -748,6 +789,8 @@
           ['部门', meta.department]
         ]));
         setHtml('overviewBookingGrid', descriptionGrid(bookingStructure()));
+        const trafficRows = trafficOccupancyData();
+        setHtml('trafficOccupancyRows', trafficRows.length ? trafficRows.map(trafficOccupancyRow).join('') : '<tr><td class="table-empty-cell" colspan="6">本订单暂无交通资源占用记录。</td></tr>');
         setHtml('orderMoneyGrid', config.money.map(moneyCard).join(''));
         setText('aiDrawerText', config.travelers.ai.join(' '));
         setHtml('aiCheckItems', config.travelers.ai.map(function (text, index) { return taskItem(['预检项' + (index + 1), text]); }).join(''));

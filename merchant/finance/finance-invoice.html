@@ -54,7 +54,7 @@
       <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
     </section>
 
-    <section id="invoice-supplier" class="invoice-panel">
+    <section id="invoice-supplier" class="invoice-panel" hidden>
       <section class="filter-card filter-card-compact invoice-filter list-surface-filter" aria-label="供应商收票筛选">
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="supplierKeyword">供应商/发票/应付单</label><input id="supplierKeyword" type="search" placeholder="供应商/发票/应付单"></div>
@@ -81,7 +81,7 @@
       <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
     </section>
 
-    <section id="invoice-red" class="invoice-panel">
+    <section id="invoice-red" class="invoice-panel" hidden>
       <section class="filter-card filter-card-compact invoice-filter list-surface-filter" aria-label="红冲记录筛选">
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="redKeyword">红冲单/原发票/订单/客户</label><input id="redKeyword" type="search" placeholder="红冲单/原发票/订单/客户"></div>
@@ -105,7 +105,7 @@
       <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-2条/共2条</span></div>
     </section>
 
-    <section id="invoice-exception" class="invoice-panel">
+    <section id="invoice-exception" class="invoice-panel" hidden>
       <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="发票异常">
         <table>
           <thead><tr><th>异常单据</th><th>对象</th><th>关联业务</th><th>异常原因</th><th>金额</th><th>状态</th><th>操作</th></tr></thead>
@@ -214,8 +214,16 @@
       }
 
       function switchTab(tabName) {
-        tabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.invoiceTab === tabName); });
-        panels.forEach(function (panel) { panel.classList.toggle('active', panel.id === 'invoice-' + tabName); });
+        tabs.forEach(function (tab) {
+          var active = tab.dataset.invoiceTab === tabName;
+          tab.classList.toggle('active', active);
+          tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        panels.forEach(function (panel) {
+          var active = panel.id === 'invoice-' + tabName;
+          panel.classList.toggle('active', active);
+          panel.hidden = !active;
+        });
       }
 
       function currentRows() {

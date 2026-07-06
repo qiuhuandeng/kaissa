@@ -78,7 +78,6 @@
       <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
       <button class="tab-item" type="button" data-filter-value="待审核">待审核</button>
       <button class="tab-item" type="button" data-filter-value="正常">正常</button>
-      <button class="tab-item" type="button" data-filter-value="财务异常">财务异常</button>
       <button class="tab-item" type="button" data-filter-value="暂停">暂停</button>
       <button class="tab-item" type="button" data-filter-value="停用">停用</button>
     </nav>
@@ -90,10 +89,9 @@
             <th>门市</th>
             <th>类型/归属</th>
             <th>负责人</th>
-            <th>合作规则</th>
-            <th>资金状态</th>
-            <th>可售/业务摘要</th>
-            <th>财务配置</th>
+            <th>结算规则</th>
+            <th>预存/授信</th>
+            <th>可售范围</th>
             <th>经营状态</th>
             <th>操作</th>
           </tr>
@@ -502,6 +500,46 @@
         return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
       }
 
+      function plainText(node) {
+        return (node ? node.textContent : '').replace(/\s+/g, ' ').trim();
+      }
+
+      function cleanCellHtml(cell) {
+        var clone = cell.cloneNode(true);
+        clone.querySelectorAll('.tag-row, .tag').forEach(function (node) {
+          node.remove();
+        });
+        return clone.innerHTML;
+      }
+
+      function storeBalanceHtml(row, balanceCell, financeCell) {
+        var finance = row.dataset.finance || plainText(financeCell);
+        return balanceCell.innerHTML + (finance ? '<br><span class="text-muted">财务：' + escapeHtml(finance) + '</span>' : '');
+      }
+
+      function storeAuthHtml(row, authCell) {
+        var authText = row.dataset.storeAuth || plainText(authCell) || '待配置';
+        return escapeHtml(authText);
+      }
+
+      function normalizeStoreRows() {
+        document.querySelectorAll('#storeRows tr').forEach(function (row) {
+          row.dataset.tabStatus = row.dataset.status || row.dataset.tabStatus || '正常';
+          if (row.children.length !== 9) return;
+          var cells = Array.from(row.children);
+          row.innerHTML = [
+            cells[0].outerHTML,
+            cells[1].outerHTML,
+            cells[2].outerHTML,
+            cells[3].outerHTML,
+            '<td class="amount-strong">' + storeBalanceHtml(row, cells[4], cells[6]) + '</td>',
+            '<td>' + storeAuthHtml(row, cells[5]) + '</td>',
+            cells[7].outerHTML,
+            cells[8].outerHTML
+          ].join('');
+        });
+      }
+
       function optionEnabled(value) {
         return value && value.indexOf('全部') !== 0;
       }
@@ -583,7 +621,7 @@
         if (!activeAuthRow || !activeAuthRow.children[5]) return;
         var destinationText = selectedAuthValues('[data-auth-destination]', '未选择目的地');
         activeAuthRow.dataset.storeAuth = destinationText;
-        activeAuthRow.children[5].innerHTML = '<div class="tag-row"><span class="tag tag-blue">可售范围审批中</span><span class="tag tag-orange">销售配置待生效</span></div><span class="text-muted">' + escapeHtml(destinationText) + '</span>';
+        activeAuthRow.children[5].innerHTML = escapeHtml(destinationText) + '<br><span class="text-muted">可售范围审批中</span>';
       }
 
       function openPermissionDrawer(row) {
@@ -613,14 +651,15 @@
 
       function markPermissionSubmitted() {
         if (!activePermissionRow || !activePermissionRow.children[5]) return;
-        activePermissionRow.children[5].innerHTML = '<div class="tag-row"><span class="tag tag-blue">销售配置审批中</span><span class="tag tag-orange">待生效</span></div><span class="text-muted">' + escapeHtml(activePermissionRow.dataset.storeAuth || '按门市可售范围') + '</span>';
+        activePermissionRow.children[5].innerHTML = escapeHtml(activePermissionRow.dataset.storeAuth || '按门市可售范围') + '<br><span class="text-muted">销售配置审批中</span>';
       }
 
       function markFinanceSubmitted() {
-        if (!activeFinanceRow || !activeFinanceRow.children[6]) return;
+        if (!activeFinanceRow || !activeFinanceRow.children[4]) return;
         activeFinanceRow.dataset.finance = '待财务审核';
-        activeFinanceRow.dataset.tabStatus = (activeFinanceRow.dataset.status || '正常') + ' 待审核';
-        activeFinanceRow.children[6].innerHTML = '<span class="tag tag-orange">待财务审核</span><br><span class="text-muted">账号/NC待审</span>';
+        activeFinanceRow.dataset.tabStatus = activeFinanceRow.dataset.status || '正常';
+        var baseHtml = activeFinanceRow.children[4].innerHTML.replace(/<br><span class="text-muted">财务：[\s\S]*?<\/span>/, '');
+        activeFinanceRow.children[4].innerHTML = baseHtml + '<br><span class="text-muted">财务：待财务审核</span>';
       }
 
       function activeTab() {
@@ -669,14 +708,15 @@
           '<td>' + escapeHtml(type) + '<br><span class="text-muted">' + escapeHtml(subject + ' / ' + center) + '</span></td>' +
           '<td>' + escapeHtml(manager) + '<br><span class="text-muted">' + escapeHtml(phone) + '</span></td>' +
           '<td>' + escapeHtml(settle) + '<br><span class="text-muted">管理费 ' + escapeHtml(fee) + '</span></td>' +
-          '<td class="amount-strong">¥0<br><span class="text-muted">待开预存账户</span></td>' +
-          '<td><div class="tag-row"><span class="tag tag-orange">合同待开通</span><span class="tag tag-orange">需总部复核</span><span class="tag tag-orange">可售待配</span></div><span class="text-muted">提交审核后开通可售范围</span></td>' +
-          '<td><span class="tag tag-orange">待财务审核</span><br><span class="text-muted">账号/NC待审</span></td>' +
+          '<td class="amount-strong">¥0<br><span class="text-muted">待开预存账户</span><br><span class="text-muted">财务：待财务审核</span></td>' +
+          '<td>待开通</td>' +
           '<td><span class="tag tag-blue">待审核</span></td>' +
           '<td><div class="table-action"><a class="table-action-primary" href="detail.html">详情</a><button class="table-link" type="button" data-open-auth>可售范围</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item" data-open-permission>销售配置</button><button type="button" class="dropdown-item" data-open-finance-change>财务配置</button><button type="button" class="dropdown-item">补充资料</button><button type="button" class="dropdown-item danger">撤回申请</button></span></span></div></td>' +
           '</tr>';
         document.getElementById('storeRows').insertAdjacentHTML('afterbegin', row);
       }
+
+      normalizeStoreRows();
 
       document.addEventListener('click', function (event) {
         var tab = event.target.closest('.store-list-surface .tab-item');

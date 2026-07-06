@@ -73,10 +73,15 @@
           title: "团期管理",
           children: [
             { title: "团期管控", href: "tour/schedules.html" },
-            { title: "资源采购", href: "tour/resource-procurement-inventory.html" },
-            { title: "团期成本", href: "tour/fulfillment-cost.html" },
-            { title: "出团执行", href: "tour/fulfillment-outbound.html" },
-            { title: "回团结算", href: "tour/fulfillment-return.html" },
+            { title: "成本结算", href: "tour/fulfillment-cost.html" },
+          ],
+        },
+        {
+          title: "交通采购",
+          children: [
+            { title: "机票切位", href: "tour/resource-procurement-inventory.html?kind=air" },
+            { title: "邮轮包舱", href: "tour/resource-procurement-inventory.html?kind=cruise" },
+            { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
         { title: "单团自组", href: "tour/product-custom-list.html" },
@@ -280,6 +285,7 @@
   const reportRouteKeys = new Set(["profit", "receipt", "payment", "ar-ap", "prepay", "fund"]);
   const approvalViewKeys = new Set(["todo", "mine", "cc", "overview", "config"]);
   const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "alias"]);
+  const trafficProcurementKeys = new Set(["air", "cruise", "train"]);
   const merchantBaseUrl = new URL("../merchant/", new URL(bootScript.src || "../../shared/nav-merchant.js", window.location.href));
 
   function normalizeMerchantTheme(value) {
@@ -363,6 +369,12 @@
       const view = url.searchParams.get("view") || "todo";
       return "approval/approvals.html?view=" + (approvalViewKeys.has(view) ? view : "todo");
     }
+    if (file === "tour/resource-procurement-inventory.html") {
+      const contractNo = url.searchParams.get("contractNo") || "";
+      const inferredKind = contractNo.startsWith("CRU") ? "cruise" : contractNo.startsWith("TRN") ? "train" : "air";
+      const kind = url.searchParams.get("kind") || inferredKind;
+      return "tour/resource-procurement-inventory.html?kind=" + (trafficProcurementKeys.has(kind) ? kind : "air");
+    }
     return file;
   }
 
@@ -414,9 +426,9 @@
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
-    "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "外采产品详情" },
+    "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "外采代理详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采方案包装" },
-    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "外采团期" },
+    "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "可代理团期" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
     "system/role-assignment.html": { href: "system/staff-management.html", title: "员工任职" },
     "system/data-scope.html": { href: "system/staff-management.html", title: "员工任职" },
@@ -426,13 +438,11 @@
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-batch.html": { href: "tour/schedules.html", title: "批量开排" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
-    "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html", title: "资源采购" },
-    "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
-    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
-    "tour/fulfillment-roster.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
-    "tour/fulfillment-documents.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
-    "tour/fulfillment-visa.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
-    "tour/fulfillment-notice.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
+    "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
+    "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "成本结算" },
+    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "成本结算" },
+    "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管控" },
+    "tour/fulfillment-notice.html": { href: "tour/schedules.html", title: "团期管控" },
     "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
     "sales/booking.html": { href: "sales/orders.html", title: "新建订单" },
     "sales/orders-transfer.html": { href: "sales/orders-after-sales.html", title: "变更申请" },
@@ -2050,7 +2060,7 @@
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
     "欧洲", "东南亚", "国内", "法国", "德国", "意大利", "荷兰", "比利时", "日本", "英国", "MICE", "全线路",
     "资源", "产品中心", "团期管理", "销售中心", "门市中心", "门店中心", "渠道中心", "客户", "财务", "审批", "AI", "系统设置",
-    "线路发布", "价格调整", "渠道授权", "成本差异", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
+    "线路发布", "价格调整", "渠道授权", "成本差异", "交通资源付款", "超DL还位", "损耗确认", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
     "线路经理", "线路总监", "销售顾问", "高级顾问", "顾问", "计调", "财务", "管理层", "门店店长", "审批管理员", "超管",
     "专业版", "旗舰版", "基础版", "组织账号", "权限安全", "AI模型", "系统配置", "审计只读", "线路文案生成", "行程生成", "话术建议", "财务异常分析", "客户洞察", "其他"
   ]);
@@ -2060,7 +2070,7 @@
     /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
     /^(门市|门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
     /^(资源|产品中心|团期管理|销售中心|门市中心|门店中心|渠道中心|客户|财务|审批|AI|系统设置)$/,
-    /^(线路发布|价格调整|渠道授权|成本差异|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
+    /^(线路发布|价格调整|渠道授权|成本差异|交通资源付款|超DL还位|损耗确认|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
     /^(线路经理|线路总监|销售顾问|高级顾问|顾问|计调|财务|管理层|门店店长|审批管理员|超管)$/,
     /^(专业版|旗舰版|基础版|组织账号|权限安全|AI模型|系统配置|审计只读)$/,
     /^(欧洲|东南亚|国内|法国|德国|意大利|荷兰|比利时|日本|英国|全线路)$/,
