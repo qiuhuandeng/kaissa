@@ -7,6 +7,7 @@
   var currentStep = 0;
   var formDirty = false;
   var currentKind = page.getAttribute('data-route-kind') || 'group';
+  var currentVariant = 'outbound';
   var isSupplierRoute = page.hasAttribute('data-supplier-route-edit');
 
   function $(selector, root) {
@@ -175,6 +176,8 @@
   }
 
   function routeTypeToKind(value) {
+    if (/国内/.test(value)) return 'domestic';
+    if (/出境/.test(value)) return 'outbound';
     if (/邮轮/.test(value)) return 'cruise';
     if (/专列/.test(value)) return 'train';
     if (/自由行/.test(value)) return 'free';
@@ -186,6 +189,11 @@
     if (/train|专列/i.test(value || '')) return 'train';
     if (/free|自由行/i.test(value || '')) return 'free';
     return 'group';
+  }
+
+  function normalizeVariant(value) {
+    if (/domestic|国内/i.test(value || '')) return 'domestic';
+    return 'outbound';
   }
 
   function renderKeyValueList(items, className) {
@@ -235,14 +243,14 @@
   var routePresets = {
     group: {
       scheduleType: 'group',
-      tagText: '跟团线路',
+      tagText: '出境游线路',
       tagClass: 'tag tag-blue',
       title: '欧洲十国经典游 12日11晚',
       desc: '北京出发，覆盖法国、德国、瑞士、意大利等核心目的地。',
       subtitle: '纯玩无购物，法德瑞意核心城市连线，含中文领队与签证协助',
       supplier: ['欧洲地接ABC', '国际航空CA', '法国地接联盟'],
       ownerOrg: ['欧洲线路中心', '亚洲线路中心', '国内线路中心'],
-      routeType: '跟团游',
+      routeType: '出境游',
       chips: [['供货方', '欧洲地接ABC'], ['承接组织', '欧洲线路中心'], ['出发城市', '北京']],
       heroTags: ['纯玩', '含签证', '中文领队'],
       readiness: [['方案总数', '2个'], ['参考起价', '¥29,800/人'], ['数据完整度', '100%']],
@@ -432,9 +440,33 @@
     }
   };
 
+  function routePresetFor(kind) {
+    var normalizedKind = normalizeKind(kind);
+    var preset = routePresets[normalizedKind] || routePresets.group;
+    if (normalizedKind !== 'group') return preset;
+    if (normalizeVariant(kind) !== 'domestic') return preset;
+    return Object.assign({}, preset, {
+      tagText: '国内游线路',
+      title: '三亚亲子5日游',
+      desc: '广州/深圳出发，覆盖三亚、亚龙湾、海棠湾等核心度假目的地。',
+      subtitle: '亲子度假，含海岛酒店、接送和精选景区，适合暑期家庭客群',
+      supplier: ['三亚亚特兰蒂斯酒店', '海南地接联盟', '广州客运资源中心'],
+      ownerOrg: ['国内线路中心', '华南产品中心', '门店运营中心'],
+      routeType: '国内游',
+      chips: [['供货方', '三亚亚特兰蒂斯酒店'], ['承接组织', '国内线路中心'], ['出发城市', '广州/深圳']],
+      heroTags: ['亲子', '海岛', '暑期'],
+      plans: [
+        { name: '亲子标准款', meta: '5天4晚 · 海岛酒店 · 含接送' },
+        { name: '度假升级款', meta: '5天4晚 · 高星酒店 · 含精选景区' }
+      ],
+      planSummary: '当前方案参考价 ¥4,800 - ¥7,800/人'
+    });
+  }
+
   function applyRoutePreset(kind) {
     currentKind = normalizeKind(kind);
-    var preset = routePresets[currentKind] || routePresets.group;
+    currentVariant = currentKind === 'group' ? normalizeVariant(kind) : currentKind;
+    var preset = routePresetFor(kind);
     page.setAttribute('data-route-kind', currentKind);
     page.setAttribute('data-schedule-href', isSupplierRoute ? 'schedule-create.html' : (preset.scheduleHref || 'products.html'));
 
@@ -475,6 +507,7 @@
 
     var basicExtraSection = panels[0] && panels[0].querySelector('[data-route-basic-extra]');
     if (basicExtraSection) basicExtraSection.innerHTML = preset.extraHtml;
+    setFieldValue('travelType', preset.routeType);
 
     var planTitle = panels[1] && panels[1].querySelector('.route-section-title');
     if (planTitle) planTitle.textContent = preset.planTitle;
@@ -587,7 +620,7 @@
   }
 
   function routeScheduleContext() {
-    var preset = routePresets[currentKind] || routePresets.group;
+    var preset = routePresetFor(currentKind === 'group' ? currentVariant : currentKind);
     var activePlan = page.querySelector('[data-plan-switch].active strong');
     var lineName = document.getElementById('lineName');
     var ownerOrg = document.getElementById('ownerOrg');
@@ -598,7 +631,8 @@
       return field.value;
     }).filter(Boolean);
     return {
-      type: currentKind,
+      type: currentKind === 'group' ? currentVariant : currentKind,
+      routeType: preset.routeType,
       product: lineName && lineName.value.trim() ? lineName.value.trim() : preset.title,
       route: activePlan ? activePlan.textContent.trim() : preset.plans[0].name,
       ownerOrg: ownerOrg ? ownerOrg.value : '',

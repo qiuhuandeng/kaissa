@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源采购 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">资源采购</h1>
+      </div>
+    </div>
+  </section>
+
+  <section class="list-surface resource-procurement-list-surface" data-list-surface>
+    <section class="filter-card filter-card-compact resource-procurement-filter list-surface-filter" aria-label="资源采购筛选">
+      <div class="list-surface-filter-actions list-filter-pinned-actions">
+        <div class="btn-group">
+          <button id="openCreateOrder" class="btn btn-primary" type="button">新增采购</button>
+          <button id="filterPaymentDue" class="btn btn-secondary" type="button">付款节点待处理</button>
+          <button id="filterLossDue" class="btn btn-secondary" type="button">可损释放待处理</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="procurementKeyword">采购单/库存/供应商</label>
+          <input id="procurementKeyword" type="search" placeholder="采购单/库存/供应商">
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="procurementTypeFilter">采购对象</label>
+          <select id="procurementTypeFilter">
+            <option value="全部">全部对象</option>
+            <option value="机票位">机票位</option>
+            <option value="邮轮舱房">邮轮/游轮舱房</option>
+            <option value="专列铺位">专列铺位</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="procurementRoleFilter">采购角色</label>
+          <select id="procurementRoleFilter">
+            <option value="全部">全部角色</option>
+            <option value="采购部">采购部</option>
+            <option value="航服">航服</option>
+            <option value="资源调度">资源调度</option>
+            <option value="计调">计调</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="supplierConfirmFilter">供应商确认</label>
+          <select id="supplierConfirmFilter">
+            <option value="全部">全部确认</option>
+            <option value="待确认">待确认</option>
+            <option value="已确认">已确认</option>
+            <option value="部分确认">部分确认</option>
+            <option value="变更中">变更中</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-wide filter-item-date-range">
+          <label class="sr-only">出行日期范围</label>
+          <div class="date-range">
+            <input id="procurementStartDate" type="date" aria-label="出行开始日期">
+            <span>至</span>
+            <input id="procurementEndDate" type="date" aria-label="出行结束日期">
+          </div>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="procurementStatusFilter">采购状态</label>
+          <select id="procurementStatusFilter">
+            <option value="全部">全部状态</option>
+            <option value="草稿">草稿</option>
+            <option value="待确认">待确认</option>
+            <option value="已入库">已入库</option>
+            <option value="部分借调">部分借调</option>
+            <option value="已关闭">已关闭</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="searchProcurement" class="btn btn-secondary" type="button">搜索</button>
+          <button id="resetProcurement" class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrap resource-procurement-table list-surface-table list-table-with-pagination" aria-label="资源采购列表">
+      <table>
+        <thead>
+          <tr>
+            <th>采购资源</th>
+            <th>资源信息</th>
+            <th>库存使用</th>
+            <th>付款情况</th>
+            <th>可释放</th>
+            <th>确认/状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="resourceProcurementRows"></tbody>
+      </table>
+    </section>
+
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="procurementPagination">第1-4条/共4条</span>
+      <div class="pager" aria-label="分页">
+        <button class="pager-btn" type="button" disabled>上一页</button>
+        <button class="pager-btn active" type="button">1</button>
+        <button class="pager-btn" type="button" disabled>下一页</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="createOrderDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="createOrderTitle">
+      <div class="modal-header">
+        <div id="createOrderTitle" class="modal-title">新增采购</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="orderType">采购对象</label>
+            <select id="orderType" class="form-control">
+              <option value="机票位">机票位</option>
+              <option value="邮轮舱房">邮轮/游轮舱房</option>
+              <option value="专列铺位">专列铺位</option>
+            </select>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label">系统识别</label>
+            <div class="readonly-summary">
+              <strong id="recognizedSupplier">国航团队票中心</strong>
+              <span id="recognizedRule">国航欧洲团队票协议 / CNY / 起飞前10天释放</span>
+            </div>
+          </div>
+        </div>
+
+        <section data-order-type-fields="机票位">
+          <h2 class="form-section-title">机票库存</h2>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="airGoFlight">出发航班</label><select id="airGoFlight" class="form-control"></select></div>
+            <div class="form-group"><label class="form-label" for="airBackFlight">回程航班</label><select id="airBackFlight" class="form-control"></select></div>
+            <div class="form-group"><label class="form-label" for="airDepartDate">出发日期</label><input id="airDepartDate" class="form-control" type="date" value="2026-08-18"></div>
+            <div class="form-group"><label class="form-label" for="airReturnDate">回程日期</label><input id="airReturnDate" class="form-control" type="date" value="2026-08-29"></div>
+            <div class="form-group"><label class="form-label" for="airCabin">舱位</label><input id="airCabin" class="form-control" type="text" value="经济舱团队位 / G舱"></div>
+            <div class="form-group"><label class="form-label" for="airQty">采购座位数</label><input id="airQty" class="form-control" type="number" min="1" value="40" data-stock-qty></div>
+            <div class="form-group"><label class="form-label" for="airUnitPrice">采购单价</label><input id="airUnitPrice" class="form-control" type="number" min="0" value="4100" data-stock-price></div>
+            <div class="form-group"><label class="form-label" for="airPnr">团队 PNR</label><input id="airPnr" class="form-control" type="text" value=""></div>
+          </div>
+        </section>
+
+        <section data-order-type-fields="邮轮舱房" hidden>
+          <h2 class="form-section-title">邮轮/游轮库存</h2>
+          <div class="form-grid">
+            <div class="form-group form-group-full"><label class="form-label" for="cruiseVoyageSelect">船只/航次</label><select id="cruiseVoyageSelect" class="form-control"></select></div>
+            <div class="form-group"><label class="form-label" for="cruiseShip">船只</label><input id="cruiseShip" class="form-control" type="text" value="理想号" readonly></div>
+            <div class="form-group"><label class="form-label" for="cruiseVoyage">航次</label><input id="cruiseVoyage" class="form-control" type="text" value="MED-20260912" readonly></div>
+            <div class="form-group"><label class="form-label" for="cruiseDepartPort">出发港</label><input id="cruiseDepartPort" class="form-control" type="text" value="上海吴淞口" readonly></div>
+            <div class="form-group"><label class="form-label" for="cruiseReturnPort">返程港</label><input id="cruiseReturnPort" class="form-control" type="text" value="上海吴淞口" readonly></div>
+            <div class="form-group"><label class="form-label" for="cruiseDepartDate">出发日期</label><input id="cruiseDepartDate" class="form-control" type="date" value="2026-09-12"></div>
+            <div class="form-group"><label class="form-label" for="cruiseReturnDate">返程日期</label><input id="cruiseReturnDate" class="form-control" type="date" value="2026-09-18"></div>
+          </div>
+          <section class="table-wrap" aria-label="邮轮舱型采购">
+            <table>
+              <thead>
+                <tr>
+                  <th>舱型</th>
+                  <th>舱房数</th>
+                  <th>床位数</th>
+                  <th>单价</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-resource-line data-resource-kind="cruise"><td><input class="table-input" type="text" value="内舱" data-line-cabin-type></td><td><input class="table-input" type="number" min="0" value="10" data-line-cabin-qty></td><td><input class="table-input" type="number" min="0" value="20" data-line-qty></td><td><input class="table-input" type="number" min="0" value="16800" data-line-price></td></tr>
+                <tr data-resource-line data-resource-kind="cruise"><td><input class="table-input" type="text" value="海景" data-line-cabin-type></td><td><input class="table-input" type="number" min="0" value="8" data-line-cabin-qty></td><td><input class="table-input" type="number" min="0" value="16" data-line-qty></td><td><input class="table-input" type="number" min="0" value="19800" data-line-price></td></tr>
+                <tr data-resource-line data-resource-kind="cruise"><td><input class="table-input" type="text" value="阳台" data-line-cabin-type></td><td><input class="table-input" type="number" min="0" value="12" data-line-cabin-qty></td><td><input class="table-input" type="number" min="0" value="24" data-line-qty></td><td><input class="table-input" type="number" min="0" value="22000" data-line-price></td></tr>
+              </tbody>
+            </table>
+          </section>
+        </section>
+
+        <section data-order-type-fields="专列铺位" hidden>
+          <h2 class="form-section-title">专列库存</h2>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="trainTripSelect">出发车次</label><select id="trainTripSelect" class="form-control"></select></div>
+            <div class="form-group"><label class="form-label" for="trainBackTripSelect">返程车次</label><select id="trainBackTripSelect" class="form-control"></select></div>
+            <div class="form-group"><label class="form-label" for="trainNo">列车/班次</label><input id="trainNo" class="form-control" type="text" value="Y653" readonly></div>
+            <div class="form-group"><label class="form-label" for="trainRoute">线路</label><input id="trainRoute" class="form-control" type="text" value="西安 → 敦煌 → 乌鲁木齐" readonly></div>
+            <div class="form-group"><label class="form-label" for="trainDepartDate">出发日期</label><input id="trainDepartDate" class="form-control" type="date" value="2026-09-20"></div>
+            <div class="form-group"><label class="form-label" for="trainReturnDate">返程日期</label><input id="trainReturnDate" class="form-control" type="date" value="2026-09-30"></div>
+          </div>
+          <section class="table-wrap" aria-label="专列铺位采购">
+            <table>
+              <thead>
+                <tr>
+                  <th>车厢</th>
+                  <th>席别</th>
+                  <th>铺位</th>
+                  <th>采购数量</th>
+                  <th>单价</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-resource-line data-resource-kind="train"><td><input class="table-input" type="text" value="6号车" data-line-carriage></td><td><input class="table-input" type="text" value="软卧" data-line-seat-class></td><td><input class="table-input" type="text" value="下铺" data-line-berth></td><td><input class="table-input" type="number" min="0" value="16" data-line-qty></td><td><input class="table-input" type="number" min="0" value="10800" data-line-price></td></tr>
+                <tr data-resource-line data-resource-kind="train"><td><input class="table-input" type="text" value="7号车" data-line-carriage></td><td><input class="table-input" type="text" value="硬卧" data-line-seat-class></td><td><input class="table-input" type="text" value="中铺" data-line-berth></td><td><input class="table-input" type="number" min="0" value="24" data-line-qty></td><td><input class="table-input" type="number" min="0" value="8800" data-line-price></td></tr>
+                <tr data-resource-line data-resource-kind="train"><td><input class="table-input" type="text" value="8号车" data-line-carriage></td><td><input class="table-input" type="text" value="硬卧" data-line-seat-class></td><td><input class="table-input" type="text" value="上铺" data-line-berth></td><td><input class="table-input" type="number" min="0" value="24" data-line-qty></td><td><input class="table-input" type="number" min="0" value="8200" data-line-price></td></tr>
+              </tbody>
+            </table>
+          </section>
+        </section>
+
+        <h2 class="form-section-title">押金/付款阶段</h2>
+        <section class="table-wrap" aria-label="新增采购付款阶段">
+          <table>
+            <thead>
+              <tr>
+                <th>阶段</th>
+                <th>锁定数量</th>
+                <th>付款比例</th>
+                <th>单价</th>
+                <th>支付日期</th>
+                <th>可调数量</th>
+                <th>合计</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-payment-form-row><td>第1押</td><td><input class="table-input" type="number" min="0" value="40" data-payment-qty></td><td><input class="table-input" type="number" min="0" max="100" value="30" data-payment-ratio></td><td><input class="table-input" type="number" min="0" value="4100" data-payment-price></td><td><input class="table-input" type="date" value="2026-05-26" data-payment-date></td><td><input class="table-input" type="number" value="0" data-payment-adjust></td><td><input class="table-input" type="number" min="0" value="49200" data-payment-amount readonly></td></tr>
+              <tr data-payment-form-row><td>第2押</td><td><input class="table-input" type="number" min="0" value="40" data-payment-qty></td><td><input class="table-input" type="number" min="0" max="100" value="40" data-payment-ratio></td><td><input class="table-input" type="number" min="0" value="4100" data-payment-price></td><td><input class="table-input" type="date" value="2026-06-26" data-payment-date></td><td><input class="table-input" type="number" value="2" data-payment-adjust></td><td><input class="table-input" type="number" min="0" value="68880" data-payment-amount readonly></td></tr>
+              <tr data-payment-form-row><td>第3押</td><td><input class="table-input" type="number" min="0" value="42" data-payment-qty></td><td><input class="table-input" type="number" min="0" max="100" value="30" data-payment-ratio></td><td><input class="table-input" type="number" min="0" value="4100" data-payment-price></td><td><input class="table-input" type="date" value="2026-07-26" data-payment-date></td><td><input class="table-input" type="number" value="-1" data-payment-adjust></td><td><input class="table-input" type="number" min="0" value="51660" data-payment-amount readonly></td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <span id="orderTotalCostPreview" class="text-strong">41人 | ¥169,330</span>
+        <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
+        <button id="saveOrder" class="btn btn-primary" type="button">保存并入库</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="modal-header">
+        <div id="detailTitle" class="modal-title">采购单详情</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary">
+          <strong id="detailMainName">-</strong>
+          <span id="detailMainMeta">-</span>
+        </div>
+        <div class="description-grid">
+          <div class="description-item"><span class="description-label">采购角色</span><span id="detailRole" class="description-value">-</span></div>
+          <div class="description-item"><span class="description-label">供应商确认</span><span id="detailConfirm" class="description-value">-</span></div>
+          <div class="description-item"><span class="description-label">供应商/协议</span><span id="detailSupplier" class="description-value">-</span></div>
+          <div class="description-item"><span class="description-label">识别来源</span><span id="detailResourceMatch" class="description-value">-</span></div>
+          <div class="description-item"><span class="description-label">出行/返程</span><span id="detailDate" class="description-value">-</span></div>
+          <div class="description-item"><span class="description-label">单价/总成本</span><span id="detailCost" class="description-value">-</span></div>
+          <div class="description-item"><span class="description-label">采购状态</span><span id="detailStatus" class="description-value">-</span></div>
+        </div>
+
+        <h2 class="detail-section-title">库存明细</h2>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>库存规格</th>
+                <th>总采购</th>
+                <th>可用</th>
+                <th>已借调</th>
+                <th>已售</th>
+                <th>可释放</th>
+                <th>已释放</th>
+                <th>供应商确认</th>
+              </tr>
+            </thead>
+            <tbody id="detailStockRows"></tbody>
+          </table>
+        </section>
+
+        <h2 class="detail-section-title">分期付款计划</h2>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>期次</th>
+                <th>付款比例</th>
+                <th>应付金额</th>
+                <th>付款日期</th>
+                <th>付款状态</th>
+              </tr>
+            </thead>
+            <tbody id="detailPaymentRows"></tbody>
+          </table>
+        </section>
+
+        <h2 class="detail-section-title">可损规则</h2>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>关联节点</th>
+                <th>无损释放数量</th>
+                <th>无损释放比例</th>
+                <th>最晚释放日</th>
+                <th>节点后损失规则</th>
+              </tr>
+            </thead>
+            <tbody id="detailLossRows"></tbody>
+          </table>
+        </section>
+
+        <h2 class="detail-section-title">团期借调记录</h2>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>团期编号</th>
+                <th>库存来源</th>
+                <th>借调数</th>
+                <th>已售</th>
+                <th>可释放</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="detailAllocationRows"></tbody>
+          </table>
+        </section>
+
+        <h2 class="detail-section-title">库存流水</h2>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>动作</th>
+                <th>数量</th>
+                <th>对象</th>
+                <th>记录人</th>
+              </tr>
+            </thead>
+            <tbody id="detailLedgerRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button id="closeOrder" class="btn btn-secondary" type="button">关闭采购单</button>
+        <button id="detailArchiveResource" class="btn btn-secondary" type="button">补充到资源档案</button>
+        <button id="detailAdjustment" class="btn btn-secondary" type="button">库存调整</button>
+        <button id="detailBorrow" class="btn btn-primary" type="button">借调到团期</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="borrowDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="borrowTitle">
+      <div class="modal-header">
+        <div id="borrowTitle" class="modal-title">借调到团期</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="borrowType">资源类型</label>
+            <select id="borrowType" class="form-control">
+              <option>机票位</option>
+              <option>邮轮舱房</option>
+              <option>专列铺位</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="borrowSchedule">目标团期</label>
+            <select id="borrowSchedule" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="borrowDepartDate">团期出行日期</label>
+            <input id="borrowDepartDate" class="form-control" type="date" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="borrowReturnDate">团期返程日期</label>
+            <input id="borrowReturnDate" class="form-control" type="date" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="borrowOwner">处理人</label>
+            <input id="borrowOwner" class="form-control" type="text" value="周伟">
+          </div>
+          <div class="form-group">
+            <label class="form-label">借调合计</label>
+            <input id="borrowTotalText" class="form-control" type="text" value="0" readonly>
+          </div>
+        </div>
+        <div class="readonly-summary">
+          <strong id="borrowScheduleName">-</strong>
+          <span id="borrowScheduleCheck">-</span>
+        </div>
+        <section class="table-wrap" aria-label="多批库存借调">
+          <table>
+            <thead>
+              <tr>
+                <th>库存批次</th>
+                <th>资源信息</th>
+                <th>日期</th>
+                <th>规格</th>
+                <th>可用</th>
+                <th>校验</th>
+                <th>本次借调</th>
+              </tr>
+            </thead>
+            <tbody id="borrowStockRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
+        <button id="saveBorrow" class="btn btn-primary" type="button">确认借调</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adjustmentDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="adjustmentTitle">
+      <div class="modal-header">
+        <div id="adjustmentTitle" class="modal-title">库存调整</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label class="form-label" for="adjustmentStock">库存明细</label>
+            <select id="adjustmentStock" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjustmentType">调整类型</label>
+            <select id="adjustmentType" class="form-control">
+              <option>历史订单补扣</option>
+              <option>释放修正</option>
+              <option>报损修正</option>
+              <option>盘点修正</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjustmentQty">调整数量</label>
+            <input id="adjustmentQty" class="form-control" type="number" value="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjustmentRef">关联团期/订单</label>
+            <input id="adjustmentRef" class="form-control" type="text" value="KS260705001">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjustmentReason">调整原因</label>
+            <input id="adjustmentReason" class="form-control" type="text" value="线下成交补录">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
+        <button id="saveAdjustment" class="btn btn-primary" type="button">保存调整</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="priceMatrixDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="priceMatrixTitle">
+      <div class="modal-header">
+        <div id="priceMatrixTitle" class="modal-title">销售价格矩阵</div>
+        <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="readonly-summary">
+          <strong id="priceMatrixName">-</strong>
+          <span id="priceMatrixMeta">-</span>
+        </div>
+        <section class="table-wrap" aria-label="价格矩阵">
+          <table>
+            <thead id="priceMatrixHead"></thead>
+            <tbody id="priceMatrixRows"></tbody>
+          </table>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-drawer>关闭</button>
+        <button class="btn btn-primary" type="button" data-close-drawer>保存矩阵</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var quickFilter = '';
+      var selectedOrderNo = '';
+      var selectedStockId = '';
+      var today = '2026-07-05';
+
+      var schedulesByType = {
+        '机票位': [
+          { code: 'EU20260818001', name: '欧洲十国经典游 / A线 法德意12天', depart: '2026-08-18', back: '2026-08-29', unit: '人' },
+          { code: 'EU20260818002', name: '欧洲十国经典游 / B线 荷比德法12天', depart: '2026-08-18', back: '2026-08-29', unit: '人' }
+        ],
+        '邮轮舱房': [
+          { code: 'CZ20260912001', name: '理想号地中海邮轮 / 地中海西线', depart: '2026-09-12', back: '2026-09-19', unit: '间' }
+        ],
+        '专列铺位': [
+          { code: 'TR20260920001', name: '东方丝路专列 / 西安敦煌乌鲁木齐线', depart: '2026-09-20', back: '2026-09-28', unit: '铺' }
+        ]
+      };
+
+      var resourceCatalog = {
+        '机票位': [
+          {
+            id: 'air-ca937-ca938',
+            label: 'CA937 / CA938 北京-巴黎往返',
+            supplier: '国航团队票中心',
+            agreement: '国航欧洲团队票协议',
+            currency: 'CNY',
+            rule: '定金20%，起飞前10天释放',
+            carrier: '中国国际航空',
+            goFlight: 'CA937 北京首都T3 → 巴黎戴高乐T1',
+            backFlight: 'CA938 巴黎戴高乐T1 → 北京首都T3',
+            route: '北京首都T3 → 巴黎戴高乐T1',
+            cabin: '经济舱团队位 / G舱',
+            departDate: '2026-08-18',
+            returnDate: '2026-08-29',
+            qty: 40,
+            unitPrice: 4100
+          },
+          {
+            id: 'air-hu489-hu782',
+            label: 'HU489 / HU782 北京-柏林-成都',
+            supplier: '海航团队销售部',
+            agreement: '海航欧洲团队位协议',
+            currency: 'CNY',
+            rule: '定金30%，起飞前14天释放',
+            carrier: '海南航空',
+            goFlight: 'HU489 北京首都 → 柏林勃兰登堡',
+            backFlight: 'HU782 维也纳 → 成都天府',
+            route: '北京首都 → 柏林 / 维也纳 → 成都天府',
+            cabin: '经济舱团队位 / N舱',
+            departDate: '2026-07-24',
+            returnDate: '2026-08-04',
+            qty: 40,
+            unitPrice: 4100
+          }
+        ],
+        '邮轮舱房': [
+          {
+            id: 'cruise-ideal-med',
+            label: 'MED-20260912 理想号 上海往返',
+            supplier: '地中海邮轮中国销售中心',
+            agreement: '地中海邮轮包舱规则',
+            currency: 'CNY',
+            rule: '定金30%，启航前21天释放',
+            company: '地中海邮轮',
+            ship: '理想号',
+            voyage: 'MED-20260912',
+            departPort: '上海吴淞口',
+            returnPort: '上海吴淞口',
+            departDate: '2026-09-12',
+            returnDate: '2026-09-18',
+            cabins: [
+              { cabinType: '内舱', cabinQty: 10, bedQty: 20, unitPrice: 16800 },
+              { cabinType: '海景', cabinQty: 8, bedQty: 16, unitPrice: 19800 },
+              { cabinType: '阳台', cabinQty: 12, bedQty: 24, unitPrice: 22000 }
+            ]
+          },
+          {
+            id: 'cruise-ideal-japan',
+            label: 'JPN-20261003 理想号 日韩航线',
+            supplier: '地中海邮轮中国销售中心',
+            agreement: '地中海邮轮切舱规则',
+            currency: 'CNY',
+            rule: '二款后释放按舱损核算',
+            company: '地中海邮轮',
+            ship: '理想号',
+            voyage: 'JPN-20261003',
+            departPort: '上海吴淞口',
+            returnPort: '上海吴淞口',
+            departDate: '2026-10-03',
+            returnDate: '2026-10-09',
+            cabins: [
+              { cabinType: '内舱', cabinQty: 14, bedQty: 28, unitPrice: 15800 },
+              { cabinType: '海景', cabinQty: 10, bedQty: 20, unitPrice: 18800 },
+              { cabinType: '阳台', cabinQty: 8, bedQty: 16, unitPrice: 21800 }
+            ]
+          }
+        ],
+        '专列铺位': [
+          {
+            id: 'train-y653',
+            label: 'Y653 东方丝路线',
+            supplier: '丝路文旅专列结算公司',
+            agreement: '丝路专列切位规则',
+            currency: 'CNY',
+            rule: '定金30%，发车前20天释放',
+            operator: '丝路专列运营中心',
+            trainNo: 'Y653',
+            route: '西安 → 敦煌 → 乌鲁木齐',
+            departDate: '2026-09-20',
+            returnDate: '2026-09-30',
+            berths: [
+              { carriage: '6号车', seatClass: '软卧', berth: '下铺', qty: 16, unitPrice: 10800 },
+              { carriage: '7号车', seatClass: '硬卧', berth: '中铺', qty: 24, unitPrice: 8800 },
+              { carriage: '8号车', seatClass: '硬卧', berth: '上铺', qty: 24, unitPrice: 8200 }
+            ]
+          },
+          {
+            id: 'train-y668',
+            label: 'Y668 哈尔滨漠河线',
+            supplier: '北方文旅专列服务公司',
+            agreement: '冰雪专列回传铺位规则',
+            currency: 'CNY',
+            rule: '定金25%，发车前15天释放',
+            operator: '冰雪北国旅游专列公司',
+            trainNo: 'Y668',
+            route: '北京 → 哈尔滨 → 漠河',
+            departDate: '2026-12-20',
+            returnDate: '2026-12-27',
+            berths: [
+              { carriage: '3号车', seatClass: '软卧', berth: '下铺', qty: 12, unitPrice: 9800 },
+              { carriage: '4号车', seatClass: '硬卧', berth: '中铺', qty: 28, unitPrice: 7600 },
+              { carriage: '5号车', seatClass: '硬卧', berth: '上铺', qty: 28, unitPrice: 7200 }
+            ]
+          }
+        ]
+      };
+
+      var purchaseOrders = [
+        {
+          orderNo: 'CG-AIR-20260618-001',
+          type: '机票位',
+          role: '航服',
+          supplier: '中国国际航空',
+          agreement: 'CA-2026-GROUP-EU',
+          departDate: '2026-08-18',
+          returnDate: '2026-08-29',
+          purchaseQty: 30,
+          unit: '人',
+          unitPrice: 8600,
+          totalCost: 258000,
+          currency: 'CNY',
+          supplierConfirm: '已确认',
+          status: '部分借调',
+          owner: '周伟',
+          payments: [
+            { node: '第一次付款', ratio: 30, amount: 77400, date: '2026-06-20', status: '已付款' },
+            { node: '第二次付款', ratio: 40, amount: 103200, date: '2026-07-25', status: '待付款' },
+            { node: '第三次付款', ratio: 30, amount: 77400, date: '2026-08-05', status: '未到期' }
+          ],
+          lossRules: [
+            { node: '第一次付款前', qty: 10, ratio: 33, date: '2026-06-20', rule: '付款后释放按定金损失' },
+            { node: '第二次付款前', qty: 6, ratio: 20, date: '2026-07-25', rule: '付款后释放按50%损失' },
+            { node: '第三次付款前', qty: 0, ratio: 0, date: '2026-08-05', rule: '尾款后不可无损释放' }
+          ]
+        },
+        {
+          orderNo: 'CG-AIR-20260625-002',
+          type: '机票位',
+          role: '航服',
+          supplier: '中国国际航空',
+          agreement: 'CA-2026-GROUP-EU',
+          departDate: '2026-08-18',
+          returnDate: '2026-08-29',
+          purchaseQty: 20,
+          unit: '人',
+          unitPrice: 9100,
+          totalCost: 182000,
+          currency: 'CNY',
+          supplierConfirm: '部分确认',
+          status: '已入库',
+          owner: '刘洋',
+          payments: [
+            { node: '第一次付款', ratio: 30, amount: 54600, date: '2026-06-28', status: '已付款' },
+            { node: '第二次付款', ratio: 40, amount: 72800, date: '2026-07-25', status: '待付款' },
+            { node: '第三次付款', ratio: 30, amount: 54600, date: '2026-08-05', status: '未到期' }
+          ],
+          lossRules: [
+            { node: '第一次付款前', qty: 6, ratio: 30, date: '2026-06-28', rule: '付款后释放按定金损失' },
+            { node: '第二次付款前', qty: 4, ratio: 20, date: '2026-07-25', rule: '付款后释放按50%损失' },
+            { node: '第三次付款前', qty: 0, ratio: 0, date: '2026-08-05', rule: '尾款后不可无损释放' }
+          ]
+        },
+        {
+          orderNo: 'CG-CRU-20260622-003',
+          type: '邮轮舱房',
+          role: '资源调度',
+          supplier: '地中海邮轮',
+          agreement: 'MSC-IDEAL-2026-BLK',
+          departDate: '2026-09-12',
+          returnDate: '2026-09-19',
+          purchaseQty: 60,
+          unit: '间',
+          unitPrice: 22000,
+          totalCost: 1320000,
+          currency: 'CNY',
+          supplierConfirm: '已确认',
+          status: '部分借调',
+          owner: '王强',
+          payments: [
+            { node: '第一次付款', ratio: 30, amount: 396000, date: '2026-06-25', status: '已付款' },
+            { node: '第二次付款', ratio: 40, amount: 528000, date: '2026-07-20', status: '待付款' },
+            { node: '第三次付款', ratio: 30, amount: 396000, date: '2026-08-20', status: '未到期' }
+          ],
+          lossRules: [
+            { node: '第一次付款前', qty: 18, ratio: 30, date: '2026-06-25', rule: '付款后释放按定金损失' },
+            { node: '第二次付款前', qty: 10, ratio: 17, date: '2026-07-20', rule: '二款后取消按50%舱损' },
+            { node: '第三次付款前', qty: 0, ratio: 0, date: '2026-08-20', rule: '尾款后不可无损释放' }
+          ]
+        },
+        {
+          orderNo: 'CG-TRN-20260628-002',
+          type: '专列铺位',
+          role: '采购部',
+          supplier: '丝路文旅专列',
+          agreement: 'SL-TRAIN-2026-09',
+          departDate: '2026-09-20',
+          returnDate: '2026-09-28',
+          purchaseQty: 96,
+          unit: '铺',
+          unitPrice: 9900,
+          totalCost: 950400,
+          currency: 'CNY',
+          supplierConfirm: '已确认',
+          status: '部分借调',
+          owner: '郑华',
+          payments: [
+            { node: '第一次付款', ratio: 30, amount: 285120, date: '2026-06-30', status: '已付款' },
+            { node: '第二次付款', ratio: 40, amount: 380160, date: '2026-07-30', status: '待付款' },
+            { node: '第三次付款', ratio: 30, amount: 285120, date: '2026-08-30', status: '未到期' }
+          ],
+          lossRules: [
+            { node: '第一次付款前', qty: 28, ratio: 30, date: '2026-06-30', rule: '付款后释放按定金损失' },
+            { node: '第二次付款前', qty: 16, ratio: 17, date: '2026-07-30', rule: '二款后释放按铺位损失' },
+            { node: '第三次付款前', qty: 0, ratio: 0, date: '2026-08-30', rule: '尾款后不可无损释放' }
+          ]
+        }
+      ];
+
+      var stockLines = [
+        { id: 'AIR-001-A', orderNo: 'CG-AIR-20260618-001', type: '机票位', resourceName: 'CA937 / CA938 北京-巴黎往返', route: '北京首都T3 → 巴黎戴高乐T1', departDate: '2026-08-18', returnDate: '2026-08-29', spec: '经济舱团队位 / G舱 / PNR GKA89L', qty: 30, borrowed: 18, sold: 12, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { goCarrier: '中国国际航空', goFlight: 'CA937', backCarrier: '中国国际航空', backFlight: 'CA938', cabin: 'G舱' } },
+        { id: 'AIR-002-A', orderNo: 'CG-AIR-20260625-002', type: '机票位', resourceName: 'CA937 / CA938 北京-巴黎往返', route: '北京首都T3 → 巴黎戴高乐T1', departDate: '2026-08-18', returnDate: '2026-08-29', spec: '经济舱团队位 / K舱 / PNR HK72QA', qty: 20, borrowed: 0, sold: 0, released: 0, damaged: 0, supplierConfirm: '部分确认', extra: { goCarrier: '中国国际航空', goFlight: 'CA937', backCarrier: '中国国际航空', backFlight: 'CA938', cabin: 'K舱' } },
+        { id: 'CRU-003-IN', orderNo: 'CG-CRU-20260622-003', type: '邮轮舱房', resourceName: '理想号 MED-20260912', route: '上海吴淞口 → 日韩航线', departDate: '2026-09-12', returnDate: '2026-09-19', spec: '内舱 / 20间40床', qty: 20, borrowed: 12, sold: 8, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { cabinType: '内舱', cabinQty: 20, bedQty: 40, departPort: '上海吴淞口', returnPort: '上海吴淞口' } },
+        { id: 'CRU-003-SEA', orderNo: 'CG-CRU-20260622-003', type: '邮轮舱房', resourceName: '理想号 MED-20260912', route: '上海吴淞口 → 日韩航线', departDate: '2026-09-12', returnDate: '2026-09-19', spec: '海景 / 18间36床', qty: 18, borrowed: 10, sold: 6, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { cabinType: '海景', cabinQty: 18, bedQty: 36, departPort: '上海吴淞口', returnPort: '上海吴淞口' } },
+        { id: 'CRU-003-BAL', orderNo: 'CG-CRU-20260622-003', type: '邮轮舱房', resourceName: '理想号 MED-20260912', route: '上海吴淞口 → 日韩航线', departDate: '2026-09-12', returnDate: '2026-09-19', spec: '阳台 / 22间44床', qty: 22, borrowed: 18, sold: 11, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { cabinType: '阳台', cabinQty: 22, bedQty: 44, departPort: '上海吴淞口', returnPort: '上海吴淞口' } },
+        { id: 'TRN-002-SL', orderNo: 'CG-TRN-20260628-002', type: '专列铺位', resourceName: 'Y653 东方丝路专列', route: '西安 → 敦煌 → 乌鲁木齐', departDate: '2026-09-20', returnDate: '2026-09-28', spec: '软卧 / 下铺 / 6-9号车', qty: 48, borrowed: 24, sold: 16, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { trainNo: 'Y653', seatClass: '软卧', berth: '下铺', carriage: '6-9号车' } },
+        { id: 'TRN-002-HM', orderNo: 'CG-TRN-20260628-002', type: '专列铺位', resourceName: 'Y653 东方丝路专列', route: '西安 → 敦煌 → 乌鲁木齐', departDate: '2026-09-20', returnDate: '2026-09-28', spec: '硬卧 / 中铺 / 10-12号车', qty: 28, borrowed: 10, sold: 4, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { trainNo: 'Y653', seatClass: '硬卧', berth: '中铺', carriage: '10-12号车' } },
+        { id: 'TRN-002-HU', orderNo: 'CG-TRN-20260628-002', type: '专列铺位', resourceName: 'Y653 东方丝路专列', route: '西安 → 敦煌 → 乌鲁木齐', departDate: '2026-09-20', returnDate: '2026-09-28', spec: '硬卧 / 上铺 / 10-12号车', qty: 20, borrowed: 8, sold: 3, released: 0, damaged: 0, supplierConfirm: '已确认', extra: { trainNo: 'Y653', seatClass: '硬卧', berth: '上铺', carriage: '10-12号车' } }
+      ];
+
+      var allocations = [
+        { schedule: 'EU20260818001', scheduleName: '欧洲十国经典游 / A线 法德意12天', stockId: 'AIR-001-A', qty: 18, sold: 12, status: '开放报名' },
+        { schedule: 'CZ20260912001', scheduleName: '理想号地中海邮轮 / 地中海西线', stockId: 'CRU-003-IN', qty: 12, sold: 8, status: '开放报名' },
+        { schedule: 'CZ20260912001', scheduleName: '理想号地中海邮轮 / 地中海西线', stockId: 'CRU-003-SEA', qty: 10, sold: 6, status: '开放报名' },
+        { schedule: 'CZ20260912001', scheduleName: '理想号地中海邮轮 / 地中海西线', stockId: 'CRU-003-BAL', qty: 18, sold: 11, status: '开放报名' },
+        { schedule: 'TR20260920001', scheduleName: '东方丝路专列 / 西安敦煌乌鲁木齐线', stockId: 'TRN-002-SL', qty: 24, sold: 16, status: '开放报名' },
+        { schedule: 'TR20260920001', scheduleName: '东方丝路专列 / 西安敦煌乌鲁木齐线', stockId: 'TRN-002-HM', qty: 10, sold: 4, status: '开放报名' },
+        { schedule: 'TR20260920001', scheduleName: '东方丝路专列 / 西安敦煌乌鲁木齐线', stockId: 'TRN-002-HU', qty: 8, sold: 3, status: '开放报名' }
+      ];
+
+      var ledger = [
+        { time: '2026-06-18 10:30', action: '采购入库', qty: 30, stockId: 'AIR-001-A', target: 'CG-AIR-20260618-001', owner: '周伟' },
+        { time: '2026-06-20 14:15', action: '团期借调', qty: 18, stockId: 'AIR-001-A', target: 'EU20260818001', owner: '周伟' },
+        { time: '2026-07-04 18:20', action: '订单成交扣减', qty: 2, stockId: 'AIR-001-A', target: 'KS260704018', owner: '系统' },
+        { time: '2026-06-22 09:20', action: '采购入库', qty: 60, stockId: 'CRU-003-BAL', target: 'CG-CRU-20260622-003', owner: '王强' },
+        { time: '2026-06-29 10:05', action: '团期借调', qty: 24, stockId: 'TRN-002-SL', target: 'TR20260920001', owner: '郑华' }
+      ];
+
+      var cruisePriceMatrix = [
+        ['内舱', '成人占位', 12800], ['内舱', '儿童占位', 12800], ['内舱', '儿童不占位', 3200], ['内舱', '第三/第四人', 6800],
+        ['海景', '成人占位', 16800], ['海景', '儿童占位', 16800], ['海景', '儿童不占位', 3500], ['海景', '第三/第四人', 7800],
+        ['阳台', '成人占位', 22800], ['阳台', '儿童占位', 22800], ['阳台', '儿童不占位', 4200], ['阳台', '第三/第四人', 9800]
+      ];
+
+      var trainPriceMatrix = [
+        ['软卧', '下铺', '成人占位', 19800], ['软卧', '下铺', '儿童占位', 19800], ['软卧', '下铺', '儿童不占位', 3800],
+        ['硬卧', '中铺', '成人占位', 15800], ['硬卧', '中铺', '儿童占位', 15800], ['硬卧', '中铺', '儿童不占位', 3200],
+        ['硬卧', '上铺', '成人占位', 14800], ['硬卧', '上铺', '儿童占位', 14800], ['硬卧', '上铺', '儿童不占位', 3200]
+      ];
+
+      function $(selector, root) {
+        return (root || document).querySelector(selector);
+      }
+
+      function $all(selector, root) {
+        return Array.from((root || document).querySelectorAll(selector));
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function toast(message, type) {
+        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message, { type: type || 'success' });
+      }
+
+      function money(value, currency) {
+        var symbol = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '¥';
+        return symbol + Number(value || 0).toLocaleString('zh-CN');
+      }
+
+      function statusClass(status) {
+        if (status === '已确认' || status === '已付款' || status === '已入库') return 'tag tag-green';
+        if (status === '部分确认' || status === '部分借调' || status === '待付款' || status === '临期') return 'tag tag-orange';
+        if (status === '逾期' || status === '变更中') return 'tag tag-red';
+        if (status === '已关闭') return 'tag tag-gray';
+        if (status === '机票位' || status === '待确认') return 'tag tag-blue';
+        if (status === '邮轮舱房') return 'tag tag-purple';
+        if (status === '专列铺位') return 'tag tag-orange';
+        return 'tag tag-gray';
+      }
+
+      function orderFor(orderNo) {
+        return purchaseOrders.find(function (order) { return order.orderNo === orderNo; });
+      }
+
+      function stockFor(stockId) {
+        return stockLines.find(function (stock) { return stock.id === stockId; });
+      }
+
+      function stocksForOrder(orderNo) {
+        return stockLines.filter(function (stock) { return stock.orderNo === orderNo; });
+      }
+
+      function availableQty(stock) {
+        return Math.max(0, Number(stock.qty || 0) - Number(stock.borrowed || 0) - Number(stock.damaged || 0));
+      }
+
+      function releasableQty(stock) {
+        return Math.max(0, Number(stock.borrowed || 0) - Number(stock.sold || 0));
+      }
+
+      function paymentProgress(order) {
+        var paidRatio = order.payments.filter(function (row) { return row.status === '已付款'; }).reduce(function (sum, row) { return sum + Number(row.ratio || 0); }, 0);
+        var next = order.payments.find(function (row) { return row.status !== '已付款'; });
+        return {
+          paidRatio: paidRatio,
+          text: '已付' + paidRatio + '% / ' + (next ? next.node + ' ' + next.ratio + '%' : '已结清'),
+          next: next || order.payments[order.payments.length - 1]
+        };
+      }
+
+      function orderTotals(order) {
+        var stocks = stocksForOrder(order.orderNo);
+        var borrowed = stocks.reduce(function (sum, stock) { return sum + stock.borrowed; }, 0);
+        var sold = stocks.reduce(function (sum, stock) { return sum + stock.sold; }, 0);
+        var released = stocks.reduce(function (sum, stock) { return sum + stock.released; }, 0);
+        var available = stocks.reduce(function (sum, stock) { return sum + availableQty(stock); }, 0);
+        return { borrowed: borrowed, sold: sold, released: released, available: available };
+      }
+
+      function syncOrderStatus(order) {
+        if (order.status === '已关闭') return;
+        var totals = orderTotals(order);
+        if (totals.borrowed > 0) order.status = '部分借调';
+        else order.status = '已入库';
+      }
+
+      function rowTextForOrder(order) {
+        return [order.orderNo, order.type, order.role, order.supplier, order.agreement, order.supplierConfirm, order.status].join(' ');
+      }
+
+      function rowTextForStock(stock) {
+        return [stock.id, stock.orderNo, stock.type, stock.resourceName, stock.route, stock.spec, stock.supplierConfirm].join(' ');
+      }
+
+      function filterOrder(order) {
+        var keyword = $('#procurementKeyword').value.trim();
+        var type = $('#procurementTypeFilter').value;
+        var role = $('#procurementRoleFilter').value;
+        var confirm = $('#supplierConfirmFilter').value;
+        var status = $('#procurementStatusFilter').value;
+        var start = $('#procurementStartDate').value;
+        var end = $('#procurementEndDate').value;
+        if (keyword && rowTextForOrder(order).indexOf(keyword) < 0) return false;
+        if (type !== '全部' && order.type !== type) return false;
+        if (role !== '全部' && order.role !== role) return false;
+        if (confirm !== '全部' && order.supplierConfirm !== confirm) return false;
+        if (status !== '全部' && order.status !== status) return false;
+        if (start && order.departDate < start) return false;
+        if (end && order.departDate > end) return false;
+        return true;
+      }
+
+      function filterStock(stock) {
+        var order = orderFor(stock.orderNo);
+        var keyword = $('#procurementKeyword').value.trim();
+        var type = $('#procurementTypeFilter').value;
+        var role = $('#procurementRoleFilter').value;
+        var confirm = $('#supplierConfirmFilter').value;
+        var status = $('#procurementStatusFilter').value;
+        var start = $('#procurementStartDate').value;
+        var end = $('#procurementEndDate').value;
+        if (keyword && rowTextForStock(stock).indexOf(keyword) < 0) return false;
+        if (type !== '全部' && stock.type !== type) return false;
+        if (role !== '全部' && order && order.role !== role) return false;
+        if (confirm !== '全部' && stock.supplierConfirm !== confirm) return false;
+        if (status !== '全部' && order && order.status !== status) return false;
+        if (start && stock.departDate < start) return false;
+        if (end && stock.departDate > end) return false;
+        if (quickFilter === 'payment' && (!order || !order.payments.some(function (row) { return row.status !== '已付款'; }))) return false;
+        if (quickFilter === 'release' && releasableQty(stock) <= 0) return false;
+        return true;
+      }
+
+      function percent(value, total) {
+        if (!total) return 0;
+        return Math.max(0, Math.min(100, Math.round(Number(value || 0) / Number(total || 0) * 100)));
+      }
+
+      function progressHtml(ratio, colorClass) {
+        return '<div class="schedule-progress procurement-progress"><div class="progress-bar"><div class="progress-fill ' + escapeHtml(colorClass || '') + '" style="width:' + ratio + '%"></div></div><span>' + ratio + '%</span></div>';
+      }
+
+      function paymentAmountSummary(order) {
+        var paid = order.payments.filter(function (row) { return row.status === '已付款'; }).reduce(function (sum, row) {
+          return sum + Number(row.amount || 0);
+        }, 0);
+        var due = Math.max(0, Number(order.totalCost || 0) - paid);
+        var ratio = percent(paid, order.totalCost);
+        var next = order.payments.find(function (row) { return row.status !== '已付款'; });
+        return { paid: paid, due: due, ratio: ratio, next: next };
+      }
+
+      function stockUsageHtml(stock, order) {
+        var used = Number(stock.borrowed || 0);
+        var total = Number(stock.qty || 0);
+        var ratio = percent(used, total);
+        var unit = order ? order.unit : '';
+        return '<div class="schedule-product-name">' + escapeHtml('已用 ' + used + '/' + total + unit) + '</div>' +
+          progressHtml(ratio, ratio >= 90 ? 'orange' : '') +
+          '<span class="text-muted">' + escapeHtml('剩余 ' + availableQty(stock) + unit + ' · 已售 ' + stock.sold + unit) + '</span>';
+      }
+
+      function paymentUsageHtml(order) {
+        var summary = paymentAmountSummary(order);
+        return '<div class="schedule-product-name">' + escapeHtml('已付 ' + money(summary.paid, order.currency) + '/' + money(order.totalCost, order.currency)) + '</div>' +
+          progressHtml(summary.ratio, summary.ratio >= 100 ? 'green' : 'orange') +
+          '<span class="text-muted">' + escapeHtml('待付 ' + money(summary.due, order.currency) + (summary.next ? ' · ' + summary.next.date : '')) + '</span>';
+      }
+
+      function resourceProcurementRowHtml(stock) {
+        var order = orderFor(stock.orderNo);
+        var typeName = stock.type === '邮轮舱房' ? '邮轮/游轮舱房' : stock.type;
+        var status = order ? order.status : '-';
+        var unit = order ? order.unit : '';
+        return '<tr data-procurement-stock-id="' + escapeHtml(stock.id) + '">' +
+          '<td><a class="link-primary table-main-link" href="#" data-open-detail>' + escapeHtml(stock.orderNo) + '</a><span class="' + statusClass(stock.type) + '">' + escapeHtml(typeName) + '</span><span class="text-muted">' + escapeHtml((order ? order.supplier : '-') + ' / ' + (order ? order.agreement : '-')) + '</span></td>' +
+          '<td><span class="schedule-product-name">' + escapeHtml(stock.resourceName) + '</span><span class="text-muted">' + escapeHtml(stock.departDate + ' 至 ' + stock.returnDate) + ' · ' + escapeHtml(stock.spec) + '</span></td>' +
+          '<td>' + stockUsageHtml(stock, order) + '</td>' +
+          '<td>' + (order ? paymentUsageHtml(order) : '-') + '</td>' +
+          '<td><span class="schedule-product-name">' + escapeHtml(releasableQty(stock) + unit + '可释放') + '</span><span class="text-muted">' + escapeHtml('已释放 ' + stock.released + unit) + '</span></td>' +
+          '<td><span class="' + statusClass(stock.supplierConfirm) + '">' + escapeHtml(stock.supplierConfirm) + '</span><span class="' + statusClass(status) + '">' + escapeHtml(status) + '</span></td>' +
+          '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button><button type="button" data-open-borrow>借调到团期</button><button type="button" data-open-adjustment>更多</button></div></td>' +
+          '</tr>';
+      }
+
+      function renderRows() {
+        purchaseOrders.forEach(syncOrderStatus);
+        var stockRows = stockLines.filter(filterStock);
+        $('#resourceProcurementRows').innerHTML = stockRows.length ? stockRows.map(resourceProcurementRowHtml).join('') : '<tr><td colspan="7">暂无符合条件的资源采购记录</td></tr>';
+        var count = stockRows.length;
+        $('#procurementPagination').textContent = '第1-' + count + '条/共' + count + '条';
+      }
+
+      function openLayer(layer) {
+        if (!layer) return;
+        layer.classList.add('show');
+        layer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLayer(layer) {
+        if (!layer) return;
+        layer.classList.remove('show');
+        layer.setAttribute('aria-hidden', 'true');
+      }
+
+      function selectedOrder() {
+        return orderFor(selectedOrderNo);
+      }
+
+      function setSelectedFromStock(stockId) {
+        var stock = stockFor(stockId);
+        if (!stock) return;
+        selectedStockId = stock.id;
+        selectedOrderNo = stock.orderNo;
+      }
+
+      function fillDetail(order) {
+        if (!order) return;
+        var progress = paymentProgress(order);
+        $('#detailTitle').textContent = '采购单详情 - ' + order.orderNo;
+        $('#detailMainName').textContent = order.orderNo + ' / ' + (order.type === '邮轮舱房' ? '邮轮/游轮舱房' : order.type);
+        $('#detailMainMeta').textContent = order.supplier + ' | ' + order.departDate + ' 至 ' + order.returnDate + ' | ' + progress.text;
+        $('#detailRole').textContent = order.role + ' / ' + order.owner;
+        $('#detailConfirm').innerHTML = '<span class="' + statusClass(order.supplierConfirm) + '">' + escapeHtml(order.supplierConfirm) + '</span>';
+        $('#detailSupplier').textContent = order.supplier + ' / ' + order.agreement;
+        $('#detailResourceMatch').textContent = order.resourceMatch || (order.resourceSnapshot && order.resourceSnapshot.matchedResourceId ? '已匹配资源档案' : '采购快照');
+        $('#detailDate').textContent = order.departDate + ' 至 ' + order.returnDate;
+        $('#detailCost').textContent = money(order.unitPrice, order.currency) + ' / ' + money(order.totalCost, order.currency);
+        $('#detailStatus').innerHTML = '<span class="' + statusClass(order.status) + '">' + escapeHtml(order.status) + '</span>';
+        $('#detailStockRows').innerHTML = stocksForOrder(order.orderNo).map(function (stock) {
+          return '<tr><td>' + escapeHtml(stock.spec) + '</td><td>' + escapeHtml(stock.qty + order.unit) + '</td><td>' + escapeHtml(availableQty(stock) + order.unit) + '</td><td>' + escapeHtml(stock.borrowed + order.unit) + '</td><td>' + escapeHtml(stock.sold + order.unit) + '</td><td>' + escapeHtml(releasableQty(stock) + order.unit) + '</td><td>' + escapeHtml(stock.released + order.unit) + '</td><td><span class="' + statusClass(stock.supplierConfirm) + '">' + escapeHtml(stock.supplierConfirm) + '</span></td></tr>';
+        }).join('');
+        $('#detailPaymentRows').innerHTML = order.payments.map(function (row) {
+          return '<tr><td>' + escapeHtml(row.node) + '</td><td>' + escapeHtml(row.ratio + '%') + '</td><td>' + escapeHtml(money(row.amount, order.currency)) + '</td><td>' + escapeHtml(row.date) + '</td><td><span class="' + statusClass(row.status) + '">' + escapeHtml(row.status) + '</span></td></tr>';
+        }).join('');
+        $('#detailLossRows').innerHTML = order.lossRules.map(function (row) {
+          return '<tr><td>' + escapeHtml(row.node) + '</td><td>' + escapeHtml(row.qty + order.unit) + '</td><td>' + escapeHtml(row.ratio + '%') + '</td><td>' + escapeHtml(row.date) + '</td><td>' + escapeHtml(row.rule) + '</td></tr>';
+        }).join('');
+        var stockIds = stocksForOrder(order.orderNo).map(function (stock) { return stock.id; });
+        var allocationRows = allocations.filter(function (row) { return stockIds.indexOf(row.stockId) > -1; });
+        $('#detailAllocationRows').innerHTML = allocationRows.length ? allocationRows.map(function (row) {
+          var stock = stockFor(row.stockId);
+          return '<tr><td><a class="link-primary" href="schedules-detail.html?scheduleNo=' + encodeURIComponent(row.schedule) + '">' + escapeHtml(row.schedule) + '</a><span class="text-muted">' + escapeHtml(row.scheduleName) + '</span></td><td>' + escapeHtml(stock ? stock.spec : row.stockId) + '</td><td>' + escapeHtml(row.qty + order.unit) + '</td><td>' + escapeHtml(row.sold + order.unit) + '</td><td>' + escapeHtml(Math.max(0, row.qty - row.sold) + order.unit) + '</td><td><span class="' + statusClass(row.status === '已关闭' ? '已关闭' : '部分借调') + '">' + escapeHtml(row.status) + '</span></td></tr>';
+        }).join('') : '<tr><td colspan="6">暂无团期借调记录</td></tr>';
+        $('#detailLedgerRows').innerHTML = ledger.filter(function (row) {
+          var stock = stockFor(row.stockId);
+          return stock && stock.orderNo === order.orderNo;
+        }).map(function (row) {
+          var stock = stockFor(row.stockId);
+          return '<tr><td>' + escapeHtml(row.time) + '</td><td>' + escapeHtml(row.action) + '</td><td>' + escapeHtml(row.qty + order.unit) + '</td><td>' + escapeHtml(row.target + ' / ' + (stock ? stock.spec : row.stockId)) + '</td><td>' + escapeHtml(row.owner) + '</td></tr>';
+        }).join('');
+      }
+
+      function openDetailByOrder(orderNo) {
+        selectedOrderNo = orderNo;
+        selectedStockId = '';
+        fillDetail(selectedOrder());
+        openLayer($('#detailDrawer'));
+      }
+
+      function openDetailByStock(stockId) {
+        setSelectedFromStock(stockId);
+        fillDetail(selectedOrder());
+        openLayer($('#detailDrawer'));
+      }
+
+      function roleForType(type) {
+        if (type === '机票位') return '航服';
+        if (type === '邮轮舱房') return '资源调度';
+        return '采购部';
+      }
+
+      function ownerForType(type) {
+        if (type === '机票位') return '周伟';
+        if (type === '邮轮舱房') return '陈航';
+        return '赵琳';
+      }
+
+      function unitForType(type) {
+        if (type === '机票位') return '人';
+        if (type === '邮轮舱房') return '床';
+        return '铺';
+      }
+
+      function selectedResource() {
+        var type = $('#orderType').value;
+        var resources = resourceCatalog[type] || [];
+        var selectedId = '';
+        if (type === '机票位') selectedId = $('#airGoFlight').value || $('#airBackFlight').value;
+        else if (type === '邮轮舱房') selectedId = $('#cruiseVoyageSelect').value;
+        else selectedId = $('#trainTripSelect').value || $('#trainBackTripSelect').value;
+        return resources.find(function (item) { return item.id === selectedId; }) || resources[0] || null;
+      }
+
+      function renderResourceOptions() {
+        var airGoOptions = (resourceCatalog['机票位'] || []).map(function (item) {
+          return '<option value="' + escapeHtml(item.id) + '">' + escapeHtml(item.goFlight) + '</option>';
+        }).join('');
+        var airBackOptions = (resourceCatalog['机票位'] || []).map(function (item) {
+          return '<option value="' + escapeHtml(item.id) + '">' + escapeHtml(item.backFlight) + '</option>';
+        }).join('');
+        $('#airGoFlight').innerHTML = airGoOptions;
+        $('#airBackFlight').innerHTML = airBackOptions;
+        $('#cruiseVoyageSelect').innerHTML = (resourceCatalog['邮轮舱房'] || []).map(function (item) {
+          return '<option value="' + escapeHtml(item.id) + '">' + escapeHtml(item.label) + '</option>';
+        }).join('');
+        var trainOptions = (resourceCatalog['专列铺位'] || []).map(function (item) {
+          return '<option value="' + escapeHtml(item.id) + '">' + escapeHtml(item.label) + '</option>';
+        }).join('');
+        $('#trainTripSelect').innerHTML = trainOptions;
+        $('#trainBackTripSelect').innerHTML = trainOptions;
+      }
+
+      function renderCruiseCabins(resource) {
+        var body = $('[data-order-type-fields="邮轮舱房"] tbody');
+        body.innerHTML = (resource.cabins || []).map(function (item) {
+          return '<tr data-resource-line data-resource-kind="cruise"><td><input class="table-input" type="text" value="' + escapeHtml(item.cabinType) + '" data-line-cabin-type></td><td><input class="table-input" type="number" min="0" value="' + escapeHtml(item.cabinQty) + '" data-line-cabin-qty></td><td><input class="table-input" type="number" min="0" value="' + escapeHtml(item.bedQty) + '" data-line-qty></td><td><input class="table-input" type="number" min="0" value="' + escapeHtml(item.unitPrice) + '" data-line-price></td></tr>';
+        }).join('');
+        bindResourceLineEvents(body);
+      }
+
+      function renderTrainBerths(resource) {
+        var body = $('[data-order-type-fields="专列铺位"] tbody');
+        body.innerHTML = (resource.berths || []).map(function (item) {
+          return '<tr data-resource-line data-resource-kind="train"><td><input class="table-input" type="text" value="' + escapeHtml(item.carriage) + '" data-line-carriage></td><td><input class="table-input" type="text" value="' + escapeHtml(item.seatClass) + '" data-line-seat-class></td><td><input class="table-input" type="text" value="' + escapeHtml(item.berth) + '" data-line-berth></td><td><input class="table-input" type="number" min="0" value="' + escapeHtml(item.qty) + '" data-line-qty></td><td><input class="table-input" type="number" min="0" value="' + escapeHtml(item.unitPrice) + '" data-line-price></td></tr>';
+        }).join('');
+        bindResourceLineEvents(body);
+      }
+
+      function bindResourceLineEvents(root) {
+        $all('[data-line-cabin-type], [data-line-carriage], [data-line-seat-class], [data-line-berth], [data-line-cabin-qty], [data-line-qty], [data-line-price]', root || document).forEach(function (field) {
+          field.addEventListener('input', function () {
+            updatePaymentDefaults();
+            updateOrderCostPreview();
+          });
+          field.addEventListener('change', function () {
+            updatePaymentDefaults();
+            updateOrderCostPreview();
+          });
+        });
+      }
+
+      function applyMatchedResource() {
+        var type = $('#orderType').value;
+        var resource = selectedResource();
+        if (!resource) {
+          $('#recognizedSupplier').textContent = '-';
+          $('#recognizedRule').textContent = '-';
+          updatePaymentDefaults();
+          updateOrderCostPreview();
+          return;
+        }
+        $('#recognizedSupplier').textContent = resource.supplier || '-';
+        $('#recognizedRule').textContent = (resource.agreement || '-') + ' / ' + (resource.currency || 'CNY') + ' / ' + (resource.rule || '-');
+        if (type === '机票位') {
+          $('#airBackFlight').value = resource.id;
+          $('#airGoFlight').value = resource.id;
+          $('#airDepartDate').value = resource.departDate || '';
+          $('#airReturnDate').value = resource.returnDate || '';
+          $('#airCabin').value = resource.cabin || '';
+          $('#airQty').value = resource.qty || 0;
+          $('#airUnitPrice').value = resource.unitPrice || 0;
+          $('#airPnr').value = '';
+        } else if (type === '邮轮舱房') {
+          $('#cruiseShip').value = resource.ship || '';
+          $('#cruiseVoyage').value = resource.voyage || '';
+          $('#cruiseDepartPort').value = resource.departPort || '';
+          $('#cruiseReturnPort').value = resource.returnPort || '';
+          $('#cruiseDepartDate').value = resource.departDate || '';
+          $('#cruiseReturnDate').value = resource.returnDate || '';
+          renderCruiseCabins(resource);
+        } else {
+          $('#trainNo').value = resource.trainNo || '';
+          $('#trainRoute').value = resource.route || '';
+          $('#trainDepartDate').value = resource.departDate || '';
+          $('#trainReturnDate').value = resource.returnDate || '';
+          renderTrainBerths(resource);
+        }
+        updatePaymentDefaults();
+        updateOrderCostPreview();
+      }
+
+      function activeResourceLines() {
+        var type = $('#orderType').value;
+        var resource = selectedResource();
+        if (type === '机票位') {
+          var pnr = $('#airPnr').value.trim();
+          return [{
+            name: (resource ? resource.goFlight + ' / ' + resource.backFlight : '机票往返'),
+            route: resource && resource.route ? resource.route : '-',
+            spec: $('#airCabin').value + (pnr ? ' / PNR ' + pnr : ''),
+            departDate: $('#airDepartDate').value,
+            returnDate: $('#airReturnDate').value,
+            qty: Number($('#airQty').value || 0),
+            unitPrice: Number($('#airUnitPrice').value || 0),
+            extra: { carrier: resource ? resource.carrier : '', goFlight: resource ? resource.goFlight : '', backFlight: resource ? resource.backFlight : '', cabin: $('#airCabin').value, pnr: pnr }
+          }].filter(function (line) { return line.qty > 0; });
+        }
+        if (type === '邮轮舱房') {
+          return $all('[data-resource-kind="cruise"]').map(function (row) {
+            var cabinType = $('[data-line-cabin-type]', row).value.trim();
+            var cabinQty = Number($('[data-line-cabin-qty]', row).value || 0);
+            var bedQty = Number($('[data-line-qty]', row).value || 0);
+            return {
+              name: $('#cruiseShip').value + ' ' + $('#cruiseVoyage').value,
+              route: $('#cruiseDepartPort').value + ' → ' + $('#cruiseReturnPort').value,
+              spec: cabinType + ' / ' + cabinQty + '间' + bedQty + '床',
+              departDate: $('#cruiseDepartDate').value,
+              returnDate: $('#cruiseReturnDate').value,
+              qty: bedQty,
+              unitPrice: Number($('[data-line-price]', row).value || 0),
+              extra: { cabinType: cabinType, cabinQty: cabinQty, bedQty: bedQty, departPort: $('#cruiseDepartPort').value, returnPort: $('#cruiseReturnPort').value }
+            };
+          }).filter(function (line) { return line.qty > 0; });
+        }
+        return $all('[data-resource-kind="train"]').map(function (row) {
+          var carriage = $('[data-line-carriage]', row).value.trim();
+          var seatClass = $('[data-line-seat-class]', row).value.trim();
+          var berth = $('[data-line-berth]', row).value.trim();
+          return {
+            name: $('#trainNo').value + ' 东方丝路专列',
+            route: $('#trainRoute').value,
+            spec: seatClass + ' / ' + berth + ' / ' + carriage,
+            departDate: $('#trainDepartDate').value,
+            returnDate: $('#trainReturnDate').value,
+            qty: Number($('[data-line-qty]', row).value || 0),
+            unitPrice: Number($('[data-line-price]', row).value || 0),
+            extra: { trainNo: $('#trainNo').value, carriage: carriage, seatClass: seatClass, berth: berth }
+          };
+        }).filter(function (line) { return line.qty > 0; });
+      }
+
+      function orderTotalsFromForm() {
+        var lines = activeResourceLines();
+        var qty = lines.reduce(function (sum, line) { return sum + line.qty; }, 0);
+        var total = lines.reduce(function (sum, line) { return sum + line.qty * line.unitPrice; }, 0);
+        var unitPrice = qty ? Math.round(total / qty) : 0;
+        return { lines: lines, qty: qty, total: total, unitPrice: unitPrice };
+      }
+
+      function updatePaymentDefaults() {
+        var totals = orderTotalsFromForm();
+        var firstPrice = totals.lines.length ? totals.lines[0].unitPrice : 0;
+        $all('[data-payment-form-row]').forEach(function (row, index) {
+          var qtyInput = $('[data-payment-qty]', row);
+          var priceInput = $('[data-payment-price]', row);
+          if (qtyInput) qtyInput.value = totals.qty;
+          if (priceInput) priceInput.value = firstPrice || totals.unitPrice;
+        });
+      }
+
+      function updateOrderCostPreview() {
+        var totals = orderTotalsFromForm();
+        var resource = selectedResource();
+        var currency = resource ? resource.currency : 'CNY';
+        $all('[data-payment-form-row]').forEach(function (row) {
+          var qty = Number($('[data-payment-qty]', row).value || 0);
+          var ratio = Number($('[data-payment-ratio]', row).value || 0);
+          var price = Number($('[data-payment-price]', row).value || 0);
+          var adjust = Number($('[data-payment-adjust]', row).value || 0);
+          var stageQty = Math.max(0, qty + adjust);
+          $('[data-payment-amount]', row).value = Math.round(stageQty * price * ratio / 100);
+        });
+        $('#orderTotalCostPreview').textContent = totals.qty + unitForType($('#orderType').value) + ' | ' + money(totals.total, currency);
+      }
+
+      function handleOrderTypeChange() {
+        var type = $('#orderType').value;
+        $all('[data-order-type-fields]').forEach(function (section) {
+          section.hidden = section.getAttribute('data-order-type-fields') !== type;
+        });
+        applyMatchedResource();
+      }
+
+      function formPayments() {
+        return $all('[data-payment-form-row]').map(function (row, index) {
+          return {
+            node: index === 0 ? '第一次付款' : index === 1 ? '第二次付款' : '第三次付款',
+            qty: Number($('[data-payment-qty]', row).value || 0),
+            ratio: Number($('[data-payment-ratio]', row).value || 0),
+            unitPrice: Number($('[data-payment-price]', row).value || 0),
+            adjustQty: Number($('[data-payment-adjust]', row).value || 0),
+            amount: Number($('[data-payment-amount]', row).value || 0),
+            date: $('[data-payment-date]', row).value,
+            status: index === 0 ? '待付款' : '未到期'
+          };
+        });
+      }
+
+      function formLossRules(unit) {
+        return $all('[data-payment-form-row]').map(function (row, index) {
+          var adjustQty = Math.abs(Number($('[data-payment-adjust]', row).value || 0));
+          var qty = Number($('[data-payment-qty]', row).value || 0);
+          var ratio = Number($('[data-payment-ratio]', row).value || 0);
+          return {
+            node: index === 0 ? '第一次付款前' : index === 1 ? '第二次付款前' : '第三次付款前',
+            qty: adjustQty || Math.round(qty * 0.1),
+            ratio: ratio,
+            date: $('[data-payment-date]', row).value,
+            rule: '节点前可调整' + (adjustQty || Math.round(qty * 0.1)) + unit + '，节点后按已付比例计损'
+          };
+        });
+      }
+
+      function createOrderFromForm() {
+        var type = $('#orderType').value;
+        var totals = orderTotalsFromForm();
+        var matchedResource = selectedResource();
+        if (!matchedResource) {
+          toast('请选择有效的航班、航次或车次', 'warning');
+          return false;
+        }
+        if (!totals.lines.length) {
+          toast('请填写有效的采购数量', 'warning');
+          return false;
+        }
+        var currency = matchedResource.currency || 'CNY';
+        var unit = unitForType(type);
+        var prefix = type === '机票位' ? 'AIR' : type === '邮轮舱房' ? 'CRU' : 'TRN';
+        var orderNo = 'CG-' + prefix + '-' + today.replace(/-/g, '') + '-' + String(purchaseOrders.length + 1).padStart(3, '0');
+        var departDate = totals.lines[0].departDate;
+        var returnDate = totals.lines[0].returnDate;
+        var order = {
+          orderNo: orderNo,
+          type: type,
+          role: roleForType(type),
+          supplier: matchedResource.supplier || '',
+          agreement: matchedResource.agreement || '',
+          departDate: departDate,
+          returnDate: returnDate,
+          purchaseQty: totals.qty,
+          unit: unit,
+          unitPrice: totals.unitPrice,
+          totalCost: totals.total,
+          currency: currency,
+          supplierConfirm: '待确认',
+          status: '已入库',
+          owner: ownerForType(type),
+          resourceMatch: '已从资源配置识别供应商和协议',
+          resourceSnapshot: {
+            matchedResourceId: matchedResource.id,
+            matchedResourceLabel: matchedResource.label,
+            supplier: matchedResource.supplier || '',
+            agreement: matchedResource.agreement || '',
+            currency: currency
+          },
+          payments: formPayments(),
+          lossRules: formLossRules(unit)
+        };
+        purchaseOrders.unshift(order);
+        totals.lines.forEach(function (line, index) {
+          var stock = {
+            id: prefix + '-' + Date.now() + '-' + index,
+            orderNo: orderNo,
+            type: type,
+            resourceName: line.name,
+            route: line.route,
+            departDate: line.departDate,
+            returnDate: line.returnDate,
+            spec: line.spec,
+            qty: line.qty,
+            borrowed: 0,
+            sold: 0,
+            released: 0,
+            damaged: 0,
+            supplierConfirm: order.supplierConfirm,
+            extra: line.extra
+          };
+          stockLines.unshift(stock);
+          ledger.unshift({ time: today + ' 10:00', action: '采购入库', qty: line.qty, stockId: stock.id, target: orderNo, owner: order.owner });
+        });
+        return true;
+      }
+
+      function fillBorrow(type, prefillStockId) {
+        $('#borrowType').value = type || '机票位';
+        var options = schedulesByType[$('#borrowType').value] || [];
+        $('#borrowSchedule').innerHTML = options.map(function (item) {
+          return '<option value="' + escapeHtml(item.code) + '" data-depart="' + escapeHtml(item.depart) + '" data-back="' + escapeHtml(item.back) + '">' + escapeHtml(item.code + ' | ' + item.name) + '</option>';
+        }).join('');
+        syncBorrowScheduleDates();
+        renderBorrowStockRows(prefillStockId);
+      }
+
+      function scheduleStats(scheduleCode) {
+        var rows = allocations.filter(function (row) { return row.schedule === scheduleCode; });
+        return rows.reduce(function (stats, row) {
+          stats.borrowed += row.qty;
+          stats.sold += row.sold;
+          return stats;
+        }, { borrowed: 0, sold: 0 });
+      }
+
+      function updateBorrowScheduleSummary() {
+        var option = $('#borrowSchedule').options[$('#borrowSchedule').selectedIndex];
+        if (!option) {
+          $('#borrowScheduleName').textContent = '-';
+          $('#borrowScheduleCheck').textContent = '-';
+          return;
+        }
+        var stats = scheduleStats($('#borrowSchedule').value);
+        var unit = unitForType($('#borrowType').value);
+        $('#borrowScheduleName').textContent = option.textContent;
+        $('#borrowScheduleCheck').textContent = '团期日期 ' + ($('#borrowDepartDate').value || '-') + ' 至 ' + ($('#borrowReturnDate').value || '-') + '，已借调' + stats.borrowed + unit + '，已售' + stats.sold + unit + '，待售' + Math.max(0, stats.borrowed - stats.sold) + unit;
+      }
+
+      function renderBorrowStockRows(prefillStockId) {
+        var type = $('#borrowType').value;
+        var depart = $('#borrowDepartDate').value;
+        var back = $('#borrowReturnDate').value;
+        $('#borrowStockRows').innerHTML = stockLines.filter(function (stock) {
+          return stock.type === type;
+        }).map(function (stock) {
+          var order = orderFor(stock.orderNo);
+          var matched = stock.departDate === depart && stock.returnDate === back;
+          var checkedValue = matched && stock.id === prefillStockId ? Math.min(availableQty(stock), 6) : 0;
+          return '<tr data-borrow-stock-id="' + escapeHtml(stock.id) + '"><td>' + escapeHtml(stock.orderNo) + '<br><span class="text-muted">' + escapeHtml(order ? order.supplierConfirm : stock.supplierConfirm) + '</span></td><td>' + escapeHtml(stock.resourceName) + '<br><span class="text-muted">' + escapeHtml(stock.route) + '</span></td><td>' + escapeHtml(stock.departDate + ' / ' + stock.returnDate) + '</td><td>' + escapeHtml(stock.spec) + '</td><td>' + escapeHtml(availableQty(stock) + (order ? order.unit : '')) + '</td><td><span class="' + statusClass(matched ? '已确认' : '变更中') + '">' + escapeHtml(matched ? '日期匹配' : '日期冲突') + '</span></td><td><input class="table-input" type="number" min="0" max="' + availableQty(stock) + '" value="' + checkedValue + '" data-borrow-qty' + (matched ? '' : ' disabled') + '></td></tr>';
+        }).join('') || '<tr><td colspan="7">暂无可借调库存</td></tr>';
+        updateBorrowTotal();
+      }
+
+      function syncBorrowScheduleDates() {
+        var option = $('#borrowSchedule').options[$('#borrowSchedule').selectedIndex];
+        if (!option) return;
+        $('#borrowDepartDate').value = option.getAttribute('data-depart') || '';
+        $('#borrowReturnDate').value = option.getAttribute('data-back') || '';
+        updateBorrowScheduleSummary();
+      }
+
+      function updateBorrowTotal() {
+        var total = $all('[data-borrow-qty]').reduce(function (sum, input) {
+          return sum + Number(input.value || 0);
+        }, 0);
+        $('#borrowTotalText').value = total + unitForType($('#borrowType').value);
+      }
+
+      function openBorrow(type, stockId) {
+        selectedStockId = stockId || '';
+        fillBorrow(type, stockId);
+        openLayer($('#borrowDrawer'));
+      }
+
+      function saveBorrow() {
+        var type = $('#borrowType').value;
+        var scheduleCode = $('#borrowSchedule').value;
+        var option = $('#borrowSchedule').options[$('#borrowSchedule').selectedIndex];
+        var scheduleName = option ? option.textContent : scheduleCode;
+        var depart = $('#borrowDepartDate').value;
+        var back = $('#borrowReturnDate').value;
+        var total = 0;
+        var rows = $all('[data-borrow-stock-id]').map(function (row) {
+          return { row: row, stock: stockFor(row.getAttribute('data-borrow-stock-id')), qty: Number($('[data-borrow-qty]', row).value || 0) };
+        }).filter(function (item) { return item.qty > 0; });
+        if (!rows.length) {
+          toast('请至少填写一批借调数量', 'warning');
+          return;
+        }
+        var invalid = rows.find(function (item) {
+          return item.qty > availableQty(item.stock);
+        });
+        if (invalid) {
+          toast('借调数量不能超过可用库存', 'warning');
+          return;
+        }
+        var conflict = rows.find(function (item) {
+          return item.stock.departDate !== depart || item.stock.returnDate !== back;
+        });
+        if (conflict) {
+          toast('团期日期必须与所选库存日期一致', 'warning');
+          return;
+        }
+        rows.forEach(function (item) {
+          item.stock.borrowed += item.qty;
+          total += item.qty;
+          var allocation = allocations.find(function (row) {
+            return row.stockId === item.stock.id && row.schedule === scheduleCode;
+          });
+          if (allocation) allocation.qty += item.qty;
+          else allocations.push({ schedule: scheduleCode, scheduleName: scheduleName, stockId: item.stock.id, qty: item.qty, sold: 0, status: '筹备中' });
+          ledger.unshift({ time: today + ' 16:00', action: '团期借调', qty: item.qty, stockId: item.stock.id, target: scheduleCode, owner: $('#borrowOwner').value || '周伟' });
+          syncOrderStatus(orderFor(item.stock.orderNo));
+        });
+        closeLayer($('#borrowDrawer'));
+        renderRows();
+        if ($('#detailDrawer').classList.contains('show')) fillDetail(selectedOrder());
+        toast(type + '已从' + rows.length + '批库存借调' + total);
+      }
+
+      function openAdjustment(stockId) {
+        if (stockId) setSelectedFromStock(stockId);
+        var order = selectedOrder();
+        var stocks = order ? stocksForOrder(order.orderNo) : stockLines;
+        $('#adjustmentStock').innerHTML = stocks.map(function (stock) {
+          return '<option value="' + escapeHtml(stock.id) + '"' + (stock.id === selectedStockId ? ' selected' : '') + '>' + escapeHtml(stock.orderNo + ' | ' + stock.resourceName + ' | ' + stock.spec) + '</option>';
+        }).join('');
+        $('#adjustmentQty').value = 1;
+        $('#adjustmentRef').value = order ? order.orderNo : '异常处理';
+        $('#adjustmentReason').value = '线下成交补录';
+        openLayer($('#adjustmentDrawer'));
+      }
+
+      function saveAdjustment() {
+        var stock = stockFor($('#adjustmentStock').value);
+        if (!stock) {
+          toast('请选择库存明细', 'warning');
+          return;
+        }
+        var order = orderFor(stock.orderNo);
+        var type = $('#adjustmentType').value;
+        var qty = Number($('#adjustmentQty').value || 0);
+        var absQty = Math.abs(qty);
+        if (!qty) {
+          toast('请填写调整数量', 'warning');
+          return;
+        }
+        if (type === '历史订单补扣') {
+          stock.sold += absQty;
+        } else if (type === '释放修正') {
+          stock.released += absQty;
+          stock.borrowed = Math.max(0, stock.borrowed - absQty);
+        } else if (type === '报损修正') {
+          stock.damaged += absQty;
+        } else {
+          stock.qty = Math.max(0, stock.qty + qty);
+        }
+        ledger.unshift({ time: today + ' 18:00', action: '人工调整', qty: qty, stockId: stock.id, target: ($('#adjustmentRef').value || '异常处理') + ' / ' + type + ' / ' + ($('#adjustmentReason').value || '未填写原因'), owner: order ? order.owner : '资源调度' });
+        if (order) syncOrderStatus(order);
+        closeLayer($('#adjustmentDrawer'));
+        renderRows();
+        if ($('#detailDrawer').classList.contains('show') && order) fillDetail(order);
+        toast('库存调整已记录，正常订单成交仍由订单中心自动扣减');
+      }
+
+      function openPriceMatrix(stockId) {
+        var stock = stockFor(stockId);
+        if (!stock) return;
+        $('#priceMatrixName').textContent = stock.resourceName;
+        $('#priceMatrixMeta').textContent = stock.spec;
+        if (stock.type === '邮轮舱房') {
+          $('#priceMatrixTitle').textContent = '邮轮/游轮舱型价格矩阵';
+          $('#priceMatrixHead').innerHTML = '<tr><th>舱型</th><th>售卖规则</th><th>价格</th></tr>';
+          $('#priceMatrixRows').innerHTML = cruisePriceMatrix.map(function (row) {
+            return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td><input class="table-input" type="number" value="' + row[2] + '"></td></tr>';
+          }).join('');
+        } else if (stock.type === '专列铺位') {
+          $('#priceMatrixTitle').textContent = '专列铺位价格矩阵';
+          $('#priceMatrixHead').innerHTML = '<tr><th>席别</th><th>铺位</th><th>售卖规则</th><th>价格</th></tr>';
+          $('#priceMatrixRows').innerHTML = trainPriceMatrix.map(function (row) {
+            return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><input class="table-input" type="number" value="' + row[3] + '"></td></tr>';
+          }).join('');
+        }
+        openLayer($('#priceMatrixDrawer'));
+      }
+
+      function closeOrder() {
+        var order = selectedOrder();
+        if (!order) return;
+        stocksForOrder(order.orderNo).forEach(function (stock) {
+          var release = releasableQty(stock);
+          if (release > 0) {
+            stock.borrowed -= release;
+            stock.released += release;
+            ledger.unshift({ time: today + ' 18:30', action: '团期关闭归还', qty: release, stockId: stock.id, target: order.orderNo, owner: order.owner });
+          }
+          allocations.filter(function (row) { return row.stockId === stock.id; }).forEach(function (row) { row.status = '已关闭'; });
+        });
+        order.status = '已关闭';
+        ledger.unshift({ time: today + ' 18:35', action: '人工调整', qty: 0, stockId: stocksForOrder(order.orderNo)[0].id, target: '关闭采购单', owner: order.owner });
+        fillDetail(order);
+        renderRows();
+        toast('采购单已关闭，未售借调库存已归还或标记释放');
+      }
+
+      function resetFilters() {
+        quickFilter = '';
+        $('#procurementKeyword').value = '';
+        $('#procurementTypeFilter').value = '全部';
+        $('#procurementRoleFilter').value = '全部';
+        $('#supplierConfirmFilter').value = '全部';
+        $('#procurementStatusFilter').value = '全部';
+        $('#procurementStartDate').value = '';
+        $('#procurementEndDate').value = '';
+        renderRows();
+      }
+
+      $('#openCreateOrder').addEventListener('click', function () {
+        openLayer($('#createOrderDrawer'));
+      });
+      $('#filterPaymentDue').addEventListener('click', function () {
+        quickFilter = 'payment';
+        $('#procurementStatusFilter').value = '全部';
+        renderRows();
+        toast('已筛选待处理付款节点');
+      });
+      $('#filterLossDue').addEventListener('click', function () {
+        quickFilter = 'release';
+        renderRows();
+        toast('已筛选可释放资源');
+      });
+      $('#searchProcurement').addEventListener('click', renderRows);
+      $('#resetProcurement').addEventListener('click', resetFilters);
+      $('#orderType').addEventListener('change', handleOrderTypeChange);
+      $all('#airGoFlight, #airBackFlight, #cruiseVoyageSelect, #trainTripSelect, #trainBackTripSelect').forEach(function (field) {
+        field.addEventListener('change', applyMatchedResource);
+      });
+      $all('#airDepartDate, #airReturnDate, #airCabin, #airQty, #airUnitPrice, #airPnr, #cruiseDepartDate, #cruiseReturnDate, #trainDepartDate, #trainReturnDate, [data-line-cabin-type], [data-line-carriage], [data-line-seat-class], [data-line-berth], [data-line-cabin-qty], [data-line-qty], [data-line-price]').forEach(function (field) {
+        field.addEventListener('input', function () {
+          updatePaymentDefaults();
+          updateOrderCostPreview();
+        });
+        field.addEventListener('change', function () {
+          updatePaymentDefaults();
+          updateOrderCostPreview();
+        });
+      });
+      $all('[data-payment-qty], [data-payment-ratio], [data-payment-price], [data-payment-adjust], [data-payment-date]').forEach(function (field) {
+        field.addEventListener('input', updateOrderCostPreview);
+        field.addEventListener('change', updateOrderCostPreview);
+      });
+      $('#saveOrder').addEventListener('click', function () {
+        if (createOrderFromForm()) {
+          closeLayer($('#createOrderDrawer'));
+          renderRows();
+          toast('采购已保存并形成库存明细');
+        }
+      });
+      $('#resourceProcurementRows').addEventListener('click', function (event) {
+        var row = event.target.closest('tr[data-procurement-stock-id]');
+        if (!row) return;
+        var stockId = row.getAttribute('data-procurement-stock-id');
+        var stock = stockFor(stockId);
+        if (event.target.closest('[data-open-detail]')) {
+          event.preventDefault();
+          openDetailByStock(stockId);
+        }
+        if (event.target.closest('[data-open-borrow]')) openBorrow(stock.type, stockId);
+        if (event.target.closest('[data-open-adjustment]')) openAdjustment(stockId);
+      });
+      $('#detailBorrow').addEventListener('click', function () {
+        var order = selectedOrder();
+        if (order) openBorrow(order.type, selectedStockId);
+      });
+      $('#detailAdjustment').addEventListener('click', function () {
+        openAdjustment(selectedStockId);
+      });
+      $('#detailArchiveResource').addEventListener('click', function () {
+        var order = selectedOrder();
+        if (order) toast('已生成资源档案补充任务：' + order.orderNo);
+      });
+      $('#closeOrder').addEventListener('click', closeOrder);
+      $('#borrowType').addEventListener('change', function () {
+        fillBorrow($('#borrowType').value, '');
+      });
+      $('#borrowSchedule').addEventListener('change', function () {
+        syncBorrowScheduleDates();
+        renderBorrowStockRows(selectedStockId);
+      });
+      $('#borrowStockRows').addEventListener('input', function (event) {
+        if (event.target.matches('[data-borrow-qty]')) updateBorrowTotal();
+      });
+      $('#saveBorrow').addEventListener('click', saveBorrow);
+      $('#saveAdjustment').addEventListener('click', saveAdjustment);
+      $all('[data-close-drawer]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          closeLayer(button.closest('.modal-overlay'));
+        });
+      });
+      $all('.modal-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (event) {
+          if (event.target === overlay) closeLayer(overlay);
+        });
+      });
+
+      renderResourceOptions();
+      handleOrderTypeChange();
+      renderRows();
+    })();
+  </script>
+</body>
+</html>

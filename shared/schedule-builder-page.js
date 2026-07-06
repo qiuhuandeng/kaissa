@@ -10,7 +10,7 @@
 
   var data = {
     group: {
-      label: '跟团线路',
+      label: '出境游线路',
       scheduleType: '普通团期',
       objectName: '团期',
       tagClass: 'tag tag-blue',
@@ -31,7 +31,7 @@
       products: [
         {
           name: '欧洲十国经典游',
-          meta: '出境跟团，12天11晚，法德瑞意核心城市连线。',
+          meta: '出境游，12天11晚，法德瑞意核心城市连线。',
           plans: [
             { name: '经济款', days: 12, basis: '三星/四星酒店，不含机票，成人参考价 ¥29,800' },
             { name: '品质款', days: 12, basis: '五星酒店，含往返机票，成人参考价 ¥59,800' }
@@ -274,6 +274,32 @@
     }
   };
 
+  data.outbound = Object.assign({}, data.group, {
+    label: '出境游线路',
+    prefix: 'OB'
+  });
+  data.domestic = Object.assign({}, data.group, {
+    label: '国内游线路',
+    prefix: 'CN',
+    products: [
+      {
+        name: '三亚亲子5日游',
+        meta: '国内游，5天4晚，三亚、亚龙湾、海棠湾亲子度假。',
+        plans: [
+          { name: '亲子标准款', days: 5, basis: '海岛酒店、接送和亲子活动，成人参考价 ¥4,800' },
+          { name: '度假升级款', days: 5, basis: '高星酒店、精选景区和亲子活动，成人参考价 ¥7,800' }
+        ]
+      },
+      {
+        name: '西藏深度探索7日',
+        meta: '国内游，7天6晚，成都出发，拉萨及周边深度游览。',
+        plans: [
+          { name: '高原标准款', days: 7, basis: '当地酒店、景区首道门票、中文导游，成人参考价 ¥4,800' }
+        ]
+      }
+    ]
+  });
+
   function $(selector, root) {
     return (root || document).querySelector(selector);
   }
@@ -303,6 +329,14 @@
   function selectedTypeKey() {
     var active = $('[data-schedule-type].active');
     return active ? active.getAttribute('data-schedule-type') : 'group';
+  }
+
+  function isPeopleScheduleType(typeKey) {
+    return typeKey === 'group' || typeKey === 'outbound' || typeKey === 'domestic';
+  }
+
+  function requiresProcurementInventory(typeKey) {
+    return typeKey === 'group' || typeKey === 'outbound' || typeKey === 'domestic' || typeKey === 'cruise' || typeKey === 'train';
   }
 
   function selectedType() {
@@ -341,29 +375,137 @@
     var demand = $('#trafficDemand');
     var route = $('#defaultFlightRoute');
     var method = $('#flightUseMethod');
-    if (!demand || selectedTypeKey() !== 'group') return null;
+    if (!requiresProcurementInventory(selectedTypeKey())) return null;
+    var borrowSource = $('#resourceBorrowSource');
+    if (!borrowSource) return null;
+    var borrowQty = $('#resourceBorrowQty');
+    var borrowStatus = $('#resourceBorrowStatus');
+    var sourceOption = borrowSource && borrowSource.options[borrowSource.selectedIndex];
+    var defaults = resourceDemandDefaults();
+    var peopleType = isPeopleScheduleType(selectedTypeKey());
     return {
-      trafficDemand: demand.value,
-      defaultRoute: route ? route.value : '',
-      useMethod: method ? method.value : '',
-      expectedPeople: $('#matrixTotal') ? $('#matrixTotal').textContent : ''
+      trafficDemand: peopleType && demand ? demand.value : defaults.demand,
+      defaultRoute: peopleType && route ? route.value : defaults.route,
+      useMethod: peopleType && method ? method.value : defaults.next,
+      expectedPeople: $('#matrixTotal') ? $('#matrixTotal').textContent : '',
+      borrowSource: borrowSource ? borrowSource.value : '',
+      borrowQty: borrowQty ? Number(borrowQty.value || 0) : 0,
+      borrowStatus: borrowStatus ? borrowStatus.value : '未借调',
+      sourceDepart: sourceOption ? sourceOption.getAttribute('data-depart') : '',
+      sourceBack: sourceOption ? sourceOption.getAttribute('data-back') : ''
     };
+  }
+
+  function resourceDemandDefaults() {
+    var typeKey = selectedTypeKey();
+    if (typeKey === 'cruise') {
+      return {
+        demand: '需要邮轮舱房',
+        route: '理想号 MED-20260912 / 内舱、海景、阳台',
+        next: '开团前借调舱型库存'
+      };
+    }
+    if (typeKey === 'train') {
+      return {
+        demand: '需要专列铺位',
+        route: 'Y653 东方丝路专列 / 软卧、硬卧',
+        next: '开团前借调铺位库存'
+      };
+    }
+    return {
+      demand: '需要航班资源',
+      route: 'CA937 / CA938 北京-巴黎往返',
+      next: '开团前借调机票位'
+    };
+  }
+
+  function resourceBorrowOptions() {
+    var typeKey = selectedTypeKey();
+    if (typeKey === 'cruise') {
+      return [
+        { value: 'CG-CRU-20260622-003 / 内舱20间', depart: '2026-09-12', back: '2026-09-19', qty: 20 },
+        { value: 'CG-CRU-20260622-003 / 海景18间', depart: '2026-09-12', back: '2026-09-19', qty: 18 },
+        { value: 'CG-CRU-20260622-003 / 阳台22间', depart: '2026-09-12', back: '2026-09-19', qty: 22 }
+      ];
+    }
+    if (typeKey === 'train') {
+      return [
+        { value: 'CG-TRN-20260628-002 / 软卧下铺48铺', depart: '2026-09-20', back: '2026-09-28', qty: 48 },
+        { value: 'CG-TRN-20260628-002 / 硬卧中铺28铺', depart: '2026-09-20', back: '2026-09-28', qty: 28 },
+        { value: 'CG-TRN-20260628-002 / 硬卧上铺20铺', depart: '2026-09-20', back: '2026-09-28', qty: 20 }
+      ];
+    }
+    return [
+      { value: 'CG-AIR-20260618-001 / CA937 G舱30位', depart: '2026-08-18', back: '2026-08-29', qty: 30 },
+      { value: 'CG-AIR-20260625-002 / CA937 K舱20位', depart: '2026-08-18', back: '2026-08-29', qty: 20 }
+    ];
+  }
+
+  function renderResourceBorrowOptions() {
+    var source = $('#resourceBorrowSource');
+    var qty = $('#resourceBorrowQty');
+    var status = $('#resourceBorrowStatus');
+    if (!source) return;
+    var options = resourceBorrowOptions();
+    source.innerHTML = options.map(function (option) {
+      return '<option value="' + option.value + '" data-depart="' + option.depart + '" data-back="' + option.back + '" data-qty="' + option.qty + '">' + option.value + ' | 可用' + option.qty + selectedType().unit + '</option>';
+    }).join('');
+    if (qty && options[0]) qty.value = Math.min(options[0].qty, Number(selectedType().defaultStock || options[0].qty));
+    if (status) status.value = '已满足';
+    applyResourceBorrowDates();
+  }
+
+  function applyResourceBorrowDates() {
+    var source = $('#resourceBorrowSource');
+    if (!source || !source.options.length || !requiresProcurementInventory(selectedTypeKey())) return;
+    var option = source.options[source.selectedIndex];
+    var depart = option.getAttribute('data-depart');
+    var back = option.getAttribute('data-back');
+    if (depart && $('#departDate')) $('#departDate').value = depart;
+    if (back && $('#returnDate')) $('#returnDate').value = back;
+    if (depart && $('#deadlineDate')) $('#deadlineDate').value = addDays(depart, -10);
+    if (depart && $('#deadline2')) $('#deadline2').value = addDays(depart, -6);
+    if ($('#durationHint')) {
+      var days = depart && back ? Math.round((new Date(back) - new Date(depart)) / 86400000) + 1 : 0;
+      $('#durationHint').textContent = days > 0 ? days + '天' + Math.max(days - 1, 0) + '晚' : '-';
+    }
+  }
+
+  function resourceBorrowCheckText() {
+    var demand = selectedResourceDemand();
+    if (!demand) return '无需采购库存';
+    var totals = matrixTotals();
+    if (demand.borrowStatus !== '已满足') return '资源未满足';
+    if (demand.borrowQty < totals.saleable) return '借调数量小于可售容量';
+    if (demand.sourceDepart && $('#departDate').value && demand.sourceDepart !== $('#departDate').value) return '出行日期不一致';
+    if (demand.sourceBack && $('#returnDate').value && demand.sourceBack !== $('#returnDate').value) return '返程日期不一致';
+    return '日期与数量匹配';
   }
 
   function renderResourceDemandContext() {
     var section = $('[data-resource-demand-section]');
     if (!section) return;
-    section.hidden = selectedTypeKey() !== 'group';
+    section.hidden = !requiresProcurementInventory(selectedTypeKey());
     var demand = selectedResourceDemand();
-    if (!demand) return;
+    var defaults = resourceDemandDefaults();
     var type = $('#resourceDemandType');
     var route = $('#resourceDemandRoute');
     var people = $('#resourceDemandPeople');
     var next = $('#resourceDemandNext');
-    if (type) type.textContent = demand.trafficDemand || '航班资源';
-    if (route) route.textContent = demand.defaultRoute || '暂不指定';
-    if (people) people.textContent = demand.expectedPeople || '按总名额确认';
-    if (next) next.textContent = demand.useMethod || '生成后分配资源';
+    var state = $('#resourceBorrowState');
+    var check = $('#resourceBorrowCheck');
+    var demandLabel = $('#trafficDemandLabel');
+    var routeLabel = $('#defaultFlightRouteLabel');
+    var methodLabel = $('#flightUseMethodLabel');
+    if (demandLabel) demandLabel.textContent = selectedTypeKey() === 'cruise' ? '舱房需求' : selectedTypeKey() === 'train' ? '铺位需求' : '大交通需求';
+    if (routeLabel) routeLabel.textContent = selectedTypeKey() === 'cruise' ? '默认航次' : selectedTypeKey() === 'train' ? '默认班次' : '默认航线';
+    if (methodLabel) methodLabel.textContent = selectedTypeKey() === 'cruise' ? '用舱方式' : selectedTypeKey() === 'train' ? '用铺方式' : '用位方式';
+    if (type) type.textContent = demand ? demand.trafficDemand : defaults.demand;
+    if (route) route.textContent = demand && demand.borrowSource ? demand.borrowSource : defaults.route;
+    if (people) people.textContent = demand ? demand.expectedPeople : '按总名额确认';
+    if (next) next.textContent = demand ? demand.useMethod : defaults.next;
+    if (state) state.textContent = demand ? demand.borrowStatus : '未借调';
+    if (check) check.textContent = resourceBorrowCheckText();
   }
 
   function defaultPlanDays(type) {
@@ -374,6 +516,7 @@
   }
 
   function setType(typeKey) {
+    if (typeKey === 'group') typeKey = 'outbound';
     if (!data[typeKey]) typeKey = 'group';
     $all('[data-schedule-type]').forEach(function (button) {
       button.classList.toggle('active', button.getAttribute('data-schedule-type') === typeKey);
@@ -383,6 +526,7 @@
     renderMatrix();
     renderTypeNodes();
     syncDates(true);
+    renderResourceBorrowOptions();
     renderResourceDemandContext();
     renderPreviewIfNeeded();
   }
@@ -527,6 +671,7 @@
     $('#matrixSaleable').textContent = totals.saleable + selectedType().unit;
     $('#channelCapacity').textContent = totals.saleable;
     updateChannelTotals();
+    renderResourceDemandContext();
   }
 
   function updateChannelTotals() {
@@ -599,6 +744,9 @@
       trafficDemand: resourceDemand ? resourceDemand.trafficDemand : '',
       defaultFlightRoute: resourceDemand ? resourceDemand.defaultRoute : '',
       flightUseMethod: resourceDemand ? resourceDemand.useMethod : '',
+      resourceBorrowSource: resourceDemand ? resourceDemand.borrowSource : '',
+      resourceBorrowQty: resourceDemand ? resourceDemand.borrowQty : 0,
+      resourceBorrowStatus: resourceDemand ? resourceDemand.borrowStatus : '',
       remark: type.label + '按' + type.planLabel + '生成，价格与余量已确认',
       deadline: $('#deadlineDate').value || addDays(depart, -10)
     };
@@ -615,9 +763,24 @@
       '<div class="schedule-summary-card"><span>价格余量</span><strong>' + totals.saleable + type.unit + '可售，起价' + primaryPrice() + '</strong></div>'
     ];
     if (demand) {
-      summary.push('<div class="schedule-summary-card"><span>资源需求</span><strong>' + demand.trafficDemand + '，' + demand.useMethod + '</strong></div>');
+      summary.push('<div class="schedule-summary-card"><span>资源借调</span><strong>' + demand.borrowStatus + '，' + demand.borrowQty + type.unit + '，' + resourceBorrowCheckText() + '</strong></div>');
     }
     $('#summaryContent').innerHTML = summary.join('');
+  }
+
+  function validateResourceBorrow() {
+    if (isSupplierSchedule || !requiresProcurementInventory(selectedTypeKey())) return true;
+    var demand = selectedResourceDemand();
+    if (!demand) return true;
+    var check = resourceBorrowCheckText();
+    if (demand.borrowStatus !== '已满足' || check !== '日期与数量匹配') {
+      if (window.caesarUI && window.caesarUI.toast) {
+        window.caesarUI.toast('自营团期必须先完成资源采购库存借调：' + check, { type: 'warning' });
+      }
+      setStep(1);
+      return false;
+    }
+    return true;
   }
 
   function setStep(index) {
@@ -728,6 +891,7 @@
 
   function submitSingle() {
     renderSummary();
+    if (!validateResourceBorrow()) return;
     var type = selectedType();
     writePending(schedulePayload(null, 1));
     $('#successTitle').textContent = isSupplierSchedule ? type.objectName + '已提交凯撒确认' : type.objectName + '已提交';
@@ -786,6 +950,7 @@
 
   function confirmBatch() {
     renderPreview();
+    if (!validateResourceBorrow()) return;
     var items = $all('[data-preview-row]').filter(function (row) {
       return $('input[type="checkbox"]', row).checked;
     }).map(function (row, index) {
@@ -829,8 +994,14 @@
       markDirty();
     });
 
-    $all('#trafficDemand, #defaultFlightRoute, #flightUseMethod').forEach(function (field) {
+    $all('#trafficDemand, #defaultFlightRoute, #flightUseMethod, #resourceBorrowSource, #resourceBorrowQty, #resourceBorrowStatus').forEach(function (field) {
       field.addEventListener('change', function () {
+        if (field.id === 'resourceBorrowSource') applyResourceBorrowDates();
+        renderResourceDemandContext();
+        renderSummary();
+        markDirty();
+      });
+      field.addEventListener('input', function () {
         renderResourceDemandContext();
         renderSummary();
         markDirty();
@@ -945,6 +1116,8 @@
     renderMatrix();
     renderTypeNodes();
     syncDates(true);
+    renderResourceBorrowOptions();
+    renderResourceDemandContext();
     if (fromProduct) appendRouteContextMeta(routeContext);
     syncBackLinks();
     bindEvents();

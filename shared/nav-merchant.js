@@ -23,6 +23,7 @@
         {
           title: "航空资源",
           children: [
+            { title: "航空公司", href: "resource/resource-airlines.html" },
             { title: "航线库", href: "resource/resource-flight-routes.html" },
             { title: "航司协议", href: "resource/resource-flight-block.html" },
           ],
@@ -39,6 +40,7 @@
           title: "专列资源",
           children: [
             { title: "运营商", href: "resource/resource-train-operators.html" },
+            { title: "车次库", href: "resource/resource-train-trips.html" },
             { title: "专列模板", href: "resource/resource-train-routes.html" },
           ],
         },
@@ -71,6 +73,7 @@
           title: "团期管理",
           children: [
             { title: "团期管控", href: "tour/schedules.html" },
+            { title: "资源采购", href: "tour/resource-procurement-inventory.html" },
             { title: "团期成本", href: "tour/fulfillment-cost.html" },
             { title: "出团执行", href: "tour/fulfillment-outbound.html" },
             { title: "回团结算", href: "tour/fulfillment-return.html" },
@@ -127,10 +130,10 @@
       ],
     },
     {
-      title: "客户",
+      title: "会员",
       icon: "users",
       children: [
-        { title: "客户列表", href: "customer/list.html" },
+        { title: "会员列表", href: "customer/list.html" },
       ],
     },
     {
@@ -140,7 +143,7 @@
         { title: "收款管理", href: "finance/receipts.html" },
         { title: "订单认款", href: "finance/finance-matching.html" },
         { title: "预存账户", href: "finance/finance-predeposit.html" },
-        { title: "转款记录", href: "finance/finance-transfer-records.html" },
+        { title: "转单记录", href: "finance/finance-transfer-records.html" },
         { title: "应收管理", href: "finance/finance-receivable.html" },
         { title: "应付管理", href: "finance/finance-payable.html" },
         { title: "付款执行", href: "finance/finance-payment.html" },
@@ -227,7 +230,7 @@
     销售中心: "销售",
     门市中心: "门市",
     渠道中心: "渠道",
-    客户: "客户",
+    会员: "会员",
     财务: "财务",
     审批: "审批",
     AI: "AI",
@@ -241,7 +244,7 @@
     销售中心: "销售中心",
     门市中心: "门市中心",
     渠道中心: "渠道中心",
-    客户: "客户管理",
+    会员: "会员管理",
     财务: "财务管理",
     审批: "审批中心",
     AI: "AI工具",
@@ -423,6 +426,7 @@
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-batch.html": { href: "tour/schedules.html", title: "批量开排" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
+    "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html", title: "资源采购" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
     "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
     "tour/fulfillment-roster.html": { href: "tour/fulfillment-outbound.html", title: "出团执行" },
@@ -433,7 +437,7 @@
     "sales/booking.html": { href: "sales/orders.html", title: "新建订单" },
     "sales/orders-transfer.html": { href: "sales/orders-after-sales.html", title: "变更申请" },
     "sales/orders-cancel.html": { href: "sales/orders-after-sales.html", title: "退团退订" },
-    "sales/orders-payment-transfer.html": { href: "sales/orders-after-sales.html", title: "转款申请" },
+    "sales/orders-payment-transfer.html": { href: "sales/orders-after-sales.html", title: "转单申请" },
     "sales/orders-refund.html": { href: "sales/orders-after-sales.html", title: "退款申请" },
     "sales/store/detail.html": { href: "sales/store/index.html", title: "门市详情" },
     "sales/store/members.html": { href: "sales/store/members.html", title: "门市成员" },
@@ -442,11 +446,11 @@
     "tour/projects.html": { href: "tour/product-custom-list.html", title: "单团自组" },
     "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
-    "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转款记录" },
+    "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转单记录" },
     "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
-    "customer/customers-detail.html": { href: "customer/list.html", title: "客户详情" },
-    "customer/detail.html": { href: "customer/list.html", title: "客户详情" },
+    "customer/customers-detail.html": { href: "customer/list.html", title: "会员详情" },
+    "customer/detail.html": { href: "customer/list.html", title: "会员详情" },
     "channel/ota_shops.html": { href: "channel/ota_shops.html", title: "店铺配置" },
     "channel/ota_products.html": { href: "channel/ota_products.html", title: "商品映射" },
     "channel/ota_orders.html": { href: "sales/orders.html", title: "订单管理" },
@@ -2040,7 +2044,7 @@
     "线路", "团期", "自由行", "单项服务", "普通团期", "邮轮团期", "专列团期", "研学团期", "邮轮航次", "专列班期", "研学营期",
     "景点", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮模板", "运营商", "专列模板", "供应商", "领队",
     "产品管理", "自营", "自营产品", "自营线路", "外采", "外采产品", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮线路", "专列", "专列线路", "研学", "研学线路", "服务单",
-    "出境游", "国内游", "国内跟团", "港澳台", "小包团", "定制团", "半自由行", "出境跟团", "跟团游", "普通报价", "团队报价",
+    "出境游", "国内游", "港澳台", "小包团", "定制团", "半自由行", "普通报价", "团队报价",
     "成人/儿童结算价", "舱型库存价", "铺位/包厢结算价", "服务费/加急费",
     "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA平台", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
@@ -2052,7 +2056,7 @@
   ]);
 
   const metaTagPatterns = [
-    /^(产品管理|自营|外采|邮轮|专列|研学|自由行|单项服务|跟团游|出境游|国内游|MICE)(产品|线路|团期)?$/,
+    /^(产品管理|自营|外采|邮轮|专列|研学|自由行|单项服务|出境游|国内游|MICE)(产品|线路|团期)?$/,
     /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
     /^(门市|门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
     /^(资源|产品中心|团期管理|销售中心|门市中心|门店中心|渠道中心|客户|财务|审批|AI|系统设置)$/,
