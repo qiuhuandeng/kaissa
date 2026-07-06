@@ -130,19 +130,14 @@
     <section class="card detail-tabs-card product-detail-unified-tabs schedule-detail-tabs">
       <nav class="tab-bar" aria-label="团期详情标签页">
         <button class="tab-item active" type="button" data-tab="info">总览</button>
+        <button class="tab-item" type="button" data-tab="itinerary">行程安排</button>
         <button class="tab-item" type="button" data-tab="roster">报名名单</button>
         <button class="tab-item" type="button" data-tab="resource">交通资源</button>
         <button class="tab-item" type="button" data-tab="inventory">价格名额</button>
         <button class="tab-item" type="button" data-tab="orders">关联订单</button>
         <button class="tab-item" type="button" data-tab="files">出团资料</button>
         <button class="tab-item" type="button" data-tab="cost">成本摘要</button>
-        <span class="dropdown schedule-tab-more">
-          <button id="scheduleMoreTab" class="tab-item schedule-more-tab" type="button" data-row-more aria-expanded="false">更多</button>
-          <span class="dropdown-menu action-dropdown-menu">
-            <button class="dropdown-item" type="button" data-tab-menu="itinerary">行程安排</button>
-            <button class="dropdown-item" type="button" data-tab-menu="logs">操作日志</button>
-          </span>
-        </span>
+        <button class="tab-item" type="button" data-tab="logs">操作日志</button>
       </nav>
 
       <section id="tab-info" class="detail-tab-panel active">
@@ -1369,8 +1364,6 @@
   <script>
     (function () {
       var tabButtons = Array.from(document.querySelectorAll('.detail-tabs-card .tab-item[data-tab]'));
-      var tabMenuButtons = Array.from(document.querySelectorAll('.detail-tabs-card [data-tab-menu]'));
-      var tabMoreButton = document.getElementById('scheduleMoreTab');
       var detailTabAlias = {
         channels: 'inventory',
         'finance-chain': 'cost',
@@ -2207,18 +2200,9 @@
         var button = tabButtons.find(function (item) {
           return item.dataset.tab === tab;
         });
-        var menuButton = tabMenuButtons.find(function (item) {
-          return item.dataset.tabMenu === tab;
-        });
         tabButtons.forEach(function (item) {
           item.classList.toggle('active', item === button);
         });
-        tabMenuButtons.forEach(function (item) {
-          item.classList.toggle('active', item === menuButton);
-        });
-        if (tabMoreButton) {
-          tabMoreButton.classList.toggle('active', !!menuButton && !button);
-        }
         document.querySelectorAll('.detail-tab-panel').forEach(function (panel) {
           panel.classList.toggle('active', panel.id === 'tab-' + tab);
         });
@@ -2227,14 +2211,6 @@
       tabButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           setActiveDetailTab(button.dataset.tab);
-        });
-      });
-
-      tabMenuButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-          setActiveDetailTab(button.dataset.tabMenu);
-          var dropdown = button.closest('.dropdown');
-          if (dropdown) closePageDropdowns();
         });
       });
 

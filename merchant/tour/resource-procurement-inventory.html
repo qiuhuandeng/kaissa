@@ -104,7 +104,7 @@
   </section>
 
   <div id="createContractDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="createContractTitle">
+    <div class="modal drawer-modal drawer-lg resource-procurement-create-drawer" role="dialog" aria-modal="true" aria-labelledby="createContractTitle">
       <div class="modal-header">
         <div id="createContractTitle" class="modal-title">新增机票切位</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
@@ -176,7 +176,7 @@
           <h2 class="form-section-title">押金阶段</h2>
           <button id="addPaymentStage" class="btn btn-secondary" type="button">新增阶段</button>
         </div>
-        <section class="table-wrap" aria-label="新增押金阶段">
+        <section class="table-wrap resource-procurement-payment-editor" aria-label="新增押金阶段">
           <table>
             <thead>
               <tr>
@@ -842,7 +842,7 @@
           subtypeSectionTitle: '舱型与舱室',
           subtypeNameLabel: '舱型',
           qtyLabel: '舱室数',
-          unitLabel: '入住规则',
+          unitLabel: '单位',
           priceLabel: '每间成本',
           guaranteeLabel: '保底间数',
           freeLossLabel: '免损间数',
@@ -859,10 +859,6 @@
           defaultGuarantee: 16,
           defaultFreeLoss: 2,
           defaultLossRate: 100,
-          defaultCapacity: 2,
-          defaultMaxCapacity: 4,
-          defaultThirdFourth: '支持',
-          defaultChildNoBerth: '支持',
           resourceSummarySuffix: '船公司协议自动带出',
           owner: '邮轮计调王强',
           contractPrefix: 'CRU-BLK',
@@ -875,9 +871,9 @@
             { value: 'MED-20261010', label: '理想号返港 20261010', supplier: '地中海邮轮中国销售中心', resource: '理想号返港 20261010', route: '日韩航线 → 上海吴淞口' }
           ],
           subtypeDefaults: [
-            { name: '内舱', qty: 20, price: 16800, guarantee: 18, freeLoss: 2, lossRate: 100, capacity: 2, maxCapacity: 4, thirdFourth: '支持', childNoBerth: '支持' },
-            { name: '海景', qty: 10, price: 19800, guarantee: 8, freeLoss: 1, lossRate: 100, capacity: 2, maxCapacity: 4, thirdFourth: '支持', childNoBerth: '支持' },
-            { name: '阳台', qty: 8, price: 22000, guarantee: 6, freeLoss: 1, lossRate: 100, capacity: 2, maxCapacity: 4, thirdFourth: '支持', childNoBerth: '需确认' }
+            { name: '内舱', qty: 20, price: 16800, guarantee: 18, freeLoss: 2, lossRate: 100 },
+            { name: '海景', qty: 10, price: 19800, guarantee: 8, freeLoss: 1, lossRate: 100 },
+            { name: '阳台', qty: 8, price: 22000, guarantee: 6, freeLoss: 1, lossRate: 100 }
           ]
         },
         train: {
@@ -1223,6 +1219,9 @@
       function subtypeRuleText(contract, subtype) {
         if (!contract || !subtype) return '';
         if (contract.type === '邮轮') {
+          if (!subtype.capacity && !subtype.maxCapacity && !subtype.thirdFourth && !subtype.childNoBerth) {
+            return '随产品方案带出';
+          }
           var capacity = '标准' + (subtype.capacity || 2) + '人/最大' + (subtype.maxCapacity || subtype.capacity || 2) + '人';
           return capacity + ' · 三四人' + (subtype.thirdFourth || '需确认') + ' · 儿童不占位' + (subtype.childNoBerth || '需确认');
         }
@@ -1950,10 +1949,6 @@
           guarantee: Number(config.defaultGuarantee || 0),
           freeLoss: Number(config.defaultFreeLoss || 0),
           lossRate: Number(config.defaultLossRate || 100),
-          capacity: Number(config.defaultCapacity || 2),
-          maxCapacity: Number(config.defaultMaxCapacity || 4),
-          thirdFourth: config.defaultThirdFourth || '支持',
-          childNoBerth: config.defaultChildNoBerth || '支持',
           compartment: config.defaultCompartment || '否'
         }];
       }
@@ -1971,12 +1966,6 @@
             freeLoss: Number($('[data-subtype-free-loss]', row).value || 0),
             lossRate: Number($('[data-subtype-loss-rate]', row).value || 100)
           };
-          if (config.type === '邮轮') {
-            item.capacity = Number($('[data-subtype-capacity]', row).value || 2);
-            item.maxCapacity = Number($('[data-subtype-max-capacity]', row).value || item.capacity);
-            item.thirdFourth = $('[data-subtype-third-fourth]', row).value;
-            item.childNoBerth = $('[data-subtype-child-no-berth]', row).value;
-          }
           if (config.type === '专列') {
             item.compartment = $('[data-subtype-compartment]', row).value;
             item.childNoBerth = $('[data-subtype-child-no-berth]', row).value;
@@ -2005,12 +1994,7 @@
       function subtypeUnitOptions(config, row) {
         if (config.type === '邮轮') {
           return '<input data-subtype-unit type="hidden" value="间">' +
-            '<div class="resource-procurement-inline-inputs">' +
-            '<input data-subtype-capacity class="table-input" type="number" min="1" value="' + Number(row.capacity || 2) + '" aria-label="标准入住">' +
-            '<input data-subtype-max-capacity class="table-input" type="number" min="1" value="' + Number(row.maxCapacity || 4) + '" aria-label="最大入住">' +
-            '<select data-subtype-third-fourth class="table-input" aria-label="第三第四人"><option value="支持"' + (row.thirdFourth !== '不支持' ? ' selected' : '') + '>三四人支持</option><option value="不支持"' + (row.thirdFourth === '不支持' ? ' selected' : '') + '>三四人不支持</option></select>' +
-            '<select data-subtype-child-no-berth class="table-input" aria-label="儿童不占位"><option value="支持"' + (row.childNoBerth === '支持' ? ' selected' : '') + '>儿童不占位支持</option><option value="需确认"' + (row.childNoBerth !== '支持' && row.childNoBerth !== '不支持' ? ' selected' : '') + '>儿童不占位需确认</option><option value="不支持"' + (row.childNoBerth === '不支持' ? ' selected' : '') + '>儿童不占位不支持</option></select>' +
-            '</div>';
+            '<span class="text-muted">间</span>';
         }
         if (config.type === '专列') {
           return '<input data-subtype-unit type="hidden" value="' + escapeHtml(row.unit || config.unit) + '">' +
@@ -2222,10 +2206,6 @@
             lossRate: row.lossRate
           };
           if (config.type === '邮轮') {
-            subtype.capacity = row.capacity || 2;
-            subtype.maxCapacity = row.maxCapacity || subtype.capacity;
-            subtype.thirdFourth = row.thirdFourth || '支持';
-            subtype.childNoBerth = row.childNoBerth || '支持';
             subtype.adultOccupancy = 0;
             subtype.childOccupancy = 0;
             subtype.childNoBerthSold = 0;
