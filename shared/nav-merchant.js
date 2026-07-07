@@ -450,7 +450,6 @@
     "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学线路编辑" },
     "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期" },
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
-    "tour/schedules-batch.html": { href: "tour/schedules.html", title: "批量开排" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
     "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "成本结算" },

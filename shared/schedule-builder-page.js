@@ -46,13 +46,11 @@
           ]
         }
       ],
-      matrixColumns: ['价格项', '总名额', '预留', '可售', '销售价', '结算价', '备注'],
+      matrixTitle: '人群价格与名额',
+      matrixColumns: ['价格结构', '成人价', '儿童价', '单房差', '服务费', '补差'],
       matrix: [
-        ['成人', 30, 2, 29800, 27600, '主销售价'],
-        ['儿童占床', 8, 0, 26800, 24800, '按儿童政策'],
-        ['儿童不占床', 8, 0, 23800, 21800, '不占床'],
-        ['老人', 6, 0, 29800, 27600, '同成人'],
-        ['单房差', 8, 0, 4800, 4200, '按房差补收']
+        { label: '标准团费', total: 30, reserve: 0, cells: [{ kind: 'primaryPrice', value: 29800 }, { type: 'number', value: 26800 }, { type: 'number', value: 4800 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] },
+        { label: '优惠团费', total: 0, reserve: 0, cells: [{ type: 'number', value: 27800 }, { type: 'number', value: 24800 }, { type: 'number', value: 4800 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] }
       ],
       nodes: [
         ['报名截止日期', 'date', '2026-06-20'],
@@ -98,12 +96,12 @@
           ]
         }
       ],
-      matrixColumns: ['套餐项', '总余量', '预留', '可售', '成人价', '儿童占位价', '儿童不占位价'],
+      matrixTitle: '套餐价格与余量',
+      matrixColumns: ['套餐结构', '成人价', '儿童价', '单房差', '服务费', '补差'],
       matrix: [
-        ['机票酒店套餐', 36, 4, 3680, 3280, 2680],
-        ['纯酒店套餐', 18, 2, 2980, 2680, 1980],
-        ['当地玩乐套餐', 24, 0, 980, 780, 480],
-        ['接送机加购', 20, 0, 480, 320, 0]
+        { label: '机票酒店套餐', total: 36, reserve: 0, cells: [{ kind: 'primaryPrice', value: 3680 }, { type: 'number', value: 3280 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] },
+        { label: '纯酒店套餐', total: 18, reserve: 0, cells: [{ type: 'number', value: 2980 }, { type: 'number', value: 2680 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] },
+        { label: '当地玩乐套餐', total: 24, reserve: 0, cells: [{ type: 'number', value: 980 }, { type: 'number', value: 780 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] }
       ],
       nodes: [
         ['房态回传截止', 'date', '2026-07-10'],
@@ -148,70 +146,55 @@
           ]
         }
       ],
-      matrixColumns: ['舱型', '入住规则', '借调舱房', '预留', '可售', '成人占位价', '儿童占位价', '儿童不占位价', '第三/第四人价', '单房差'],
+      matrixTitle: '舱型价格与舱房',
+      matrixColumns: ['舱型结构', '成人价', '儿童价', '单房差', '港务税/服务费', '升舱差价'],
       matrix: [
         {
-          label: '内舱房',
+          label: '内舱 IC',
           total: 42,
-          reserve: 4,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '2人/最多4人，儿童可不占位' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 12800 },
             { type: 'number', value: 9800 },
-            { type: 'number', value: 5800 },
-            { type: 'number', value: 8800 },
-            { type: 'number', value: 4800 }
+            { type: 'number', value: 4800 },
+            { type: 'number', value: 1800 },
+            { type: 'number', value: 0 }
           ]
         },
         {
-          label: '海景房',
+          label: '海景 OC',
           total: 36,
-          reserve: 3,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '2人/最多4人，儿童可不占位' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 15800 },
             { type: 'number', value: 12800 },
-            { type: 'number', value: 6800 },
-            { type: 'number', value: 10800 },
-            { type: 'number', value: 5800 }
+            { type: 'number', value: 5800 },
+            { type: 'number', value: 1800 },
+            { type: 'number', value: 3000 }
           ]
         },
         {
-          label: '阳台房',
+          label: '阳台 BC',
           total: 36,
-          reserve: 4,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '2人/最多4人，儿童可不占位' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 18800 },
             { type: 'number', value: 14800 },
-            { type: 'number', value: 7800 },
-            { type: 'number', value: 12800 },
-            { type: 'number', value: 6800 }
+            { type: 'number', value: 6800 },
+            { type: 'number', value: 1800 },
+            { type: 'number', value: 6000 }
           ]
         },
         {
-          label: '套房',
+          label: '套房 ST',
           total: 12,
-          reserve: 2,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '2人/最多3人，儿童可不占位' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 26800 },
             { type: 'number', value: 21800 },
             { type: 'number', value: 9800 },
-            { type: 'number', value: 18800 },
-            { type: 'number', value: 9800 }
+            { type: 'number', value: 1800 },
+            { type: 'number', value: 14000 }
           ]
         }
       ],
@@ -259,62 +242,55 @@
           ]
         }
       ],
-      matrixColumns: ['席别', '铺位', '借调铺位', '预留', '可售', '成人占位价', '儿童占位价', '儿童不占位价'],
+      matrixTitle: '席别价格与铺位',
+      matrixColumns: ['席别/铺位', '成人价', '儿童价', '单铺差', '服务费', '升铺差价'],
       matrix: [
         {
-          label: '软卧',
+          label: '软卧下铺',
           total: 48,
-          reserve: 4,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '下铺' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 19800 },
             { type: 'number', value: 17800 },
-            { type: 'number', value: 7800 }
+            { type: 'number', value: 0 },
+            { type: 'number', value: 800 },
+            { type: 'number', value: 1000 }
           ]
         },
         {
-          label: '软卧',
+          label: '软卧上铺',
           total: 36,
-          reserve: 4,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '上铺' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 18800 },
             { type: 'number', value: 16800 },
-            { type: 'number', value: 7800 }
+            { type: 'number', value: 0 },
+            { type: 'number', value: 800 },
+            { type: 'number', value: 0 }
           ]
         },
         {
-          label: '硬卧',
+          label: '硬卧中铺',
           total: 32,
-          reserve: 4,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '中铺' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 15800 },
             { type: 'number', value: 13800 },
-            { type: 'number', value: 6800 }
+            { type: 'number', value: 0 },
+            { type: 'number', value: 600 },
+            { type: 'number', value: -3000 }
           ]
         },
         {
           label: '软卧包厢',
           total: 12,
-          reserve: 2,
+          reserve: 0,
           cells: [
-            { type: 'text', value: '整包厢' },
-            { kind: 'total' },
-            { kind: 'reserve' },
-            { kind: 'saleable' },
             { kind: 'primaryPrice', value: 36800 },
             { type: 'number', value: 32800 },
-            { type: 'number', value: 8800 }
+            { type: 'number', value: 0 },
+            { type: 'number', value: 1200 },
+            { type: 'number', value: 18000 }
           ]
         }
       ],
@@ -362,12 +338,11 @@
           ]
         }
       ],
-      matrixColumns: ['班级/角色', '名额', '预留', '可售', '学生价', '结算价', '配置'],
+      matrixTitle: '研学价格与名额',
+      matrixColumns: ['名额结构', '学生价', '陪同价', '课程/服务费', '保险费', '备注'],
       matrix: [
-        ['学生名额', 30, 2, 9600, 8800, '六年级以上'],
-        ['带队老师', 4, 0, 0, 0, '每班至少1名'],
-        ['课程导师', 3, 0, 0, 0, '航天导师/安全导师'],
-        ['家长陪同', 6, 0, 6200, 5600, '可选陪同']
+        { label: '学生名额', total: 30, reserve: 0, cells: [{ kind: 'primaryPrice', value: 9600 }, { type: 'number', value: 0 }, { type: 'number', value: 1200 }, { type: 'number', value: 120 }, { type: 'text', value: '六年级以上' }] },
+        { label: '家长陪同', total: 6, reserve: 0, cells: [{ type: 'number', value: 6200 }, { type: 'number', value: 6200 }, { type: 'number', value: 600 }, { type: 'number', value: 120 }, { type: 'text', value: '可选陪同' }] }
       ],
       nodes: [
         ['适合年级', 'text', '小学五年级-初二'],
@@ -479,50 +454,30 @@
   }
 
   function selectedResourceDemand() {
-    var demand = $('#trafficDemand');
-    var route = $('#defaultFlightRoute');
-    var method = $('#flightUseMethod');
     if (!requiresProcurementInventory(selectedTypeKey())) return null;
+    var demand = $('#trafficDemand');
     var borrowSource = $('#resourceBorrowSource');
+    if (!demand || !borrowSource) return null;
+    var isBound = demand.value === '绑定已采购交通';
     if (!borrowSource) return null;
     var borrowQty = $('#resourceBorrowQty');
     var borrowStatus = $('#resourceBorrowStatus');
     var sourceOption = borrowSource && borrowSource.options[borrowSource.selectedIndex];
-    var defaults = resourceDemandDefaults();
-    var peopleType = isPeopleScheduleType(selectedTypeKey());
+    var optionQty = sourceOption ? Number(sourceOption.getAttribute('data-qty') || 0) : 0;
     return {
-      trafficDemand: peopleType && demand ? demand.value : defaults.demand,
-      defaultRoute: peopleType && route ? route.value : defaults.route,
-      useMethod: peopleType && method ? method.value : defaults.next,
+      bindMode: demand.value,
+      bound: isBound,
+      trafficDemand: demand.value,
+      defaultRoute: isBound && sourceOption ? sourceOption.textContent : '',
+      useMethod: isBound ? '保存后占用交通可分配库存' : '手工维护团期名额',
       expectedPeople: $('#matrixTotal') ? $('#matrixTotal').textContent : '',
-      borrowSource: borrowSource ? borrowSource.value : '',
-      borrowQty: borrowQty ? Number(borrowQty.value || 0) : 0,
-      borrowStatus: borrowStatus ? borrowStatus.value : '未借调',
+      borrowSource: isBound && borrowSource ? borrowSource.value : '',
+      borrowQty: isBound && borrowQty ? Number(borrowQty.value || optionQty || 0) : 0,
+      borrowStatus: isBound ? (borrowStatus ? borrowStatus.value || '已绑定' : '已绑定') : '未绑定',
       sourceDepart: sourceOption ? sourceOption.getAttribute('data-depart') : '',
-      sourceBack: sourceOption ? sourceOption.getAttribute('data-back') : ''
-    };
-  }
-
-  function resourceDemandDefaults() {
-    var typeKey = selectedTypeKey();
-    if (typeKey === 'cruise') {
-      return {
-        demand: '需要邮轮舱房',
-        route: '理想号 MED-20260912 / 内舱、海景、阳台',
-        next: '开团前借调舱型库存'
-      };
-    }
-    if (typeKey === 'train') {
-      return {
-        demand: '需要专列铺位',
-        route: 'Y653 东方丝路专列 / 软卧、硬卧、包厢',
-        next: '开团前借调铺位库存'
-      };
-    }
-    return {
-      demand: '需要航班资源',
-      route: 'CA937 / CA938 北京-巴黎往返',
-      next: '开团前借调机票位'
+      sourceBack: sourceOption ? sourceOption.getAttribute('data-back') : '',
+      sourceQty: optionQty,
+      sourceUnit: sourceOption ? sourceOption.getAttribute('data-unit') || selectedType().unit : selectedType().unit
     };
   }
 
@@ -530,21 +485,19 @@
     var typeKey = selectedTypeKey();
     if (typeKey === 'cruise') {
       return [
-        { value: 'CRU-BLK-20260622-003 / 理想号 MED-20260912 内舱20间', depart: '2026-09-12', back: '2026-09-19', qty: 20 },
-        { value: 'CRU-BLK-20260622-003 / 理想号 MED-20260912 海景18间', depart: '2026-09-12', back: '2026-09-19', qty: 18 },
-        { value: 'CRU-BLK-20260622-003 / 理想号 MED-20260912 阳台22间', depart: '2026-09-12', back: '2026-09-19', qty: 22 }
+        { value: 'CRU-BLK-20261003-001', label: '理想号 MED-20261003 上海吴淞口 · 全舱型 · 可分配126间', depart: '2026-10-03', back: '2026-10-10', qty: 126, unit: '间' },
+        { value: 'CRU-BLK-20260912-003', label: '理想号 MED-20260912 上海吴淞口 · 全舱型 · 可分配38间', depart: '2026-09-12', back: '2026-09-19', qty: 38, unit: '间' }
       ];
     }
     if (typeKey === 'train') {
       return [
-        { value: 'TRN-BLK-20260628-004 / Y653 软卧下铺48铺', depart: '2026-09-20', back: '2026-09-28', qty: 48 },
-        { value: 'TRN-BLK-20260628-004 / Y653 硬卧中铺28铺', depart: '2026-09-20', back: '2026-09-28', qty: 28 },
-        { value: 'TRN-BLK-20260628-004 / Y653 软卧包厢12间', depart: '2026-09-20', back: '2026-09-28', qty: 12 }
+        { value: 'TRN-BLK-20260920-001', label: 'Y653 西安-乌鲁木齐 2026/09/20 · 全席别 · 可分配96铺', depart: '2026-09-20', back: '2026-09-28', qty: 96, unit: '铺' },
+        { value: 'TRN-BLK-20261005-002', label: 'Y654 乌鲁木齐-西安 2026/10/05 · 全席别 · 可分配72铺', depart: '2026-10-05', back: '2026-10-13', qty: 72, unit: '铺' }
       ];
     }
     return [
-      { value: 'CG-AIR-20260618-001 / CA937 G舱30位', depart: '2026-08-18', back: '2026-08-29', qty: 30 },
-      { value: 'CG-AIR-20260625-002 / CA937 K舱20位', depart: '2026-08-18', back: '2026-08-29', qty: 20 }
+      { value: 'AIR-CT-20260908-001|经济舱G舱', label: 'CA937 北京-巴黎 2026/09/08 · 经济舱G舱 · 可分配30座', depart: '2026-09-08', back: '2026-09-19', qty: 30, unit: '座' },
+      { value: 'AIR-CT-20260908-001|经济舱K舱', label: 'CA937 北京-巴黎 2026/09/08 · 经济舱K舱 · 可分配20座', depart: '2026-09-08', back: '2026-09-19', qty: 20, unit: '座' }
     ];
   }
 
@@ -555,11 +508,60 @@
     if (!source) return;
     var options = resourceBorrowOptions();
     source.innerHTML = options.map(function (option) {
-      return '<option value="' + option.value + '" data-depart="' + option.depart + '" data-back="' + option.back + '" data-qty="' + option.qty + '">' + option.value + ' | 可用' + option.qty + selectedType().unit + '</option>';
+      return '<option value="' + option.value + '" data-depart="' + option.depart + '" data-back="' + option.back + '" data-qty="' + option.qty + '" data-unit="' + (option.unit || selectedType().unit) + '">' + (option.label || option.value) + '</option>';
     }).join('');
-    if (qty && options[0]) qty.value = Math.min(options[0].qty, Number(selectedType().defaultStock || options[0].qty));
-    if (status) status.value = options.length ? '已满足' : '暂不借调';
-    applyResourceBorrowDates();
+    if (qty) qty.value = $('#trafficDemand') && $('#trafficDemand').value === '绑定已采购交通' && options[0] ? Math.min(options[0].qty, quotaPlanCount() || Number(selectedType().defaultStock || options[0].qty)) : 0;
+    if (status) status.value = $('#trafficDemand') && $('#trafficDemand').value === '绑定已采购交通' ? '已绑定' : '未绑定';
+  }
+
+  function applyResourceBindingDefaults(updateDates) {
+    var demand = $('#trafficDemand');
+    var source = $('#resourceBorrowSource');
+    var qty = $('#resourceBorrowQty');
+    var status = $('#resourceBorrowStatus');
+    if (!demand || !source || !qty) return;
+    var bound = demand.value === '绑定已采购交通';
+    var option = source.options[source.selectedIndex];
+    source.disabled = !bound;
+    qty.disabled = !bound;
+    if (!bound) {
+      qty.value = 0;
+      if (status) status.value = '未绑定';
+      return;
+    }
+    if (option && !Number(qty.value || 0)) {
+      qty.value = Math.min(Number(option.getAttribute('data-qty') || 0), trafficBindingCapacity() || Number(option.getAttribute('data-qty') || 0));
+    }
+    if (status) status.value = '已绑定';
+    if (updateDates) applyResourceBorrowDates();
+  }
+
+  function quotaPlanCount() {
+    var field = $('#quotaPlanCount');
+    if (field) return Number(field.value || 0);
+    return 0;
+  }
+
+  function adultCount() {
+    var field = $('#adultCount');
+    if (field) return Number(field.value || 0);
+    return 0;
+  }
+
+  function reserveHours() {
+    var field = $('#reserveHours');
+    if (field) return Number(field.value || 0);
+    return 0;
+  }
+
+  function quotaDisplayUnit() {
+    if (selectedTypeKey() === 'cruise') return '人';
+    return selectedType().unit;
+  }
+
+  function syncQuotaPlanningFields() {
+    var qty = $('#resourceBorrowQty');
+    if (qty && $('#quotaPlanCount')) qty.value = quotaPlanCount();
   }
 
   function applyResourceBorrowDates() {
@@ -580,39 +582,47 @@
 
   function resourceBorrowCheckText() {
     var demand = selectedResourceDemand();
-    if (!demand) return '无需采购库存';
-    var totals = matrixTotals();
-    if (demand.borrowStatus !== '已满足') return '资源未满足';
-    if (demand.borrowQty < totals.saleable) return '借调数量小于可售容量';
-    if (demand.sourceDepart && $('#departDate').value && demand.sourceDepart !== $('#departDate').value) return '出行日期不一致';
-    if (demand.sourceBack && $('#returnDate').value && demand.sourceBack !== $('#returnDate').value) return '返程日期不一致';
-    return '日期与数量匹配';
+    if (!demand || !demand.bound) return '未绑定交通，按手工名额销售';
+    var capacity = trafficBindingCapacity();
+    if (demand.borrowQty > demand.sourceQty) return '占用数量超过交通可分配库存';
+    if (demand.borrowQty < capacity) return '占用数量小于计划数量';
+    return '保存后占用交通可分配库存';
+  }
+
+  function trafficBindingCapacity() {
+    if ($('#quotaPlanCount')) return quotaPlanCount();
+    if (isPeopleScheduleType(selectedTypeKey())) {
+      var firstRow = $('[data-matrix-row]');
+      if (firstRow) {
+        var total = $('[data-total]', firstRow);
+        var reserve = $('[data-reserve]', firstRow);
+        return Math.max(Number(total ? total.value : 0) - Number(reserve ? reserve.value : 0), 0);
+      }
+    }
+    return matrixTotals().saleable;
   }
 
   function renderResourceDemandContext() {
-    var section = $('[data-resource-demand-section]');
-    if (!section) return;
-    section.hidden = !requiresProcurementInventory(selectedTypeKey());
+    syncQuotaPlanningFields();
     var demand = selectedResourceDemand();
-    var defaults = resourceDemandDefaults();
-    var type = $('#resourceDemandType');
-    var route = $('#resourceDemandRoute');
-    var people = $('#resourceDemandPeople');
-    var next = $('#resourceDemandNext');
-    var state = $('#resourceBorrowState');
+    var sourceField = $('[data-resource-source-field]');
+    var needsResource = requiresProcurementInventory(selectedTypeKey());
+    if (sourceField) sourceField.hidden = !needsResource;
+    applyResourceBindingDefaults(false);
     var check = $('#resourceBorrowCheck');
     var demandLabel = $('#trafficDemandLabel');
-    var routeLabel = $('#defaultFlightRouteLabel');
-    var methodLabel = $('#flightUseMethodLabel');
-    if (demandLabel) demandLabel.textContent = selectedTypeKey() === 'cruise' ? '舱房需求' : selectedTypeKey() === 'train' ? '铺位需求' : '大交通需求';
-    if (routeLabel) routeLabel.textContent = selectedTypeKey() === 'cruise' ? '默认航次' : selectedTypeKey() === 'train' ? '默认班次' : '默认航线';
-    if (methodLabel) methodLabel.textContent = selectedTypeKey() === 'cruise' ? '用舱方式' : selectedTypeKey() === 'train' ? '用铺方式' : '用位方式';
-    if (type) type.textContent = demand ? demand.trafficDemand : defaults.demand;
-    if (route) route.textContent = demand && demand.borrowSource ? demand.borrowSource : defaults.route;
-    if (people) people.textContent = demand ? demand.expectedPeople : '按总名额确认';
-    if (next) next.textContent = demand ? demand.useMethod : defaults.next;
-    if (state) state.textContent = demand ? demand.borrowStatus : '未借调';
-    if (check) check.textContent = resourceBorrowCheckText();
+    var sourceLabel = $('#resourceBorrowSourceLabel');
+    var qtyLabel = $('#resourceBorrowQtyLabel');
+    var quotaLabel = $('#quotaPlanCountLabel');
+    var adultLabel = $('#adultCountLabel');
+    var matrixTitle = $('#matrixSectionTitle');
+    if (demandLabel) demandLabel.textContent = '名额来源';
+    if (sourceLabel) sourceLabel.textContent = selectedTypeKey() === 'cruise' ? '选择邮轮舱房' : selectedTypeKey() === 'train' ? '选择专列铺位' : '选择交通';
+    if (qtyLabel) qtyLabel.textContent = selectedTypeKey() === 'cruise' ? '占用舱房' : selectedTypeKey() === 'train' ? '占用铺位' : '占用座位';
+    if (quotaLabel) quotaLabel.textContent = selectedTypeKey() === 'train' ? '计划铺位' : selectedTypeKey() === 'study' ? '学生名额' : '计划客';
+    if (adultLabel) adultLabel.textContent = selectedTypeKey() === 'study' ? '陪同人数' : '成人数';
+    if (matrixTitle) matrixTitle.textContent = selectedType().matrixTitle || '价格结构';
+    if (check) check.textContent = needsResource ? resourceBorrowCheckText() : '按当前名额与价格生成';
   }
 
   function defaultPlanDays(type) {
@@ -714,6 +724,14 @@
     $('#endPlace').value = type.endValue;
     $('#deadline2Label').textContent = type.deadlineLabel;
     $('#scheduleCodePreview').textContent = type.prefix + dateCode($('#departDate').value) + '001';
+    if ($('#quotaPlanCount')) {
+      var defaultQuota = selectedTypeKey() === 'cruise' ? 30 : type.defaultStock;
+      $('#quotaPlanCount').value = defaultQuota;
+    }
+    if ($('#adultCount')) {
+      $('#adultCount').value = selectedTypeKey() === 'study' ? 4 : Math.max(Math.floor(Number($('#quotaPlanCount') ? $('#quotaPlanCount').value : type.defaultStock) * 0.6), 0);
+    }
+    if ($('#reserveHours') && !Number($('#reserveHours').value || 0)) $('#reserveHours').value = 24;
     renderResourceDemandContext();
   }
 
@@ -760,7 +778,7 @@
 
   function matrixRow(row) {
     if (!Array.isArray(row)) {
-      return '<tr data-matrix-row>' +
+      return '<tr data-matrix-row data-row-total="' + Number(row.total || 0) + '" data-row-reserve="' + Number(row.reserve || 0) + '">' +
         '<td><strong>' + row.label + '</strong></td>' +
         row.cells.map(function (cell) { return matrixObjectCell(cell, row); }).join('') +
         '</tr>';
@@ -791,11 +809,16 @@
   }
 
   function matrixTotals() {
+    var planned = quotaPlanCount();
+    if ($('#quotaPlanCount')) return { total: planned, saleable: planned };
     return $all('[data-matrix-row]').reduce(function (summary, row) {
-      var total = Number($('[data-total]', row).value || 0);
-      var reserve = Number($('[data-reserve]', row).value || 0);
+      var totalInput = $('[data-total]', row);
+      var reserveInput = $('[data-reserve]', row);
+      var total = Number(totalInput ? totalInput.value : row.getAttribute('data-row-total') || 0);
+      var reserve = Number(reserveInput ? reserveInput.value : row.getAttribute('data-row-reserve') || 0);
       var saleable = Math.max(total - reserve, 0);
-      $('[data-saleable]', row).textContent = saleable;
+      var saleableCell = $('[data-saleable]', row);
+      if (saleableCell) saleableCell.textContent = saleable;
       summary.total += total;
       summary.saleable += saleable;
       return summary;
@@ -804,14 +827,15 @@
 
   function updateMatrixTotals() {
     var totals = matrixTotals();
-    $('#matrixTotal').textContent = totals.total + selectedType().unit;
-    $('#matrixSaleable').textContent = totals.saleable + selectedType().unit;
-    $('#channelCapacity').textContent = totals.saleable;
+    $('#matrixTotal').textContent = totals.total + quotaDisplayUnit();
+    $('#matrixSaleable').textContent = totals.saleable + quotaDisplayUnit();
+    if ($('#channelCapacity')) $('#channelCapacity').textContent = totals.saleable;
     updateChannelTotals();
     renderResourceDemandContext();
   }
 
   function updateChannelTotals() {
+    if (!$('#channelCapacity') || !$('#channelTotal') || !$('#channelStatus')) return;
     var total = $all('.schedule-channel-input').reduce(function (sum, input) {
       return sum + Number(input.value || 0);
     }, 0);
@@ -864,11 +888,13 @@
       stock: totals.total,
       sold: 0,
       left: totals.saleable,
-      unit: type.unit,
-      stockLabel: totals.total + type.unit,
-      leftLabel: totals.saleable + type.unit,
+      unit: quotaDisplayUnit(),
+      stockLabel: totals.total + quotaDisplayUnit(),
+      leftLabel: totals.saleable + quotaDisplayUnit(),
       channelSeats: channelMap(),
       price: primaryPrice(),
+      adultCount: adultCount(),
+      reserveHours: reserveHours(),
       planner: $('#plannerSelect').value,
       saleStatus: saleStatus,
       executionStatus: executionStatus,
@@ -881,6 +907,12 @@
       trafficDemand: resourceDemand ? resourceDemand.trafficDemand : '',
       defaultFlightRoute: resourceDemand ? resourceDemand.defaultRoute : '',
       flightUseMethod: resourceDemand ? resourceDemand.useMethod : '',
+      trafficBindingMode: resourceDemand && resourceDemand.bound ? '绑定已采购交通' : '手工录入名额',
+      trafficResource: resourceDemand && resourceDemand.bound ? resourceDemand.defaultRoute : '',
+      trafficResourceValue: resourceDemand && resourceDemand.bound ? resourceDemand.borrowSource : '',
+      trafficResourceQty: resourceDemand && resourceDemand.bound ? resourceDemand.borrowQty : 0,
+      trafficResourceUnit: resourceDemand && resourceDemand.bound ? resourceDemand.sourceUnit : '',
+      trafficResourceStatus: resourceDemand && resourceDemand.bound ? '已绑定' : '未绑定',
       resourceBorrowSource: resourceDemand ? resourceDemand.borrowSource : '',
       resourceBorrowQty: resourceDemand ? resourceDemand.borrowQty : 0,
       resourceBorrowStatus: resourceDemand ? resourceDemand.borrowStatus : '',
@@ -897,15 +929,20 @@
       '<div class="schedule-summary-card"><span>线路类型</span><strong>' + type.label + '</strong></div>',
       '<div class="schedule-summary-card"><span>线路/方案</span><strong>' + selectedProduct().name + ' / ' + selectedPlan().name + '</strong></div>',
       '<div class="schedule-summary-card"><span>日期</span><strong>' + $('#departDate').value + ' 至 ' + $('#returnDate').value + '</strong></div>',
-      '<div class="schedule-summary-card"><span>价格余量</span><strong>' + totals.saleable + type.unit + '可售，起价' + primaryPrice() + '</strong></div>'
+      '<div class="schedule-summary-card"><span>名额价格</span><strong>' + totals.saleable + quotaDisplayUnit() + '，成人' + adultCount() + '，起价' + primaryPrice() + '</strong></div>',
+      '<div class="schedule-summary-card"><span>预留时长</span><strong>' + reserveHours() + '小时</strong></div>'
     ];
-    if (demand) {
-      summary.push('<div class="schedule-summary-card"><span>资源借调</span><strong>' + demand.borrowStatus + '，' + demand.borrowQty + type.unit + '，' + resourceBorrowCheckText() + '</strong></div>');
-    }
+    summary.push('<div class="schedule-summary-card"><span>资源占用</span><strong>' + (demand && demand.bound ? (demand.borrowQty + (demand.sourceUnit || type.unit) + '，' + resourceBorrowCheckText()) : '按当前名额生成') + '</strong></div>');
     $('#summaryContent').innerHTML = summary.join('');
   }
 
   function validateResourceBorrow() {
+    var demand = selectedResourceDemand();
+    if (!demand || !demand.bound) return true;
+    if (demand.borrowQty > demand.sourceQty || demand.borrowQty < trafficBindingCapacity()) {
+      if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('绑定交通库存不足，请调整价格库存或占用数量', { type: 'warning' });
+      return false;
+    }
     return true;
   }
 
@@ -1122,14 +1159,17 @@
 
     $all('#trafficDemand, #defaultFlightRoute, #flightUseMethod, #resourceBorrowSource, #resourceBorrowQty, #resourceBorrowStatus').forEach(function (field) {
       field.addEventListener('change', function () {
-        if (field.id === 'resourceBorrowSource') applyResourceBorrowDates();
+        if (field.id === 'trafficDemand') applyResourceBindingDefaults(false);
+        if (field.id === 'resourceBorrowSource') applyResourceBindingDefaults(false);
         renderResourceDemandContext();
-        renderSummary();
+        if (mode === 'single') renderSummary();
+        else renderPreviewIfNeeded();
         markDirty();
       });
       field.addEventListener('input', function () {
         renderResourceDemandContext();
-        renderSummary();
+        if (mode === 'single') renderSummary();
+        else renderPreviewIfNeeded();
         markDirty();
       });
     });
@@ -1138,6 +1178,14 @@
       updateMatrixTotals();
       renderPreviewIfNeeded();
       markDirty();
+    });
+
+    $all('#quotaPlanCount, #adultCount, #reserveHours').forEach(function (input) {
+      input.addEventListener('input', function () {
+        updateMatrixTotals();
+        renderPreviewIfNeeded();
+        markDirty();
+      });
     });
 
     $all('.schedule-channel-input').forEach(function (input) {
