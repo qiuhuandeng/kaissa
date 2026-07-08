@@ -18,6 +18,7 @@
         </div>
       </div>
       <div class="btn-group">
+        <button id="createIndependentGroup" class="btn btn-secondary" type="button">创建独立成团</button>
         <a class="btn btn-primary" href="product-self-edit.html">编辑线路</a>
         <button id="openShelfModal" class="btn btn-warning" type="button">下架线路</button>
         <button id="copyDetailProduct" class="btn btn-secondary" type="button">复制线路</button>
@@ -184,6 +185,7 @@
               <div id="routeServiceSummary" class="description-grid route-service-summary"></div>
               <div class="route-preview-toolbar">
                 <div id="routeDayTabs" class="segmented-control" aria-label="按天查看方案"></div>
+                <button id="createIndependentGroupFromPlan" class="btn btn-secondary" type="button">按当前方案创建独立成团</button>
               </div>
               <div id="routePreviewItinerary" class="product-itinerary"></div>
             </div>
@@ -357,6 +359,91 @@
     </div>
   </div>
 
+  <div id="independentGroupModal" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal custom-project-modal" role="dialog" aria-modal="true" aria-labelledby="independentGroupTitle">
+      <div class="modal-header">
+        <div id="independentGroupTitle" class="modal-title">创建独立成团</div>
+        <button class="modal-close" type="button" data-close-independent-group aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group form-group-full">
+            <label class="form-label" for="independentCustomerCompany">客户单位名称 <span class="req">*</span></label>
+            <input id="independentCustomerCompany" class="form-control" type="text" placeholder="请输入客户单位名称" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentContactName">客户联系人 <span class="req">*</span></label>
+            <input id="independentContactName" class="form-control" type="text" placeholder="请输入联系人" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentContactPhone">联系人手机 <span class="req">*</span></label>
+            <input id="independentContactPhone" class="form-control" type="tel" placeholder="请输入手机号" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentRouteName">引用线路 <span class="req">*</span></label>
+            <input id="independentRouteName" class="form-control" type="text" value="欧洲十国经典游" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentPlanSelect">线路方案 <span class="req">*</span></label>
+            <select id="independentPlanSelect" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentDestination">目的地</label>
+            <input id="independentDestination" class="form-control" type="text" value="法国/德国/意大利">
+          </div>
+          <div class="form-group">
+            <label class="form-label">计划出行日期</label>
+            <div class="date-range custom-date-range">
+              <input id="independentTravelStart" class="form-control" type="date" aria-label="独立成团出行开始日期">
+              <span>至</span>
+              <input id="independentTravelEnd" class="form-control" type="date" aria-label="独立成团出行结束日期">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentPeopleCount">预计人数</label>
+            <input id="independentPeopleCount" class="form-control" type="number" min="1" value="25">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentProjectNo">关联单团项目</label>
+            <input id="independentProjectNo" class="form-control" type="text" placeholder="可为空，确认成团后自动生成">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentSaleScope">销售范围</label>
+            <select id="independentSaleScope" class="form-control">
+              <option>指定客户专属</option>
+              <option>指定门店/销售可见</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentQuoteBasis">报价口径</label>
+            <select id="independentQuoteBasis" class="form-control">
+              <option>按标准方案重新报价</option>
+              <option>使用线路参考价测算</option>
+              <option>客户已确认锁定报价</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="independentOwner">负责人</label>
+            <select id="independentOwner" class="form-control">
+              <option>陈刚</option>
+              <option>王芳</option>
+              <option>周伟</option>
+            </select>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="independentAdjustments">与标准方案差异</label>
+            <textarea id="independentAdjustments" class="form-control" rows="4" placeholder="如：独立用车、升级酒店、指定领队、调整购物点、增加公务拜访等"></textarea>
+            <div class="form-hint">创建后进入单团项目详情，先完成报价确认；确认成团后再生成项目团，不进入公开渠道售卖。</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-independent-group>取消</button>
+        <button id="confirmIndependentGroup" class="btn btn-primary" type="button">生成独立成团项目</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var tabs = Array.from(document.querySelectorAll('[data-tab]'));
@@ -367,6 +454,8 @@
       var logModal = document.getElementById('logModal');
       var versionModal = document.getElementById('versionModal');
       var archiveModal = document.getElementById('archiveModal');
+      var independentGroupModal = document.getElementById('independentGroupModal');
+      var independentPlanSelect = document.getElementById('independentPlanSelect');
       var recommendButton = document.getElementById('recommendButton');
       var recommendTag = document.getElementById('recommendTag');
       var detailRouteRows = document.getElementById('detailRouteRows');
@@ -531,6 +620,17 @@
         window.caesarUI.toast(message, { type: 'success' });
       }
 
+      function requireValue(id, message) {
+        var field = document.getElementById(id);
+        var value = field ? field.value.trim() : '';
+        if (!value) {
+          window.caesarUI.toast(message, { type: 'warning' });
+          if (field) field.focus();
+          return '';
+        }
+        return value;
+      }
+
       function renderRouteRows() {
         detailRouteRows.innerHTML = detailRoutes.map(function (route, index) {
           return [
@@ -590,6 +690,79 @@
         renderRoutePreview();
       }
 
+      function renderIndependentPlanOptions() {
+        independentPlanSelect.innerHTML = detailRoutes.map(function (route, index) {
+          return '<option value="' + index + '">' + escapeHtml(route.name) + '</option>';
+        }).join('');
+        independentPlanSelect.value = String(activeRouteIndex);
+      }
+
+      function openIndependentGroupModal() {
+        var route = detailRoutes[activeRouteIndex] || detailRoutes[0];
+        renderIndependentPlanOptions();
+        document.getElementById('independentRouteName').value = '欧洲十国经典游';
+        document.getElementById('independentDestination').value = route.destinations || '法国/德国/意大利';
+        if (!document.getElementById('independentAdjustments').value) {
+          document.getElementById('independentAdjustments').value = '引用标准线路方案创建客户专属项目团，按客户人数、日期和服务差异重新核价。';
+        }
+        window.caesarUI.openLayer(independentGroupModal);
+      }
+
+      function independentProjectHref() {
+        var selectedIndex = Number(independentPlanSelect.value || activeRouteIndex);
+        var route = detailRoutes[selectedIndex] || detailRoutes[activeRouteIndex] || detailRoutes[0];
+        var customer = requireValue('independentCustomerCompany', '请填写客户单位名称');
+        var contact = requireValue('independentContactName', '请填写客户联系人');
+        var phone = requireValue('independentContactPhone', '请填写联系人手机');
+        if (!customer || !contact || !phone) return '';
+        var context = {
+          product: '欧洲十国经典游',
+          route: route.name,
+          type: 'group',
+          ownerOrg: '欧洲线路中心',
+          supplier: route.supplierLine || '欧洲地接ABC',
+          flightRouteResource: route.flightRouteResource || '',
+          flightUsePolicy: route.flightUsePolicy || '',
+          resourceRefs: [route.flightRouteResource, route.hotelLevel, route.localTraffic].filter(Boolean),
+          groupMode: '独立成团',
+          privateCustomer: customer,
+          privateSaleScope: document.getElementById('independentSaleScope').value,
+          quoteBasis: document.getElementById('independentQuoteBasis').value,
+          owner: document.getElementById('independentOwner').value,
+          contactName: contact,
+          contactPhone: phone
+        };
+        try {
+          window.localStorage.setItem('caesarRouteScheduleContext', JSON.stringify(context));
+        } catch (error) {}
+        var quoteBasis = document.getElementById('independentQuoteBasis').value;
+        var projectNo = document.getElementById('independentProjectNo').value.trim() || 'INC-20260708-001';
+        var query = new URLSearchParams();
+        query.set('source', 'routeIndependent');
+        query.set('productName', context.product);
+        query.set('route', context.route);
+        query.set('type', 'group');
+        query.set('groupMode', 'independent');
+        query.set('customer', customer);
+        query.set('contact', contact);
+        query.set('phone', phone);
+        query.set('projectNo', projectNo);
+        query.set('people', document.getElementById('independentPeopleCount').value || '');
+        query.set('travelStart', document.getElementById('independentTravelStart').value || '');
+        query.set('travelEnd', document.getElementById('independentTravelEnd').value || '');
+        query.set('privateSaleScope', document.getElementById('independentSaleScope').value);
+        query.set('quoteBasis', quoteBasis);
+        query.set('projectStatus', quoteBasis === '客户已确认锁定报价' ? '待确认成团' : '报价中');
+        query.set('owner', document.getElementById('independentOwner').value);
+        query.set('independentNote', document.getElementById('independentAdjustments').value.trim());
+        return '../tour/product-custom-detail.html?' + query.toString();
+      }
+
+      function createIndependentGroup() {
+        var href = independentProjectHref();
+        if (href) window.location.href = href;
+      }
+
       tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
           setTab(tab.dataset.tab);
@@ -647,6 +820,14 @@
         showRouteToast('已复制为草稿，可在自营线路列表继续编辑');
       });
 
+      document.getElementById('createIndependentGroup').addEventListener('click', openIndependentGroupModal);
+      document.getElementById('createIndependentGroupFromPlan').addEventListener('click', openIndependentGroupModal);
+      document.getElementById('confirmIndependentGroup').addEventListener('click', createIndependentGroup);
+      independentPlanSelect.addEventListener('change', function () {
+        var route = detailRoutes[Number(independentPlanSelect.value)] || detailRoutes[0];
+        document.getElementById('independentDestination').value = route.destinations || '';
+      });
+
       document.getElementById('confirmDetailShelf').addEventListener('click', function () {
         window.caesarUI.closeLayer(shelfModal);
         showRouteToast('线路已提交下架处理');
@@ -690,7 +871,11 @@
         button.addEventListener('click', function () { window.caesarUI.closeLayer(archiveModal); });
       });
 
-      [shelfModal, logModal, versionModal, archiveModal].forEach(function (modal) {
+      document.querySelectorAll('[data-close-independent-group]').forEach(function (button) {
+        button.addEventListener('click', function () { window.caesarUI.closeLayer(independentGroupModal); });
+      });
+
+      [shelfModal, logModal, versionModal, archiveModal, independentGroupModal].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) window.caesarUI.closeLayer(modal);
         });

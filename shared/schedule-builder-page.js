@@ -873,6 +873,16 @@
     var executionStatus = executionStatusField ? executionStatusField.value : '未出团';
     var settlementStatus = settlementStatusField ? settlementStatusField.value : '未维护成本';
     var resourceDemand = selectedResourceDemand();
+    var groupModeField = $('#groupModeSelect');
+    var privateCustomerField = $('#privateCustomerInput');
+    var customProjectField = $('#customProjectInput');
+    var privateSaleScopeField = $('#privateSaleScope');
+    var privateGroupNoteField = $('#privateGroupNote');
+    var groupMode = groupModeField ? groupModeField.value : '散拼';
+    var privateCustomer = privateCustomerField ? privateCustomerField.value.trim() : '';
+    var customProjectNo = customProjectField ? customProjectField.value.trim() : '';
+    var privateSaleScope = privateSaleScopeField ? privateSaleScopeField.value : '';
+    var privateGroupNote = privateGroupNoteField ? privateGroupNoteField.value.trim() : '';
     if (mode === 'batch') {
       saleStatus = '筹备中';
       executionStatus = '未出团';
@@ -916,7 +926,12 @@
       resourceBorrowSource: resourceDemand ? resourceDemand.borrowSource : '',
       resourceBorrowQty: resourceDemand ? resourceDemand.borrowQty : 0,
       resourceBorrowStatus: resourceDemand ? resourceDemand.borrowStatus : '',
-      remark: type.label + '按' + type.planLabel + '生成，价格与余量已确认',
+      groupMode: groupMode,
+      privateCustomer: privateCustomer,
+      customProjectNo: customProjectNo,
+      privateSaleScope: privateSaleScope,
+      privateGroupNote: privateGroupNote,
+      remark: (privateGroupNote || type.label + '按' + type.planLabel + '生成，价格与余量已确认') + (groupMode === '独立成团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
       deadline: $('#deadlineDate').value || addDays(depart, -10)
     };
   }
@@ -932,6 +947,12 @@
       '<div class="schedule-summary-card"><span>名额价格</span><strong>' + totals.saleable + quotaDisplayUnit() + '，成人' + adultCount() + '，起价' + primaryPrice() + '</strong></div>',
       '<div class="schedule-summary-card"><span>预留时长</span><strong>' + reserveHours() + '小时</strong></div>'
     ];
+    if ($('#groupModeSelect')) {
+      summary.push('<div class="schedule-summary-card"><span>成团方式</span><strong>' + $('#groupModeSelect').value + '</strong></div>');
+      if ($('#groupModeSelect').value === '独立成团') {
+        summary.push('<div class="schedule-summary-card"><span>客户专属</span><strong>' + (($('#privateCustomerInput') && $('#privateCustomerInput').value.trim()) || '待选择客户') + '</strong></div>');
+      }
+    }
     summary.push('<div class="schedule-summary-card"><span>资源占用</span><strong>' + (demand && demand.bound ? (demand.borrowQty + (demand.sourceUnit || type.unit) + '，' + resourceBorrowCheckText()) : '按当前名额生成') + '</strong></div>');
     $('#summaryContent').innerHTML = summary.join('');
   }
@@ -944,6 +965,16 @@
       return false;
     }
     return true;
+  }
+
+  function validatePrivateGroup() {
+    var groupModeField = $('#groupModeSelect');
+    var privateCustomerField = $('#privateCustomerInput');
+    if (!groupModeField || groupModeField.value !== '独立成团') return true;
+    if (privateCustomerField && privateCustomerField.value.trim()) return true;
+    if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('独立成团必须选择或填写指定客户', { type: 'warning' });
+    if (privateCustomerField) privateCustomerField.focus();
+    return false;
   }
 
   function setStep(index) {
@@ -1055,6 +1086,7 @@
   function submitSingle() {
     renderSummary();
     if (!validateResourceBorrow()) return;
+    if (!validatePrivateGroup()) return;
     var type = selectedType();
     writePending(schedulePayload(null, 1));
     $('#successTitle').textContent = isSupplierSchedule ? type.objectName + '已提交凯撒确认' : type.objectName + '已提交';

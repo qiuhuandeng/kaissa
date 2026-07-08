@@ -75,6 +75,14 @@
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="groupModeFilter">成团方式</label>
+          <select id="groupModeFilter">
+            <option value="全部">全部成团</option>
+            <option value="散拼">散拼</option>
+            <option value="独立成团">独立成团</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-sm filter-item-status">
           <label class="sr-only" for="scheduleStatus">销售状态</label>
           <select id="scheduleStatus">
             <option>全部</option>
@@ -1739,6 +1747,7 @@
       var departStartDate = document.getElementById('departStartDate');
       var departEndDate = document.getElementById('departEndDate');
       var batchTypeFilter = document.getElementById('batchTypeFilter');
+      var groupModeFilter = document.getElementById('groupModeFilter');
       var scheduleStatusFilter = document.getElementById('scheduleStatus');
       var executionStatusFilter = document.getElementById('executionStatusFilter');
       var currentTodoFilter = document.getElementById('currentTodoFilter');
@@ -2752,6 +2761,23 @@
         }).join('') : '<tr><td colspan="9">当前团期暂无关联订单</td></tr>';
       }
 
+      function bookingPresetHref(item) {
+        var left = stockNumber(item.left);
+        var params = new URLSearchParams();
+        params.set('entry', 'product-booking');
+        params.set('from', 'schedule-control');
+        params.set('type', scheduleTypeKey(item));
+        params.set('product', item.product || '');
+        params.set('plan', item.route || '');
+        params.set('scheduleNo', item.code || '');
+        params.set('stock', item.code || '');
+        params.set('date', item.depart || '');
+        params.set('price', item.price || '');
+        params.set('people', '1');
+        params.set('status', left > 0 ? '余' + left + (item.unit || '人') : '无余位');
+        return '../sales/booking.html?' + params.toString();
+      }
+
       function fillStockLineage(item) {
         document.getElementById('stockLineageTitle').textContent = '调整库存价格 - ' + item.code;
         document.getElementById('stockLineageName').textContent = item.product + ' / ' + (item.route || '-');
@@ -3177,6 +3203,10 @@
           costStatus: '未维护成本',
           costClass: 'tag tag-orange',
           locked: false,
+          groupMode: '散拼',
+          privateCustomer: '',
+          customProjectNo: '',
+          privateSaleScope: '',
           remark: '',
           deadline: ''
         }, item || {});
@@ -3192,6 +3222,39 @@
 
       function applyLifecycleSampleSchedules() {
         [
+          {
+            code: 'INC20260915001',
+            product: '欧洲十国经典游',
+            route: 'A线 法德意12天',
+            batchType: '普通团期',
+            depart: '2026-09-15',
+            back: '2026-09-26',
+            stock: 80,
+            sold: 0,
+            left: 80,
+            unit: '人',
+            channelSeats: {},
+            price: '¥23,825',
+            planner: '陈刚',
+            leader: '待确认',
+            saleStatus: '筹备中',
+            executionStatus: '未出团',
+            settlementStatus: '未维护成本',
+            status: '筹备中',
+            costStatus: '未维护成本',
+            rosterStatus: '待导入名单',
+            documentsStatus: '资料未收',
+            resourceStatus: '待确认',
+            noticeStatus: '未到节点',
+            leaderStatus: '待安排',
+            groupMode: '独立成团',
+            privateCustomer: '北京某科技有限公司',
+            customProjectNo: 'MICE-20250623-001',
+            privateSaleScope: '指定客户专属',
+            tabStatus: '筹备中 未出团 未维护成本 待发布',
+            remark: '引用欧洲十国经典游A线创建客户专属团期，不进入公开渠道售卖',
+            deadline: '2026-09-05'
+          },
           {
             code: 'EU20260701001',
             product: '欧洲十国经典游',
@@ -3393,7 +3456,17 @@
       function detailHref(item) {
         var normalized = normalizeBatchType(item.batchType);
         var type = normalized === '邮轮航次' ? 'cruise' : normalized === '专列班期' ? 'train' : normalized === '研学营期' ? 'study' : 'group';
-        return 'schedules-detail.html?type=' + type;
+        var query = new URLSearchParams();
+        query.set('type', type);
+        if (item.code) query.set('scheduleNo', item.code);
+        if (item.product) query.set('product', item.product);
+        if (item.route) query.set('package', item.route);
+        if (item.groupMode === '独立成团') {
+          query.set('groupMode', 'independent');
+          if (item.privateCustomer) query.set('customer', item.privateCustomer);
+          if (item.customProjectNo) query.set('projectNo', item.customProjectNo);
+        }
+        return 'schedules-detail.html?' + query.toString();
       }
 
       function mutedLine(text) {
@@ -3406,10 +3479,14 @@
       }
 
       function scheduleObjectCell(item, href) {
+        var privateLine = item.groupMode === '独立成团'
+          ? '<span class="text-muted schedule-route-name">客户专属：' + escapeHtml(item.privateCustomer || '未指定客户') + (item.customProjectNo ? ' · ' + escapeHtml(item.customProjectNo) : '') + '</span>'
+          : '';
         return '<span class="schedule-batch-cell">' +
           '<span class="schedule-order-line"><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(item.code) + '</a><span class="' + batchTypeClass(item.batchType) + '">' + escapeHtml(batchTypeDisplay(item.batchType)) + '</span></span>' +
           '<span class="schedule-product-name">' + escapeHtml(item.product || '-') + '</span>' +
           '<span class="text-muted schedule-route-name">' + escapeHtml(item.route || '-') + '</span>' +
+          privateLine +
           '</span>';
       }
 
@@ -3661,6 +3738,7 @@
           items.push(dropdownItem('复制团期', 'data-copy-schedule'));
           items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
         } else if (mainStage === '销售中') {
+          items.push(dropdownItem('下单', 'data-open-quick-booking'));
           items.push(dropdownItem('编辑团期', 'data-edit-schedule'));
           items.push(dropdownItem(saleToggleLabel(item), 'data-toggle-sale'));
           items.push(dropdownItem('调整库存价格', 'data-open-quota-price'));
@@ -3745,9 +3823,11 @@
         var currentTodo = currentTodoFilter.value;
         var riskStatus = riskStatusFilter.value;
         var batchType = batchTypeFilter.value;
+        var groupMode = groupModeFilter ? groupModeFilter.value : '全部';
         if (productQuery && item.product.indexOf(productQuery) === -1) return false;
         if (codeQuery && item.code.toUpperCase().indexOf(codeQuery) === -1) return false;
         if (batchType && batchType !== '全部' && item.batchType !== batchType) return false;
+        if (groupMode && groupMode !== '全部' && (item.groupMode || '散拼') !== groupMode) return false;
         if (departStartDate.value && item.depart < departStartDate.value) return false;
         if (departEndDate.value && item.depart > departEndDate.value) return false;
         if (status && status !== '全部') {
@@ -5248,6 +5328,7 @@
         var toggleSaleButton = event.target.closest('[data-toggle-sale]');
         var adjustDeadlineButton = event.target.closest('[data-open-quota-price]');
         var scheduleOrderButton = event.target.closest('[data-open-schedule-orders]');
+        var quickBookingButton = event.target.closest('[data-open-quick-booking]');
         var quotaPriceButton = event.target.closest('[data-open-quota-price]');
         var resourceActionButton = event.target.closest('[data-resource-action]');
         var primaryActionButton = event.target.closest('[data-open-primary-action]');
@@ -5307,6 +5388,13 @@
           closeMenus();
           fillScheduleOrderDrawer(item);
           window.caesarUI.openLayer(scheduleOrderDrawer);
+          return;
+        }
+        if (quickBookingButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          navigateTo(bookingPresetHref(item));
           return;
         }
         if ((quotaPriceButton || adjustDeadlineButton) && item) {
@@ -5784,6 +5872,7 @@
         departStartDate.value = '';
         departEndDate.value = '';
         batchTypeFilter.selectedIndex = 0;
+        if (groupModeFilter) groupModeFilter.selectedIndex = 0;
         scheduleStatusFilter.selectedIndex = 0;
         executionStatusFilter.selectedIndex = 0;
         currentTodoFilter.selectedIndex = 0;
@@ -5877,6 +5966,10 @@
       }
       if (pageParams.get('stage')) {
         executionStatusFilter.value = pageParams.get('stage');
+        applyFilters();
+      }
+      if (pageParams.get('groupMode') === 'independent' && groupModeFilter) {
+        groupModeFilter.value = '独立成团';
         applyFilters();
       }
       if (pageParams.get('todo')) {

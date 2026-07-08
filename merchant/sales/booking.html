@@ -108,6 +108,15 @@
                 <button id="changePresetSelection" class="table-link" type="button">更换</button>
               </div>
 
+              <section id="bookingSourceContext" class="booking-object-summary" hidden>
+                <div class="booking-preset-main">
+                  <span id="sourceContextType">单团来源</span>
+                  <strong id="sourceContextTitle">-</strong>
+                  <em id="sourceContextMeta">-</em>
+                </div>
+                <a id="sourceContextLink" class="table-link" href="../tour/product-custom-list.html">查看来源</a>
+              </section>
+
               <div id="saleObjectPicker" class="booking-object-picker" hidden>
                 <div id="planSelectBlock" class="booking-object-plan-block">
                   <div class="booking-plan-title">方案</div>
@@ -526,9 +535,16 @@
         }
       ];
 
+      const pageParams = new URLSearchParams(window.location.search);
+      const sourceContext = buildSourceContext(pageParams);
       const bookingPresetPanel = document.getElementById('bookingPresetPanel');
+      const bookingSourceContext = document.getElementById('bookingSourceContext');
       const presetProductName = document.getElementById('presetProductName');
       const presetProductMeta = document.getElementById('presetProductMeta');
+      const sourceContextType = document.getElementById('sourceContextType');
+      const sourceContextTitle = document.getElementById('sourceContextTitle');
+      const sourceContextMeta = document.getElementById('sourceContextMeta');
+      const sourceContextLink = document.getElementById('sourceContextLink');
       const changePresetSelection = document.getElementById('changePresetSelection');
       const saleObjectSearchPanel = document.getElementById('saleObjectSearchPanel');
       const saleObjectPicker = document.getElementById('saleObjectPicker');
@@ -582,7 +598,106 @@
         });
       }
 
+      function paramValue(searchParams, key, fallback) {
+        const value = searchParams.get(key);
+        return value === null || value === '' ? fallback : value;
+      }
+
+      function buildSourceContext(searchParams) {
+        const source = searchParams.get('source') || '';
+        const groupMode = searchParams.get('groupMode') || '';
+        const isCustomProject = source === 'customProject';
+        const isIndependentGroup = source === 'independentGroup' || groupMode === 'independent';
+        const productName = paramValue(searchParams, 'product', isCustomProject ? '某科技公司2025年会欧洲行' : '欧洲十国经典游·12天');
+        const customer = paramValue(searchParams, 'customer', isCustomProject ? '北京某科技有限公司' : '待选择客户');
+        const projectNo = paramValue(searchParams, 'projectNo', isCustomProject ? 'MICE-20250623-001' : '');
+        const scheduleNo = paramValue(searchParams, 'scheduleNo', isCustomProject ? 'MICE20250915001' : paramValue(searchParams, 'stock', 'EU20260715001'));
+        return {
+          source: source,
+          groupMode: groupMode,
+          isCustomProject: isCustomProject,
+          isIndependentGroup: isIndependentGroup,
+          isSingleGroup: isCustomProject || isIndependentGroup,
+          productName: productName,
+          customer: customer,
+          projectNo: projectNo,
+          scheduleNo: scheduleNo,
+          quoteVersion: paramValue(searchParams, 'quoteVersion', isCustomProject ? 'A' : ''),
+          amount: paramValue(searchParams, 'amount', isCustomProject ? '1906000' : searchParams.get('price')),
+          people: paramValue(searchParams, 'people', isCustomProject ? '80' : '1'),
+          travelDate: paramValue(searchParams, 'date', isCustomProject ? '2025-09-15' : '已选日期')
+        };
+      }
+
+      function customProjectProduct() {
+        const amount = priceNumber(sourceContext.amount || 1906000) || 1906000;
+        const people = Number(sourceContext.people || 80) || 80;
+        const planName = '方案' + (sourceContext.quoteVersion || 'A') + '：豪华五星版 / 锁定报价 ' + money(amount);
+        return {
+          id: 'CUSTOM-' + (sourceContext.projectNo || 'PROJECT'),
+          type: 'customProject',
+          tag: '单团项目',
+          tagClass: 'tag tag-purple',
+          name: sourceContext.productName,
+          meta: sourceContext.customer + ' / ' + people + '人 / 锁定报价方案' + (sourceContext.quoteVersion || 'A'),
+          planLabel: '锁定报价',
+          stockLabel: '项目团期',
+          stockHeads: ['出发日期', '项目团期', '客户范围'],
+          core: [
+            { id: 'plan', label: '锁定报价', type: 'select', options: [planName] },
+            { id: 'schedule', label: '项目团期', type: 'select', options: [sourceContext.scheduleNo + ' / ' + sourceContext.travelDate] }
+          ],
+          stocks: [
+            [sourceContext.travelDate, sourceContext.scheduleNo, sourceContext.customer + ' / ' + people + '人专属', amount, '客户专属', 'tag tag-purple']
+          ],
+          counts: [
+            { id: 'groupOrder', label: '团体订单', price: amount, value: 1, min: 1, hint: people + '人总价' }
+          ],
+          after: ['生成项目合同', '补充游客名单', '按阶段应收进入财务承接', '进入项目团期执行']
+        };
+      }
+
+      function sourceContextHref(kind) {
+        const params = new URLSearchParams();
+        if (sourceContext.isCustomProject) {
+          params.set('source', 'customProject');
+          if (sourceContext.projectNo) params.set('projectNo', sourceContext.projectNo);
+          params.set('customer', sourceContext.customer);
+          params.set('product', sourceContext.productName);
+          params.set('amount', sourceContext.amount || '');
+          params.set('quoteVersion', sourceContext.quoteVersion || '');
+          if (kind === 'source') return '../tour/product-custom-detail.html?' + params.toString();
+          if (kind === 'contract') return 'contracts.html?' + params.toString();
+        }
+        if (sourceContext.isSingleGroup) {
+          params.set('groupMode', 'independent');
+          params.set('customer', sourceContext.customer);
+          if (sourceContext.projectNo) params.set('projectNo', sourceContext.projectNo);
+          if (sourceContext.scheduleNo) params.set('scheduleNo', sourceContext.scheduleNo);
+          return '../tour/schedules-detail.html?' + params.toString();
+        }
+        return kind === 'contract' ? 'contracts.html' : '../tour/product-custom-list.html';
+      }
+
+      function renderSourceContext() {
+        if (!bookingSourceContext) return;
+        bookingSourceContext.hidden = !sourceContext.isSingleGroup;
+        bookingSourceContext.setAttribute('aria-hidden', sourceContext.isSingleGroup ? 'false' : 'true');
+        if (!sourceContext.isSingleGroup) {
+          sourceContextType.textContent = '';
+          sourceContextTitle.textContent = '';
+          sourceContextMeta.textContent = '';
+          sourceContextLink.href = '../tour/product-custom-list.html';
+          return;
+        }
+        sourceContextType.textContent = sourceContext.isCustomProject ? '单团项目来源' : '独立成团来源';
+        sourceContextTitle.textContent = sourceContext.isCustomProject ? sourceContext.projectNo + ' / ' + sourceContext.customer : sourceContext.customer + ' / 客户专属团期';
+        sourceContextMeta.textContent = [sourceContext.productName, sourceContext.scheduleNo, sourceContext.quoteVersion ? '报价方案' + sourceContext.quoteVersion : ''].filter(Boolean).join(' / ');
+        sourceContextLink.href = sourceContextHref('source');
+      }
+
       function detailType() {
+        if (sourceContext.isCustomProject || currentProduct.type === 'customProject') return 'customProject';
         if (currentProduct.type === 'cruise') return 'cruise';
         if (currentProduct.type === 'train') return 'train';
         if (currentProduct.type === 'free') return 'free';
@@ -822,6 +937,7 @@
         renderFee();
         syncSummary();
         syncPresetPanel();
+        renderSourceContext();
       }
 
       function indexByText(list, value) {
@@ -957,12 +1073,14 @@
       }
 
       function generatedOrderNo() {
-        const prefix = { group: 'KS', cruise: 'KSCZ', train: 'KSTR', free: 'KSFT', study: 'KSST', single: 'KSSV' }[currentProduct.type] || 'KS';
+        const prefix = { group: 'KS', customProject: 'KSMICE', cruise: 'KSCZ', train: 'KSTR', free: 'KSFT', study: 'KSST', single: 'KSSV' }[currentProduct.type] || 'KS';
         const seed = String(Date.now()).slice(-8);
         return prefix + '20260704' + seed;
       }
 
       function sourceText() {
+        if (sourceContext.isCustomProject) return '单团项目 / ' + sourceContext.projectNo + ' / ' + sourceContext.customer;
+        if (sourceContext.isIndependentGroup) return '独立成团 / ' + sourceContext.customer + ' / ' + (sourceContext.scheduleNo || '客户专属团期');
         const source = channelSource.value;
         if (source === '分销') return source + ' / ' + document.getElementById('distributorName').value + ' / ' + document.getElementById('distributorMember').value;
         if (source === 'OTA') return source + ' / ' + document.getElementById('otaPlatform').value;
@@ -979,9 +1097,27 @@
         const process = processProfile();
         const stock = selectedStock();
         const total = money(calcTotal());
-        createdDetailHref = 'orders-detail.html?type=' + encodeURIComponent(detailType()) + '&orderNo=' + encodeURIComponent(orderNo);
+        const detailParams = new URLSearchParams();
+        detailParams.set('type', detailType());
+        detailParams.set('orderNo', orderNo);
+        detailParams.set('product', currentProduct.name);
+        detailParams.set('customer', document.getElementById('contactName').value.trim());
+        if (stock) {
+          detailParams.set('scheduleNo', stock[1]);
+          detailParams.set('travelDate', stock[0]);
+        }
+        if (sourceContext.isSingleGroup) {
+          detailParams.set('groupMode', 'independent');
+          detailParams.set('source', sourceContext.isCustomProject ? 'customProject' : 'independentGroup');
+          detailParams.set('customer', sourceContext.customer);
+          if (sourceContext.projectNo) detailParams.set('projectNo', sourceContext.projectNo);
+          if (sourceContext.quoteVersion) detailParams.set('quoteVersion', sourceContext.quoteVersion);
+          if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
+          if (sourceContext.people) detailParams.set('people', sourceContext.people);
+        }
+        createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
-        document.getElementById('createdText').textContent = process.status + '订单已生成，库存状态为“' + process.inventory + '”。';
+        document.getElementById('createdText').textContent = sourceContext.isSingleGroup ? '客户专属团体订单已生成，合同、收款计划和项目团期按来源承接。' : process.status + '订单已生成，库存状态为“' + process.inventory + '”。';
         document.getElementById('createdOrderNo').textContent = orderNo;
         document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag;
         document.getElementById('createdStock').textContent = currentProduct.stockLabel + ' ' + stock[1];
@@ -989,17 +1125,28 @@
         document.getElementById('createdAmount').textContent = total;
         document.getElementById('createdOrderStatus').innerHTML = '<span class="' + process.tag + '">' + process.status + '</span>';
         document.getElementById('createdSource').textContent = sourceText();
-        document.getElementById('createdFinanceItems').innerHTML = [
+        const financeItems = sourceContext.isSingleGroup ? [
+          '阶段应收计划：30% / 50% / 20% 待财务承接',
+          '收款状态：未收款',
+          '项目团期：' + stock[1] + ' 客户专属',
+          sourceContext.isCustomProject ? '项目合同：锁定报价方案' + (sourceContext.quoteVersion || 'A') : '合同/确认单：客户专属团期确认后生成'
+        ] : [
           '应收单 YS' + orderNo.slice(-8) + '：' + total + ' 待审核',
           '收款状态：未收款',
           currentProduct.type === 'single' ? '服务单：待受理' : '库存占用：' + process.inventory,
           '合同/确认单：订单确认后生成'
-        ].map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
-        document.getElementById('createdNextSteps').innerHTML = [
+        ];
+        document.getElementById('createdFinanceItems').innerHTML = financeItems.map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
+        const nextSteps = sourceContext.isSingleGroup ? [
+          ['查看详情', '进入订单详情补充名单、收款计划和售后入口'],
+          ['合同签署', '进入合同管理确认项目合同和签署状态'],
+          ['项目团期', '进入客户专属团期承接执行资料和资源确认']
+        ] : [
           ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
           ['补充资料', '进入订单详情补充游客、证件、材料和服务要求'],
           ['查看详情', '查看订单完整信息和后续处理记录']
-        ].map(function (item) {
+        ];
+        document.getElementById('createdNextSteps').innerHTML = nextSteps.map(function (item) {
           return '<button class="booking-next-action" type="button" data-next-action="' + item[0] + '"><strong>' + item[0] + '</strong><span>' + item[1] + '</span></button>';
         }).join('');
         bookingFormView.hidden = true;
@@ -1079,6 +1226,17 @@
       document.getElementById('createdNextSteps').addEventListener('click', function (event) {
         const button = event.target.closest('[data-next-action]');
         if (!button) return;
+        if (sourceContext.isSingleGroup && button.dataset.nextAction === '合同签署') {
+          if (window.caesarNavigateTo) window.caesarNavigateTo(sourceContextHref('contract'));
+          else window.location.href = sourceContextHref('contract');
+          return;
+        }
+        if (sourceContext.isSingleGroup && button.dataset.nextAction === '项目团期') {
+          const target = sourceContextHref('schedule');
+          if (window.caesarNavigateTo) window.caesarNavigateTo(target);
+          else window.location.href = target;
+          return;
+        }
         if (button.dataset.nextAction === '查看详情' || button.dataset.nextAction === '补充资料') {
           if (window.caesarNavigateTo) window.caesarNavigateTo(createdDetailHref);
           else window.location.href = createdDetailHref;
@@ -1094,19 +1252,23 @@
         });
       });
 
-      const params = new URLSearchParams(window.location.search);
+      const params = pageParams;
+      if (sourceContext.isCustomProject && !products.some(function (item) { return item.id === 'CUSTOM-' + (sourceContext.projectNo || 'PROJECT'); })) {
+        products.unshift(customProjectProduct());
+      }
       const typeFromUrl = params.get('type');
       const productFromUrl = params.get('product');
-      const typeMap = { standard: 'group', group: 'group', cruise: 'cruise', train: 'train', free: 'free', study: 'study', single: 'single' };
-      const isProductBookingEntry = params.get('from') === 'quote' ||
+      const typeMap = { standard: 'group', group: 'group', customProject: 'customProject', cruise: 'cruise', train: 'train', free: 'free', study: 'study', single: 'single' };
+      const isProductBookingEntry = sourceContext.isSingleGroup ||
+        params.get('from') === 'quote' ||
         params.get('entry') === 'product-booking' ||
-        (!!productFromUrl && (params.has('plan') || params.has('date') || params.has('stock') || params.has('price')));
+        (!!productFromUrl && (params.has('plan') || params.has('date') || params.has('stock') || params.has('scheduleNo') || params.has('price') || params.has('amount')));
       const productByName = products.find(function (item) {
         if (!productFromUrl) return false;
         return item.name === productFromUrl || item.name.indexOf(productFromUrl) >= 0 || productFromUrl.indexOf(item.name) >= 0;
       });
-      currentProduct = cloneProduct(productByName || products.find(function (item) { return item.type === typeMap[typeFromUrl]; }) || products[0]);
-      presetMode = isProductBookingEntry && !!productFromUrl;
+      currentProduct = cloneProduct((sourceContext.isCustomProject ? products[0] : productByName) || products.find(function (item) { return item.type === typeMap[typeFromUrl]; }) || products[0]);
+      presetMode = isProductBookingEntry && (!!productFromUrl || sourceContext.isSingleGroup);
       hasSaleObject = presetMode;
       objectStep = presetMode ? 'selected' : 'search';
       if (presetMode) {
@@ -1115,14 +1277,24 @@
         saleObjectSearchPanel.hidden = true;
         saleObjectPicker.hidden = true;
       }
-      presetPlanOverride = presetMode ? params.get('plan') || '' : '';
+      if (sourceContext.isSingleGroup) {
+        document.getElementById('contactName').value = sourceContext.customer;
+        document.getElementById('contactPhone').value = params.get('phone') || '13800138001';
+        channelSource.value = '企业客户';
+        orderProcessMode.value = 'confirm';
+        const paymentPlan = document.getElementById('paymentPlan');
+        if (paymentPlan) paymentPlan.value = '大客户月结认款';
+        const remark = document.getElementById('orderRemark');
+        if (remark) remark.value = sourceContext.isCustomProject ? '单团项目 ' + sourceContext.projectNo + ' 锁定报价方案' + (sourceContext.quoteVersion || 'A') + ' 转团体订单。' : '标准线路独立成团，客户专属团期下单。';
+      }
+      presetPlanOverride = presetMode ? (sourceContext.isCustomProject ? currentProduct.core[0].options[0] : params.get('plan') || '') : '';
       if (presetMode) {
-        applyPresetPrice(params.get('price'));
+        applyPresetPrice(sourceContext.amount || params.get('price'));
         const presetDate = params.get('date');
-        const presetStock = params.get('stock');
-        const presetStatus = params.get('status') || presetStock || '可售';
+        const presetStock = params.get('stock') || params.get('scheduleNo');
+        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || presetStock || '可售';
         const presetTag = /紧张|少量|确认|询位/.test(presetStatus) ? 'tag tag-orange' : 'tag tag-green';
-        if (presetDate || presetStock) {
+        if (!sourceContext.isCustomProject && (presetDate || presetStock)) {
           presetStockOverride = [
             presetDate || '已选班期',
             [presetDate, presetStock].filter(Boolean).join(' / '),
@@ -1134,7 +1306,7 @@
         }
       }
       selectedPlanIndex = indexByText(planOptions(), presetPlanOverride || params.get('plan'));
-      selectedStockIndex = stockIndexFromParams(params.get('date'), params.get('stock'));
+      selectedStockIndex = stockIndexFromParams(params.get('date'), params.get('stock') || params.get('scheduleNo'));
       updateChannelFields();
       renderAll();
     })();

@@ -115,6 +115,34 @@
             <label class="form-label" for="lineMeta">线路摘要</label>
             <textarea id="lineMeta" class="form-control" rows="4" readonly></textarea>
           </div>
+          <div class="form-group">
+            <label class="form-label" for="groupModeSelect">成团方式</label>
+            <select id="groupModeSelect" class="form-control">
+              <option value="散拼">散拼</option>
+              <option value="独立成团">独立成团</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="privateCustomerInput">指定客户</label>
+            <input id="privateCustomerInput" class="form-control" type="text" placeholder="独立成团必填">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customProjectInput">关联单团项目</label>
+            <input id="customProjectInput" class="form-control" type="text" placeholder="如 MICE-20250623-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="privateSaleScope">销售范围</label>
+            <select id="privateSaleScope" class="form-control">
+              <option>公开渠道</option>
+              <option>指定客户专属</option>
+              <option>指定门店/销售可见</option>
+            </select>
+          </div>
+          <div class="form-group schedule-builder-full">
+            <label class="form-label" for="privateGroupNote">独立成团说明</label>
+            <textarea id="privateGroupNote" class="form-control" rows="3" placeholder="如：客户专属日期、独立用车、指定领队、报价差异等"></textarea>
+            <div class="form-hint">独立成团不会把线路改成新类型，只在项目团记录客户专属范围。</div>
+          </div>
         </div>
       </section>
     </section>
@@ -269,5 +297,41 @@
   </div>
 
   <script src="../../shared/schedule-builder-page.js"></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var groupMode = document.getElementById('groupModeSelect');
+      var customer = document.getElementById('privateCustomerInput');
+      var project = document.getElementById('customProjectInput');
+      var scope = document.getElementById('privateSaleScope');
+      var note = document.getElementById('privateGroupNote');
+      var departDate = document.getElementById('departDate');
+      var returnDate = document.getElementById('returnDate');
+      var quotaPlanCount = document.getElementById('quotaPlanCount');
+      var adultCount = document.getElementById('adultCount');
+      if (!groupMode) return;
+
+      function syncPrivateMode() {
+        var independent = groupMode.value === '独立成团';
+        if (scope && !params.get('privateSaleScope')) scope.value = independent ? '指定客户专属' : '公开渠道';
+        if (customer) customer.required = independent;
+      }
+
+      if (params.get('groupMode') === 'independent' || params.get('source') === 'custom') {
+        groupMode.value = '独立成团';
+        if (customer) customer.value = params.get('customer') || '待选择客户';
+        if (project) project.value = params.get('projectNo') || params.get('project') || '';
+        if (scope && params.get('privateSaleScope')) scope.value = params.get('privateSaleScope');
+        if (departDate && params.get('travelStart')) departDate.value = params.get('travelStart');
+        if (returnDate && params.get('travelEnd')) returnDate.value = params.get('travelEnd');
+        if (quotaPlanCount && params.get('people')) quotaPlanCount.value = params.get('people');
+        if (adultCount && params.get('people')) adultCount.value = params.get('people');
+        if (note && !note.value) note.value = params.get('independentNote') || '引用标准线路方案创建客户专属项目团，后续合同、订单和收款回订单中心承接。';
+      }
+
+      groupMode.addEventListener('change', syncPrivateMode);
+      syncPrivateMode();
+    })();
+  </script>
 </body>
 </html>
