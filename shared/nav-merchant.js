@@ -2726,11 +2726,57 @@
 
   function initActionMenus(scope) {
     const menuSelector = ".action-dropdown-menu, .dropdown-menu, .table-more-menu";
-    const toggleSelector = "[data-action-menu-toggle], .table-more-toggle";
+    const toggleSelector = "[data-action-menu-toggle], .table-more-toggle, [data-row-more], [data-schedule-more], [data-product-more], [data-bulk-menu-toggle], [data-export-toggle]";
 
-    const getActionMenu = (wrap) => wrap.querySelector(menuSelector);
+    const getActionMenu = (wrap) => wrap.__floatingActionMenu || wrap.querySelector(menuSelector);
+
+    const portalActionMenu = (wrap, menu) => {
+      if (!menu.__actionMenuPortal) {
+        menu.__actionMenuPortal = {
+          parent: menu.parentNode,
+          next: menu.nextSibling
+        };
+      }
+      wrap.__floatingActionMenu = menu;
+      document.body.appendChild(menu);
+    };
+
+    const restoreActionMenu = (wrap, menu) => {
+      const portal = menu.__actionMenuPortal;
+      if (portal && portal.parent && portal.parent.isConnected) {
+        const next = portal.next && portal.next.parentNode === portal.parent ? portal.next : null;
+        portal.parent.insertBefore(menu, next);
+      } else if (wrap && wrap.isConnected) {
+        wrap.appendChild(menu);
+      }
+      delete menu.__actionMenuPortal;
+      if (wrap && wrap.__floatingActionMenu === menu) delete wrap.__floatingActionMenu;
+    };
+
+    const showActionMenuTopLayer = (menu) => {
+      if (typeof menu.showPopover !== "function" || typeof menu.hidePopover !== "function") return false;
+      if (!menu.hasAttribute("popover")) menu.setAttribute("popover", "manual");
+      try {
+        if (!menu.matches(":popover-open")) menu.showPopover();
+        menu.__actionMenuTopLayer = true;
+        return true;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const hideActionMenuTopLayer = (menu) => {
+      if (!menu.__actionMenuTopLayer || typeof menu.hidePopover !== "function") return;
+      try {
+        if (menu.matches(":popover-open")) menu.hidePopover();
+      } catch (error) {
+        // Ignore browsers that partially support the popover selector.
+      }
+      delete menu.__actionMenuTopLayer;
+    };
 
     const resetActionMenuPosition = (menu) => {
+      hideActionMenuTopLayer(menu);
       menu.classList.remove("dropdown-menu-floating");
       menu.style.top = "";
       menu.style.right = "";
@@ -2745,6 +2791,8 @@
       if (!toggle || !menu) return;
 
       menu.classList.add("dropdown-menu-floating");
+      menu.classList.add("show");
+      if (!showActionMenuTopLayer(menu)) portalActionMenu(wrap, menu);
       menu.style.right = "auto";
       menu.style.bottom = "auto";
       menu.style.left = "0px";
@@ -2779,9 +2827,12 @@
 
     const closeActionMenu = (wrap) => {
       wrap.classList.remove("open");
-      wrap.querySelectorAll(menuSelector).forEach((menu) => {
+      const menus = new Set(wrap.querySelectorAll(menuSelector));
+      if (wrap.__floatingActionMenu) menus.add(wrap.__floatingActionMenu);
+      menus.forEach((menu) => {
         menu.classList.remove("show");
         resetActionMenuPosition(menu);
+        if (menu.__actionMenuPortal) restoreActionMenu(wrap, menu);
       });
       wrap.querySelectorAll(toggleSelector).forEach((toggle) => {
         toggle.setAttribute("aria-expanded", "false");
@@ -2789,50 +2840,65 @@
     };
 
     const closeAllActionMenus = (except) => {
-      document.querySelectorAll("[data-action-menu], .dropdown.table-action-more").forEach((wrap) => {
+      document.querySelectorAll("[data-action-menu].open, .dropdown.open").forEach((wrap) => {
         if (wrap !== except) closeActionMenu(wrap);
       });
     };
 
     scope.querySelectorAll("[data-action-menu], .dropdown.table-action-more").forEach((wrap) => {
-      if (wrap.dataset.actionMenuReady === "true") return;
-      wrap.dataset.actionMenuReady = "true";
-
       const toggle = wrap.querySelector(toggleSelector);
-      if (!toggle) return;
+      if (toggle && !toggle.hasAttribute("aria-expanded")) toggle.setAttribute("aria-expanded", "false");
+    });
+    scope.querySelectorAll(toggleSelector).forEach((toggle) => {
       if (!toggle.hasAttribute("aria-expanded")) toggle.setAttribute("aria-expanded", "false");
-
-      toggle.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        closeAllActionMenus(wrap);
-        const open = !wrap.classList.contains("open");
-        wrap.classList.toggle("open", open);
-        toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        const menu = getActionMenu(wrap);
-        if (menu) {
-          menu.classList.toggle("show", open);
-          if (open) {
-            positionActionMenu(wrap);
-          } else {
-            resetActionMenuPosition(menu);
-          }
-        }
-      }, true);
     });
 
     if (document.documentElement.dataset.actionMenuReady !== "true") {
       document.documentElement.dataset.actionMenuReady = "true";
-      document.addEventListener("click", () => {
+
+      document.addEventListener("click", (event) => {
+        const toggle = event.target.closest(toggleSelector);
+        if (toggle) {
+          const wrap = toggle.closest("[data-action-menu], .dropdown");
+          if (!wrap || !getActionMenu(wrap)) return;
+
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          closeAllActionMenus(wrap);
+          const open = !wrap.classList.contains("open");
+          wrap.classList.toggle("open", open);
+          toggle.setAttribute("aria-expanded", open ? "true" : "false");
+          const menu = getActionMenu(wrap);
+          if (menu) {
+            menu.classList.toggle("show", open);
+            if (open) {
+              positionActionMenu(wrap);
+            } else {
+              resetActionMenuPosition(menu);
+            }
+          }
+          return;
+        }
+
+        if (event.target.closest(menuSelector)) {
+          if (event.target.closest(".dropdown-item, a, button")) {
+            window.setTimeout(() => closeAllActionMenus(null), 0);
+          }
+          return;
+        }
         closeAllActionMenus(null);
-      });
+      }, true);
+
       document.addEventListener("scroll", () => {
         closeAllActionMenus(null);
       }, true);
       window.addEventListener("resize", () => {
         closeAllActionMenus(null);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeAllActionMenus(null);
       });
     }
   }
