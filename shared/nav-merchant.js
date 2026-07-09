@@ -2237,6 +2237,28 @@
     });
   }
 
+  function shouldUseFinanceStickyActions() {
+    const file = fileFromUrl(currentRouteUrl || new URL(window.location.href));
+    return file.startsWith("finance/") && file !== "finance/finance-settlement-detail.html";
+  }
+
+  function markFinanceStickyActionTables(scope) {
+    if (!scope || !shouldUseFinanceStickyActions()) return;
+
+    scope.querySelectorAll(".list-surface-table table").forEach((table) => {
+      if (!table.tHead) return;
+
+      const headerRows = Array.from(table.tHead.rows);
+      const headerCells = headerRows.length ? Array.from(headerRows[headerRows.length - 1].cells) : [];
+      const lastHeader = headerCells[headerCells.length - 1];
+      if (!lastHeader || columnTitleText(lastHeader.textContent) !== "操作") return;
+
+      table.classList.add("finance-sticky-action-table");
+      const tableWrap = table.closest(".list-surface-table");
+      if (tableWrap) tableWrap.classList.add("finance-sticky-action-table-wrap");
+    });
+  }
+
   function tagText(tag) {
     return compactText(tag.textContent);
   }
@@ -2448,6 +2470,7 @@
     });
 
     normalizeListSurfaceTags(surface);
+    markFinanceStickyActionTables(surface);
 
     surface.querySelectorAll(".pagination").forEach((pagination) => {
       attachPaginationToTable(pagination);
