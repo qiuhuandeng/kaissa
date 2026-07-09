@@ -641,11 +641,11 @@
           name: sourceContext.productName,
           meta: sourceContext.customer + ' / ' + people + '人 / 锁定报价方案' + (sourceContext.quoteVersion || 'A'),
           planLabel: '锁定报价',
-          stockLabel: '项目团期',
-          stockHeads: ['出发日期', '项目团期', '客户范围'],
+          stockLabel: '项目团',
+          stockHeads: ['出发日期', '项目团', '客户范围'],
           core: [
             { id: 'plan', label: '锁定报价', type: 'select', options: [planName] },
-            { id: 'schedule', label: '项目团期', type: 'select', options: [sourceContext.scheduleNo + ' / ' + sourceContext.travelDate] }
+            { id: 'schedule', label: '项目团', type: 'select', options: [sourceContext.scheduleNo + ' / ' + sourceContext.travelDate] }
           ],
           stocks: [
             [sourceContext.travelDate, sourceContext.scheduleNo, sourceContext.customer + ' / ' + people + '人专属', amount, '客户专属', 'tag tag-purple']
@@ -653,7 +653,7 @@
           counts: [
             { id: 'groupOrder', label: '团体订单', price: amount, value: 1, min: 1, hint: people + '人总价' }
           ],
-          after: ['生成项目合同', '补充游客名单', '按阶段应收进入财务承接', '进入项目团期执行']
+          after: ['生成项目合同', '补充项目名单', '按阶段应收进入财务承接', '进入项目团执行']
         };
       }
 
@@ -691,7 +691,7 @@
           return;
         }
         sourceContextType.textContent = sourceContext.isCustomProject ? '单团项目来源' : '独立成团来源';
-        sourceContextTitle.textContent = sourceContext.isCustomProject ? sourceContext.projectNo + ' / ' + sourceContext.customer : sourceContext.customer + ' / 客户专属团期';
+        sourceContextTitle.textContent = sourceContext.isCustomProject ? sourceContext.projectNo + ' / ' + sourceContext.customer : sourceContext.customer + ' / 客户专属项目团';
         sourceContextMeta.textContent = [sourceContext.productName, sourceContext.scheduleNo, sourceContext.quoteVersion ? '报价方案' + sourceContext.quoteVersion : ''].filter(Boolean).join(' / ');
         sourceContextLink.href = sourceContextHref('source');
       }
@@ -1080,7 +1080,7 @@
 
       function sourceText() {
         if (sourceContext.isCustomProject) return '单团项目 / ' + sourceContext.projectNo + ' / ' + sourceContext.customer;
-        if (sourceContext.isIndependentGroup) return '独立成团 / ' + sourceContext.customer + ' / ' + (sourceContext.scheduleNo || '客户专属团期');
+        if (sourceContext.isIndependentGroup) return '独立成团 / ' + sourceContext.customer + ' / ' + (sourceContext.scheduleNo || '客户专属项目团');
         const source = channelSource.value;
         if (source === '分销') return source + ' / ' + document.getElementById('distributorName').value + ' / ' + document.getElementById('distributorMember').value;
         if (source === 'OTA') return source + ' / ' + document.getElementById('otaPlatform').value;
@@ -1117,7 +1117,7 @@
         }
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
-        document.getElementById('createdText').textContent = sourceContext.isSingleGroup ? '客户专属团体订单已生成，合同、收款计划和项目团期按来源承接。' : process.status + '订单已生成，库存状态为“' + process.inventory + '”。';
+        document.getElementById('createdText').textContent = sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，库存状态为“' + process.inventory + '”。';
         document.getElementById('createdOrderNo').textContent = orderNo;
         document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag;
         document.getElementById('createdStock').textContent = currentProduct.stockLabel + ' ' + stock[1];
@@ -1128,8 +1128,8 @@
         const financeItems = sourceContext.isSingleGroup ? [
           '阶段应收计划：30% / 50% / 20% 待财务承接',
           '收款状态：未收款',
-          '项目团期：' + stock[1] + ' 客户专属',
-          sourceContext.isCustomProject ? '项目合同：锁定报价方案' + (sourceContext.quoteVersion || 'A') : '合同/确认单：客户专属团期确认后生成'
+          '项目团：' + stock[1] + ' 客户专属',
+          sourceContext.isCustomProject ? '项目合同：锁定报价方案' + (sourceContext.quoteVersion || 'A') : '合同/确认单：客户专属项目团确认后生成'
         ] : [
           '应收单 YS' + orderNo.slice(-8) + '：' + total + ' 待审核',
           '收款状态：未收款',
@@ -1140,7 +1140,7 @@
         const nextSteps = sourceContext.isSingleGroup ? [
           ['查看详情', '进入订单详情补充名单、收款计划和售后入口'],
           ['合同签署', '进入合同管理确认项目合同和签署状态'],
-          ['项目团期', '进入客户专属团期承接执行资料和资源确认']
+          ['项目团', '进入客户专属项目团承接执行资料和资源确认']
         ] : [
           ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
           ['补充资料', '进入订单详情补充游客、证件、材料和服务要求'],
@@ -1231,7 +1231,7 @@
           else window.location.href = sourceContextHref('contract');
           return;
         }
-        if (sourceContext.isSingleGroup && button.dataset.nextAction === '项目团期') {
+        if (sourceContext.isSingleGroup && button.dataset.nextAction === '项目团') {
           const target = sourceContextHref('schedule');
           if (window.caesarNavigateTo) window.caesarNavigateTo(target);
           else window.location.href = target;
@@ -1285,7 +1285,7 @@
         const paymentPlan = document.getElementById('paymentPlan');
         if (paymentPlan) paymentPlan.value = '大客户月结认款';
         const remark = document.getElementById('orderRemark');
-        if (remark) remark.value = sourceContext.isCustomProject ? '单团项目 ' + sourceContext.projectNo + ' 锁定报价方案' + (sourceContext.quoteVersion || 'A') + ' 转团体订单。' : '标准线路独立成团，客户专属团期下单。';
+        if (remark) remark.value = sourceContext.isCustomProject ? '单团项目 ' + sourceContext.projectNo + ' 锁定报价方案' + (sourceContext.quoteVersion || 'A') + ' 转项目订单。' : '标准线路独立成团，客户专属项目团承接。';
       }
       presetPlanOverride = presetMode ? (sourceContext.isCustomProject ? currentProduct.core[0].options[0] : params.get('plan') || '') : '';
       if (presetMode) {

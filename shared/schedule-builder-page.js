@@ -345,6 +345,7 @@
         { label: '家长陪同', total: 6, reserve: 0, cells: [{ type: 'number', value: 6200 }, { type: 'number', value: 6200 }, { type: 'number', value: 600 }, { type: 'number', value: 120 }, { type: 'text', value: '可选陪同' }] }
       ],
       nodes: [
+        ['营期名称', 'text', '北京航天研学营暑期营期'],
         ['适合年级', 'text', '小学五年级-初二'],
         ['班级数量', 'number', '2'],
         ['每班上限', 'number', '15'],
@@ -806,6 +807,43 @@
     $('#typeNodeGrid').innerHTML = selectedType().nodes.map(function (node, index) {
       return '<div class="schedule-node-card"><label class="form-label" for="typeNode' + index + '">' + node[0] + '</label><input id="typeNode' + index + '" class="form-control" type="' + node[1] + '" value="' + node[2] + '"></div>';
     }).join('');
+  }
+
+  function setTypeNodeValue(labels, value) {
+    if (!value) return;
+    var names = Array.isArray(labels) ? labels : [labels];
+    $all('#typeNodeGrid .schedule-node-card').some(function (card) {
+      var label = $('.form-label', card);
+      var input = $('.form-control', card);
+      if (!label || !input) return false;
+      var text = label.textContent.trim();
+      if (names.indexOf(text) === -1) return false;
+      input.value = value;
+      return true;
+    });
+  }
+
+  function applyInboundScheduleDefaults() {
+    var start = params.get('travelStart') || params.get('departDate');
+    var end = params.get('travelEnd') || params.get('returnDate');
+    var people = params.get('people') || params.get('quota') || params.get('students');
+    var scheduleName = params.get('campName') || params.get('scheduleName') || params.get('voyageName') || params.get('periodName');
+    if (start && $('#departDate')) $('#departDate').value = start;
+    if (end && $('#returnDate')) $('#returnDate').value = end;
+    else if (start && $('#returnDate')) $('#returnDate').value = addDays(start, selectedPlan().days - 1);
+    if (start && $('#deadlineDate')) $('#deadlineDate').value = addDays(start, -10);
+    if (start && $('#deadline2')) $('#deadline2').value = addDays(start, -6);
+    if (people && $('#quotaPlanCount')) $('#quotaPlanCount').value = people;
+    if (people && $('#adultCount') && selectedTypeKey() === 'study') $('#adultCount').value = Math.min(4, Number(people || 0));
+    setTypeNodeValue(['营期名称', '班期名称', '航次名称'], scheduleName);
+    if (scheduleName && $('#executeRemark') && !$('#executeRemark').value) $('#executeRemark').value = '来源营期：' + scheduleName;
+    if ($('#durationHint') && $('#departDate') && $('#returnDate')) {
+      var days = $('#departDate').value && $('#returnDate').value ? Math.round((new Date($('#returnDate').value) - new Date($('#departDate').value)) / 86400000) + 1 : 0;
+      $('#durationHint').textContent = days > 0 ? days + '天' + Math.max(days - 1, 0) + '晚' : '-';
+    }
+    if ($('#scheduleCodePreview') && $('#departDate')) $('#scheduleCodePreview').textContent = selectedType().prefix + dateCode($('#departDate').value) + '001';
+    if ($('#heroUnit') && $('#quotaPlanCount')) $('#heroUnit').textContent = $('#quotaPlanCount').value + selectedType().unit;
+    updateMatrixTotals();
   }
 
   function matrixTotals() {
@@ -1306,7 +1344,7 @@
 
   function init() {
     var routeContext = readRouteScheduleContext();
-    var fromProduct = params.get('source') === 'product';
+    var fromProduct = params.get('source') === 'product' || params.get('source') === 'studyProduct';
     var requestedProduct = params.get('product') || params.get('productName') || (fromProduct ? routeContext.product : '') || '';
     var requestedRoute = params.get('route') || (fromProduct ? routeContext.route : '') || '';
     var type = params.get('type') || (fromProduct && routeContext.type) || inferTypeFromProductName(requestedProduct) || 'group';
@@ -1322,6 +1360,7 @@
     renderMatrix();
     renderTypeNodes();
     syncDates(true);
+    applyInboundScheduleDefaults();
     renderResourceBorrowOptions();
     renderResourceDemandContext();
     if (fromProduct) appendRouteContextMeta(routeContext);

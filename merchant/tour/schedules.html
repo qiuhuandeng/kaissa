@@ -49,12 +49,12 @@
       </div>
       <div class="filter-row">
         <div class="filter-item">
-          <label class="sr-only" for="productName">线路名称</label>
-          <input id="productName" type="text" placeholder="请输入线路名称">
+          <label class="sr-only" for="productName">线路/方案名称</label>
+          <input id="productName" type="text" placeholder="线路/方案名称">
         </div>
         <div class="filter-item">
-          <label class="sr-only" for="scheduleCode">编号</label>
-          <input id="scheduleCode" type="text" placeholder="编号">
+          <label class="sr-only" for="scheduleCode">团期编号</label>
+          <input id="scheduleCode" type="text" placeholder="团期编号">
         </div>
         <div class="filter-item filter-item-wide filter-item-date-range">
           <label class="sr-only">出发日期范围</label>
@@ -69,6 +69,7 @@
           <select id="batchTypeFilter">
             <option value="全部">全部类型</option>
             <option value="普通团期">团期</option>
+            <option value="项目团">项目团</option>
             <option value="邮轮航次">航次</option>
             <option value="专列班期">班期</option>
             <option value="研学营期">营期</option>
@@ -134,7 +135,7 @@
 
     <section id="currentRouteFilter" class="schedule-current-filter" hidden>
       <div class="schedule-current-filter-main">
-        <span>当前线路</span>
+        <span id="currentRouteFilterLabel">当前线路</span>
         <strong id="currentRouteFilterName">-</strong>
         <em id="currentRouteFilterCount">0条</em>
       </div>
@@ -153,7 +154,18 @@
   </nav>
 
   <section class="table-wrap schedule-list-table list-surface-table list-table-with-pagination" aria-label="团期管控">
-    <table>
+    <table class="schedule-control-table">
+      <colgroup>
+        <col class="schedule-control-col-object">
+        <col class="schedule-control-col-date">
+        <col class="schedule-control-col-sales">
+        <col class="schedule-control-col-order">
+        <col class="schedule-control-col-resource">
+        <col class="schedule-control-col-gap">
+        <col class="schedule-control-col-owner">
+        <col class="schedule-control-col-status">
+        <col class="schedule-control-col-action">
+      </colgroup>
       <thead>
         <tr>
           <th>团期/线路</th>
@@ -164,7 +176,7 @@
           <th>关键缺口</th>
           <th>负责人</th>
           <th>主状态</th>
-          <th>操作</th>
+          <th class="schedule-control-action-head">操作</th>
         </tr>
       </thead>
       <tbody id="scheduleRows" hidden>
@@ -1788,6 +1800,7 @@
       var batchExportFormat = document.getElementById('batchExportFormat');
       var batchActionRemark = document.getElementById('batchActionRemark');
       var currentRouteFilter = document.getElementById('currentRouteFilter');
+      var currentRouteFilterLabel = document.getElementById('currentRouteFilterLabel');
       var currentRouteFilterName = document.getElementById('currentRouteFilterName');
       var currentRouteFilterCount = document.getElementById('currentRouteFilterCount');
       var executionCheckAllGuests = document.getElementById('executionCheckAllGuests');
@@ -1795,6 +1808,7 @@
       var pageParams = new URLSearchParams(window.location.search);
       var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
       var routeFilterType = pageParams.get('type') || '';
+      var routeFilterScheduleNos = (pageParams.get('scheduleNos') || '').split(/[,，\s]+/).map(function (item) { return item.trim(); }).filter(Boolean);
       var currentMode = 'create';
       var currentSchedule = null;
       var sequence = 9001;
@@ -1909,6 +1923,7 @@
 
       function normalizeBatchType(batchType) {
         var text = String(batchType || '');
+        if (/项目团|独立成团|客户专属/.test(text)) return '项目团';
         if (/邮轮|航次/.test(text)) return '邮轮航次';
         if (/专列|班期/.test(text)) return '专列班期';
         if (/研学|营期/.test(text)) return '研学营期';
@@ -1916,8 +1931,14 @@
         return '普通团期';
       }
 
+      function isProjectGroup(item) {
+        if (!item) return false;
+        return normalizeBatchType(item.batchType) === '项目团' || item.groupMode === '独立成团' || !!item.customProjectNo;
+      }
+
       function scheduleObjectName(batchType) {
         var normalized = normalizeBatchType(batchType);
+        if (normalized === '项目团') return '项目团';
         if (normalized === '邮轮航次') return '航次';
         if (normalized === '专列班期') return '班期';
         if (normalized === '研学营期') return '营期';
@@ -1934,6 +1955,7 @@
 
       function batchTypeProductLabel(batchType) {
         var normalized = normalizeBatchType(batchType);
+        if (normalized === '项目团') return '项目线路';
         if (normalized === '邮轮航次') return '邮轮线路';
         if (normalized === '专列班期') return '专列线路';
         if (normalized === '研学营期') return '研学线路';
@@ -2439,6 +2461,7 @@
 
       function batchTypeClass(batchType) {
         var normalized = normalizeBatchType(batchType);
+        if (normalized === '项目团') return 'tag tag-purple';
         if (normalized === '邮轮航次') return 'tag tag-purple';
         if (normalized === '专列班期') return 'tag tag-orange';
         if (normalized === '研学营期') return 'tag tag-green';
@@ -2447,6 +2470,7 @@
 
       function batchTypeDisplay(batchType) {
         var normalized = normalizeBatchType(batchType);
+        if (normalized === '项目团') return '项目团';
         if (normalized === '邮轮航次') return '航次';
         if (normalized === '专列班期') return '班期';
         if (normalized === '研学营期') return '营期';
@@ -2596,6 +2620,7 @@
 
       function scheduleTypeKey(item) {
         var type = normalizeBatchType(item.batchType);
+        if (type === '项目团') return 'project';
         if (type === '邮轮航次') return 'cruise';
         if (type === '专列班期') return 'train';
         if (type === '研学营期') return 'study';
@@ -2792,6 +2817,15 @@
       }
 
       function resourceRowsFor(item) {
+        if (isProjectGroup(item)) {
+          return [
+            ['项目交通', 'AIR-MICE-20260704-001', '团队机票80位，PNR待生成', '名单截止 ' + (item.deadline || addDays(item.depart, -15)), '待确认', '成本待确认', '确认'],
+            ['酒店住宿', '欧洲酒店集团', '8晚×42间，VIP单间待确认', '出发前20天', '待确认', '成本待确认', '确认'],
+            ['会务活动', '巴黎会议中心', '欢迎会、茶歇、颁奖晚宴3项', '出发前18天', '待确认', '成本待确认', '追加'],
+            ['地接与用车', '欧洲地接ABC', '9天×2台大巴，中文导游待确认', '出发前15天', '部分确认', '成本待确认', '确认'],
+            ['领队服务', '凯撒领队中心', '双语领队1名，随团工作人员2名', '出发前10天', '待安排', '应付待生成', '安排']
+          ];
+        }
         if (normalizeBatchType(item.batchType) === '邮轮航次') {
           var cruiseOccupancy = procurementOccupancyFor(item);
           return [
@@ -2826,11 +2860,12 @@
       }
 
       function fillScheduleResourceDrawer(item) {
-        document.getElementById('scheduleResourceTitle').textContent = '资源/票务确认 - ' + item.code;
+        var project = isProjectGroup(item);
+        document.getElementById('scheduleResourceTitle').textContent = (project ? '项目资源确认 - ' : '资源/票务确认 - ') + item.code;
         document.getElementById('resourceScheduleName').textContent = item.product + ' / ' + (item.route || '-');
-        document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (item.planner || '-');
-        document.getElementById('resourceRosterText').textContent = stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
-        document.getElementById('resourceDeadlineText').textContent = addDays(item.depart, -7);
+        document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (project ? item.privateCustomer || '-' : item.planner || '-');
+        document.getElementById('resourceRosterText').textContent = project ? stockText(item.stock, item.unit) + '项目人数，名单待导入' : stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
+        document.getElementById('resourceDeadlineText').textContent = project ? (item.deadline || addDays(item.depart, -15)) : addDays(item.depart, -7);
         document.getElementById('resourceFinanceText').textContent = item.settlementStatus || '未维护成本';
         var rows = resourceRowsFor(item);
         var pending = rows.filter(function (row) { return row[4] !== '已确认'; }).length;
@@ -3206,6 +3241,9 @@
           groupMode: '散拼',
           privateCustomer: '',
           customProjectNo: '',
+          projectOrderNo: '',
+          contractNo: '',
+          receivableNo: '',
           privateSaleScope: '',
           remark: '',
           deadline: ''
@@ -3223,37 +3261,40 @@
       function applyLifecycleSampleSchedules() {
         [
           {
-            code: 'INC20260915001',
-            product: '欧洲十国经典游',
-            route: 'A线 法德意12天',
-            batchType: '普通团期',
-            depart: '2026-09-15',
-            back: '2026-09-26',
+            code: 'MICE20250915001',
+            product: '北京某科技有限公司欧洲奖励旅游',
+            route: '企业奖励团A案',
+            batchType: '项目团',
+            depart: '2025-09-15',
+            back: '2025-09-23',
             stock: 80,
             sold: 0,
-            left: 80,
+            left: 0,
             unit: '人',
             channelSeats: {},
-            price: '¥23,825',
+            price: '¥1,906,000',
             planner: '陈刚',
             leader: '待确认',
-            saleStatus: '筹备中',
-            executionStatus: '未出团',
-            settlementStatus: '未维护成本',
-            status: '筹备中',
-            costStatus: '未维护成本',
+            saleStatus: '客户专属',
+            executionStatus: '出发准备',
+            settlementStatus: '预估成本',
+            status: '客户专属',
+            costStatus: '预估成本',
             rosterStatus: '待导入名单',
             documentsStatus: '资料未收',
-            resourceStatus: '待确认',
-            noticeStatus: '未到节点',
+            resourceStatus: '交通酒店待确认',
+            noticeStatus: '未生成',
             leaderStatus: '待安排',
             groupMode: '独立成团',
             privateCustomer: '北京某科技有限公司',
             customProjectNo: 'MICE-20250623-001',
-            privateSaleScope: '指定客户专属',
-            tabStatus: '筹备中 未出团 未维护成本 待发布',
-            remark: '引用欧洲十国经典游A线创建客户专属团期，不进入公开渠道售卖',
-            deadline: '2026-09-05'
+            projectOrderNo: 'KSMICE20260704001',
+            contractNo: 'CTR-MICE-20260704-001',
+            receivableNo: 'YS-MICE-20260704-001',
+            privateSaleScope: '客户专属',
+            tabStatus: '独立成团 项目团 出发准备 预估成本',
+            remark: '由单团项目确认成团生成，不进入公开渠道售卖',
+            deadline: '2025-08-31'
           },
           {
             code: 'EU20260701001',
@@ -3455,18 +3496,45 @@
 
       function detailHref(item) {
         var normalized = normalizeBatchType(item.batchType);
-        var type = normalized === '邮轮航次' ? 'cruise' : normalized === '专列班期' ? 'train' : normalized === '研学营期' ? 'study' : 'group';
+        var type = normalized === '项目团' ? 'project' : normalized === '邮轮航次' ? 'cruise' : normalized === '专列班期' ? 'train' : normalized === '研学营期' ? 'study' : 'group';
         var query = new URLSearchParams();
         query.set('type', type);
+        if (isProjectGroup(item)) query.set('source', 'customProject');
         if (item.code) query.set('scheduleNo', item.code);
         if (item.product) query.set('product', item.product);
         if (item.route) query.set('package', item.route);
-        if (item.groupMode === '独立成团') {
+        if (item.groupMode === '独立成团' || isProjectGroup(item)) {
           query.set('groupMode', 'independent');
           if (item.privateCustomer) query.set('customer', item.privateCustomer);
           if (item.customProjectNo) query.set('projectNo', item.customProjectNo);
+          if (item.projectOrderNo) query.set('orderNo', item.projectOrderNo);
+          if (item.contractNo) query.set('contractNo', item.contractNo);
+          if (item.receivableNo) query.set('receivableNo', item.receivableNo);
+          query.set('people', String(stockNumber(item.stock) || 0));
+          query.set('amount', String(moneyNumber(item.price) || 0));
         }
         return 'schedules-detail.html?' + query.toString();
+      }
+
+      function projectOrderHref(item) {
+        var query = new URLSearchParams();
+        query.set('type', 'project');
+        query.set('source', 'customProject');
+        if (item.projectOrderNo) query.set('orderNo', item.projectOrderNo);
+        if (item.code) query.set('scheduleNo', item.code);
+        if (item.customProjectNo) query.set('projectNo', item.customProjectNo);
+        if (item.privateCustomer) query.set('customer', item.privateCustomer);
+        return '../sales/orders-detail.html?' + query.toString();
+      }
+
+      function projectCostHref(item) {
+        var query = new URLSearchParams();
+        query.set('source', 'customProject');
+        if (item.code) query.set('scheduleNo', item.code);
+        if (item.customProjectNo) query.set('projectNo', item.customProjectNo);
+        if (item.projectOrderNo) query.set('orderNo', item.projectOrderNo);
+        query.set('type', 'project');
+        return 'fulfillment-cost.html?' + query.toString();
       }
 
       function mutedLine(text) {
@@ -3479,14 +3547,14 @@
       }
 
       function scheduleObjectCell(item, href) {
-        var privateLine = item.groupMode === '独立成团'
-          ? '<span class="text-muted schedule-route-name">客户专属：' + escapeHtml(item.privateCustomer || '未指定客户') + (item.customProjectNo ? ' · ' + escapeHtml(item.customProjectNo) : '') + '</span>'
-          : '';
+        var project = isProjectGroup(item);
+        var routeLine = project
+          ? ((item.privateCustomer || '客户专属') + (item.projectOrderNo ? ' · ' + item.projectOrderNo : ''))
+          : (item.route || '-');
         return '<span class="schedule-batch-cell">' +
           '<span class="schedule-order-line"><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(item.code) + '</a><span class="' + batchTypeClass(item.batchType) + '">' + escapeHtml(batchTypeDisplay(item.batchType)) + '</span></span>' +
           '<span class="schedule-product-name">' + escapeHtml(item.product || '-') + '</span>' +
-          '<span class="text-muted schedule-route-name">' + escapeHtml(item.route || '-') + '</span>' +
-          privateLine +
+          '<span class="text-muted schedule-route-name">' + escapeHtml(routeLine) + '</span>' +
           '</span>';
       }
 
@@ -3510,6 +3578,11 @@
         var sold = Math.max(stockNumber(item.sold), 0);
         var baseCode = String(item.code || 'SCH00000000').replace(/\D/g, '').slice(-8) || '00000000';
         var price = item.price || '-';
+        if (isProjectGroup(item)) {
+          return [
+            { no: item.projectOrderNo || 'KSMICE20260704001', customer: (item.privateCustomer || '项目客户') + ' / 单团项目', sales: item.planner || '单团计调', qty: stockText(item.stock, item.unit), amount: price, pay: '阶段应收待确认', payTag: 'tag tag-orange', roster: item.rosterStatus || '名单待导入', rosterTag: 'tag tag-orange', resource: item.resourceStatus || '交通酒店待确认', status: '项目订单已生成', statusTag: 'tag tag-blue' }
+          ];
+        }
         if (!sold) return [];
         if (type === '邮轮航次') {
           return [
@@ -3581,6 +3654,16 @@
 
       function keyGapItems(item) {
         var gaps = [];
+        if (isProjectGroup(item)) {
+          var total = stockNumber(item.stock);
+          var imported = stockNumber(item.sold);
+          var pending = Math.max(total - imported, 0);
+          if (pending > 0) gaps.push({ category: '名单待导入', text: '名单待导入' + pending + (item.unit || '人') });
+          if (/待|未|部分/.test(item.resourceStatus || '')) gaps.push({ category: '资源待确认', text: item.resourceStatus || '资源待确认' });
+          if ((item.settlementStatus || item.costStatus || '') !== '成本已确认') gaps.push({ category: '成本未确认', text: '预算成本待确认' });
+          if (!gaps.length) gaps.push({ category: '无缺口', text: '无关键缺口' });
+          return gaps;
+        }
         var stock = stockNumber(item.stock);
         var sold = stockNumber(item.sold);
         var orderSummary = scheduleOrderSummary(item);
@@ -3606,7 +3689,7 @@
         var leftText = left <= 0 ? '无余位' : '余 ' + left + item.unit;
         var summary = scheduleOrderSummary(item);
         return '<span class="schedule-product-name">' + escapeHtml(sold + '/' + stock + item.unit) + '</span>' +
-          '<span class="schedule-order-line"><button class="table-link schedule-order-link" type="button" data-open-schedule-orders>' + escapeHtml(summary.totalOrders + '单') + '</button><span class="text-muted">' + escapeHtml(summary.pendingPay + '待收 · ' + summary.rosterPending + '名单待补') + '</span></span>' +
+          '<span class="schedule-order-line"><span class="count-link-line"><button class="table-link schedule-order-link count-link-number" type="button" data-open-schedule-orders>' + escapeHtml(String(summary.totalOrders)) + '</button>单</span><span class="text-muted">' + escapeHtml(summary.pendingPay + '待收 · ' + summary.rosterPending + '名单待补') + '</span></span>' +
           mutedLine(leftText + ' · ' + price);
       }
 
@@ -3617,7 +3700,7 @@
         var summary = scheduleOrderSummary(item);
         var rosterStatus = rosterStatusText(item);
         return '<span class="schedule-product-name">' + escapeHtml('已售 ' + sold + '/' + stock + item.unit) + '</span>' +
-          '<span class="schedule-order-line"><button class="table-link schedule-order-link" type="button" data-open-schedule-orders>' + escapeHtml(summary.totalOrders + '单') + '</button><span class="text-muted">' + escapeHtml(summary.pendingPay + '待收 · 余 ' + left + item.unit) + '</span></span>' +
+          '<span class="schedule-order-line"><span class="count-link-line"><button class="table-link schedule-order-link count-link-number" type="button" data-open-schedule-orders>' + escapeHtml(String(summary.totalOrders)) + '</button>单</span><span class="text-muted">' + escapeHtml(summary.pendingPay + '待收 · 余 ' + left + item.unit) + '</span></span>' +
           '<span class="' + rosterStatusClass(rosterStatus) + '">' + escapeHtml(rosterStatus) + '</span>';
       }
 
@@ -3631,20 +3714,34 @@
       }
 
       function salesQuotaCell(item) {
+        if (isProjectGroup(item)) {
+          var total = stockNumber(item.stock);
+          var imported = stockNumber(item.sold);
+          var pending = Math.max(total - imported, 0);
+          return '<span class="schedule-product-name">' + escapeHtml('项目人数 ' + total + (item.unit || '人')) + '</span>' +
+            '<span class="schedule-order-line"><span class="tag tag-purple">客户专属</span><span class="text-muted">' + escapeHtml((item.privateSaleScope || '客户专属')) + '</span></span>' +
+            mutedLine('名单已入 ' + imported + (item.unit || '人') + ' · 待导入 ' + pending + (item.unit || '人'));
+        }
         var stock = stockNumber(item.stock);
         var sold = stockNumber(item.sold);
         var left = stockNumber(item.left);
         var usage = usageBucketClass(sold, stock);
         return '<span class="schedule-product-name">' + escapeHtml('已售 ' + sold + '/' + stock + item.unit) + '</span>' +
-          '<span class="schedule-order-line"><span class="schedule-traffic-meter ' + usage.className + '"><i></i></span><span class="text-muted">' + escapeHtml(usage.percent + '%') + '</span></span>' +
-          mutedLine('余 ' + left + item.unit);
+          '<span class="schedule-order-line schedule-meter-line"><span class="schedule-traffic-meter ' + usage.className + '"><i></i></span><span class="text-muted schedule-percent-text">' + escapeHtml(usage.percent + '%') + '</span></span>' +
+          mutedLine('余 ' + left + item.unit + ' · ' + (item.price || '-'));
       }
 
       function orderRosterCell(item) {
         var summary = scheduleOrderSummary(item);
+        if (isProjectGroup(item)) {
+          var order = summary.rows[0] || {};
+          return '<span class="schedule-order-no-line"><a class="table-link schedule-order-link" href="' + projectOrderHref(item) + '">' + escapeHtml(order.no || item.projectOrderNo || '项目订单') + '</a></span>' +
+            mutedLine(order.pay || '阶段应收待确认') +
+            mutedLine(order.roster || item.rosterStatus || '名单待导入');
+        }
         var sold = stockNumber(item.sold);
         var rosterText = sold ? (summary.rosterPending > 0 ? '资料缺' + summary.rosterPending + '单' : '名单资料完整') : '暂无报名名单';
-        return '<span class="schedule-order-line"><button class="table-link schedule-order-link" type="button" data-open-schedule-orders>' + escapeHtml(summary.totalOrders + '单') + '</button><span class="text-muted">' + escapeHtml('尾款未收' + summary.pendingPay + '单') + '</span></span>' +
+        return '<span class="schedule-order-line"><span class="count-link-line"><button class="table-link schedule-order-link count-link-number" type="button" data-open-schedule-orders>' + escapeHtml(String(summary.totalOrders)) + '</button>单</span><span class="text-muted">' + escapeHtml('尾款未收' + summary.pendingPay + '单') + '</span></span>' +
           mutedLine(rosterText);
       }
 
@@ -3661,6 +3758,11 @@
       }
 
       function trafficConfirmCell(item) {
+        if (isProjectGroup(item)) {
+          var status = item.resourceStatus || '交通酒店待确认';
+          return '<span class="' + resourceStatusClass(status) + '">' + escapeHtml(status) + '</span>' +
+            mutedLine('机票、酒店、会务、用车按项目资源确认');
+        }
         if (item.trafficBindingMode === '绑定已采购交通' && item.trafficResource) {
           var bindingStatus = item.trafficResourceStatus || '已绑定';
           var resourceText = String(item.trafficResource || '').replace(/ · 可分配.*/, '');
@@ -3700,7 +3802,9 @@
       }
 
       function ownerCell(item) {
-        return '<span class="schedule-product-name">' + escapeHtml(item.planner || '-') + '</span>';
+        var leader = item.leader || leaderStatusText(item) || '-';
+        return '<span class="schedule-product-name">' + escapeHtml(item.planner || '-') + '</span>' +
+          mutedLine('领队 ' + leader);
       }
 
       function mainStageClass(stage) {
@@ -3714,6 +3818,10 @@
 
       function mainStatusCell(item) {
         var stage = scheduleMainStage(item);
+        if (isProjectGroup(item)) {
+          return '<span class="' + mainStageClass(stage) + '">' + escapeHtml(stage) + '</span>' +
+            mutedLine(item.customProjectNo ? '来源 ' + item.customProjectNo : '单团项目');
+        }
         var saleText = item.saleStatus === '筹备中' ? '待发布' : item.saleStatus;
         return '<span class="' + mainStageClass(stage) + '">' + escapeHtml(stage) + '</span>' +
           mutedLine('销售 ' + saleText);
@@ -3738,14 +3846,11 @@
           items.push(dropdownItem('复制团期', 'data-copy-schedule'));
           items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
         } else if (mainStage === '销售中') {
-          items.push(dropdownItem('下单', 'data-open-quick-booking'));
           items.push(dropdownItem('编辑团期', 'data-edit-schedule'));
           items.push(dropdownItem(saleToggleLabel(item), 'data-toggle-sale'));
-          items.push(dropdownItem('调整库存价格', 'data-open-quota-price'));
           items.push(dropdownItem('复制团期', 'data-copy-schedule'));
           items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
         } else if (mainStage === '出发准备') {
-          items.push(dropdownItem('名单管理', 'data-open-roster'));
           items.push(dropdownItem('证件/签证', 'data-open-documents'));
           items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
           items.push(dropdownItem('出团通知', 'data-open-notice'));
@@ -3754,7 +3859,6 @@
           items.push(dropdownItem('调整库存价格', 'data-open-quota-price'));
           items.push(dropdownItem('取消团期', 'data-cancel-schedule', true));
         } else if (mainStage === '出团中') {
-          items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
           items.push(dropdownItem('出团通知', 'data-open-notice'));
           items.push(dropdownItem('领队安排', 'data-open-leader'));
           items.push(dropdownItem('标记已回团', 'data-mark-returned'));
@@ -3774,38 +3878,53 @@
       function actionHtml(item) {
         var href = detailHref(item);
         var settlementHref = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&tab=settlement';
+        if (isProjectGroup(item)) {
+          return '<div class="table-action">' +
+            '<button class="table-action-primary" type="button" data-open-roster>名单</button>' +
+            '<button type="button" data-open-execution-resource>资源</button>' +
+            '<a href="' + projectCostHref(item) + '">成本</a>' +
+            '</div>';
+        }
         if (item.approvalStatus === '待审批' || (item.tabStatus || '').split(/\s+/).indexOf('待审批') > -1) {
           return '<div class="table-action"><button type="button" class="table-action-primary" disabled>审批中</button><a href="' + href + '">详情</a></div>';
         }
         var mainStage = scheduleMainStage(item);
         var primaryAction = '<a class="table-action-primary" href="' + href + '">查看详情</a>';
+        var secondaryAction = '';
         if (mainStage === '待发布') {
           primaryAction = '<button class="table-action-primary" type="button" data-toggle-sale>发布销售</button>';
+          secondaryAction = '<button type="button" data-edit-schedule>编辑</button>';
         } else if (mainStage === '销售中') {
-          primaryAction = '<button class="table-action-primary" type="button" data-open-quota-price>调整库存价格</button>';
+          primaryAction = '<button class="table-action-primary" type="button" data-open-quota-price>调库存</button>';
+          secondaryAction = '<button type="button" data-open-quick-booking>下单</button>';
         } else if (mainStage === '出发准备') {
           primaryAction = '<button class="table-action-primary" type="button" data-open-primary-action="preparation">出团准备</button>';
+          secondaryAction = '<button type="button" data-open-roster>名单</button>';
         } else if (mainStage === '出团中') {
           primaryAction = '<button class="table-action-primary" type="button" data-open-primary-action="execution">执行记录</button>';
+          secondaryAction = '<button type="button" data-open-execution-resource>资源</button>';
         } else if (mainStage === '已回团') {
           primaryAction = '<a class="table-action-primary" href="' + settlementHref + '">成本结算</a>';
+          secondaryAction = '<a href="' + href + '">详情</a>';
+        } else if (mainStage === '已终止') {
+          primaryAction = '<a class="table-action-primary" href="' + href + '">详情</a>';
         }
-        return '<div class="table-action">' + primaryAction + '<a href="' + href + '">详情</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu">' + moreActionsHtml(item) + '</span></span></div>';
+        return '<div class="table-action">' + primaryAction + secondaryAction + '<span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-schedule-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu">' + moreActionsHtml(item) + '</span></span></div>';
       }
 
       function rowHtml(item, index) {
         var href = detailHref(item);
         var actions = actionHtml(item);
-        return '<tr data-index="' + index + '" data-href="' + href + '" data-tab-status="' + escapeHtml(item.tabStatus) + '" data-deadline="' + escapeHtml(item.deadline || '') + '" data-remark="' + escapeHtml(item.remark || '') + '" data-locked="' + (item.locked ? 'true' : 'false') + '">' +
-          '<td data-product="' + escapeHtml(item.product) + '" data-route="' + escapeHtml(item.route || '-') + '">' + scheduleObjectCell(item, href) + '</td>' +
-          '<td>' + departCell(item) + '</td>' +
-          '<td>' + salesQuotaCell(item) + '</td>' +
-          '<td>' + orderRosterCell(item) + '</td>' +
-          '<td>' + trafficConfirmCell(item) + '</td>' +
-          '<td>' + keyGapCell(item) + '</td>' +
-          '<td>' + ownerCell(item) + '</td>' +
-          '<td>' + mainStatusCell(item) + '</td>' +
-          '<td>' + actions + '</td>' +
+        return '<tr data-index="' + index + '" data-href="' + href + '" data-tab-status="' + escapeHtml(item.tabStatus) + '" data-deadline="' + escapeHtml(item.deadline || '') + '" data-remark="' + escapeHtml(item.remark || '') + '" data-locked="' + (item.locked ? 'true' : 'false') + '" data-batch-type="' + escapeHtml(item.batchType || '') + '" data-group-mode="' + escapeHtml(item.groupMode || '') + '" data-project-no="' + escapeHtml(item.customProjectNo || '') + '" data-order-no="' + escapeHtml(item.projectOrderNo || '') + '">' +
+          '<td class="schedule-control-object-cell" data-product="' + escapeHtml(item.product) + '" data-route="' + escapeHtml(item.route || '-') + '">' + scheduleObjectCell(item, href) + '</td>' +
+          '<td class="schedule-control-date-cell">' + departCell(item) + '</td>' +
+          '<td class="schedule-control-sales-cell">' + salesQuotaCell(item) + '</td>' +
+          '<td class="schedule-control-order-cell">' + orderRosterCell(item) + '</td>' +
+          '<td class="schedule-control-resource-cell">' + trafficConfirmCell(item) + '</td>' +
+          '<td class="schedule-control-gap-cell">' + keyGapCell(item) + '</td>' +
+          '<td class="schedule-control-owner-cell">' + ownerCell(item) + '</td>' +
+          '<td class="schedule-control-status-cell">' + mainStatusCell(item) + '</td>' +
+          '<td class="schedule-control-action-cell">' + actions + '</td>' +
           '</tr>';
       }
 
@@ -3817,15 +3936,15 @@
 
       function rowMatches(item) {
         var productQuery = productNameFilter.value.trim();
-        var codeQuery = scheduleCodeFilter.value.trim().toUpperCase();
+        var codeQueries = scheduleCodeFilter.value.trim().toUpperCase().split(/[,，\s]+/).filter(Boolean);
         var status = scheduleStatusFilter.value;
         var executionStatus = executionStatusFilter.value;
         var currentTodo = currentTodoFilter.value;
         var riskStatus = riskStatusFilter.value;
         var batchType = batchTypeFilter.value;
         var groupMode = groupModeFilter ? groupModeFilter.value : '全部';
-        if (productQuery && item.product.indexOf(productQuery) === -1) return false;
-        if (codeQuery && item.code.toUpperCase().indexOf(codeQuery) === -1) return false;
+        if (productQuery && (item.product + ' ' + (item.route || '')).indexOf(productQuery) === -1) return false;
+        if (codeQueries.length && !codeQueries.some(function (query) { return item.code.toUpperCase().indexOf(query) >= 0; })) return false;
         if (batchType && batchType !== '全部' && item.batchType !== batchType) return false;
         if (groupMode && groupMode !== '全部' && (item.groupMode || '散拼') !== groupMode) return false;
         if (departStartDate.value && item.depart < departStartDate.value) return false;
@@ -3917,9 +4036,10 @@
       function updateCurrentRouteFilter(visibleCount) {
         updateCreateScheduleHref();
         if (!currentRouteFilter) return;
-        currentRouteFilter.hidden = !routeFilterProduct;
-        if (!routeFilterProduct) return;
-        currentRouteFilterName.textContent = routeFilterProduct;
+        currentRouteFilter.hidden = !routeFilterProduct && !routeFilterScheduleNos.length;
+        if (currentRouteFilter.hidden) return;
+        if (currentRouteFilterLabel) currentRouteFilterLabel.textContent = routeFilterProduct ? '当前线路' : '关联团期';
+        currentRouteFilterName.textContent = routeFilterProduct || (routeFilterScheduleNos.length + '个团期');
         currentRouteFilterCount.textContent = visibleCount + '条';
       }
 
@@ -5867,6 +5987,7 @@
       document.getElementById('resetSchedules').addEventListener('click', function () {
         routeFilterProduct = '';
         routeFilterType = '';
+        routeFilterScheduleNos = [];
         productNameFilter.value = '';
         scheduleCodeFilter.value = '';
         departStartDate.value = '';
@@ -5962,6 +6083,10 @@
 
       if (routeFilterProduct) {
         productNameFilter.value = routeFilterProduct;
+        applyFilters();
+      }
+      if (routeFilterScheduleNos.length) {
+        scheduleCodeFilter.value = routeFilterScheduleNos.join(' ');
         applyFilters();
       }
       if (pageParams.get('stage')) {

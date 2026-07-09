@@ -277,15 +277,18 @@
 
     <div class="table-wrap product-market-table list-surface-table list-table-with-pagination" aria-label="线路列表" hidden>
       <table>
+        <colgroup>
+          <col class="market-col-product">
+          <col class="market-col-availability">
+          <col class="market-col-price">
+          <col class="market-col-status">
+          <col class="market-col-action">
+        </colgroup>
         <thead>
           <tr>
-            <th>线路名称</th>
-            <th>供应来源</th>
-            <th>旅游类型</th>
-            <th>主题标签</th>
-            <th>行程信息</th>
-            <th>供应商结算价</th>
-            <th>可代理团期</th>
+            <th>商品/来源</th>
+            <th>可售安排</th>
+            <th>价格/结构</th>
             <th>承接状态</th>
             <th>操作</th>
           </tr>
@@ -618,11 +621,6 @@
         if (type.indexOf('自由行') >= 0) return '供应端确认房态和套餐余量';
         if (type.indexOf('单项服务') >= 0) return '供应商回传办理节点';
         return '供应商确认团期余位';
-      }
-
-      function sourceSummaryText(card) {
-        if (!card) return '待确认';
-        return sourceOriginText(card) + ' · ' + (card.dataset.supplier || '来源方待确认');
       }
 
       function listHtml(items) {
@@ -999,11 +997,20 @@
         productCards.forEach(renderSaleStatus);
       }
 
-      function createCell(text, className) {
+      function appendLine(cell, tagName, text, className) {
+        var node = document.createElement(tagName);
+        if (className) node.className = className;
+        node.textContent = text || '';
+        cell.appendChild(node);
+        return node;
+      }
+
+      function createStackCell(stackClass) {
         var cell = document.createElement('td');
-        if (className) cell.className = className;
-        cell.textContent = text || '';
-        return cell;
+        var stack = document.createElement('div');
+        stack.className = 'market-table-cell ' + stackClass;
+        cell.appendChild(stack);
+        return { cell: cell, stack: stack };
       }
 
       function cloneTagFromCard(card, tagIndex) {
@@ -1014,30 +1021,70 @@
         return tag;
       }
 
+      function statusHintText(status) {
+        if (status === '可代理未入库') return '可发起代理入库';
+        if (status === '入库草稿') return '草稿待补全';
+        if (status === '入库审核中') return '等待审批结果';
+        if (status === '入库驳回') return '按驳回意见重提';
+        if (status === '已入库') return '可提交上线';
+        if (status === '上线审核中') return '等待上线审批';
+        if (status === '已上线') return '销售端可售';
+        if (status === '已下线') return '销售端已关闭';
+        return '查看详情';
+      }
+
+      function buildProductSummaryCell(card) {
+        var result = createStackCell('market-product-table-name');
+        appendLine(result.stack, 'strong', card.dataset.product);
+        appendLine(result.stack, 'span', sourceOriginText(card) + ' · ' + (card.dataset.supplier || '来源方待确认'));
+        var tagRow = document.createElement('div');
+        tagRow.className = 'market-table-tag-row';
+        tagRow.appendChild(cloneTagFromCard(card, 0));
+        var modelTag = cloneTagFromCard(card, 1);
+        tagRow.appendChild(modelTag);
+        result.stack.appendChild(tagRow);
+        return result.cell;
+      }
+
+      function buildAvailabilityCell(card) {
+        var result = createStackCell('market-product-table-availability');
+        var info = cardInfo(card);
+        var summary = scheduleSummary(card);
+        appendLine(result.stack, 'strong', info.destination + ' · ' + info.duration);
+        appendLine(result.stack, 'span', info.depart + ' · ' + themeTagText(card));
+        appendLine(result.stack, 'em', summary.title + '：' + summary.main + (summary.detail ? ' / ' + summary.detail : ''));
+        return result.cell;
+      }
+
+      function scheduleSummary(card) {
+        var info = cardInfo(card);
+        var text = info.schedule || '可售信息待确认';
+        var parts = text.split('：');
+        var title = parts.length > 1 ? parts.shift() : '可售安排';
+        var content = parts.join('：') || text;
+        var detailParts = content.split(' / ');
+        return {
+          title: title,
+          main: detailParts.shift() || content,
+          detail: detailParts.join(' / ') || sourceConfirmText(card)
+        };
+      }
+
+      function buildPriceStructureCell(card) {
+        var result = createStackCell('market-product-table-price');
+        appendLine(result.stack, 'strong', referencePrice(card));
+        appendLine(result.stack, 'span', saleStructureText(card));
+        return result.cell;
+      }
+
       function buildSaleStatusCell(card) {
-        var cell = document.createElement('td');
+        var result = createStackCell('market-product-table-status');
         var statusTag = document.createElement('span');
         statusTag.className = saleStatusTagClass(productSaleStatus(card));
         statusTag.textContent = productSaleStatus(card);
-        cell.appendChild(statusTag);
-        return cell;
-      }
-
-      function buildSupplySourceCell(card) {
-        var cell = document.createElement('td');
-        cell.className = 'market-product-table-source';
-        var tag = cloneTagFromCard(card, 1);
-        var name = document.createElement('strong');
-        var origin = document.createElement('span');
-        var confirm = document.createElement('em');
-        name.textContent = card.dataset.supplier || '来源方待确认';
-        origin.textContent = sourceOriginText(card);
-        confirm.textContent = sourceConfirmText(card);
-        cell.appendChild(tag);
-        cell.appendChild(name);
-        cell.appendChild(origin);
-        cell.appendChild(confirm);
-        return cell;
+        result.stack.appendChild(statusTag);
+        appendLine(result.stack, 'em', statusHintText(productSaleStatus(card)));
+        return result.cell;
       }
 
       function buildProductTable() {
@@ -1050,38 +1097,15 @@
           row.setAttribute('tabindex', '0');
           row.setAttribute('role', 'button');
 
-          var nameCell = createCell('', 'market-product-table-name');
-          var name = document.createElement('strong');
-          var model = document.createElement('span');
-          name.textContent = card.dataset.product;
-          model.textContent = sourceSummaryText(card);
-          nameCell.appendChild(name);
-          nameCell.appendChild(model);
-          row.appendChild(nameCell);
-
-          row.appendChild(buildSupplySourceCell(card));
-
-          var typeCell = document.createElement('td');
-          var typeTag = document.createElement('span');
-          typeTag.className = typeTagClass(card.dataset.type);
-          typeTag.textContent = travelTypeText(card);
-          typeCell.appendChild(typeTag);
-          row.appendChild(typeCell);
-
-          row.appendChild(createCell(themeTagText(card)));
-
-          var info = cardInfo(card);
-          row.appendChild(createCell([info.destination, info.duration, info.depart].join(' / ')));
-
-          row.appendChild(createCell(referencePrice(card), 'market-product-table-price'));
-
-          var schedule = card.querySelector('.market-product-schedule');
-          row.appendChild(createCell(schedule ? schedule.textContent : ''));
-
+          row.appendChild(buildProductSummaryCell(card));
+          row.appendChild(buildAvailabilityCell(card));
+          row.appendChild(buildPriceStructureCell(card));
           row.appendChild(buildSaleStatusCell(card));
 
           var actionCell = document.createElement('td');
-          actionCell.className = 'table-action';
+          actionCell.className = 'market-product-table-action';
+          var actionWrap = document.createElement('div');
+          actionWrap.className = 'table-action';
           var status = productSaleStatus(card);
           var primaryButton = document.createElement('button');
           primaryButton.type = 'button';
@@ -1089,14 +1113,14 @@
           primaryButton.setAttribute(primaryActionAttr(status), '');
           primaryButton.dataset.productIndex = String(index);
           primaryButton.textContent = primaryActionText(status);
-          actionCell.appendChild(primaryButton);
+          actionWrap.appendChild(primaryButton);
 
           var detailButton = document.createElement('button');
           detailButton.type = 'button';
           detailButton.dataset.openMarketDetail = '';
           detailButton.dataset.productIndex = String(index);
           detailButton.textContent = '详情';
-          actionCell.appendChild(detailButton);
+          actionWrap.appendChild(detailButton);
 
           if (canStopSale(card)) {
             var stopButton = document.createElement('button');
@@ -1104,8 +1128,9 @@
             stopButton.dataset.openStopSale = '';
             stopButton.dataset.productIndex = String(index);
             stopButton.textContent = '下线';
-            actionCell.appendChild(stopButton);
+            actionWrap.appendChild(stopButton);
           }
+          actionCell.appendChild(actionWrap);
           row.appendChild(actionCell);
 
           row.addEventListener('click', function (event) {

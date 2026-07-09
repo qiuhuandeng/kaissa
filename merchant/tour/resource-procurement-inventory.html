@@ -42,20 +42,20 @@
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
-          <label class="sr-only" for="taskFilter">当前待办</label>
+          <label class="sr-only" for="taskFilter">处理场景</label>
           <select id="taskFilter">
-            <option value="全部">全部待办</option>
-            <option value="付款">付款待处理</option>
-            <option value="DL">DL还位核对</option>
-            <option value="损耗">损耗确认</option>
-            <option value="名单">名单确认</option>
-            <option value="库存">库存紧张</option>
+            <option value="全部">全部场景</option>
+            <option value="付款">付款待申请</option>
+            <option value="DL">临近DL</option>
+            <option value="损耗">损耗待确认</option>
+            <option value="名单">待出票/确认</option>
+            <option value="库存">可分配不足</option>
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
           <label class="sr-only" for="dateTypeFilter">日期口径</label>
           <select id="dateTypeFilter">
-            <option value="出发日期">出发日期</option>
+            <option value="出发日期">出行日期</option>
             <option value="DL日期">DL日期</option>
             <option value="付款日期">付款日期</option>
           </select>
@@ -75,18 +75,41 @@
       </div>
     </section>
 
+    <nav class="tab-bar list-surface-tabs resource-procurement-tabs" aria-label="机票切位快捷筛选">
+      <button class="tab-item active" type="button" data-resource-quick="">全部</button>
+      <button class="tab-item" type="button" data-resource-quick="dl">临近DL</button>
+      <button id="quickIssueTab" class="tab-item" type="button" data-resource-quick="issue">待出票</button>
+      <button class="tab-item" type="button" data-resource-quick="inventory">可分配不足</button>
+      <button class="tab-item" type="button" data-resource-quick="payment">付款待申请</button>
+      <button id="quickLossTab" class="tab-item" type="button" data-resource-quick="loss">票损待确认</button>
+    </nav>
+
     <section class="table-wrap resource-procurement-table list-surface-table list-table-with-pagination" aria-label="交通资源采购列表">
       <table>
+        <colgroup>
+          <col class="resource-procurement-col-resource">
+          <col class="resource-procurement-col-depart-date">
+          <col class="resource-procurement-col-return-date">
+          <col class="resource-procurement-col-inventory">
+          <col class="resource-procurement-col-sales">
+          <col class="resource-procurement-col-structure">
+          <col class="resource-procurement-col-schedules">
+          <col class="resource-procurement-col-payment">
+          <col class="resource-procurement-col-status">
+          <col class="resource-procurement-col-action">
+        </colgroup>
         <thead>
           <tr>
-            <th id="listOutboundHead">出发航班</th>
-            <th id="listInboundHead">回程航班</th>
+            <th id="listResourceHead">航班/票代</th>
             <th id="listDepartHead">出发日期</th>
             <th id="listReturnHead">回程日期</th>
-            <th id="listInventoryHead">机位</th>
-            <th>当前待办</th>
-            <th>合同状态</th>
-            <th>操作</th>
+            <th id="listInventoryHead">机位/分配</th>
+            <th id="listSalesHead">销售/出票</th>
+            <th id="listStructureHead">舱位结构</th>
+            <th>关联团期</th>
+            <th>付款节点</th>
+            <th>履约状态</th>
+            <th class="resource-procurement-action-head">操作</th>
           </tr>
         </thead>
         <tbody id="contractRows"></tbody>
@@ -787,7 +810,12 @@
           listInboundLabel: '回程航班',
           listDepartLabel: '出发日期',
           listReturnLabel: '回程日期',
-          listInventoryLabel: '机位',
+          listResourceLabel: '航班/票代',
+          listInventoryLabel: '机位/分配',
+          listSalesLabel: '销售/出票',
+          listStructureLabel: '舱位结构',
+          quickIssueLabel: '待出票',
+          quickLossLabel: '票损待确认',
           subtype: '经济舱G舱座位',
           unit: '座',
           price: 4300,
@@ -824,7 +852,12 @@
           listInboundLabel: '返港航次',
           listDepartLabel: '出发日期',
           listReturnLabel: '返港日期',
-          listInventoryLabel: '舱室',
+          listResourceLabel: '航次/船公司',
+          listInventoryLabel: '舱房/分配',
+          listSalesLabel: '销售/确认',
+          listStructureLabel: '舱型结构',
+          quickIssueLabel: '待舱房确认',
+          quickLossLabel: '舱损待确认',
           subtype: '阳台舱',
           unit: '间',
           price: 22000,
@@ -865,7 +898,12 @@
           listInboundLabel: '返程车次',
           listDepartLabel: '出发日期',
           listReturnLabel: '返程日期',
-          listInventoryLabel: '铺位',
+          listResourceLabel: '车次/运营商',
+          listInventoryLabel: '铺位/分配',
+          listSalesLabel: '销售/确认',
+          listStructureLabel: '席别结构',
+          quickIssueLabel: '待铺位确认',
+          quickLossLabel: '铺损待确认',
           subtype: '软卧下铺',
           unit: '铺',
           price: 10800,
@@ -1160,8 +1198,8 @@
       function tagClass(text) {
         if (/已终止|已取消|付款逾期|还位异常|损耗争议|审批驳回|NC推送失败|已逾期|驳回|超DL|已过DL|日期不匹配|超出余量|关联余量不足/.test(text)) return 'tag tag-red';
         if (/已付款|已回单|已推送|已推NC|已通过|已出票|已确认|履约完成|成本已确认|一压已付|正常|日期匹配|可确认|可分配/.test(text)) return 'tag tag-green';
+        if (/票损|舱损|铺损|损耗/.test(text)) return 'tag tag-red';
         if (/草稿|待|临近|审批中|未付款|未到期|开放报名|履约中|结算中|销售不足|名单待提交|已预占/.test(text)) return 'tag tag-orange';
-        if (/损耗/.test(text)) return 'tag tag-red';
         if (/邮轮/.test(text)) return 'tag tag-purple';
         if (/专列|包铺/.test(text)) return 'tag tag-orange';
         if (/机票|包机|切位/.test(text)) return 'tag tag-blue';
@@ -1483,7 +1521,9 @@
         if (end && (!dateValue || dateValue > end)) return false;
         if (quickFilter === 'payment' && contractTaskType(contract) !== '付款') return false;
         if (quickFilter === 'dl' && risk !== '临近DL') return false;
-        if (quickFilter === 'issue-loss' && risk !== '名单待出票' && risk !== '待损耗确认') return false;
+        if (quickFilter === 'issue' && contractStats(contract).pendingIssue <= 0) return false;
+        if (quickFilter === 'inventory' && risk !== '库存不足') return false;
+        if (quickFilter === 'loss' && !contract.losses.some(function (row) { return row.status === '待确认'; })) return false;
         return true;
       }
 
@@ -1522,56 +1562,158 @@
         if (!contract) return '-';
         var name = contract.resourceName || '';
         var match = name.match(/[A-Z]{1,4}\d{2,4}|[A-Z]{2,}-\d{6,}|Y\d{3}/);
-        return match ? match[0] : name.replace(/去程|返程/g, '').trim();
+        if (contract.type === '机票') return match ? match[0] : name.replace(/去程|返程/g, '').trim();
+        return name.replace(/去程|返程/g, '').trim();
       }
 
-      function resourceCell(contract) {
-        if (!contract) return '<td><span class="resource-procurement-empty">未采购</span></td>';
-        return '<td>' +
-          '<span class="resource-procurement-meta">' + escapeHtml(contract.supplier) + '</span>' +
-          '<span class="resource-procurement-main">' + escapeHtml(resourceCode(contract)) + '</span>' +
-          '<span class="resource-procurement-meta">' + escapeHtml(contract.route || contract.resourceName) + '</span>' +
-          '</td>';
+      function dateShort(value) {
+        if (!value) return '-';
+        return String(value).slice(5).replace('-', '-');
       }
 
-      function dateCell(contract, field) {
-        if (!contract) return '<td><span class="resource-procurement-empty">-</span></td>';
-        var dateValue = field === 'returnDate' ? contract.returnDate : contract.departDate;
-        return '<td><span class="resource-procurement-main">' + escapeHtml(dateValue || '-') + '</span><span class="resource-procurement-meta">' + escapeHtml('DL ' + (contract.dlDate || '-')) + '</span></td>';
+      function routeShort(route) {
+        var parts = String(route || '').split(/\s*→\s*/).map(placeShort).filter(Boolean);
+        return parts.length ? parts.join('-') : '-';
       }
 
-      function returnResourceDateCell(row) {
-        if (row.inbound) return dateCell(row.inbound, 'departDate');
-        if (row.primary.type === '邮轮') return dateCell(row.primary, 'returnDate');
-        return '<td><span class="resource-procurement-empty">-</span></td>';
+      function placeShort(place) {
+        var text = String(place || '').replace(/T\d+/g, '').replace(/\s+/g, '').trim();
+        var cityMap = [
+          ['北京', /北京/],
+          ['巴黎', /巴黎/],
+          ['柏林', /柏林/],
+          ['维也纳', /维也纳/],
+          ['成都', /成都/],
+          ['上海', /上海/],
+          ['巴塞罗那', /巴塞罗那/],
+          ['西安', /西安/],
+          ['敦煌', /敦煌/],
+          ['乌鲁木齐', /乌鲁木齐/],
+          ['拉萨', /拉萨/]
+        ];
+        var matched = cityMap.find(function (item) { return item[1].test(text); });
+        if (matched) return matched[0];
+        return text.replace(/国际机场|机场|航站楼|首都|大兴|戴高乐|勃兰登堡|天府|吴淞口|港口|码头/g, '') || text;
       }
 
       function sameStats(a, b) {
-        return a.total === b.total && a.allocated === b.allocated && a.available === b.available && a.sold === b.sold && a.issued === b.issued && a.pendingIssue === b.pendingIssue;
+        return a.total === b.total && a.allocated === b.allocated && a.available === b.available && a.sold === b.sold && a.issued === b.issued && a.pendingIssue === b.pendingIssue && a.returned === b.returned;
       }
 
-      function inventoryUsageHtml(stats, unit, prefix) {
-        var ratio = stats.total ? Math.max(0, Math.min(100, Math.round(stats.allocated / stats.total * 100))) : 0;
-        var fill = ratio >= 90 ? 'orange' : ratio >= 70 ? 'green' : '';
-        var prefixText = prefix ? prefix : '';
-        return '<span class="resource-procurement-main">' + escapeHtml(prefixText + '已用 ' + stats.allocated + '/' + stats.total) + '</span>' +
-          '<div class="schedule-progress procurement-progress"><div class="progress-bar"><div class="progress-fill ' + fill + '" style="width:' + ratio + '%"></div></div><span>' + ratio + '%</span></div>' +
-          '<span class="resource-procurement-meta">' + escapeHtml('已售 ' + stats.sold + unit + ' · 已确认 ' + stats.issued + unit + ' · 待确认 ' + stats.pendingIssue + unit) + '</span>';
+      function rowStats(row) {
+        var statsList = row.members.map(contractStats);
+        if (statsList.length === 2 && sameStats(statsList[0], statsList[1])) return statsList[0];
+        return statsList.reduce(function (sum, item) {
+          sum.total += item.total;
+          sum.allocated += item.allocated;
+          sum.sold += item.sold;
+          sum.issued += item.issued;
+          sum.returned += item.returned;
+          sum.available += item.available;
+          sum.pendingIssue += item.pendingIssue;
+          sum.amount += item.amount;
+          sum.lossAmount += item.lossAmount;
+          return sum;
+        }, { total: 0, allocated: 0, sold: 0, issued: 0, returned: 0, available: 0, pendingIssue: 0, amount: 0, lossAmount: 0 });
+      }
+
+      function rowUnit(row) {
+        if (row.primary.type === '机票') return '座';
+        if (row.primary.type === '邮轮') return '间';
+        return '铺';
+      }
+
+      function rowResourceTitle(row) {
+        if (row.primary.type === '机票' && row.outbound && row.inbound) {
+          return resourceCode(row.outbound) + ' / ' + resourceCode(row.inbound);
+        }
+        return resourceCode(row.primary);
+      }
+
+      function rowRouteText(row) {
+        if (row.primary.type === '机票' && row.outbound && row.inbound) {
+          return routeShort(row.outbound.route) + ' / ' + routeShort(row.inbound.route);
+        }
+        return routeShort(row.primary.route || row.primary.resourceName);
+      }
+
+      function resourceCell(row) {
+        var primary = row.primary;
+        return '<td class="resource-procurement-resource-cell">' +
+          '<span class="resource-procurement-main">' + escapeHtml(rowResourceTitle(row)) + '</span>' +
+          '<span class="resource-procurement-meta">' + escapeHtml(rowRouteText(row)) + '</span>' +
+          '<span class="resource-procurement-tagline"><span class="' + tagClass(primary.mode || primary.type) + '">' + escapeHtml(primary.mode || primary.type) + '</span></span>' +
+          '</td>';
+      }
+
+      function rowDepartContract(row) {
+        return row.primary.type === '机票' && row.outbound ? row.outbound : row.primary;
+      }
+
+      function rowReturnContract(row) {
+        if (row.inbound) return row.inbound;
+        return row.primary;
+      }
+
+      function dateCell(contract, field) {
+        if (!contract) return '<td class="resource-procurement-date-cell"><span class="resource-procurement-empty">-</span></td>';
+        var value = field === 'return' ? (contract.type === '机票' ? contract.departDate : contract.returnDate) : contract.departDate;
+        var dlDays = daysUntil(contract.dlDate);
+        return '<td class="resource-procurement-date-cell">' +
+          '<span class="resource-procurement-date-main">' + escapeHtml(value || '-') + '</span>' +
+          '<span class="resource-procurement-meta">' + escapeHtml('DL ' + (contract.dlDate || '-')) + '</span>' +
+          (dlDays <= 15 ? '<span class="' + tagClass('临近DL') + '">' + escapeHtml('剩' + dlDays + '天') + '</span>' : '') +
+          '</td>';
       }
 
       function inventoryCell(row) {
-        var main = row.primary;
-        var mainStats = contractStats(main);
-        var unit = main.subtypes[0] ? main.subtypes[0].unit : allocationUnitText(main);
-        var pair = row.outbound && row.inbound ? (row.outbound.contractNo === main.contractNo ? row.inbound : row.outbound) : null;
-        if (!pair) {
-          return '<td>' + inventoryUsageHtml(mainStats, unit, '') + '</td>';
-        }
-        var pairStats = contractStats(pair);
-        if (sameStats(mainStats, pairStats)) {
-          return '<td>' + inventoryUsageHtml(mainStats, unit, '') + '</td>';
-        }
-        return '<td>' + inventoryUsageHtml(mainStats, unit, '去程 ') + inventoryUsageHtml(pairStats, unit, '返程 ') + '</td>';
+        var stats = rowStats(row);
+        var unit = rowUnit(row);
+        var ratio = stats.total ? Math.max(0, Math.min(100, Math.round(stats.allocated / stats.total * 100))) : 0;
+        var fill = ratio >= 90 ? 'orange' : ratio >= 70 ? 'green' : '';
+        return '<td class="resource-procurement-inventory-cell">' +
+          '<span class="resource-procurement-main">' + escapeHtml('已分 ' + stats.allocated + '/' + stats.total + unit) + '</span>' +
+          '<div class="schedule-progress procurement-progress"><div class="progress-bar"><div class="progress-fill ' + fill + '" style="width:' + ratio + '%"></div></div></div>' +
+          '<span class="resource-procurement-meta">' + escapeHtml('可分 ' + stats.available + unit + ' · 已还 ' + stats.returned + unit) + '</span>' +
+          '</td>';
+      }
+
+      function salesIssueCell(row) {
+        var stats = rowStats(row);
+        var unit = rowUnit(row);
+        var issueText = row.primary.type === '机票' ? '已出票 ' : '已确认 ';
+        var pendingText = row.primary.type === '机票' ? '待出票 ' : '待确认 ';
+        return '<td class="resource-procurement-sales-cell">' +
+          '<span class="resource-procurement-main">' + escapeHtml('已售 ' + stats.sold + unit) + '</span>' +
+          '<span class="resource-procurement-meta">' + escapeHtml(issueText + stats.issued + unit + ' · ' + pendingText + stats.pendingIssue + unit) + '</span>' +
+          '</td>';
+      }
+
+      function structureCell(row) {
+        var unit = rowUnit(row);
+        var items = row.primary.subtypes.map(function (item) {
+          return item.name.replace(/座位|铺位/g, '') + Number(item.total || 0) + (item.unit || unit);
+        });
+        var main = items.slice(0, 2).join(' · ') || '-';
+        var meta = items.length > 2 ? ('另' + (items.length - 2) + '类：' + items.slice(2).join(' · ')) : '';
+        return '<td class="resource-procurement-structure-cell"><span class="resource-procurement-main">' + escapeHtml(main) + '</span>' + (meta ? '<span class="resource-procurement-meta">' + escapeHtml(meta) + '</span>' : '') + '</td>';
+      }
+
+      function scheduleCell(row) {
+        var scheduleMap = {};
+        row.members.forEach(function (contract) {
+          contract.allocations.forEach(function (item) {
+            if (!scheduleMap[item.scheduleNo]) scheduleMap[item.scheduleNo] = item.scheduleName || '';
+          });
+        });
+        var codes = Object.keys(scheduleMap);
+        if (!codes.length) return '<td><span class="resource-procurement-empty">未分配团期</span></td>';
+        var params = new URLSearchParams();
+        params.set('scheduleNos', codes.join(','));
+        params.set('resourceName', rowResourceTitle(row));
+        return '<td class="resource-procurement-schedule-cell">' +
+          '<span class="resource-procurement-schedule-count"><a class="link-primary count-link-number" href="schedules.html?' + escapeHtml(params.toString()) + '">' + escapeHtml(String(codes.length)) + '</a>个团期</span>' +
+          '</td>';
       }
 
       function nextPaymentForRow(row) {
@@ -1647,28 +1789,61 @@
         return '<td><span class="resource-procurement-empty">暂无待办</span></td>';
       }
 
+      function paymentCell(row) {
+        var candidate = nextPaymentForRow(row);
+        var payment = candidate ? candidate.payment : null;
+        if (!payment) return '<td><span class="resource-procurement-empty">暂无付款节点</span></td>';
+        var status = paymentNodeStatus(payment);
+        var direction = candidate.contract && row.members.length > 1 ? (candidate.contract.direction || '单程') + ' · ' : '';
+        return '<td class="resource-procurement-payment-cell">' +
+          '<span class="resource-procurement-main">' + escapeHtml(payment.node + ' ' + money(payment.amount)) + '</span>' +
+          '<span class="' + tagClass(status) + '">' + escapeHtml(status) + '</span>' +
+          '<span class="resource-procurement-meta">' + escapeHtml(direction + dateShort(payment.dueDate) + ' 到期') + '</span>' +
+          '</td>';
+      }
+
       function rowLifecycleStatus(row) {
         var statuses = row.members.map(contractLifecycleStatus);
         var priority = ['已终止', '已取消', '待一压', '一压已付', '临近DL', '待出票/确认', '待三压', '待损耗确认', '结算中', '履约完成', '履约中'];
         return priority.find(function (status) { return statuses.indexOf(status) >= 0; }) || statuses[0] || '履约中';
       }
 
+      function statusTextForType(status, type) {
+        if (status === '待出票/确认') {
+          if (type === '机票') return '待出票';
+          if (type === '邮轮') return '待舱房确认';
+          return '待铺位确认';
+        }
+        if (status === '待损耗确认') {
+          if (type === '机票') return '票损待确认';
+          if (type === '邮轮') return '舱损待确认';
+          return '铺损待确认';
+        }
+        return status;
+      }
+
       function statusCell(row) {
         var status = rowLifecycleStatus(row);
+        var displayStatus = statusTextForType(status, row.primary.type);
         var diffText = '';
         if (row.members.length > 1) {
           var memberStatuses = row.members.map(function (contract) {
-            return (contract.direction || '单程') + ' ' + contractLifecycleStatus(contract);
+            return (contract.direction || '单程') + ' ' + statusTextForType(contractLifecycleStatus(contract), contract.type);
           });
           if (row.members.map(contractLifecycleStatus).some(function (item) { return item !== status; })) diffText = memberStatuses.join(' / ');
         }
-        return '<td><span class="' + tagClass(status) + '">' + escapeHtml(status) + '</span>' + (diffText ? '<span class="resource-procurement-meta">' + escapeHtml(diffText) + '</span>' : '') + '</td>';
+        return '<td class="resource-procurement-status-cell"><span class="' + tagClass(displayStatus) + '">' + escapeHtml(displayStatus) + '</span>' + (diffText ? '<span class="resource-procurement-meta">' + escapeHtml(diffText) + '</span>' : '') + '</td>';
       }
 
       function actionCell(row) {
         var status = rowLifecycleStatus(row);
         var canAllocate = !/已终止|已取消|履约完成/.test(status);
-        return '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button>' + (canAllocate ? '<button type="button" data-open-allocation>分配</button>' : '') + '</div></td>';
+        var issueAction = row.primary.type === '机票' ? '出票' : '确认';
+        return '<td class="resource-procurement-action-cell"><div class="table-action">' +
+          (canAllocate ? '<button class="table-action-primary" type="button" data-open-allocation>分配</button>' : '') +
+          '<button type="button" data-open-ticket>' + escapeHtml(issueAction) + '</button>' +
+          '<button type="button" data-open-detail>详情</button>' +
+          '</div></td>';
       }
 
       function detailTask(contract) {
@@ -1706,12 +1881,14 @@
       function contractRowHtml(row) {
         var primary = row.primary;
         return '<tr data-contract-no="' + escapeHtml(primary.contractNo) + '">' +
-          resourceCell(row.outbound) +
-          resourceCell(row.inbound) +
-          dateCell(row.outbound || primary, 'departDate') +
-          returnResourceDateCell(row) +
+          resourceCell(row) +
+          dateCell(rowDepartContract(row), 'depart') +
+          dateCell(rowReturnContract(row), 'return') +
           inventoryCell(row) +
-          taskCell(row) +
+          salesIssueCell(row) +
+          structureCell(row) +
+          scheduleCell(row) +
+          paymentCell(row) +
           statusCell(row) +
           actionCell(row) +
           '</tr>';
@@ -1719,7 +1896,7 @@
 
       function renderContracts() {
         var rows = contractListRows();
-        $('#contractRows').innerHTML = rows.length ? rows.map(contractRowHtml).join('') : '<tr><td colspan="8">暂无符合条件的交通采购记录</td></tr>';
+        $('#contractRows').innerHTML = rows.length ? rows.map(contractRowHtml).join('') : '<tr><td colspan="10">暂无符合条件的交通采购记录</td></tr>';
         $('#contractPagination').textContent = rows.length ? '第1-' + rows.length + '条/共' + rows.length + '条' : '第0-0条/共0条';
       }
 
@@ -1880,14 +2057,18 @@
         $('#pageTitle').textContent = config.title;
         $('#openCreateContract').textContent = '新增' + config.title;
         $('#createContractTitle').textContent = config.createTitle;
-        $('#listOutboundHead').textContent = config.listOutboundLabel;
-        $('#listInboundHead').textContent = config.listInboundLabel;
+        $('#listResourceHead').textContent = config.listResourceLabel;
         $('#listDepartHead').textContent = config.listDepartLabel;
         $('#listReturnHead').textContent = config.listReturnLabel;
         $('#listInventoryHead').textContent = config.listInventoryLabel;
+        $('#listSalesHead').textContent = config.listSalesLabel;
+        $('#listStructureHead').textContent = config.listStructureLabel;
+        $('#quickIssueTab').textContent = config.quickIssueLabel;
+        $('#quickLossTab').textContent = config.quickLossLabel;
         $('#resourceTypeFilter').value = config.type;
         $('#purchaseModeFilter').value = '全部';
-        $('#contractKeyword').placeholder = config.type === '机票' ? '协议号/航班/供应商/团期' : config.type === '邮轮' ? '协议号/航次/船公司/团期' : '协议号/车次/运营商/团期';
+        $('#contractKeyword').placeholder = config.type === '机票' ? '航班/票代/团期' : config.type === '邮轮' ? '航次/船公司/团期' : '车次/运营商/团期';
+        $('.resource-procurement-tabs').setAttribute('aria-label', config.title + '快捷筛选');
         $('#directionFilterGroup').hidden = config.type !== '机票';
         if (config.type !== '机票') $('#directionFilter').value = '全部';
         document.title = config.title + ' - 凯撒旅游';
@@ -2744,8 +2925,15 @@
         activateDetailTab('fee');
       }
 
+      function syncQuickTabs() {
+        $all('[data-resource-quick]').forEach(function (button) {
+          button.classList.toggle('active', button.getAttribute('data-resource-quick') === quickFilter);
+        });
+      }
+
       function resetFilters() {
         quickFilter = '';
+        syncQuickTabs();
         $('#contractKeyword').value = '';
         $('#resourceTypeFilter').value = currentCreateConfig().type;
         $('#purchaseModeFilter').value = '全部';
@@ -2781,6 +2969,13 @@
       });
       $('#searchContracts').addEventListener('click', renderContracts);
       $('#resetContracts').addEventListener('click', resetFilters);
+      $all('[data-resource-quick]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          quickFilter = button.getAttribute('data-resource-quick') || '';
+          syncQuickTabs();
+          renderContracts();
+        });
+      });
       $('#taskFilter').addEventListener('change', renderContracts);
       $('#dateTypeFilter').addEventListener('change', renderContracts);
       $('#newResourceType').addEventListener('change', syncCreateDefaults);
@@ -2835,6 +3030,10 @@
         if (event.target.closest('[data-open-allocation]')) {
           fillDetail(selectedContract());
           openAllocation();
+        }
+        if (event.target.closest('[data-open-ticket]')) {
+          fillDetail(selectedContract());
+          openTicket();
         }
       });
       $all('[data-detail-tab]').forEach(function (button) {

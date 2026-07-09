@@ -1701,16 +1701,71 @@
   }
 
   function initActionMenus(scope) {
+    const menuSelector = ".action-dropdown-menu, .dropdown-menu, .table-more-menu";
+    const toggleSelector = "[data-action-menu-toggle], .table-more-toggle";
+
+    const getActionMenu = (wrap) => wrap.querySelector(menuSelector);
+
+    const resetActionMenuPosition = (menu) => {
+      menu.classList.remove("dropdown-menu-floating");
+      menu.style.top = "";
+      menu.style.right = "";
+      menu.style.bottom = "";
+      menu.style.left = "";
+      menu.style.maxHeight = "";
+    };
+
+    const positionActionMenu = (wrap) => {
+      const toggle = wrap.querySelector(toggleSelector);
+      const menu = getActionMenu(wrap);
+      if (!toggle || !menu) return;
+
+      menu.classList.add("dropdown-menu-floating");
+      menu.style.right = "auto";
+      menu.style.bottom = "auto";
+      menu.style.left = "0px";
+      menu.style.top = "0px";
+      menu.style.maxHeight = "";
+
+      const edgeGap = 8;
+      const triggerGap = 6;
+      const toggleRect = toggle.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - toggleRect.bottom - edgeGap - triggerGap;
+      const spaceAbove = toggleRect.top - edgeGap - triggerGap;
+      const openAbove = menuRect.height > spaceBelow && spaceAbove > spaceBelow;
+      const availableHeight = Math.max(96, openAbove ? spaceAbove : spaceBelow);
+
+      menu.style.maxHeight = availableHeight + "px";
+
+      const placedRect = menu.getBoundingClientRect();
+      const menuWidth = placedRect.width;
+      const menuHeight = placedRect.height;
+      let left = toggleRect.right - menuWidth;
+      let top = openAbove ? toggleRect.top - menuHeight - triggerGap : toggleRect.bottom + triggerGap;
+
+      left = Math.min(left, window.innerWidth - menuWidth - edgeGap);
+      left = Math.max(edgeGap, left);
+      top = Math.min(top, window.innerHeight - menuHeight - edgeGap);
+      top = Math.max(edgeGap, top);
+
+      menu.style.left = Math.round(left) + "px";
+      menu.style.top = Math.round(top) + "px";
+    };
+
     const closeActionMenu = (wrap) => {
       wrap.classList.remove("open");
-      wrap.querySelectorAll(".action-dropdown-menu.show, .dropdown-menu.show").forEach((menu) => menu.classList.remove("show"));
-      wrap.querySelectorAll("[data-action-menu-toggle], .table-more-toggle").forEach((toggle) => {
+      wrap.querySelectorAll(menuSelector).forEach((menu) => {
+        menu.classList.remove("show");
+        resetActionMenuPosition(menu);
+      });
+      wrap.querySelectorAll(toggleSelector).forEach((toggle) => {
         toggle.setAttribute("aria-expanded", "false");
       });
     };
 
     const closeAllActionMenus = (except) => {
-      document.querySelectorAll("[data-action-menu].open, .dropdown.table-action-more.open").forEach((wrap) => {
+      document.querySelectorAll("[data-action-menu], .dropdown.table-action-more").forEach((wrap) => {
         if (wrap !== except) closeActionMenu(wrap);
       });
     };
@@ -1719,26 +1774,40 @@
       if (wrap.dataset.actionMenuReady === "true") return;
       wrap.dataset.actionMenuReady = "true";
 
-      const toggle = wrap.querySelector("[data-action-menu-toggle], .table-more-toggle");
+      const toggle = wrap.querySelector(toggleSelector);
       if (!toggle) return;
       if (!toggle.hasAttribute("aria-expanded")) toggle.setAttribute("aria-expanded", "false");
 
       toggle.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
 
         closeAllActionMenus(wrap);
-        wrap.classList.toggle("open");
-        const open = wrap.classList.contains("open");
+        const open = !wrap.classList.contains("open");
+        wrap.classList.toggle("open", open);
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        const menu = wrap.querySelector(".action-dropdown-menu, .dropdown-menu, .table-more-menu");
-        if (menu) menu.classList.toggle("show", open);
-      });
+        const menu = getActionMenu(wrap);
+        if (menu) {
+          menu.classList.toggle("show", open);
+          if (open) {
+            positionActionMenu(wrap);
+          } else {
+            resetActionMenuPosition(menu);
+          }
+        }
+      }, true);
     });
 
     if (document.documentElement.dataset.actionMenuReady !== "true") {
       document.documentElement.dataset.actionMenuReady = "true";
       document.addEventListener("click", () => {
+        closeAllActionMenus(null);
+      });
+      document.addEventListener("scroll", () => {
+        closeAllActionMenus(null);
+      }, true);
+      window.addEventListener("resize", () => {
         closeAllActionMenus(null);
       });
     }

@@ -21,8 +21,10 @@
     <section class="filter-card filter-card-compact receivable-filter list-surface-filter" aria-label="应收单筛选">
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="receivableKeyword">应收单/订单/客户/线路</label><input id="receivableKeyword" type="search" placeholder="应收单/订单/客户/线路"></div>
-        <div class="filter-item-sm"><label class="sr-only" for="receivableType">应收类型</label><select id="receivableType"><option>全部类型</option><option>订单应收</option><option>应收调整</option><option>减免调整</option><option>补差应收</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="receivableSourceType">来源类型</label><select id="receivableSourceType"><option>全部来源</option><option>订单应收</option><option>项目订单</option><option>应收调整</option><option>渠道结算</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="receivableType">应收类型</label><select id="receivableType"><option>全部类型</option><option>订单应收</option><option>项目阶段应收</option><option>应收调整</option><option>减免调整</option><option>补差应收</option></select></div>
         <div class="filter-item-sm"><label class="sr-only" for="receivableStatus">状态</label><select id="receivableStatus"><option>全部状态</option><option>待审核</option><option>待收款</option><option>部分收款</option><option>已收清</option><option>逾期</option><option>坏账</option></select></div>
+        <div class="filter-item"><label class="sr-only" for="receivableProjectKeyword">单团项目/项目团/项目订单</label><input id="receivableProjectKeyword" type="search" placeholder="单团项目/项目团/项目订单"></div>
         <div class="filter-item-wide filter-item-date-range"><label class="sr-only">到期日期</label><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-receivable>查询</button><button class="btn btn-secondary" type="button" data-reset-receivable>重置</button></div>
       </div>
@@ -56,6 +58,19 @@
           </tr>
         </thead>
         <tbody id="receivableRows">
+          <tr data-tab-status="待收款" data-no="YS-MICE-20260704-001" data-order="KSMICE20260704001" data-customer="北京某科技有限公司" data-business="某科技公司2025年会欧洲行 / 项目首款 30% / MICE20250915001" data-type="项目阶段应收" data-source-type="项目订单" data-project-no="MICE-20250623-001" data-schedule-no="MICE20250915001" data-amount="¥571,800" data-received="¥0" data-pending="¥571,800" data-due="2026-07-15" data-status="待收款" data-nc="未生成" data-source="项目订单阶段应收" data-records="暂无认款记录" data-change="确认成团生成阶段应收计划，首款30%待项目订单登记收款或收款认领">
+            <td>YS-MICE-20260704-001<br><span class="text-muted">项目订单阶段应收</span></td>
+            <td>北京某科技有限公司<br><span class="tag tag-purple">单团项目</span></td>
+            <td>KSMICE20260704001<br><span class="text-muted">MICE-20250623-001 / 项目团 MICE20250915001</span></td>
+            <td>项目阶段应收</td>
+            <td class="amount-strong">¥571,800</td>
+            <td>¥0</td>
+            <td>¥571,800</td>
+            <td>2026-07-15</td>
+            <td><span class="tag tag-blue">待收款</span></td>
+            <td><span class="tag tag-gray">未生成</span></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button><a href="../sales/orders-detail.html?type=project&amp;source=customProject&amp;orderNo=KSMICE20260704001&amp;projectNo=MICE-20250623-001&amp;scheduleNo=MICE20250915001">查看订单</a><a href="../tour/product-custom-detail.html?projectNo=MICE-20250623-001">查看项目</a></div></td>
+          </tr>
           <tr data-tab-status="待审核" data-no="YS202606290011" data-order="ORD202606290001" data-customer="北京王府井旗舰店" data-business="青岛一日游 / 散拼团 / QD20260705001" data-type="订单应收" data-amount="¥3,000" data-received="¥0" data-pending="待审核" data-due="2026-06-29" data-status="待审核" data-nc="未生成" data-source="订单创建" data-records="暂无收款记录" data-change="订单创建生成团费应收">
             <td>YS202606290011<br><span class="text-muted">订单创建</span></td>
             <td>北京王府井旗舰店</td>
@@ -290,6 +305,7 @@
       var reviewGrid = document.getElementById('receivableReviewGrid');
       var reviewRows = document.getElementById('receivableReviewRows');
       var badDebtGrid = document.getElementById('badDebtGrid');
+      var pageParams = new URLSearchParams(window.location.search);
       var activeRow = null;
 
       function notify(message, type) {
@@ -337,13 +353,18 @@
 
       function applyFilters() {
         var keyword = (document.getElementById('receivableKeyword').value || '').trim().toLowerCase();
+        var projectKeyword = (document.getElementById('receivableProjectKeyword').value || '').trim().toLowerCase();
+        var sourceType = document.getElementById('receivableSourceType').value;
         var type = document.getElementById('receivableType').value;
         var status = document.getElementById('receivableStatus').value;
         var tab = activeTab();
         document.querySelectorAll('#receivableRows tr').forEach(function (row) {
           var text = rowText(row);
+          var lowerText = text.toLowerCase();
           var visible = true;
-          if (keyword && text.toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (keyword && lowerText.indexOf(keyword) < 0) visible = false;
+          if (projectKeyword && lowerText.indexOf(projectKeyword) < 0) visible = false;
+          if (optionEnabled(sourceType) && row.dataset.sourceType !== sourceType && row.dataset.source !== sourceType) visible = false;
           if (optionEnabled(type) && row.dataset.type !== type) visible = false;
           if (optionEnabled(status) && row.dataset.status !== status) visible = false;
           if (tab !== '全部' && String(row.dataset.tabStatus || '').indexOf(tab) < 0) visible = false;
@@ -359,6 +380,15 @@
 
       function data(row) {
         return row.dataset;
+      }
+
+      function projectLinksHtml(item) {
+        if (!item.projectNo) return '';
+        var orderHref = '../sales/orders-detail.html?type=project&source=customProject&orderNo=' + encodeURIComponent(item.order) + '&projectNo=' + encodeURIComponent(item.projectNo) + '&scheduleNo=' + encodeURIComponent(item.scheduleNo || '');
+        var projectHref = '../tour/product-custom-detail.html?projectNo=' + encodeURIComponent(item.projectNo);
+        var scheduleHref = '../tour/schedules-detail.html?type=project&source=customProject&groupMode=independent&scheduleNo=' + encodeURIComponent(item.scheduleNo || '') + '&projectNo=' + encodeURIComponent(item.projectNo) + '&customer=' + encodeURIComponent(item.customer || '');
+        var claimHref = '../sales/payment-claim.html?claimMode=projectStage&type=customProject&source=customProject&orderNo=' + encodeURIComponent(item.order) + '&projectNo=' + encodeURIComponent(item.projectNo) + '&scheduleNo=' + encodeURIComponent(item.scheduleNo || '');
+        return '<div class="table-action"><a class="table-action-primary" href="' + escapeHtml(orderHref) + '">查看订单</a><a href="' + escapeHtml(projectHref) + '">查看项目</a><a href="' + escapeHtml(scheduleHref) + '">查看项目团</a><a href="' + escapeHtml(claimHref) + '">查看认款</a></div>';
       }
 
       function renderGrid(target, items) {
@@ -390,7 +420,8 @@
           : '<tr><td>' + escapeHtml(recordText.split(' / ')[0] + ' / ' + recordText.split(' / ')[1]) + '</td><td class="amount-strong">' + escapeHtml(recordText.split(' / ')[2] || item.received) + '</td><td><span class="tag tag-green">' + escapeHtml(recordText.split(' / ')[3] || '已入账') + '</span></td></tr>';
         renderGrid(changeGrid, [
           ['来源', escapeHtml(item.source)],
-          ['调整说明', escapeHtml(item.change), true]
+          ['调整说明', escapeHtml(item.change), true],
+          ['项目反查', projectLinksHtml(item) || '<span class="text-muted">无项目来源</span>', true]
         ]);
         openLayer(detailDrawer);
       }
@@ -406,7 +437,8 @@
           ['业务内容', escapeHtml(item.business), true],
           ['应收类型', escapeHtml(item.type)],
           ['本次金额', '<span class="amount-strong">' + escapeHtml(item.amount) + '</span>'],
-          ['来源', escapeHtml(item.source)]
+          ['来源', escapeHtml(item.source)],
+          ['项目反查', projectLinksHtml(item) || '<span class="text-muted">非项目订单</span>', true]
         ]);
         reviewRows.innerHTML = '<tr><td>' + escapeHtml(item.type) + '</td><td>' + escapeHtml(item.source) + '</td><td class="amount-strong">' + escapeHtml(item.amount) + '</td><td>' + (item.type === '减免调整' ? '冲减原应收' : '进入待收款') + '</td></tr>';
         openLayer(reviewDrawer);
@@ -500,6 +532,17 @@
           if (event.target === overlay) closeLayer(overlay);
         });
       });
+      if (pageParams.get('orderNo')) document.getElementById('receivableKeyword').value = pageParams.get('orderNo');
+      if (pageParams.get('projectNo')) document.getElementById('receivableProjectKeyword').value = pageParams.get('projectNo');
+      if (pageParams.get('scheduleNo')) document.getElementById('receivableProjectKeyword').value = pageParams.get('scheduleNo');
+      if (pageParams.get('source') === 'customProject') document.getElementById('receivableSourceType').value = '项目订单';
+      document.querySelectorAll('#receivableKeyword, #receivableProjectKeyword, #receivableSourceType, #receivableType, #receivableStatus').forEach(function (field) {
+        field.addEventListener('change', applyFilters);
+        field.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') applyFilters();
+        });
+      });
+      applyFilters();
     })();
   </script>
 </body>
