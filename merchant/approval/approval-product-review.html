@@ -58,7 +58,7 @@
             </div>
             <div>
               <strong>后续单据</strong>
-              <span>审批通过后进入付款执行，上传银行回单后自动生成 NC 付款推送任务。</span>
+              <span>审批通过后进入付款执行，上传银行回单后由财务模块承接 NC 付款推送。</span>
             </div>
           </div>
         </section>
@@ -155,7 +155,7 @@
             </div>
             <div>
               <strong>NC推送</strong>
-              <span>回单确认后自动创建 NC 付款推送任务，异常时进入 NC异常审批。</span>
+              <span>回单确认后形成 NC 付款待推送任务，异常时进入 NC 异常处理。</span>
             </div>
             <div>
               <strong>操作审计</strong>
@@ -173,7 +173,6 @@
         <div class="modal-header">
           <div>
             <h2 id="relatedModalTitle">关联单据</h2>
-            <p class="text-muted" id="relatedModalSubtitle">付款申请关联团期、成本、应付、结算和NC记录</p>
           </div>
           <button class="modal-close" type="button" data-close-related aria-label="关闭">×</button>
         </div>
@@ -208,9 +207,13 @@
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search);
+      const currentView = params.get("view") || "todo";
       const opinion = document.getElementById("approvalOpinion");
       const toast = document.getElementById("approvalToast");
       const relatedModal = document.getElementById("relatedModal");
+      const backLink = document.querySelector(".page-back-link");
+      const focusOpinionButton = document.querySelector("[data-focus-opinion]");
+      const approvalPanel = document.querySelector(".review-approval-panel");
       const readonlySections = Array.from(document.querySelectorAll(".review-readonly-section"));
       const summaryGrid = document.querySelector(".review-description-grid");
       const contentTitle = readonlySections[1] && readonlySections[1].querySelector("h2");
@@ -224,6 +227,8 @@
       const relatedGrid = relatedModal.querySelector(".approval-mini-grid");
       const relatedChecks = relatedModal.querySelector(".approval-check-list");
       let currentApproval;
+
+      if (backLink) backLink.href = "approvals.html?view=" + encodeURIComponent(currentView);
 
       function showToast(message) {
         toast.textContent = message;
@@ -829,12 +834,15 @@
         if (relatedChecks) {
           relatedChecks.innerHTML = [
             "当前角色可查看该审批事项的来源单据。",
-            "金额、状态、应收应付和NC任务按审批结果继续流转。",
+            "金额、状态、应收应付和下游任务按审批结果继续流转。",
             "敏感信息按角色权限脱敏展示。"
           ].map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
         }
         const submitButton = document.querySelector("[data-submit-approval]");
-        if (submitButton) submitButton.disabled = data.status === "已通过" || data.status === "已拒绝";
+        const canSubmit = currentView === "todo" && data.status === "待审批";
+        if (submitButton) submitButton.disabled = !canSubmit;
+        if (approvalPanel) approvalPanel.hidden = currentView !== "todo";
+        if (focusOpinionButton) focusOpinionButton.hidden = currentView !== "todo";
         if (opinion && data.opinion) opinion.value = data.opinion;
       }
 
@@ -879,10 +887,15 @@
       renderApproval(currentApproval);
 
       document.querySelector("[data-focus-opinion]").addEventListener("click", () => {
+        if (currentView !== "todo") return;
         opinion.focus();
       });
 
       document.querySelector("[data-submit-approval]").addEventListener("click", () => {
+        if (currentView !== "todo" || currentApproval.status !== "待审批") {
+          showToast("当前视图仅查看审批记录");
+          return;
+        }
         const decision = document.querySelector("input[name='decision']:checked").value;
         if (decision !== "通过" && !opinion.value.trim()) {
           opinion.focus();
