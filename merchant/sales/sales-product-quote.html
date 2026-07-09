@@ -257,13 +257,11 @@
         <table>
           <thead>
             <tr>
-              <th>线路/产品名称</th>
-              <th>供货方</th>
-              <th>产品类型</th>
-              <th>主题标签</th>
-              <th>行程信息</th>
-              <th>起售价</th>
+              <th>商品/来源</th>
+              <th>类型/目的地</th>
               <th>最近可售</th>
+              <th>价格/口径</th>
+              <th>余位/库存</th>
               <th>销售状态</th>
               <th>操作</th>
             </tr>
@@ -753,10 +751,47 @@
         statusWrap.appendChild(statusActions);
       }
 
-      function createCell(text, className) {
+      function scheduleParts(card) {
+        var info = cardInfo(card);
+        var text = String(info.schedule || '').replace(/\s+/g, ' ').trim();
+        var parts = text.split('：');
+        var body = parts.length > 1 ? parts.slice(1).join('：') : text;
+        var values = body.split('/').map(function (item) { return item.trim(); }).filter(Boolean);
+        if (card.dataset.type === '单项服务') {
+          return {
+            label: parts[0] || '服务内容',
+            date: card.dataset.scheduleDate ? card.dataset.scheduleDate + ' 起受理' : '随时受理',
+            stock: values.join(' / ') || card.dataset.stockLevel || '可办理',
+            raw: text
+          };
+        }
+        var date = values[0] || (card.dataset.scheduleDate ? card.dataset.scheduleDate : '待确认');
+        var stock = values[1] || card.dataset.stockLevel || '待确认';
+        var label = parts[0] || (card.dataset.type === '邮轮' ? '可售航次' : card.dataset.type === '专列' ? '可售班期' : card.dataset.type === '单项服务' ? '服务内容' : '可售团期');
+        return { label: label, date: date, stock: stock, raw: text };
+      }
+
+      function sourceText(card) {
+        if (!card) return '待确认';
+        if (card.dataset.type === '外采产品') return (card.dataset.model || '外采代理') + ' · ' + (card.dataset.supplier || '供货方待确认');
+        if ((card.dataset.model || '') !== '自营') return (card.dataset.model || '甄选代理') + ' · ' + (card.dataset.supplier || '供货方待确认');
+        return (card.dataset.model || '自营') + ' · ' + (card.dataset.supplier || '凯撒');
+      }
+
+      function createStackCell(lines, className) {
         var cell = document.createElement('td');
-        if (className) cell.className = className;
-        cell.textContent = text || '';
+        var stack = document.createElement('div');
+        cell.className = className || '';
+        stack.className = 'market-table-cell';
+        lines.filter(function (line) {
+          return line && (typeof line !== 'object' || line.text);
+        }).slice(0, 3).forEach(function (line, index) {
+          var node = document.createElement(index === 0 ? 'strong' : 'span');
+          if (line && line.className) node.className = line.className;
+          node.textContent = line && typeof line === 'object' ? line.text : line;
+          stack.appendChild(node);
+        });
+        cell.appendChild(stack);
         return cell;
       }
 
@@ -766,33 +801,41 @@
           var index = productCards.indexOf(card);
           var row = document.createElement('tr');
           var info = cardInfo(card);
+          var schedule = scheduleParts(card);
           row.dataset.productIndex = String(index);
           row.setAttribute('tabindex', '0');
           row.setAttribute('role', 'button');
 
-          var nameCell = createCell('', 'market-product-table-name');
-          var name = document.createElement('strong');
-          var model = document.createElement('span');
-          name.textContent = card.dataset.product;
-          model.textContent = card.dataset.model || '自营';
-          nameCell.appendChild(name);
-          nameCell.appendChild(model);
-          row.appendChild(nameCell);
-          row.appendChild(createCell(card.dataset.supplier));
+          row.appendChild(createStackCell([
+            card.dataset.product,
+            sourceText(card),
+            themeTagText(card)
+          ], 'market-product-table-name'));
 
-          var typeCell = document.createElement('td');
-          var typeTag = document.createElement('span');
-          typeTag.className = typeTagClass(card.dataset.type);
-          typeTag.textContent = card.dataset.type;
-          typeCell.appendChild(typeTag);
-          row.appendChild(typeCell);
+          row.appendChild(createStackCell([
+            travelTypeText(card),
+            info.destination + ' / ' + info.depart,
+            info.duration
+          ], 'market-product-table-type'));
 
-          row.appendChild(createCell(themeTagText(card)));
-          row.appendChild(createCell([info.destination, info.duration, info.depart].join(' / ')));
-          row.appendChild(createCell(referencePrice(card), 'market-product-table-price'));
-          row.appendChild(createCell(info.schedule));
+          row.appendChild(createStackCell([
+            schedule.date,
+            schedule.label,
+            card.dataset.scheduleDate || ''
+          ], 'market-product-table-availability'));
+
+          row.appendChild(createStackCell([
+            referencePrice(card),
+            card.dataset.priceModel || '报价口径待确认'
+          ], 'market-product-table-price'));
+
+          row.appendChild(createStackCell([
+            schedule.stock,
+            card.dataset.stockLevel || productSaleStatus(card)
+          ], 'market-product-table-stock'));
 
           var statusCell = document.createElement('td');
+          statusCell.className = 'market-product-table-status';
           var statusTag = document.createElement('span');
           statusTag.className = saleStatusTagClass(productSaleStatus(card));
           statusTag.textContent = productSaleStatus(card);
@@ -800,14 +843,17 @@
           row.appendChild(statusCell);
 
           var actionCell = document.createElement('td');
-          actionCell.className = 'table-action';
+          actionCell.className = 'market-product-table-action';
+          var actionWrap = document.createElement('div');
+          actionWrap.className = 'table-action';
           var scheduleButton = document.createElement('button');
           scheduleButton.type = 'button';
           scheduleButton.dataset.openMarketDetail = '';
           scheduleButton.dataset.productIndex = String(index);
           scheduleButton.className = 'table-action-primary';
           scheduleButton.textContent = '查看班期';
-          actionCell.appendChild(scheduleButton);
+          actionWrap.appendChild(scheduleButton);
+          actionCell.appendChild(actionWrap);
           row.appendChild(actionCell);
 
           row.addEventListener('click', function (event) {
