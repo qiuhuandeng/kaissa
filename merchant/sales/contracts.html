@@ -30,9 +30,10 @@
           <select id="contractStatus">
             <option>全部状态</option>
             <option>待生成</option>
+            <option>待发送</option>
             <option>待签署</option>
             <option>已签署</option>
-            <option>补充条款待确认</option>
+            <option>待归档</option>
             <option>已作废</option>
           </select>
         </div>
@@ -75,6 +76,15 @@
             <option>不适用</option>
           </select>
         </div>
+        <div class="filter-item filter-item-status">
+          <label class="sr-only" for="contractRisk">风险提示</label>
+          <select id="contractRisk">
+            <option>全部风险</option>
+            <option>超期未签</option>
+            <option>条款待确认</option>
+            <option>无风险</option>
+          </select>
+        </div>
         <div class="filter-item filter-item-wide filter-item-date-range">
           <label class="sr-only">出行日期范围</label>
           <div class="date-range">
@@ -86,133 +96,137 @@
         <div class="filter-actions">
           <button id="searchContracts" class="btn btn-secondary" type="button">搜索</button>
           <button id="resetContracts" class="btn btn-secondary" type="button">重置</button>
-          <button class="btn btn-warning" type="button" data-open-batch-remind>批量催签</button>
+          <button id="batchContractRemind" class="btn btn-warning" type="button" data-open-batch-remind hidden>批量催签</button>
+          <span id="contractSelectedText" class="contracts-selected-text"></span>
         </div>
       </div>
     </section>
 
 
-  <nav class="tab-bar contracts-tabs list-surface-tabs" aria-label="签署状态筛选" data-filter-tabs data-filter-target="#contractRows">
+  <nav class="tab-bar contracts-tabs list-surface-tabs list-filter-tabs" aria-label="签署状态筛选" data-filter-tabs data-filter-tabs-ready="true" data-filter-target="#contractRows">
     <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
-    <button class="tab-item contracts-tab-warning" type="button" data-filter-value="未签署">未签署</button>
+    <button class="tab-item" type="button" data-filter-value="待生成">待生成</button>
+    <button class="tab-item" type="button" data-filter-value="待发送">待发送</button>
+    <button class="tab-item contracts-tab-warning" type="button" data-filter-value="待签署">待签署</button>
     <button class="tab-item" type="button" data-filter-value="已签署">已签署</button>
-    <button class="tab-item" type="button" data-filter-value="超期预警">超期预警</button>
+    <button class="tab-item" type="button" data-filter-value="待归档">待归档</button>
     <button class="tab-item" type="button" data-filter-value="已作废">已作废</button>
   </nav>
 
   <section class="table-wrap contracts-table-wrap list-surface-table list-table-with-pagination" aria-label="合同列表">
-    <table>
+    <table class="table-column-runtime">
       <thead>
         <tr>
+          <th class="contracts-select-head"><input id="selectAllContracts" type="checkbox" aria-label="选择当前页可催签合同"></th>
           <th>合同/订单</th>
-          <th>线路/项目</th>
           <th>客户/签署对象</th>
-          <th>合同类型</th>
-          <th>合同金额</th>
-          <th>归属/规则</th>
+          <th>产品/出行</th>
+          <th>合同类型/条款</th>
+          <th>合同金额/收款</th>
           <th>签署状态</th>
-          <th>操作</th>
+          <th>负责人/门市</th>
+          <th class="contracts-action-head">操作</th>
         </tr>
       </thead>
       <tbody id="contractRows">
-        <tr data-tab-status="待签署 未签署" data-product-type="单团项目" data-contract-status="待签署" data-supplement-status="已确认" data-contract-no="CTR-MICE-20260704-001" data-order-no="KSMICE20260704001" data-project-no="MICE-20250623-001" data-project-group-no="MICE20250915001" data-customer="北京某科技有限公司" data-passengers="企业团队80人" data-store="上海会展门市" data-store-rule="大客户阶段收款" data-product-name="某科技公司2025年会欧洲行" data-plan="方案A 豪华五星版" data-schedule="MICE20250915001" data-date-range="2025-09-15 至 2025-09-24" data-template="项目旅游服务合同" data-version="V1.0" data-status="待签署" data-sent-at="-" data-signed-at="-" data-amount="¥1,906,000" data-receivable="阶段应收计划待确认" data-paid="¥0" data-finance="合同确认后进入订单应收计划，认款在财务处理" data-quote-version="V4 / 客户确认版" data-receivable-plan="首款30% ¥571,800；进度款50% ¥953,000；尾款20% ¥381,200" data-roster-deadline="2025-08-31" data-change-rule="人数、日期、服务范围变化需先形成项目变更，再更新合同附件和阶段应收" data-clause="锁定报价、企业团队名单、会议活动服务、阶段收款、人数变更、客户专属项目团" data-refund="锁定后人数、日期、服务标准变化进入单团项目变更记录，涉及退款按订单售后和财务退款执行。">
-          <td><strong>CTR-MICE-20260704-001</strong><br><a class="link-primary" href="orders-detail.html?type=project&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=independent&amp;quoteVersion=A&amp;amount=1906000&amp;people=80">KSMICE20260704001</a></td>
-          <td><span class="tag tag-purple">单团项目</span><br>某科技公司2025年会欧洲行</td>
-          <td>方案A 豪华五星版<br><span class="text-muted">项目团 MICE20250915001 / 2025-09-15出发</span></td>
-          <td>项目旅游服务合同<br><span class="tag tag-green">锁定报价已确认</span></td>
-          <td>北京某科技有限公司<br><span class="text-muted">企业团队80人</span></td>
-          <td>上海会展门市<br><span class="tag tag-blue">大客户阶段收款</span></td>
-          <td><strong class="amount-strong">¥1,906,000</strong><br><span class="text-muted">阶段应收待确认</span></td>
-          <td><span class="tag tag-orange">待签署</span><br><span class="text-muted">锁定报价后待发送</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><button type="button" data-open-send-contract>发送</button><button type="button" data-download-contract>下载</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item" href="orders-detail.html?type=project&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=independent&amp;quoteVersion=A&amp;amount=1906000&amp;people=80">查看项目订单</a><a class="dropdown-item" href="../tour/product-custom-detail.html?projectNo=MICE-20250623-001">查看单团项目</a><a class="dropdown-item" href="../tour/schedules-detail.html?type=project&amp;source=customProject&amp;groupMode=independent&amp;scheduleNo=MICE20250915001&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8">查看项目团</a><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
+        <tr data-tab-status="待发送 未签署" data-product-type="单团项目" data-contract-status="待发送" data-supplement-status="已确认" data-risk-status="无风险" data-contract-no="CTR-MICE-20260704-001" data-order-no="KSMICE20260704001" data-project-no="MICE-20250623-001" data-project-group-no="MICE20250915001" data-customer="北京某科技有限公司" data-passengers="企业团队80人" data-store="上海会展门市" data-store-rule="大客户阶段收款" data-product-name="某科技公司2025年会欧洲行" data-plan="方案A 豪华五星版" data-schedule="MICE20250915001" data-date-range="2025-09-15 至 2025-09-24" data-template="项目旅游服务合同" data-version="V1.0" data-status="待发送" data-sent-at="-" data-signed-at="-" data-amount="¥1,906,000" data-receivable="阶段应收计划待确认" data-paid="¥0" data-finance="合同确认后进入订单应收计划，认款在财务处理" data-quote-version="V4 / 客户确认版" data-receivable-plan="首款30% ¥571,800；进度款50% ¥953,000；尾款20% ¥381,200" data-roster-deadline="2025-08-31" data-change-rule="人数、日期、服务范围变化需先形成项目变更，再更新合同附件和阶段应收" data-clause="锁定报价、企业团队名单、会议活动服务、阶段收款、人数变更、客户专属项目团" data-refund="锁定后人数、日期、服务范围变化进入单团项目变更记录，涉及退款按订单售后和财务退款执行。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-MICE-20260704-001" disabled></td>
+          <td class="contracts-id-cell"><strong>CTR-MICE-20260704-001</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=project&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=independent&amp;quoteVersion=A&amp;amount=1906000&amp;people=80">KSMICE20260704001</a></td>
+          <td class="contracts-party-cell"><strong>北京某科技有限公司</strong><span class="contract-cell-sub">企业团队80人</span></td>
+          <td class="contracts-product-cell"><strong>某科技公司2025年会欧洲行</strong><span class="contract-cell-sub">方案A 豪华五星版</span><span class="contract-cell-sub">09-15 至 09-24</span></td>
+          <td class="contracts-type-cell"><strong>项目旅游服务合同</strong><span class="contract-cell-sub">条款已确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥1,906,000</strong><span class="contract-cell-sub">已收 ¥0 · 阶段应收待确认</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-orange">待发送</span><span class="contract-cell-sub">锁定报价已确认</span></td>
+          <td class="contracts-owner-cell"><strong>周敏</strong><span class="contract-cell-sub">上海会展门市</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-open-send-contract class="table-action-primary">发送</button><button type="button" data-open-contract-view>详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item" data-download-contract>下载草稿</button><a class="dropdown-item" href="orders-detail.html?type=project&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001">查看订单</a><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
         </tr>
-        <tr data-tab-status="待签署 未签署" data-product-type="出境游" data-contract-status="待签署" data-supplement-status="已确认" data-contract-no="CTR-20250623-01058" data-order-no="ORD-20250623-01058" data-customer="陈晓明" data-passengers="陈晓明、李梅（2人）" data-store="上海徐汇门市" data-store-rule="先交团费" data-product-name="法瑞意经典15日游" data-plan="经济款 法瑞意经典15日" data-schedule="EU-FRA-20250725-001" data-date-range="2025-07-25 至 2025-08-08" data-template="团队出境旅游合同" data-version="V1.0" data-status="待签署" data-sent-at="2025-06-23 09:15" data-signed-at="-" data-amount="¥25,600" data-receivable="SK20250623058" data-paid="¥12,800" data-finance="应收单已生成，尾款待收" data-clause="签证材料、单房差、成团确认、取消损失" data-refund="按团队出境旅游合同阶梯退改规则执行，已发生签证和地接成本需先扣减。">
-          <td><strong>CTR-20250623-01058</strong><br><a class="link-primary" href="orders-detail.html?type=group">ORD-20250623-01058</a></td>
-          <td><span class="tag tag-blue">出境游</span><br>法瑞意经典15日游</td>
-          <td>经济款 法瑞意经典15日<br><span class="text-muted">团期 EU-FRA-20250725-001 / 2025-07-25出发</span></td>
-          <td>团队出境旅游合同<br><span class="tag tag-green">条款已确认</span></td>
-          <td>陈晓明<br><span class="text-muted">陈晓明、李梅（2人）</span></td>
-          <td>上海徐汇门市<br><span class="tag tag-orange">先交团费</span></td>
-          <td><strong class="amount-strong">¥25,600</strong><br><span class="text-muted">已收 ¥12,800 / 尾款待收</span></td>
-          <td><span class="tag tag-orange">待签署</span><br><span class="text-muted">2025-06-23 09:15已发送</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><button type="button" data-open-batch-remind>重发</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
+        <tr data-tab-status="待签署 未签署" data-product-type="出境游" data-contract-status="待签署" data-supplement-status="已确认" data-risk-status="无风险" data-contract-no="CTR-20250623-01058" data-order-no="ORD-20250623-01058" data-customer="陈晓明" data-passengers="陈晓明、李梅（2人）" data-store="上海徐汇门市" data-store-rule="先交团费" data-product-name="法瑞意经典15日游" data-plan="经济款 法瑞意经典15日" data-schedule="EU-FRA-20250725-001" data-date-range="2025-07-25 至 2025-08-08" data-template="团队出境旅游合同" data-version="V1.0" data-status="待签署" data-sent-at="2025-06-23 09:15" data-signed-at="-" data-amount="¥25,600" data-receivable="SK20250623058" data-paid="¥12,800" data-finance="应收单已生成，尾款待收" data-clause="签证材料、单房差、成团确认、取消损失" data-refund="按团队出境旅游合同阶梯退改规则执行，已发生签证和地接成本需先扣减。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250623-01058"></td>
+          <td class="contracts-id-cell"><strong>CTR-20250623-01058</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=group">ORD-20250623-01058</a></td>
+          <td class="contracts-party-cell"><strong>陈晓明</strong><span class="contract-cell-sub">陈晓明、李梅（2人）</span></td>
+          <td class="contracts-product-cell"><strong>法瑞意经典15日游</strong><span class="contract-cell-sub">经济款 法瑞意经典15日</span><span class="contract-cell-sub">07-25 至 08-08</span></td>
+          <td class="contracts-type-cell"><strong>团队出境旅游合同</strong><span class="contract-cell-sub">条款已确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥25,600</strong><span class="contract-cell-sub">已收 ¥12,800 · 未收 ¥12,800</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-orange">待签署</span><span class="contract-cell-sub">06-23 09:15已发送</span></td>
+          <td class="contracts-owner-cell"><strong>赵佳</strong><span class="contract-cell-sub">上海徐汇门市</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-open-batch-remind class="table-action-primary">催签</button><button type="button" data-open-contract-view>详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item" data-download-contract>下载</button><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
         </tr>
-        <tr data-tab-status="已签署" data-product-type="出境游" data-contract-status="已签署" data-supplement-status="已确认" data-contract-no="CTR-20250622-01055" data-order-no="ORD-20250622-01055" data-customer="张丽华" data-passengers="张丽华等4人" data-store="北京王府井旗舰店" data-store-rule="预存扣款" data-product-name="德捷奥深度10日" data-plan="品质款 德捷奥深度10日" data-schedule="EU-DEU-20250720-001" data-date-range="2025-07-20 至 2025-07-29" data-template="团队出境旅游合同" data-version="V1.0" data-status="已签署" data-sent-at="2025-06-22 16:30" data-signed-at="2025-06-22 17:45" data-amount="¥52,400" data-receivable="SK20250622055" data-paid="¥52,400" data-finance="已收全款，NC收款凭证待推送" data-clause="成团确认、签证提交、购物安排为无、单房差" data-refund="出发前按阶梯损失扣减，签证送签后签证费用不退。">
-          <td><strong>CTR-20250622-01055</strong><br><a class="link-primary" href="orders-detail.html?type=group">ORD-20250622-01055</a></td>
-          <td><span class="tag tag-blue">出境游</span><br>德捷奥深度10日</td>
-          <td>品质款 德捷奥深度10日<br><span class="text-muted">团期 EU-DEU-20250720-001 / 2025-07-20出发</span></td>
-          <td>团队出境旅游合同<br><span class="tag tag-green">条款已确认</span></td>
-          <td>张丽华<br><span class="text-muted">张丽华等4人</span></td>
-          <td>北京王府井旗舰店<br><span class="tag tag-green">预存扣款</span></td>
-          <td><strong class="amount-strong">¥52,400</strong><br><span class="text-muted">已收 ¥52,400 / 应收已清</span></td>
-          <td><span class="tag tag-green">已签署</span><br><span class="text-muted">2025-06-22 17:45</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">下载</button></span></span></div></td>
+        <tr data-tab-status="待归档 已签署" data-product-type="出境游" data-contract-status="待归档" data-supplement-status="已确认" data-risk-status="无风险" data-contract-no="CTR-20250622-01055" data-order-no="ORD-20250622-01055" data-customer="张丽华" data-passengers="张丽华等4人" data-store="北京王府井旗舰店" data-store-rule="预存扣款" data-product-name="德捷奥深度10日" data-plan="品质款 德捷奥深度10日" data-schedule="EU-DEU-20250720-001" data-date-range="2025-07-20 至 2025-07-29" data-template="团队出境旅游合同" data-version="V1.0" data-status="待归档" data-sent-at="2025-06-22 16:30" data-signed-at="2025-06-22 17:45" data-amount="¥52,400" data-receivable="SK20250622055" data-paid="¥52,400" data-finance="已收全款，合同待归档" data-clause="成团确认、签证提交、购物安排为无、单房差" data-refund="出发前按阶梯损失扣减，签证送签后签证费用不退。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250622-01055" disabled></td>
+          <td class="contracts-id-cell"><strong>CTR-20250622-01055</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=group">ORD-20250622-01055</a></td>
+          <td class="contracts-party-cell"><strong>张丽华</strong><span class="contract-cell-sub">张丽华等4人</span></td>
+          <td class="contracts-product-cell"><strong>德捷奥深度10日</strong><span class="contract-cell-sub">品质款 德捷奥深度10日</span><span class="contract-cell-sub">07-20 至 07-29</span></td>
+          <td class="contracts-type-cell"><strong>团队出境旅游合同</strong><span class="contract-cell-sub">条款已确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥52,400</strong><span class="contract-cell-sub">已收 ¥52,400 · 未收 ¥0</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-blue">待归档</span><span class="contract-cell-sub">签署 06-22 17:45</span></td>
+          <td class="contracts-owner-cell"><strong>李然</strong><span class="contract-cell-sub">北京王府井旗舰店</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-contract-archive class="table-action-primary">归档</button><button type="button" data-download-contract>下载</button><button type="button" data-open-contract-view>详情</button></div></td>
         </tr>
-        <tr data-tab-status="补充条款待确认 未签署" data-product-type="邮轮" data-contract-status="补充条款待确认" data-supplement-status="待确认" data-contract-no="CTR-20250619-01042" data-order-no="ORD-20250619-01042" data-customer="高梦婷" data-passengers="高梦婷、周伟（2人）" data-store="北京王府井旗舰店" data-store-rule="财务确认收款" data-product-name="理想号地中海邮轮" data-plan="阳台舱岸上全含方案" data-schedule="CR-MED-20250720-001" data-date-range="2025-07-20 至 2025-08-01" data-template="邮轮旅游合同+舱房补充条款" data-version="V1.2" data-status="补充条款待确认" data-sent-at="2025-06-19 14:00" data-signed-at="-" data-amount="¥57,600" data-receivable="SK20250619042" data-paid="¥57,600" data-finance="已收全款，船票应付待审批" data-clause="舱型/舱号、船票出具、港口税、小费、岸上观光、船方取消规则" data-refund="船票出具后按船方取消规则扣损；港口税、小费和岸上观光需分别核算。">
-          <td><strong>CTR-20250619-01042</strong><br><a class="link-primary" href="orders-detail.html?type=cruise">ORD-20250619-01042</a></td>
-          <td><span class="tag tag-purple">邮轮</span><br>理想号地中海邮轮</td>
-          <td>阳台舱岸上全含方案<br><span class="text-muted">团期 CR-MED-20250720-001 / 2025-07-20登船</span></td>
-          <td>邮轮旅游合同+舱房补充条款<br><span class="tag tag-orange">舱房条款待确认</span></td>
-          <td>高梦婷<br><span class="text-muted">高梦婷、周伟（2人）</span></td>
-          <td>北京王府井旗舰店<br><span class="tag tag-blue">财务确认收款</span></td>
-          <td><strong class="amount-strong">¥57,600</strong><br><span class="text-muted">已收 ¥57,600 / 船票应付待审</span></td>
-          <td><span class="tag tag-orange">补充条款待确认</span><br><span class="text-muted">船票未出，舱号待回传</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><button type="button" data-open-batch-remind>催确认</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">下载草稿</button><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
+        <tr data-tab-status="待签署 未签署 条款待确认" data-product-type="邮轮" data-contract-status="待签署" data-supplement-status="待确认" data-risk-status="条款待确认" data-contract-no="CTR-20250619-01042" data-order-no="ORD-20250619-01042" data-customer="高梦婷" data-passengers="高梦婷、周伟（2人）" data-store="北京王府井旗舰店" data-store-rule="财务确认收款" data-product-name="理想号地中海邮轮" data-plan="阳台舱岸上全含方案" data-schedule="CR-MED-20250720-001" data-date-range="2025-07-20 至 2025-08-01" data-template="邮轮旅游合同+舱房补充条款" data-version="V1.2" data-status="待签署" data-sent-at="2025-06-19 14:00" data-signed-at="-" data-amount="¥57,600" data-receivable="SK20250619042" data-paid="¥57,600" data-finance="已收全款，舱房条款待确认" data-clause="舱型/舱号、船票出具、港口税、小费、岸上观光、船方取消规则" data-refund="船票出具后按船方取消规则扣损；港口税、小费和岸上观光需分别核算。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250619-01042"></td>
+          <td class="contracts-id-cell"><strong>CTR-20250619-01042</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=cruise">ORD-20250619-01042</a></td>
+          <td class="contracts-party-cell"><strong>高梦婷</strong><span class="contract-cell-sub">高梦婷、周伟（2人）</span></td>
+          <td class="contracts-product-cell"><strong>理想号地中海邮轮</strong><span class="contract-cell-sub">阳台舱岸上全含方案</span><span class="contract-cell-sub">07-20 至 08-01</span></td>
+          <td class="contracts-type-cell"><strong>邮轮旅游合同+舱房补充条款</strong><span class="contract-cell-sub contracts-risk-text">舱房条款待确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥57,600</strong><span class="contract-cell-sub">已收 ¥57,600 · 未收 ¥0</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-orange">待签署</span><span class="contract-cell-sub">06-19 14:00已发送</span></td>
+          <td class="contracts-owner-cell"><strong>李然</strong><span class="contract-cell-sub">北京王府井旗舰店</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-open-batch-remind class="table-action-primary">催确认</button><button type="button" data-open-contract-view>详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item" data-download-contract>下载草稿</button><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
         </tr>
-        <tr data-tab-status="已签署" data-product-type="邮轮" data-contract-status="已签署" data-supplement-status="已确认" data-contract-no="CTR-20250617-01036" data-order-no="ORD-20250617-01036" data-customer="刘洋" data-passengers="刘洋等3人" data-store="上海会展门市" data-store-rule="预存扣款" data-product-name="理想号爱琴海邮轮" data-plan="海景舱经典方案" data-schedule="CR-AEG-20250803-001" data-date-range="2025-08-03 至 2025-08-12" data-template="邮轮旅游合同+舱房补充条款" data-version="V1.2" data-status="已签署" data-sent-at="2025-06-17 10:30" data-signed-at="2025-06-17 18:10" data-amount="¥72,800" data-receivable="SK20250617036" data-paid="¥72,800" data-finance="全款已收，港口税明细已冻结" data-clause="船票、港口税、小费政策、岸上项目、登船资料" data-refund="已确认船方阶梯取消损失，退款需先复核船票状态。">
-          <td><strong>CTR-20250617-01036</strong><br><a class="link-primary" href="orders-detail.html?type=cruise">ORD-20250617-01036</a></td>
-          <td><span class="tag tag-purple">邮轮</span><br>理想号爱琴海邮轮</td>
-          <td>海景舱经典方案<br><span class="text-muted">团期 CR-AEG-20250803-001 / 2025-08-03登船</span></td>
-          <td>邮轮旅游合同+舱房补充条款<br><span class="tag tag-green">条款已确认</span></td>
-          <td>刘洋<br><span class="text-muted">刘洋等3人</span></td>
-          <td>上海会展门市<br><span class="tag tag-green">预存扣款</span></td>
-          <td><strong class="amount-strong">¥72,800</strong><br><span class="text-muted">已收 ¥72,800 / 港口税已冻结</span></td>
-          <td><span class="tag tag-green">已签署</span><br><span class="text-muted">2025-06-17 18:10</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">下载</button></span></span></div></td>
+        <tr data-tab-status="已签署" data-product-type="邮轮" data-contract-status="已签署" data-supplement-status="已确认" data-risk-status="无风险" data-contract-no="CTR-20250617-01036" data-order-no="ORD-20250617-01036" data-customer="刘洋" data-passengers="刘洋等3人" data-store="上海会展门市" data-store-rule="预存扣款" data-product-name="理想号爱琴海邮轮" data-plan="海景舱经典方案" data-schedule="CR-AEG-20250803-001" data-date-range="2025-08-03 至 2025-08-12" data-template="邮轮旅游合同+舱房补充条款" data-version="V1.2" data-status="已签署" data-sent-at="2025-06-17 10:30" data-signed-at="2025-06-17 18:10" data-amount="¥72,800" data-receivable="SK20250617036" data-paid="¥72,800" data-finance="全款已收，合同已归档" data-clause="船票、港口税、小费政策、岸上项目、登船资料" data-refund="已确认船方阶梯取消损失，退款需先复核船票状态。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250617-01036" disabled></td>
+          <td class="contracts-id-cell"><strong>CTR-20250617-01036</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=cruise">ORD-20250617-01036</a></td>
+          <td class="contracts-party-cell"><strong>刘洋</strong><span class="contract-cell-sub">刘洋等3人</span></td>
+          <td class="contracts-product-cell"><strong>理想号爱琴海邮轮</strong><span class="contract-cell-sub">海景舱经典方案</span><span class="contract-cell-sub">08-03 至 08-12</span></td>
+          <td class="contracts-type-cell"><strong>邮轮旅游合同+舱房补充条款</strong><span class="contract-cell-sub">条款已确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥72,800</strong><span class="contract-cell-sub">已收 ¥72,800 · 未收 ¥0</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-green">已签署</span><span class="contract-cell-sub">签署 06-17 18:10</span></td>
+          <td class="contracts-owner-cell"><strong>周敏</strong><span class="contract-cell-sub">上海会展门市</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-download-contract class="table-action-primary">下载</button><button type="button" data-open-contract-view>详情</button></div></td>
         </tr>
-        <tr data-tab-status="待签署 未签署" data-product-type="专列" data-contract-status="待签署" data-supplement-status="待确认" data-contract-no="CTR-20250624-01062" data-order-no="ORD-20250624-01062" data-customer="王强" data-passengers="王强、陈红、王小雨（3人）" data-store="上海会展门市" data-store-rule="总部复核" data-product-name="东方丝路专列9日" data-plan="软卧标准方案" data-schedule="TR-SILK-20250805-001" data-date-range="2025-08-05 至 2025-08-13" data-template="专列旅游确认书+铺位规则" data-version="V1.0" data-status="待签署" data-sent-at="2025-06-24 11:20" data-signed-at="-" data-amount="¥28,760" data-receivable="SK20250624062" data-paid="¥28,760" data-finance="全款已收，运营商应付待审批" data-clause="铺位/包厢、实名制名单、退铺规则、集合站、运营商确认" data-refund="铺位锁定后按运营商退铺规则扣损；实名制名单提交后退改需人工复核。">
-          <td><strong>CTR-20250624-01062</strong><br><a class="link-primary" href="orders-detail.html?type=train">ORD-20250624-01062</a></td>
-          <td><span class="tag tag-orange">专列</span><br>东方丝路专列9日</td>
-          <td>软卧标准方案<br><span class="text-muted">团期 TR-SILK-20250805-001 / 2025-08-05发车</span></td>
-          <td>专列旅游确认书+铺位规则<br><span class="tag tag-orange">铺位条款待确认</span></td>
-          <td>王强<br><span class="text-muted">王强、陈红、王小雨（3人）</span></td>
-          <td>上海会展门市<br><span class="tag tag-orange">总部复核</span></td>
-          <td><strong class="amount-strong">¥28,760</strong><br><span class="text-muted">已收 ¥28,760 / 应付待审</span></td>
-          <td><span class="tag tag-orange">待签署</span><br><span class="text-muted">铺位号待运营商回传</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><button type="button" data-open-batch-remind>重发</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
+        <tr data-tab-status="待签署 未签署 条款待确认" data-product-type="专列" data-contract-status="待签署" data-supplement-status="待确认" data-risk-status="条款待确认" data-contract-no="CTR-20250624-01062" data-order-no="ORD-20250624-01062" data-customer="王强" data-passengers="王强、陈红、王小雨（3人）" data-store="上海会展门市" data-store-rule="总部复核" data-product-name="东方丝路专列9日" data-plan="软卧标准方案" data-schedule="TR-SILK-20250805-001" data-date-range="2025-08-05 至 2025-08-13" data-template="专列旅游确认书+铺位规则" data-version="V1.0" data-status="待签署" data-sent-at="2025-06-24 11:20" data-signed-at="-" data-amount="¥28,760" data-receivable="SK20250624062" data-paid="¥28,760" data-finance="全款已收，铺位条款待确认" data-clause="铺位/包厢、实名制名单、退铺规则、集合站、运营商确认" data-refund="铺位锁定后按运营商退铺规则扣损；实名制名单提交后退改需人工复核。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250624-01062"></td>
+          <td class="contracts-id-cell"><strong>CTR-20250624-01062</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=train">ORD-20250624-01062</a></td>
+          <td class="contracts-party-cell"><strong>王强</strong><span class="contract-cell-sub">王强、陈红、王小雨（3人）</span></td>
+          <td class="contracts-product-cell"><strong>东方丝路专列9日</strong><span class="contract-cell-sub">软卧标准方案</span><span class="contract-cell-sub">08-05 至 08-13</span></td>
+          <td class="contracts-type-cell"><strong>专列旅游确认书+铺位规则</strong><span class="contract-cell-sub contracts-risk-text">铺位条款待确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥28,760</strong><span class="contract-cell-sub">已收 ¥28,760 · 未收 ¥0</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-orange">待签署</span><span class="contract-cell-sub">06-24 11:20已发送</span></td>
+          <td class="contracts-owner-cell"><strong>周敏</strong><span class="contract-cell-sub">上海会展门市</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-open-batch-remind class="table-action-primary">催签</button><button type="button" data-open-contract-view>详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item" data-download-contract>下载</button><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
         </tr>
-        <tr data-tab-status="已签署" data-product-type="专列" data-contract-status="已签署" data-supplement-status="已确认" data-contract-no="CTR-20250618-01039" data-order-no="ORD-20250618-01039" data-customer="吴芳" data-passengers="吴芳等2人" data-store="北京王府井旗舰店" data-store-rule="预存扣款" data-product-name="北疆秋色专列12日" data-plan="高级软卧方案" data-schedule="TR-XJ-20250918-001" data-date-range="2025-09-18 至 2025-09-29" data-template="专列旅游确认书+铺位规则" data-version="V1.0" data-status="已签署" data-sent-at="2025-06-18 15:20" data-signed-at="2025-06-18 16:05" data-amount="¥39,600" data-receivable="SK20250618039" data-paid="¥39,600" data-finance="已收全款，铺位成本已锁" data-clause="车厢/铺位、上下车站、集合时间、退铺规则" data-refund="退铺扣损按运营商确认规则执行；集合站变更需重新确认。">
-          <td><strong>CTR-20250618-01039</strong><br><a class="link-primary" href="orders-detail.html?type=train">ORD-20250618-01039</a></td>
-          <td><span class="tag tag-orange">专列</span><br>北疆秋色专列12日</td>
-          <td>高级软卧方案<br><span class="text-muted">团期 TR-XJ-20250918-001 / 2025-09-18发车</span></td>
-          <td>专列旅游确认书+铺位规则<br><span class="tag tag-green">条款已确认</span></td>
-          <td>吴芳<br><span class="text-muted">吴芳等2人</span></td>
-          <td>北京王府井旗舰店<br><span class="tag tag-green">预存扣款</span></td>
-          <td><strong class="amount-strong">¥39,600</strong><br><span class="text-muted">已收 ¥39,600 / 成本已锁</span></td>
-          <td><span class="tag tag-green">已签署</span><br><span class="text-muted">2025-06-18 16:05</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">下载</button></span></span></div></td>
+        <tr data-tab-status="已签署" data-product-type="专列" data-contract-status="已签署" data-supplement-status="已确认" data-risk-status="无风险" data-contract-no="CTR-20250618-01039" data-order-no="ORD-20250618-01039" data-customer="吴芳" data-passengers="吴芳等2人" data-store="北京王府井旗舰店" data-store-rule="预存扣款" data-product-name="北疆秋色专列12日" data-plan="高级软卧方案" data-schedule="TR-XJ-20250918-001" data-date-range="2025-09-18 至 2025-09-29" data-template="专列旅游确认书+铺位规则" data-version="V1.0" data-status="已签署" data-sent-at="2025-06-18 15:20" data-signed-at="2025-06-18 16:05" data-amount="¥39,600" data-receivable="SK20250618039" data-paid="¥39,600" data-finance="已收全款，合同已归档" data-clause="车厢/铺位、上下车站、集合时间、退铺规则" data-refund="退铺扣损按运营商确认规则执行；集合站变更需重新确认。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250618-01039" disabled></td>
+          <td class="contracts-id-cell"><strong>CTR-20250618-01039</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=train">ORD-20250618-01039</a></td>
+          <td class="contracts-party-cell"><strong>吴芳</strong><span class="contract-cell-sub">吴芳等2人</span></td>
+          <td class="contracts-product-cell"><strong>北疆秋色专列12日</strong><span class="contract-cell-sub">高级软卧方案</span><span class="contract-cell-sub">09-18 至 09-29</span></td>
+          <td class="contracts-type-cell"><strong>专列旅游确认书+铺位规则</strong><span class="contract-cell-sub">条款已确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥39,600</strong><span class="contract-cell-sub">已收 ¥39,600 · 未收 ¥0</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-green">已签署</span><span class="contract-cell-sub">签署 06-18 16:05</span></td>
+          <td class="contracts-owner-cell"><strong>李然</strong><span class="contract-cell-sub">北京王府井旗舰店</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-download-contract class="table-action-primary">下载</button><button type="button" data-open-contract-view>详情</button></div></td>
         </tr>
-        <tr data-tab-status="超期预警 待签署 未签署" data-product-type="出境游" data-contract-status="待签署" data-supplement-status="已确认" data-contract-no="CTR-20250620-01045" data-order-no="ORD-20250620-01045" data-customer="李大伟" data-passengers="李大伟等2人" data-store="广州天河门市" data-store-rule="先交团费" data-product-name="法瑞意经典15日游" data-plan="品质款 法瑞意经典15日" data-schedule="EU-FRA-20250625-001" data-date-range="2025-06-25 至 2025-07-09" data-template="团队出境旅游合同" data-version="V1.0" data-status="超期预警" data-sent-at="2025-06-20 09:30" data-signed-at="-" data-amount="¥31,200" data-receivable="SK20250620045" data-paid="¥15,600" data-finance="定金已收，尾款待收，出发前5天未签" data-clause="签证材料、领队服务、退改规则" data-refund="出发前5天取消已进入高损失区间，退款需计调确认已发生费用。">
-          <td><strong>CTR-20250620-01045</strong><br><a class="link-primary" href="orders-detail.html?type=group">ORD-20250620-01045</a></td>
-          <td><span class="tag tag-blue">出境游</span><br>法瑞意经典15日游</td>
-          <td>品质款 法瑞意经典15日<br><span class="text-muted">团期 EU-FRA-20250625-001 / 2025-06-25出发</span></td>
-          <td>团队出境旅游合同<br><span class="tag tag-green">条款已确认</span></td>
-          <td>李大伟<br><span class="text-muted">李大伟等2人</span></td>
-          <td>广州天河门市<br><span class="tag tag-orange">先交团费</span></td>
-          <td><strong class="amount-strong">¥31,200</strong><br><span class="text-muted">已收 ¥15,600 / 尾款待收</span></td>
-          <td><span class="tag tag-red">超期预警</span><br><span class="text-muted">出发5天内未签</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button><button type="button" data-open-batch-remind>紧急催签</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
+        <tr data-tab-status="待签署 未签署 超期未签" data-product-type="出境游" data-contract-status="待签署" data-supplement-status="已确认" data-risk-status="超期未签" data-contract-no="CTR-20250620-01045" data-order-no="ORD-20250620-01045" data-customer="李大伟" data-passengers="李大伟等2人" data-store="广州天河门市" data-store-rule="先交团费" data-product-name="法瑞意经典15日游" data-plan="品质款 法瑞意经典15日" data-schedule="EU-FRA-20250625-001" data-date-range="2025-06-25 至 2025-07-09" data-template="团队出境旅游合同" data-version="V1.0" data-status="待签署" data-sent-at="2025-06-20 09:30" data-signed-at="-" data-amount="¥31,200" data-receivable="SK20250620045" data-paid="¥15,600" data-finance="定金已收，尾款待收，出发前5天未签" data-clause="签证材料、领队服务、退改规则" data-refund="出发前5天取消已进入高损失区间，退款需计调确认已发生费用。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250620-01045"></td>
+          <td class="contracts-id-cell"><strong>CTR-20250620-01045</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=group">ORD-20250620-01045</a></td>
+          <td class="contracts-party-cell"><strong>李大伟</strong><span class="contract-cell-sub">李大伟等2人</span></td>
+          <td class="contracts-product-cell"><strong>法瑞意经典15日游</strong><span class="contract-cell-sub">品质款 法瑞意经典15日</span><span class="contract-cell-sub">06-25 至 07-09</span></td>
+          <td class="contracts-type-cell"><strong>团队出境旅游合同</strong><span class="contract-cell-sub">条款已确认</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥31,200</strong><span class="contract-cell-sub">已收 ¥15,600 · 未收 ¥15,600</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-orange">待签署</span><span class="contract-cell-sub contracts-danger-text">超期未签：出发5天内</span></td>
+          <td class="contracts-owner-cell"><strong>陈玲</strong><span class="contract-cell-sub">广州天河门市</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-open-batch-remind class="table-action-primary">紧急催签</button><button type="button" data-open-contract-view>详情</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item" data-download-contract>下载</button><button class="dropdown-item danger" type="button" data-open-void>作废</button></span></span></div></td>
         </tr>
-        <tr data-tab-status="已作废" data-product-type="出境游" data-contract-status="已作废" data-supplement-status="不适用" data-contract-no="CTR-20250601-00988" data-order-no="ORD-20250601-00988" data-customer="林婷婷" data-passengers="林婷婷（1人）" data-store="北京王府井旗舰店" data-store-rule="已释放" data-product-name="法瑞意经典15日游" data-plan="经济款 法瑞意经典15日" data-schedule="EU-FRA-20250615-001" data-date-range="2025-06-15 至 2025-06-29" data-template="团队出境旅游合同" data-version="V1.0" data-status="已作废" data-sent-at="2025-06-01 09:00" data-signed-at="-" data-amount="¥12,800" data-receivable="SK20250601088" data-paid="¥0" data-finance="订单已取消，应收已冲销" data-clause="作废后不可签署" data-refund="无已收款，不产生退款执行。">
-          <td><strong>CTR-20250601-00988</strong><br><a class="link-primary" href="orders-detail.html?type=group">ORD-20250601-00988</a></td>
-          <td><span class="tag tag-blue">出境游</span><br>法瑞意经典15日游</td>
-          <td>经济款 法瑞意经典15日<br><span class="text-muted">团期 EU-FRA-20250615-001 / 已取消</span></td>
-          <td>团队出境旅游合同<br><span class="tag tag-gray">不适用</span></td>
-          <td>林婷婷<br><span class="text-muted">林婷婷（1人）</span></td>
-          <td>北京王府井旗舰店<br><span class="tag tag-gray">已释放</span></td>
-          <td><strong class="amount-strong">¥12,800</strong><br><span class="text-muted">应收已冲销</span></td>
-          <td><span class="tag tag-gray">已作废</span><br><span class="text-muted">订单已取消</span></td>
-          <td><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button></div></td>
+        <tr data-tab-status="已作废" data-product-type="出境游" data-contract-status="已作废" data-supplement-status="不适用" data-risk-status="无风险" data-contract-no="CTR-20250601-00988" data-order-no="ORD-20250601-00988" data-customer="林婷婷" data-passengers="林婷婷（1人）" data-store="北京王府井旗舰店" data-store-rule="已释放" data-product-name="法瑞意经典15日游" data-plan="经济款 法瑞意经典15日" data-schedule="EU-FRA-20250615-001" data-date-range="2025-06-15 至 2025-06-29" data-template="团队出境旅游合同" data-version="V1.0" data-status="已作废" data-sent-at="2025-06-01 09:00" data-signed-at="-" data-amount="¥12,800" data-receivable="SK20250601088" data-paid="¥0" data-finance="订单已取消，应收已冲销" data-clause="作废后不可签署" data-refund="无已收款，不产生退款执行。">
+          <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-20250601-00988" disabled></td>
+          <td class="contracts-id-cell"><strong>CTR-20250601-00988</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=group">ORD-20250601-00988</a></td>
+          <td class="contracts-party-cell"><strong>林婷婷</strong><span class="contract-cell-sub">林婷婷（1人）</span></td>
+          <td class="contracts-product-cell"><strong>法瑞意经典15日游</strong><span class="contract-cell-sub">经济款 法瑞意经典15日</span><span class="contract-cell-sub">订单已取消</span></td>
+          <td class="contracts-type-cell"><strong>团队出境旅游合同</strong><span class="contract-cell-sub">不适用</span></td>
+          <td class="contracts-money-cell"><strong class="amount-strong">¥12,800</strong><span class="contract-cell-sub">应收已冲销</span></td>
+          <td class="contracts-status-cell"><span class="tag tag-gray">已作废</span><span class="contract-cell-sub">订单已取消</span></td>
+          <td class="contracts-owner-cell"><strong>李然</strong><span class="contract-cell-sub">北京王府井旗舰店</span></td>
+          <td class="contracts-action-cell"><div class="table-action"><button type="button" data-open-contract-view class="table-action-primary">详情</button></div></td>
         </tr>
       </tbody>
     </table>
@@ -388,19 +402,13 @@
           <table>
             <thead>
               <tr>
-                <th>客人姓名</th>
-                <th>线路</th>
-                <th>产品类型</th>
-                <th>出行安排</th>
-                <th>合同类型</th>
-                <th>开始日期</th>
+                <th>合同/客户</th>
+                <th>产品/出行</th>
+                <th>合同金额</th>
+                <th>签署状态</th>
               </tr>
             </thead>
-            <tbody>
-              <tr><td>陈晓明</td><td>法瑞意经典15日游</td><td>出境游</td><td>A线 法瑞意经典15日 / EU-FRA-20250725-001</td><td>团队出境旅游合同</td><td>2025-07-25</td></tr>
-              <tr><td>刘明月</td><td>北京印象5日游</td><td>自由行</td><td>北京印象套餐 / BJ-FIT-20250630-003</td><td>自由行服务确认单</td><td>2025-06-30</td></tr>
-              <tr><td>李大伟</td><td>法瑞意经典15日游</td><td>出境游</td><td>A线 法瑞意经典15日 / EU-FRA-20250625-001</td><td>团队出境旅游合同</td><td>2025-06-25</td></tr>
-              <tr><td>王强</td><td>东方丝路专列9日</td><td>专列</td><td>丝路经典线9天 / TR-SILK-20250805-001</td><td>专列旅游确认书+铺位规则</td><td>2025-08-05</td></tr>
+            <tbody id="batchRemindRows">
             </tbody>
           </table>
         </div>
@@ -526,13 +534,6 @@
         return normalizeContractType(row ? row.dataset.productType : '');
       }
 
-      function getCellText(cells, index) {
-        var cell = cells[index];
-        if (!cell) return '';
-        var link = index === 1 ? cell.querySelector('a') : null;
-        return (link ? link.textContent : cell.textContent).trim().replace(/\s+/g, ' ');
-      }
-
       function resolveDateRange(startDate, baseRange) {
         if (!startDate) return baseRange;
         if (baseRange && baseRange.indexOf(startDate + ' 至') === 0) return baseRange;
@@ -540,6 +541,7 @@
       }
 
       function statusTagClass(status) {
+        if (String(status || '').indexOf('待归档') >= 0) return 'tag tag-blue';
         if (String(status || '').indexOf('已签署') >= 0) return 'tag tag-green';
         if (String(status || '').indexOf('作废') >= 0) return 'tag tag-gray';
         if (String(status || '').indexOf('超期') >= 0) return 'tag tag-red';
@@ -584,51 +586,6 @@
         return String(value || '').split(/[、，,]/).map(function (item) {
           return item.trim();
         }).filter(Boolean);
-      }
-
-      function plainText(node) {
-        return (node ? node.textContent : '').replace(/\s+/g, ' ').trim();
-      }
-
-      function cleanCellHtml(cell) {
-        var clone = cell.cloneNode(true);
-        clone.querySelectorAll('.tag').forEach(function (tag) {
-          tag.remove();
-        });
-        return clone.innerHTML;
-      }
-
-      function contractLineHtml(row, productCell, scheduleCell) {
-        return cleanCellHtml(productCell) +
-          '<br><span class="text-muted">' + escapeHtml(row.dataset.productType || '') + '</span>' +
-          '<br>' + (scheduleCell ? scheduleCell.innerHTML : '');
-      }
-
-      function contractTypeHtml(row, typeCell) {
-        var supplement = row.dataset.supplementStatus || '';
-        return cleanCellHtml(typeCell) + (supplement ? '<br><span class="text-muted">条款：' + escapeHtml(supplement) + '</span>' : '');
-      }
-
-      function storeRuleHtml(row, storeCell) {
-        return escapeHtml(row.dataset.store || plainText(storeCell)) +
-          (row.dataset.storeRule ? '<br><span class="text-muted">' + escapeHtml(row.dataset.storeRule) + '</span>' : '');
-      }
-
-      function normalizeContractRows() {
-        document.querySelectorAll('#contractRows tr').forEach(function (row) {
-          if (row.children.length !== 9) return;
-          var cells = Array.from(row.children);
-          row.innerHTML = [
-            cells[0].outerHTML,
-            '<td>' + contractLineHtml(row, cells[1], cells[2]) + '</td>',
-            cells[4].outerHTML,
-            '<td>' + contractTypeHtml(row, cells[3]) + '</td>',
-            cells[6].outerHTML,
-            '<td>' + storeRuleHtml(row, cells[5]) + '</td>',
-            cells[7].outerHTML,
-            cells[8].outerHTML
-          ].join('');
-        });
       }
 
       function buildContractConfig(button) {
@@ -850,27 +807,81 @@
         return !value || value.indexOf('全部') === 0;
       }
 
+      function activeContractTab() {
+        var active = document.querySelector('.contracts-tabs .tab-item.active');
+        return active ? active.dataset.filterValue || active.textContent.trim() : '全部';
+      }
+
+      function rowMatchesTab(row, tabValue) {
+        if (tabValue === '全部') return true;
+        return String(row.dataset.tabStatus || '').split(/[\s,，|/]+/).indexOf(tabValue) >= 0;
+      }
+
+      function selectedContractRows() {
+        return Array.from(document.querySelectorAll('[data-contract-select]:checked')).map(function (checkbox) {
+          return checkbox.closest('tr');
+        }).filter(function (row) {
+          return row && !row.hidden;
+        });
+      }
+
+      function updateBatchContractSelection() {
+        var selectedRows = selectedContractRows();
+        var batchButton = document.getElementById('batchContractRemind');
+        var selectedText = document.getElementById('contractSelectedText');
+        if (batchButton) batchButton.hidden = selectedRows.length === 0;
+        if (selectedText) selectedText.textContent = selectedRows.length ? '已选择 ' + selectedRows.length + ' 份待签合同' : '';
+        var selectable = Array.from(document.querySelectorAll('[data-contract-select]:not(:disabled)')).filter(function (checkbox) {
+          var row = checkbox.closest('tr');
+          return row && !row.hidden;
+        });
+        var checked = selectable.filter(function (checkbox) { return checkbox.checked; });
+        var selectAll = document.getElementById('selectAllContracts');
+        if (selectAll) {
+          selectAll.checked = selectable.length > 0 && checked.length === selectable.length;
+          selectAll.indeterminate = checked.length > 0 && checked.length < selectable.length;
+        }
+      }
+
+      function renderBatchRemindRows(rows) {
+        var tbody = document.getElementById('batchRemindRows');
+        if (!tbody) return;
+        tbody.innerHTML = rows.map(function (row) {
+          var config = buildContractConfig(row.querySelector('[data-open-contract-view]') || row);
+          var statusText = row.dataset.riskStatus && row.dataset.riskStatus !== '无风险' ? row.dataset.riskStatus : config.status;
+          return '<tr>' +
+            '<td><strong>' + escapeHtml(config.contractNo) + '</strong><span class="contract-cell-sub">' + escapeHtml(config.customer) + '</span></td>' +
+            '<td><strong>' + escapeHtml(config.productName) + '</strong><span class="contract-cell-sub">' + escapeHtml(config.plan) + '</span></td>' +
+            '<td><strong>' + escapeHtml(config.amount) + '</strong><span class="contract-cell-sub">已收 ' + escapeHtml(config.paid) + '</span></td>' +
+            '<td>' + escapeHtml(statusText) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
       function applyContractFilters() {
         var keyword = (selectedValue('contractKeyword') || '').trim().toLowerCase();
         var scheduleKeyword = (selectedValue('scheduleKeyword') || '').trim().toLowerCase();
+        var tabValue = activeContractTab();
         var status = selectedValue('contractStatus');
         var productType = selectedValue('contractProductType');
         var template = selectedValue('contractTemplate');
         var supplement = selectedValue('supplementStatus');
+        var risk = selectedValue('contractRisk');
         document.querySelectorAll('#contractRows tr').forEach(function (row) {
           var rowText = (row.textContent || '').toLowerCase();
           var scheduleText = [row.dataset.productName, row.dataset.plan, row.dataset.schedule].join(' ').toLowerCase();
-          var matched = (isAll(status) || row.dataset.contractStatus === status || row.dataset.tabStatus.indexOf(status) >= 0) &&
+          var matched = rowMatchesTab(row, tabValue) &&
+            (isAll(status) || row.dataset.contractStatus === status || row.dataset.tabStatus.indexOf(status) >= 0) &&
             (isAll(productType) || row.dataset.productType === productType) &&
             (isAll(template) || row.dataset.template === template) &&
             (isAll(supplement) || row.dataset.supplementStatus === supplement) &&
+            (isAll(risk) || row.dataset.riskStatus === risk) &&
             (!keyword || rowText.indexOf(keyword) >= 0) &&
             (!scheduleKeyword || scheduleText.indexOf(scheduleKeyword) >= 0);
           row.hidden = !matched;
         });
+        updateBatchContractSelection();
       }
-
-      normalizeContractRows();
 
       document.querySelectorAll('[data-open-contract-view]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -902,6 +913,9 @@
           if (button.closest('tr')) {
             openSendContract(button);
           } else {
+            var selectedRows = selectedContractRows();
+            if (!selectedRows.length) return;
+            renderBatchRemindRows(selectedRows);
             openLayer(batchRemindModal);
           }
         });
@@ -914,9 +928,16 @@
         });
       });
 
+      document.querySelectorAll('[data-contract-archive]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var config = buildContractConfig(button);
+          showResult('归档已提交', config.contractNo + ' 已进入合同归档记录，订单合同状态同步为已签署。');
+        });
+      });
+
       document.addEventListener('click', function (event) {
         var button = event.target.closest('button.dropdown-item');
-        if (!button || button.dataset.openVoid !== undefined) return;
+        if (!button || button.dataset.openVoid !== undefined || button.dataset.downloadContract !== undefined) return;
         if (/下载/.test(button.textContent || '')) {
           var config = buildContractConfig(button);
           showResult('下载已生成', config.contractNo + ' 的合同文件已生成。');
@@ -942,7 +963,13 @@
       document.querySelectorAll('[data-submit-batch-remind]').forEach(function (button) {
         button.addEventListener('click', function () {
           closeLayer(batchRemindModal);
-          showResult('催签已发送', '未签署合同已通过选定渠道发送催签提醒。');
+          var rows = selectedContractRows();
+          rows.forEach(function (row) {
+            var checkbox = row.querySelector('[data-contract-select]');
+            if (checkbox) checkbox.checked = false;
+          });
+          updateBatchContractSelection();
+          showResult('催签已发送', rows.length + ' 份待签合同已通过选定渠道发送催签提醒。');
         });
       });
 
@@ -969,13 +996,32 @@
       });
 
       document.getElementById('searchContracts').addEventListener('click', applyContractFilters);
+      document.querySelectorAll('.contracts-tabs .tab-item').forEach(function (button) {
+        button.addEventListener('click', function () {
+          document.querySelectorAll('.contracts-tabs .tab-item').forEach(function (item) {
+            item.classList.toggle('active', item === button);
+          });
+          applyContractFilters();
+        });
+      });
       document.querySelectorAll('#contractKeyword, #scheduleKeyword').forEach(function (input) {
         input.addEventListener('keydown', function (event) {
           if (event.key === 'Enter') applyContractFilters();
         });
       });
-      document.querySelectorAll('#contractStatus, #contractProductType, #contractTemplate, #supplementStatus').forEach(function (select) {
+      document.querySelectorAll('#contractStatus, #contractProductType, #contractTemplate, #supplementStatus, #contractRisk').forEach(function (select) {
         select.addEventListener('change', applyContractFilters);
+      });
+      document.querySelectorAll('[data-contract-select]').forEach(function (checkbox) {
+        checkbox.addEventListener('change', updateBatchContractSelection);
+      });
+      document.getElementById('selectAllContracts').addEventListener('change', function (event) {
+        var checked = event.target.checked;
+        document.querySelectorAll('[data-contract-select]:not(:disabled)').forEach(function (checkbox) {
+          var row = checkbox.closest('tr');
+          if (row && !row.hidden) checkbox.checked = checked;
+        });
+        updateBatchContractSelection();
       });
 
       syncOrderLinks();

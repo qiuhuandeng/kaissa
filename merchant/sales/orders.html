@@ -127,18 +127,26 @@
 
   <section class="table-wrap orders-table-wrap list-surface-table list-table-with-pagination" aria-label="订单列表">
     <table>
+      <colgroup>
+        <col class="orders-col-select">
+        <col class="orders-col-order">
+        <col class="orders-col-product">
+        <col class="orders-col-source">
+        <col class="orders-col-status">
+        <col class="orders-col-amount">
+        <col class="orders-col-docs">
+        <col class="orders-col-action">
+      </colgroup>
       <thead>
         <tr>
           <th><input id="checkAllOrders" type="checkbox" aria-label="全选订单"></th>
-          <th>订单编号</th>
-          <th>产品类型/线路</th>
-          <th>方案/团期/出行</th>
-          <th>联系人/资料</th>
-          <th>来源/归属</th>
+          <th>订单/客户</th>
+          <th>产品/出行</th>
+          <th>来源/负责人</th>
+          <th>主状态</th>
           <th>应收/收款</th>
-          <th>资源确认</th>
-          <th>下单时间</th>
-          <th>操作</th>
+          <th>合同/资料</th>
+          <th class="orders-action-head">操作</th>
         </tr>
       </thead>
       <tbody id="orderRows">
@@ -1443,16 +1451,23 @@
       }
 
       function rowOrderNo(row) {
-        return row && row.children[1] ? plainText(row.children[1]) : '';
+        if (!row) return '';
+        if (row.dataset.orderNo) return row.dataset.orderNo;
+        var link = row.children[1] && row.children[1].querySelector('.table-main-link');
+        return plainText(link) || (row.children[1] ? plainText(row.children[1]).split(/\s+/)[0] : '');
       }
 
       function orderAmountCell(row) {
         if (!row) return null;
+        var cell = row.querySelector('.orders-amount-cell');
+        if (cell) return cell;
         return row.children.length >= 13 ? row.children[9] : row.children[6];
       }
 
       function orderStatusCell(row) {
         if (!row) return null;
+        var cell = row.querySelector('.orders-status-cell');
+        if (cell) return cell;
         if (row.children.length === 10) return null;
         return row.children.length >= 13 ? row.children[10] : row.children[7];
       }
@@ -1464,6 +1479,8 @@
 
       function orderTimeCell(row) {
         if (!row) return null;
+        var cell = row.querySelector('.orders-order-time');
+        if (cell) return cell;
         if (row.children.length >= 13) return row.children[11];
         if (row.children.length === 10) return row.children[8];
         return row.children.length === 11 ? row.children[9] : row.children[8];
@@ -1471,8 +1488,10 @@
 
       function rowCustomer(row) {
         if (row.dataset.customer) return row.dataset.customer;
-        var cell = row.children[4];
+        var cell = row.classList.contains('orders-normalized-row') ? row.children[1] : row.children[4];
         if (!cell) return '';
+        var customerLine = cell.querySelector('.orders-customer-line');
+        if (customerLine) return plainText(customerLine).split(/[\/·]/)[0].trim();
         var directText = '';
         Array.prototype.forEach.call(cell.childNodes, function (node) {
           if (node.nodeType === 3) directText += node.textContent || '';
@@ -1489,8 +1508,10 @@
 
       function rowPackageName(row) {
         if (row.dataset.package) return row.dataset.package;
-        var cell = row.children[3];
+        var cell = row.classList.contains('orders-normalized-row') ? row.children[2] : row.children[3];
         if (!cell) return '';
+        var planLine = cell.querySelector('.orders-plan-line');
+        if (planLine) return plainText(planLine).replace(rowProductType(row), '').trim();
         var directText = '';
         Array.prototype.forEach.call(cell.childNodes, function (node) {
           if (node.nodeType === 3) directText += node.textContent || '';
@@ -1503,7 +1524,8 @@
         if (row.dataset.scheduleNo) return row.dataset.scheduleNo;
         if (row.dataset.projectNo) return row.dataset.projectNo;
         if (row.dataset.schedule) return row.dataset.schedule;
-        var source = [row.dataset.search || '', row.children[3] ? plainText(row.children[3]) : ''].join(' ');
+        var sourceCell = row.classList.contains('orders-normalized-row') ? row.children[2] : row.children[3];
+        var source = [row.dataset.search || '', sourceCell ? plainText(sourceCell) : ''].join(' ');
         var matches = source.match(/[A-Z]{2,}(?:-[A-Z0-9]+)*-\d{8}-\d{3}|[A-Z]{2}\d{8,}|WT\d+|XY\d+/g) || [];
         var orderNo = rowOrderNo(row);
         matches = matches.filter(function (item) { return item !== orderNo; });
@@ -1512,7 +1534,8 @@
 
       function rowTravelDate(row) {
         if (row.dataset.travelDate) return row.dataset.travelDate;
-        var source = row.children[3] ? plainText(row.children[3]) : '';
+        var sourceCell = row.classList.contains('orders-normalized-row') ? row.children[2] : row.children[3];
+        var source = sourceCell ? plainText(sourceCell) : '';
         var match = source.match(/\d{4}-\d{2}-\d{2}/);
         return match ? match[0] : '';
       }
@@ -1551,7 +1574,7 @@
           line2 = '已收 ' + moneyText(received) + ' · 待收 ' + moneyText(pending || Math.max(receivable - received, 0));
         }
         return '<button class="table-link order-receivable-trigger" type="button" data-open-receivable-drawer>' +
-          '<strong>应收 ' + escapeHtml(moneyText(receivable)) + '</strong><br>' +
+          '<strong>应收 ' + escapeHtml(moneyText(receivable)) + '</strong>' +
           '<span class="text-muted">' + escapeHtml(line2) + '</span>' +
           '</button>';
       }
@@ -1563,6 +1586,79 @@
       function secondaryText(cell) {
         var meta = cell && cell.querySelector('.text-muted');
         return plainText(meta);
+      }
+
+      function directCellText(cell) {
+        if (!cell) return '';
+        var text = '';
+        Array.prototype.forEach.call(cell.childNodes, function (node) {
+          if (node.nodeType === 3) text += node.textContent || '';
+          if (node.nodeType === 1 && node.matches && node.matches('a, strong, button')) text += ' ' + plainText(node);
+        });
+        return text.replace(/\s+/g, ' ').trim();
+      }
+
+      function firstMeaningfulText(cell) {
+        if (!cell) return '';
+        var link = cell.querySelector('.table-main-link');
+        return plainText(link) || directCellText(cell) || plainText(cell).split(/\s{2,}| \/ | · /)[0];
+      }
+
+      function linkFromCell(cell, text, fallbackHref) {
+        var link = cell && cell.querySelector('a[href]');
+        var href = link ? link.getAttribute('href') : (fallbackHref || 'orders-detail.html');
+        return '<a class="link-primary table-main-link" href="' + escapeHtml(href) + '">' + escapeHtml(text || plainText(link) || '-') + '</a>';
+      }
+
+      function orderCustomerHtml(row, orderCell, customerCell, timeCell) {
+        var orderNo = rowOrderNo(row) || firstMeaningfulText(orderCell);
+        var customer = row.dataset.customer || firstMeaningfulText(customerCell);
+        var customerMeta = secondaryText(customerCell);
+        var time = plainText(timeCell);
+        row.dataset.orderNo = orderNo;
+        if (customer) row.dataset.customer = customer;
+        if (time) row.dataset.orderTime = time;
+        return linkFromCell(orderCell, orderNo, 'orders-detail.html') +
+          (customer ? '<span class="orders-customer-line">' + escapeHtml(customer + (customerMeta ? ' / ' + customerMeta : '')) + '</span>' : '') +
+          (time ? '<span class="text-muted orders-order-time">' + escapeHtml('下单 ' + time) + '</span>' : '');
+      }
+
+      function productTravelHtml(row, productCell, planCell) {
+        var productName = rowProductName(row);
+        var productType = rowProductType(row);
+        var plan = rowPackageName(row) || firstMeaningfulText(planCell);
+        var scheduleLine = secondaryText(planCell);
+        row.dataset.productName = row.dataset.productName || productName;
+        if (plan) row.dataset.package = row.dataset.package || plan;
+        return linkFromCell(productCell, productName, 'orders-detail.html?type=' + detailType(productType)) +
+          '<span class="orders-plan-line"><span class="' + escapeHtml(productTag(productType)) + '">' + escapeHtml(productType) + '</span>' +
+          (plan ? '<span class="orders-inline-text">' + escapeHtml(plan) + '</span>' : '') + '</span>' +
+          (scheduleLine ? '<span class="text-muted">' + escapeHtml(scheduleLine) + '</span>' : '');
+      }
+
+      function sourceOwnerHtml(row, sourceCell) {
+        var main = firstMeaningfulText(sourceCell);
+        var tagMeta = sourceCell ? Array.from(sourceCell.querySelectorAll('.tag')).map(function (tag) {
+          return plainText(tag);
+        }).filter(Boolean).join(' · ') : '';
+        var sourceMeta = [secondaryText(sourceCell), tagMeta].filter(Boolean).join(' · ');
+        var advisor = row.dataset.advisor || '';
+        return '<strong>' + escapeHtml(main || '-') + '</strong>' +
+          (sourceMeta ? '<span class="text-muted">' + escapeHtml(sourceMeta) + '</span>' : '') +
+          (advisor ? '<span class="text-muted">' + escapeHtml('销售顾问 ' + advisor) + '</span>' : '');
+      }
+
+      function contractDocsHtml(row, docCell) {
+        var stateText = [row.dataset.contractStatus || '', row.dataset.projectStage || '', rowStateText(row)].join(' ');
+        var orderStatus = row.dataset.orderStatus || inferOrderStatus(row);
+        var contract = '待签署';
+        if (/已签署/.test(stateText)) contract = '已签署';
+        else if (/待生成|预留|占位|待确认/.test(stateText + ' ' + orderStatus)) contract = '待生成';
+        else if (/已取消|已退款|已作废/.test(stateText)) contract = '已关闭';
+        var docStatus = row.dataset.docStatus || (docCell ? plainText(docCell).split(/\s+/)[0] : '');
+        var docMeta = secondaryText(docCell);
+        return '<strong>' + escapeHtml(contract) + '</strong>' +
+          (docStatus ? '<span class="text-muted">' + escapeHtml(docStatus + (docMeta ? ' · ' + docMeta : '')) + '</span>' : '');
       }
 
       function contactDocHtml(customerCell, docCell, docStatus) {
@@ -1594,7 +1690,7 @@
 
       function normalizeOrderColumns() {
         orderRows.querySelectorAll('tr').forEach(function (row) {
-          if (row.children.length === 10) {
+          if (row.classList.contains('orders-normalized-row')) {
             var currentPaymentStatus = row.dataset.paymentStatus || inferPaymentStatus(row);
             var amountCell = orderAmountCell(row);
             if (amountCell) amountCell.innerHTML = amountSummaryHtml(row, currentPaymentStatus);
@@ -1604,19 +1700,21 @@
           var paymentStatus = row.dataset.paymentStatus || inferPaymentStatus(row);
           var isFullRow = cells.length >= 13;
           var timeHtml = isFullRow ? (cells[11] ? cells[11].innerHTML : '') : (cells[cells.length - 2] ? cells[cells.length - 2].innerHTML : '');
+          var timeCell = isFullRow ? cells[11] : cells[cells.length - 2];
           var actionHtml = cells[cells.length - 1] ? cells[cells.length - 1].innerHTML : '';
+          var docCell = isFullRow ? cells[8] : null;
+          var orderStatus = row.dataset.orderStatus || inferOrderStatus(row);
           row.innerHTML = [
-            cells[0].outerHTML,
-            cells[1].outerHTML,
-            cells[2].outerHTML,
-            cells[3].outerHTML,
-            '<td>' + contactDocHtml(cells[4], isFullRow ? cells[8] : null, row.dataset.docStatus) + '</td>',
-            '<td>' + sourceHtml(cells[5]) + '</td>',
-            '<td>' + amountSummaryHtml(row, paymentStatus) + '</td>',
-            '<td>' + resourceConfirmHtml(row, isFullRow ? cells[6] : cells[7], isFullRow ? cells[7] : null) + '</td>',
-            '<td>' + timeHtml + '</td>',
-            '<td>' + actionHtml + '</td>'
+            '<td class="orders-select-cell">' + (cells[0] ? cells[0].innerHTML : '') + '</td>',
+            '<td class="orders-order-cell">' + orderCustomerHtml(row, cells[1], cells[4], timeCell) + '</td>',
+            '<td class="orders-product-cell">' + productTravelHtml(row, cells[2], cells[3]) + '</td>',
+            '<td class="orders-source-cell">' + sourceOwnerHtml(row, cells[5]) + '</td>',
+            '<td class="orders-status-cell">' + tagHtml(orderStatus, statusTag(orderStatus)) + '</td>',
+            '<td class="orders-amount-cell">' + amountSummaryHtml(row, paymentStatus) + '</td>',
+            '<td class="orders-docs-cell">' + contractDocsHtml(row, docCell) + '</td>',
+            '<td class="orders-action-cell">' + actionHtml + '</td>'
           ].join('');
+          row.classList.add('orders-normalized-row');
         });
       }
 
@@ -1634,7 +1732,7 @@
           setParamIfValue(params, 'projectNo', row.dataset.projectNo || rowSchedule(row));
           setParamIfValue(params, 'scheduleNo', row.dataset.scheduleNo || rowSchedule(row));
           setParamIfValue(params, 'quoteVersion', row.dataset.quoteVersion || 'A');
-          setParamIfValue(params, 'people', (plainText(row.children[4]).match(/\d+\/(\d+)/) || plainText(row.children[4]).match(/(\d+)人/) || [])[1] || '');
+          setParamIfValue(params, 'people', row.dataset.people || (rowAllText(row).match(/\d+\/(\d+)/) || rowAllText(row).match(/(\d+)人/) || [])[1] || '');
         }
         if (type === 'free') {
           setParamIfValue(params, 'batch', row.dataset.batchCode || rowSchedule(row));
@@ -2107,10 +2205,11 @@
         var received = receivedAmountTextFromCell(amountCell);
         var orderLink = row.querySelector('a[href^="orders-detail"]');
         var orderNo = plainText(row.children[1]);
+        orderNo = rowOrderNo(row) || orderNo;
         var productCell = row.children[2];
         var productText = plainText(productCell.querySelector('.table-main-link')) || plainText(productCell);
         var type = row.dataset.productType || plainText(productCell.querySelector('.tag')) || '出境游';
-        var contactText = plainText(row.children[4]);
+        var contactText = rowAllText(row);
         var passengerMatch = contactText.match(/名单\d+\/(\d+)/) || contactText.match(/(\d+人|\d+学员)/);
         var passengers = row.dataset.people ? row.dataset.people + '人' : passengerMatch ? (passengerMatch[1].indexOf('人') >= 0 || passengerMatch[1].indexOf('学员') >= 0 ? passengerMatch[1] : passengerMatch[1] + '人') : '2人';
         return {
@@ -2118,8 +2217,8 @@
           orderNo: orderNo,
           product: productText,
           type: type,
-          plan: plainText(row.children[3]),
-          customer: plainText(row.children[4]),
+          plan: rowPackageName(row) || plainText(productCell),
+          customer: rowCustomer(row),
           resource: row.dataset.resourceStatus || '-',
           purchase: row.dataset.purchaseStatus || '-',
           docs: row.dataset.docStatus || '-',
@@ -3311,19 +3410,20 @@
             tag.textContent = '已确认';
           }
           var orderNo = plainText(currentPurchaseRow.children[1]);
+          orderNo = rowOrderNo(currentPurchaseRow) || orderNo;
           var store = readStored('caesarOrderFinanceEvents');
           if (!store.orders) store.orders = {};
           store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
             orderNo: orderNo,
             orderType: '自由行',
-            productName: currentPurchaseRow.dataset.productName || plainText(currentPurchaseRow.children[2]),
-            routeText: currentPurchaseRow.dataset.package || plainText(currentPurchaseRow.children[3]),
+            productName: currentPurchaseRow.dataset.productName || rowProductName(currentPurchaseRow),
+            routeText: currentPurchaseRow.dataset.package || rowPackageName(currentPurchaseRow),
             sourceLabel: '出行日期',
             sourceNo: currentPurchaseRow.dataset.batchCode || '',
             sourceDate: currentPurchaseRow.dataset.travelDate || '',
             purchaseStatus: '已确认',
             purchaseMeta: '供应商费用已确认',
-            customer: plainText(currentPurchaseRow.children[4]).split(' ')[0],
+            customer: rowCustomer(currentPurchaseRow),
             updatedAt: '2026-07-01 18:10'
           });
           writeStored('caesarOrderFinanceEvents', store);
