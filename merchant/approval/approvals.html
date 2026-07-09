@@ -136,19 +136,15 @@
   </nav>
 
   <section id="approvalListArea" class="approval-list-panel">
-    <section class="table-wrap approval-table list-surface-table list-table-with-pagination" aria-label="审批列表">
+    <section class="table-wrap approval-table list-surface-table list-table-with-pagination business-optimized-table business-optimized-table-approval" aria-label="审批列表">
       <table>
         <thead>
           <tr>
-            <th>审批单号</th>
-            <th>来源模块</th>
-            <th>审批事项</th>
-            <th>业务单据</th>
-            <th>线路/方案</th>
+            <th>审批单/事项</th>
+            <th>业务对象</th>
             <th>金额/影响</th>
-            <th>风险提示</th>
-            <th>当前节点</th>
-            <th>超时</th>
+            <th>风险/要点</th>
+            <th>节点/时效</th>
             <th>状态</th>
             <th>操作</th>
           </tr>
@@ -675,7 +671,7 @@
             <td><div class="table-action"><button type="button" data-approval-action="detail" class="table-action-primary">详情</button><button type="button" data-approval-action="progress">记录</button></div></td>
           </tr>
           <tr id="approvalEmptyRow" hidden>
-            <td colspan="11">暂无匹配的审批记录</td>
+            <td colspan="7">暂无匹配的审批记录</td>
           </tr>
         </tbody>
       </table>
@@ -841,7 +837,12 @@
 
       function addTask(tasks, seen, task) {
         if (!task || !task.approvalNo || seen[task.approvalNo]) return;
-        if (document.querySelector("#approvalRows tr td:first-child") && Array.from(document.querySelectorAll("#approvalRows tr[data-kind]")).some((row) => row.cells[0] && row.cells[0].textContent.trim() === task.approvalNo)) return;
+        if (document.querySelector("#approvalRows tr td:first-child") && Array.from(document.querySelectorAll("#approvalRows tr[data-kind]")).some((row) => {
+          const firstCell = row.cells[0];
+          const strong = firstCell ? firstCell.querySelector("strong") : null;
+          const value = row.dataset.approvalNo || (strong ? strong.textContent.trim() : firstCell ? firstCell.textContent.trim().split(/\s+/)[0] : "");
+          return value === task.approvalNo;
+        })) return;
         seen[task.approvalNo] = true;
         const status = resultStatus(task.approvalNo) || task.status || "待审批";
         const normalized = Object.assign({
@@ -1093,19 +1094,68 @@
           flow: task.flow,
           opinion: task.opinion
         };
-        return '<tr data-tab-status="' + escapeHtml(task.approvalType) + '" data-kind="' + escapeHtml(task.kind) + '" data-scope="' + escapeHtml(task.scope) + '" data-approval-type="' + escapeHtml(task.approvalType) + '" data-source="' + escapeHtml(task.source) + '" data-status="' + escapeHtml(status) + '" data-keywords="' + escapeHtml(keyword) + '" data-dynamic-approval="true" data-apply-no="' + escapeHtml(applyNoFrom(task.businessNo)) + '">' +
-          '<td>' + escapeHtml(task.approvalNo) + '</td>' +
-          '<td>' + escapeHtml(task.source) + '</td>' +
-          '<td><span class="tag tag-blue">' + escapeHtml(task.approvalType) + '</span></td>' +
-          '<td>' + escapeHtml(task.businessNo) + '</td>' +
-          '<td>' + escapeHtml(task.productText) + '</td>' +
-          '<td>' + escapeHtml(task.amount) + '</td>' +
+        return '<tr data-tab-status="' + escapeHtml(task.approvalType) + '" data-kind="' + escapeHtml(task.kind) + '" data-scope="' + escapeHtml(task.scope) + '" data-approval-type="' + escapeHtml(task.approvalType) + '" data-source="' + escapeHtml(task.source) + '" data-status="' + escapeHtml(status) + '" data-keywords="' + escapeHtml(keyword) + '" data-dynamic-approval="true" data-apply-no="' + escapeHtml(applyNoFrom(task.businessNo)) + '" data-approval-no="' + escapeHtml(task.approvalNo) + '" data-business-no="' + escapeHtml(task.businessNo) + '" data-product-text="' + escapeHtml(task.productText) + '" data-amount="' + escapeHtml(task.amount) + '" data-node="' + escapeHtml(task.node) + '" data-timeout="' + escapeHtml(pending ? task.timeout : "已完成") + '">' +
+          '<td><strong>' + escapeHtml(task.approvalNo) + '</strong><span class="approval-cell-line"><span class="tag tag-blue">' + escapeHtml(task.approvalType) + '</span></span></td>' +
+          '<td><strong>' + escapeHtml(task.productText) + '</strong><span class="text-muted">' + escapeHtml(task.businessNo) + '</span></td>' +
+          '<td><strong>' + escapeHtml(task.amount) + '</strong><span class="text-muted">' + escapeHtml(task.approvalType) + '</span></td>' +
           '<td><span class="tag tag-orange">' + escapeHtml(task.risk) + '</span></td>' +
-          '<td>' + escapeHtml(task.node) + '</td>' +
-          '<td>' + escapeHtml(pending ? task.timeout : "已完成") + '</td>' +
+          '<td><strong>' + escapeHtml(task.node) + '</strong><span class="text-muted">' + escapeHtml(pending ? task.timeout : "已完成") + '</span></td>' +
           '<td><span class="' + tagClass(status) + '">' + escapeHtml(status) + '</span></td>' +
           '<td><div class="table-action">' + (pending ? '<button type="button" data-approval-action="approve" class="table-action-primary">审批</button><button type="button" data-approval-action="detail">详情</button><button type="button" data-approval-action="related">单据</button>' : '<button type="button" data-approval-action="detail" class="table-action-primary">详情</button><button type="button" data-approval-action="progress">记录</button><button type="button" data-approval-action="related">单据</button>') + '</div></td>' +
           '</tr>';
+      }
+
+      function cellText(cell) {
+        return cell ? cell.textContent.trim().replace(/\s+/g, " ") : "";
+      }
+
+      function mainAndSubText(cell) {
+        if (!cell) return { main: "", sub: "" };
+        const muted = cell.querySelector(".text-muted");
+        const sub = muted ? cellText(muted) : "";
+        const all = cellText(cell);
+        return {
+          main: sub ? all.replace(sub, "").trim() : all,
+          sub: sub
+        };
+      }
+
+      function setCells(row, cells) {
+        row.innerHTML = cells.map((html) => "<td>" + html + "</td>").join("");
+      }
+
+      function normalizeApprovalRows() {
+        document.querySelectorAll("#approvalRows tr[data-kind]").forEach((row) => {
+          if (row.cells.length < 11) return;
+          const approvalNo = cellText(row.cells[0]);
+          const matterHtml = row.cells[2].innerHTML;
+          const businessNo = cellText(row.cells[3]);
+          const product = mainAndSubText(row.cells[4]);
+          const amount = cellText(row.cells[5]);
+          const riskHtml = row.cells[6].innerHTML;
+          const node = cellText(row.cells[7]);
+          const timeout = cellText(row.cells[8]);
+          const statusHtml = row.cells[9].innerHTML;
+          const actionHtml = row.cells[10].innerHTML;
+          const productText = [product.main, product.sub].filter(Boolean).join(" / ");
+
+          row.dataset.approvalNo = approvalNo;
+          row.dataset.businessNo = businessNo;
+          row.dataset.productText = productText;
+          row.dataset.amount = amount;
+          row.dataset.node = node;
+          row.dataset.timeout = timeout;
+
+          setCells(row, [
+            "<strong>" + escapeHtml(approvalNo) + "</strong><span class=\"approval-cell-line\">" + matterHtml + "</span>",
+            "<strong>" + escapeHtml(product.main || businessNo) + "</strong><span class=\"text-muted\">" + escapeHtml(businessNo) + "</span>" + (product.sub ? "<span class=\"text-muted\">" + escapeHtml(product.sub) + "</span>" : ""),
+            "<strong>" + escapeHtml(amount) + "</strong><span class=\"text-muted\">" + escapeHtml(row.dataset.approvalType || "") + "</span>",
+            riskHtml,
+            "<strong>" + escapeHtml(node) + "</strong><span class=\"text-muted\">" + escapeHtml(timeout) + "</span>",
+            statusHtml,
+            actionHtml
+          ]);
+        });
       }
 
       function appendDynamicApprovalRows() {
@@ -1123,6 +1173,7 @@
       }
 
       appendDynamicApprovalRows();
+      normalizeApprovalRows();
 
       const rows = Array.from(document.querySelectorAll("#approvalRows tr[data-kind]"));
       const emptyRow = document.getElementById("approvalEmptyRow");
@@ -1705,8 +1756,28 @@
         emptyRow.hidden = visibleCount !== 0;
       }
 
+      function approvalNoFromRow(row) {
+        return row ? (row.dataset.approvalNo || cellText(row.cells[0] && row.cells[0].querySelector("strong")) || cellText(row.cells[0])) : "";
+      }
+
+      function businessNoFromRow(row) {
+        return row ? (row.dataset.businessNo || cellText(row.cells[1] && row.cells[1].querySelector(".text-muted")) || cellText(row.cells[1])) : "";
+      }
+
+      function productTextFromRow(row) {
+        return row ? (row.dataset.productText || cellText(row.cells[1] && row.cells[1].querySelector("strong")) || cellText(row.cells[1])) : "";
+      }
+
+      function amountFromRow(row) {
+        return row ? (row.dataset.amount || cellText(row.cells[2] && row.cells[2].querySelector("strong")) || cellText(row.cells[2])) : "";
+      }
+
+      function nodeFromRow(row) {
+        return row ? (row.dataset.node || cellText(row.cells[4] && row.cells[4].querySelector("strong")) || cellText(row.cells[4])) : "";
+      }
+
       function findApprovalRow(approvalNo) {
-        return rows.find((row) => row.cells[0] && row.cells[0].textContent.trim() === approvalNo);
+        return rows.find((row) => approvalNoFromRow(row) === approvalNo);
       }
 
       function actionTitle(action, detail) {
@@ -1721,12 +1792,12 @@
       function relatedItems(row) {
         const type = row.dataset.approvalType || "";
         const source = row.dataset.source || "";
-        const businessNo = row.cells[3].textContent.trim().replace(/\s+/g, " ");
-        const productText = row.cells[4].textContent.trim().replace(/\s+/g, " ");
-        const amount = row.cells[5].textContent.trim().replace(/\s+/g, " ");
-        const noPart = compactNo(businessNo, row.cells[0].textContent.trim());
+        const businessNo = businessNoFromRow(row);
+        const productText = productTextFromRow(row);
+        const amount = amountFromRow(row);
+        const noPart = compactNo(businessNo, approvalNoFromRow(row));
         const common = [
-          ["审批单", row.cells[0].textContent.trim()],
+          ["审批单", approvalNoFromRow(row)],
           ["来源模块", source],
           ["业务单据", businessNo],
           ["线路/方案", productText],
@@ -1847,13 +1918,13 @@
       function buildRelatedDetail(row, detail) {
         return {
           title: "关联单据",
-          subtitle: row.dataset.approvalType + " · " + row.cells[3].textContent.trim().replace(/\s+/g, " "),
+          subtitle: row.dataset.approvalType + " · " + businessNoFromRow(row),
           summary: [
-            "审批单号：" + row.cells[0].textContent.trim(),
+            "审批单号：" + approvalNoFromRow(row),
             "审批事项：" + row.dataset.approvalType,
             "来源模块：" + row.dataset.source,
-            "业务单据：" + row.cells[3].textContent.trim().replace(/\s+/g, " "),
-            "当前节点：" + row.cells[7].textContent.trim(),
+            "业务单据：" + businessNoFromRow(row),
+            "当前节点：" + nodeFromRow(row),
             "审批状态：" + row.dataset.status
           ],
           detail: relatedItems(row),
@@ -1924,16 +1995,16 @@
       }
 
       function writeApprovalResult(row, decisionValue) {
-        const approvalNo = row.cells[0].textContent.trim();
+        const approvalNo = approvalNoFromRow(row);
         const results = readApprovalResults();
         const passed = decisionValue === "通过";
         results[approvalNo] = {
           status: passed ? "approved" : "rejected",
           kind: row.dataset.kind,
           approvalType: row.dataset.approvalType,
-          businessNo: row.cells[3].textContent.trim().replace(/\s+/g, " "),
-          productText: row.cells[4].textContent.trim().replace(/\s+/g, " "),
-          amount: row.cells[5].textContent.trim().replace(/\s+/g, " "),
+          businessNo: businessNoFromRow(row),
+          productText: productTextFromRow(row),
+          amount: amountFromRow(row),
           applyNo: row.dataset.applyNo || "",
           source: row.dataset.source,
           updatedAt: "2026-06-24 16:30"
@@ -1950,10 +2021,11 @@
       function updateRowAfterDecision(row, decisionValue) {
         const passed = decisionValue === "通过";
         row.dataset.status = passed ? "已通过" : "已拒绝";
-        row.cells[7].textContent = "已完成";
-        row.cells[8].textContent = "已完成";
-        row.cells[9].innerHTML = passed ? "<span class=\"tag tag-green\">已通过</span>" : "<span class=\"tag tag-red\">已拒绝</span>";
-        row.cells[10].innerHTML = "<div class=\"table-action\"><button type=\"button\" data-approval-action=\"detail\" class=\"table-action-primary\">详情</button><button type=\"button\" data-approval-action=\"progress\">记录</button><button type=\"button\" data-approval-action=\"related\">单据</button></div>";
+        row.dataset.node = "已完成";
+        row.dataset.timeout = "已完成";
+        row.cells[4].innerHTML = "<strong>已完成</strong><span class=\"text-muted\">已完成</span>";
+        row.cells[5].innerHTML = passed ? "<span class=\"tag tag-green\">已通过</span>" : "<span class=\"tag tag-red\">已拒绝</span>";
+        row.cells[6].innerHTML = "<div class=\"table-action\"><button type=\"button\" data-approval-action=\"detail\" class=\"table-action-primary\">详情</button><button type=\"button\" data-approval-action=\"progress\">记录</button><button type=\"button\" data-approval-action=\"related\">单据</button></div>";
         row.classList.add("approval-row-highlight");
         writeApprovalResult(row, decisionValue);
         row.querySelectorAll("[data-approval-action]").forEach((button) => {
