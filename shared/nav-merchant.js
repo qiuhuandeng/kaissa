@@ -59,21 +59,20 @@
       title: "产品中心",
       icon: "map",
       children: [
-        { title: "线路市场", href: "product/product-market.html" },
         {
-          title: "产品管理",
+          title: "外采产品",
           children: [
-            { title: "旅游线路", href: "product/products.html" },
-            { title: "研学线路", href: "product/product-study-products.html" },
-            { title: "单项服务", href: "product/product-single-orders.html" },
-            { title: "外采产品", href: "product/product-outsource-list.html" },
+            { title: "产品市场", href: "product/product-market.html" },
+            { title: "代理产品", href: "product/product-outsource-list.html" },
           ],
         },
         {
-          title: "团期管理",
+          title: "自营产品",
           children: [
+            { title: "产品管理", href: "product/products.html" },
+            { title: "单团自组", href: "tour/product-custom-list.html" },
             { title: "团期管控", href: "tour/schedules.html" },
-            { title: "团期成本", href: "tour/fulfillment-cost.html" },
+            { title: "团期结算", href: "tour/fulfillment-cost.html" },
           ],
         },
         {
@@ -84,7 +83,6 @@
             { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
-        { title: "单团自组", href: "tour/product-custom-list.html" },
         { title: "定价策略", href: "product/product-pricing.html" },
       ],
     },
@@ -149,10 +147,11 @@
       ],
     },
     {
-      title: "会员",
+      title: "客户",
       icon: "users",
       children: [
-        { title: "会员列表", href: "customer/list.html" },
+        { title: "散客会员", href: "customer/list.html" },
+        { title: "企业客户", href: "customer/enterprise-list.html" },
       ],
     },
     {
@@ -429,31 +428,32 @@
     "dashboard-group.html": { href: "dashboard.html", title: "集团管理层工作台" },
     "dashboard-store.html": { href: "dashboard.html", title: "门店店长工作台" },
     "ai/ai-assistant.html": { href: "dashboard.html", title: "工作台助手" },
-    "product/product-cruise-routes.html": { href: "product/products.html", title: "邮轮方案配置" },
-    "product/product-train-routes.html": { href: "product/products.html", title: "专列方案配置" },
+    "product/product-cruise-routes.html": { href: "product/products.html", title: "邮轮产品线路配置" },
+    "product/product-train-routes.html": { href: "product/products.html", title: "专列产品线路配置" },
     "product/product-free-travel-list.html": { href: "product/products.html", title: "出行日期" },
-    "product/product-self-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
-    "product/product-cruise-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
-    "product/product-train-edit.html": { href: "product/products.html", title: "旅游线路编辑" },
-    "product/products-detail.html": { href: "product/products.html", title: "线路详情" },
+    "product/product-self-edit.html": { href: "product/products.html", title: "自营产品编辑" },
+    "product/product-cruise-edit.html": { href: "product/products.html", title: "自营产品编辑" },
+    "product/product-train-edit.html": { href: "product/products.html", title: "自营产品编辑" },
+    "product/products-detail.html": { href: "product/products.html", title: "自营产品详情" },
+    "product/product-schedules.html": { href: "product/products.html", title: "产品团期" },
     "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
-    "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "外采代理详情" },
-    "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "外采方案包装" },
+    "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "代理产品详情" },
+    "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "代理产品包装" },
     "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "可代理团期" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
     "system/role-assignment.html": { href: "system/staff-management.html", title: "员工任职" },
     "system/data-scope.html": { href: "system/staff-management.html", title: "员工任职" },
     "system/hr-requests.html": { href: "approval/approvals.html?view=mine", title: "我发起的" },
-    "product/product-study-edit.html": { href: "product/product-study-products.html", title: "研学线路编辑" },
+    "product/product-study-edit.html": { href: "product/products.html", title: "研学产品编辑" },
     "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期" },
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
     "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
-    "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
-    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期成本" },
+    "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
+    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
     "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管控" },
     "tour/fulfillment-notice.html": { href: "tour/schedules.html", title: "团期管控" },
     "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
@@ -477,10 +477,11 @@
     "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
     "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转单记录" },
-    "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
     "customer/customers-detail.html": { href: "customer/list.html", title: "会员详情" },
     "customer/detail.html": { href: "customer/list.html", title: "会员详情" },
+    "customer/enterprise-list.html": { href: "customer/enterprise-list.html", title: "企业客户" },
+    "customer/enterprise-detail.html": { href: "customer/enterprise-list.html", title: "企业客户详情" },
     "channel/ota_shops.html": { href: "channel/ota_shops.html", title: "店铺配置" },
     "channel/ota_products.html": { href: "channel/ota_products.html", title: "商品映射" },
     "channel/ota_orders.html": { href: "sales/orders.html", title: "订单管理" },
@@ -539,7 +540,7 @@
               typeLabel: "中心",
               name: "出境事业中心",
               children: [
-                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲线路部" },
+                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲产品部" },
                 { id: "dept-fj-visa", type: "department", typeLabel: "部门", name: "签证运营部" },
                 { id: "store-fz-dongbai", type: "store", typeLabel: "门市", name: "福州东百门市" },
                 { id: "store-xm-siming", type: "store", typeLabel: "门市", name: "厦门思明门市" },
@@ -569,7 +570,7 @@
               typeLabel: "中心",
               name: "出境事业中心",
               children: [
-                { id: "dept-bj-eu", type: "department", typeLabel: "部门", name: "西欧线路部" },
+                { id: "dept-bj-eu", type: "department", typeLabel: "部门", name: "西欧产品部" },
                 { id: "dept-bj-cruise", type: "department", typeLabel: "部门", name: "邮轮产品部" },
                 { id: "store-bj-chaoyang", type: "store", typeLabel: "门市", name: "北京朝阳门市" },
               ],
@@ -2073,28 +2074,28 @@
   const metaTagTexts = new Set([
     "线路", "团期", "自由行", "单项服务", "普通团期", "邮轮团期", "专列团期", "研学团期", "邮轮航次", "专列班期", "研学营期",
     "景点", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮模板", "运营商", "专列模板", "供应商", "领队",
-    "产品管理", "自营", "自营产品", "自营线路", "外采", "外采产品", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮线路", "专列", "专列线路", "研学", "研学线路", "服务单",
-    "出境游", "国内游", "港澳台", "小包团", "定制团", "半自由行", "普通报价", "团队报价",
+    "产品管理", "自营", "自营产品", "外采", "外采产品", "代理", "代理产品", "团期结算", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "服务单",
+    "参团游", "出境游", "入境游", "境内游", "港澳台", "小包团", "定制团", "半自由行", "普通报价", "团队报价",
     "成人/儿童结算价", "舱型库存价", "铺位/包厢结算价", "服务费/加急费",
     "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA平台", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
     "欧洲", "东南亚", "国内", "法国", "德国", "意大利", "荷兰", "比利时", "日本", "英国", "MICE", "全线路",
     "资源", "产品中心", "团期管理", "销售中心", "门市中心", "门店中心", "渠道中心", "客户", "财务", "审批", "AI", "系统设置",
-    "线路发布", "价格调整", "渠道授权", "成本差异", "交通资源付款", "超DL还位", "损耗确认", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
-    "线路经理", "线路总监", "销售顾问", "高级顾问", "顾问", "计调", "财务", "管理层", "门店店长", "审批管理员", "超管",
-    "专业版", "旗舰版", "基础版", "组织账号", "权限安全", "AI模型", "系统配置", "审计只读", "线路文案生成", "行程生成", "话术建议", "财务异常分析", "客户洞察", "其他"
+    "产品发布", "价格调整", "渠道授权", "成本差异", "交通资源付款", "超DL还位", "损耗确认", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
+    "产品经理", "产品总监", "销售顾问", "高级顾问", "顾问", "计调", "财务", "管理层", "门店店长", "审批管理员", "超管",
+    "专业版", "旗舰版", "基础版", "组织账号", "权限安全", "AI模型", "系统配置", "审计只读", "产品文案生成", "行程生成", "话术建议", "财务异常分析", "客户洞察", "其他"
   ]);
 
   const metaTagPatterns = [
-    /^(产品管理|自营|外采|邮轮|专列|研学|自由行|单项服务|出境游|国内游|MICE)(产品|线路|团期)?$/,
+    /^(产品管理|自营|外采|代理|参团游|邮轮|专列|研学|自由行|单项服务|MICE)(产品|线路|团期)?$/,
     /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
     /^(门市|门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
     /^(资源|产品中心|团期管理|销售中心|门市中心|门店中心|渠道中心|客户|财务|审批|AI|系统设置)$/,
-    /^(线路发布|价格调整|渠道授权|成本差异|交通资源付款|超DL还位|损耗确认|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
-    /^(线路经理|线路总监|销售顾问|高级顾问|顾问|计调|财务|管理层|门店店长|审批管理员|超管)$/,
+    /^(产品发布|价格调整|渠道授权|成本差异|交通资源付款|超DL还位|损耗确认|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
+    /^(产品经理|产品总监|销售顾问|高级顾问|顾问|计调|财务|管理层|门店店长|审批管理员|超管)$/,
     /^(专业版|旗舰版|基础版|组织账号|权限安全|AI模型|系统配置|审计只读)$/,
     /^(欧洲|东南亚|国内|法国|德国|意大利|荷兰|比利时|日本|英国|全线路)$/,
-    /^(线路文案生成|行程生成|话术建议|财务异常分析|客户洞察|其他)$/
+    /^(产品文案生成|行程生成|话术建议|财务异常分析|客户洞察|其他)$/
   ];
 
   const plainTagPatterns = [
@@ -2122,7 +2123,7 @@
   function isMetaColumnTitle(title) {
     const text = compactText(title);
     if (!text || isStatusColumnTitle(text)) return false;
-    return /审批事项|事项|来源模块|来源|模块|线路类型|业务类型|合同类型|客户类型|团期类型|资源类型|类型|渠道|平台|分类|标签|履约|对象|适用|付款方|认款方式|供应商|航司|船公司|运营商|目的地|出发地|城市|业务线|主题|结算方式|价格模型|团期形式|套餐|等级|端|模板|权限|角色|岗位|组织|部门|地区|区域/.test(text);
+    return /审批事项|事项|来源模块|来源|模块|产品类型|业务类型|合同类型|客户类型|团期类型|资源类型|类型|渠道|平台|分类|标签|履约|对象|适用|付款方|认款方式|供应商|航司|船公司|运营商|目的地|出发地|城市|业务线|主题|结算方式|价格模型|团期形式|套餐|等级|端|模板|权限|角色|岗位|组织|部门|地区|区域/.test(text);
   }
 
   const tableColumnClassNames = [

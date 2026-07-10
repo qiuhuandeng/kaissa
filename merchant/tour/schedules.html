@@ -7,6 +7,13 @@
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
+  <script>
+    (function () {
+      if (new URLSearchParams(window.location.search).get('embed') === 'batchDrawer') {
+        document.documentElement.classList.add('batch-drawer-embed-mode');
+      }
+    })();
+  </script>
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-page-panel">
@@ -49,8 +56,8 @@
       </div>
       <div class="filter-row">
         <div class="filter-item">
-          <label class="sr-only" for="productName">线路/方案名称</label>
-          <input id="productName" type="text" placeholder="线路/方案名称">
+          <label class="sr-only" for="productName">产品/线路名称</label>
+          <input id="productName" type="text" placeholder="产品/线路名称">
         </div>
         <div class="filter-item">
           <label class="sr-only" for="scheduleCode">团期编号</label>
@@ -355,11 +362,11 @@
         <div class="filter-item tour-type-filter">
           <div class="multi-select" data-calendar-multi>
             <button class="multi-select-trigger" type="button" aria-expanded="false">
-              <span>线路类型：全部</span>
+              <span>产品类型：全部</span>
             </button>
             <div class="multi-select-menu tour-type-menu">
-              <label><input type="checkbox" checked><i class="tour-type-dot type-outbound"></i>出境游</label>
-              <label><input type="checkbox" checked><i class="tour-type-dot type-domestic"></i>国内游</label>
+              <label><input type="checkbox" checked><i class="tour-type-dot type-outbound"></i>参团游（出境）</label>
+              <label><input type="checkbox" checked><i class="tour-type-dot type-domestic"></i>参团游（境内）</label>
               <label><input type="checkbox" checked><i class="tour-type-dot type-cruise"></i>邮轮</label>
               <label><input type="checkbox" checked><i class="tour-type-dot type-train"></i>专列</label>
               <label><input type="checkbox" checked><i class="tour-type-dot type-study"></i>研学</label>
@@ -493,9 +500,9 @@
       </div>
     </section>
 
-    <section class="card tour-calendar-legend" aria-label="线路类型颜色图例">
-      <span><i class="tour-type-dot type-outbound"></i>出境游</span>
-      <span><i class="tour-type-dot type-domestic"></i>国内游</span>
+    <section class="card tour-calendar-legend" aria-label="产品类型颜色图例">
+      <span><i class="tour-type-dot type-outbound"></i>参团游（出境）</span>
+      <span><i class="tour-type-dot type-domestic"></i>参团游（境内）</span>
       <span><i class="tour-type-dot type-cruise"></i>邮轮</span>
       <span><i class="tour-type-dot type-train"></i>专列</span>
       <span><i class="tour-type-dot type-study"></i>研学</span>
@@ -521,7 +528,7 @@
         <section class="schedule-create-panel active" data-create-panel="1">
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label" for="scheduleTypeSelect">线路类型 <span class="req">*</span></label>
+              <label class="form-label" for="scheduleTypeSelect">产品类型 <span class="req">*</span></label>
               <select id="scheduleTypeSelect" class="form-control">
                 <option value="普通团期">团期</option>
                 <option value="邮轮航次">航次</option>
@@ -530,11 +537,11 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="scheduleProduct">线路 <span class="req">*</span></label>
+              <label class="form-label" for="scheduleProduct">产品 <span class="req">*</span></label>
               <select id="scheduleProduct" class="form-control" required></select>
             </div>
             <div class="form-group form-group-full">
-              <label id="scheduleRoutePlanLabel" class="form-label" for="scheduleRoutePlan">选择方案 <span class="req">*</span></label>
+              <label id="scheduleRoutePlanLabel" class="form-label" for="scheduleRoutePlan">选择线路 <span class="req">*</span></label>
               <select id="scheduleRoutePlan" class="form-control" required>
                 <option>A线 法德意12天</option>
                 <option>B线 荷比德法12天</option>
@@ -845,7 +852,7 @@
                   <th>金额</th>
                   <th>收款</th>
                   <th>名单</th>
-                  <th>订单状态</th>
+                  <th>资源/确认</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -879,14 +886,14 @@
             <div class="batch-flow-head">
               <span class="batch-flow-index">1</span>
               <div>
-                <h2>选择目标线路与方案</h2>
+                <h2>选择目标产品与线路</h2>
               </div>
             </div>
             <div id="batchSelectedRoutePanel" class="batch-selected-route-panel" hidden>
               <div class="batch-selected-route-main">
-                <span>已选线路与方案</span>
+                <span>已选产品与线路</span>
                 <strong id="batchSelectedRouteName">欧洲十国经典游</strong>
-                <em id="batchSelectedRouteMeta">方案A：A线 法德意12天</em>
+                <em id="batchSelectedRouteMeta">线路A：A线 法德意12天</em>
               </div>
               <button id="changeBatchRouteSelection" class="table-link" type="button">更换</button>
             </div>
@@ -894,25 +901,25 @@
               <div class="batch-product-select-wrap">
                 <div class="batch-product-select">
                   <span aria-hidden="true">⌕</span>
-                  <input id="batchProductSearch" type="search" value="" autocomplete="off" placeholder="搜索线路名称、目的地、编号..." aria-label="选择线路产品">
-                  <button id="clearBatchProductSearch" class="batch-product-clear" type="button" aria-label="清除已选线路" hidden>×</button>
+                  <input id="batchProductSearch" type="search" value="" autocomplete="off" placeholder="搜索产品名称、目的地、编号..." aria-label="选择产品">
+                  <button id="clearBatchProductSearch" class="batch-product-clear" type="button" aria-label="清除已选产品" hidden>×</button>
                   <div id="batchProductInlinePanel" class="batch-picker-panel" hidden>
-                    <div id="batchProductList" class="batch-product-list" aria-label="线路卡片列表">
-                      <button class="batch-product-card active" type="button" data-product-code="EU" data-product-type="出境游" data-batch-type="普通团期" data-tag-class="tag-blue" data-name="欧洲十国经典游" data-route="A线 法德意12天" data-route-options="A线 法德意12天|B线 荷比德法12天|C线 瑞意深度10天" data-unit="人" data-default-capacity="30" data-default-price="¥12,800" data-destination="法国/德国/意大利" data-days="12" data-planner="周伟">
+                    <div id="batchProductList" class="batch-product-list" aria-label="产品卡片列表">
+                      <button class="batch-product-card active" type="button" data-product-code="EU" data-product-type="参团游" data-batch-type="普通团期" data-tag-class="tag-blue" data-name="欧洲十国经典游" data-route="A线 法德意12天" data-route-options="A线 法德意12天|B线 荷比德法12天|C线 瑞意深度10天" data-unit="人" data-default-capacity="30" data-default-price="¥12,800" data-destination="法国/德国/意大利" data-days="12" data-planner="周伟">
                         <div class="batch-product-head"><strong>欧洲十国经典游</strong><span class="tag tag-blue">自营</span></div>
-                        <div class="batch-product-meta"><span>出境游</span><span>12天</span><span>已有6个团期</span></div>
+                        <div class="batch-product-meta"><span>参团游</span><span>12天</span><span>已有6个团期</span></div>
                       </button>
-                      <button class="batch-product-card" type="button" data-product-code="JP" data-product-type="出境游" data-batch-type="普通团期" data-tag-class="tag-purple" data-name="日本关西深度游" data-route="关西古都7日" data-route-options="关西古都7日|京都奈良慢游线" data-unit="人" data-default-capacity="25" data-default-price="¥8,980" data-destination="大阪/京都/奈良" data-days="7" data-planner="陈红">
+                      <button class="batch-product-card" type="button" data-product-code="JP" data-product-type="参团游" data-batch-type="普通团期" data-tag-class="tag-purple" data-name="日本关西深度游" data-route="关西古都7日" data-route-options="关西古都7日|京都奈良慢游线" data-unit="人" data-default-capacity="25" data-default-price="¥8,980" data-destination="大阪/京都/奈良" data-days="7" data-planner="陈红">
                         <div class="batch-product-head"><strong>日本关西深度游</strong><span class="tag tag-blue">自营</span></div>
-                        <div class="batch-product-meta"><span>出境游</span><span>7天</span><span>已有3个团期</span></div>
+                        <div class="batch-product-meta"><span>参团游</span><span>7天</span><span>已有3个团期</span></div>
                       </button>
                       <button class="batch-product-card" type="button" data-product-code="CZ" data-product-type="邮轮" data-batch-type="邮轮航次" data-tag-class="tag-orange" data-name="理想号地中海邮轮" data-route="地中海西线 / 阳台舱" data-route-options="地中海西线 / 内舱|地中海西线 / 阳台舱|地中海东线 / 套房" data-unit="人" data-default-capacity="30" data-default-price="¥28,800" data-destination="巴塞罗那/马赛/罗马" data-days="14" data-planner="王强">
                         <div class="batch-product-head"><strong>理想号地中海邮轮</strong><span class="tag tag-orange">邮轮</span></div>
                         <div class="batch-product-meta"><span>邮轮</span><span>14天</span><span>已有2个航次</span></div>
                       </button>
-                      <button class="batch-product-card" type="button" data-product-code="HN" data-product-type="国内游" data-batch-type="普通团期" data-tag-class="tag-green" data-name="三亚亲子5日游" data-route="亚特兰蒂斯亲子线" data-route-options="亚特兰蒂斯亲子线|海棠湾轻奢线" data-unit="人" data-default-capacity="40" data-default-price="¥6,800" data-destination="三亚" data-days="5" data-planner="赵明">
+                      <button class="batch-product-card" type="button" data-product-code="HN" data-product-type="参团游" data-batch-type="普通团期" data-tag-class="tag-green" data-name="三亚亲子5日游" data-route="亚特兰蒂斯亲子线" data-route-options="亚特兰蒂斯亲子线|海棠湾轻奢线" data-unit="人" data-default-capacity="40" data-default-price="¥6,800" data-destination="三亚" data-days="5" data-planner="赵明">
                         <div class="batch-product-head"><strong>三亚亲子5日游</strong><span class="tag tag-blue">自营</span></div>
-                        <div class="batch-product-meta"><span>国内游</span><span>5天</span><span>已有5个团期</span></div>
+                        <div class="batch-product-meta"><span>参团游</span><span>5天</span><span>已有5个团期</span></div>
                       </button>
                       <button class="batch-product-card" type="button" data-product-code="TR" data-product-type="专列" data-batch-type="专列班期" data-tag-class="tag-orange" data-name="东方丝路专列" data-route="西安敦煌乌鲁木齐线 / 软卧" data-route-options="西安敦煌乌鲁木齐线 / 硬卧|西安敦煌乌鲁木齐线 / 软卧|丝路全景线 / 包厢" data-unit="铺" data-default-capacity="96" data-default-price="¥19,800" data-destination="西安/敦煌/乌鲁木齐" data-days="9" data-planner="郑华">
                         <div class="batch-product-head"><strong>东方丝路专列</strong><span class="tag tag-orange">专列</span></div>
@@ -922,15 +929,31 @@
                         <div class="batch-product-head"><strong>北京航天研学营</strong><span class="tag tag-green">研学</span></div>
                         <div class="batch-product-meta"><span>研学</span><span>7天</span><span>已有4个营期</span></div>
                       </button>
+                      <button class="batch-product-card" type="button" data-product-code="ST-DH" data-product-type="研学" data-batch-type="研学营期" data-tag-class="tag-green" data-name="敦煌历史文化研学7日" data-route="敦煌艺术与历史课堂" data-route-options="敦煌艺术与历史课堂" data-unit="名" data-default-capacity="40" data-default-price="¥8,800" data-destination="敦煌" data-days="7" data-planner="张明">
+                        <div class="batch-product-head"><strong>敦煌历史文化研学7日</strong><span class="tag tag-green">研学</span></div>
+                        <div class="batch-product-meta"><span>研学</span><span>7天</span><span>已有2个营期</span></div>
+                      </button>
+                      <button class="batch-product-card" type="button" data-product-code="ST-BJ" data-product-type="研学" data-batch-type="研学营期" data-tag-class="tag-green" data-name="北京故宫非遗研学5日" data-route="故宫非遗体验线" data-route-options="故宫非遗体验线" data-unit="名" data-default-capacity="30" data-default-price="¥6,600" data-destination="北京" data-days="5" data-planner="李梅">
+                        <div class="batch-product-head"><strong>北京故宫非遗研学5日</strong><span class="tag tag-green">研学</span></div>
+                        <div class="batch-product-meta"><span>研学</span><span>5天</span><span>已有1个营期</span></div>
+                      </button>
+                      <button class="batch-product-card" type="button" data-product-code="ST-SG" data-product-type="研学" data-batch-type="研学营期" data-tag-class="tag-green" data-name="新加坡科技创新研学6日" data-route="新加坡科技课堂" data-route-options="新加坡科技课堂" data-unit="名" data-default-capacity="30" data-default-price="¥12,800" data-destination="新加坡" data-days="6" data-planner="王强">
+                        <div class="batch-product-head"><strong>新加坡科技创新研学6日</strong><span class="tag tag-green">研学</span></div>
+                        <div class="batch-product-meta"><span>研学</span><span>6天</span><span>已有1个营期</span></div>
+                      </button>
+                      <button class="batch-product-card" type="button" data-product-code="ST-SH" data-product-type="研学" data-batch-type="研学营期" data-tag-class="tag-green" data-name="上海艺术博物馆研学4日" data-route="上海艺术博物馆课程" data-route-options="上海艺术博物馆课程" data-unit="名" data-default-capacity="30" data-default-price="¥4,980" data-destination="上海" data-days="4" data-planner="李梅">
+                        <div class="batch-product-head"><strong>上海艺术博物馆研学4日</strong><span class="tag tag-green">研学</span></div>
+                        <div class="batch-product-meta"><span>研学</span><span>4天</span><span>暂无营期</span></div>
+                      </button>
                     </div>
-                    <div id="batchProductEmpty" class="batch-product-empty" hidden>未找到匹配线路</div>
+                    <div id="batchProductEmpty" class="batch-product-empty" hidden>未找到匹配产品</div>
                   </div>
                 </div>
               </div>
               <div id="batchPlanSelectWrap" class="batch-plan-select-wrap" hidden>
-                <label id="batchRoutePlanLabel" class="form-label" for="batchRoutePlanCards">选择行程方案 <span class="req">*</span></label>
+                <label id="batchRoutePlanLabel" class="form-label" for="batchRoutePlanCards">选择产品线路 <span class="req">*</span></label>
                 <select id="batchRoutePlan" class="batch-route-hidden" aria-hidden="true" tabindex="-1"></select>
-                <div id="batchRoutePlanCards" class="batch-plan-card-list" aria-label="产品行程具体方案"></div>
+                <div id="batchRoutePlanCards" class="batch-plan-card-list" aria-label="产品线路"></div>
               </div>
             </div>
           </section>
@@ -1183,7 +1206,7 @@
           </div>
           <section class="batch-preview-summary" aria-label="新建团期摘要">
             <div class="batch-preview-summary-main">
-              <span>线路/方案</span>
+              <span>产品/线路</span>
               <strong id="batchPreviewRouteText">-</strong>
             </div>
             <div>
@@ -1363,36 +1386,48 @@
   </div>
 
   <div id="stockLineageDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="stockLineageTitle">
+    <div class="modal drawer-modal drawer-action drawer-lg schedule-quota-drawer" role="dialog" aria-modal="true" aria-labelledby="stockLineageTitle">
       <div class="modal-header">
         <div id="stockLineageTitle" class="modal-title">调整库存价格</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-lineage>×</button>
       </div>
       <div class="modal-body">
-        <div class="readonly-summary">
-          <strong id="stockLineageName">欧洲十国经典游</strong>
-          <span id="stockLineageMeta">GT20260701001 | 团期</span>
-        </div>
-        <div class="description-grid compact-description-list">
-          <div class="description-item"><span class="description-label">团期类型</span><span id="stockLineageObject" class="description-value">团期</span></div>
-          <div class="description-item"><span class="description-label">线路/方案</span><span id="stockLineageUpstream" class="description-value">欧洲十国经典游 / 经济款</span></div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="quotaTotalStock">计划收客</label>
-            <input id="quotaTotalStock" class="form-control" type="number" min="0">
-            <div id="quotaUnitText" class="form-hint">单位：人</div>
+        <div class="drawer-object-summary">
+          <div class="drawer-object-summary-main">
+            <div>
+              <h3 id="stockLineageName" class="drawer-object-title">-</h3>
+              <div id="stockLineageContext" class="drawer-object-subtitle">-</div>
+            </div>
+            <span id="stockLineageStatus" class="tag tag-blue drawer-status">销售中</span>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="quotaPriceInput">销售价</label>
-            <input id="quotaPriceInput" class="form-control" type="text" placeholder="如 ¥12,800">
+          <div class="drawer-summary-grid schedule-quota-summary-grid">
+            <div class="drawer-summary-item"><span class="drawer-summary-label">当前销售价</span><span id="stockLineagePriceText" class="drawer-summary-value">-</span></div>
+            <div class="drawer-summary-item"><span class="drawer-summary-label">当前计划</span><span id="stockLineagePlanText" class="drawer-summary-value">-</span></div>
+            <div class="drawer-summary-item"><span class="drawer-summary-label">已售占用</span><span id="stockLineageSoldText" class="drawer-summary-value">-</span></div>
+            <div class="drawer-summary-item"><span class="drawer-summary-label">当前余位</span><span id="stockLineageLeftText" class="drawer-summary-value">-</span></div>
           </div>
         </div>
 
-        <section class="batch-step-panel active">
-          <div class="batch-panel-head">
-            <h2>渠道余位</h2>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h2 class="drawer-section-title">本次调整</h2>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="quotaTotalStock">计划收客</label>
+              <input id="quotaTotalStock" class="form-control" type="number" min="0">
+              <div id="quotaUnitText" class="form-hint">计量单位：人</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="quotaPriceInput">销售价</label>
+              <input id="quotaPriceInput" class="form-control" type="text" placeholder="如 ¥12,800">
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section schedule-quota-channel-section">
+          <div class="drawer-section-head">
+            <h2 class="drawer-section-title">渠道余位</h2>
             <span id="quotaAllocationPill" class="tag tag-green">分配正常</span>
           </div>
           <div class="quota-relation-strip">
@@ -1410,8 +1445,8 @@
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-lineage>关闭</button>
-        <button id="saveQuotaPrice" class="btn btn-primary" type="button">保存调整</button>
+        <button class="btn btn-secondary" type="button" data-close-lineage>取消</button>
+        <button id="saveQuotaPrice" class="btn btn-primary" type="button">确认调整</button>
       </div>
     </div>
   </div>
@@ -1438,7 +1473,7 @@
             <thead>
               <tr>
                 <th>资源项</th>
-                <th>方案资源</th>
+                <th>线路资源</th>
                 <th>本次确认</th>
                 <th>截止节点</th>
                 <th>确认状态</th>
@@ -1812,6 +1847,7 @@
       var executionCheckAllGuests = document.getElementById('executionCheckAllGuests');
       var executionNoticeGuestList = document.getElementById('executionNoticeGuestList');
       var pageParams = new URLSearchParams(window.location.search);
+      var batchDrawerEmbedMode = pageParams.get('embed') === 'batchDrawer';
       var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
       var routeFilterType = pageParams.get('type') || '';
       var routeFilterScheduleNos = (pageParams.get('scheduleNos') || '').split(/[,，\s]+/).map(function (item) { return item.trim(); }).filter(Boolean);
@@ -1961,11 +1997,11 @@
 
       function batchTypeProductLabel(batchType) {
         var normalized = normalizeBatchType(batchType);
-        if (normalized === '项目团') return '项目线路';
-        if (normalized === '邮轮航次') return '邮轮线路';
-        if (normalized === '专列班期') return '专列线路';
-        if (normalized === '研学营期') return '研学线路';
-        return '旅游线路';
+        if (normalized === '项目团') return '项目产品';
+        if (normalized === '邮轮航次') return '邮轮产品';
+        if (normalized === '专列班期') return '专列产品';
+        if (normalized === '研学营期') return '研学产品';
+        return '旅游产品';
       }
 
       function parseStockValue(value) {
@@ -2075,7 +2111,7 @@
       }
 
       function routeFieldLabel(batchType) {
-        return '选择方案';
+        return '选择线路';
       }
 
       function capacityHintText(batchType, unit) {
@@ -2756,7 +2792,7 @@
         document.getElementById('costModalTitle').textContent = '成本摘要 - ' + item.code;
         var summary = costModal.querySelector('.schedule-cost-summary');
         if (summary) {
-          summary.innerHTML = '<span>线路：' + escapeHtml(item.product) + '</span><span>方案：' + escapeHtml(item.route || '-') + '</span><span>已售：' + escapeHtml(stockText(item.sold, item.unit)) + '</span><span>成本状态：' + escapeHtml(status) + '</span>';
+          summary.innerHTML = '<span>产品：' + escapeHtml(item.product) + '</span><span>线路：' + escapeHtml(item.route || '-') + '</span><span>已售：' + escapeHtml(stockText(item.sold, item.unit)) + '</span><span>成本状态：' + escapeHtml(status) + '</span>';
         }
         closeCostItemEditor();
         var rows = renderCostRows(item);
@@ -2775,21 +2811,29 @@
       function fillScheduleOrderDrawer(item) {
         var summary = scheduleOrderSummary(item);
         var hasRisk = summary.pendingPay > 0 || summary.rosterPending > 0;
-        document.getElementById('scheduleOrderTitle').textContent = '团期订单概览 - ' + item.code;
-        document.getElementById('scheduleOrderName').textContent = item.product + ' / ' + (item.route || '-');
-        document.getElementById('scheduleOrderContext').textContent = (item.code || '-') + ' / 出发 ' + (item.depart || '-') + ' / ' + batchTypeDisplay(item.batchType);
+        document.getElementById('scheduleOrderTitle').textContent = '团期订单概览';
+        document.getElementById('scheduleOrderName').textContent = item.code || '-';
+        document.getElementById('scheduleOrderContext').textContent = (item.product || '-') + ' / ' + (item.route || '-') + ' / 出发 ' + (item.depart || '-') + ' / ' + batchTypeDisplay(item.batchType);
         document.getElementById('scheduleOrderTotal').textContent = summary.totalOrders + '单';
         document.getElementById('scheduleOrderBooked').textContent = stockText(item.sold, item.unit) + ' / ' + stockText(item.stock, item.unit);
         document.getElementById('scheduleOrderPendingPay').textContent = summary.pendingPay + '单';
         document.getElementById('scheduleOrderRosterPending').textContent = summary.rosterPending + '单';
         var status = document.getElementById('scheduleOrderStatus');
         status.textContent = hasRisk ? '需跟进' : '正常';
-        status.className = hasRisk ? 'tag tag-orange' : 'tag tag-green';
+        status.className = hasRisk ? 'tag tag-orange drawer-status' : 'tag tag-green drawer-status';
         document.getElementById('scheduleOrderCenterLink').href = '../sales/orders.html?scheduleNo=' + encodeURIComponent(item.code || '');
         document.getElementById('scheduleOrderRows').innerHTML = summary.rows.length ? summary.rows.map(function (row) {
           var detailHref = '../sales/orders-detail.html?orderNo=' + encodeURIComponent(row.no) + '&scheduleNo=' + encodeURIComponent(item.code || '');
-          return '<tr><td><a class="link-primary table-main-link" href="' + detailHref + '">' + escapeHtml(row.no) + '</a></td><td>' + escapeHtml(row.customer) + '</td><td>' + escapeHtml(row.sales) + '</td><td>' + escapeHtml(row.qty) + '</td><td>' + escapeHtml(row.amount) + '</td><td><span class="' + row.payTag + '">' + escapeHtml(row.pay) + '</span></td><td><span class="' + row.rosterTag + '">' + escapeHtml(row.roster) + '</span></td><td><span class="' + row.statusTag + '">' + escapeHtml(row.status) + '</span></td><td><div class="table-action"><a class="table-action-primary" href="' + detailHref + '">订单详情</a></div></td></tr>';
+          return '<tr><td><a class="link-primary table-main-link" href="' + detailHref + '">' + escapeHtml(row.no) + '</a></td><td>' + escapeHtml(row.customer) + '</td><td>' + escapeHtml(row.sales) + '</td><td>' + escapeHtml(row.qty) + '</td><td>' + escapeHtml(row.amount) + '</td><td><span class="' + row.payTag + '">' + escapeHtml(row.pay) + '</span></td><td><span class="' + row.rosterTag + '">' + escapeHtml(row.roster) + '</span></td><td>' + scheduleOrderResourceCell(row) + '</td><td><div class="table-action"><a class="table-action-primary" href="' + detailHref + '">订单详情</a></div></td></tr>';
         }).join('') : '<tr><td colspan="9">当前团期暂无关联订单</td></tr>';
+      }
+
+      function scheduleOrderResourceCell(row) {
+        var resource = row.resource || row.status || '-';
+        if (!row.resource && (row.status === '确认' || row.status === '已确认')) resource = '名额已确认';
+        var parts = String(resource).split(' · ');
+        return '<span class="schedule-order-resource-main">' + escapeHtml(parts[0] || '-') + '</span>' +
+          (parts.length > 1 ? '<span class="schedule-order-resource-sub text-muted">' + escapeHtml(parts.slice(1).join(' · ')) + '</span>' : '');
       }
 
       function bookingPresetHref(item) {
@@ -2810,14 +2854,24 @@
       }
 
       function fillStockLineage(item) {
-        document.getElementById('stockLineageTitle').textContent = '调整库存价格 - ' + item.code;
-        document.getElementById('stockLineageName').textContent = item.product + ' / ' + (item.route || '-');
-        document.getElementById('stockLineageMeta').textContent = item.code + ' | ' + batchTypeDisplay(item.batchType);
-        document.getElementById('stockLineageObject').textContent = batchTypeDisplay(item.batchType);
-        document.getElementById('stockLineageUpstream').textContent = item.product + ' / ' + (item.route || '-');
+        var unit = item.unit || '人';
+        var stage = scheduleMainStage(item);
+        var sold = stockNumber(item.sold);
+        var stock = stockNumber(item.stock);
+        var left = stockNumber(item.left);
+        if (!left && stock >= sold) left = Math.max(stock - sold, 0);
+        document.getElementById('stockLineageTitle').textContent = '调整库存价格';
+        document.getElementById('stockLineageName').textContent = item.code || '-';
+        document.getElementById('stockLineageContext').textContent = (item.product || '-') + ' / ' + (item.route || '-') + ' / 出发 ' + (item.depart || '-') + ' / ' + batchTypeDisplay(item.batchType);
+        document.getElementById('stockLineageStatus').textContent = stage;
+        document.getElementById('stockLineageStatus').className = mainStageClass(stage) + ' drawer-status';
+        document.getElementById('stockLineagePriceText').textContent = item.price || '-';
+        document.getElementById('stockLineagePlanText').textContent = stockText(stock, unit);
+        document.getElementById('stockLineageSoldText').textContent = stockText(sold, unit);
+        document.getElementById('stockLineageLeftText').textContent = stockText(left, unit);
         quotaTotalStock.value = stockNumber(item.stock);
         quotaPriceInput.value = item.price || '';
-        quotaUnitText.textContent = '单位：' + (item.unit || '人');
+        quotaUnitText.textContent = '计量单位：' + unit;
         renderQuotaChannelInputs(item);
         updateQuotaAllocation();
       }
@@ -4088,7 +4142,7 @@
       function updateCalendarTypeText() {
         if (!calendarMulti || !calendarTriggerText) return;
         var checked = calendarMulti.querySelectorAll('input:checked').length;
-        calendarTriggerText.textContent = checked === 7 ? '线路类型：全部' : '线路类型：已选' + checked + '类';
+        calendarTriggerText.textContent = checked === 7 ? '产品类型：全部' : '产品类型：已选' + checked + '类';
       }
 
       function renderScheduleProducts(batchType, selectedProduct) {
@@ -4428,7 +4482,7 @@
         var unit = productStockUnits[product] || '人';
         scheduleRoutePlanLabel.innerHTML = routeFieldLabel(batchType) + ' <span class="req">*</span>';
         if (!productRoutePlans[product]) {
-          scheduleRoutePlan.innerHTML = '<option value="">请先选择方案</option>';
+          scheduleRoutePlan.innerHTML = '<option value="">请先选择线路</option>';
           scheduleRoutePlan.disabled = true;
           routePlanHint.hidden = true;
           routePlanHint.textContent = '';
@@ -4742,14 +4796,14 @@
         var batchType = card.dataset.batchType || '普通团期';
         var unit = card.dataset.unit || '人';
         var plans = (card.dataset.routeOptions || card.dataset.route || '').split('|').filter(Boolean);
-        batchRoutePlanLabel.innerHTML = '选择行程方案 <span class="req">*</span>';
+        batchRoutePlanLabel.innerHTML = '选择产品线路 <span class="req">*</span>';
         routeSelect.innerHTML = plans.map(function (plan) {
           return '<option' + (plan === card.dataset.route ? ' selected' : '') + '>' + escapeHtml(plan) + '</option>';
         }).join('');
         routeSelect.disabled = plans.length === 0;
         document.getElementById('batchRoutePlanCards').innerHTML = plans.map(function (plan, index) {
           var active = batchPlanPicked && plan === routeSelect.value;
-          var label = '方案' + String.fromCharCode(65 + index);
+          var label = '线路' + String.fromCharCode(65 + index);
           return '<button class="batch-plan-card' + (active ? ' active' : '') + '" type="button" data-route-plan="' + escapeHtml(plan) + '"><span class="batch-plan-radio"></span><span class="batch-plan-main"><strong>' + label + '：' + escapeHtml(plan) + '</strong><em>行程时长：' + escapeHtml(card.dataset.days || '-') + '天</em></span><span class="batch-plan-days">天数: ' + escapeHtml(card.dataset.days || '-') + 'D</span></button>';
         }).join('');
       }
@@ -5137,7 +5191,7 @@
 
       function updateBatchCreateCount() {
         var count = document.querySelectorAll('#batchPreviewRows tr').length;
-        document.getElementById('batchCreateCountText').textContent = batchSelectedProduct ? '将创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') : '请先选择线路与方案';
+        document.getElementById('batchCreateCountText').textContent = batchSelectedProduct ? '将创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') : '请先选择产品与线路';
         document.getElementById('batchProgressCount').textContent = '0/' + count;
       }
 
@@ -5180,6 +5234,34 @@
           }
         }
         window.caesarUI.openLayer(batchScheduleDrawer);
+        if (batchDrawerEmbedMode) {
+          window.requestAnimationFrame(function () {
+            notifyBatchDrawerHost('ready');
+          });
+        }
+      }
+
+      function openBatchWhenPageReady(prefill) {
+        var retryCount = 0;
+        function tryOpenBatch() {
+          if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+            openBatch(prefill);
+            return;
+          }
+          retryCount += 1;
+          if (retryCount < 80) {
+            window.setTimeout(tryOpenBatch, 50);
+          }
+        }
+        tryOpenBatch();
+      }
+
+      function notifyBatchDrawerHost(action, detail) {
+        if (!batchDrawerEmbedMode || window.parent === window) return;
+        window.parent.postMessage({
+          type: 'caesar:batch-drawer:' + action,
+          detail: detail || {}
+        }, '*');
       }
 
       function commitBatchCreateRows() {
@@ -5273,6 +5355,33 @@
           document.getElementById('batchProgressCount').textContent = count + '/' + count;
           document.getElementById('batchResultSummary').textContent = '已成功创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') + '，默认销售状态为筹备中。';
           document.getElementById('batchNextStep').textContent = '已创建';
+          var createdSchedules = Array.from(document.querySelectorAll('#batchPreviewRows tr')).map(function (row, index) {
+            var depart = row.dataset.batchPreviewDate;
+            var capacity = Number(row.dataset.capacity || document.getElementById('batchCapacityLimit').value || 0);
+            return {
+              code: batchScheduleCode(depart, index),
+              product: batchSelectedProduct.dataset.name,
+              productTitle: batchSelectedProduct.dataset.name,
+              route: row.dataset.route || document.getElementById('batchRoutePlan').value || '',
+              routeCode: batchSelectedProduct.dataset.productCode || '',
+              batchType: batchSelectedProduct.dataset.batchType || '普通团期',
+              depart: depart,
+              back: addDays(depart, Number(batchSelectedProduct.dataset.days || 1) - 1),
+              deadline: addDays(depart, -5),
+              stock: capacity,
+              sold: 0,
+              price: row.dataset.price || batchPrimaryPrice(),
+              status: '筹备中',
+              execution: '未开始',
+              unit: batchSelectedProduct.dataset.unit || '人'
+            };
+          });
+          notifyBatchDrawerHost('created', {
+            count: count,
+            product: batchSelectedProduct.dataset.name,
+            route: document.getElementById('batchRoutePlan').value || '',
+            schedules: createdSchedules
+          });
         }, 700);
       }
 
@@ -5356,7 +5465,10 @@
         button.addEventListener('click', function () { window.caesarUI.closeLayer(scheduleOrderDrawer); });
       });
       document.querySelectorAll('[data-close-batch]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.closeLayer(batchScheduleDrawer); });
+        button.addEventListener('click', function () {
+          window.caesarUI.closeLayer(batchScheduleDrawer);
+          notifyBatchDrawerHost('close');
+        });
       });
       document.querySelectorAll('[data-close-batch-preview-edit]').forEach(function (button) {
         button.addEventListener('click', function () { window.caesarUI.closeLayer(batchPreviewEditModal); });
@@ -5425,6 +5537,25 @@
           if (event.target === modal) window.caesarUI.closeLayer(modal);
         });
       });
+
+      if (batchDrawerEmbedMode && batchScheduleDrawer) {
+        var batchDrawerWasOpenInEmbed = false;
+        var batchDrawerEmbedObserver = new MutationObserver(function () {
+          var isOpen = batchScheduleDrawer.classList.contains('show') || batchScheduleDrawer.getAttribute('aria-hidden') === 'false';
+          if (isOpen) {
+            batchDrawerWasOpenInEmbed = true;
+            return;
+          }
+          if (batchDrawerWasOpenInEmbed) {
+            batchDrawerWasOpenInEmbed = false;
+            notifyBatchDrawerHost('close');
+          }
+        });
+        batchDrawerEmbedObserver.observe(batchScheduleDrawer, {
+          attributes: true,
+          attributeFilter: ['class', 'hidden', 'aria-hidden']
+        });
+      }
 
       if (addCostItem) addCostItem.addEventListener('click', openCostItemEditor);
       costRows.addEventListener('click', function (event) {
@@ -5854,7 +5985,7 @@
       document.getElementById('batchNextStep').addEventListener('click', function () {
         if (batchCurrentStep === 1) {
           if (!batchSelectedProduct || !batchPlanPicked) {
-            if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请先选择线路与方案', { type: 'warning' });
+            if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请先选择产品与线路', { type: 'warning' });
             return;
           }
           setBatchStep(2);
@@ -6116,9 +6247,9 @@
         route: pageParams.get('route') || ''
       };
       if (pageParams.get('open') === 'create') {
-        openBatch(prefill);
+        openBatchWhenPageReady(prefill);
       } else if (pageParams.get('open') === 'batch') {
-        openBatch(prefill);
+        openBatchWhenPageReady(prefill);
       }
       if (pageParams.get('view') === 'calendar') {
         setScheduleView('calendar');

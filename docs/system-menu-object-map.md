@@ -11,8 +11,8 @@
 | 链路节点 | 当前主菜单 | 直达入口 | 主要业务对象 | 核心角色 | 验收边界 |
 |---|---|---|---|---|---|
 | 资源源头 | 资源 | 基础资源、航空资源、邮轮资源、专列资源、供应商、领队资源 | 可复用资源主数据、协议和模板 | 产品、资源、采购配置 | 只做基础资料和协议规则，不承接订单、付款、NC。 |
-| 产品和方案 | 产品中心 | 线路市场、旅游线路、研学线路、单项服务、外采产品、定价策略 | 线路、方案、套餐、服务项目、外采包装 | 产品经理、运营 | 维护可售结构，不在产品页做财务执行。 |
-| 动态供给和履约 | 产品中心 | 团期管控、交通采购、团期成本、单团自组 | 团期、航次、班期、项目团、采购库存、成本项 | 计调、团控、采购、项目经理 | 团期和项目承接执行、名单、资源、成本，不直接确认财务付款。 |
+| 产品和方案 | 产品中心 | 外采产品 / 产品市场、代理产品；自营产品 / 产品管理；定价策略 | 自营产品、产品线路、代理产品、外采包装 | 产品经理、运营 | 维护可售结构，不在产品页做财务执行。 |
+| 动态供给和履约 | 产品中心 | 自营产品 / 产品管理、单团自组、团期管控、团期结算；交通采购 | 团期、航次、班期、项目团、采购库存、成本项 | 计调、团控、采购、项目经理 | 团期和项目承接执行、名单、资源、成本，不直接确认财务付款。 |
 | 销售交易 | 销售中心 | 产品预订、意向订单、订单管理、收款认领、合同管理、售后处理 | 报价、订单、合同、认款发起、售后申请 | 销售、门店、订单客服 | 处理客户交易和售后申请，不执行财务退款和付款。 |
 | 自有销售网络 | 门市中心 | 门店经营、门店管理、门店成员、预存余额、门店对帐 | 门店、顾问、预存账户、门店对账 | 门店运营、店长、门店财务 | 门店视角管理销售网络和资金节点，财务最终确认在财务模块。 |
 | 外部渠道 | 渠道中心 | 分销渠道、佣金规则、分销台账、分销对账、OTA平台 | 分销商、OTA、佣金、渠道对账 | 渠道运营 | 渠道配置和对账归渠道，订单和售后主处理仍回销售中心。 |
@@ -49,17 +49,15 @@
 
 | 菜单名称 | 页面 | 业务对象 | 上游 | 下游 | 验收关注 |
 |---|---|---|---|---|---|
-| 产品中心 > 线路市场 | `merchant/product/product-market.html` | 市场商品/可引入线路 | 自营、甄选、外采来源 | 外采引入、旅游线路、渠道销售 | 外采来源不能改变原产品类型。 |
-| 产品中心 > 产品管理 > 旅游线路 | `merchant/product/products.html` | 国内游、出境游、邮轮、专列、自由行线路 | 线路创建、AI拆解、外采包装 | 方案、团期、渠道授权 | 线路层不维护具体出发日和库存。 |
-| 产品中心 > 产品管理 > 研学线路 | `merchant/product/product-study-products.html` | 研学线路 | 研学产品创建 | 研学方案、营期/团期、订单 | 研学字段独立于普通旅游线路。 |
-| 产品中心 > 产品管理 > 单项服务 | `merchant/product/product-single-orders.html` | 服务项目/服务规则 | 服务配置、供应商 | 服务单、订单、应收 | 单项服务不进入线路/团期模型。 |
-| 产品中心 > 产品管理 > 外采产品 | `merchant/product/product-outsource-list.html` | 外采原始产品、包装产品、配额 | 供应商、线路市场 | 包装、采购价、订单、差额结算 | 外采是供给来源，不是万能产品类型。 |
-| 产品中心 > 团期管理 > 团期管控 | `merchant/tour/schedules.html` | 团期、航次、班期、项目团 | 线路、方案、单团项目 | 订单、名单、执行、成本、结算 | 项目团不应突出公开渠道余量和 OTA 售卖语义。 |
-| 产品中心 > 团期管理 > 团期成本 | `merchant/tour/fulfillment-cost.html` | 成本项、成本确认、付款申请发起 | 团期、项目团、资源确认 | 应付、付款审批、结算 | 业务侧确认成本，不做财务付款执行。 |
+| 产品中心 > 外采产品 > 产品市场 | `merchant/product/product-market.html` | 可外采线路产品 | 供应商、外部供给 | 代理入库、代理产品 | 产品市场只放可外采产品，不放自营产品。 |
+| 产品中心 > 外采产品 > 代理产品 | `merchant/product/product-outsource-list.html` | 代理产品、配额 | 产品市场、供应商报价 | 包装、采购价、订单、差额结算 | 代理产品是外采入库后的经营对象。 |
+| 产品中心 > 自营产品 > 产品管理 | `merchant/product/products.html` | 参团游、邮轮、专列、自由行、研学、单项服务等自营产品 | 产品创建、AI拆解、资源引用 | 产品线路、团期、渠道授权 | 产品层不维护具体出发日和库存。 |
+| 产品中心 > 自营产品 > 团期管控 | `merchant/tour/schedules.html` | 团期、航次、班期、项目团 | 产品、产品线路、单团项目 | 订单、名单、执行、成本、结算 | 项目团不应突出公开渠道余量和 OTA 售卖语义。 |
+| 产品中心 > 自营产品 > 单团自组 | `merchant/tour/product-custom-list.html` | 单团需求、报价版本、锁定报价、项目 | 客户需求、销售跟进 | 项目团、项目订单、合同、阶段应收、项目结算 | 单团主链路锚点，不能走普通新建订单作为主入口。 |
+| 产品中心 > 自营产品 > 团期结算 | `merchant/tour/fulfillment-cost.html` | 成本项、成本确认、付款申请发起 | 团期、项目团、资源确认 | 应付、付款审批、结算 | 业务侧确认成本，不做财务付款执行。 |
 | 产品中心 > 交通采购 > 机票切位 | `merchant/tour/resource-procurement-inventory.html?kind=air` | 机票切位库存 | 航司、航线、协议 | 团期分配、成本、应付 | 动态库存放产品中心正确，不回资源日常操作。 |
 | 产品中心 > 交通采购 > 邮轮包舱 | `merchant/tour/resource-procurement-inventory.html?kind=cruise` | 邮轮舱房采购库存 | 船公司、船只、模板 | 邮轮团期舱型库存、成本 | 舱房采购与邮轮资源模板分开。 |
 | 产品中心 > 交通采购 > 专列包铺 | `merchant/tour/resource-procurement-inventory.html?kind=train` | 专列铺位采购库存 | 运营商、车次、模板 | 专列班期铺位、成本 | 铺位采购与专列资源模板分开。 |
-| 产品中心 > 单团自组 | `merchant/tour/product-custom-list.html` | 单团需求、报价版本、锁定报价、项目 | 客户需求、销售跟进 | 项目团、项目订单、合同、阶段应收、项目结算 | 单团主链路锚点，不能走普通新建订单作为主入口。 |
 | 产品中心 > 定价策略 | `merchant/product/product-pricing.html` | 定价规则 | 产品、渠道、节假日 | 团期价、订单改价、审批 | 定价本身不触发财务，订单和改价才触发财务。 |
 
 ## 4. 销售中心地图
@@ -114,15 +112,15 @@
 
 | 二级页 | 归属菜单 | 业务对象 | 验收时要确认 |
 |---|---|---|---|
-| `merchant/product/products-detail.html` | 产品中心 > 产品管理 > 旅游线路 | 线路详情 | 独立成团入口如果存在，必须进入客户专属项目逻辑，不误导为公开团期。 |
-| `merchant/product/product-self-edit.html`、`product-cruise-edit.html`、`product-train-edit.html` | 产品中心 > 产品管理 > 旅游线路 | 不同线路类型编辑 | 字段按线路/方案/团期分层，不把库存写在线路层。 |
-| `merchant/product/product-outsource-detail.html`、`product-outsource-package.html`、`product-outsource-quota.html` | 产品中心 > 产品管理 > 外采产品 | 外采详情、包装、配额 | 外采只叠加供给来源和采购价，不替代原产品类型。 |
-| `merchant/tour/team-create.html` | 产品中心 > 团期管理 > 团期管控 | 新建团期/项目团 | `groupMode=independent` 时必须是客户专属项目团，不配置公开渠道。 |
-| `merchant/tour/schedules-detail.html` | 产品中心 > 团期管理 > 团期管控 | 团期/项目团详情 | 项目团视图不能出现散拼公开售卖语义。 |
-| `merchant/tour/schedules-calendar.html` | 产品中心 > 团期管理 > 团期管控 | 团期日历 | MICE/项目团在日历中应可识别且跳转正确。 |
-| `merchant/tour/product-custom-detail.html` | 产品中心 > 单团自组 | 单团项目详情 | 报价锁定、确认成团、生成对象和下一步入口必须清楚。 |
-| `merchant/tour/projects.html`、`projects-detail.html` | 产品中心 > 单团自组 | 旧项目执行页/项目详情 | 当前可能是历史入口，验收时确认是否仍需要保留或统一到单团项目/项目团。 |
-| `merchant/tour/fulfillment-supplier-fees.html`、`fulfillment-payment-apply.html` | 产品中心 > 团期管理 > 团期成本 | 供应商费用、付款申请 | 业务侧发起付款申请，财务侧付款执行。 |
+| `merchant/product/products-detail.html` | 产品中心 > 自营产品 > 产品管理 | 产品详情 | 独立成团入口如果存在，必须进入客户专属项目逻辑，不误导为公开团期。 |
+| `merchant/product/product-self-edit.html`、`product-cruise-edit.html`、`product-train-edit.html` | 产品中心 > 自营产品 > 产品管理 | 不同产品类型编辑 | 字段按产品/线路/团期分层，不把库存写在产品层。 |
+| `merchant/product/product-outsource-detail.html`、`product-outsource-package.html`、`product-outsource-quota.html` | 产品中心 > 外采产品 > 代理产品 | 代理产品详情、包装、配额 | 外采只叠加供给来源和采购价，不替代原产品类型。 |
+| `merchant/tour/team-create.html` | 产品中心 > 自营产品 > 团期管控 | 新建团期/项目团 | `groupMode=independent` 时必须是客户专属项目团，不配置公开渠道。 |
+| `merchant/tour/schedules-detail.html` | 产品中心 > 自营产品 > 团期管控 | 团期/项目团详情 | 项目团视图不能出现散拼公开售卖语义。 |
+| `merchant/tour/schedules-calendar.html` | 产品中心 > 自营产品 > 团期管控 | 团期日历 | MICE/项目团在日历中应可识别且跳转正确。 |
+| `merchant/tour/product-custom-detail.html` | 产品中心 > 自营产品 > 单团自组 | 单团项目详情 | 报价锁定、确认成团、生成对象和下一步入口必须清楚。 |
+| `merchant/tour/projects.html`、`projects-detail.html` | 产品中心 > 自营产品 > 单团自组 | 旧项目执行页/项目详情 | 当前可能是历史入口，验收时确认是否仍需要保留或统一到单团项目/项目团。 |
+| `merchant/tour/fulfillment-supplier-fees.html`、`fulfillment-payment-apply.html` | 产品中心 > 自营产品 > 团期结算 | 供应商费用、付款申请 | 业务侧发起付款申请，财务侧付款执行。 |
 | `merchant/sales/booking.html` | 销售中心 > 订单管理 | 新建订单 | 只作为普通订单录入和二级入口，单团项目订单不从这里主创建。 |
 | `merchant/sales/orders-detail.html` | 销售中心 > 订单管理 | 订单详情 | 列表和详情的收款、合同、资料、售后等动作必须打开同源内容。 |
 | `merchant/sales/orders-transfer.html`、`orders-cancel.html`、`orders-refund.html`、`orders-payment-transfer.html` | 销售中心 > 售后处理 | 售后申请 | 售后申请与财务退款执行边界清楚。 |
@@ -135,7 +133,7 @@
 | 关注点 | 当前观察 | 后续验收动作 |
 |---|---|---|
 | 菜单命名差异 | 当前导航是“销售中心、会员”，早期业务文档常写“订单中心、客户”。 | 最终报告按实际菜单名说明；是否改名进入问题清单，不在本步改。 |
-| 团期管理入口收敛 | 当前实际菜单下“团期管理”只有“团期管控、团期成本”，没有直达“出团执行、回团结算”。 | 第 5、6 步跑链路时判断是否因入口缺失导致执行/回团断点。 |
+| 团期入口收敛 | 当前实际菜单下“产品管理、单团自组、团期管控、团期结算”归入“自营产品”，没有直达“出团执行、回团结算”。 | 第 5、6 步跑链路时判断是否因入口缺失导致执行/回团断点。 |
 | 单团项目入口并存 | 当前存在 `product-custom-list/detail` 和 `projects/projects-detail` 两组项目相关页面。 | 单团链路验收时确认主入口、历史入口和项目团入口是否一致。 |
 | 普通下单与单团订单边界 | 当前 `sales/booking.html` 归属订单管理二级页，产品预订菜单指向 `sales-product-quote.html`。 | 验收单团时确认项目订单由确认成团生成，不从普通新建订单主入口创建。 |
 | 交通采购归属 | 当前交通采购在产品中心，不在资源模块。 | 验收跟团、邮轮、专列时检查采购库存能流向团期和成本。 |

@@ -1,6 +1,6 @@
 # 菜单和页面归属校准清单
 
-更新时间：2026-06-29
+更新时间：2026-07-10
 
 关联文档：
 
@@ -44,6 +44,7 @@
 | 资金池 | 财务报表里的一个统计项 | 财务一级“资金池”，报表内保留“资金池余额” | 资金池是资金节点和流水对象，不只是报表 |
 | 系统设置命名 | 组织管理、员工管理、角色授权、业务参数 | 组织架构、角色权限、员工账号、基础参数 | 与全局菜单固定命名对齐 |
 | 竞品价格页 | 未被菜单或 pageOwners 覆盖 | 归属到产品中心 / 定价策略 | 竞品价格服务价格策略，不归 AI 竞品分析主功能 |
+| 产品中心分组 | 产品市场、产品管理、团期管理、单团自组散列 | 外采产品 / 产品市场、代理产品；自营产品 / 产品管理、单团自组、团期管控、团期结算 | 按外采供给和自营经营两条主线组织入口 |
 
 现有商户端 HTML 页面覆盖检查结果：
 
@@ -73,19 +74,17 @@
 
 | 页面 | 菜单归属 | 维护对象 | 上游 | 下游 | 归属判断 |
 |---|---|---|---|---|---|
-| product/product-market.html | 产品中心 / 线路市场 | 线路市场商品 | 外部供给、自营线路、甄选贴牌 | 外采引入、渠道销售 | 全公司统一商品库 |
-| product/products.html | 产品中心 / 产品管理 / 旅游线路 | 旅游线路列表 | 线路创建、AI 拆解、外采包装 | 方案、团期、渠道授权 | 国内游、出境游、邮轮、专列、自由行统一列表 |
-| product/product-self-edit.html | 产品中心 / 产品管理 / 旅游线路 | 国内游/出境游线路编辑 | 线路列表 | 方案、团期 | 标准线路编辑页 |
-| product/product-cruise-edit.html | 产品中心 / 产品管理 / 旅游线路 | 邮轮线路编辑 | 线路列表 | 邮轮方案、团期舱型库存 | 邮轮是线路类型，不单独左侧菜单 |
-| product/product-train-edit.html | 产品中心 / 产品管理 / 旅游线路 | 专列线路编辑 | 线路列表 | 专列方案、团期铺位库存 | 专列是线路类型，不单独左侧菜单 |
-| product/product-free-travel-list.html | 产品中心 / 产品管理 / 旅游线路 | 自由行套餐展示/配置 | 旅游线路列表、资源 | 出行日期价格库存、订单 | 自由行可展示在线路列表，但不进团期模型 |
-| product/products-detail.html | 产品中心 / 产品管理 / 旅游线路 | 线路详情 | 线路列表 | 方案、团期、渠道授权 | 详情页归属旅游线路 |
-| product/product-study-products.html | 产品中心 / 产品管理 / 研学线路 | 研学线路列表 | 研学线路创建 | 研学方案、研学团期 | 研学字段独立，保留入口 |
-| product/product-study-edit.html | 产品中心 / 产品管理 / 研学线路 | 研学线路编辑 | 研学列表 | 课程、基地、导师、安全材料、团期 | 不与普通旅游线路共用完整表单 |
-| product/product-single-orders.html | 产品中心 / 产品管理 / 单项服务 | 服务项目/服务单入口 | 服务项目配置 | 服务单、服务费、代垫 | 单项服务不是线路 |
-| product/product-outsource-list.html | 产品中心 / 外采产品 / 产品列表 | 外采原始产品、包装产品 | 线路市场、供应商报价 | 方案包装、采购价、配额 | 外采是供给来源 |
-| product/product-outsource-package.html | 产品中心 / 外采产品 / 产品列表 | 外采方案包装 | 外采原始产品 | 包装产品、渠道价 | 包装页作为外采产品详情动作 |
-| product/product-outsource-quota.html | 产品中心 / 外采产品 / 产品列表 | 外采配额 | 外采产品、供应商确认 | 销售库存、订单占用 | 配额不单独作为左侧菜单 |
+| product/product-market.html | 产品中心 / 外采产品 / 产品市场 | 可外采线路产品 | 外部供给、供应商报价 | 代理入库、代理产品 | 产品市场只放可外采产品，不放自营产品 |
+| product/product-outsource-list.html | 产品中心 / 外采产品 / 代理产品 | 代理产品 | 产品市场、供应商报价 | 方案包装、采购价、配额 | 代理产品承接入库后的外采经营 |
+| product/product-outsource-package.html | 产品中心 / 外采产品 / 代理产品 | 代理产品包装 | 代理产品 | 包装产品、渠道价 | 包装页作为代理产品详情动作 |
+| product/product-outsource-quota.html | 产品中心 / 外采产品 / 代理产品 | 可代理团期/配额 | 代理产品、供应商确认 | 销售库存、订单占用 | 配额不单独作为左侧菜单 |
+| product/products.html | 产品中心 / 自营产品 / 产品管理 | 自营产品列表 | 产品创建、AI 拆解、资源引用 | 产品线路、团期、渠道授权 | 参团游、邮轮、专列、自由行、研学、单项服务统一在产品管理内承接 |
+| product/product-self-edit.html | 产品中心 / 自营产品 / 产品管理 | 参团游产品编辑 | 产品管理 | 产品线路、团期 | 标准自营产品编辑页 |
+| product/product-cruise-edit.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品编辑 | 产品管理 | 邮轮产品线路、团期舱型库存 | 邮轮是自营产品类型，不单独左侧菜单 |
+| product/product-train-edit.html | 产品中心 / 自营产品 / 产品管理 | 专列产品编辑 | 产品管理 | 专列产品线路、团期铺位库存 | 专列是自营产品类型，不单独左侧菜单 |
+| product/product-free-travel-list.html | 产品中心 / 自营产品 / 产品管理 | 自由行套餐展示/配置 | 产品管理、资源 | 出行日期价格库存、订单 | 自由行可在产品管理内展示，但不进团期模型 |
+| product/products-detail.html | 产品中心 / 自营产品 / 产品管理 | 自营产品详情 | 产品管理 | 产品线路、团期、渠道授权 | 详情页归属产品管理 |
+| product/product-study-edit.html | 产品中心 / 自营产品 / 产品管理 | 研学产品编辑 | 产品管理、教育资源 | 课程、基地、导师、安全材料、团期 | 研学作为产品管理内类型承接 |
 | product/product-pricing.html | 产品中心 / 定价策略 | 定价策略 | 产品、渠道、节假日规则 | 团期价格、订单价格、补差/退差 | 价格策略独立对象 |
 | product/product-competitor-price.html | 产品中心 / 定价策略 | 竞品价格监控 | AI 竞品分析、OTA 公开价 | 定价建议、价格调整审批 | 服务定价，不归 AI 菜单 |
 | product/product-channel-auth.html | 产品中心 / 渠道授权 | 渠道授权 | 线路、团期、定价策略 | 渠道可售、佣金计算 | 授权属于产品可售控制 |
@@ -94,25 +93,25 @@
 
 | 页面 | 菜单归属 | 维护对象 | 上游 | 下游 | 归属判断 |
 |---|---|---|---|---|---|
-| tour/schedules.html | 产品中心 / 团期管理 / 团期管控 | 团期 | 线路、方案 | 订单、执行、成本、结算 | 团期核心入口 |
-| tour/schedules-calendar.html | 产品中心 / 团期管理 / 团期管控 | 团期日历视图 | 团期 | 批量调整、开排 | 日历是团期管控视图 |
-| tour/schedules-batch.html | 产品中心 / 团期管理 / 团期管控 | 批量开排 | 方案 | 多个团期 | 批量开排是团期管控操作 |
-| tour/team-create.html | 产品中心 / 团期管理 / 团期管控 | 新建团期 | 线路、方案 | 团期库存、价格 | 新建团期不单独挂菜单 |
-| tour/schedules-detail.html | 产品中心 / 团期管理 / 团期管控 | 团期详情 | 团期 | 名单、收款、执行、成本、结算 | 团期业财链路锚点 |
+| tour/schedules.html | 产品中心 / 自营产品 / 团期管控 | 团期 | 产品、产品线路 | 订单、执行、成本、结算 | 团期核心入口 |
+| tour/schedules-calendar.html | 产品中心 / 自营产品 / 团期管控 | 团期日历视图 | 团期 | 批量调整、开排 | 日历是团期管控视图 |
+| tour/schedules-batch.html | 产品中心 / 自营产品 / 团期管控 | 批量开排 | 产品线路、价格模板 | 多个团期 | 批量开排是团期管控操作 |
+| tour/team-create.html | 产品中心 / 自营产品 / 团期管控 | 新建团期 | 产品、产品线路 | 团期库存、价格 | 新建团期不单独挂菜单 |
+| tour/schedules-detail.html | 产品中心 / 自营产品 / 团期管控 | 团期详情 | 团期 | 名单、收款、执行、成本、结算 | 团期业财链路锚点 |
 | tour/resource-procurement-inventory.html | 产品中心 / 交通采购 / 机票切位、邮轮包舱、专列包铺 | 机票位、邮轮舱房、专列铺位采购库存 | 航空公司、常用航班、航司协议、船公司/船只/航次模板、专列运营商/车次库/铺位模板 | 团期分配、订单消耗、释放还位、付款节点承接 | 具体日期和数量的动态交通采购库存，主入口独立为交通采购；供应商、协议和币种由资源配置自动识别 |
-| tour/fulfillment-cost.html | 产品中心 / 团期管理 / 团期成本 | 团期成本 | 团期、成本项 | 成本确认、应付草稿 | 业务侧确认成本和付款申请 |
-| tour/fulfillment-supplier-fees.html | 产品中心 / 团期管理 / 团期成本 | 供应商费用 | 团期成本、供应商账单 | 应付确认 | 成本付款子页 |
-| tour/fulfillment-payment-apply.html | 产品中心 / 团期管理 / 团期成本 | 付款申请 | 应付草稿/预付款 | 审批、财务付款执行 | 业务侧发起，财务侧执行 |
-| tour/fulfillment-outbound.html | 产品中心 / 团期管理 / 出团执行 | 执行总览 | 团期、订单名单 | 名单、证件、通知、签证 | 执行入口统一 |
-| tour/fulfillment-roster.html | 产品中心 / 团期管理 / 出团执行 | 名单管理 | 订单、游客 | 出团通知、保险、签证 | 团队执行子页 |
-| tour/fulfillment-documents.html | 产品中心 / 团期管理 / 出团执行 | 证件资料 | 游客 | 签证、出团校验 | 团队执行子页 |
-| tour/fulfillment-visa.html | 产品中心 / 团期管理 / 出团执行 | 签证进度 | 证件资料 | 出团校验、风险提示 | 团队执行子页 |
-| tour/fulfillment-notice.html | 产品中心 / 团期管理 / 出团执行 | 出团通知 | 团期、名单 | 客户通知、执行确认 | 团队执行子页 |
-| tour/fulfillment-return.html | 产品中心 / 团期管理 / 回团结算 | 回团记录 | 团队执行 | 实际成本、归档、结算单草稿 | 回团处理独立于团队执行 |
-| tour/product-custom-list.html | 产品中心 / 单团自组 | MICE/定制项目列表 | 需求、报价 | 项目执行、项目结算 | 项目型成团，不进标准线路库 |
-| tour/product-custom-detail.html | 产品中心 / 单团自组 | 单团项目详情 | 项目列表 | 报价、合同、执行、结算 | 单团自组详情 |
-| tour/projects.html | 产品中心 / 单团自组 | 项目执行列表 | 锁定报价 | 执行、成本、结算 | 单团项目执行对象 |
-| tour/projects-detail.html | 产品中心 / 单团自组 | 项目执行详情 | 项目执行单 | 项目结算、NC | 单团项目详情 |
+| tour/fulfillment-cost.html | 产品中心 / 自营产品 / 团期结算 | 团期成本 | 团期、成本项 | 成本确认、应付草稿 | 业务侧确认成本和付款申请 |
+| tour/fulfillment-supplier-fees.html | 产品中心 / 自营产品 / 团期结算 | 供应商费用 | 团期成本、供应商账单 | 应付确认 | 成本付款子页 |
+| tour/fulfillment-payment-apply.html | 产品中心 / 自营产品 / 团期结算 | 付款申请 | 应付草稿/预付款 | 审批、财务付款执行 | 业务侧发起，财务侧执行 |
+| tour/fulfillment-outbound.html | 产品中心 / 自营产品 / 团期管控 / 出团执行 | 执行总览 | 团期、订单名单 | 名单、证件、通知、签证 | 执行入口从团期管控和团期详情承接 |
+| tour/fulfillment-roster.html | 产品中心 / 自营产品 / 团期管控 / 出团执行 | 名单管理 | 订单、游客 | 出团通知、保险、签证 | 团队执行子页 |
+| tour/fulfillment-documents.html | 产品中心 / 自营产品 / 团期管控 / 出团执行 | 证件资料 | 游客 | 签证、出团校验 | 团队执行子页 |
+| tour/fulfillment-visa.html | 产品中心 / 自营产品 / 团期管控 / 出团执行 | 签证进度 | 证件资料 | 出团校验、风险提示 | 团队执行子页 |
+| tour/fulfillment-notice.html | 产品中心 / 自营产品 / 团期管控 / 出团执行 | 出团通知 | 团期、名单 | 客户通知、执行确认 | 团队执行子页 |
+| tour/fulfillment-return.html | 产品中心 / 自营产品 / 团期结算 / 回团处理 | 回团记录 | 团队执行 | 实际成本、归档、结算单草稿 | 回团处理从团期成本和团期详情承接 |
+| tour/product-custom-list.html | 产品中心 / 自营产品 / 单团自组 | MICE/定制项目列表 | 需求、报价 | 项目执行、项目结算 | 项目型成团，不进标准线路库 |
+| tour/product-custom-detail.html | 产品中心 / 自营产品 / 单团自组 | 单团项目详情 | 项目列表 | 报价、合同、执行、结算 | 单团自组详情 |
+| tour/projects.html | 产品中心 / 自营产品 / 单团自组 | 项目执行列表 | 锁定报价 | 执行、成本、结算 | 单团项目执行对象 |
+| tour/projects-detail.html | 产品中心 / 自营产品 / 单团自组 | 项目执行详情 | 项目执行单 | 项目结算、NC | 单团项目详情 |
 
 ## 6. 订单中心页面归属
 
@@ -156,7 +155,7 @@
 | resource/resource-airlines.html、resource/resource-flight-routes.html、resource/resource-flight-block.html | 资源 / 航空资源 | 航空公司、常用航班、航司协议 | 航空资源主数据，不维护具体采购库存 |
 | resource/resource-cruise-companies.html、resource/resource-cruise-ships.html、resource/resource-cruise-routes.html | 资源 / 邮轮资源 | 船公司、船只、邮轮航次/航线模板 | 船方协议规则并入船公司详情，邮轮资源模板不是可售方案 |
 | resource/resource-train-operators.html、resource/resource-train-trips.html、resource/resource-train-routes.html | 资源 / 专列资源 | 运营商、车次库、专列铺位模板 | 专列协议规则并入运营商详情，专列模板不是动态采购库存 |
-| resource/suppliers.html、resource/supplier-detail.html | 资源 / 供应商 | 供应商 | 供应商是资源主数据 |
+| resource/suppliers.html | 资源 / 供应商 | 供应商 | 供应商是资源主数据，合同和供应商设置在列表抽屉处理 |
 | resource/resource-tour-leaders.html、resource/resource-leader-schedule.html | 资源 / 领队资源 | 领队、排班 | 执行人员资源 |
 | channel/ota_products.html、channel/ota_orders.html、channel/ota_refunds.html、channel/ota_reconcile.html | 渠道中心 / OTA运营 | OTA 线路、订单、退款、对账 | OTA 是渠道对象 |
 | channel/distributors.html | 渠道中心 / 分销商管理 | 分销商 | 分销商不是供应商 |
@@ -199,8 +198,8 @@
 
 1. 可复用主数据进入资源。
 2. 长期可售旅游产品进入产品中心。
-3. 国内游、出境游、邮轮、专列、自由行进入产品管理 / 旅游线路；研学进入研学线路。
-4. 单项服务进入产品管理 / 单项服务。
+3. 参团游、邮轮、专列、自由行、研学、单项服务进入 自营产品 / 产品管理。
+4. 可外采线路产品进入 外采产品 / 产品市场；代理入库后进入 外采产品 / 代理产品。
 5. 团期、成本、出团执行、回团结算进入团期管理。
 6. 销售订单、合同、售后申请进入订单中心。
 7. 退款执行、付款执行、应收、应付、结算、发票、NC 进入财务。
@@ -215,7 +214,7 @@
 第七步验收结果：
 
 1. 商户端现有 102 个 HTML 页面均被菜单或 `pageOwners` 覆盖。
-2. 旅游线路、研学线路、单项服务、外采产品、团期管理、单团自组的归属与产品类型矩阵一致。
+2. 外采产品、自营产品、产品管理、单团自组、团期管控、团期结算的归属与产品类型矩阵一致。
 3. 售后申请归订单中心，退款执行归财务。
 4. 供应商归资源，分销商和代理商归渠道中心。
 5. 资金池被识别为财务资金对象，不只是报表项。

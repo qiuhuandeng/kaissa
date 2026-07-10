@@ -40,7 +40,7 @@
 |---|---|---|---|
 | P0 标准线路闭环 | 资源、旅游线路、团期、订单、收款、成本、结算、NC | 先打通跟团/邮轮/专列/研学主链路 | 从团期详情能看到方案、库存、订单、收款、执行、成本、结算、应付、付款、NC |
 | P1 三条旁路 | 自由行、单项服务、MICE | 不强行套团期，但进入统一财务链路 | 自由行能到采购批次，单项服务能拆服务费和代垫，MICE 能按锁定报价结算 |
-| P2 外采和渠道 | 线路市场、外采产品、OTA、分销商、代理商、佣金 | 外采作为供给来源叠加，不替代产品类型 | 全额收款、采购价付款、差额收入结转可追踪 |
+| P2 外采和渠道 | 产品市场、代理产品、OTA、分销商、代理商、佣金 | 外采作为供给来源叠加，不替代产品类型 | 全额收款、采购价付款、差额收入结转可追踪 |
 | P3 财务深化 | 应收、认款、收款、应付、付款、退款、结算、发票、NC、报表 | 财务单据都能回到业务事件 | 每笔财务单据可追溯来源对象和事件编号 |
 | P4 支撑模块 | 工作台、客户、审批、AI、系统 | 补齐支撑和配置能力 | 不破坏业务主链路，审批和 AI 回写原业务对象 |
 
@@ -48,41 +48,39 @@
 
 | 页面 | 所属菜单 | 维护对象 | 上游对象 | 下游对象 | 核心字段 | 状态字段 | 触发财务事件 | NC/发票影响 | 跳转页面 | 验收标准 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| resource/resource-masterdata.html | 资源 / 基础资源 | POI/酒店/餐厅/车型/别名 | 人工维护、供应商资料、AI 解析 | 方案资源节点、自由行套餐 | 资源名称、类型、目的地、别名、供应商、状态 | 启用/停用 | 无 | 无 | 线路编辑、供应商详情 | 可被方案引用，不反向覆盖主数据 |
+| resource/resource-masterdata.html | 资源 / 基础资源 | POI/酒店/餐厅/车型/别名 | 人工维护、供应商资料、AI 解析 | 方案资源节点、自由行套餐 | 资源名称、类型、目的地、别名、供应商、状态 | 启用/停用 | 无 | 无 | 线路编辑、供应商列表 | 可被方案引用，不反向覆盖主数据 |
 | resource/resource-flight-routes.html | 资源 / 航空资源 / 航线库 | 航线 | 航司协议、人工维护 | 方案交通、团期执行、机票成本 | 航司、起降地、航班号、舱位、币种 | 启用/停用 | 无 | 机票成本确认后进入 NC | 线路编辑、团期详情 | 航线只做资源，不写团期价格库存 |
 | resource/resource-flight-block.html | 资源 / 航空资源 / 锁位管理 | 锁位资源 | 航司锁位协议 | 团期库存、订单占位、成本项 | 航线、锁位数、释放日、定金、供应商 | 有效/告急/已释放 | BF-PAY-001 | 预付款可生成付款和 NC | 团期详情、成本付款 | 锁位可追踪到团期和订单占用 |
-| resource/resource-cruise-companies.html | 资源 / 邮轮资源 / 船公司 | 船公司 | 船司资料 | 船只档案、邮轮方案、供应商成本 | 船公司、结算币种、联系人、规则 | 合作中/暂停 | 无 | 船方账单确认后影响 NC | 船只档案、供应商详情 | 船公司不是可售邮轮方案 |
+| resource/resource-cruise-companies.html | 资源 / 邮轮资源 / 船公司 | 船公司 | 船司资料 | 船只档案、邮轮方案、供应商成本 | 船公司、结算币种、联系人、规则 | 合作中/暂停 | 无 | 船方账单确认后影响 NC | 船只档案、供应商合同抽屉 | 船公司不是可售邮轮方案 |
 | resource/resource-cruise-ships.html | 资源 / 邮轮资源 / 船只档案 | 船只档案 | 船公司 | 邮轮方案、舱型模板 | 船名、吨位、舱型模板、设施、甲板图 | 启用/停用 | 无 | 无 | 邮轮线路编辑 | 舱型模板不等于团期舱型库存 |
 | resource/resource-cruise-routes.html | 资源 / 邮轮资源 / 邮轮航线 | 邮轮航线 | 船公司、港口 | 邮轮方案、团期航次 | 母港、停靠港、航次天数、港务费规则 | 启用/停用 | 无 | 港务费成本确认后影响 NC | 邮轮线路编辑 | 只维护航线资源，不维护销售价 |
-| resource/resource-train-operators.html | 资源 / 专列资源 / 运营商 | 专列运营商 | 运营商协议 | 专列线路、团期铺位成本 | 运营商、车体、结算规则、联系人 | 合作中/暂停 | 无 | 运营方账单确认后影响 NC | 专列线路、供应商详情 | 运营商不是渠道代理商 |
+| resource/resource-train-operators.html | 资源 / 专列资源 / 运营商 | 专列运营商 | 运营商协议 | 专列线路、团期铺位成本 | 运营商、车体、结算规则、联系人 | 合作中/暂停 | 无 | 运营方账单确认后影响 NC | 专列线路、供应商合同抽屉 | 运营商不是渠道代理商 |
 | resource/resource-train-routes.html | 资源 / 专列资源 / 专列线路 | 专列基础线路 | 运营商、车站 | 专列方案、团期铺位 | 起终点、经停站、铺位模板、车厢结构 | 启用/停用 | 无 | 包列成本确认后影响 NC | 专列线路编辑 | 铺位模板不等于团期铺位库存 |
-| resource/suppliers.html | 资源 / 供应商 | 供应商 | 人工维护、合同 | 成本项、应付单、进项发票 | 名称、类型、结算方式、账户、科目、资质 | 合作中/暂停/终止 | BF-COST-009 | 应付、付款、进项发票、NC | supplier-detail.html | 供应商不与分销商、代理商混用 |
-| resource/supplier-detail.html | 资源 / 供应商 | 供应商详情 | 供应商列表 | 成本、应付、付款、发票 | 基本资料、账户、合同、资质、账期 | 合作状态、资质状态 | BF-COST-009 | 进项发票和付款 NC | suppliers.html、finance-payable.html | 供应商字段变更可审计 |
+| resource/suppliers.html | 资源 / 供应商 | 供应商 | 人工维护、合同、业务设置 | 成本项、应付单、进项发票 | 名称、类型、服务范围、资质、合同、结算账户 | 合作中/暂停/终止 | BF-COST-009 | 应付、付款、进项发票、NC | 合同管理抽屉、供应商设置抽屉 | 供应商不与分销商、代理商混用 |
 | resource/resource-tour-leaders.html | 资源 / 领队资源 | 领队/导师资源 | 人工维护、排班 | 团期执行、成本项 | 姓名、证件、语种、资质、档期 | 可用/占用/停用 | 无 | 领队费用确认后影响 NC | resource-leader-schedule.html | 领队是资源，不是员工账号 |
 | resource/resource-leader-schedule.html | 资源 / 领队资源 | 领队排班 | 领队资源、团期 | 团队执行、领队成本 | 领队、团期、日期、目的地、费用 | 待确认/已确认/冲突 | BF-COST-002 | 领队费用进入成本和应付 | resource-tour-leaders.html、schedules-detail.html | 排班冲突可识别 |
-| product/products.html | 产品中心 / 自营产品 / 旅游线路 | 旅游线路列表 | 线路创建、AI 解析、外采包装 | 方案、团期、渠道授权 | 产品名称、线路类型、目的地、素材、费用政策 | 草稿/审核中/已上架/已下架 | 无 | 无 | product-self-edit.html、products-detail.html | 跟团/邮轮/专列/自由行统一筛选 |
-| product/product-self-edit.html | 产品中心 / 自营产品 / 旅游线路 | 跟团线路编辑 | 旅游线路列表、资源 | 跟团方案、团期 | 线路信息、费用政策、分日行程、酒店、交通、POI | 草稿/审核中/已发布 | 无 | 无 | products.html、team-create.html | 线路层不维护具体日期价格库存 |
-| product/product-cruise-edit.html | 产品中心 / 自营产品 / 旅游线路 | 邮轮线路编辑 | 旅游线路列表、邮轮资源 | 邮轮方案、舱型结构、团期 | 船公司、船名、航线、舱型、岸上游、费用政策 | 草稿/审核中/已发布 | 无 | 港务费、船方成本后续影响 NC | products.html、team-create.html | 舱型结构在方案层，库存在团期层 |
-| product/product-cruise-routes.html | 产品中心 / 自营产品 / 旅游线路 | 邮轮方案配置 | 邮轮线路、邮轮资源 | 邮轮团期、舱型库存 | 航次、船只、舱型结构、靠港行程、岸上游 | 草稿/已发布 | 无 | 港务费和船方成本后续进 NC | product-cruise-edit.html、team-create.html | 邮轮方案维护售卖结构，不维护当期库存 |
-| product/product-train-edit.html | 产品中心 / 自营产品 / 旅游线路 | 专列线路编辑 | 旅游线路列表、专列资源 | 专列方案、铺位结构、团期 | 运营商、线路、车厢、铺位、经停站、接驳 | 草稿/审核中/已发布 | 无 | 包列成本后续影响 NC | products.html、team-create.html | 铺位结构在方案层，库存在团期层 |
-| product/product-train-routes.html | 产品中心 / 自营产品 / 旅游线路 | 专列方案配置 | 专列线路、专列资源 | 专列团期、铺位库存 | 车厢、席别、铺位结构、经停站、下车游览 | 草稿/已发布 | 无 | 包列和铺位成本后续进 NC | product-train-edit.html、team-create.html | 专列方案维护铺位结构，不维护当期库存 |
-| product/products-detail.html | 产品中心 / 自营产品 / 旅游线路 | 线路详情 | 旅游线路 | 方案、团期、渠道授权、订单 | 线路摘要、方案列表、团期、素材、政策 | 上架状态、审核状态 | 无 | 无 | products.html、schedules-detail.html | 详情能进入团期和订单链路 |
-| product/product-study-products.html | 产品中心 / 自营产品 / 研学线路 | 研学线路列表 | 研学创建、教育资源 | 研学方案、团期 | 主题、年级、基地、机构、安全材料 | 草稿/审核中/已上架 | 无 | 无 | product-study-edit.html | 研学独立入口，不与普通线路混表单 |
-| product/product-study-edit.html | 产品中心 / 自营产品 / 研学线路 | 研学线路编辑 | 研学列表、资源 | 课程、导师、团期 | 教育目标、课程体系、基地、导师、安全预案 | 草稿/审核中/已发布 | 无 | 学校直签收款后影响 NC | product-study-products.html、team-create.html | 教育字段完整且可生成研学团期 |
-| tour/team-create.html | 产品中心 / 团期团控 / 团期列表 | 新建团期 | 线路、方案 | 团期库存、价格、渠道 | 团号、日期、容量、价格、库存矩阵、截止日 | 筹备中/开放报名 | 无 | 无 | schedules.html、schedules-detail.html | 团期层不重复完整行程 |
-| tour/schedules.html | 产品中心 / 团期团控 / 团期列表 | 团期 | 线路、方案 | 订单、执行、成本、结算 | 团号、出发日、库存、价格、渠道、领队 | 销售状态、执行状态、结算状态 | 无 | 无 | schedules-detail.html、team-create.html | 标准团期三组状态可筛选 |
-| tour/schedules-calendar.html | 产品中心 / 团期团控 / 团期列表 | 团期日历 | 团期 | 批量开排、团期详情 | 日期、线路、余位、状态、截止节点 | 销售状态 | 无 | 无 | schedules-detail.html、schedules-batch.html | 日历是视图，不另建对象 |
-| tour/schedules-batch.html | 产品中心 / 团期团控 / 团期列表 | 批量开排 | 方案、价格模板 | 多个团期 | 方案、日期规则、价格、库存、渠道 | 筹备中 | 无 | 无 | schedules.html | 批量生成团期不生成订单或财务单据 |
-| tour/schedules-detail.html | 产品中心 / 团期团控 / 团期列表 | 团期详情 | 团期 | 订单、名单、收款、执行、成本、结算 | 方案、库存矩阵、名单、收款、执行、成本、结算 | 销售/执行/结算状态 | BF-SALE-001、BF-COST-002、BF-SETTLE-001 | 收款、成本、结算进入 NC | orders.html、fulfillment-cost.html、finance-settlement-detail.html | 从团期能看完整业财链路 |
-| tour/fulfillment-outbound.html | 产品中心 / 团期团控 / 团队执行 | 团队执行总览 | 团期、订单名单 | 名单、证件、签证、通知、回团 | 团号、名单、资料、负责人、风险 | 未出团/操作中/已出发/已回团 | 无 | 无 | fulfillment-roster.html、fulfillment-return.html | 执行状态不替代销售状态 |
-| tour/fulfillment-roster.html | 产品中心 / 团期团控 / 团队执行 | 名单管理 | 订单、游客 | 出团通知、保险、成本人数 | 游客、证件、房型、特殊需求、收款风险 | 名单待确认/已锁定 | 无 | 无 | orders-detail.html、fulfillment-documents.html | 名单锁定和订单人数一致 |
-| tour/fulfillment-documents.html | 产品中心 / 团期团控 / 团队执行 | 证件资料 | 游客名单 | 签证、保险、出团校验 | 护照、证件有效期、附件、材料状态 | 待补/已齐/异常 | 无 | 无 | fulfillment-visa.html | 资料风险能回写订单详情 |
-| tour/fulfillment-visa.html | 产品中心 / 团期团控 / 团队执行 | 签证进度 | 证件资料、签证供应商 | 出团校验、签证成本 | 签证国家、材料、送签日、出签日、费用 | 待送签/送签中/已出签/拒签 | BF-COST-002 | 签证成本确认后进入 NC | fulfillment-documents.html、finance-payable.html | 签证异常触发订单风险 |
-| tour/fulfillment-notice.html | 产品中心 / 团期团控 / 团队执行 | 出团通知 | 团期、名单、集合信息 | 客户通知、执行记录 | 集合点、领队、行前说明、发送渠道 | 待发送/已发送/失败 | 无 | 无 | orders-detail.html | 通知记录可追溯到游客 |
-| tour/fulfillment-return.html | 产品中心 / 团期团控 / 回团处理 | 回团记录 | 团队执行 | 实际成本、异常关闭、结算草稿 | 回团日期、满意度、异常、归档资料、实际成本入口 | 已回团/已归档 | BF-COST-002、BF-SETTLE-001 | 成本确认和结算进入 NC | fulfillment-cost.html、finance-settlement.html | 回团后才开启实际成本确认 |
-| tour/fulfillment-cost.html | 产品中心 / 团期团控 / 成本付款 | 团期成本 | 团期、回团记录、成本项 | 成本确认单、应付草稿 | 预估成本、实际成本、供应商、科目、毛利 | 未维护/预估/实际确认 | BF-COST-001、BF-COST-002 | 成本确认后进入 NC | fulfillment-supplier-fees.html、finance-payable.html | 预估成本不生成应付 |
-| tour/fulfillment-supplier-fees.html | 产品中心 / 团期团控 / 成本付款 | 供应商费用 | 成本项、供应商账单 | 应付单、差异记录 | 供应商、费用项、数量、金额、发票要求 | 待对账/有差异/已确认 | BF-COST-009、BF-COST-010、BF-COST-011 | 应付和进项发票影响 NC | finance-payable.html | 无业务对象账单不得生成应付 |
-| tour/fulfillment-payment-apply.html | 产品中心 / 团期团控 / 成本付款 | 付款申请 | 应付草稿、预付款申请 | 审批、财务付款执行 | 供应商、应付单、金额、账户、用途 | 草稿/审批中/通过/拒绝 | BF-PAY-001、BF-PAY-002 | 审批通过后不推 NC，付款后推 | approval/approvals.html、finance-payment.html | 付款申请不等于已付款 |
+| product/products.html | 产品中心 / 自营产品 / 产品管理 | 自营产品列表 | 产品创建、AI 解析、资源引用 | 产品线路、团期、渠道授权 | 产品名称、产品类型、目的地、素材、费用政策 | 草稿/审核中/已上架/已下架 | 无 | 无 | product-self-edit.html、products-detail.html | 参团游/邮轮/专列/自由行/研学/单项服务统一筛选 |
+| product/product-self-edit.html | 产品中心 / 自营产品 / 产品管理 | 参团游产品编辑 | 产品管理、资源 | 产品线路、团期 | 产品信息、费用政策、分日行程、酒店、交通、POI | 草稿/审核中/已发布 | 无 | 无 | products.html、team-create.html | 产品层不维护具体日期价格库存 |
+| product/product-cruise-edit.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品编辑 | 产品管理、邮轮资源 | 邮轮产品线路、舱型结构、团期 | 船公司、船名、航线、舱型、岸上游、费用政策 | 草稿/审核中/已发布 | 无 | 港务费、船方成本后续影响 NC | products.html、team-create.html | 舱型结构在线路层，库存在团期层 |
+| product/product-cruise-routes.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品线路配置 | 邮轮产品、邮轮资源 | 邮轮团期、舱型库存 | 航次、船只、舱型结构、靠港行程、岸上游 | 草稿/已发布 | 无 | 港务费和船方成本后续进 NC | product-cruise-edit.html、team-create.html | 邮轮产品线路维护售卖结构，不维护当期库存 |
+| product/product-train-edit.html | 产品中心 / 自营产品 / 产品管理 | 专列产品编辑 | 产品管理、专列资源 | 专列产品线路、铺位结构、团期 | 运营商、线路、车厢、铺位、经停站、接驳 | 草稿/审核中/已发布 | 无 | 包列成本后续影响 NC | products.html、team-create.html | 铺位结构在线路层，库存在团期层 |
+| product/product-train-routes.html | 产品中心 / 自营产品 / 产品管理 | 专列产品线路配置 | 专列产品、专列资源 | 专列团期、铺位库存 | 车厢、席别、铺位结构、经停站、下车游览 | 草稿/已发布 | 无 | 包列和铺位成本后续进 NC | product-train-edit.html、team-create.html | 专列产品线路维护铺位结构，不维护当期库存 |
+| product/products-detail.html | 产品中心 / 自营产品 / 产品管理 | 产品详情 | 自营产品 | 产品线路、团期、渠道授权、订单 | 产品摘要、线路列表、团期、素材、政策 | 上架状态、审核状态 | 无 | 无 | products.html、schedules-detail.html | 详情能进入团期和订单链路 |
+| product/product-study-edit.html | 产品中心 / 自营产品 / 产品管理 | 研学产品编辑 | 产品管理、教育资源 | 课程、导师、团期 | 教育目标、课程体系、基地、导师、安全预案 | 草稿/审核中/已发布 | 无 | 学校直签收款后影响 NC | products.html、team-create.html | 教育字段完整且可生成研学团期 |
+| tour/team-create.html | 产品中心 / 自营产品 / 团期管控 | 新建团期 | 产品、产品线路 | 团期库存、价格、渠道 | 团号、日期、容量、价格、库存矩阵、截止日 | 筹备中/开放报名 | 无 | 无 | schedules.html、schedules-detail.html | 团期层不重复完整行程 |
+| tour/schedules.html | 产品中心 / 自营产品 / 团期管控 | 团期 | 产品、产品线路 | 订单、执行、成本、结算 | 团号、出发日、库存、价格、渠道、领队 | 销售状态、执行状态、结算状态 | 无 | 无 | schedules-detail.html、team-create.html | 标准团期三组状态可筛选 |
+| tour/schedules-calendar.html | 产品中心 / 自营产品 / 团期管控 | 团期日历 | 团期 | 批量开排、团期详情 | 日期、产品、余位、状态、截止节点 | 销售状态 | 无 | 无 | schedules-detail.html、schedules-batch.html | 日历是视图，不另建对象 |
+| tour/schedules-batch.html | 产品中心 / 自营产品 / 团期管控 | 批量开排 | 产品线路、价格模板 | 多个团期 | 线路、日期规则、价格、库存、渠道 | 筹备中 | 无 | 无 | schedules.html | 批量生成团期不生成订单或财务单据 |
+| tour/schedules-detail.html | 产品中心 / 自营产品 / 团期管控 | 团期详情 | 团期 | 订单、名单、收款、执行、成本、结算 | 产品线路、库存矩阵、名单、收款、执行、成本、结算 | 销售/执行/结算状态 | BF-SALE-001、BF-COST-002、BF-SETTLE-001 | 收款、成本、结算进入 NC | orders.html、fulfillment-cost.html、finance-settlement-detail.html | 从团期能看完整业财链路 |
+| tour/fulfillment-outbound.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 团队执行总览 | 团期、订单名单 | 名单、证件、签证、通知、回团 | 团号、名单、资料、负责人、风险 | 未出团/操作中/已出发/已回团 | 无 | 无 | fulfillment-roster.html、fulfillment-return.html | 执行状态不替代销售状态 |
+| tour/fulfillment-roster.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 名单管理 | 订单、游客 | 出团通知、保险、成本人数 | 游客、证件、房型、特殊需求、收款风险 | 名单待确认/已锁定 | 无 | 无 | orders-detail.html、fulfillment-documents.html | 名单锁定和订单人数一致 |
+| tour/fulfillment-documents.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 证件资料 | 游客名单 | 签证、保险、出团校验 | 护照、证件有效期、附件、材料状态 | 待补/已齐/异常 | 无 | 无 | fulfillment-visa.html | 资料风险能回写订单详情 |
+| tour/fulfillment-visa.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 签证进度 | 证件资料、签证供应商 | 出团校验、签证成本 | 签证国家、材料、送签日、出签日、费用 | 待送签/送签中/已出签/拒签 | BF-COST-002 | 签证成本确认后进入 NC | fulfillment-documents.html、finance-payable.html | 签证异常触发订单风险 |
+| tour/fulfillment-notice.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 出团通知 | 团期、名单、集合信息 | 客户通知、执行记录 | 集合点、领队、行前说明、发送渠道 | 待发送/已发送/失败 | 无 | 无 | orders-detail.html | 通知记录可追溯到游客 |
+| tour/fulfillment-return.html | 产品中心 / 自营产品 / 团期结算 / 回团处理 | 回团记录 | 团队执行 | 实际成本、异常关闭、结算草稿 | 回团日期、满意度、异常、归档资料、实际成本入口 | 已回团/已归档 | BF-COST-002、BF-SETTLE-001 | 成本确认和结算进入 NC | fulfillment-cost.html、finance-settlement.html | 回团后才开启实际成本确认 |
+| tour/fulfillment-cost.html | 产品中心 / 自营产品 / 团期结算 | 团期成本 | 团期、回团记录、成本项 | 成本确认单、应付草稿 | 预估成本、实际成本、供应商、科目、毛利 | 未维护/预估/实际确认 | BF-COST-001、BF-COST-002 | 成本确认后进入 NC | fulfillment-supplier-fees.html、finance-payable.html | 预估成本不生成应付 |
+| tour/fulfillment-supplier-fees.html | 产品中心 / 自营产品 / 团期结算 | 供应商费用 | 成本项、供应商账单 | 应付单、差异记录 | 供应商、费用项、数量、金额、发票要求 | 待对账/有差异/已确认 | BF-COST-009、BF-COST-010、BF-COST-011 | 应付和进项发票影响 NC | finance-payable.html | 无业务对象账单不得生成应付 |
+| tour/fulfillment-payment-apply.html | 产品中心 / 自营产品 / 团期结算 | 付款申请 | 应付草稿、预付款申请 | 审批、财务付款执行 | 供应商、应付单、金额、账户、用途 | 草稿/审批中/通过/拒绝 | BF-PAY-001、BF-PAY-002 | 审批通过后不推 NC，付款后推 | approval/approvals.html、finance-payment.html | 付款申请不等于已付款 |
 | sales/sales-product-quote.html | 订单中心 / 线路浏览与报价 | 线路浏览和报价单 | 线路、团期、套餐、需求 | 报价单、订单 | 产品、团期、价格、客户、报价有效期 | 草稿/已发送/已确认 | 无，报价确认后生成订单应收 | 无 | booking.html、orders.html | 报价不直接生成财务单据 |
 | sales/orders-intent.html | 订单中心 / 意向订单 | 意向订单 | 客户线索、咨询、AI 建议 | 报价单、销售订单、跟进记录 | 客户、需求、预算、日期、产品偏好、跟进人 | 新建/跟进中/已转订单/已关闭 | 无 | 无 | sales-product-quote.html、booking.html | 意向不触发财务，转订单后才生成应收 |
 | sales/booking.html | 订单中心 / 订单管理 | 新建订单 | 报价、团期、套餐、服务项目 | 应收、库存占用、合同 | 客户、出行人、产品、库存、价格、收款计划 | 待提交/待收款 | BF-SALE-001、BF-SALE-002、BF-SALE-003 | 认款后推 NC，可开票 | orders-detail.html、payment-claim.html | 下单生成应收且占用正确库存 |
@@ -109,25 +107,25 @@
 
 | 页面 | 所属菜单 | 维护对象 | 上游对象 | 下游对象 | 核心字段 | 状态字段 | 触发财务事件 | NC/发票影响 | 跳转页面 | 验收标准 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| product/product-free-travel-list.html | 产品中心 / 自营产品 / 旅游线路 | 自由行套餐 | 酒店、航班、车型、POI、供应商 | 出行日期价格库存、订单、采购批次 | 套餐、日期库存、房量、价格、采购规则 | 草稿/在售/停售 | BF-SALE-002 | 订单收款和批次成本进入 NC | booking.html、finance-settlement.html | 自由行不出现在团期列表 |
-| product/product-single-orders.html | 产品中心 / 自营产品 / 单项服务 | 服务项目和服务单入口 | 服务项目规则、客户 | 服务单、服务费、代垫、结算 | 服务项目、材料、服务费、代垫、办理节点 | 启用/停用/待处理/执行中 | BF-SALE-003、BF-COST-007、BF-SETTLE-005 | 服务费和代垫科目分离 | sales/booking.html、finance-settlement.html | 单项服务不进入新建线路 |
-| tour/product-custom-list.html | 产品中心 / 单团自组 | MICE/定制需求列表 | 客户需求、销售线索 | 报价版本、锁定报价、项目 | 客户、人数、预算、日期、需求、负责人 | 需求确认/报价中/已确认/取消 | BF-SALE-004 | 阶段应收后进入 NC | product-custom-detail.html、projects.html | MICE 不进入标准线路库 |
-| tour/product-custom-detail.html | 产品中心 / 单团自组 | 单团需求/报价详情 | 需求单 | 报价版本、合同、项目执行 | 报价版本、行程、费用、资源、客户反馈 | 草稿/已发送/已确认/已作废 | BF-SALE-004 | 锁定报价后阶段收款进入 NC | projects-detail.html、contracts.html | 锁定报价不得覆盖 |
-| tour/projects.html | 产品中心 / 单团自组 | 项目执行列表 | 锁定报价、合同 | 项目成本、阶段应收、项目结算 | 项目、客户、阶段、应收、成本、负责人 | 筹备中/操作中/执行中/已完成 | BF-SALE-005、BF-COST-008 | 阶段收款、项目成本进 NC | projects-detail.html | 项目按锁定报价核算 |
-| tour/projects-detail.html | 产品中心 / 单团自组 | 项目执行详情 | 项目执行单 | 成本确认、项目结算、NC | 锁定报价、变更单、阶段收款、实际成本 | 项目执行状态、项目结算状态 | BF-COST-008、BF-SETTLE-006 | 项目结算生成 NC 结转 | finance-settlement-detail.html、finance-nc.html | 项目变更生成变更单 |
+| product/product-free-travel-list.html | 产品中心 / 自营产品 / 产品管理 | 自由行套餐 | 酒店、航班、车型、POI、供应商 | 出行日期价格库存、订单、采购批次 | 套餐、日期库存、房量、价格、采购规则 | 草稿/在售/停售 | BF-SALE-002 | 订单收款和批次成本进入 NC | booking.html、finance-settlement.html | 自由行不出现在团期列表 |
+| product/product-single-orders.html | 产品中心 / 自营产品 / 产品管理 | 服务项目和服务单入口 | 服务项目规则、客户 | 服务单、服务费、代垫、结算 | 服务项目、材料、服务费、代垫、办理节点 | 启用/停用/待处理/执行中 | BF-SALE-003、BF-COST-007、BF-SETTLE-005 | 服务费和代垫科目分离 | sales/booking.html、finance-settlement.html | 单项服务不进入新建线路 |
+| tour/product-custom-list.html | 产品中心 / 自营产品 / 单团自组 | MICE/定制需求列表 | 客户需求、销售线索 | 报价版本、锁定报价、项目 | 客户、人数、预算、日期、需求、负责人 | 需求确认/报价中/已确认/取消 | BF-SALE-004 | 阶段应收后进入 NC | product-custom-detail.html、projects.html | MICE 不进入标准线路库 |
+| tour/product-custom-detail.html | 产品中心 / 自营产品 / 单团自组 | 单团需求/报价详情 | 需求单 | 报价版本、合同、项目执行 | 报价版本、行程、费用、资源、客户反馈 | 草稿/已发送/已确认/已作废 | BF-SALE-004 | 锁定报价后阶段收款进入 NC | projects-detail.html、contracts.html | 锁定报价不得覆盖 |
+| tour/projects.html | 产品中心 / 自营产品 / 单团自组 | 项目执行列表 | 锁定报价、合同 | 项目成本、阶段应收、项目结算 | 项目、客户、阶段、应收、成本、负责人 | 筹备中/操作中/执行中/已完成 | BF-SALE-005、BF-COST-008 | 阶段收款、项目成本进 NC | projects-detail.html | 项目按锁定报价核算 |
+| tour/projects-detail.html | 产品中心 / 自营产品 / 单团自组 | 项目执行详情 | 项目执行单 | 成本确认、项目结算、NC | 锁定报价、变更单、阶段收款、实际成本 | 项目执行状态、项目结算状态 | BF-COST-008、BF-SETTLE-006 | 项目结算生成 NC 结转 | finance-settlement-detail.html、finance-nc.html | 项目变更生成变更单 |
 
 ## 5. P2 外采和渠道任务卡
 
 | 页面 | 所属菜单 | 维护对象 | 上游对象 | 下游对象 | 核心字段 | 状态字段 | 触发财务事件 | NC/发票影响 | 跳转页面 | 验收标准 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| product/product-market.html | 产品中心 / 线路市场 | 线路市场商品 | 自营、甄选、纯代理、供应商供给 | 外采引入、包装、渠道销售 | 商品来源、产品类型、供给模式、可售状态 | 待引入/已引入/已放弃 | 无 | 订单后影响 NC | product-outsource-list.html、products-detail.html | 线路市场不是外采入口替代物 |
-| product/product-outsource-list.html | 产品中心 / 外采产品 / 产品列表 | 外采原始产品/包装产品 | 线路市场、供应商报价 | 采购价、配额、按原类型销售 | 来源、原类型、采购价、包装价、供应商 | 待引入/已引入/销售中/下架 | 无，订单后 BF-SALE | 差额结算后进 NC | product-outsource-package.html、product-outsource-quota.html | 外采跟随原产品类型 |
-| product/product-outsource-package.html | 产品中心 / 外采产品 / 产品列表 | 外采方案包装 | 外采原始产品 | 包装产品、渠道价、上架 | 名称、亮点、费用政策、渠道价、采购价 | 待包装/待上架/销售中 | 无 | 订单后按差额进入 NC | product-outsource-list.html | 包装不改变原产品结构 |
-| product/product-outsource-quota.html | 产品中心 / 外采产品 / 产品列表 | 外采配额 | 外采产品、供应商确认 | 销售占用、配额预警 | 配额对象、数量、有效期、供应商确认 | 待申请/已确认/告急/售罄 | BF-SALE-001/002 | 订单成交后影响 NC | product-outsource-list.html、orders.html | 配额不是独立左侧菜单 |
+| product/product-market.html | 产品中心 / 外采产品 / 产品市场 | 可外采线路产品 | 供应商供给 | 代理入库、包装、渠道销售 | 商品来源、产品类型、供给模式、可售状态 | 待引入/已引入/已放弃 | 无 | 订单后影响 NC | product-outsource-list.html | 产品市场只放可外采产品，不放自营产品 |
+| product/product-outsource-list.html | 产品中心 / 外采产品 / 代理产品 | 代理产品 | 产品市场、供应商报价 | 采购价、配额、按原类型销售 | 来源、原类型、采购价、包装价、供应商 | 待引入/已引入/销售中/下架 | 无，订单后 BF-SALE | 差额结算后进 NC | product-outsource-package.html、product-outsource-quota.html | 外采跟随原产品类型 |
+| product/product-outsource-package.html | 产品中心 / 外采产品 / 代理产品 | 代理产品包装 | 代理产品 | 包装产品、渠道价、上架 | 名称、亮点、费用政策、渠道价、采购价 | 待包装/待上架/销售中 | 无 | 订单后按差额进入 NC | product-outsource-list.html | 包装不改变原产品结构 |
+| product/product-outsource-quota.html | 产品中心 / 外采产品 / 代理产品 | 可代理团期/配额 | 代理产品、供应商确认 | 销售占用、配额预警 | 配额对象、数量、有效期、供应商确认 | 待申请/已确认/告急/售罄 | BF-SALE-001/002 | 订单成交后影响 NC | product-outsource-list.html、orders.html | 配额不是独立左侧菜单 |
 | product/product-channel-auth.html | 产品中心 / 渠道授权 | 渠道授权 | 线路、团期、定价策略 | 渠道可售、佣金计算 | 授权对象、渠道、价格、库存、有效期 | 待生效/生效中/停用 | BF-SALE-008 | 佣金结算影响 NC | channel/commission_rules.html | 授权按产品对象生效 |
 | product/product-pricing.html | 产品中心 / 定价策略 | 定价策略 | 产品、渠道、节假日、库存 | 团期价格、订单价格、补退差 | 策略、适用范围、价格模型、触发条件 | 启用/停用 | BF-SALE-006、BF-SALE-007 | 调整收款后进 NC | product-competitor-price.html、orders-transfer.html | 改价不直接覆盖已生效订单 |
 | product/product-competitor-price.html | 产品中心 / 定价策略 | 竞品价格监控 | OTA 公开价、AI 竞品分析 | 定价建议、价格调整审批 | 平台、竞品线路、我方线路、价差、趋势 | 已读/未读/已处理 | BF-SALE-006/007 | 仅调价生效后影响 NC | product-pricing.html | 竞品价格服务定价策略 |
-| channel/ota_products.html | 渠道中心 / OTA运营 / OTA线路 | OTA 线路 | 渠道授权、线路市场 | OTA 上架、同步日志、OTA 订单 | OTA 平台、线路、价格、库存、同步状态 | 待同步/成功/失败 | 无 | OTA 订单回款后影响 NC | ota_orders.html、ota_reconcile.html | OTA 线路不替代产品主数据 |
+| channel/ota_products.html | 渠道中心 / OTA运营 / OTA线路 | OTA 线路 | 渠道授权、产品市场/代理产品 | OTA 上架、同步日志、OTA 订单 | OTA 平台、线路、价格、库存、同步状态 | 待同步/成功/失败 | 无 | OTA 订单回款后影响 NC | ota_orders.html、ota_reconcile.html | OTA 线路不替代产品主数据 |
 | channel/ota_orders.html | 渠道中心 / OTA运营 / OTA订单 | OTA 订单 | OTA 平台订单 | 系统订单、认款、售后 | 平台单号、系统订单、金额、游客、状态 | 待确认/已确认/退款中 | BF-CASH-006 | OTA 回款和佣金影响 NC | sales/orders.html、ota_reconcile.html | OTA 订单必须映射系统订单 |
 | channel/ota_refunds.html | 渠道中心 / OTA运营 / OTA退款 | OTA 退款 | OTA 订单、售后申请 | 退款申请、退款执行、平台回写 | 平台退款单、系统订单、金额、原因 | 待处理/处理中/完成 | BF-AFTER-001、BF-AFTER-003 | 退款执行后进入 NC | orders-refund.html、finance-refund-execute.html | OTA 退款不绕过订单售后 |
 | channel/ota_reconcile.html | 渠道中心 / OTA运营 / OTA对账 | OTA 对账单 | OTA 订单、平台账单 | 认款、佣金、差异 | 平台、账期、订单金额、佣金、回款 | 待对账/有差异/已确认 | BF-CASH-006、BF-SALE-008 | 收款和佣金进入 NC | finance-matching.html | 对账差异可追踪 |

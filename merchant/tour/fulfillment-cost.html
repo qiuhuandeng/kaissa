@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>团期成本 - 凯撒旅游</title>
+  <title>团期结算 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
@@ -12,14 +12,14 @@
   <section class="list-page-panel">
     <div class="list-page-head">
       <div>
-        <h1 class="page-title">团期成本</h1>
+        <h1 class="page-title">团期结算</h1>
       </div>
     </div>
   </section>
 
   <section class="list-surface fulfillment-cost-list-surface" data-list-surface>
-    <nav class="tab-bar list-surface-tabs" aria-label="团期成本流程">
-      <button class="tab-item active" type="button" data-cost-tab="cost">成本结算</button>
+    <nav class="tab-bar list-surface-tabs" aria-label="团期结算流程">
+      <button class="tab-item active" type="button" data-cost-tab="cost">团期成本</button>
       <button class="tab-item" type="button" data-cost-tab="payment">付款申请</button>
       <button class="tab-item" type="button" data-cost-tab="records">付款记录</button>
     </nav>
@@ -48,7 +48,7 @@
         </div>
       </section>
 
-      <section class="table-wrap fulfillment-cost-table list-surface-table list-table-with-pagination" aria-label="团期成本结算列表">
+      <section class="table-wrap fulfillment-cost-table list-surface-table list-table-with-pagination" aria-label="团期成本列表">
         <table class="settlement-cost-table">
           <colgroup>
             <col class="settlement-cost-col-select">
@@ -192,7 +192,7 @@
           <div class="form-group">
             <label class="form-label" for="batchCostSource">成本来源</label>
             <select id="batchCostSource" class="form-control">
-              <option>线路方案标准成本</option>
+              <option>产品线路标准成本</option>
               <option>供应商批量报价</option>
               <option>历史同线路团期</option>
             </select>
@@ -316,18 +316,24 @@
   </div>
 
   <div id="settlementBasisDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal fulfillment-cost-drawer" role="dialog" aria-modal="true" aria-labelledby="settlementBasisTitle">
+    <div class="modal drawer-modal fulfillment-cost-drawer settlement-basis-drawer" role="dialog" aria-modal="true" aria-labelledby="settlementBasisTitle">
       <div class="modal-header">
         <div id="settlementBasisTitle" class="modal-title">结算依据</div>
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
       </div>
-      <div class="modal-body">
-        <div id="settlementBasisSummary" class="readonly-summary"></div>
-        <section class="fulfillment-cost-review-grid">
-          <div><span>收款净额</span><strong id="settlementReceivedNet">-</strong></div>
-          <div><span>成本合计</span><strong id="settlementCostTotal">-</strong></div>
-          <div><span>待付金额</span><strong id="settlementPendingPayable">-</strong></div>
-          <div><span>预计毛利</span><strong id="settlementProfit">-</strong></div>
+      <div class="modal-body settlement-basis-body">
+        <section id="settlementBasisSummary" class="drawer-object-summary settlement-basis-summary"></section>
+        <section class="settlement-basis-metrics" aria-label="团期结算总览">
+          <article><span>收入总额</span><strong id="settlementReceivableTotal">-</strong></article>
+          <article><span>已收金额</span><strong id="settlementReceivedNet">-</strong></article>
+          <article><span>未收金额</span><strong id="settlementUnreceivedTotal">-</strong></article>
+          <article><span>成本合计</span><strong id="settlementCostTotal">-</strong></article>
+          <article><span>已付金额</span><strong id="settlementPaidTotal">-</strong></article>
+          <article class="highlight"><span>毛利/毛利率</span><strong id="settlementProfit">-</strong></article>
+        </section>
+        <section class="order-desc-card settlement-basis-section">
+          <h2 class="detail-section-title">团期基本信息</h2>
+          <div id="settlementBasicInfo" class="description-grid settlement-basis-basic-grid"></div>
         </section>
         <section id="projectSettlementPanel" class="order-desc-card" hidden>
           <h2 class="detail-section-title">项目回团结算</h2>
@@ -348,7 +354,54 @@
             <button id="resubmitProjectSettlement" class="btn btn-secondary" type="button">重新提交</button>
           </div>
         </section>
-        <section class="order-desc-card">
+        <section class="order-desc-card settlement-basis-section">
+          <h2 class="detail-section-title">收入明细</h2>
+          <section class="table-wrap fulfillment-cost-inner-table settlement-income-table">
+            <table>
+              <thead><tr><th>订单号</th><th>客户/渠道</th><th>类型</th><th>财务科目</th><th>应收金额</th><th>已收金额</th><th>未收金额</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
+              <tbody id="settlementIncomeRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="order-desc-card settlement-basis-section">
+          <h2 class="detail-section-title">成本明细</h2>
+          <section class="table-wrap fulfillment-cost-inner-table settlement-cost-detail-table">
+            <table>
+              <thead><tr><th>供应商</th><th>费用项目</th><th>币种</th><th>单价</th><th>数量</th><th>原币金额</th><th>汇率</th><th>本币金额</th><th>已付金额</th><th>未付金额</th><th>附件</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
+              <tbody id="settlementCostRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="order-desc-card settlement-basis-section">
+          <h2 class="detail-section-title">附件依据</h2>
+          <section class="table-wrap fulfillment-cost-inner-table settlement-attachment-table">
+            <table>
+              <thead><tr><th>附件类型</th><th>应上传</th><th>已上传</th><th>状态</th><th>最近附件</th><th>上传人/时间</th><th>操作</th></tr></thead>
+              <tbody id="settlementAttachmentRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="order-desc-card settlement-basis-section">
+          <h2 class="detail-section-title">汇总统计</h2>
+          <section class="table-wrap fulfillment-cost-inner-table settlement-summary-table">
+            <table>
+              <tbody id="settlementSummaryRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="order-desc-card settlement-basis-section">
+          <div class="detail-section-head settlement-basis-section-head">
+            <h2 class="detail-section-title">结算记录</h2>
+            <button id="startSecondSettlement" class="btn btn-secondary btn-sm" type="button" hidden>发起二次结算</button>
+          </div>
+          <section class="table-wrap fulfillment-cost-inner-table settlement-record-table">
+            <table>
+              <thead><tr><th>结算次数</th><th>结算单号</th><th>结算原因</th><th>收入调整</th><th>成本调整</th><th>毛利影响</th><th>附件</th><th>状态</th></tr></thead>
+              <tbody id="settlementRecordRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="order-desc-card settlement-basis-section">
           <h2 class="detail-section-title">结算依据</h2>
           <section class="table-wrap fulfillment-cost-inner-table">
             <table>
@@ -357,7 +410,7 @@
             </table>
           </section>
         </section>
-        <section class="order-desc-card">
+        <section class="order-desc-card settlement-basis-section">
           <h2 class="detail-section-title">提交前校验</h2>
           <section class="table-wrap fulfillment-cost-inner-table">
             <table>

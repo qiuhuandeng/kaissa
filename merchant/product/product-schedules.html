@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品团期 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+  <script src="../../shared/schedule-route-catalog.js"></script>
+
+  <main class="product-schedule-page">
+    <section class="page-workbar product-schedule-workbar">
+      <div class="page-title-row">
+        <a class="page-back-link" href="products.html">返回</a>
+        <h1 class="page-title">产品团期</h1>
+      </div>
+      <div class="btn-group">
+        <a id="productScheduleDetailLink" class="btn btn-secondary" href="products-detail.html">产品详情</a>
+        <button id="openProductScheduleDrawer" class="btn btn-primary" type="button">新建团期</button>
+      </div>
+    </section>
+
+    <section class="card product-schedule-hero" aria-label="当前产品信息">
+      <figure class="product-schedule-cover">
+        <img id="summaryProductCover" src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80" alt="产品封面">
+        <figcaption class="product-schedule-cover-overlay">
+          <span id="summaryProductStatus" class="tag tag-green">销售中</span>
+          <strong id="summaryProductName">-</strong>
+          <small id="summaryProductMeta">-</small>
+        </figcaption>
+      </figure>
+      <div class="product-schedule-info">
+        <div class="product-schedule-field-grid">
+          <div class="product-schedule-field"><span>产品编号</span><strong id="summaryProductCode">-</strong></div>
+          <div class="product-schedule-field"><span>产品类型</span><strong id="summaryProductType">-</strong></div>
+          <div class="product-schedule-field"><span>旅游类型</span><strong id="summaryTravelType">-</strong></div>
+          <div class="product-schedule-field"><span>出发地</span><strong id="summaryDeparture">-</strong></div>
+          <div class="product-schedule-field"><span>目的地</span><strong id="summaryDestination">-</strong></div>
+        </div>
+        <div class="product-schedule-context">
+          <div class="product-schedule-sale-metric">
+            <span>当前可售</span>
+            <div><strong id="summarySaleCount">0</strong><em id="summarySaleObject">个团期</em></div>
+          </div>
+          <div id="summaryRouteScheduleStats" class="product-schedule-context-stat">-</div>
+          <div id="summaryOwnerLine" class="product-schedule-context-audit">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="product-schedule-route-section" aria-label="产品线路">
+      <div id="productScheduleRoutes" class="product-schedule-route-grid"></div>
+    </section>
+
+    <section class="filter-card filter-card-compact product-schedule-filter-surface" aria-label="产品团期筛选">
+      <div class="filter-row">
+        <div class="filter-item filter-item-search product-schedule-filter-keyword">
+          <label class="sr-only" for="scheduleKeyword">团期编号/线路名称</label>
+          <input id="scheduleKeyword" type="text" placeholder="团期编号/线路名称">
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="scheduleStatusFilter">销售状态</label>
+          <select id="scheduleStatusFilter">
+            <option value="">全部状态</option>
+            <option>筹备中</option>
+            <option>销售中</option>
+            <option>已停售</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="scheduleDepartMonth">出发月份</label>
+          <select id="scheduleDepartMonth">
+            <option value="">全部月份</option>
+            <option value="2026-07">2026-07</option>
+            <option value="2026-08">2026-08</option>
+            <option value="2026-09">2026-09</option>
+            <option value="2026-10">2026-10</option>
+          </select>
+        </div>
+        <label class="filter-check"><input id="hideStoppedSchedules" type="checkbox" checked> 隐藏已停售</label>
+        <div class="filter-actions">
+          <button id="resetProductScheduleFilters" class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="list-surface product-schedule-table-surface" data-list-surface>
+      <section class="table-wrap list-surface-table list-table-with-pagination product-schedule-table-wrap" aria-label="产品团期列表">
+        <table class="product-schedule-table">
+          <colgroup>
+            <col class="product-schedule-col-code">
+            <col class="product-schedule-col-route">
+            <col class="product-schedule-col-date">
+            <col class="product-schedule-col-deadline">
+            <col class="product-schedule-col-stock">
+            <col class="product-schedule-col-price">
+            <col class="product-schedule-col-status">
+            <col class="product-schedule-col-action">
+          </colgroup>
+          <thead>
+            <tr>
+              <th id="scheduleCodeHead">团期编号</th>
+              <th>使用线路</th>
+              <th>出发/回团</th>
+              <th>报名截止</th>
+              <th>名额/已售</th>
+              <th>销售价</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="productScheduleRows"></tbody>
+        </table>
+      </section>
+
+      <div class="pagination list-surface-pagination list-pagination-attached">
+        <span id="productSchedulePager">0 条</span>
+      </div>
+    </section>
+  </main>
+
+  <div id="productScheduleBatchDrawerHost" class="product-schedule-batch-drawer-host" hidden aria-hidden="true">
+    <iframe id="productScheduleBatchDrawerFrame" class="product-schedule-batch-drawer-frame" title="新建团期"></iframe>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var catalog = window.caesarScheduleRouteCatalog || [];
+      function escapeHtml(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char];
+        });
+      }
+      function objectName(batchType) {
+        if (batchType === "邮轮航次") return "航次";
+        if (batchType === "专列班期") return "班期";
+        if (batchType === "研学营期") return "营期";
+        return "团期";
+      }
+      function statusClass(status) {
+        if (status === "销售中" || status === "启售") return "tag tag-green";
+        if (status === "已停售" || status === "停售") return "tag tag-orange";
+        if (status === "筹备中") return "tag tag-blue";
+        return "tag tag-gray";
+      }
+      function productCoverUrl(product) {
+        var coverMap = {
+          "GT-EU-001": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80",
+          "GT-JP-002": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=900&q=80",
+          "CR-MED-001": "https://images.unsplash.com/photo-1544550285-f813152fb2fd?auto=format&fit=crop&w=900&q=80",
+          "TR-SILK-001": "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=900&q=80",
+          "ST-DH-001": "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80"
+        };
+        return coverMap[product.productCode] || "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=900&q=80";
+      }
+      var productNameParam = params.get("productName") || params.get("product") || "欧洲十国经典游";
+      var typeParam = params.get("type") || "";
+      var routeParam = params.get("route") || params.get("routeName") || "";
+      var activeRoute = routeParam || "__all";
+
+      function productMatches(route) {
+        var name = productNameParam.trim();
+        if (!name) return false;
+        return route.product === name || route.productTitle === name || route.productTitle.indexOf(name) >= 0 || route.product.indexOf(name) >= 0;
+      }
+
+      function typeMatches(route) {
+        if (!typeParam) return true;
+        return route.typeKey === typeParam || route.type === typeParam || route.batchType === typeParam;
+      }
+
+      var routes = catalog.filter(function (route) {
+        return productMatches(route) && typeMatches(route);
+      });
+
+      if (!routes.length) {
+        routes = catalog.filter(function (route) { return productMatches(route); });
+      }
+      if (!routes.length) {
+        routes = catalog.filter(function (route) { return route.product === "欧洲十国经典游"; });
+      }
+
+      var profile = routes[0] || {};
+      var schedules = routes.flatMap(function (route) {
+        return (route.schedules || []).map(function (item) {
+          return {
+            code: item[0],
+            route: route.route,
+            routeCode: route.routeCode,
+            product: route.product,
+            productTitle: route.productTitle,
+            type: route.type,
+            typeKey: route.typeKey,
+            batchType: route.batchType,
+            depart: item[1],
+            back: item[2],
+            deadline: item[3],
+            stock: Number(item[4] || 0),
+            sold: Number(item[5] || 0),
+            price: item[6],
+            status: item[7],
+            execution: item[8],
+            unit: route.unit || "人"
+          };
+        });
+      });
+
+      function setText(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+
+      function detailHref(item) {
+        var query = new URLSearchParams();
+        query.set("source", "product");
+        query.set("scheduleNo", item.code);
+        query.set("productName", item.product);
+        query.set("type", item.typeKey || "");
+        query.set("package", item.route);
+        return "../tour/schedules-detail.html?" + query.toString();
+      }
+
+      function routeStats(route) {
+        var rows = schedules.filter(function (item) { return item.routeCode === route.routeCode; });
+        var saleRows = rows.filter(function (item) { return item.status !== "已停售"; });
+        var next = saleRows.map(function (item) { return item.depart; }).sort()[0] || "暂无";
+        var sold = rows.reduce(function (sum, item) { return sum + Number(item.sold || 0); }, 0);
+        return { count: rows.length, saleCount: saleRows.length, next: next, sold: sold };
+      }
+
+      function renderSummary() {
+        var totalCount = schedules.length;
+        var saleCount = schedules.filter(function (item) { return item.status !== "已停售"; }).length;
+        var currentObjectName = objectName(profile.batchType || "普通团期");
+        var nextDepart = schedules.filter(function (item) { return item.status !== "已停售"; }).map(function (item) { return item.depart; }).sort()[0] || "暂无";
+        var cover = document.getElementById("summaryProductCover");
+        var status = document.getElementById("summaryProductStatus");
+        document.title = (profile.productTitle || profile.product || "产品") + " - 产品团期 - 凯撒旅游";
+        setText("summaryProductCode", profile.productCode || "-");
+        setText("summaryProductName", profile.productTitle || profile.product || "-");
+        setText("summaryProductMeta", [profile.type || "", profile.travelType || ""].filter(Boolean).join(" · "));
+        setText("summaryProductType", profile.type || "-");
+        setText("summaryTravelType", profile.travelType || "-");
+        setText("summaryDestination", profile.destination || "-");
+        setText("summaryDeparture", profile.departure || "-");
+        setText("summarySaleCount", saleCount);
+        setText("summarySaleObject", "个" + currentObjectName);
+        setText("summaryRouteScheduleStats", routes.length + "条线路 / 共" + totalCount + "个" + currentObjectName);
+        setText("summaryOwnerLine", "负责人 " + (profile.owner || "-") + " · 最近出发 " + nextDepart);
+        if (cover) {
+          cover.src = productCoverUrl(profile);
+          cover.alt = (profile.productTitle || profile.product || "产品") + "封面";
+        }
+        if (status) {
+          status.textContent = saleCount ? "销售中" : "待维护";
+          status.className = saleCount ? "tag tag-green" : "tag tag-gray";
+        }
+        setText("scheduleCodeHead", currentObjectName + "编号");
+        document.getElementById("productScheduleDetailLink").href = "products-detail.html?productName=" + encodeURIComponent(profile.product || productNameParam) + "&type=" + encodeURIComponent(profile.typeKey || typeParam);
+      }
+
+      function renderRoutes() {
+        var routeHtml = [];
+        routes.forEach(function (route) {
+          var stats = routeStats(route);
+          routeHtml.push([
+            '<button class="product-schedule-route-card' + (activeRoute === route.route ? ' active' : '') + '" type="button" data-route-filter="' + escapeHtml(route.route) + '">',
+            '  <strong>' + escapeHtml(route.route) + '</strong>',
+            '  <span>' + escapeHtml(stats.saleCount + '个可售' + objectName(route.batchType) + ' / 已售' + stats.sold + route.unit) + '</span>',
+            '  <em>最近 ' + escapeHtml(stats.next) + '</em>',
+            '</button>'
+          ].join(""));
+        });
+        document.getElementById("productScheduleRoutes").innerHTML = routeHtml.join("");
+      }
+
+      function filteredSchedules() {
+        var keyword = document.getElementById("scheduleKeyword").value.trim().toLowerCase();
+        var status = document.getElementById("scheduleStatusFilter").value;
+        var month = document.getElementById("scheduleDepartMonth").value;
+        var hideStopped = document.getElementById("hideStoppedSchedules").checked;
+        return schedules.filter(function (item) {
+          if (activeRoute !== "__all" && item.route !== activeRoute) return false;
+          if (keyword && [item.code, item.route, item.product].join(" ").toLowerCase().indexOf(keyword) < 0) return false;
+          if (status && item.status !== status) return false;
+          if (month && item.depart.slice(0, 7) !== month) return false;
+          if (hideStopped && item.status === "已停售") return false;
+          return true;
+        });
+      }
+
+      function renderRows() {
+        var rows = filteredSchedules();
+        var tbody = document.getElementById("productScheduleRows");
+        tbody.innerHTML = rows.map(function (item) {
+          var left = Math.max(Number(item.stock || 0) - Number(item.sold || 0), 0);
+          var stopText = item.status === "已停售" ? "恢复" : "停售";
+          return [
+            '<tr data-schedule-code="' + escapeHtml(item.code) + '">',
+            '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.code) + '</strong><span>' + escapeHtml(objectName(item.batchType)) + '</span></div></td>',
+            '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.route) + '</strong><span>' + escapeHtml(item.productTitle || item.product) + '</span></div></td>',
+            '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.depart) + '</strong><span>回团 ' + escapeHtml(item.back) + '</span></div></td>',
+            '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.deadline) + '</strong><span>截止报名</span></div></td>',
+            '  <td><div class="table-cell-main"><strong>' + escapeHtml(String(left)) + '/' + escapeHtml(String(item.stock)) + escapeHtml(item.unit) + '</strong><span>已售 ' + escapeHtml(String(item.sold)) + escapeHtml(item.unit) + '</span></div></td>',
+            '  <td><strong>' + escapeHtml(item.price) + '</strong></td>',
+            '  <td><div class="tag-row"><span class="' + statusClass(item.status) + '">' + escapeHtml(item.status) + '</span><span class="tag tag-gray">' + escapeHtml(item.execution) + '</span></div></td>',
+            '  <td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(detailHref(item)) + '">详情</a><button type="button" data-adjust-schedule>调价名额</button><button type="button" data-toggle-schedule>' + stopText + '</button></div></td>',
+            '</tr>'
+          ].join("");
+        }).join("");
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-muted">当前线路暂无团期，可点击右上角新建团期。</td></tr>';
+        }
+        document.getElementById("productSchedulePager").textContent = rows.length + " 条";
+        renderRoutes();
+      }
+
+      function scheduleCreateHref(routeName) {
+        var targetRoute = routes.find(function (route) { return route.route === routeName; }) || routes[0] || profile;
+        var query = new URLSearchParams();
+        var productName = (targetRoute && targetRoute.product) || profile.product || productNameParam || "";
+        query.set("open", "batch");
+        query.set("source", "productSchedule");
+        if (productName) {
+          query.set("product", productName);
+          query.set("productName", productName);
+        }
+        if (targetRoute && targetRoute.typeKey) query.set("type", targetRoute.typeKey);
+        query.set("embed", "batchDrawer");
+        if (targetRoute && targetRoute.route && (routeName !== "__all" || routes.length === 1)) {
+          query.set("route", targetRoute.route);
+        }
+        return "../tour/schedules.html?" + query.toString();
+      }
+
+      function closeSharedBatchDrawer() {
+        var host = document.getElementById("productScheduleBatchDrawerHost");
+        var frame = document.getElementById("productScheduleBatchDrawerFrame");
+        if (window.productScheduleBatchDrawerTimer) {
+          window.clearTimeout(window.productScheduleBatchDrawerTimer);
+          window.productScheduleBatchDrawerTimer = null;
+        }
+        host.classList.remove("loading");
+        host.classList.remove("show");
+        host.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("product-schedule-batch-drawer-open");
+        window.setTimeout(function () {
+          host.hidden = true;
+          frame.removeAttribute("src");
+        }, 380);
+      }
+
+      function openSharedBatchDrawer(routeName) {
+        var host = document.getElementById("productScheduleBatchDrawerHost");
+        var frame = document.getElementById("productScheduleBatchDrawerFrame");
+        var href = scheduleCreateHref(routeName);
+        var separator = href.indexOf("?") > -1 ? "&" : "?";
+        if (window.productScheduleBatchDrawerTimer) {
+          window.clearTimeout(window.productScheduleBatchDrawerTimer);
+        }
+        host.hidden = false;
+        host.classList.remove("show");
+        host.classList.add("loading");
+        host.setAttribute("aria-hidden", "false");
+        frame.src = href + separator + "_drawerTs=" + Date.now();
+        window.productScheduleBatchDrawerTimer = window.setTimeout(function () {
+          if (host.classList.contains("loading")) closeSharedBatchDrawer();
+        }, 5000);
+      }
+
+      window.addEventListener("message", function (event) {
+        var data = event.data || {};
+        if (!data || typeof data.type !== "string" || data.type.indexOf("caesar:batch-drawer:") !== 0) return;
+        var frame = document.getElementById("productScheduleBatchDrawerFrame");
+        if (event.source !== frame.contentWindow) return;
+        if (data.type === "caesar:batch-drawer:ready") {
+          var host = document.getElementById("productScheduleBatchDrawerHost");
+          if (window.productScheduleBatchDrawerTimer) {
+            window.clearTimeout(window.productScheduleBatchDrawerTimer);
+            window.productScheduleBatchDrawerTimer = null;
+          }
+          host.classList.remove("loading");
+          host.classList.add("show");
+          document.body.classList.add("product-schedule-batch-drawer-open");
+          return;
+        }
+        if (data.type === "caesar:batch-drawer:created") {
+          var created = (data.detail && data.detail.schedules) || [];
+          created.slice().reverse().forEach(function (item) {
+            var matchedRoute = routes.find(function (route) { return route.route === item.route; }) || profile;
+            schedules.unshift(Object.assign({}, item, {
+              productTitle: matchedRoute.productTitle || profile.productTitle || item.product,
+              type: matchedRoute.type || profile.type,
+              typeKey: matchedRoute.typeKey || profile.typeKey,
+              routeCode: matchedRoute.routeCode || item.routeCode || profile.productCode || "",
+              sold: Number(item.sold || 0)
+            }));
+          });
+          if (created.length) {
+            activeRoute = created[0].route || activeRoute;
+            renderSummary();
+            renderRows();
+          }
+          if (window.caesarUI && window.caesarUI.toast) {
+            window.caesarUI.toast("团期已创建，可在当前产品团期页继续查看和管理");
+          }
+        }
+        if (data.type === "caesar:batch-drawer:close") {
+          closeSharedBatchDrawer();
+        }
+      });
+
+      document.getElementById("openProductScheduleDrawer").addEventListener("click", function () {
+        openSharedBatchDrawer(activeRoute);
+      });
+
+      document.getElementById("productScheduleRoutes").addEventListener("click", function (event) {
+        var card = event.target.closest("[data-route-filter]");
+        if (!card) return;
+        activeRoute = activeRoute === card.dataset.routeFilter ? "__all" : card.dataset.routeFilter;
+        renderRows();
+      });
+
+      ["scheduleKeyword", "scheduleStatusFilter", "scheduleDepartMonth", "hideStoppedSchedules"].forEach(function (id) {
+        document.getElementById(id).addEventListener("input", renderRows);
+        document.getElementById(id).addEventListener("change", renderRows);
+      });
+
+      document.getElementById("resetProductScheduleFilters").addEventListener("click", function () {
+        document.getElementById("scheduleKeyword").value = "";
+        document.getElementById("scheduleStatusFilter").value = "";
+        document.getElementById("scheduleDepartMonth").value = "";
+        document.getElementById("hideStoppedSchedules").checked = true;
+        renderRows();
+      });
+
+      document.getElementById("productScheduleRows").addEventListener("click", function (event) {
+        var row = event.target.closest("tr[data-schedule-code]");
+        if (!row) return;
+        var item = schedules.find(function (schedule) { return schedule.code === row.dataset.scheduleCode; });
+        if (!item) return;
+        if (event.target.closest("[data-adjust-schedule]")) {
+          if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast("已打开调价名额处理入口");
+          return;
+        }
+        if (event.target.closest("[data-toggle-schedule]")) {
+          item.status = item.status === "已停售" ? "销售中" : "已停售";
+          renderRows();
+        }
+      });
+
+      renderSummary();
+      renderRoutes();
+      renderRows();
+    })();
+  </script>
+</body>
+</html>

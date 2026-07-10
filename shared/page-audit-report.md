@@ -137,7 +137,6 @@
 | ready | merchant/resource/resource-train-operators.html | 可直接纳入内容路由 |
 | ready | merchant/resource/resource-train-routes.html | 可直接纳入内容路由 |
 | ready | merchant/resource/resource-train-trips.html | 可直接纳入内容路由 |
-| ready | merchant/resource/supplier-detail.html | 可直接纳入内容路由 |
 | ready | merchant/resource/suppliers.html | 可直接纳入内容路由 |
 | ready | merchant/sales/consultant/detail.html | 可直接纳入内容路由 |
 | ready | merchant/sales/orders-after-sales.html | 可直接纳入内容路由 |

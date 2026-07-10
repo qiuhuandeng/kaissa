@@ -952,12 +952,12 @@
         var contact = decodeParam('contact') || '待补联系人';
         var phone = decodeParam('phone') || '待补手机号';
         var projectNo = decodeParam('projectNo') || 'INC-20260708-001';
-        var route = decodeParam('route') || '标准线路方案';
-        var product = decodeParam('productName') || '旅游线路';
+        var route = decodeParam('route') || '标准产品线路';
+        var product = decodeParam('productName') || '旅游产品';
         var people = decodeParam('people') || '待确认';
         var travelStart = decodeParam('travelStart') || '待确认';
         var travelEnd = decodeParam('travelEnd') || '待确认';
-        var quoteBasis = decodeParam('quoteBasis') || '按标准方案重新报价';
+        var quoteBasis = decodeParam('quoteBasis') || '按标准线路重新报价';
         var projectStatus = decodeParam('projectStatus') || (quoteBasis === '客户已确认锁定报价' ? '待确认成团' : '报价中');
         var token = travelStart && travelStart !== '待确认' ? travelStart.replace(/\D/g, '') : '20260708';
         var dateText = travelStart !== '待确认' && travelEnd !== '待确认' ? travelStart + ' 至 ' + travelEnd : '待确认';
@@ -982,7 +982,7 @@
           quoteBasis: quoteBasis,
           projectStatus: projectStatus,
           owner: decodeParam('owner') || '陈刚',
-          note: decodeParam('independentNote') || '基于标准线路方案独立成团，按客户日期、人数和服务差异重新报价。',
+          note: decodeParam('independentNote') || '基于标准产品线路独立成团，按客户日期、人数和服务差异重新报价。',
           amountText: hasAmount ? '¥' + Number(amountNumber).toLocaleString('zh-CN') : amountText,
           amountNumber: hasAmount ? amountNumber : '',
           lockedVersion: route + ' / 独立成团报价',
@@ -1068,7 +1068,7 @@
         var ncHref = buildHref('../finance/finance-nc.html', { source: 'customProject', projectNo: ctx.projectNo });
 
         setTableBody('项目推进总览',
-          '<tr><td>需求</td><td>已指定客户、引用线路、出行日期和人数</td><td>销售/单团计调</td><td>补齐客户差异要求并核价</td><td><div class="table-action"><button class="table-action-primary" type="button" data-go-tab="demand">查看</button></div></td></tr>' +
+          '<tr><td>需求</td><td>已指定客户、引用产品线路、出行日期和人数</td><td>销售/单团计调</td><td>补齐客户差异要求并核价</td><td><div class="table-action"><button class="table-action-primary" type="button" data-go-tab="demand">查看</button></div></td></tr>' +
           '<tr><td>报价</td><td>' + escapeHtml(ctx.quoteBasis) + '</td><td>单团计调</td><td>锁定客户确认版本</td><td><div class="table-action"><button class="table-action-primary" type="button" data-go-tab="quote">查看</button></div></td></tr>' +
           '<tr><td>锁定</td><td id="overviewLockedStatus">' + (ctx.projectStatus === '待确认成团' ? '客户确认报价待复核' : '未锁定') + '</td><td>单团计调</td><td>报价锁定后确认成团</td><td><div class="table-action"><button class="table-action-primary" type="button" data-go-tab="locked">查看</button></div></td></tr>' +
           '<tr><td>合同订单</td><td id="overviewContractStatus">待确认成团</td><td>销售</td><td>确认成团后生成项目订单和合同草稿</td><td><div class="table-action"><button class="table-action-primary" type="button" data-go-tab="contract">查看</button></div></td></tr>' +
@@ -1078,14 +1078,14 @@
 
         setTableBody('需求完整度',
           '<tr><td>客户与联系人</td><td>' + customer + ' / ' + escapeHtml(ctx.contact) + '</td><td><span class="tag tag-green">可报价</span></td><td>报价单抬头、合同主体</td></tr>' +
-          '<tr><td>引用线路</td><td>' + route + '</td><td><span class="tag tag-green">已明确</span></td><td>报价方案、行程服务标准</td></tr>' +
+          '<tr><td>引用产品线路</td><td>' + route + '</td><td><span class="tag tag-green">已明确</span></td><td>报价明细、行程服务标准</td></tr>' +
           '<tr><td>出行日期与人数</td><td>' + dateText + ' / ' + peopleText + '</td><td><span class="tag tag-green">可核价</span></td><td>交通、酒店、项目团</td></tr>' +
           '<tr><td>差异要求</td><td>' + escapeHtml(ctx.note) + '</td><td><span class="tag tag-orange">待复核</span></td><td>报价明细、资源成本</td></tr>'
         );
 
         setTableBody('报价版本',
           '<tr>' +
-          '<td>引用线路报价</td>' +
+          '<td>引用产品线路报价</td>' +
           '<td>' + route + '<br><span class="text-muted">按客户独立成团日期、人数和差异重核</span></td>' +
           '<td>' + amountText + '</td>' +
           '<td>按资源成本待复核</td>' +
@@ -1107,7 +1107,7 @@
         var quotePlanTitle = document.querySelector('.quote-plan-head h3');
         if (quotePlanTitle) quotePlanTitle.innerHTML = route + ' - 独立成团报价 <span id="quotePlanStatus" class="tag tag-orange">' + (ctx.projectStatus === '待确认成团' ? '客户已确认' : '待重新报价') + '</span>';
         var quotePlanMeta = document.querySelector('.quote-plan-head p');
-        if (quotePlanMeta) quotePlanMeta.textContent = '报价口径：引用标准线路方案 / 出行日期：' + ctx.dateText + ' / 报价有效期以客户确认为准';
+        if (quotePlanMeta) quotePlanMeta.textContent = '报价口径：引用标准产品线路 / 出行日期：' + ctx.dateText + ' / 报价有效期以客户确认为准';
         setTableBody('报价费用明细',
           '<tr><td>标准线路团费</td><td>' + peopleText + '</td><td>按线路报价</td><td>待核价</td><td>按线路成本</td></tr>' +
           '<tr><td>独立成团差异</td><td>1项</td><td>按差异报价</td><td>待核价</td><td>资源待确认</td></tr>' +
@@ -1158,7 +1158,7 @@
         if (timeline) {
           timeline.innerHTML =
             '<div class="timeline-item"><span>2026-07-08 10:00</span><strong>' + escapeHtml(ctx.owner) + '</strong><p>从标准线路创建独立成团项目，进入报价阶段。</p></div>' +
-            '<div class="timeline-item"><span>2026-07-08 10:05</span><strong>' + escapeHtml(ctx.owner) + '</strong><p>引用线路：' + route + '；客户：' + customer + '；出行：' + dateText + '。</p></div>';
+            '<div class="timeline-item"><span>2026-07-08 10:05</span><strong>' + escapeHtml(ctx.owner) + '</strong><p>引用产品线路：' + route + '；客户：' + customer + '；出行：' + dateText + '。</p></div>';
         }
 
         setText('lockedVersion', ctx.projectStatus === '待确认成团' ? ctx.lockedVersion : '未锁定');
@@ -1240,7 +1240,7 @@
             title: '生成需求确认单',
             primary: '生成确认单',
             done: '需求确认单已生成，可发送客户确认。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>确认项</th><th>内容</th></tr></thead><tbody><tr><td>客户</td><td>' + customer + '</td></tr><tr><td>引用线路</td><td>' + route + '</td></tr><tr><td>出行信息</td><td>' + dateText + ' / ' + peopleText + '</td></tr><tr><td>确认方式</td><td>生成客户需求确认单并记录到单团项目资料</td></tr></tbody></table></section>'
+            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>确认项</th><th>内容</th></tr></thead><tbody><tr><td>客户</td><td>' + customer + '</td></tr><tr><td>引用产品线路</td><td>' + route + '</td></tr><tr><td>出行信息</td><td>' + dateText + ' / ' + peopleText + '</td></tr><tr><td>确认方式</td><td>生成客户需求确认单并记录到单团项目资料</td></tr></tbody></table></section>'
           },
           'new-quote': {
             title: '新建独立成团报价',
@@ -1294,7 +1294,7 @@
             title: '生成出团通知',
             primary: '生成通知',
             done: '出团通知草稿已生成，名单锁定后可发送客户。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>通知内容</th><th>状态</th></tr></thead><tbody><tr><td>行程安排</td><td>读取引用线路和锁定报价</td></tr><tr><td>交通酒店</td><td>待资源确认号补齐</td></tr><tr><td>项目名单</td><td>待名单导入</td></tr><tr><td>发送对象</td><td>客户联系人、销售、领队</td></tr></tbody></table></section>'
+            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>通知内容</th><th>状态</th></tr></thead><tbody><tr><td>行程安排</td><td>读取引用产品线路和锁定报价</td></tr><tr><td>交通酒店</td><td>待资源确认号补齐</td></tr><tr><td>项目名单</td><td>待名单导入</td></tr><tr><td>发送对象</td><td>客户联系人、销售、领队</td></tr></tbody></table></section>'
           },
           'add-cost': {
             title: '补充成本',
@@ -1426,11 +1426,11 @@
         currentProjectContext = ctx;
         document.querySelector('.page-title').textContent = ctx.customer + '独立成团';
         setText('customSummaryProjectNo', ctx.projectNo);
-        setText('customSummarySource', '引用标准线路');
+        setText('customSummarySource', '引用产品线路');
         setText('customSummaryCustomer', ctx.customer);
         setText('customSummaryType', '独立成团');
         setText('customSummaryOwner', ctx.owner);
-        setText('customSummaryQuoteVersion', ctx.projectStatus === '待确认成团' ? '客户确认报价待成团' : '引用线路待报价');
+        setText('customSummaryQuoteVersion', ctx.projectStatus === '待确认成团' ? '客户确认报价待成团' : '引用产品线路待报价');
         setText('customSummaryAmount', ctx.projectStatus === '待确认成团' ? ctx.amountText : '未锁定');
         setTag('customSummaryStatus', ctx.projectStatus, 'tag tag-orange');
         setText('demandCustomerName', ctx.customer);
@@ -1549,9 +1549,9 @@
         setTag('customSummaryStatus', '已锁定', 'tag tag-green');
         setTag('quoteStatusA', '已锁定', 'tag tag-green');
         setTag('quotePlanStatus', '已锁定', 'tag tag-green');
-        setText('customSummaryQuoteVersion', ctx ? '引用线路报价已锁定' : '方案A已锁定');
+        setText('customSummaryQuoteVersion', ctx ? '引用产品线路报价已锁定' : '方案A已锁定');
         setText('customSummaryAmount', ctx ? ctx.amountText : '¥1,906,000');
-        setText('overviewLockedStatus', ctx ? '引用线路报价已锁定' : '方案A已锁定');
+        setText('overviewLockedStatus', ctx ? '引用产品线路报价已锁定' : '方案A已锁定');
         setText('overviewContractStatus', '待确认成团');
         setText('lockedVersion', ctx ? ctx.lockedVersion : 'V3 / 方案A');
         setText('lockedAmount', ctx ? ctx.amountText : '¥1,906,000');

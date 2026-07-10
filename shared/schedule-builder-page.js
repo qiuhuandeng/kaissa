@@ -10,13 +10,13 @@
 
   var data = {
     group: {
-      label: '出境游线路',
+      label: '参团游产品',
       scheduleType: '普通团期',
       objectName: '团期',
       tagClass: 'tag tag-blue',
       prefix: 'GT',
       unit: '人',
-      planLabel: '行程方案',
+      planLabel: '产品线路',
       departLabel: '出发日期',
       returnLabel: '返回日期',
       startLabel: '出发城市',
@@ -27,11 +27,11 @@
       defaultPrice: 29800,
       defaultStock: 30,
       approvalNo: 'APR-20260624-030',
-      approvalNode: '线路负责人',
+      approvalNode: '产品负责人',
       products: [
         {
           name: '欧洲十国经典游',
-          meta: '出境游，12天11晚，法德瑞意核心城市连线。',
+          meta: '旅游类型：出境游，12天11晚，法德瑞意核心城市连线。',
           plans: [
             { name: '经济款', days: 12, basis: '三星/四星酒店，不含机票，成人参考价 ¥29,800' },
             { name: '品质款', days: 12, basis: '五星酒店，含往返机票，成人参考价 ¥59,800' }
@@ -66,7 +66,7 @@
       tagClass: 'tag tag-green',
       prefix: 'FT',
       unit: '套',
-      planLabel: '套餐方案',
+      planLabel: '套餐线路',
       departLabel: '出行开始',
       returnLabel: '出行结束',
       startLabel: '出发城市',
@@ -77,7 +77,7 @@
       defaultPrice: 3680,
       defaultStock: 36,
       approvalNo: 'SUP-SCH-20260702-041',
-      approvalNode: '凯撒外采运营',
+      approvalNode: '凯撒代理运营',
       products: [
         {
           name: '兰卡威机票酒店套餐',
@@ -111,13 +111,13 @@
       ]
     },
     cruise: {
-      label: '邮轮线路',
+      label: '邮轮产品',
       scheduleType: '邮轮航次',
       objectName: '航次',
       tagClass: 'tag tag-purple',
       prefix: 'CR',
       unit: '间',
-      planLabel: '航线方案',
+      planLabel: '产品线路',
       departLabel: '开航日期',
       returnLabel: '返港日期',
       startLabel: '出发母港',
@@ -207,13 +207,13 @@
       ]
     },
     train: {
-      label: '专列线路',
+      label: '专列产品',
       scheduleType: '专列班期',
       objectName: '班期',
       tagClass: 'tag tag-green',
       prefix: 'TR',
       unit: '铺',
-      planLabel: '行程方案',
+      planLabel: '产品线路',
       departLabel: '发车日期',
       returnLabel: '回程日期',
       startLabel: '出发站',
@@ -303,13 +303,13 @@
       ]
     },
     study: {
-      label: '研学线路',
+      label: '研学产品',
       scheduleType: '研学营期',
       objectName: '营期',
       tagClass: 'tag tag-green',
       prefix: 'ST',
       unit: '名',
-      planLabel: '研学方案',
+      planLabel: '产品线路',
       departLabel: '开营日期',
       returnLabel: '结营日期',
       startLabel: '集合城市',
@@ -358,16 +358,16 @@
   };
 
   data.outbound = Object.assign({}, data.group, {
-    label: '出境游线路',
+    label: '参团游线路',
     prefix: 'OB'
   });
   data.domestic = Object.assign({}, data.group, {
-    label: '国内游线路',
+    label: '参团游线路',
     prefix: 'CN',
     products: [
       {
         name: '三亚亲子5日游',
-        meta: '国内游，5天4晚，三亚、亚龙湾、海棠湾亲子度假。',
+        meta: '旅游类型：境内游，5天4晚，三亚、亚龙湾、海棠湾亲子度假。',
         plans: [
           { name: '亲子标准款', days: 5, basis: '海岛酒店、接送和亲子活动，成人参考价 ¥4,800' },
           { name: '度假升级款', days: 5, basis: '高星酒店、精选景区和亲子活动，成人参考价 ¥7,800' }
@@ -375,7 +375,7 @@
       },
       {
         name: '西藏深度探索7日',
-        meta: '国内游，7天6晚，成都出发，拉萨及周边深度游览。',
+        meta: '旅游类型：境内游，7天6晚，成都出发，拉萨及周边深度游览。',
         plans: [
           { name: '高原标准款', days: 7, basis: '当地酒店、景区首道门票、中文导游，成人参考价 ¥4,800' }
         ]
@@ -662,8 +662,8 @@
     if (preferredLine && !preferredProduct) {
       preferredProduct = {
         name: preferredLine,
-        meta: '待开排线路',
-        plans: [{ name: preferredPlan || '默认方案', days: defaultPlanDays(type), basis: '按当前方案开排' }]
+        meta: '待开排产品',
+        plans: [{ name: preferredPlan || '默认线路', days: defaultPlanDays(type), basis: '按当前线路开排' }]
       };
       type.products.unshift(preferredProduct);
     }
@@ -684,7 +684,7 @@
 
     var currentProduct = selectedProduct();
     if (preferredPlan && !currentProduct.plans.some(function (plan) { return plan.name === preferredPlan; })) {
-      currentProduct.plans.unshift({ name: preferredPlan, days: defaultPlanDays(type), basis: '按当前方案开排' });
+      currentProduct.plans.unshift({ name: preferredPlan, days: defaultPlanDays(type), basis: '按当前线路开排' });
     }
 
     planSelect.innerHTML = selectedProduct().plans.map(function (plan) {
@@ -979,8 +979,8 @@
     var totals = matrixTotals();
     var demand = selectedResourceDemand();
     var summary = [
-      '<div class="schedule-summary-card"><span>线路类型</span><strong>' + type.label + '</strong></div>',
-      '<div class="schedule-summary-card"><span>线路/方案</span><strong>' + selectedProduct().name + ' / ' + selectedPlan().name + '</strong></div>',
+      '<div class="schedule-summary-card"><span>产品类型</span><strong>' + type.label + '</strong></div>',
+      '<div class="schedule-summary-card"><span>产品/线路</span><strong>' + selectedProduct().name + ' / ' + selectedPlan().name + '</strong></div>',
       '<div class="schedule-summary-card"><span>日期</span><strong>' + $('#departDate').value + ' 至 ' + $('#returnDate').value + '</strong></div>',
       '<div class="schedule-summary-card"><span>名额价格</span><strong>' + totals.saleable + quotaDisplayUnit() + '，成人' + adultCount() + '，起价' + primaryPrice() + '</strong></div>',
       '<div class="schedule-summary-card"><span>预留时长</span><strong>' + reserveHours() + '小时</strong></div>'
@@ -1082,14 +1082,14 @@
     if (!routeContext || !routeContext.product) return;
     var lineMeta = $('#lineMeta');
     if (!lineMeta) return;
-    var pieces = ['来源线路：' + routeContext.product];
-    if (routeContext.route) pieces.push('承接行程方案：' + routeContext.route);
+    var pieces = ['来源产品：' + routeContext.product];
+    if (routeContext.route) pieces.push('承接产品线路：' + routeContext.route);
     if (routeContext.ownerOrg) pieces.push('承接组织：' + routeContext.ownerOrg);
     if (routeContext.supplier) pieces.push('供货方：' + routeContext.supplier);
     if (routeContext.flightRouteResource) pieces.push('航线资源：' + routeContext.flightRouteResource);
     if (routeContext.flightUsePolicy) pieces.push('用位方式：' + routeContext.flightUsePolicy);
     if (Array.isArray(routeContext.resourceRefs) && routeContext.resourceRefs.length) {
-      pieces.push('方案资源：' + routeContext.resourceRefs.slice(0, 4).join('、'));
+      pieces.push('线路资源：' + routeContext.resourceRefs.slice(0, 4).join('、'));
     }
     lineMeta.value = lineMeta.value + '\n' + pieces.join('；');
   }
@@ -1128,9 +1128,9 @@
     var type = selectedType();
     writePending(schedulePayload(null, 1));
     $('#successTitle').textContent = isSupplierSchedule ? type.objectName + '已提交凯撒确认' : type.objectName + '已提交';
-    $('#successText').textContent = isSupplierSchedule ? type.label + '已提交凯撒确认，凯撒采用后生成外采销售' + type.objectName + '。' : type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
+    $('#successText').textContent = isSupplierSchedule ? type.label + '已提交凯撒确认，凯撒采用后生成代理销售' + type.objectName + '。' : type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
     $('#approvalNo').textContent = isSupplierSchedule ? 'SUP-' + scheduleCode(1, $('#departDate').value) : type.approvalNo;
-    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒外采运营' : type.approvalNode;
+    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒代理运营' : type.approvalNode;
     $('#approvalLink').href = scheduleListHref();
     $('#approvalLink').textContent = '返回列表';
     dirty = false;
@@ -1193,7 +1193,7 @@
     $('#successTitle').textContent = isSupplierSchedule ? '批量团期已提交凯撒确认' : '批量开排完成';
     $('#successText').textContent = isSupplierSchedule ? '已生成' + items.length + '个供应商' + selectedType().objectName + '草稿并提交凯撒确认。' : '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
     $('#approvalNo').textContent = isSupplierSchedule ? '待凯撒确认' : '无需审批';
-    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒外采运营' : '已进入团期列表';
+    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒代理运营' : '已进入团期列表';
     $('#approvalLink').style.display = 'none';
     dirty = false;
     openModal();

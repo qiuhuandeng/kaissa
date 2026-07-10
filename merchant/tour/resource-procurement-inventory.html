@@ -300,7 +300,7 @@
               <thead>
                 <tr>
                   <th>团期编号</th>
-                  <th>线路/方案</th>
+                  <th>产品/线路</th>
                   <th id="detailAllocationSubtypeHead">舱位</th>
                   <th>分配</th>
                   <th>已售</th>
@@ -451,77 +451,94 @@
   </div>
 
   <div id="allocationDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="allocationTitle">
+    <div class="modal drawer-modal drawer-select drawer-lg resource-allocation-drawer" role="dialog" aria-modal="true" aria-labelledby="allocationTitle">
       <div class="modal-header">
         <div id="allocationTitle" class="modal-title">分配到团期</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
       </div>
       <div class="modal-body">
-        <div id="allocationResourceSummary" class="resource-allocation-summary">
-          <strong>-</strong>
-          <span>-</span>
+        <div id="allocationResourceSummary" class="drawer-object-summary resource-allocation-summary">
+          <div class="drawer-object-summary-main">
+            <div>
+              <h3 id="allocationResourceTitle" class="drawer-object-title">-</h3>
+              <div id="allocationResourceContext" class="drawer-object-subtitle">-</div>
+            </div>
+            <span id="allocationResourceStatus" class="tag tag-blue">可分配</span>
+          </div>
+          <div class="drawer-summary-grid resource-allocation-summary-grid">
+            <div class="drawer-summary-item">
+              <span class="drawer-summary-label">采购库存</span>
+              <strong id="allocationSummaryTotal" class="drawer-summary-value">-</strong>
+            </div>
+            <div class="drawer-summary-item">
+              <span class="drawer-summary-label">已分配</span>
+              <strong id="allocationSummaryAllocated" class="drawer-summary-value">-</strong>
+            </div>
+            <div class="drawer-summary-item">
+              <span class="drawer-summary-label">可分配</span>
+              <strong id="allocationSummaryAvailable" class="drawer-summary-value">-</strong>
+            </div>
+            <div class="drawer-summary-item">
+              <span class="drawer-summary-label">DL截止</span>
+              <strong id="allocationSummaryDl" class="drawer-summary-value">-</strong>
+            </div>
+          </div>
         </div>
-        <div class="resource-allocation-controls">
-          <div class="form-group resource-allocation-schedule-select">
-            <label class="form-label" for="allocationSchedule">目标团期</label>
-            <select id="allocationSchedule" class="form-control"></select>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">选择目标团期</h3>
           </div>
-          <input id="allocationDepartDate" type="hidden">
-          <input id="allocationReturnDate" type="hidden">
-          <div class="form-group">
-            <label class="form-label" for="allocationLinkMode">去返程联动</label>
-            <select id="allocationLinkMode" class="form-control">
-              <option value="current">仅分当前协议</option>
-              <option value="linked">同步分配关联协议</option>
-            </select>
+          <div class="resource-allocation-controls">
+            <div class="form-group resource-allocation-schedule-select">
+              <label class="form-label" for="allocationSchedule">目标团期</label>
+              <select id="allocationSchedule" class="form-control"></select>
+            </div>
+            <input id="allocationDepartDate" type="hidden">
+            <input id="allocationReturnDate" type="hidden">
+            <div class="form-group">
+              <label class="form-label" for="allocationLinkMode">去返程联动</label>
+              <select id="allocationLinkMode" class="form-control">
+                <option value="current">仅分当前协议</option>
+                <option value="linked">同步分配关联协议</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="allocationOwner">处理人</label>
+              <input id="allocationOwner" class="form-control" type="text" value="团控周伟">
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="allocationOwner">处理人</label>
-            <input id="allocationOwner" class="form-control" type="text" value="团控周伟">
+          <div id="allocationScheduleSummary" class="resource-allocation-schedule">
+            <strong>-</strong>
+            <span>-</span>
+          </div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">可分配资源</h3>
           </div>
           <input id="allocationTotal" type="hidden" value="0">
-        </div>
-        <div id="allocationScheduleSummary" class="resource-allocation-schedule">
-          <strong>-</strong>
-          <span>-</span>
-        </div>
-        <div class="resource-allocation-impact">
-          <div>
-            <span>当前可售</span>
-            <strong id="allocationImpactCurrent">-</strong>
-          </div>
-          <div>
-            <span>本次增加</span>
-            <strong id="allocationImpactTotal">0</strong>
-          </div>
-          <div>
-            <span>分配后可售</span>
-            <strong id="allocationImpactSchedule">-</strong>
-          </div>
-          <div>
-            <span>采购剩余</span>
-            <strong id="allocationImpactAvailable">-</strong>
-          </div>
-        </div>
-        <section class="table-wrap" aria-label="分配库存子类型">
-          <table>
-            <thead>
-              <tr>
-                <th>可用资源</th>
-                <th>规格/PNR</th>
-                <th>可分配</th>
-                <th>本次分配</th>
-                <th>分配后剩余</th>
-                <th>校验结果</th>
-              </tr>
-            </thead>
-            <tbody id="allocationSubtypeRows"></tbody>
-          </table>
+          <section class="table-wrap resource-allocation-table" aria-label="分配库存子类型">
+            <table>
+              <thead>
+                <tr>
+                  <th>可用资源</th>
+                  <th>规格/PNR</th>
+                  <th>可分配</th>
+                  <th>本次分配</th>
+                  <th>分配后剩余</th>
+                  <th>校验结果</th>
+                </tr>
+              </thead>
+              <tbody id="allocationSubtypeRows"></tbody>
+            </table>
+          </section>
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
-        <button id="saveAllocation" class="btn btn-primary" type="button">确认分配</button>
+        <div class="drawer-footer-actions">
+          <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
+          <button id="saveAllocation" class="btn btn-primary" type="button">确认分配</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1226,7 +1243,7 @@
         if (!contract || !subtype) return '';
         if (contract.type === '邮轮') {
           if (!subtype.capacity && !subtype.maxCapacity && !subtype.thirdFourth && !subtype.childNoBerth) {
-            return '随产品方案带出';
+            return '随产品线路带出';
           }
           var capacity = '标准' + (subtype.capacity || 2) + '人/最大' + (subtype.maxCapacity || subtype.capacity || 2) + '人';
           return capacity + ' · 三四人' + (subtype.thirdFourth || '需确认') + ' · 儿童不占位' + (subtype.childNoBerth || '需确认');
@@ -1237,7 +1254,7 @@
           if (seat) pieces.push(seat);
           if (subtype.compartment) pieces.push(subtype.compartment === '是' ? '整包厢' : '非包厢');
           if (subtype.childNoBerth) pieces.push('儿童不占位' + subtype.childNoBerth);
-          return pieces.length ? pieces.join(' · ') : '随产品方案带出';
+          return pieces.length ? pieces.join(' · ') : '随产品线路带出';
         }
         return '';
       }
@@ -2433,7 +2450,17 @@
         var stats = contractStats(contract);
         var unit = contractUnitText(contract);
         var linked = linkedAllocationContract(contract);
-        $('#allocationResourceSummary').innerHTML = '<strong>' + escapeHtml(contract.resourceName + '｜' + (contract.direction || '单程') + '｜可分配' + stats.available + unit) + '</strong><span>' + escapeHtml(contract.route + '｜出发 ' + contract.departDate + '｜DL ' + contract.dlDate + '（剩余' + daysUntil(contract.dlDate) + '天）' + (linked ? '｜关联 ' + linked.resourceName : '')) + '</span>';
+        var dlDays = daysUntil(contract.dlDate);
+        var dlText = contract.dlDate + (dlDays >= 0 ? '（剩余' + dlDays + '天）' : '（已过DL）');
+        var statusText = stats.available > 0 ? '可分配' : '无可分配';
+        $('#allocationResourceTitle').textContent = contract.resourceName + ' / ' + (contract.direction || '单程');
+        $('#allocationResourceContext').textContent = [contract.route, '出发 ' + contract.departDate, linked ? '关联 ' + linked.resourceName : ''].filter(Boolean).join(' / ');
+        $('#allocationResourceStatus').textContent = statusText;
+        $('#allocationResourceStatus').className = tagClass(statusText);
+        $('#allocationSummaryTotal').textContent = stats.total + unit;
+        $('#allocationSummaryAllocated').textContent = stats.allocated + unit;
+        $('#allocationSummaryAvailable').textContent = stats.available + unit;
+        $('#allocationSummaryDl').textContent = dlText;
         $('#allocationSchedule').innerHTML = (schedules[contract.type] || []).map(function (item) {
           var scheduleStats = scheduleAllocationStats(contract, item.code);
           var depart = item.departDate || contract.departDate;
@@ -2482,10 +2509,8 @@
         var contract = selectedContract();
         if (!contract) return;
         var schedule = selectedAllocationSchedule(contract);
-        var scheduleStats = scheduleAllocationStats(contract, schedule.no);
         var unit = contractUnitText(contract);
         var total = 0;
-        var availableTotal = 0;
         $all('[data-allocation-subtype]').forEach(function (row) {
           var available = Number(row.getAttribute('data-allocation-available') || 0);
           var qty = Number($('[data-allocation-qty]', row).value || 0);
@@ -2493,7 +2518,6 @@
           var after = Math.max(0, available - qty);
           var checkText = '可分配';
           var checkMeta = allocationDateText(contract, schedule);
-          availableTotal += available;
           total += qty;
           if (!allocationDateMatched(contract, schedule)) {
             checkText = '日期不匹配';
@@ -2511,10 +2535,6 @@
           $('[data-allocation-check]', row).innerHTML = '<span class="' + tagClass(checkText) + '">' + escapeHtml(checkText) + '</span><span class="resource-procurement-meta">' + escapeHtml(checkMeta) + '</span>';
         });
         $('#allocationTotal').value = total + unit;
-        $('#allocationImpactCurrent').textContent = scheduleStats.pending + unit;
-        $('#allocationImpactTotal').textContent = (total ? '+' : '') + total + unit;
-        $('#allocationImpactSchedule').textContent = (scheduleStats.pending + total) + unit;
-        $('#allocationImpactAvailable').textContent = Math.max(0, availableTotal - total) + unit;
       }
 
       function saveAllocation() {

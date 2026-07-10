@@ -16,8 +16,8 @@
           <label class="ai-role-select ai-role-card">
             <span class="ai-role-label"><span aria-hidden="true"></span>当前角色</span>
             <select id="roleSelect" class="form-control" aria-label="切换角色">
-              <option>线路总监</option>
-              <option>线路经理/计调</option>
+              <option>产品总监</option>
+              <option>产品经理/计调</option>
               <option>运营专员</option>
               <option>财务主管</option>
               <option>财务专员</option>
@@ -35,7 +35,7 @@
         <header class="ai-chat-header">
           <div class="ai-chat-title">
             <strong>AI助手</strong>
-            <span id="chatContextText">线路总监</span>
+            <span id="chatContextText">产品总监</span>
           </div>
           <div class="ai-chat-actions">
             <button id="newChatButton" class="ai-header-icon-button" type="button" aria-label="新建对话" title="新建对话">
@@ -125,16 +125,16 @@
       var actionConfirmModal = document.getElementById('actionConfirmModal');
       var actionConfirmText = document.getElementById('actionConfirmText');
       var pendingAction = '';
-      var activeRole = '线路总监';
+      var activeRole = '产品总监';
 
       var roles = {
-        '线路总监': [
-          { group: '线路审批', items: ['查看今日待审批线路列表', '查看本周已审批线路汇总', '查看被驳回线路详情', '查看各渠道价格合规异常'] },
+        '产品总监': [
+          { group: '产品审批', items: ['查看今日待审批产品列表', '查看本周已审批产品汇总', '查看被驳回产品详情', '查看各渠道价格合规异常'] },
           { group: '竞品与定价', items: ['查看今日竞品价格预警', '查看携程近7天同类线路价格对比', '生成本周竞品分析摘要', '查看我方各渠道价格一致性检查结果'] },
           { group: '线路健康度', items: ['查看9类线路本月健康度总览', '查看出单率低于阈值的线路列表', '查看毛利率异常线路', '生成本月线路经营分析报告'] },
           { group: '文案与素材', items: ['为当前草稿线路优化OTA标题关键词', '生成欧洲经典线路卖点文案', '生成小程序推送版本文案', '生成携程详情页文案'] }
         ],
-        '线路经理/计调': [
+        '产品经理/计调': [
           { group: '线路录入', items: ['AI解析上传的行程PDF', '根据目的地和天数生成行程草案', '优化当前线路的行程文案', '检查当前线路纯玩合规性'] },
           { group: '团期管理', items: ['查看本月团期日历', '查看余位低于5人的近期团期', '生成下季度批量开排建议', '查看OTA各平台库存同步状态'] },
           { group: '成本录入', items: ['查看待录入成本的团期列表', '查看某团期的预估成本明细', '查看本月成本超支团期', '生成供应商付款提醒清单'] },
@@ -196,17 +196,17 @@
       };
 
       var rolePolicies = {
-        '线路总监': {
-          modules: '线路审批、定价策略、线路分析、渠道授权',
-          dataScope: '本中心及授权业务线的线路、方案、团期和竞品价格',
+        '产品总监': {
+          modules: '产品审批、定价策略、产品分析、渠道授权',
+          dataScope: '本中心及授权业务线的产品、线路、团期和竞品价格',
           sensitive: '游客证件、客户联系方式默认脱敏；供应商底价仅展示汇总',
-          action: '线路发布、调价、渠道授权需要二次确认并留痕',
+          action: '产品发布、调价、渠道授权需要二次确认并留痕',
           allow: { product_admin: true, finance_execute: false, sensitive_export: false, broad_data: false, admin_config: false },
           confirm: { product_admin: true }
         },
-        '线路经理/计调': {
-          modules: '线路草稿、线路维护、团期开排、成本录入、出团文件',
-          dataScope: '本人及本部门负责的线路、方案、团期和供应商成本',
+        '产品经理/计调': {
+          modules: '产品草稿、产品维护、团期开排、成本录入、出团文件',
+          dataScope: '本人及本部门负责的产品、线路、团期和供应商成本',
           sensitive: '游客名单可按指定团期脱敏查看；证件号、手机号默认脱敏',
           action: '可生成草稿和文件，不能代为上架、改价、发布',
           allow: { product_admin: false, finance_execute: false, sensitive_export: true, broad_data: false, admin_config: false },
@@ -272,7 +272,7 @@
 
       var pickerData = {
         schedule: ['ZY-202506-0028｜欧洲经典12日｜2025-06-28', 'EU20240715001｜欧洲十国经典游｜2025-07-15', 'TR-SILK-20250805-001｜东方丝路专列｜2025-08-05'],
-        product: ['欧洲经典12日｜自营线路｜已上架', '理想号地中海邮轮｜邮轮线路｜航次4个', '日本签证代办｜单项服务｜服务项3个'],
+        product: ['欧洲经典12日｜自营产品｜已上架', '理想号地中海邮轮｜邮轮产品｜航次4个', '日本签证代办｜单项服务｜服务项3个'],
         customer: ['张建国｜KS20240618001｜欧洲十国经典游', '李梅｜意向订单待跟进｜日本关西深度游', '王强｜高价值客户｜邮轮偏好']
       };
 
@@ -411,10 +411,10 @@
         return [
           '<p>今日共有 <strong>3 条线路</strong> 等待您审批。</p>',
           tableToolbar(),
-          '<div class="table-wrap ai-data-table"><table><thead><tr><th data-sortable>序号</th><th data-sortable>线路名称</th><th data-sortable>提交人</th><th data-sortable>提交时间</th><th data-sortable>线路类型</th></tr></thead><tbody>',
-          '<tr><td>1</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">欧洲经典12日</a></td><td>计调张明</td><td>10:23</td><td><span class="ai-result-tag ai-result-tag-blue">自营线路</span></td></tr>',
-          '<tr><td>2</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">理想号地中海邮轮</a></td><td>线路经理李梅</td><td>09:48</td><td><span class="ai-result-tag ai-result-tag-green">邮轮线路</span></td></tr>',
-          '<tr><td>3</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">东方丝路专列9日</a></td><td>计调王强</td><td>09:12</td><td><span class="ai-result-tag ai-result-tag-purple">专列线路</span></td></tr>',
+          '<div class="table-wrap ai-data-table"><table><thead><tr><th data-sortable>序号</th><th data-sortable>产品名称</th><th data-sortable>提交人</th><th data-sortable>提交时间</th><th data-sortable>产品类型</th></tr></thead><tbody>',
+          '<tr><td>1</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">欧洲经典12日</a></td><td>计调张明</td><td>10:23</td><td><span class="ai-result-tag ai-result-tag-blue">自营产品</span></td></tr>',
+          '<tr><td>2</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">理想号地中海邮轮</a></td><td>产品经理李梅</td><td>09:48</td><td><span class="ai-result-tag ai-result-tag-green">邮轮产品</span></td></tr>',
+          '<tr><td>3</td><td><a class="ai-entity-link" href="../approval/approval-product-review.html">东方丝路专列9日</a></td><td>计调王强</td><td>09:12</td><td><span class="ai-result-tag ai-result-tag-purple">专列产品</span></td></tr>',
           '</tbody></table></div>',
           '<p><a class="ai-inline-link" href="../approval/approval-product-review.html">前往审批中心查看全部</a></p>'
         ].join('');

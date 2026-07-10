@@ -133,46 +133,63 @@
   </main>
 
   <div id="exceptionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="exceptionDrawerTitle">
+    <div class="modal drawer-modal drawer-action drawer-lg ota-exception-drawer" role="dialog" aria-modal="true" aria-labelledby="exceptionDrawerTitle">
       <div class="modal-header">
-        <div>
-          <div id="exceptionDrawerTitle" class="modal-title">异常处理</div>
-          <div class="drawer-title-meta" data-exception-title>OTA-EX-20260704001</div>
-        </div>
+        <div id="exceptionDrawerTitle" class="modal-title">异常处理</div>
         <button class="modal-close" type="button" aria-label="关闭异常处理" data-close-exception>×</button>
       </div>
       <div class="modal-body">
-        <div class="description-grid">
-          <div class="description-item"><div class="description-label">异常单号</div><div class="description-value" data-detail-no>OTA-EX-20260704001</div></div>
-          <div class="description-item"><div class="description-label">平台</div><div class="description-value" data-detail-platform>同程</div></div>
-          <div class="description-item"><div class="description-label">异常类型</div><div class="description-value" data-detail-type>商品映射失败</div></div>
-          <div class="description-item"><div class="description-label">来源单据</div><div class="description-value" data-detail-source>MAP-TC-JP-0871</div></div>
-          <div class="description-item full"><div class="description-label">异常原因</div><div class="description-value" data-detail-reason>平台退改政策编码缺失</div></div>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="exceptionMethod">处理方式</label>
-            <select id="exceptionMethod" class="form-control">
-              <option>补充映射后重试</option>
-              <option>重新同步来源单据</option>
-              <option>关闭异常</option>
-              <option>转人工核对</option>
-            </select>
+        <section class="drawer-object-summary ota-exception-summary">
+          <div class="drawer-object-summary-main">
+            <div>
+              <h3 class="drawer-object-title" data-detail-no>OTA-EX-20260704001</h3>
+              <div class="drawer-object-subtitle"><span data-detail-platform>同程</span> / <span data-detail-type>商品映射失败</span> / <span data-detail-source>MAP-TC-JP-0871</span></div>
+            </div>
+            <span class="tag tag-orange" data-detail-status>待处理</span>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="exceptionOwner">处理人</label>
-            <input id="exceptionOwner" class="form-control" type="text" value="平台运营">
+          <div class="drawer-summary-grid ota-exception-summary-grid">
+            <div class="drawer-summary-item">
+              <span class="drawer-summary-label">异常原因</span>
+              <strong class="drawer-summary-value" data-detail-reason>平台退改政策编码缺失</strong>
+            </div>
+            <div class="drawer-summary-item">
+              <span class="drawer-summary-label">发生时间</span>
+              <strong class="drawer-summary-value" data-detail-time>2026-07-04 09:18</strong>
+            </div>
           </div>
-          <div class="form-group form-group-full">
-            <label class="form-label" for="exceptionRemark">处理备注</label>
-            <textarea id="exceptionRemark" class="form-control" rows="4" placeholder="记录补充字段、平台返回码、是否需要业务/财务确认"></textarea>
+        </section>
+
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">本次处理</h3>
           </div>
-        </div>
+          <div class="form-grid ota-exception-form">
+            <div class="form-group">
+              <label class="form-label" for="exceptionMethod">处理方式</label>
+              <select id="exceptionMethod" class="form-control">
+                <option>补充映射后重试</option>
+                <option>重新同步来源单据</option>
+                <option>关闭异常</option>
+                <option>转人工核对</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="exceptionOwner">处理人</label>
+              <input id="exceptionOwner" class="form-control" type="text" value="平台运营">
+            </div>
+            <div class="form-group form-group-full">
+              <label class="form-label" for="exceptionRemark">处理备注</label>
+              <textarea id="exceptionRemark" class="form-control" rows="4" placeholder="记录补充字段、平台返回码、是否需要业务/财务确认"></textarea>
+            </div>
+          </div>
+        </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-exception>取消</button>
-        <button class="btn btn-secondary" type="button" data-retry-from-drawer>重试同步</button>
-        <button class="btn btn-primary" type="button" data-save-exception>保存处理</button>
+        <div class="drawer-footer-actions">
+          <button class="btn btn-secondary" type="button" data-close-exception>取消</button>
+          <button class="btn btn-secondary" type="button" data-retry-from-drawer>重试同步</button>
+          <button class="btn btn-primary" type="button" data-save-exception>保存处理</button>
+        </div>
       </div>
     </div>
   </div>
@@ -182,16 +199,27 @@
       var drawer = document.getElementById('exceptionDrawer');
       var rows = Array.prototype.slice.call(document.querySelectorAll('tbody tr[data-keywords]'));
 
+      function statusTagClass(status) {
+        if (status === '待处理') return 'tag tag-orange';
+        if (status === '处理中') return 'tag tag-blue';
+        if (status === '已重试' || status === '已关闭') return 'tag tag-green';
+        return 'tag tag-gray';
+      }
+
       document.querySelectorAll('[data-open-exception]').forEach(function (button) {
         button.addEventListener('click', function () {
           var row = button.closest('tr');
           var cells = row.querySelectorAll('td');
-          drawer.querySelector('[data-exception-title]').textContent = cells[0].textContent.trim();
-          drawer.querySelector('[data-detail-no]').textContent = cells[0].textContent.trim();
-          drawer.querySelector('[data-detail-platform]').textContent = cells[1].textContent.trim();
-          drawer.querySelector('[data-detail-type]').textContent = cells[2].textContent.trim();
-          drawer.querySelector('[data-detail-source]').textContent = cells[3].textContent.trim();
-          drawer.querySelector('[data-detail-reason]').textContent = cells[5].textContent.trim();
+          var status = cells[5].querySelector('.tag') ? cells[5].querySelector('.tag').textContent.trim() : cells[5].textContent.trim();
+          var statusTag = drawer.querySelector('[data-detail-status]');
+          drawer.querySelector('[data-detail-no]').textContent = cells[0].querySelector('strong').textContent.trim();
+          drawer.querySelector('[data-detail-platform]').textContent = row.dataset.platform;
+          drawer.querySelector('[data-detail-type]').textContent = cells[1].textContent.trim();
+          drawer.querySelector('[data-detail-source]').textContent = cells[2].textContent.trim().replace(/\s+/g, ' ');
+          drawer.querySelector('[data-detail-reason]').textContent = cells[3].textContent.trim();
+          drawer.querySelector('[data-detail-time]').textContent = cells[4].textContent.trim();
+          statusTag.textContent = status;
+          statusTag.className = statusTagClass(status);
           window.caesarUI.openLayer(drawer);
         });
       });

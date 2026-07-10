@@ -81,45 +81,75 @@
   </main>
 
   <div id="sourceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="sourceDrawerTitle">
+    <div class="modal drawer-modal drawer-edit drawer-md channel-source-drawer" role="dialog" aria-modal="true" aria-labelledby="sourceDrawerTitle">
       <div class="modal-header">
-        <div id="sourceDrawerTitle" class="modal-title">渠道来源</div>
+        <div id="sourceDrawerTitle" class="modal-title">新增来源</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-source>×</button>
       </div>
       <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="sourceName">来源名称</label>
-            <input id="sourceName" class="form-control" type="text" value="分销来源">
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">基础信息</h3>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="sourceType">来源类型</label>
-            <select id="sourceType" class="form-control">
-              <option>门市</option>
-              <option selected>分销渠道</option>
-              <option>OTA平台</option>
-              <option>官网</option>
-              <option>企业客户</option>
-            </select>
+          <div class="form-grid channel-source-form">
+            <div class="form-group">
+              <label class="form-label" for="sourceName">来源名称</label>
+              <input id="sourceName" class="form-control" type="text" data-source-name>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sourceType">来源类型</label>
+              <select id="sourceType" class="form-control" data-source-type>
+                <option>门市</option>
+                <option>分销渠道</option>
+                <option>OTA平台</option>
+                <option>官网</option>
+                <option>企业客户</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sourceStatus">状态</label>
+              <select id="sourceStatus" class="form-control" data-source-status>
+                <option>启用</option>
+                <option>停用</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="sourceOwner">适用对象</label>
-            <input id="sourceOwner" class="form-control" type="text" value="分销渠道档案">
+        </section>
+
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">业务承接</h3>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="sourceSettlement">收款/对账承接</label>
-            <select id="sourceSettlement" class="form-control">
-              <option>门市预存 / 门市对账</option>
-              <option selected>分销对账 / 佣金规则</option>
-              <option>平台对账 / 服务费</option>
-              <option>线上流水 / 认款管理</option>
-            </select>
+          <div class="form-grid channel-source-form">
+            <div class="form-group">
+              <label class="form-label" for="sourceOwner">适用对象</label>
+              <input id="sourceOwner" class="form-control" type="text" data-source-owner>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sourceOrderOwner">订单归属</label>
+              <input id="sourceOrderOwner" class="form-control" type="text" data-source-order-owner>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sourceSettlement">收款/对账承接</label>
+              <select id="sourceSettlement" class="form-control" data-source-settlement>
+                <option>门市预存 / 门市对账</option>
+                <option>分销对账 / 佣金规则</option>
+                <option>平台对账 / 服务费</option>
+                <option>线上流水 / 认款管理</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sourceDefault">默认处理方式</label>
+              <input id="sourceDefault" class="form-control" type="text" data-source-default>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-source>取消</button>
-        <button class="btn btn-primary" type="button" data-save-source>保存</button>
+        <div class="drawer-footer-actions">
+          <button class="btn btn-secondary" type="button" data-close-source>取消</button>
+          <button class="btn btn-primary" type="button" data-save-source>保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -127,8 +157,27 @@
   <script>
     (function () {
       var drawer = document.getElementById('sourceDrawer');
+
+      function cellText(row, index) {
+        return row ? row.children[index].textContent.trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function fillSource(row) {
+        drawer.querySelector('#sourceDrawerTitle').textContent = row ? '编辑来源' : '新增来源';
+        drawer.querySelector('[data-source-name]').value = cellText(row, 0);
+        drawer.querySelector('[data-source-type]').value = row ? cellText(row, 1) : '门市';
+        drawer.querySelector('[data-source-owner]').value = cellText(row, 2);
+        drawer.querySelector('[data-source-order-owner]').value = cellText(row, 3);
+        drawer.querySelector('[data-source-settlement]').value = row ? cellText(row, 4) : '门市预存 / 门市对账';
+        drawer.querySelector('[data-source-default]').value = cellText(row, 5);
+        drawer.querySelector('[data-source-status]').value = row ? cellText(row, 6) : '启用';
+      }
+
       document.querySelectorAll('[data-open-source]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.openLayer(drawer); });
+        button.addEventListener('click', function () {
+          fillSource(button.closest('tr'));
+          window.caesarUI.openLayer(drawer);
+        });
       });
       drawer.querySelectorAll('[data-close-source]').forEach(function (button) {
         button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
