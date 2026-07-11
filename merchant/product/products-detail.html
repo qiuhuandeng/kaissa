@@ -441,6 +441,7 @@
     </div>
   </div>
 
+  <script src="../../shared/custom-inquiry-drawer.js"></script>
   <script>
     (function () {
       var tabs = Array.from(document.querySelectorAll('[data-tab]'));
@@ -1275,13 +1276,20 @@
 
       function openIndependentGroupModal() {
         var route = detailRoutes[activeRouteIndex] || detailRoutes[0];
-        renderIndependentPlanOptions();
-        document.getElementById('independentRouteName').value = currentProductName();
-        document.getElementById('independentDestination').value = route.destinations || detailProfile.destination || '';
-        if (!document.getElementById('independentAdjustments').value) {
-          document.getElementById('independentAdjustments').value = '引用标准产品线路创建客户专属项目团，按客户人数、日期和服务差异重新核价。';
-        }
-        window.caesarUI.openLayer(independentGroupModal);
+        window.caesarInquiryDrawer.open({
+          source: 'productRouteInquiry',
+          sourceLabel: '产品详情',
+          sourceNo: currentProductName(),
+          productName: currentProductName(),
+          route: route.name || '产品线路',
+          type: detailProfile.typeParam || '定制团',
+          destination: route.destinations || detailProfile.destination || '',
+          budget: detailProfile.price || '',
+          owner: cleanParam('owner'),
+          customer: cleanParam('customer'),
+          contact: cleanParam('contact'),
+          phone: cleanParam('phone')
+        });
       }
 
       function independentProjectHref() {

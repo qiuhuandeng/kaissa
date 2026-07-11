@@ -2150,9 +2150,9 @@
             { name: '出团通知', time: '2025-09-10', status: '未生成', tag: 'tag tag-gray' }
           ],
           executionRows: [
-            { node: '项目名单', owner: '项目经理', content: '客户员工、嘉宾和随团工作人员名单导入、证件资料、分房分车', status: '待导入', tag: 'tag tag-orange', links: [['名单', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=independent&tab=roster']] },
-            { node: '资源确认', owner: '计调/资源', content: '国际机票、酒店会议室、当地用车、会务物料和地接确认', status: '待确认', tag: 'tag tag-orange', links: [['资源', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=independent&tab=resource']] },
-            { node: '项目成本', owner: '项目经理', content: '预算成本、供应商确认价和付款申请承接到团期成本', status: '预估成本', tag: 'tag tag-blue', links: [['成本', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=independent&tab=cost']] }
+            { node: '项目名单', owner: '项目经理', content: '客户员工、嘉宾和随团工作人员名单导入、证件资料、分房分车', status: '待导入', tag: 'tag tag-orange', links: [['名单', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=roster']] },
+            { node: '资源确认', owner: '计调/资源', content: '国际机票、酒店会议室、当地用车、会务物料和地接确认', status: '待确认', tag: 'tag tag-orange', links: [['资源', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=resource']] },
+            { node: '项目成本', owner: '项目经理', content: '预算成本、供应商确认价和付款申请承接到团期成本', status: '预估成本', tag: 'tag tag-blue', links: [['成本', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=cost']] }
           ],
           costGroups: [
             { title: '国际交通', subtotal: '¥688,000', items: [['国际机票', '中国国际航空', '80人', '¥8,600', '¥688,000', 'CNY', '待确认', 'tag tag-orange', '北京-巴黎 / 罗马-北京']] },
@@ -4321,7 +4321,7 @@
         var projectNo = ctx.projectNo || '未关联';
         var routeText = ctx.route || '客户确认产品线路';
         var rosterTemplateNo = 'ML-' + projectNoToken(projectNo || scheduleNo);
-        var scheduleQuery = 'scheduleNo=' + encodeURIComponent(scheduleNo) + '&groupMode=independent&source=customProject&projectNo=' + encodeURIComponent(projectNo) + '&customer=' + encodeURIComponent(ctx.customer);
+        var scheduleQuery = 'scheduleNo=' + encodeURIComponent(scheduleNo) + '&groupMode=project&source=customProject&projectNo=' + encodeURIComponent(projectNo) + '&customer=' + encodeURIComponent(ctx.customer);
         scheduleData.code = scheduleNo;
         scheduleData.product = ctx.product;
         scheduleData.route = routeText;
@@ -4487,7 +4487,7 @@
 
       function applyInboundOrderContext() {
         var source = inboundParam('source');
-        if ((pageParams.get('groupMode') === 'independent' || inboundParam('projectNo')) && (source === 'custom' || source === 'customProject')) return;
+        if ((['project', 'independent'].indexOf(pageParams.get('groupMode')) >= 0 || inboundParam('projectNo')) && (source === 'custom' || source === 'customProject')) return;
         var orderNo = inboundParam('orderNo');
         var product = inboundParam('product') || inboundParam('route');
         var packageName = inboundParam('package');
@@ -4562,7 +4562,7 @@
       function applyInboundPrivateGroupContext() {
         var scheduleNo = inboundParam('scheduleNo') || inboundParam('schedule') || inboundParam('sourceNo');
         var source = inboundParam('source');
-        var isProjectInbound = pageParams.get('groupMode') === 'independent' ||
+        var isProjectInbound = ['project', 'independent'].indexOf(pageParams.get('groupMode')) >= 0 ||
           source === 'custom' ||
           source === 'customProject' ||
           !!inboundParam('projectNo') ||

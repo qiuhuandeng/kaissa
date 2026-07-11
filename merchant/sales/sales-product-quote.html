@@ -335,12 +335,13 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-open-custom-inquiry>引用产品发起单团询价</button>
+        <button class="btn btn-secondary" type="button" data-open-product-inquiry>引用产品发起单团询价</button>
         <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
       </div>
     </div>
   </div>
 
+  <script src="../../shared/custom-inquiry-drawer.js"></script>
   <script>
     (function () {
       var detailModal = document.getElementById('bookingProductDetailModal');
@@ -722,30 +723,29 @@
         return 'booking.html?' + params.toString();
       }
 
-      function customInquiryHref(card) {
+      function customInquiryContext(card) {
         var activeCard = card || currentCard || document.querySelector('.market-product-card');
         var config = detailConfig(activeCard);
         var plan = config.plans[currentPlanIndex] || config.plans[0] || {};
         var sourceParams = new URLSearchParams(window.location.search);
-        var params = new URLSearchParams();
-        params.set('source', 'salesProductInquiry');
-        params.set('inquiryNo', 'INQ-20260711-003');
-        params.set('projectStatus', '待计调接单');
-        params.set('projectName', (activeCard.dataset.product || '产品') + '单团询价');
-        params.set('productName', activeCard.dataset.product || '');
-        params.set('route', plan.name || '');
-        params.set('type', activeCard.dataset.type || '单团自组');
-        params.set('destination', activeCard.dataset.destination || '');
-        params.set('quoteBasis', '引用产品参考价询价');
-        params.set('budget', referencePrice(activeCard));
-        params.set('owner', sourceParams.get('owner') || '');
+        var context = {
+          source: 'salesProductInquiry',
+          sourceLabel: '销售选产品',
+          sourceNo: activeCard.dataset.product || '产品',
+          projectName: (activeCard.dataset.product || '产品') + '单团询价',
+          productName: activeCard.dataset.product || '',
+          route: plan.name || '',
+          type: activeCard.dataset.type || '定制团',
+          destination: activeCard.dataset.destination || '',
+          referencePrice: referencePrice(activeCard),
+          owner: sourceParams.get('owner') || ''
+        };
         if (sourceParams.get('from') === 'enterpriseCustomer' && sourceParams.get('customer')) {
-          params.set('customer', sourceParams.get('customer'));
-          params.set('contact', sourceParams.get('contact') || '');
-          params.set('phone', sourceParams.get('phone') || '');
-          params.set('from', 'enterpriseCustomer');
+          context.customer = sourceParams.get('customer');
+          context.contact = sourceParams.get('contact') || '';
+          context.phone = sourceParams.get('phone') || '';
         }
-        return '../tour/product-custom-detail.html?' + params.toString();
+        return context;
       }
 
       function openBooking(card, scheduleIndex) {
@@ -1019,7 +1019,7 @@
         var detailButton = event.target.closest('[data-open-market-detail]');
         var planButton = event.target.closest('[data-booking-plan-index]');
         var bookingButton = event.target.closest('[data-open-booking]');
-        var inquiryButton = event.target.closest('[data-open-custom-inquiry]');
+        var inquiryButton = event.target.closest('[data-open-product-inquiry]');
         if (viewButton) {
           switchProductView(viewButton.dataset.marketView);
           return;
@@ -1045,7 +1045,7 @@
           return;
         }
         if (inquiryButton) {
-          window.caesarNavigateTo(customInquiryHref(currentCard));
+          window.caesarInquiryDrawer.open(customInquiryContext(currentCard));
           return;
         }
         if (event.target.closest('[data-close-modal]') || event.target === detailModal) {

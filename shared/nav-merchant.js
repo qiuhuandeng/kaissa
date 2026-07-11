@@ -70,7 +70,7 @@
           title: "自营产品",
           children: [
             { title: "产品管理", href: "product/products.html" },
-            { title: "单团自组", href: "tour/product-custom-list.html" },
+            { title: "单团项目", href: "tour/product-custom-list.html" },
             { title: "团期管控", href: "tour/schedules.html" },
             { title: "团期结算", href: "tour/fulfillment-cost.html" },
           ],
@@ -440,6 +440,7 @@
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
+    "tour/product-custom-inquiry-create.html": { href: "tour/product-custom-list.html", title: "发起单团询价" },
     "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "代理产品详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "代理产品包装" },
     "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "可代理团期" },

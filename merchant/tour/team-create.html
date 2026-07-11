@@ -311,7 +311,7 @@
       var projectGroupModeOption = document.getElementById('projectGroupModeOption');
       var projectGroupModeHint = document.getElementById('projectGroupModeHint');
       if (!groupMode) return;
-      var fromCustomProject = params.get('groupMode') === 'independent' || params.get('source') === 'custom' || params.get('source') === 'customProject';
+      var fromCustomProject = ['project', 'independent'].indexOf(params.get('groupMode')) >= 0 || params.get('source') === 'custom' || params.get('source') === 'customProject';
 
       function syncPrivateMode() {
         var independent = groupMode.value === '项目团';
@@ -325,6 +325,10 @@
       }
 
       if (fromCustomProject) {
+        document.title = '生成项目团 - 凯撒旅游';
+        document.querySelector('.page-title').textContent = '生成项目团';
+        var submitBuilder = document.querySelector('[data-submit-builder]');
+        if (submitBuilder) submitBuilder.textContent = '生成项目团';
         if (projectGroupModeOption) {
           projectGroupModeOption.disabled = false;
           projectGroupModeOption.textContent = '单团项目生成';
@@ -340,7 +344,7 @@
         if (returnDate && params.get('travelEnd')) returnDate.value = params.get('travelEnd');
         if (quotaPlanCount && params.get('people')) quotaPlanCount.value = params.get('people');
         if (adultCount && params.get('people')) adultCount.value = params.get('people');
-        if (note && !note.value) note.value = params.get('independentNote') || '由单团项目确认成团后生成，承接锁定报价、客户、日期、人数和服务标准。';
+        if (note && !note.value) note.value = params.get('requirement') || params.get('independentNote') || '由单团项目确认成团后生成，承接锁定报价、客户、日期、人数和服务标准。';
         [customer, project, scope, note].forEach(function (field) {
           if (!field) return;
           if (field.tagName === 'SELECT') field.disabled = true;

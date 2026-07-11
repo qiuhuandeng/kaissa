@@ -131,7 +131,7 @@
       <tbody id="contractRows">
         <tr data-tab-status="待发送 未签署" data-product-type="单团项目" data-contract-status="待发送" data-supplement-status="已确认" data-risk-status="无风险" data-contract-no="CTR-MICE-20260704-001" data-order-no="KSMICE20260704001" data-project-no="MICE-20250623-001" data-project-group-no="MICE20250915001" data-customer="北京某科技有限公司" data-passengers="企业团队80人" data-store="上海会展门市" data-store-rule="大客户阶段收款" data-product-name="某科技公司2025年会欧洲行" data-plan="方案A 豪华五星版" data-schedule="MICE20250915001" data-date-range="2025-09-15 至 2025-09-24" data-template="项目旅游服务合同" data-version="V1.0" data-status="待发送" data-sent-at="-" data-signed-at="-" data-amount="¥1,906,000" data-receivable="阶段应收计划待确认" data-paid="¥0" data-finance="合同确认后进入订单应收计划，认款在财务处理" data-quote-version="V4 / 客户确认版" data-receivable-plan="项目首款：合同签署后；项目进度款：出发前客户确认节点；项目尾款：回团验收后" data-roster-deadline="2025-08-31" data-change-rule="人数、日期、服务范围变化需先形成项目变更，再更新合同附件和阶段应收" data-clause="锁定报价、企业团队名单、会议活动服务、阶段收款、人数变更、客户专属项目团" data-refund="锁定后人数、日期、服务范围变化进入单团项目变更记录，涉及退款按订单售后和财务退款执行。">
           <td class="contracts-select-cell"><input type="checkbox" data-contract-select aria-label="选择合同 CTR-MICE-20260704-001" disabled></td>
-          <td class="contracts-id-cell"><strong>CTR-MICE-20260704-001</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=project&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=independent&amp;quoteVersion=A&amp;amount=1906000&amp;people=80">KSMICE20260704001</a></td>
+          <td class="contracts-id-cell"><strong>CTR-MICE-20260704-001</strong><a class="contract-cell-sub link-primary" href="orders-detail.html?type=project&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=project&amp;quoteVersion=A&amp;amount=1906000&amp;people=80">KSMICE20260704001</a></td>
           <td class="contracts-party-cell"><strong>北京某科技有限公司</strong><span class="contract-cell-sub">企业团队80人</span></td>
           <td class="contracts-product-cell"><strong>某科技公司2025年会欧洲行</strong><span class="contract-cell-sub">方案A 豪华五星版</span><span class="contract-cell-sub">09-15 至 09-24</span></td>
           <td class="contracts-type-cell"><strong>项目旅游服务合同</strong><span class="contract-cell-sub">条款已确认</span></td>
@@ -567,17 +567,23 @@
           '&customer=' + encodeParam(config.customer) +
           '&product=' + encodeParam(config.productName) +
           '&scheduleNo=' + encodeParam(config.projectGroupNo || config.schedule) +
-          '&groupMode=independent&quoteVersion=' + encodeParam(config.quoteVersion) +
+          '&groupMode=project&quoteVersion=' + encodeParam(config.quoteVersion) +
           '&amount=' + encodeParam(normalizedAmount(config.amount)) +
           '&people=' + encodeParam(config.passengers);
       }
 
       function customProjectHref(config) {
-        return '../tour/product-custom-detail.html?projectNo=' + encodeParam(config.projectNo);
+        return '../tour/product-custom-detail.html?source=customProject&projectNo=' + encodeParam(config.projectNo) +
+          '&projectName=' + encodeParam(config.productName) +
+          '&customer=' + encodeParam(config.customer) +
+          '&projectStatus=已成团&orderNo=' + encodeParam(config.orderNo) +
+          '&contractNo=' + encodeParam(config.contractNo) +
+          '&scheduleNo=' + encodeParam(config.projectGroupNo || config.schedule) +
+          '&quoteVersion=' + encodeParam(config.quoteVersion);
       }
 
       function projectGroupHref(config) {
-        return '../tour/schedules-detail.html?type=project&source=customProject&groupMode=independent&scheduleNo=' + encodeParam(config.projectGroupNo || config.schedule) +
+        return '../tour/schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' + encodeParam(config.projectGroupNo || config.schedule) +
           '&projectNo=' + encodeParam(config.projectNo) +
           '&customer=' + encodeParam(config.customer);
       }
@@ -741,6 +747,15 @@
         });
       }
 
+      function applyProjectFromUrl() {
+        var projectNo = pageParams.get('projectNo');
+        var orderNo = pageParams.get('orderNo');
+        var keywordInput = document.getElementById('contractKeyword');
+        if (!keywordInput) return;
+        if (projectNo) keywordInput.value = projectNo;
+        else if (orderNo) keywordInput.value = orderNo;
+      }
+
       function openLayer(layer) {
         if (!layer) return;
         if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
@@ -869,7 +884,7 @@
         var supplement = selectedValue('supplementStatus');
         var risk = selectedValue('contractRisk');
         document.querySelectorAll('#contractRows tr').forEach(function (row) {
-          var rowText = (row.textContent || '').toLowerCase();
+          var rowText = ((row.textContent || '') + ' ' + (row.dataset.projectNo || '') + ' ' + (row.dataset.orderNo || '')).toLowerCase();
           var scheduleText = [row.dataset.productName, row.dataset.plan, row.dataset.schedule].join(' ').toLowerCase();
           var matched = rowMatchesTab(row, tabValue) &&
             (isAll(status) || row.dataset.contractStatus === status || row.dataset.tabStatus.indexOf(status) >= 0) &&
@@ -1027,6 +1042,7 @@
 
       syncOrderLinks();
       applyTypeFromUrl();
+      applyProjectFromUrl();
       applyContractFilters();
       renderContractPreview(buildContractConfig(document.querySelector('[data-open-contract-view]')));
     })();

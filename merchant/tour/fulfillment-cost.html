@@ -1343,7 +1343,7 @@
 
       function scheduleDetailHref(item) {
         if (isProjectSchedule(item)) {
-          return 'schedules-detail.html?type=project&source=customProject&groupMode=independent&scheduleNo=' +
+          return 'schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' +
             encodeURIComponent(item.id || '') +
             '&projectNo=' + encodeURIComponent(item.projectNo || '') +
             '&customer=' + encodeURIComponent(item.customer || '');
@@ -1353,7 +1353,9 @@
 
       function projectHref(item) {
         return 'product-custom-detail.html?projectNo=' + encodeURIComponent(item.projectNo || '') +
-          '&source=cost&scheduleNo=' + encodeURIComponent(item.id || '');
+          '&projectName=' + encodeURIComponent(item.name || item.projectNo || '') +
+          '&customer=' + encodeURIComponent(item.customer || '') +
+          '&source=cost&scheduleNo=' + encodeURIComponent(item.id || '') + '&projectStatus=已成团';
       }
 
       function projectOrderHref(item) {
@@ -3357,9 +3359,9 @@
           '<div class="description-item"><div class="description-label">供应商账单</div><div class="description-value">' + escapeHtml(activePaymentGroup.billNo) + '</div></div>' +
           (projectMode
             ? '<div class="description-item"><div class="description-label">客户</div><div class="description-value">' + escapeHtml(activePaymentGroup.customer || '-') + '</div></div>' +
-              '<div class="description-item"><div class="description-label">单团项目</div><div class="description-value"><a class="link-primary" href="product-custom-detail.html?projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '">' + escapeHtml(activePaymentGroup.projectNo || '-') + '</a></div></div>' +
+              '<div class="description-item"><div class="description-label">单团项目</div><div class="description-value"><a class="link-primary" href="product-custom-detail.html?source=cost&amp;projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '&amp;customer=' + encodeURIComponent(activePaymentGroup.customer || '') + '&amp;projectStatus=已成团">' + escapeHtml(activePaymentGroup.projectNo || '-') + '</a></div></div>' +
               '<div class="description-item"><div class="description-label">项目订单</div><div class="description-value"><a class="link-primary" href="../sales/orders-detail.html?type=project&source=customProject&orderNo=' + encodeURIComponent(activePaymentGroup.projectOrder || '') + '&projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '&scheduleNo=' + encodeURIComponent(activePaymentGroup.projectGroup || '') + '">' + escapeHtml(activePaymentGroup.projectOrder || '-') + '</a></div></div>' +
-              '<div class="description-item"><div class="description-label">项目团</div><div class="description-value"><a class="link-primary" href="schedules-detail.html?type=project&source=customProject&groupMode=independent&scheduleNo=' + encodeURIComponent(activePaymentGroup.projectGroup || '') + '&projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '">' + escapeHtml(activePaymentGroup.projectGroup || '-') + '</a></div></div>'
+              '<div class="description-item"><div class="description-label">项目团</div><div class="description-value"><a class="link-primary" href="schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' + encodeURIComponent(activePaymentGroup.projectGroup || '') + '&projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '">' + escapeHtml(activePaymentGroup.projectGroup || '-') + '</a></div></div>'
             : '') +
           '<div class="description-item"><div class="description-label">付款节点</div><div class="description-value">' + tag(activePaymentGroup.node) + '</div></div>' +
           '<div class="description-item"><div class="description-label">可申请余额</div><div class="description-value amount-strong">' + money(request ? requestAmount(request) : available) + '</div></div>';
@@ -3591,9 +3593,9 @@
           '<div class="description-item"><div class="description-label">收款账户</div><div class="description-value">' + escapeHtml(request.account) + '</div></div>' +
           (request.sourceType === 'project'
             ? '<div class="description-item"><div class="description-label">客户</div><div class="description-value">' + escapeHtml(request.customer || '-') + '</div></div>' +
-              '<div class="description-item"><div class="description-label">单团项目</div><div class="description-value"><a class="link-primary" href="product-custom-detail.html?projectNo=' + encodeURIComponent(request.projectNo || '') + '">' + escapeHtml(request.projectNo || '-') + '</a></div></div>' +
+              '<div class="description-item"><div class="description-label">单团项目</div><div class="description-value"><a class="link-primary" href="product-custom-detail.html?source=cost&amp;projectNo=' + encodeURIComponent(request.projectNo || '') + '&amp;customer=' + encodeURIComponent(request.customer || '') + '&amp;projectStatus=已成团">' + escapeHtml(request.projectNo || '-') + '</a></div></div>' +
               '<div class="description-item"><div class="description-label">项目订单</div><div class="description-value"><a class="link-primary" href="../sales/orders-detail.html?type=project&source=customProject&orderNo=' + encodeURIComponent(request.projectOrder || '') + '&projectNo=' + encodeURIComponent(request.projectNo || '') + '&scheduleNo=' + encodeURIComponent(request.projectGroup || '') + '">' + escapeHtml(request.projectOrder || '-') + '</a></div></div>' +
-              '<div class="description-item"><div class="description-label">项目团</div><div class="description-value"><a class="link-primary" href="schedules-detail.html?type=project&source=customProject&groupMode=independent&scheduleNo=' + encodeURIComponent(request.projectGroup || '') + '&projectNo=' + encodeURIComponent(request.projectNo || '') + '">' + escapeHtml(request.projectGroup || '-') + '</a></div></div>'
+              '<div class="description-item"><div class="description-label">项目团</div><div class="description-value"><a class="link-primary" href="schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' + encodeURIComponent(request.projectGroup || '') + '&projectNo=' + encodeURIComponent(request.projectNo || '') + '">' + escapeHtml(request.projectGroup || '-') + '</a></div></div>'
             : '') +
           '<div class="description-item"><div class="description-label">付款节点</div><div class="description-value">' + tag(request.node) + '</div></div>' +
           '<div class="description-item"><div class="description-label">申请金额</div><div class="description-value amount-strong">' + money(requestAmount(request)) + '</div></div>' +
