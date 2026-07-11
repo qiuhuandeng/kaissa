@@ -116,15 +116,16 @@
             <textarea id="lineMeta" class="form-control" rows="4" readonly></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label" for="groupModeSelect">成团方式</label>
+            <label class="form-label" for="groupModeSelect">团队来源</label>
             <select id="groupModeSelect" class="form-control">
-              <option value="散拼">散拼</option>
-              <option value="独立成团">独立成团</option>
+              <option value="散拼">标准团期</option>
+              <option id="projectGroupModeOption" value="项目团" disabled>单团项目确认成团后带入</option>
             </select>
+            <div id="projectGroupModeHint" class="form-hint">项目团不能在普通入口手工创建，需从已锁定报价的单团项目确认成团后进入。</div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="privateCustomerInput">指定客户</label>
-            <input id="privateCustomerInput" class="form-control" type="text" placeholder="独立成团必填">
+            <label class="form-label" for="privateCustomerInput">项目客户</label>
+            <input id="privateCustomerInput" class="form-control" type="text" placeholder="从单团项目带入">
           </div>
           <div class="form-group">
             <label class="form-label" for="customProjectInput">关联单团项目</label>
@@ -133,15 +134,13 @@
           <div class="form-group">
             <label class="form-label" for="privateSaleScope">销售范围</label>
             <select id="privateSaleScope" class="form-control">
-              <option>公开渠道</option>
               <option>指定客户专属</option>
-              <option>指定门店/销售可见</option>
+              <option>公开渠道</option>
             </select>
           </div>
           <div class="form-group schedule-builder-full">
-            <label class="form-label" for="privateGroupNote">独立成团说明</label>
-            <textarea id="privateGroupNote" class="form-control" rows="3" placeholder="如：客户专属日期、独立用车、指定领队、报价差异等"></textarea>
-            <div class="form-hint">独立成团不会把线路改成新类型，只在项目团记录客户专属范围。</div>
+            <label class="form-label" for="privateGroupNote">项目团来源说明</label>
+            <textarea id="privateGroupNote" class="form-control" rows="3" placeholder="由已锁定报价的单团项目带入"></textarea>
           </div>
         </div>
       </section>
@@ -309,24 +308,55 @@
       var returnDate = document.getElementById('returnDate');
       var quotaPlanCount = document.getElementById('quotaPlanCount');
       var adultCount = document.getElementById('adultCount');
+      var projectGroupModeOption = document.getElementById('projectGroupModeOption');
+      var projectGroupModeHint = document.getElementById('projectGroupModeHint');
       if (!groupMode) return;
+      var fromCustomProject = params.get('groupMode') === 'independent' || params.get('source') === 'custom' || params.get('source') === 'customProject';
 
       function syncPrivateMode() {
-        var independent = groupMode.value === '独立成团';
+        var independent = groupMode.value === '项目团';
         if (scope && !params.get('privateSaleScope')) scope.value = independent ? '指定客户专属' : '公开渠道';
         if (customer) customer.required = independent;
+        if (!fromCustomProject && independent) {
+          groupMode.value = '散拼';
+          if (scope && !params.get('privateSaleScope')) scope.value = '公开渠道';
+          if (customer) customer.required = false;
+        }
       }
 
-      if (params.get('groupMode') === 'independent' || params.get('source') === 'custom') {
-        groupMode.value = '独立成团';
+      if (fromCustomProject) {
+        if (projectGroupModeOption) {
+          projectGroupModeOption.disabled = false;
+          projectGroupModeOption.textContent = '单团项目生成';
+        }
+        if (projectGroupModeHint) projectGroupModeHint.textContent = '当前由单团项目确认成团后进入，项目、客户、日期和人数按锁定报价带入。';
+        groupMode.value = '项目团';
+        groupMode.disabled = true;
         if (customer) customer.value = params.get('customer') || '待选择客户';
         if (project) project.value = params.get('projectNo') || params.get('project') || '';
         if (scope && params.get('privateSaleScope')) scope.value = params.get('privateSaleScope');
+        if (scope && !params.get('privateSaleScope')) scope.value = '指定客户专属';
         if (departDate && params.get('travelStart')) departDate.value = params.get('travelStart');
         if (returnDate && params.get('travelEnd')) returnDate.value = params.get('travelEnd');
         if (quotaPlanCount && params.get('people')) quotaPlanCount.value = params.get('people');
         if (adultCount && params.get('people')) adultCount.value = params.get('people');
-        if (note && !note.value) note.value = params.get('independentNote') || '引用标准产品线路创建客户专属项目团，后续合同、订单和收款回订单中心承接。';
+        if (note && !note.value) note.value = params.get('independentNote') || '由单团项目确认成团后生成，承接锁定报价、客户、日期、人数和服务标准。';
+        [customer, project, scope, note].forEach(function (field) {
+          if (!field) return;
+          if (field.tagName === 'SELECT') field.disabled = true;
+          else field.readOnly = true;
+        });
+      } else {
+        groupMode.value = '散拼';
+        if (projectGroupModeOption) projectGroupModeOption.disabled = true;
+        [customer, project, note].forEach(function (field) {
+          if (!field) return;
+          field.readOnly = true;
+        });
+        if (scope) {
+          scope.value = '公开渠道';
+          scope.disabled = true;
+        }
       }
 
       groupMode.addEventListener('change', syncPrivateMode);

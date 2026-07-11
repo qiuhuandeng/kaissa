@@ -969,7 +969,7 @@
       customProjectNo: customProjectNo,
       privateSaleScope: privateSaleScope,
       privateGroupNote: privateGroupNote,
-      remark: (privateGroupNote || type.label + '按' + type.planLabel + '生成，价格与余量已确认') + (groupMode === '独立成团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
+      remark: (privateGroupNote || type.label + '按' + type.planLabel + '生成，价格与余量已确认') + (groupMode === '项目团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
       deadline: $('#deadlineDate').value || addDays(depart, -10)
     };
   }
@@ -986,8 +986,8 @@
       '<div class="schedule-summary-card"><span>预留时长</span><strong>' + reserveHours() + '小时</strong></div>'
     ];
     if ($('#groupModeSelect')) {
-      summary.push('<div class="schedule-summary-card"><span>成团方式</span><strong>' + $('#groupModeSelect').value + '</strong></div>');
-      if ($('#groupModeSelect').value === '独立成团') {
+      summary.push('<div class="schedule-summary-card"><span>团队来源</span><strong>' + $('#groupModeSelect').value + '</strong></div>');
+      if ($('#groupModeSelect').value === '项目团') {
         summary.push('<div class="schedule-summary-card"><span>客户专属</span><strong>' + (($('#privateCustomerInput') && $('#privateCustomerInput').value.trim()) || '待选择客户') + '</strong></div>');
       }
     }
@@ -1008,9 +1008,9 @@
   function validatePrivateGroup() {
     var groupModeField = $('#groupModeSelect');
     var privateCustomerField = $('#privateCustomerInput');
-    if (!groupModeField || groupModeField.value !== '独立成团') return true;
+    if (!groupModeField || groupModeField.value !== '项目团') return true;
     if (privateCustomerField && privateCustomerField.value.trim()) return true;
-    if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('独立成团必须选择或填写指定客户', { type: 'warning' });
+    if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('项目团必须关联单团项目客户', { type: 'warning' });
     if (privateCustomerField) privateCustomerField.focus();
     return false;
   }

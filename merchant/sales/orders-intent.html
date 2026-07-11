@@ -44,6 +44,7 @@
               <option>全部</option>
               <option>新意向</option>
               <option>跟进中</option>
+              <option>询价中</option>
               <option>已转订单</option>
               <option>已放弃</option>
             </select>
@@ -71,6 +72,7 @@
     <button class="tab-item active" type="button" data-filter-value="全部"><span>全部</span><span class="list-tab-count">43</span></button>
     <button class="tab-item" type="button" data-filter-value="新意向"><span>新意向</span><span class="list-tab-count">8</span></button>
     <button class="tab-item" type="button" data-filter-value="跟进中"><span>跟进中</span><span class="list-tab-count">18</span></button>
+    <button class="tab-item" type="button" data-filter-value="询价中"><span>询价中</span><span class="list-tab-count">6</span></button>
     <button class="tab-item" type="button" data-filter-value="已转订单"><span>已转订单</span><span class="list-tab-count">12</span></button>
     <button class="tab-item" type="button" data-filter-value="已放弃"><span>已放弃</span><span class="list-tab-count">5</span></button>
   </nav>
@@ -118,7 +120,7 @@
           <td><strong>大客户转介</strong><span class="text-muted">刘总监</span></td>
           <td><strong>昨天</strong><span class="text-muted">下次：明日10:00</span></td>
           <td><span class="tag tag-blue">跟进中</span></td>
-          <td><div class="table-action"><button type="button" data-open-follow class="table-action-primary">跟进</button><a href="../tour/product-custom-detail.html?source=intent&amp;intentNo=YX20240617008&amp;customer=%E7%8E%8B%E6%80%BB">建单团</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button">分配</button><button class="dropdown-item" type="button">高意向</button><button class="dropdown-item danger" type="button">放弃意向</button></span></span></div></td>
+          <td><div class="table-action"><button type="button" data-open-follow class="table-action-primary">跟进</button><a href="../tour/product-custom-detail.html?source=intentInquiry&amp;intentNo=YX20240617008&amp;inquiryNo=INQ-20260711-008&amp;customer=%E7%8E%8B%E6%80%BB&amp;projectName=MICE%E5%9B%A2%E5%BB%BA%E5%8D%95%E5%9B%A2%E8%AF%A2%E4%BB%B7&amp;type=MICE&amp;people=80&amp;budget=200000&amp;projectStatus=%E5%BE%85%E8%AE%A1%E8%B0%83%E6%8E%A5%E5%8D%95&amp;owner=%E5%88%98%E6%80%BB%E7%9B%91">发起单团询价</a><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button class="dropdown-item" type="button">分配</button><button class="dropdown-item" type="button">高意向</button><button class="dropdown-item danger" type="button">放弃意向</button></span></span></div></td>
         </tr>
         <tr data-tab-status="已转订单">
           <td><strong>陈女士</strong><span class="text-muted">135****3456</span><span class="text-muted">个人客户</span></td>
@@ -285,6 +287,41 @@
           <textarea id="specialNeeds" class="form-control" rows="3"></textarea>
         </div>
 
+        <div class="form-section-title">单团询价安排</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="inquiryPlannerGroup">计调组</label>
+            <select id="inquiryPlannerGroup" class="form-control">
+              <option>会奖计调组</option>
+              <option>欧洲计调组</option>
+              <option>亚洲计调组</option>
+              <option>国内定制组</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inquiryDueTime">期望报价时间</label>
+            <input id="inquiryDueTime" class="form-control" type="datetime-local">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="inquiryUrgency">询价紧急度</label>
+            <select id="inquiryUrgency" class="form-control">
+              <option>普通</option>
+              <option>加急</option>
+              <option>客户当天要价</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inquiryPaymentExpect">客户付款预期</label>
+            <input id="inquiryPaymentExpect" class="form-control" type="text" placeholder="如 项目首款、出发前节点、回团验收后尾款">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inquiryServiceRequest">服务标准/报价要求</label>
+          <textarea id="inquiryServiceRequest" class="form-control" rows="3" placeholder="酒店、用车、餐标、导游、会议、活动、特殊人群等要求"></textarea>
+        </div>
+
         <div class="form-section-title">归属信息</div>
         <div class="form-row">
           <div class="form-group">
@@ -305,7 +342,8 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-create>取消</button>
-        <button class="btn btn-primary" type="button">保存意向订单</button>
+        <button class="btn btn-secondary" type="button">保存意向订单</button>
+        <button class="btn btn-primary" type="button" data-submit-custom-inquiry>保存并发起单团询价</button>
       </div>
     </section>
   </div>
@@ -386,8 +424,36 @@
         window.caesarUI.openLayer(followModal);
       }
 
+      function intentInquiryHref() {
+        var adults = Number((document.querySelector('[data-intent-stepper] input') || {}).value || 0);
+        var childrenInputs = document.querySelectorAll('[data-intent-stepper] input');
+        var children = Number((childrenInputs[1] || {}).value || 0);
+        var params = new URLSearchParams();
+        params.set('source', 'intentInquiry');
+        params.set('intentNo', 'YX20260711001');
+        params.set('inquiryNo', 'INQ-20260711-001');
+        params.set('projectStatus', '待计调接单');
+        params.set('projectName', document.getElementById('intentProductSelect').value.trim() || '单团询价');
+        params.set('type', document.getElementById('intentProductType').value || '单团自组');
+        params.set('customer', document.getElementById('customerName').value.trim() || '新客户');
+        params.set('contact', document.getElementById('customerName').value.trim() || '联系人待补');
+        params.set('phone', document.getElementById('customerPhone').value.trim() || '');
+        params.set('people', String(Math.max(adults + children, 1)));
+        params.set('budget', document.getElementById('budgetRange').value || '');
+        params.set('owner', document.getElementById('ownerSales').value || '');
+        params.set('plannerGroup', document.getElementById('inquiryPlannerGroup').value || '');
+        params.set('quoteDue', document.getElementById('inquiryDueTime').value || '');
+        params.set('paymentExpect', document.getElementById('inquiryPaymentExpect').value.trim() || '');
+        params.set('requirement', document.getElementById('specialNeeds').value.trim() || document.getElementById('inquiryServiceRequest').value.trim() || '');
+        return '../tour/product-custom-detail.html?' + params.toString();
+      }
+
       document.getElementById('openCreateIntent').addEventListener('click', function () {
         window.caesarUI.openLayer(createDrawer);
+      });
+
+      document.querySelector('[data-submit-custom-inquiry]').addEventListener('click', function () {
+        window.location.href = intentInquiryHref();
       });
 
       document.querySelectorAll('[data-open-follow]').forEach(function (button) {

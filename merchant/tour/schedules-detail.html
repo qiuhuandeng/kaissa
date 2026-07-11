@@ -2113,7 +2113,7 @@
             costStatus: '预估成本',
             income: 1906000,
             paid: '待收款',
-            groupMode: '独立成团',
+            groupMode: '项目团',
             privateCustomer: '北京某科技有限公司',
             customProjectNo: 'MICE-20260704-001',
             privateSaleScope: '客户专属'
@@ -2781,18 +2781,18 @@
         if (type === 'project') {
           return Object.assign({}, base, {
             version: '客户确认报价',
-            adjustmentStatus: '独立成团差异待复核',
+            adjustmentStatus: '项目团差异待复核',
             contractVersion: '项目合同草稿',
             title: '项目行程',
             meta: (info.origin || '按客户确认出发地') + ' / ' + (info.destination || scheduleData.route || '客户确认线路'),
             serviceTag: ['项目团行程', 'tag tag-purple'],
-            standard: ['交通：按客户最终名单确认团队交通或当地用车', '住宿：按独立成团报价标准确认房型和房量', '服务：领队、导游、餐食、门票和保险按客户确认线路执行'],
+            standard: ['交通：按客户最终名单确认团队交通或当地用车', '住宿：按锁定报价标准确认房型和房量', '服务：领队、导游、餐食、门票和保险按客户确认线路执行'],
             included: ['锁定报价内的线路行程服务', '行程所列酒店、餐食、用车和景点', '地接导游和随团执行服务'],
             excluded: ['客户临时新增服务', '个人消费', '超出报价人数或服务标准的增补差价'],
             adjustments: ['客户名单导入后锁定分房分车', '客户差异要求在资源和成本确认中复核'],
             days: [
               { day: 'D1', title: '客户团队出发', meta: '集合 / 交通 / 入住', desc: '按客户最终名单办理集合、交通和入住，领队核对分房分车和特殊需求。', tags: ['客户专属', '名单核对'] },
-              { day: 'D2-D3', title: scheduleData.route || '引用线路核心行程', meta: '按锁定线路执行', desc: '承接引用线路的核心游览和服务标准，按客户独立成团要求调整节奏和用车。', tags: ['引用线路', '独立用车'] },
+              { day: 'D2-D3', title: scheduleData.route || '引用线路核心行程', meta: '按锁定线路执行', desc: '承接引用线路的核心游览和服务标准，按客户项目团要求调整节奏和用车。', tags: ['引用线路', '独立用车'] },
               { day: 'D4-D6', title: '线路中段服务确认', meta: '酒店 / 餐食 / 景点', desc: '根据客户名单和资源确认结果执行酒店、餐食、景点、导游和当地交通安排。', tags: ['资源确认', '服务标准'] },
               { day: 'D7-D8', title: '客户差异服务', meta: '特殊需求 / 增补服务', desc: '处理客户确认的差异需求，如房型、餐食、拜访、活动或自由活动安排。', tags: ['特殊需求', '增补复核'] },
               { day: '返程', title: '返程与回团', meta: '统一送机 / 回团复核', desc: '根据返程交通统一送站送机，回团后进入实际成本、异常和客户确认材料复核。', tags: ['返程', '回团结算'] }
@@ -4273,7 +4273,7 @@
         var scheduleNo = firstInbound(['scheduleNo', 'schedule', 'sourceNo']) || detailConfigs.project.summary.code;
         var customer = inboundParam('customer') || detailConfigs.project.summary.privateCustomer || '待选择客户';
         var projectNo = firstInbound(['projectNo', 'project']) || detailConfigs.project.summary.customProjectNo || '';
-        var product = firstInbound(['product', 'productName']) || (customer === '待选择客户' ? detailConfigs.project.summary.product : customer + '独立成团');
+        var product = firstInbound(['product', 'productName']) || (customer === '待选择客户' ? detailConfigs.project.summary.product : customer + '项目团');
         var route = firstInbound(['route', 'package', 'plan', 'routePlan']) || detailConfigs.project.summary.route;
         var depart = firstInbound(['travelStart', 'travelDate', 'departDate']) || detailConfigs.project.summary.depart;
         var back = firstInbound(['travelEnd', 'returnDate', 'backDate']);
@@ -4342,7 +4342,7 @@
         scheduleData.costStatus = '预估成本';
         scheduleData.income = ctx.estimateIncome || 0;
         scheduleData.paid = '待收款';
-        scheduleData.groupMode = '独立成团';
+        scheduleData.groupMode = '项目团';
         scheduleData.privateCustomer = ctx.customer;
         scheduleData.customProjectNo = projectNo;
         scheduleData.privateSaleScope = ctx.privateSaleScope;
@@ -4350,7 +4350,7 @@
         activeDetailConfig.summary = Object.assign({}, activeDetailConfig.summary, scheduleData);
         activeDetailConfig.info = Object.assign({}, activeDetailConfig.info, {
           productOwner: '单团项目中心',
-          productType: '独立成团',
+          productType: '项目团',
           origin: '按客户确认出发地',
           destination: routeText,
           childPrice: '预算成本 ' + moneyText(baseCost),
@@ -4621,7 +4621,7 @@
         document.getElementById('summaryReturn').textContent = scheduleData.back;
         setTag(document.getElementById('summarySaleStatus'), scheduleData.saleStatus, saleStatusClass(scheduleData.saleStatus) + ' tag-lg');
         setTag(document.getElementById('summaryBatchType'), normalizeBatchType(scheduleData.batchType), batchTypeClass(scheduleData.batchType) + ' tag-lg');
-        if (scheduleData.groupMode === '独立成团') {
+        if (scheduleData.groupMode === '项目团') {
           var contextTag = document.getElementById('summaryOrderContext');
           if (contextTag) {
             contextTag.hidden = false;
@@ -4651,8 +4651,8 @@
         setTag(document.getElementById('infoExecutionStatus'), scheduleData.executionStatus, executionStatusClass(scheduleData.executionStatus));
         setTag(document.getElementById('infoBatchType'), normalizedBatchType, batchTypeClass(scheduleData.batchType));
         setText('infoGroupMode', scheduleData.groupMode || '散拼');
-        setText('infoPrivateCustomer', scheduleData.groupMode === '独立成团' ? (scheduleData.privateCustomer || '待选择客户') : '-');
-        setText('infoCustomProject', scheduleData.groupMode === '独立成团' ? (scheduleData.customProjectNo || '未关联') : '-');
+        setText('infoPrivateCustomer', scheduleData.groupMode === '项目团' ? (scheduleData.privateCustomer || '待选择客户') : '-');
+        setText('infoCustomProject', scheduleData.groupMode === '项目团' ? (scheduleData.customProjectNo || '未关联') : '-');
         document.getElementById('infoStock').textContent = stockText(scheduleData.stock);
         document.getElementById('infoSold').textContent = stockText(scheduleData.sold);
         document.getElementById('infoAvailable').innerHTML = stockText(scheduleData.available) + (isTight ? ' <span class="text-danger">余量紧张</span>' : '');
@@ -4743,7 +4743,7 @@
         if (activeDetailConfig.typeKey === 'project') {
           scheduleData.available = 0;
           scheduleData.locked = stock;
-          scheduleData.groupMode = '独立成团';
+          scheduleData.groupMode = '项目团';
           scheduleData.saleStatus = '客户专属';
           scheduleData.status = '客户专属';
           scheduleData.privateSaleScope = '客户专属';

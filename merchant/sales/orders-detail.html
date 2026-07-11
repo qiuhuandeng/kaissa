@@ -418,7 +418,7 @@
       const projectAttachmentCategories = [
         ['锁定报价附件', '客户确认的报价版本、费用包含/不含和变更规则', '已确认', '1个文件', '报价V4-客户确认版.pdf'],
         ['项目合同附件', '电子合同、盖章合同、补充协议和签署回执', '待签署', '0个文件', '待发送客户签署'],
-        ['阶段收款计划', '首款、进度款、尾款节点和金额比例', '待确认', '1个文件', '阶段收款计划.xlsx'],
+        ['阶段收款计划', '首款、进度款、尾款节点、金额和触发条件', '待确认', '1个文件', '阶段收款计划.xlsx'],
         ['客户验收资料', '回团确认、客户验收单、满意度和异常关闭记录', '待上传', '0个文件', '回团后上传']
       ];
       const configs = {
@@ -694,10 +694,10 @@
         amount: ['¥1,906,000', '¥0', '¥1,906,000'],
         todos: [
           ['名单待导入', '项目团需要80人名单后承接证件、房型和交通分组'],
-          ['阶段应收待确认', '30% / 50% / 20% 收款计划需财务承接'],
+          ['阶段应收待确认', '锁定报价付款节点需财务承接'],
           ['成本待确认', '交通、酒店、会务和地接成本进入团期成本确认']
         ],
-        snapshot: [['订单来源', '单团项目'], ['单团项目', 'MICE-20250623-001'], ['下单销售', '刘洋'], ['项目团', 'MICE20250915001'], ['方案', '方案A 豪华五星版'], ['出发/回团', '2025-09-15 / 2025-09-24']],
+        snapshot: [['订单来源', '单团项目'], ['询价单号', 'INQ-20260711-001'], ['单团项目', 'MICE-20250623-001'], ['下单销售', '刘洋'], ['项目团', 'MICE20250915001'], ['锁定报价', '方案A 豪华五星版'], ['出发/回团', '2025-09-15 / 2025-09-24']],
         money: [['应收', '¥1,906,000', 'amount-red'], ['已收', '¥0', ''], ['待收', '¥1,906,000', 'amount-red'], ['退款中', '¥0', '']],
         downstream: [['项目团执行', '名单、资料、资源确认由项目团承接'], ['合同管理', '项目合同按锁定报价生成并签署'], ['团期成本', '预算成本和供应商确认成本由团期成本承接']],
         travelers: {
@@ -734,7 +734,7 @@
         config.meta = '方案' + quoteVersion + ' 豪华五星版 / ' + scheduleNo + ' / 2025-09-15 出发';
         config.amount = [amountText, '¥0', amountText];
         config.money = [['应收', amountText, 'amount-red'], ['已收', '¥0', ''], ['待收', amountText, 'amount-red'], ['退款中', '¥0', '']];
-        config.snapshot = [['订单来源', '单团项目'], ['单团项目', projectNo], ['下单销售', '刘洋'], ['项目团', scheduleNo], ['方案', '方案' + quoteVersion + ' 豪华五星版'], ['出发/回团', params.get('travelDate') || '2025-09-15 / 2025-09-24']];
+        config.snapshot = [['订单来源', '单团项目'], ['询价单号', params.get('inquiryNo') || 'INQ-20260711-001'], ['单团项目', projectNo], ['下单销售', params.get('owner') || '刘洋'], ['项目团', scheduleNo], ['锁定报价', '方案' + quoteVersion + ' 豪华五星版'], ['出发/回团', params.get('travelDate') || '2025-09-15 / 2025-09-24']];
       }
 
       function escapeHtml(value) {
@@ -915,12 +915,12 @@
           return {
             title: '登记阶段收款',
             nodeLabel: '收款阶段',
-            nodeOptions: ['首款 30% / ¥571,800', '进度款 50% / ¥953,000', '尾款 20% / ¥381,200', '项目补差'],
+            nodeOptions: ['项目首款 / 锁定报价节点', '项目进度款 / 锁定报价节点', '项目尾款 / 锁定报价节点', '项目补差'],
             projectLabel: '对应应收',
             projectOptions: ['YS-MICE-20260704-001 项目首款', 'YS-MICE-20260704-002 项目进度款', 'YS-MICE-20260704-003 项目尾款'],
             sourceLabel: '收款来源',
             sourceOptions: ['客户对公转账', '门市预存账户', '银行流水认领', '线下收款待认领'],
-            amount: '¥571,800',
+            amount: '按本次到账金额',
             voucherText: '上传银行回单或选择收款流水，提交后进入订单中心收款认领/财务复核',
             remark: '填写付款公司名称、流水号、差额说明或客户付款备注'
           };
@@ -1180,16 +1180,16 @@
       }
       function projectReceivableItems() {
         return [
-          ['项目首款', '阶段应收', '¥571,800', '系统生成', '待收款', 'YS-MICE-20260704-001', '合同签署后收取30%首款'],
-          ['项目进度款', '阶段应收', '¥953,000', '待触发', '未生效', 'YS-MICE-20260704-002', '出发前30天收取50%进度款'],
-          ['项目尾款', '阶段应收', '¥381,200', '待触发', '未生效', 'YS-MICE-20260704-003', '回团验收后收取20%尾款']
+          ['项目首款', '阶段应收', '待合同确认', '系统生成', '待收款', 'YS-MICE-20260704-001', '合同签署后按锁定报价节点收取'],
+          ['项目进度款', '阶段应收', '待合同确认', '待触发', '未生效', 'YS-MICE-20260704-002', '出发前按锁定报价节点收取'],
+          ['项目尾款', '阶段应收', '待合同确认', '待触发', '未生效', 'YS-MICE-20260704-003', '回团验收后按锁定报价节点收取']
         ];
       }
       function projectReceiptFieldsHtml() {
         return [
-          '<label class="form-group"><span class="form-label">收款阶段</span><select class="form-control"><option>首款 30% / ¥571,800</option><option>进度款 50% / ¥953,000</option><option>尾款 20% / ¥381,200</option><option>项目补差</option></select></label>',
+          '<label class="form-group"><span class="form-label">收款阶段</span><select class="form-control"><option>项目首款 / 锁定报价节点</option><option>项目进度款 / 锁定报价节点</option><option>项目尾款 / 锁定报价节点</option><option>项目补差</option></select></label>',
           '<label class="form-group"><span class="form-label">收款来源</span><select class="form-control"><option>客户对公转账</option><option>门市预存账户</option><option>银行流水认领</option><option>线下收款待认领</option></select></label>',
-          '<label class="form-group"><span class="form-label">本次收款金额</span><input class="form-control" type="text" value="¥571,800"></label>',
+          '<label class="form-group"><span class="form-label">本次收款金额</span><input class="form-control" type="text" value="按银行流水"></label>',
           '<label class="form-group"><span class="form-label">对应应收</span><select class="form-control"><option>YS-MICE-20260704-001 项目首款</option><option>YS-MICE-20260704-002 项目进度款</option><option>YS-MICE-20260704-003 项目尾款</option></select></label>',
           '<label class="form-group form-group-full"><span class="form-label">凭证/流水</span><div class="upload-box">上传银行回单或选择收款流水，提交后进入订单中心收款认领/财务复核</div></label>',
           '<label class="form-group form-group-full"><span class="form-label">收款说明</span><textarea class="form-control" rows="3" placeholder="填写付款公司名称、流水号、差额说明或客户付款备注"></textarea></label>'
