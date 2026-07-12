@@ -39,6 +39,14 @@
         </div>
         <div class="filter-item filter-item-status">
           <select>
+            <option>全部产品来源</option>
+            <option>标准产品</option>
+            <option>手工产品</option>
+            <option>单团项目承接</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-status">
+          <select>
             <option>全部订单状态</option>
             <option>预留</option>
             <option>占位</option>
@@ -66,6 +74,14 @@
         </thead>
         <tbody>
           <tr>
+            <td><a class="link-primary table-main-link" href="orders-detail.html?type=cruise&amp;source=manualProduct">KSHG20260711001</a></td>
+            <td>地中海邮轮8天7晚<br><span class="tag tag-purple">邮轮</span> <span class="tag tag-blue">手工产品</span></td>
+            <td>李娜<br><span class="text-muted">2成人</span></td>
+            <td><strong>应收 ¥57,600</strong><br><span class="text-muted">未收款 ¥57,600</span></td>
+            <td><span class="tag tag-orange">预留</span><br><span class="tag tag-orange">资源待确认</span></td>
+            <td><div class="table-action"><a class="table-action-primary" href="orders-detail.html?type=cruise&amp;source=manualProduct">详情</a></div></td>
+          </tr>
+          <tr>
             <td><a class="link-primary table-main-link" href="orders-detail.html?type=group">KS2024061802</a></td>
             <td>日本关西深度游<br><span class="tag tag-blue">参团游</span></td>
             <td>李梅<br><span class="text-muted">2成人 1儿童</span></td>
@@ -88,7 +104,68 @@
       <div id="bookingFormView" class="modal-body booking-drawer-body">
         <section class="booking-drawer-layout">
           <div class="booking-drawer-main">
+            <section class="booking-section booking-mode-section" aria-labelledby="bookingModeTitle">
+              <h2 id="bookingModeTitle" class="booking-section-title">下单方式</h2>
+              <div class="booking-mode-switch" role="group" aria-label="下单方式">
+                <button class="booking-mode-option active" type="button" data-booking-mode="standard">
+                  <strong>选择已有产品下单</strong>
+                  <span>从产品、线路、团期/航次中选择</span>
+                </button>
+                <button class="booking-mode-option" type="button" data-booking-mode="manual">
+                  <strong>手工填写产品下单</strong>
+                  <span>只形成本订单的产品与出行快照</span>
+                </button>
+              </div>
+            </section>
+
             <section class="booking-section booking-sale-object-section" aria-labelledby="bookingProductTitle">
+              <div id="manualProductPanel" class="booking-manual-product-panel" hidden>
+                <section class="booking-manual-block" aria-labelledby="manualProductTitle">
+                  <h2 id="manualProductTitle" class="booking-section-title">产品信息</h2>
+                  <div class="form-grid booking-manual-grid">
+                    <div class="form-group form-group-full">
+                      <span class="form-label">产品类型 <span class="req">*</span></span>
+                      <div id="manualProductType" class="booking-product-type-options" role="group" aria-label="产品类型">
+                        <button class="active" type="button" data-manual-product-type="参团游">参团游</button>
+                        <button type="button" data-manual-product-type="邮轮">邮轮</button>
+                        <button type="button" data-manual-product-type="专列">专列</button>
+                        <button type="button" data-manual-product-type="自由行">自由行</button>
+                        <button type="button" data-manual-product-type="单项服务">单项服务</button>
+                        <button type="button" data-manual-product-type="单团项目">单团项目</button>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="manualProductOwnerType">类型 <span class="req">*</span></label>
+                      <select id="manualProductOwnerType" class="form-control" data-manual-required="类型">
+                        <option>自营</option>
+                        <option>代理</option>
+                        <option>外采</option>
+                        <option>供应商直采</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="manualSupplier">供应商/承接方 <span class="req">*</span></label>
+                      <input id="manualSupplier" class="form-control" type="text" value="北京凯撒晟和国际旅行社有限公司" placeholder="请输入或搜索供应商" data-manual-required="供应商/承接方">
+                    </div>
+                    <div class="form-group form-group-full">
+                      <span class="form-label">旅游类型 <span class="req">*</span></span>
+                      <div class="booking-travel-type-options" role="radiogroup" aria-label="旅游类型">
+                        <label><input type="radio" name="manualTravelType" value="境外游" checked> 境外游</label>
+                        <label><input type="radio" name="manualTravelType" value="境内游"> 境内游</label>
+                        <label><input type="radio" name="manualTravelType" value="入境游"> 入境游</label>
+                        <label><input type="radio" name="manualTravelType" value="港澳台"> 港澳台</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="manualTypeFields" class="form-grid booking-manual-grid booking-manual-type-fields"></div>
+                </section>
+
+                <section id="manualTripBlock" class="booking-manual-block" aria-labelledby="manualTravelTitle">
+                  <h2 id="manualTravelTitle" class="booking-section-title">出行信息</h2>
+                  <div id="manualTripFields" class="form-grid booking-manual-grid"></div>
+                </section>
+              </div>
+
               <div id="saleObjectSearchPanel" class="booking-product-search-panel" hidden>
                 <h2 id="bookingProductTitle" class="booking-section-title">选择产品</h2>
                 <div class="booking-product-search-control">
@@ -537,6 +614,15 @@
 
       const pageParams = new URLSearchParams(window.location.search);
       const sourceContext = buildSourceContext(pageParams);
+      const bookingDrawer = document.getElementById('bookingDrawer');
+      const bookingModeButtons = Array.from(document.querySelectorAll('[data-booking-mode]'));
+      const manualProductPanel = document.getElementById('manualProductPanel');
+      const manualProductType = document.getElementById('manualProductType');
+      const manualSupplier = document.getElementById('manualSupplier');
+      const manualTypeFields = document.getElementById('manualTypeFields');
+      const manualTripBlock = document.getElementById('manualTripBlock');
+      const manualTravelTitle = document.getElementById('manualTravelTitle');
+      const manualTripFields = document.getElementById('manualTripFields');
       const bookingPresetPanel = document.getElementById('bookingPresetPanel');
       const bookingSourceContext = document.getElementById('bookingSourceContext');
       const presetProductName = document.getElementById('presetProductName');
@@ -570,10 +656,128 @@
       let selectedStockIndex = 0;
       let hasSaleObject = false;
       let objectStep = 'search';
+      let bookingMode = 'standard';
+      let selectedManualProductType = '参团游';
       let presetMode = false;
       let presetPlanOverride = '';
       let presetStockOverride = null;
       let createdDetailHref = 'orders-detail.html?type=group';
+      const manualTypeFieldMap = {
+        '参团游': [
+          { id: 'routeName', label: '线路名称', value: '日本关西深度游7天', required: true }
+        ],
+        '邮轮': [
+          { id: 'routeName', label: '邮轮线路名称', value: '地中海邮轮8天7晚', required: true }
+        ],
+        '专列': [
+          { id: 'routeName', label: '专列线路名称', value: '东方丝路专列9日', required: true }
+        ],
+        '自由行': [
+          { id: 'packageName', label: '套餐名称', value: '三亚酒店+接送机套餐', required: true }
+        ],
+        '单项服务': [
+          { id: 'serviceName', label: '服务名称', value: '日本签证代办', required: true }
+        ],
+        '单团项目': [
+          { id: 'projectName', label: '项目名称', value: '某科技公司欧洲奖励旅游', required: true },
+          { id: 'projectBrief', label: '需求简述', value: '企业奖励旅游，约80人', required: false }
+        ]
+      };
+      const manualTripFieldMap = {
+        '参团游': {
+          title: '出行信息',
+          fields: [
+            { id: 'manualDepartureCity', label: '出发城市', type: 'text', value: '北京', required: true },
+            { id: 'manualDestinationCity', label: '目的地/行程范围', type: 'text', value: '大阪、京都、奈良', required: true },
+            { id: 'manualStartDate', label: '出发日期', type: 'date', value: '2026-09-15', required: true },
+            { id: 'manualEndDate', label: '返回日期', type: 'date', value: '2026-09-21', required: true },
+            { id: 'manualDays', label: '天数/晚数', type: 'dayNight', value: '7', nights: '6', required: true }
+          ]
+        },
+        '邮轮': {
+          title: '出行信息',
+          fields: [
+            { id: 'manualDepartureCity', label: '出发城市', type: 'text', value: '北京', required: true },
+            { id: 'manualDestinationCity', label: '目的地/行程范围', type: 'text', value: '地中海', required: true },
+            { id: 'manualStartDate', label: '出发日期', type: 'date', value: '2026-09-15', required: true },
+            { id: 'manualEndDate', label: '返回日期', type: 'date', value: '2026-09-22', required: true },
+            { id: 'manualDays', label: '天数/晚数', type: 'dayNight', value: '8', nights: '7', required: true }
+          ]
+        },
+        '专列': {
+          title: '出行信息',
+          fields: [
+            { id: 'manualDepartureCity', label: '出发城市', type: 'text', value: '西安', required: true },
+            { id: 'manualDestinationCity', label: '目的地/行程范围', type: 'text', value: '敦煌、吐鲁番', required: true },
+            { id: 'manualStartDate', label: '出发日期', type: 'date', value: '2026-09-15', required: true },
+            { id: 'manualEndDate', label: '返回日期', type: 'date', value: '2026-09-23', required: true },
+            { id: 'manualDays', label: '天数/晚数', type: 'dayNight', value: '9', nights: '8', required: true }
+          ]
+        },
+        '自由行': {
+          title: '出行信息',
+          fields: [
+            { id: 'manualDepartureCity', label: '出发城市', type: 'text', value: '北京', required: true },
+            { id: 'manualDestinationCity', label: '目的地/行程范围', type: 'text', value: '三亚', required: true },
+            { id: 'manualStartDate', label: '出发日期', type: 'date', value: '2026-09-15', required: true },
+            { id: 'manualEndDate', label: '返回日期', type: 'date', value: '2026-09-19', required: true },
+            { id: 'manualDays', label: '天数/晚数', type: 'dayNight', value: '5', nights: '4', required: true }
+          ]
+        },
+        '单项服务': {
+          title: '服务信息',
+          fields: [
+            { id: 'manualServiceDate', label: '服务日期', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualFinishDate', label: '预计完成日期', type: 'date', value: '2026-09-08', required: false },
+            { id: 'manualServiceRemark', label: '服务说明', type: 'text', value: '普通办理', required: false }
+          ]
+        },
+        '单团项目': {
+          title: '项目信息',
+          fields: [
+            { id: 'manualStartDate', label: '项目开始日期', type: 'date', value: '2026-09-15', required: true },
+            { id: 'manualEndDate', label: '项目结束日期', type: 'date', value: '2026-09-22', required: true },
+            { id: 'manualDestinationCity', label: '项目地点', type: 'text', value: '巴黎、慕尼黑', required: true },
+            { id: 'manualProjectBrief', label: '需求简述', type: 'text', value: '企业奖励旅游，含会议和用车', required: false }
+          ]
+        }
+      };
+      const manualCountTemplateMap = {
+        '参团游': [
+          { id: 'adult', label: '成人', price: 12800, value: 2, min: 1 },
+          { id: 'childBed', label: '儿童占床', price: 12800, value: 0, min: 0 },
+          { id: 'childNoBed', label: '儿童不占床', price: 9800, value: 0, min: 0 },
+          { id: 'singleRoom', label: '单房差', price: 1800, value: 0, min: 0 }
+        ],
+        '邮轮': [
+          { id: 'adult', label: '成人', price: 28800, value: 2, min: 1 },
+          { id: 'child', label: '儿童', price: 21800, value: 0, min: 0 },
+          { id: 'thirdFourth', label: '第三/第四人', price: 18800, value: 0, min: 0 },
+          { id: 'portTax', label: '港务税/附加费', price: 1850, value: 2, min: 0 }
+        ],
+        '专列': [
+          { id: 'adult', label: '成人', price: 21800, value: 2, min: 1 },
+          { id: 'child', label: '儿童', price: 18800, value: 0, min: 0 },
+          { id: 'berthUpgrade', label: '铺位差价', price: 0, value: 0, min: 0 },
+          { id: 'extraFee', label: '附加费', price: 0, value: 0, min: 0 }
+        ],
+        '自由行': [
+          { id: 'adult', label: '成人', price: 6800, value: 2, min: 1 },
+          { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 },
+          { id: 'roomNight', label: '房间/间夜', price: 0, value: 1, min: 0 },
+          { id: 'extraService', label: '附加服务', price: 0, value: 0, min: 0 }
+        ],
+        '单项服务': [
+          { id: 'copies', label: '办理份数', price: 980, value: 2, min: 1 },
+          { id: 'urgent', label: '加急份数', price: 300, value: 0, min: 0 },
+          { id: 'extraFee', label: '快递/附加费', price: 80, value: 0, min: 0 }
+        ],
+        '单团项目': [
+          { id: 'groupPackage', label: '团体打包价', price: 1906000, value: 1, min: 1 },
+          { id: 'extraPerson', label: '增减人数', price: 0, value: 0, min: 0 },
+          { id: 'extraService', label: '增项服务', price: 0, value: 0, min: 0 }
+        ]
+      };
 
       function money(value) {
         return '¥' + Number(value || 0).toLocaleString('zh-CN');
@@ -596,6 +800,184 @@
         return String(value || '').replace(/[&<>"']/g, function (char) {
           return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
         });
+      }
+
+      function isManualMode() {
+        return bookingMode === 'manual';
+      }
+
+      function manualFieldValue(id) {
+        const node = document.getElementById(id);
+        return node ? String(node.value || '').trim() : '';
+      }
+
+      function manualTravelType() {
+        const checked = document.querySelector('input[name="manualTravelType"]:checked');
+        return checked ? checked.value : '境外游';
+      }
+
+      function manualTypeLabel() {
+        return selectedManualProductType || '参团游';
+      }
+
+      function renderManualTypeFields() {
+        if (!manualTypeFields) return;
+        const fields = manualTypeFieldMap[manualTypeLabel()] || [];
+        manualTypeFields.innerHTML = fields.map(function (field) {
+          const required = field.required ? ' <span class="req">*</span>' : '';
+          const requiredAttr = field.required ? ' data-manual-required="' + escapeHtml(field.label) + '"' : '';
+          return '<div class="form-group">' +
+            '<label class="form-label" for="manual_extra_' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label>' +
+            '<input id="manual_extra_' + escapeHtml(field.id) + '" class="form-control" type="' + escapeHtml(field.type || 'text') + '" value="' + escapeHtml(field.value || '') + '" data-manual-extra="' + escapeHtml(field.label) + '" data-manual-extra-id="' + escapeHtml(field.id) + '"' + requiredAttr + ' placeholder="请输入' + escapeHtml(field.label) + '">' +
+          '</div>';
+        }).join('');
+      }
+
+      function manualPrimaryName() {
+        const field = manualTypeFields ? manualTypeFields.querySelector('[data-manual-extra]') : null;
+        return field ? String(field.value || '').trim() : '';
+      }
+
+      function manualExtraText() {
+        return Array.from(manualTypeFields.querySelectorAll('[data-manual-extra]')).map(function (field) {
+          return field.dataset.manualExtra + '：' + field.value;
+        }).filter(function (item) {
+          return !/：$/.test(item);
+        }).join(' / ');
+      }
+
+      function renderManualField(field) {
+        const required = field.required ? ' <span class="req">*</span>' : '';
+        const requiredAttr = field.required ? ' data-manual-required="' + escapeHtml(field.label) + '"' : '';
+        if (field.type === 'dayNight') {
+          return '<div class="form-group">' +
+            '<label class="form-label">' + escapeHtml(field.label) + required + '</label>' +
+            '<div class="booking-day-night-fields">' +
+              '<input id="' + escapeHtml(field.id) + '" class="form-control" type="number" min="1" value="' + escapeHtml(field.value || '') + '" aria-label="天数"' + requiredAttr + '>' +
+              '<span>天</span>' +
+              '<input id="manualNights" class="form-control" type="number" min="0" value="' + escapeHtml(field.nights || '') + '" aria-label="晚数">' +
+              '<span>晚</span>' +
+            '</div>' +
+          '</div>';
+        }
+        return '<div class="form-group' + (field.full ? ' form-group-full' : '') + '">' +
+          '<label class="form-label" for="' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label>' +
+          '<input id="' + escapeHtml(field.id) + '" class="form-control" type="' + escapeHtml(field.type || 'text') + '" value="' + escapeHtml(field.value || '') + '"' + requiredAttr + ' placeholder="请输入' + escapeHtml(field.label) + '">' +
+        '</div>';
+      }
+
+      function renderManualTripFields() {
+        if (!manualTripFields || !manualTravelTitle) return;
+        const config = manualTripFieldMap[manualTypeLabel()];
+        if (!config) {
+          manualTripBlock.hidden = true;
+          manualTripFields.innerHTML = '';
+          return;
+        }
+        manualTripBlock.hidden = false;
+        manualTravelTitle.textContent = config.title || '出行信息';
+        manualTripFields.innerHTML = (config.fields || []).map(renderManualField).join('');
+      }
+
+      function manualCountsFor(type) {
+        const rows = manualCountTemplateMap[type] || manualCountTemplateMap['参团游'];
+        return rows.map(function (item) {
+          return Object.assign({}, item);
+        });
+      }
+
+      function daysBetween(start, end) {
+        if (!start || !end) return 0;
+        const startDate = new Date(start + 'T00:00:00');
+        const endDate = new Date(end + 'T00:00:00');
+        const diff = Math.round((endDate - startDate) / 86400000) + 1;
+        return diff > 0 ? diff : 0;
+      }
+
+      function syncManualTravelDays() {
+        const daysNode = document.getElementById('manualDays');
+        const nightsNode = document.getElementById('manualNights');
+        const days = daysBetween(manualFieldValue('manualStartDate'), manualFieldValue('manualEndDate'));
+        if (!days || !daysNode || !nightsNode) return;
+        daysNode.value = days;
+        nightsNode.value = Math.max(days - 1, 0);
+      }
+
+      function manualProductSnapshot() {
+        const type = manualTypeLabel();
+        const name = manualPrimaryName() || '手工填写产品';
+        const supplier = manualFieldValue('manualSupplier') || '-';
+        const destination = manualFieldValue('manualDestinationCity') || manualFieldValue('manualServiceRemark') || manualFieldValue('manualProjectBrief') || '-';
+        const startDate = manualFieldValue('manualStartDate') || manualFieldValue('manualServiceDate') || '-';
+        const days = manualFieldValue('manualDays');
+        const displayText = type === '单项服务'
+          ? [manualFieldValue('manualServiceDate'), name].filter(Boolean).join(' / ')
+          : type === '单团项目'
+            ? [manualFieldValue('manualStartDate') && manualFieldValue('manualEndDate') ? manualFieldValue('manualStartDate') + ' 至 ' + manualFieldValue('manualEndDate') : '', destination].filter(Boolean).join(' / ')
+            : [startDate, (manualFieldValue('manualDepartureCity') || '-') + '-' + destination].filter(Boolean).join(' / ');
+        const metaParts = type === '单项服务'
+          ? [manualFieldValue('manualServiceDate') ? '服务日期 ' + manualFieldValue('manualServiceDate') : '', destination]
+          : [manualTravelType(), destination, days ? days + '天' : ''];
+        return {
+          id: 'MANUAL-ORDER-PRODUCT',
+          type: 'manual',
+          tag: type,
+          tagClass: productTagForManual(type),
+          name: name,
+          meta: metaParts.filter(Boolean).join(' / '),
+          planLabel: '订单内产品',
+          stockLabel: '出行',
+          stockHeads: ['出团日期', '订单内产品', '确认状态'],
+          core: [],
+          stocks: [[startDate, '订单内产品快照', '不校验标准团期库存', calcManualBasePrice(), '手工产品', 'tag tag-blue']],
+          counts: currentProduct && currentProduct.type === 'manual' && currentProduct.manualProductType === type ? currentProduct.counts : manualCountsFor(type),
+          after: ['补充出行人资料', '收款或认款', '合同/确认单处理', '履约服务承接'],
+          manualProductType: type,
+          manualSupplier: supplier,
+          manualDestination: destination,
+          manualDeparture: manualFieldValue('manualDepartureCity') || '-',
+          manualDisplay: displayText,
+          manualExtra: manualExtraText()
+        };
+      }
+
+      function calcManualBasePrice() {
+        return currentProduct && currentProduct.type === 'manual' ? calcTotal() : 0;
+      }
+
+      function productTagForManual(type) {
+        if (type === '邮轮') return 'tag tag-purple';
+        if (type === '专列') return 'tag tag-orange';
+        if (type === '自由行') return 'tag tag-green';
+        if (type === '单项服务') return 'tag tag-gray';
+        if (type === '单团项目') return 'tag tag-purple';
+        return 'tag tag-blue';
+      }
+
+      function refreshManualProduct() {
+        if (!isManualMode()) return;
+        currentProduct = manualProductSnapshot();
+      }
+
+      function setBookingMode(mode) {
+        if (mode === bookingMode) return;
+        bookingMode = mode;
+        bookingModeButtons.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.bookingMode === bookingMode);
+        });
+        if (bookingDrawer) bookingDrawer.dataset.bookingMode = bookingMode;
+        if (isManualMode()) {
+          clearPresetContext();
+          presetMode = false;
+          objectStep = 'manual';
+          hasSaleObject = true;
+          renderManualTypeFields();
+          renderManualTripFields();
+          refreshManualProduct();
+          renderAll();
+          return;
+        }
+        resetSaleObjectSearch();
       }
 
       function paramValue(searchParams, key, fallback) {
@@ -697,6 +1079,7 @@
       }
 
       function detailType() {
+        if (currentProduct.type === 'manual') return 'group';
         if (sourceContext.isCustomProject || currentProduct.type === 'customProject') return 'customProject';
         if (currentProduct.type === 'cruise') return 'cruise';
         if (currentProduct.type === 'train') return 'train';
@@ -708,6 +1091,11 @@
 
       function processProfile() {
         const mode = orderProcessMode.value;
+        if (currentProduct.type === 'manual') {
+          if (mode === 'confirm') return { status: '已确认', inventory: '订单内产品快照', button: '生成确认订单', tag: 'tag tag-green' };
+          if (mode === 'hold') return { status: '占位', inventory: '不校验标准团期库存', button: '生成占位订单', tag: 'tag tag-blue' };
+          return { status: '预留', inventory: '不校验标准团期库存', button: '生成预留订单', tag: 'tag tag-orange' };
+        }
         if (currentProduct.type === 'single') {
           return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
         }
@@ -717,11 +1105,16 @@
       }
 
       function selectedStock() {
+        if (isManualMode()) {
+          refreshManualProduct();
+          return currentProduct.stocks[0];
+        }
         if (presetStockOverride) return presetStockOverride;
         return currentProduct.stocks[selectedStockIndex] || currentProduct.stocks[0];
       }
 
       function selectedPlanName() {
+        if (isManualMode()) return currentProduct.name;
         if (presetPlanOverride) return presetPlanOverride;
         return planOptions()[selectedPlanIndex] || planOptions()[0] || currentProduct.name;
       }
@@ -811,13 +1204,34 @@
       }
 
       function renderCounts() {
+        if (isManualMode()) {
+          countRows.classList.add('booking-manual-price-table');
+          countRows.innerHTML = '<div class="table-wrap booking-price-table-wrap"><table class="booking-price-table">' +
+            '<thead><tr><th>费用项</th><th>数量</th><th>单价</th><th>小计</th></tr></thead>' +
+            '<tbody>' + currentProduct.counts.map(function (item) {
+              const subtotal = Number(item.value || 0) * Number(item.price || 0);
+              return '<tr>' +
+                '<td><span class="booking-count-label">' + escapeHtml(item.label) + '</span></td>' +
+                '<td><span class="booking-stepper" data-stepper>' +
+                  '<button type="button" data-step="-1" aria-label="减少' + escapeHtml(item.label) + '">-</button>' +
+                  '<input type="text" value="' + item.value + '" readonly data-count-input data-count-id="' + escapeHtml(item.id) + '" data-count-label="' + escapeHtml(item.label) + '" data-price="' + item.price + '" data-min="' + item.min + '">' +
+                  '<button type="button" data-step="1" aria-label="增加' + escapeHtml(item.label) + '">+</button>' +
+                '</span></td>' +
+                '<td><input class="form-control booking-price-input" type="number" min="0" value="' + Number(item.price || 0) + '" data-manual-price="' + escapeHtml(item.id) + '"></td>' +
+                '<td><strong>' + money(subtotal) + '</strong></td>' +
+              '</tr>';
+            }).join('') + '</tbody></table></div>';
+          renderOccupancySummary();
+          return;
+        }
+        countRows.classList.remove('booking-manual-price-table');
         countRows.innerHTML = currentProduct.counts.map(function (item) {
           const hint = item.hint ? '<em>' + escapeHtml(item.hint) + '</em>' : '';
           return '<div class="booking-count-item">' +
             '<span class="booking-count-label">' + escapeHtml(item.label) + '</span>' +
             '<span class="booking-stepper" data-stepper>' +
               '<button type="button" data-step="-1" aria-label="减少' + escapeHtml(item.label) + '">-</button>' +
-              '<input type="text" value="' + item.value + '" readonly data-count-input data-price="' + item.price + '" data-min="' + item.min + '">' +
+              '<input type="text" value="' + item.value + '" readonly data-count-input data-count-id="' + escapeHtml(item.id) + '" data-price="' + item.price + '" data-min="' + item.min + '">' +
               '<button type="button" data-step="1" aria-label="增加' + escapeHtml(item.label) + '">+</button>' +
             '</span>' +
             '<span class="booking-count-hint">' + money(item.price) + hint + '</span>' +
@@ -873,7 +1287,8 @@
         }
         const rows = Array.from(countRows.querySelectorAll('[data-count-input]')).map(function (input) {
           const item = currentProduct.counts.find(function (count) { return count.price === Number(input.dataset.price) && count.min === Number(input.dataset.min); });
-          const label = input.closest('.booking-count-item').querySelector('.booking-count-label').textContent;
+          const labelNode = input.closest('.booking-count-item, tr').querySelector('.booking-count-label');
+          const label = input.dataset.countLabel || (labelNode ? labelNode.textContent : '');
           const count = Number(input.value || 0);
           const price = Number(input.dataset.price || 0);
           if (!count) return '';
@@ -887,6 +1302,15 @@
       }
 
       function syncSummary() {
+        if (isManualMode()) {
+          refreshManualProduct();
+          const process = processProfile();
+          document.getElementById('inventoryHint').className = 'tag tag-blue';
+          document.getElementById('inventoryHint').textContent = '手工产品';
+          document.getElementById('createOrder').disabled = false;
+          document.getElementById('createOrder').textContent = process.button;
+          return;
+        }
         if (!hasSaleObject) {
           document.getElementById('inventoryHint').className = 'tag tag-gray';
           document.getElementById('inventoryHint').textContent = '待选团期';
@@ -914,6 +1338,7 @@
         const showSearch = objectStep === 'search' || objectStep === 'pick';
         const showPicker = objectStep === 'pick';
         const showSummary = objectStep === 'selected';
+        if (manualProductPanel) manualProductPanel.hidden = !isManualMode();
         saleObjectSearchPanel.hidden = !showSearch;
         saleObjectPicker.hidden = !showPicker;
         bookingPresetPanel.hidden = !showSummary;
@@ -928,6 +1353,7 @@
       }
 
       function renderAll() {
+        if (isManualMode()) refreshManualProduct();
         renderPlanCards();
         renderCoreFields();
         applySelectedPriceMatrix();
@@ -1059,7 +1485,20 @@
 
       function validate() {
         const missing = [];
-        if (!hasSaleObject) missing.push('可售对象');
+        if (isManualMode()) {
+          refreshManualProduct();
+          Array.from(document.querySelectorAll('[data-manual-required]')).forEach(function (field) {
+            if (!field.value) missing.push(field.dataset.manualRequired || '必填项');
+          });
+          const startDate = manualFieldValue('manualStartDate');
+          const endDate = manualFieldValue('manualEndDate');
+          const serviceDate = manualFieldValue('manualServiceDate');
+          const finishDate = manualFieldValue('manualFinishDate');
+          if (startDate && endDate && endDate < startDate) missing.push('回团日期不能早于出团日期');
+          if (serviceDate && finishDate && finishDate < serviceDate) missing.push('预计完成日期不能早于服务日期');
+        } else if (!hasSaleObject) {
+          missing.push('可售对象');
+        }
         Array.from(coreFields.querySelectorAll('[data-core-required="true"]')).forEach(function (field) {
           if (!field.value) missing.push(field.dataset.coreLabel || '必填项');
         });
@@ -1073,7 +1512,7 @@
       }
 
       function generatedOrderNo() {
-        const prefix = { group: 'KS', customProject: 'KSMICE', cruise: 'KSCZ', train: 'KSTR', free: 'KSFT', study: 'KSST', single: 'KSSV' }[currentProduct.type] || 'KS';
+        const prefix = { group: 'KS', customProject: 'KSMICE', cruise: 'KSCZ', train: 'KSTR', free: 'KSFT', study: 'KSST', single: 'KSSV', manual: 'KSHG' }[currentProduct.type] || 'KS';
         const seed = String(Date.now()).slice(-8);
         return prefix + '20260704' + seed;
       }
@@ -1102,6 +1541,13 @@
         detailParams.set('orderNo', orderNo);
         detailParams.set('product', currentProduct.name);
         detailParams.set('customer', document.getElementById('contactName').value.trim());
+        if (isManualMode()) {
+          detailParams.set('source', 'manualProduct');
+          detailParams.set('productSource', 'manual');
+          detailParams.set('productType', manualTypeLabel());
+          detailParams.set('supplier', currentProduct.manualSupplier || '');
+          detailParams.set('destination', currentProduct.manualDestination || '');
+        }
         if (stock) {
           detailParams.set('scheduleNo', stock[1]);
           detailParams.set('travelDate', stock[0]);
@@ -1117,15 +1563,24 @@
         }
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
-        document.getElementById('createdText').textContent = sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，库存状态为“' + process.inventory + '”。';
+        document.getElementById('createdText').textContent = isManualMode()
+          ? process.status + '订单已生成，产品与出行信息以订单内快照承接，不占用标准团期库存。'
+          : (sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，库存状态为“' + process.inventory + '”。');
         document.getElementById('createdOrderNo').textContent = orderNo;
-        document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag;
-        document.getElementById('createdStock').textContent = currentProduct.stockLabel + ' ' + stock[1];
+        document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag + (isManualMode() ? ' / 手工产品' : '');
+        document.getElementById('createdStock').textContent = isManualMode()
+          ? (currentProduct.manualDisplay || stock[0])
+          : currentProduct.stockLabel + ' ' + stock[1];
         document.getElementById('createdContact').textContent = document.getElementById('contactName').value.trim() + ' / ' + document.getElementById('contactPhone').value.trim();
         document.getElementById('createdAmount').textContent = total;
         document.getElementById('createdOrderStatus').innerHTML = '<span class="' + process.tag + '">' + process.status + '</span>';
         document.getElementById('createdSource').textContent = sourceText();
-        const financeItems = sourceContext.isSingleGroup ? [
+        const financeItems = isManualMode() ? [
+          '应收单：按订单金额待审核',
+          '收款状态：未收款',
+          '产品来源：订单内产品快照',
+          '业务信息：' + (currentProduct.manualDisplay || currentProduct.manualDestination || '-')
+        ] : sourceContext.isSingleGroup ? [
           '阶段应收计划：按锁定报价付款节点待财务承接',
           '收款状态：未收款',
           '项目团：' + stock[1] + ' 客户专属',
@@ -1137,7 +1592,11 @@
           '合同/确认单：订单确认后生成'
         ];
         document.getElementById('createdFinanceItems').innerHTML = financeItems.map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
-        const nextSteps = sourceContext.isSingleGroup ? [
+        const nextSteps = isManualMode() ? [
+          ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
+          ['补充资料', '进入订单详情补充游客、证件、材料和服务要求'],
+          ['查看详情', '查看订单完整信息和后续处理记录']
+        ] : sourceContext.isSingleGroup ? [
           ['查看详情', '进入订单详情补充名单、收款计划和售后入口'],
           ['合同签署', '进入合同管理确认项目合同和签署状态'],
           ['项目团', '进入客户专属项目团承接执行资料和资源确认']
@@ -1168,16 +1627,38 @@
         selectCurrentStock(target.dataset.stockIndex || target.dataset.selectStock);
       });
 
+      bookingModeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setBookingMode(button.dataset.bookingMode);
+        });
+      });
+
       countRows.addEventListener('click', function (event) {
         const button = event.target.closest('[data-step]');
         if (!button) return;
         const input = button.closest('[data-stepper]').querySelector('[data-count-input]');
         input.value = Math.max(Number(input.dataset.min || 0), Number(input.value || 0) + Number(button.dataset.step));
-        const label = input.closest('.booking-count-item').querySelector('.booking-count-label').textContent;
-        const count = currentProduct.counts.find(function (item) { return item.label === label; });
+        const labelNode = input.closest('.booking-count-item, tr').querySelector('.booking-count-label');
+        const label = input.dataset.countLabel || (labelNode ? labelNode.textContent : '');
+        const count = currentProduct.counts.find(function (item) { return item.id === input.dataset.countId || item.label === label; });
         if (count) count.value = Number(input.value || 0);
+        if (isManualMode()) renderCounts();
         renderFee();
         renderOccupancySummary();
+      });
+
+      countRows.addEventListener('input', function (event) {
+        const priceInput = event.target.closest('[data-manual-price]');
+        if (!priceInput) return;
+        const id = priceInput.dataset.manualPrice;
+        const count = currentProduct.counts.find(function (item) { return item.id === id; });
+        if (count) count.price = Number(priceInput.value || 0);
+        const quantityInput = countRows.querySelector('[data-count-input][data-count-id="' + id + '"]');
+        if (quantityInput) quantityInput.dataset.price = Number(priceInput.value || 0);
+        const subtotal = count ? Number(count.value || 0) * Number(count.price || 0) : 0;
+        const subtotalNode = priceInput.closest('tr') ? priceInput.closest('tr').querySelector('td:last-child strong') : null;
+        if (subtotalNode) subtotalNode.textContent = money(subtotal);
+        renderFee();
       });
 
       coreFields.addEventListener('change', function () {
@@ -1187,6 +1668,35 @@
         syncSummary();
         syncPresetPanel();
       });
+
+      if (manualProductPanel) {
+        manualProductPanel.addEventListener('input', function (event) {
+          if (event.target && (event.target.id === 'manualStartDate' || event.target.id === 'manualEndDate')) syncManualTravelDays();
+          refreshManualProduct();
+          renderFee();
+          syncSummary();
+        });
+        manualProductPanel.addEventListener('change', function (event) {
+          if (event.target && (event.target.id === 'manualStartDate' || event.target.id === 'manualEndDate')) syncManualTravelDays();
+          refreshManualProduct();
+          renderFee();
+          syncSummary();
+        });
+        manualProductPanel.addEventListener('click', function (event) {
+          const typeButton = event.target.closest('[data-manual-product-type]');
+          if (!typeButton) return;
+          selectedManualProductType = typeButton.dataset.manualProductType;
+          manualProductType.querySelectorAll('[data-manual-product-type]').forEach(function (button) {
+            button.classList.toggle('active', button === typeButton);
+          });
+          renderManualTypeFields();
+          renderManualTripFields();
+          refreshManualProduct();
+          renderCounts();
+          renderFee();
+          syncSummary();
+        });
+      }
 
       channelSource.addEventListener('change', updateChannelFields);
       orderProcessMode.addEventListener('change', syncSummary);
@@ -1273,6 +1783,8 @@
       objectStep = presetMode ? 'selected' : 'search';
       if (presetMode) {
         bookingDrawer.dataset.entry = 'product-booking';
+        var bookingModeSection = document.querySelector('.booking-mode-section');
+        if (bookingModeSection) bookingModeSection.hidden = true;
         changePresetSelection.hidden = true;
         saleObjectSearchPanel.hidden = true;
         saleObjectPicker.hidden = true;
@@ -1313,6 +1825,22 @@
       }
       selectedPlanIndex = indexByText(planOptions(), presetPlanOverride || params.get('plan'));
       selectedStockIndex = stockIndexFromParams(params.get('date'), params.get('stock') || params.get('scheduleNo'));
+      if (!presetMode && params.get('mode') === 'manual') {
+        bookingMode = 'manual';
+        bookingModeButtons.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.bookingMode === bookingMode);
+        });
+        bookingDrawer.dataset.bookingMode = bookingMode;
+        objectStep = 'manual';
+        hasSaleObject = true;
+        renderManualTypeFields();
+        renderManualTripFields();
+        refreshManualProduct();
+      } else {
+        bookingDrawer.dataset.bookingMode = bookingMode;
+        renderManualTypeFields();
+        renderManualTripFields();
+      }
       updateChannelFields();
       renderAll();
     })();
