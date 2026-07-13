@@ -36,6 +36,8 @@
           <div class="product-schedule-field"><span>产品编号</span><strong id="summaryProductCode">-</strong></div>
           <div class="product-schedule-field"><span>产品类型</span><strong id="summaryProductType">-</strong></div>
           <div class="product-schedule-field"><span>旅游类型</span><strong id="summaryTravelType">-</strong></div>
+          <div class="product-schedule-field"><span>主体公司</span><strong id="summarySubjectCompany">福建凯撒</strong></div>
+          <div class="product-schedule-field"><span>归属中心/部门</span><strong id="summaryOwnerOrg">-</strong></div>
           <div class="product-schedule-field"><span>出发地</span><strong id="summaryDeparture">-</strong></div>
           <div class="product-schedule-field"><span>目的地</span><strong id="summaryDestination">-</strong></div>
         </div>
@@ -156,6 +158,17 @@
         };
         return coverMap[product.productCode] || "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=900&q=80";
       }
+      function ownerOrgFor(route) {
+        route = route || {};
+        if (route.ownerOrg) return route.ownerOrg;
+        if (route.typeKey === "cruise") return "产品中心 / 邮轮部";
+        if (route.typeKey === "train") return "产品中心 / 专列部";
+        if (route.typeKey === "free") return "产品中心 / 自由行部";
+        if (route.typeKey === "study") return "产品中心 / 研学部";
+        if (route.typeKey === "domestic") return "短线中心 / 国内部";
+        if (/日本|关西|新加坡|亚洲/.test((route.product || "") + (route.destination || ""))) return "长线中心 / 亚洲部";
+        return "长线中心 / 欧洲部";
+      }
       var productNameParam = params.get("productName") || params.get("product") || "欧洲十国经典游";
       var typeParam = params.get("type") || "";
       var routeParam = params.get("route") || params.get("routeName") || "";
@@ -203,6 +216,8 @@
             price: item[6],
             status: item[7],
             execution: item[8],
+            company: route.company || "福建凯撒",
+            ownerOrg: route.ownerOrg || ownerOrgFor(route),
             unit: route.unit || "人"
           };
         });
@@ -220,6 +235,8 @@
         query.set("productName", item.product);
         query.set("type", item.typeKey || "");
         query.set("package", item.route);
+        query.set("company", item.company || profile.company || "福建凯撒");
+        query.set("ownerOrg", item.ownerOrg || ownerOrgFor(item));
         return "../tour/schedules-detail.html?" + query.toString();
       }
 
@@ -244,6 +261,8 @@
         setText("summaryProductMeta", [profile.type || "", profile.travelType || ""].filter(Boolean).join(" · "));
         setText("summaryProductType", profile.type || "-");
         setText("summaryTravelType", profile.travelType || "-");
+        setText("summarySubjectCompany", profile.company || "福建凯撒");
+        setText("summaryOwnerOrg", ownerOrgFor(profile));
         setText("summaryDestination", profile.destination || "-");
         setText("summaryDeparture", profile.departure || "-");
         setText("summarySaleCount", saleCount);
@@ -329,6 +348,8 @@
           query.set("productName", productName);
         }
         if (targetRoute && targetRoute.typeKey) query.set("type", targetRoute.typeKey);
+        query.set("company", (targetRoute && targetRoute.company) || profile.company || "福建凯撒");
+        query.set("ownerOrg", (targetRoute && targetRoute.ownerOrg) || ownerOrgFor(targetRoute || profile));
         query.set("embed", "batchDrawer");
         if (targetRoute && targetRoute.route && (routeName !== "__all" || routes.length === 1)) {
           query.set("route", targetRoute.route);
@@ -396,6 +417,8 @@
               type: matchedRoute.type || profile.type,
               typeKey: matchedRoute.typeKey || profile.typeKey,
               routeCode: matchedRoute.routeCode || item.routeCode || profile.productCode || "",
+              company: matchedRoute.company || profile.company || "福建凯撒",
+              ownerOrg: matchedRoute.ownerOrg || ownerOrgFor(matchedRoute),
               sold: Number(item.sold || 0)
             }));
           });

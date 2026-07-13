@@ -149,6 +149,12 @@
       <button class="table-link" type="button" data-clear-route-filter>清除</button>
     </section>
 
+    <div class="data-scope-note role-scope-note">
+      <strong>当前数据范围：团期按“主体 + 产品中心/部门 + 计调责任人”承接</strong>
+      <span>产品/计调看授权中心和本人负责团期；门店只能看被授权销售的团期和可售名额，不进入成本、结算价和供应商应付；财务仍按福建凯撒主体确认收付、结算和 NC。</span>
+      <div class="role-scope-tags"><span class="tag tag-blue">中心：团期与成本协同</span><span class="tag tag-gray">门店：销售授权名额</span><span class="tag tag-green">财务边界：福建凯撒</span></div>
+    </div>
+
   <section id="scheduleListPanel" data-schedule-panel="list">
 
   <nav class="tab-bar list-surface-tabs" aria-label="团期生命周期筛选" data-filter-tabs data-filter-target="#scheduleRows">
@@ -549,6 +555,23 @@
               <div id="routePlanHint" class="form-hint" hidden></div>
             </div>
             <div class="form-group">
+              <label class="form-label" for="scheduleSubjectCompany">主体公司</label>
+              <select id="scheduleSubjectCompany" class="form-control">
+                <option selected>福建凯撒</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="scheduleOwnerOrg">归属中心/部门</label>
+              <select id="scheduleOwnerOrg" class="form-control">
+                <option>长线中心 / 欧洲部</option>
+                <option>长线中心 / 亚洲部</option>
+                <option>短线中心 / 国内部</option>
+                <option>产品中心 / 邮轮部</option>
+                <option>产品中心 / 专列部</option>
+                <option>产品中心 / 研学部</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label class="form-label" for="departDate">出发日期 <span class="req">*</span></label>
               <input id="departDate" class="form-control" type="date" required>
             </div>
@@ -645,7 +668,7 @@
             <span id="createAllocationPill" class="tag tag-green">分配正常</span>
           </div>
           <div class="batch-quota-grid">
-            <label><span>门市渠道</span><input class="form-control create-quota-input" type="number" min="0" value="8" data-channel-name="门"></label>
+            <label><span>门店渠道</span><input class="form-control create-quota-input" type="number" min="0" value="8" data-channel-name="门"></label>
             <label><span>携程</span><input class="form-control create-quota-input" type="number" min="0" value="6" data-channel-name="携"></label>
             <label><span>飞猪</span><input class="form-control create-quota-input" type="number" min="0" value="4" data-channel-name="猪"></label>
             <label><span>同程</span><input class="form-control create-quota-input" type="number" min="0" value="4" data-channel-name="同"></label>
@@ -686,20 +709,20 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="storeScope">投放门市</label>
+              <label class="form-label" for="storeScope">投放门店</label>
               <select id="storeScope" class="form-control">
-                <option>全部门市</option>
-                <option>北京门市</option>
-                <option>上海门市</option>
-                <option>华东门市</option>
-                <option>直营门市</option>
+                <option>全部门店</option>
+                <option>厦门门店</option>
+                <option>泉州门店</option>
+                <option>福州门店</option>
+                <option>直营门店</option>
               </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="channelScope">投放渠道</label>
               <select id="channelScope" class="form-control">
                 <option>全部渠道</option>
-                <option>门市渠道</option>
+                <option>门店渠道</option>
                 <option>直营网店</option>
                 <option>代理渠道</option>
                 <option>暂不投放</option>
@@ -1151,20 +1174,20 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" for="batchStoreScope">投放门市</label>
+                <label class="form-label" for="batchStoreScope">投放门店</label>
                 <select id="batchStoreScope" class="form-control">
-                  <option>全部门市</option>
-                  <option>北京门市</option>
-                  <option>上海门市</option>
-                  <option>华东门市</option>
-                  <option>直营门市</option>
+                  <option>全部门店</option>
+                  <option>厦门门店</option>
+                  <option>泉州门店</option>
+                  <option>福州门店</option>
+                  <option>直营门店</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label" for="batchChannelScope">投放渠道</label>
                 <select id="batchChannelScope" class="form-control">
                   <option>全部渠道</option>
-                  <option>门市渠道</option>
+                  <option>门店渠道</option>
                   <option>直营网店</option>
                   <option>代理渠道</option>
                   <option>暂不投放</option>
@@ -1723,6 +1746,8 @@
       var scheduleRows = document.getElementById('scheduleRows');
       var scheduleTypeSelect = document.getElementById('scheduleTypeSelect');
       var scheduleProduct = document.getElementById('scheduleProduct');
+      var scheduleSubjectCompany = document.getElementById('scheduleSubjectCompany');
+      var scheduleOwnerOrg = document.getElementById('scheduleOwnerOrg');
       var departDate = document.getElementById('departDate');
       var returnDate = document.getElementById('returnDate');
       var totalStock = document.getElementById('totalStock');
@@ -1919,6 +1944,21 @@
         '北京航天研学营': '研学营期'
       };
 
+      var productOwnerOrgs = {
+        '欧洲十国经典游': '长线中心 / 欧洲部',
+        '日本关西深度游': '长线中心 / 亚洲部',
+        '理想号地中海邮轮': '产品中心 / 邮轮部',
+        '三亚亲子5日游': '短线中心 / 国内部',
+        '泰国曼谷清迈8日': '长线中心 / 亚洲部',
+        '北京故宫定制游': '短线中心 / 国内部',
+        '东方丝路专列': '产品中心 / 专列部',
+        '北京航天研学营': '产品中心 / 研学部',
+        '敦煌历史文化研学7日': '产品中心 / 研学部',
+        '北京故宫非遗研学5日': '产品中心 / 研学部',
+        '新加坡科技创新研学6日': '产品中心 / 研学部',
+        '上海艺术博物馆研学4日': '产品中心 / 研学部'
+      };
+
       var productRoutePlans = {
         '欧洲十国经典游': ['A线 法德意12天', 'B线 荷比德法12天', 'C线 瑞意深度10天'],
         '日本关西深度游': ['关西古都7日', '京都奈良慢游线'],
@@ -1993,6 +2033,22 @@
         return Object.keys(productBatchTypes).filter(function (product) {
           return normalizeBatchType(productBatchTypes[product]) === normalized;
         });
+      }
+
+      function productOwnerOrg(product) {
+        if (productOwnerOrgs[product]) return productOwnerOrgs[product];
+        var batchType = normalizeBatchType(productBatchTypes[product] || scheduleTypeSelect.value || '普通团期');
+        if (batchType === '邮轮航次') return '产品中心 / 邮轮部';
+        if (batchType === '专列班期') return '产品中心 / 专列部';
+        if (batchType === '研学营期') return '产品中心 / 研学部';
+        if (/三亚|故宫|国内/.test(product || '')) return '短线中心 / 国内部';
+        if (/日本|泰国|新加坡|亚洲/.test(product || '')) return '长线中心 / 亚洲部';
+        return '长线中心 / 欧洲部';
+      }
+
+      function syncScheduleOwnership(product, item) {
+        if (scheduleSubjectCompany) scheduleSubjectCompany.value = item && item.company || pageParams.get('company') || '福建凯撒';
+        if (scheduleOwnerOrg) scheduleOwnerOrg.value = item && item.ownerOrg || pageParams.get('ownerOrg') || productOwnerOrg(product);
       }
 
       function batchTypeProductLabel(batchType) {
@@ -2574,7 +2630,7 @@
       }
 
       var channelLabels = {
-        门: '门市渠道',
+        门: '门店渠道',
         携: '携程',
         猪: '飞猪',
         同: '同程',
@@ -2803,7 +2859,7 @@
         }
         var costWorktopLink = document.getElementById('costWorktopLink');
         if (costWorktopLink) {
-          costWorktopLink.href = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&mode=' + (rows.length ? 'maintainCost' : 'initCost');
+          costWorktopLink.href = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&mode=' + (rows.length ? 'maintainCost' : 'initCost') + '&company=' + encodeURIComponent(item.company || '福建凯撒') + '&ownerOrg=' + encodeURIComponent(item.ownerOrg || productOwnerOrg(item.product));
           costWorktopLink.textContent = rows.length ? '进入成本结算' : '初始化成本';
         }
       }
@@ -2944,7 +3000,7 @@
         var rows = orderRowsForSchedule(item);
         if (rows.length) return rows;
         return [
-          { no: 'KS' + String(item.code || '00000000').replace(/\D/g, '').slice(-8) + '001', customer: '待报名游客 / 门市', sales: item.planner || '-', qty: '0' + (item.unit || '人'), amount: item.price || '-', pay: '未收款', payTag: 'tag tag-gray', roster: '未开始', rosterTag: 'tag tag-gray', status: '待确认', statusTag: 'tag tag-gray' }
+          { no: 'KS' + String(item.code || '00000000').replace(/\D/g, '').slice(-8) + '001', customer: '待报名游客 / 门店', sales: item.planner || '-', qty: '0' + (item.unit || '人'), amount: item.price || '-', pay: '未收款', payTag: 'tag tag-gray', roster: '未开始', rosterTag: 'tag tag-gray', status: '待确认', statusTag: 'tag tag-gray' }
         ];
       }
 
@@ -3594,6 +3650,8 @@
         if (item.customProjectNo) query.set('projectNo', item.customProjectNo);
         if (item.projectOrderNo) query.set('orderNo', item.projectOrderNo);
         query.set('type', 'project');
+        query.set('company', item.company || '福建凯撒');
+        query.set('ownerOrg', item.ownerOrg || '产品中心 / 单团部');
         return 'fulfillment-cost.html?' + query.toString();
       }
 
@@ -3647,13 +3705,13 @@
         if (type === '邮轮航次') {
           return [
             { no: 'KS' + baseCode + '018', customer: '张建国 / 携程邮轮', sales: '刘洋', qty: '1间2人', amount: '¥57,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '阳台舱BA-9232 / 成人占位2', status: '已确认', statusTag: 'tag tag-green' },
-            { no: 'KS' + baseCode + '026', customer: '李梅 / 门市', sales: '陈红', qty: '1间3人', amount: '¥31,600', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补护照', rosterTag: 'tag tag-orange', resource: '海景舱OV待回填 / 儿童不占位1', status: '已确认', statusTag: 'tag tag-green' },
+            { no: 'KS' + baseCode + '026', customer: '李梅 / 门店', sales: '陈红', qty: '1间3人', amount: '¥31,600', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补护照', rosterTag: 'tag tag-orange', resource: '海景舱OV待回填 / 儿童不占位1', status: '已确认', statusTag: 'tag tag-green' },
             { no: 'KS' + baseCode + '031', customer: '王强 / 直客', sales: '赵明', qty: '1间2人', amount: '¥42,800', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '套房SU-1102 / 成人占位2', status: '已确认', statusTag: 'tag tag-green' }
           ];
         }
         if (type === '专列班期') {
           return [
-            { no: 'KS' + baseCode + '021', customer: '周伟 / 门市', sales: '孙丽', qty: '2铺', amount: '¥43,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '03车12下/13下 · 成人占位2', status: '已确认', statusTag: 'tag tag-green' },
+            { no: 'KS' + baseCode + '021', customer: '周伟 / 门店', sales: '孙丽', qty: '2铺', amount: '¥43,600', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '03车12下/13下 · 成人占位2', status: '已确认', statusTag: 'tag tag-green' },
             { no: 'KS' + baseCode + '032', customer: '吴芳 / 分销', sales: '郑华', qty: '6铺+1儿童', amount: '¥102,600', pay: '待尾款', payTag: 'tag tag-orange', roster: '待补身份证', rosterTag: 'tag tag-orange', resource: '软卧下铺6 · 儿童不占位1', status: '确认中', statusTag: 'tag tag-blue' },
             { no: 'KS' + baseCode + '041', customer: '郑华 / 直客', sales: '刘洋', qty: '1包厢', amount: '¥26,800', pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', resource: '豪华包厢1间', status: '已确认', statusTag: 'tag tag-green' }
           ];
@@ -3666,7 +3724,7 @@
           ];
         }
         return [
-          { no: 'KS' + baseCode + '001', customer: '张建国 / 门市', sales: '周伟', qty: Math.min(sold || 2, 2) + unit, amount: price, pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', status: '确认', statusTag: 'tag tag-green' },
+          { no: 'KS' + baseCode + '001', customer: '张建国 / 门店', sales: '周伟', qty: Math.min(sold || 2, 2) + unit, amount: price, pay: '已收齐', payTag: 'tag tag-green', roster: '已齐', rosterTag: 'tag tag-green', status: '确认', statusTag: 'tag tag-green' },
           { no: 'KS' + baseCode + '014', customer: '李梅 / 携程', sales: '刘洋', qty: Math.min(Math.max(sold - 2, 1), 4) + unit, amount: price, pay: '待尾款', payTag: 'tag tag-orange', roster: '证件待补', rosterTag: 'tag tag-orange', status: '确认', statusTag: 'tag tag-green' },
           { no: 'KS' + baseCode + '027', customer: '王强 / 直客', sales: '赵明', qty: '1' + unit, amount: price, pay: '已收齐', payTag: 'tag tag-green', roster: '特殊需求待核', rosterTag: 'tag tag-blue', status: '确认', statusTag: 'tag tag-green' }
         ];
@@ -3937,7 +3995,7 @@
 
       function actionHtml(item) {
         var href = detailHref(item);
-        var settlementHref = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&tab=settlement';
+        var settlementHref = 'fulfillment-cost.html?scheduleNo=' + encodeURIComponent(item.code || '') + '&type=' + encodeURIComponent(scheduleTypeKey(item)) + '&tab=settlement' + '&company=' + encodeURIComponent(item.company || '福建凯撒') + '&ownerOrg=' + encodeURIComponent(item.ownerOrg || productOwnerOrg(item.product));
         if (isProjectGroup(item)) {
           return '<div class="table-action">' +
             '<button class="table-action-primary" type="button" data-open-roster>名单</button>' +
@@ -4353,6 +4411,7 @@
         totalStock.value = '';
         deadlineDate.value = '';
         syncRouteOptions(scheduleProduct.value);
+        syncScheduleOwnership(scheduleProduct.value);
         deadlineTouched = false;
         adultPrice.value = productDefaultPrices[scheduleProduct.value] || '¥12,800';
         totalStock.value = productDefaultCapacities[scheduleProduct.value] || '';
@@ -4361,7 +4420,7 @@
         currencySelect.value = 'CNY';
         plannerSelect.value = productPlanners[scheduleProduct.value] || '周伟';
         leaderSelect.value = '';
-        storeScope.value = '全部门市';
+        storeScope.value = '全部门店';
         channelScope.value = '全部渠道';
         meetingPlace.value = '';
         inheritExecution.checked = true;
@@ -4387,6 +4446,7 @@
         renderScheduleProducts(scheduleTypeSelect.value, item.product);
         scheduleProduct.value = item.product;
         syncRouteOptions(item.product, item.route);
+        syncScheduleOwnership(item.product, item);
         departDate.value = item.depart;
         returnDate.value = item.back;
         totalStock.value = item.stock;
@@ -4398,7 +4458,7 @@
         currencySelect.value = item.currency || 'CNY';
         plannerSelect.value = item.planner || productPlanners[item.product] || '周伟';
         leaderSelect.value = item.leader || '';
-        storeScope.value = item.storeScope || '全部门市';
+        storeScope.value = item.storeScope || '全部门店';
         channelScope.value = item.channelScope || '全部渠道';
         meetingPlace.value = item.meetingPlace || '';
         inheritExecution.checked = item.inheritExecution !== false;
@@ -4425,6 +4485,8 @@
           code: currentMode === 'edit' && currentSchedule ? currentSchedule.code : createScheduleCode(scheduleProduct.value, departDate.value),
           product: scheduleProduct.value.trim() || '欧洲十国经典游',
           route: scheduleRoutePlan.value || '-',
+          company: scheduleSubjectCompany && scheduleSubjectCompany.value || '福建凯撒',
+          ownerOrg: scheduleOwnerOrg && scheduleOwnerOrg.value || productOwnerOrg(scheduleProduct.value.trim()),
           batchType: scheduleTypeSelect.value || productBatchTypes[scheduleProduct.value] || currentSchedule && currentSchedule.batchType || '普通团期',
           depart: departDate.value,
           back: returnDate.value,
@@ -4450,7 +4512,7 @@
           minGroupSize: minGroupSize.value || '',
           reserveHours: reserveHours.value || '4',
           leader: leaderSelect.value || '',
-          storeScope: storeScope.value || '全部门市',
+          storeScope: storeScope.value || '全部门店',
           channelScope: channelScope.value || '全部渠道',
           meetingPlace: meetingPlace.value.trim(),
           inheritExecution: inheritExecution.checked,
@@ -5276,6 +5338,8 @@
           schedules.unshift({
             code: batchScheduleCode(departDateValue, sourceIndex),
             product: batchSelectedProduct.dataset.name,
+            company: '福建凯撒',
+            ownerOrg: productOwnerOrg(batchSelectedProduct.dataset.name),
             depart: departDateValue,
             back: addDays(departDateValue, Number(batchSelectedProduct.dataset.days || 1) - 1),
             stock: String(capacity),
@@ -5304,7 +5368,7 @@
             reserveHours: batchCreateReserveHours ? batchCreateReserveHours.value || '24' : '24',
             planner: document.getElementById('batchPlannerSelect').value || batchSelectedProduct.dataset.planner,
             leader: rowLeader,
-            storeScope: document.getElementById('batchStoreScope').value || '全部门市',
+            storeScope: document.getElementById('batchStoreScope').value || '全部门店',
             channelScope: document.getElementById('batchChannelScope').value || '全部渠道',
             meetingPlace: document.getElementById('batchMeetingPlace').value.trim(),
             inheritExecution: document.getElementById('batchInheritExecution').checked,
@@ -6154,6 +6218,7 @@
           if (currentMode !== 'edit' || !totalStock.value) totalStock.value = productDefaultCapacities[product];
         }
         if (productPlanners[product]) plannerSelect.value = productPlanners[product];
+        syncScheduleOwnership(product);
         if (!minGroupSize.value || currentMode !== 'edit') {
           minGroupSize.value = Math.ceil(Number(totalStock.value || 0) * 0.6) || '';
         }

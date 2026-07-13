@@ -164,80 +164,63 @@
       children: [
         {
           id: "sub-fujian",
-          type: "subsidiary",
-          typeLabel: "子公司",
+          type: "company",
+          typeLabel: "主体公司",
           name: "福建凯撒国际旅行社有限公司",
           children: [
             {
-              id: "center-fj-outbound",
-              type: "center",
-              typeLabel: "中心",
-              name: "出境事业中心",
+              id: "branch-fj-xiamen",
+              type: "branch",
+              typeLabel: "公司",
+              name: "厦门分公司",
               children: [
-                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲产品部" },
-                { id: "dept-fj-visa", type: "department", typeLabel: "部门", name: "签证运营部" },
-                { id: "store-fz-dongbai", type: "store", typeLabel: "门市", name: "福州东百门市" },
-                { id: "store-xm-siming", type: "store", typeLabel: "门市", name: "厦门思明门市" },
+                {
+                  id: "store-dept-fj-xiamen",
+                  type: "storeDepartment",
+                  typeLabel: "门市部",
+                  name: "厦门思明区门市部",
+                  children: [
+                    { id: "store-fj-xm-a", type: "store", typeLabel: "门店", name: "软件园门店" },
+                    { id: "store-fj-xm-b", type: "store", typeLabel: "门店", name: "文灶门店" },
+                    { id: "store-fj-xm-c", type: "store", typeLabel: "门店", name: "观音山门店" },
+                  ],
+                },
               ],
             },
             {
-              id: "center-fj-sales",
-              type: "center",
-              typeLabel: "中心",
-              name: "门市销售中心",
+              id: "branch-fj-quanzhou",
+              type: "branch",
+              typeLabel: "公司",
+              name: "泉州分公司",
               children: [
-                { id: "dept-fj-store-ops", type: "department", typeLabel: "部门", name: "门市运营部" },
-                { id: "store-qz-fengze", type: "store", typeLabel: "门市", name: "泉州丰泽门市" },
+                {
+                  id: "store-dept-fj-quanzhou",
+                  type: "storeDepartment",
+                  typeLabel: "门市部",
+                  name: "泉州丰泽门市部",
+                  children: [
+                    { id: "store-qz-fengze", type: "store", typeLabel: "门店", name: "泉州丰泽门店" },
+                    { id: "store-qz-licheng", type: "store", typeLabel: "门店", name: "泉州鲤城门店" },
+                    { id: "store-qz-donghai", type: "store", typeLabel: "门店", name: "泉州东海门店" },
+                  ],
+                },
               ],
             },
-          ],
-        },
-        {
-          id: "sub-beijing",
-          type: "subsidiary",
-          typeLabel: "子公司",
-          name: "北京凯撒国际旅行社有限公司",
-          children: [
+            { id: "branch-fj-fuzhou", type: "branch", typeLabel: "公司", name: "福州分公司" },
+            { id: "branch-fj-zhangzhou", type: "branch", typeLabel: "公司", name: "漳州分公司" },
+            { id: "center-fj-product", type: "center", typeLabel: "中心", name: "产品中心" },
             {
-              id: "center-bj-outbound",
+              id: "center-fj-longhaul",
               type: "center",
               typeLabel: "中心",
-              name: "出境事业中心",
+              name: "长线中心",
               children: [
-                { id: "dept-bj-eu", type: "department", typeLabel: "部门", name: "西欧产品部" },
-                { id: "dept-bj-cruise", type: "department", typeLabel: "部门", name: "邮轮产品部" },
-                { id: "store-bj-chaoyang", type: "store", typeLabel: "门市", name: "北京朝阳门市" },
+                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲部" },
+                { id: "dept-fj-au", type: "department", typeLabel: "部门", name: "澳洲部" },
+                { id: "dept-fj-america", type: "department", typeLabel: "部门", name: "美洲部" },
               ],
             },
-            {
-              id: "center-bj-mice",
-              type: "center",
-              typeLabel: "中心",
-              name: "MICE会展中心",
-              children: [
-                { id: "dept-bj-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
-                { id: "store-bj-wangfujing", type: "store", typeLabel: "门市", name: "北京王府井门市" },
-              ],
-            },
-          ],
-        },
-        {
-          id: "sub-shanghai",
-          type: "subsidiary",
-          typeLabel: "子公司",
-          name: "上海凯撒国际旅行社有限公司",
-          children: [
-            {
-              id: "center-sh-sales",
-              type: "center",
-              typeLabel: "中心",
-              name: "华东销售中心",
-              children: [
-                { id: "dept-sh-store", type: "department", typeLabel: "部门", name: "门市运营部" },
-                { id: "store-sh-xuhui", type: "store", typeLabel: "门市", name: "上海徐汇门市" },
-                { id: "store-hz-hubin", type: "store", typeLabel: "门市", name: "杭州湖滨合作门市" },
-              ],
-            },
+            { id: "center-fj-shorthaul", type: "center", typeLabel: "中心", name: "短线中心 / 销售中心" },
           ],
         },
       ],
@@ -246,13 +229,11 @@
 
   const workspaceExpandedIds = new Set([
     "sub-fujian",
-    "center-fj-outbound",
-    "center-fj-sales",
-    "sub-beijing",
-    "center-bj-outbound",
-    "center-bj-mice",
-    "sub-shanghai",
-    "center-sh-sales",
+    "branch-fj-xiamen",
+    "store-dept-fj-xiamen",
+    "branch-fj-quanzhou",
+    "store-dept-fj-quanzhou",
+    "center-fj-longhaul",
   ]);
   let currentWorkspaceId = "sub-fujian";
 
@@ -962,14 +943,14 @@
 
     const scopeHead = document.createElement("div");
     scopeHead.className = "workspace-scope-head";
-    scopeHead.innerHTML = '<strong>经营主体</strong><span>中心、部门和门市为主体内数据范围</span>';
+    scopeHead.innerHTML = '<strong>经营主体</strong><span>公司、中心、部门、门市部和门店为主体内数据范围</span>';
 
     const searchWrap = document.createElement("div");
     searchWrap.className = "workspace-search";
     searchWrap.innerHTML = '<span class="workspace-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>';
     const search = document.createElement("input");
     search.type = "search";
-    search.placeholder = "搜索子公司/中心/部门/门市";
+    search.placeholder = "搜索公司/中心/部门/门市部/门店";
     search.setAttribute("aria-label", "搜索组织节点");
     searchWrap.appendChild(search);
 
@@ -1598,7 +1579,7 @@
     "自营", "自营产品", "代理", "代理产品", "代理团期", "代理包团", "代理系列团", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "委托单",
     "参团游", "出境游", "入境游", "境内游", "港澳台", "小包团", "定制团", "半自由行", "普通报价", "团队报价",
     "成人/儿童结算价", "舱型库存价", "铺位/包厢结算价", "服务费/加急费",
-    "门市", "门市渠道", "门店", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
+    "门店", "门店渠道", "门店POS", "小程序", "官网", "OTA", "OTA渠道", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
     "欧洲", "东南亚", "国内", "法国", "德国", "意大利", "荷兰", "比利时", "日本", "英国", "MICE", "全线路",
     "线路", "销售", "财务", "系统", "资源", "出团", "渠道", "客户", "客服", "审批", "数据", "AI",
@@ -1610,7 +1591,7 @@
   const metaTagPatterns = [
     /^(自营|代理|参团游|邮轮|专列|研学|自由行|单项委托|MICE)(产品|线路|团期)?$/,
     /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
-    /^(门市|门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
+    /^(门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
     /^(线路|销售|财务|系统|资源|出团|渠道|客户|客服|审批|数据|AI)$/,
     /^(产品发布|价格调整|渠道授权|成本差异|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
     /^(产品经理|产品总监|销售顾问|高级顾问|顾问|计调|客服|财务|管理层|门店店长|呼叫中心坐席|审批管理员|超管)$/,

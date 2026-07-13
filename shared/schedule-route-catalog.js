@@ -340,6 +340,21 @@
     return "团期";
   }
 
+  function organizationForRoute(route) {
+    route = route || {};
+    if (route.typeKey === "cruise") return "产品中心 / 邮轮部";
+    if (route.typeKey === "train") return "产品中心 / 专列部";
+    if (route.typeKey === "study") return "产品中心 / 研学部";
+    if (route.typeKey === "domestic") return "短线中心 / 国内部";
+    if (/日本|关西|新加坡|亚洲/.test((route.product || "") + (route.destination || ""))) return "长线中心 / 亚洲部";
+    return "长线中心 / 欧洲部";
+  }
+
+  routeCatalog.forEach(function (route) {
+    route.company = route.company || "福建凯撒";
+    route.ownerOrg = route.ownerOrg || organizationForRoute(route);
+  });
+
   function statusClass(status) {
     if (status === "销售中" || status === "启售") return "tag tag-green";
     if (status === "已停售" || status === "停售") return "tag tag-orange";
@@ -351,6 +366,7 @@
   window.caesarScheduleRouteHelper = {
     routes: routeCatalog,
     objectName: objectName,
+    organizationForRoute: organizationForRoute,
     statusClass: statusClass,
     escapeHtml: escapeHtml
   };
