@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>转单记录 - 凯撒旅游</title>
+  <title>转款核销 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
@@ -11,151 +11,525 @@
 
   <section class="list-page-panel">
     <div class="list-page-head">
-      <h1 class="page-title">转单记录</h1>
+      <h1 class="page-title">转款核销</h1>
       <div class="btn-group">
-        <button class="btn btn-secondary" type="button">导出</button>
+        <button class="btn btn-secondary" type="button" data-export-transfer>导出</button>
       </div>
     </div>
   </section>
 
-  <section class="list-surface" data-list-surface>
-    <section class="filter-card filter-card-compact list-surface-filter" aria-label="转单记录筛选">
+  <section class="list-surface transfer-list-surface" data-list-surface>
+    <section class="filter-card filter-card-compact list-surface-filter transfer-filter" aria-label="转款核销筛选">
       <div class="filter-row">
         <div class="filter-item orders-quick-search">
-          <label class="sr-only" for="quickSearch">快速搜索</label>
-          <input id="quickSearch" type="search" placeholder="转单单号/原订单/转入订单/客户/流水号">
+          <label class="sr-only" for="transferKeyword">快速搜索</label>
+          <input id="transferKeyword" type="search" placeholder="转款单/审批单/原订单/转入订单/客户/流水">
         </div>
-        <div class="filter-item filter-item-status">
-          <label class="sr-only" for="statusFilter">核对状态</label>
-          <select id="statusFilter">
-            <option>全部状态</option>
-            <option>待核对</option>
-            <option>核对中</option>
-            <option>已核销</option>
-            <option>已退回</option>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="transferCompany">财务主体</label>
+          <select id="transferCompany">
+            <option value="">全部主体</option>
+            <option value="hq">总部财务</option>
+            <option value="bj">北京凯撒</option>
+            <option value="sh">上海凯撒</option>
+            <option value="fj">福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="transferStore">归属门店</label>
+          <select id="transferStore">
+            <option value="">全部门店</option>
+            <option>北京王府井旗舰店</option>
+            <option>上海徐汇门市</option>
+            <option>厦门文灶门店</option>
+            <option>福州东街口门市</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="transferScene">转款场景</label>
+          <select id="transferScene">
+            <option value="">全部场景</option>
+            <option>改期重订</option>
+            <option>换团转款</option>
+            <option>同客转单</option>
+            <option>门店转单</option>
           </select>
         </div>
         <div class="filter-actions">
-          <button class="btn btn-secondary" type="button">搜索</button>
-          <button class="btn btn-secondary" type="button">重置</button>
+          <button class="btn btn-secondary" type="button" data-search-transfer>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-transfer>重置</button>
         </div>
       </div>
     </section>
 
-    <section class="table-wrap">
+    <nav class="tab-bar list-surface-tabs" aria-label="转款核销状态">
+      <button class="tab-item active" type="button" data-status-tab="全部">全部</button>
+      <button class="tab-item" type="button" data-status-tab="待核对">待核对</button>
+      <button class="tab-item" type="button" data-status-tab="已核销">已核销</button>
+      <button class="tab-item" type="button" data-status-tab="已退回">已退回</button>
+      <button class="tab-item" type="button" data-status-tab="已关闭">已关闭</button>
+    </nav>
+
+    <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="转款核销列表">
       <table>
         <thead>
           <tr>
-            <th>转单单号</th>
-            <th>原订单</th>
+            <th>转款单/来源</th>
+            <th>客户/门店</th>
+            <th>转出订单</th>
             <th>转入订单</th>
-            <th>客户</th>
-            <th>收款流水</th>
-            <th>转单金额</th>
-            <th>核销状态</th>
-            <th>NC状态</th>
+            <th>转款金额</th>
+            <th>核对结果</th>
+            <th>下游处理</th>
             <th>操作</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td><a class="link-primary" href="#" data-open-record>ZK20260703001</a></td>
-            <td>KS202606182313306754<br><span class="text-muted">原订单应收已收</span></td>
-            <td>KS202607010023<br><span class="text-muted">新订单待核销</span></td>
-            <td>测试客户</td>
-            <td>CMBC20260703018</td>
+        <tbody id="transferRows">
+          <tr data-transfer-no="ZK20260703001" data-approval-no="APR-ZK-20260703-001" data-flow-no="CMBC20260703018" data-customer="马晓丽" data-store="北京王府井旗舰店" data-company="bj" data-scene="改期重订" data-status="待核对">
+            <td><div class="table-cell-main"><strong>ZK20260703001</strong><span>APR-ZK-20260703-001 / 改期重订</span></div></td>
+            <td><div class="table-cell-main"><strong>马晓丽</strong><span>北京王府井旗舰店</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202606182313306754</strong><span>北欧四国15日 / 可转 ¥31,000</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607010023</strong><span>北欧四国升级团 / 待收 ¥29,400</span></div></td>
             <td class="amount-strong">¥29,400</td>
-            <td><span class="tag tag-blue">待核对</span></td>
-            <td><span class="tag tag-gray">待推送</span></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-record>核对</button></div></td>
+            <td><div class="table-cell-main"><strong>2项通过</strong><span>银行流水待核对</span></div></td>
+            <td><div class="table-cell-main"><strong>应收待核销</strong><span>NC未生成</span></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-transfer>核对</button></div></td>
           </tr>
-          <tr>
-            <td><a class="link-primary" href="#" data-open-record>ZK20260702008</a></td>
-            <td>KS202607020009<br><span class="text-muted">邮轮原订单</span></td>
-            <td>KS202607150016<br><span class="text-muted">邮轮新航次订单</span></td>
-            <td>吴芳</td>
-            <td>ICBC20260702009</td>
+          <tr data-transfer-no="ZK20260702008" data-approval-no="APR-ZK-20260702-008" data-flow-no="ICBC20260702009" data-customer="吴芳" data-store="上海徐汇门市" data-company="sh" data-scene="换团转款" data-status="待核对">
+            <td><div class="table-cell-main"><strong>ZK20260702008</strong><span>APR-ZK-20260702-008 / 换团转款</span></div></td>
+            <td><div class="table-cell-main"><strong>吴芳</strong><span>上海徐汇门市</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607020009</strong><span>邮轮原航次 / 可转 ¥12,000</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607150016</strong><span>邮轮新航次 / 待收 ¥13,600</span></div></td>
             <td class="amount-strong">¥12,000</td>
-            <td><span class="tag tag-orange">核对中</span></td>
-            <td><span class="tag tag-gray">待推送</span></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-record>查看</button></div></td>
+            <td><div class="table-cell-main"><strong>差额 ¥1,600</strong><span>转入订单仍需补收</span></div></td>
+            <td><div class="table-cell-main"><strong>部分核销</strong><span>补收进入应收</span></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-transfer>核对</button></div></td>
           </tr>
-          <tr>
-            <td><a class="link-primary" href="#" data-open-record>ZK20260628004</a></td>
-            <td>KS202606280011<br><span class="text-muted">专列原订单</span></td>
-            <td>KS202607060018<br><span class="text-muted">专列新班期订单</span></td>
-            <td>周伟</td>
-            <td>ABC20260628077</td>
+          <tr data-transfer-no="ZK20260623003" data-approval-no="APR-ZK-20260623-003" data-flow-no="BOC20260623019" data-customer="上海徐汇门市" data-store="上海徐汇门市" data-company="sh" data-scene="门店转单" data-status="已核销">
+            <td><div class="table-cell-main"><strong>ZK20260623003</strong><span>BOC20260623019 / 门店转单</span></div></td>
+            <td><div class="table-cell-main"><strong>上海徐汇门市</strong><span>上海分公司</span></div></td>
+            <td><div class="table-cell-main"><strong>KS2024061813</strong><span>兰卡威自由行 / 可转 ¥8,600</span></div></td>
+            <td><div class="table-cell-main"><strong>KS2024061818</strong><span>马来西亚自由行 / 待收 ¥8,600</span></div></td>
+            <td class="amount-strong">¥8,600</td>
+            <td><div class="table-cell-main"><strong>核对通过</strong><span>金额与流水一致</span></div></td>
+            <td><div class="table-cell-main"><strong>应收已核销</strong><span>NC待推送</span></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-transfer>详情</button></div></td>
+          </tr>
+          <tr data-transfer-no="ZK20260628004" data-approval-no="APR-ZK-20260628-004" data-flow-no="ABC20260628077" data-customer="周伟" data-store="福州东街口门市" data-company="fj" data-scene="换团转款" data-status="已核销">
+            <td><div class="table-cell-main"><strong>ZK20260628004</strong><span>APR-ZK-20260628-004 / 换团转款</span></div></td>
+            <td><div class="table-cell-main"><strong>周伟</strong><span>福州东街口门市</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202606280011</strong><span>丝路专列原班期 / 可转 ¥8,800</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607060018</strong><span>丝路专列新班期 / 待收 ¥8,800</span></div></td>
             <td class="amount-strong">¥8,800</td>
-            <td><span class="tag tag-green">已核销</span></td>
-            <td><span class="tag tag-green">已推送</span></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-record>查看</button></div></td>
+            <td><div class="table-cell-main"><strong>核对通过</strong><span>客户、金额、审批一致</span></div></td>
+            <td><div class="table-cell-main"><strong>应收已核销</strong><span>NC已推送</span></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-transfer>详情</button></div></td>
+          </tr>
+          <tr data-transfer-no="ZK20260705006" data-approval-no="APR-ZK-20260705-006" data-flow-no="-" data-customer="林倩" data-store="厦门文灶门店" data-company="fj" data-scene="同客转单" data-status="已退回">
+            <td><div class="table-cell-main"><strong>ZK20260705006</strong><span>APR-ZK-20260705-006 / 同客转单</span></div></td>
+            <td><div class="table-cell-main"><strong>林倩</strong><span>厦门文灶门店</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607030019</strong><span>日本关西深度游 / 可转 ¥6,400</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607080021</strong><span>客户证件姓名不一致</span></div></td>
+            <td class="amount-strong">¥6,400</td>
+            <td><div class="table-cell-main"><strong>客户不一致</strong><span>缺少授权证明</span></div></td>
+            <td><div class="table-cell-main"><strong>已退回</strong><span>回到售后补资料</span></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-transfer>详情</button></div></td>
           </tr>
         </tbody>
       </table>
     </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="transferPagination">第1-5条/共5条</span>
+    </div>
   </section>
 
-  <div id="recordDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="recordDrawerTitle">
+  <div id="transferDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-xl" role="dialog" aria-modal="true" aria-labelledby="transferDrawerTitle">
       <div class="modal-header">
-        <div id="recordDrawerTitle" class="modal-title">转单记录</div>
-        <button class="modal-close" type="button" aria-label="关闭转单记录" data-close-record>×</button>
+        <div id="transferDrawerTitle" class="modal-title">转款详情</div>
+        <button class="modal-close" type="button" aria-label="关闭转款详情" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <section class="description-grid">
-          <div class="description-item"><div class="description-label">转单单号</div><div class="description-value">ZK20260703001</div></div>
-          <div class="description-item"><div class="description-label">审批状态</div><div class="description-value"><span class="tag tag-green">审批通过</span></div></div>
-          <div class="description-item"><div class="description-label">原订单</div><div class="description-value">KS202606182313306754</div></div>
-          <div class="description-item"><div class="description-label">转入订单</div><div class="description-value">KS202607010023</div></div>
-          <div class="description-item"><div class="description-label">收款流水</div><div class="description-value">CMBC20260703018</div></div>
-          <div class="description-item"><div class="description-label">转单金额</div><div class="description-value amount-strong">¥29,400</div></div>
+        <section id="transferSummaryGrid" class="description-grid"></section>
+        <nav class="tab-bar" aria-label="转款核销详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="basis">来源依据</button>
+          <button class="tab-item" type="button" data-detail-tab="writeoff">核销明细</button>
+          <button class="tab-item" type="button" data-detail-tab="difference">差异处理</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+        </nav>
+        <section class="drawer-section" data-detail-panel="basis">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">来源依据</h3></div>
+          <div id="basisGrid" class="description-grid"></div>
         </section>
-        <section class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>核对项</th>
-                <th>结果</th>
-                <th>备注</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>原订单可转余额</td><td><span class="tag tag-green">通过</span></td><td>余额充足</td></tr>
-              <tr><td>转入订单应收</td><td><span class="tag tag-green">通过</span></td><td>可核销 ¥29,400</td></tr>
-              <tr><td>银行流水匹配</td><td><span class="tag tag-blue">待核对</span></td><td>待财务确认流水归属</td></tr>
-            </tbody>
-          </table>
+        <section class="drawer-section" data-detail-panel="writeoff" hidden>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">核销明细</h3></div>
+          <section class="table-wrap drawer-table-wrap">
+            <table>
+              <thead><tr><th>核销对象</th><th>单据</th><th>应收/可转</th><th>本次核销</th><th>核销后余额</th><th>处理结果</th></tr></thead>
+              <tbody id="writeoffRows"></tbody>
+            </table>
+          </section>
         </section>
-        <section class="finance-link-card">
-          <div class="finance-link-title">财务处理</div>
-          <div class="finance-link-items">
-            <span class="finance-link-item">核对通过后冲减原订单未核销收款，并核销转入订单应收；NC 推送由财务侧统一处理。</span>
-          </div>
+        <section class="drawer-section" data-detail-panel="difference" hidden>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">差异处理</h3></div>
+          <section class="table-wrap drawer-table-wrap">
+            <table>
+              <thead><tr><th>核对项</th><th>系统结果</th><th>处理方式</th><th>状态</th></tr></thead>
+              <tbody id="differenceRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="drawer-section" data-detail-panel="logs" hidden>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+          <section class="table-wrap drawer-table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>处理环节</th><th>处理结果</th><th>处理人</th></tr></thead>
+              <tbody id="logRows"></tbody>
+            </table>
+          </section>
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-record>关闭</button>
-        <button class="btn btn-primary" type="button">确认核销</button>
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button id="returnButton" class="btn btn-secondary" type="button" data-return-transfer hidden>退回申请</button>
+        <button id="confirmButton" class="btn btn-primary" type="button" data-confirm-transfer hidden>确认核销</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var drawer = document.getElementById('recordDrawer');
-      document.querySelectorAll('[data-open-record]').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-          event.preventDefault();
-          window.caesarUI.openLayer(drawer);
+      var transferDrawer = document.getElementById('transferDrawer');
+      var activeRow = null;
+      var activeTransfer = null;
+      var transfers = {
+        ZK20260703001: {
+          summary: ['马晓丽', '北京王府井旗舰店', '北京凯撒', '改期重订', '¥29,400', '待核对'],
+          basis: [
+            ['转款申请', 'ZK20260703001 / APR-ZK-20260703-001'],
+            ['原订单', 'KS202606182313306754 / 北欧四国15日'],
+            ['转入订单', 'KS202607010023 / 北欧四国升级团'],
+            ['原收款来源', 'CMBC20260703018 / RK20260703001'],
+            ['转款原因', '客户改期重订，售后审批通过'],
+            ['客户授权', '已上传客户确认函']
+          ],
+          writeoff: [
+            ['转出订单', 'KS202606182313306754', '可转 ¥31,000', '¥29,400', '剩余 ¥1,600', '剩余转客户预存'],
+            ['转入订单', 'KS202607010023', '待收 ¥29,400', '¥29,400', '待收 ¥0', '待确认核销']
+          ],
+          differences: [
+            ['原订单可转余额', '通过 / 可转 ¥31,000', '本次转款 ¥29,400', '通过'],
+            ['转入订单应收', '通过 / 待收 ¥29,400', '全额核销', '通过'],
+            ['银行流水匹配', 'CMBC20260703018', '核对原收款来源', '待核对'],
+            ['剩余金额', '¥1,600', '转客户预存账户', '待确认']
+          ],
+          logs: [
+            ['2026-07-03 09:12', '售后转款申请', '已提交', '销售顾问'],
+            ['2026-07-03 11:30', '审批中心', '审批通过', '门店经理'],
+            ['2026-07-03 15:20', '财务核对', '待核对', '总部财务']
+          ]
+        },
+        ZK20260702008: {
+          summary: ['吴芳', '上海徐汇门市', '上海凯撒', '换团转款', '¥12,000', '待核对'],
+          basis: [
+            ['转款申请', 'ZK20260702008 / APR-ZK-20260702-008'],
+            ['原订单', 'KS202607020009 / 理想号邮轮原航次'],
+            ['转入订单', 'KS202607150016 / 理想号邮轮新航次'],
+            ['原收款来源', 'ICBC20260702009 / RK20260702008'],
+            ['转款原因', '客户改航次，邮轮差价待补收'],
+            ['客户授权', '已上传改期确认单']
+          ],
+          writeoff: [
+            ['转出订单', 'KS202607020009', '可转 ¥12,000', '¥12,000', '剩余 ¥0', '全额转出'],
+            ['转入订单', 'KS202607150016', '待收 ¥13,600', '¥12,000', '待收 ¥1,600', '进入应收催收']
+          ],
+          differences: [
+            ['原订单可转余额', '通过 / 可转 ¥12,000', '全额转出', '通过'],
+            ['转入订单应收', '差额 ¥1,600', '剩余应收继续收款', '待确认'],
+            ['客户一致性', '通过', '同客户同门店', '通过']
+          ],
+          logs: [
+            ['2026-07-02 10:08', '售后转款申请', '已提交', '销售顾问'],
+            ['2026-07-02 14:22', '审批中心', '审批通过', '运营经理'],
+            ['2026-07-02 16:40', '财务核对', '待核对', '上海财务']
+          ]
+        },
+        ZK20260623003: {
+          summary: ['上海徐汇门市', '上海徐汇门市', '上海凯撒', '门店转单', '¥8,600', '已核销'],
+          basis: [
+            ['转款申请', 'ZK20260623003 / APR-ZK-20260623-003'],
+            ['原订单', 'KS2024061813 / 兰卡威自由行'],
+            ['转入订单', 'KS2024061818 / 马来西亚自由行'],
+            ['转款入账', 'BOC20260623019'],
+            ['转款原因', '门店代收款转入新订单'],
+            ['客户授权', '门店确认单已归档']
+          ],
+          writeoff: [
+            ['转出订单', 'KS2024061813', '可转 ¥8,600', '¥8,600', '剩余 ¥0', '已冲减'],
+            ['转入订单', 'KS2024061818', '待收 ¥8,600', '¥8,600', '待收 ¥0', '已核销']
+          ],
+          differences: [
+            ['转款入账', 'BOC20260623019 / ¥8,600', '与申请一致', '通过'],
+            ['转入应收', '待收 ¥8,600', '全额核销', '通过'],
+            ['NC承接', '凭证待推送', '进入NC推送', '待推送']
+          ],
+          logs: [
+            ['2026-06-23 10:16', '转款申请', '已提交', '门店财务'],
+            ['2026-06-23 13:40', '审批中心', '审批通过', '上海财务主管'],
+            ['2026-06-23 14:40', '财务核销', '已核销', '上海财务']
+          ]
+        },
+        ZK20260628004: {
+          summary: ['周伟', '福州东街口门市', '福建凯撒', '换团转款', '¥8,800', '已核销'],
+          basis: [
+            ['转款申请', 'ZK20260628004 / APR-ZK-20260628-004'],
+            ['原订单', 'KS202606280011 / 丝路专列原班期'],
+            ['转入订单', 'KS202607060018 / 丝路专列新班期'],
+            ['原收款来源', 'ABC20260628077 / RK20260628004'],
+            ['转款原因', '专列班期调整，客户确认换班'],
+            ['客户授权', '换班确认单已归档']
+          ],
+          writeoff: [
+            ['转出订单', 'KS202606280011', '可转 ¥8,800', '¥8,800', '剩余 ¥0', '已冲减'],
+            ['转入订单', 'KS202607060018', '待收 ¥8,800', '¥8,800', '待收 ¥0', '已核销']
+          ],
+          differences: [
+            ['客户一致性', '通过', '同客户换班', '通过'],
+            ['金额一致性', '通过 / ¥8,800', '全额核销', '通过'],
+            ['NC承接', 'NC-ZK-20260628004', '已推送', '通过']
+          ],
+          logs: [
+            ['2026-06-28 10:25', '转款申请', '已提交', '销售顾问'],
+            ['2026-06-28 13:10', '财务核销', '已核销', '福建财务'],
+            ['2026-06-28 17:35', 'NC推送', '已推送', '系统']
+          ]
+        },
+        ZK20260705006: {
+          summary: ['林倩', '厦门文灶门店', '福建凯撒', '同客转单', '¥6,400', '已退回'],
+          basis: [
+            ['转款申请', 'ZK20260705006 / APR-ZK-20260705-006'],
+            ['原订单', 'KS202607030019 / 日本关西深度游'],
+            ['转入订单', 'KS202607080021 / 日本关西深度游'],
+            ['原收款来源', 'RK20260703019'],
+            ['转款原因', '客户转单申请'],
+            ['客户授权', '证件姓名不一致，授权缺失']
+          ],
+          writeoff: [
+            ['转出订单', 'KS202607030019', '可转 ¥6,400', '¥0', '剩余 ¥6,400', '未转出'],
+            ['转入订单', 'KS202607080021', '待收 ¥6,400', '¥0', '待收 ¥6,400', '未核销']
+          ],
+          differences: [
+            ['客户一致性', '不通过', '补充授权证明后重提', '已退回'],
+            ['转入订单应收', '待收 ¥6,400', '暂不核销', '已退回'],
+            ['下游处理', '回到售后申请', '补资料', '已退回']
+          ],
+          logs: [
+            ['2026-07-05 09:50', '转款申请', '已提交', '销售顾问'],
+            ['2026-07-05 11:20', '财务核对', '客户不一致', '福建财务'],
+            ['2026-07-05 11:24', '退回申请', '已退回', '福建财务']
+          ]
+        }
+      };
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
         });
+      }
+
+      function notify(message) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message);
+      }
+
+      function rowText(row) {
+        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function activeStatus() {
+        var active = document.querySelector('[data-status-tab].active');
+        return active ? active.dataset.statusTab : '全部';
+      }
+
+      function amountClass(value) {
+        return String(value || '').indexOf('-') === 0 ? 'amount-red' : 'amount-strong';
+      }
+
+      function statusTag(value) {
+        if (/通过|已核销|已推送|全额/.test(value)) return '<span class="tag tag-green">' + escapeHtml(value) + '</span>';
+        if (/不通过|退回|差额/.test(value)) return '<span class="tag tag-red">' + escapeHtml(value) + '</span>';
+        if (/待|部分/.test(value)) return '<span class="tag tag-orange">' + escapeHtml(value) + '</span>';
+        return '<span class="tag tag-blue">' + escapeHtml(value) + '</span>';
+      }
+
+      function renderGrid(target, items) {
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>';
+        }).join('');
+      }
+
+      function renderRows(target, rows, type) {
+        target.innerHTML = rows.map(function (row) {
+          if (type === 'writeoff') {
+            return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td class="' + amountClass(row[3]) + '">' + escapeHtml(row[3]) + '</td><td>' + escapeHtml(row[4]) + '</td><td>' + escapeHtml(row[5]) + '</td></tr>';
+          }
+          if (type === 'difference') {
+            return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td>' + statusTag(row[3]) + '</td></tr>';
+          }
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td></tr>';
+        }).join('');
+      }
+
+      function switchDetailTab(tab) {
+        document.querySelectorAll('[data-detail-tab]').forEach(function (button) {
+          button.classList.toggle('active', button.dataset.detailTab === tab);
+        });
+        document.querySelectorAll('[data-detail-panel]').forEach(function (panel) {
+          panel.hidden = panel.dataset.detailPanel !== tab;
+        });
+      }
+
+      function updateAction(row) {
+        var action = row.dataset.status === '待核对' ? '核对' : '详情';
+        row.querySelector('td:last-child').innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-transfer>' + action + '</button></div>';
+      }
+
+      function markTransferResult(row, result) {
+        if (result === '已核销') {
+          row.children[5].innerHTML = '<div class="table-cell-main"><strong>核对通过</strong><span>客户、金额、审批一致</span></div>';
+          row.children[6].innerHTML = '<div class="table-cell-main"><strong>应收已核销</strong><span>NC待推送</span></div>';
+          return;
+        }
+        row.children[5].innerHTML = '<div class="table-cell-main"><strong>已退回</strong><span>核对依据需补充</span></div>';
+        row.children[6].innerHTML = '<div class="table-cell-main"><strong>回到来源</strong><span>售后补充后重提</span></div>';
+      }
+
+      function openTransfer(row) {
+        activeRow = row;
+        activeTransfer = transfers[row.dataset.transferNo];
+        if (!activeTransfer) return;
+        document.getElementById('transferDrawerTitle').textContent = (row.dataset.status === '待核对' ? '转款核对 - ' : '转款详情 - ') + row.dataset.transferNo;
+        renderGrid(document.getElementById('transferSummaryGrid'), [
+          ['转款单', escapeHtml(row.dataset.transferNo)],
+          ['审批单', escapeHtml(row.dataset.approvalNo)],
+          ['客户/门店', escapeHtml(activeTransfer.summary[0] + ' / ' + activeTransfer.summary[1])],
+          ['财务主体', escapeHtml(activeTransfer.summary[2])],
+          ['转款金额', '<span class="amount-strong">' + escapeHtml(activeTransfer.summary[4]) + '</span>'],
+          ['主状态', escapeHtml(row.dataset.status)]
+        ]);
+        renderGrid(document.getElementById('basisGrid'), activeTransfer.basis.map(function (item) { return [item[0], escapeHtml(item[1])]; }));
+        renderRows(document.getElementById('writeoffRows'), activeTransfer.writeoff, 'writeoff');
+        renderRows(document.getElementById('differenceRows'), activeTransfer.differences, 'difference');
+        renderRows(document.getElementById('logRows'), activeTransfer.logs, 'logs');
+        document.getElementById('returnButton').hidden = row.dataset.status !== '待核对';
+        document.getElementById('confirmButton').hidden = row.dataset.status !== '待核对';
+        switchDetailTab('basis');
+        window.caesarUI.openLayer(transferDrawer);
+      }
+
+      function applyFilters() {
+        var keyword = (document.getElementById('transferKeyword').value || '').trim().toLowerCase();
+        var company = document.getElementById('transferCompany').value;
+        var store = document.getElementById('transferStore').value;
+        var scene = document.getElementById('transferScene').value;
+        var tab = activeStatus();
+        var rows = Array.from(document.querySelectorAll('#transferRows tr'));
+        var visibleCount = 0;
+        rows.forEach(function (row) {
+          var visible = true;
+          var text = rowText(row).toLowerCase();
+          if (keyword && text.indexOf(keyword) < 0) visible = false;
+          if (company && row.dataset.company !== company) visible = false;
+          if (store && row.dataset.store !== store) visible = false;
+          if (scene && row.dataset.scene !== scene) visible = false;
+          if (tab !== '全部' && row.dataset.status !== tab) visible = false;
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        document.getElementById('transferPagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + rows.length + '条' : '第0条/共' + rows.length + '条';
+      }
+
+      function resetFilters() {
+        document.querySelectorAll('.transfer-filter input').forEach(function (input) { input.value = ''; });
+        document.querySelectorAll('.transfer-filter select').forEach(function (select) { select.selectedIndex = 0; });
+        applyFilters();
+      }
+
+      function findRowByParam(key, value) {
+        if (!value) return null;
+        return Array.from(document.querySelectorAll('#transferRows tr')).find(function (row) {
+          return row.dataset[key] === value;
+        }) || null;
+      }
+
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var row = findRowByParam('transferNo', params.get('transferNo')) || findRowByParam('flowNo', params.get('flowNo'));
+        if (row) openTransfer(row);
+      }
+
+      document.addEventListener('click', function (event) {
+        var statusButton = event.target.closest('[data-status-tab]');
+        if (statusButton) {
+          document.querySelectorAll('[data-status-tab]').forEach(function (button) { button.classList.toggle('active', button === statusButton); });
+          applyFilters();
+          return;
+        }
+        var detailTab = event.target.closest('[data-detail-tab]');
+        if (detailTab) {
+          switchDetailTab(detailTab.dataset.detailTab);
+          return;
+        }
+        var openButton = event.target.closest('[data-open-transfer]');
+        if (openButton) {
+          openTransfer(openButton.closest('tr'));
+          return;
+        }
+        if (event.target.closest('[data-confirm-transfer]')) {
+          activeRow.dataset.status = '已核销';
+          transfers[activeRow.dataset.transferNo].summary[5] = '已核销';
+          markTransferResult(activeRow, '已核销');
+          updateAction(activeRow);
+          window.caesarUI.closeLayer(transferDrawer);
+          applyFilters();
+          notify('转款已确认核销，待应收与NC承接');
+          return;
+        }
+        if (event.target.closest('[data-return-transfer]')) {
+          activeRow.dataset.status = '已退回';
+          transfers[activeRow.dataset.transferNo].summary[5] = '已退回';
+          markTransferResult(activeRow, '已退回');
+          updateAction(activeRow);
+          window.caesarUI.closeLayer(transferDrawer);
+          applyFilters();
+          notify('转款申请已退回');
+          return;
+        }
+        if (event.target.closest('[data-search-transfer]')) {
+          applyFilters();
+          return;
+        }
+        if (event.target.closest('[data-reset-transfer]')) {
+          resetFilters();
+          return;
+        }
+        if (event.target.closest('[data-export-transfer]')) {
+          notify('转款核销已导出');
+          return;
+        }
+        if (event.target.closest('[data-close-layer]')) {
+          window.caesarUI.closeLayer(event.target.closest('.modal-overlay'));
+        }
       });
-      document.querySelectorAll('[data-close-record]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
+
+      document.querySelectorAll('.transfer-filter input, .transfer-filter select').forEach(function (control) {
+        control.addEventListener('change', applyFilters);
       });
-      drawer.addEventListener('click', function (event) {
-        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
+
+      transferDrawer.addEventListener('click', function (event) {
+        if (event.target === transferDrawer) window.caesarUI.closeLayer(transferDrawer);
       });
+
+      openFromParams();
     })();
   </script>
 </body>

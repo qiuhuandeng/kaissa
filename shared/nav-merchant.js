@@ -187,29 +187,63 @@
       title: "财务",
       icon: "wallet",
       children: [
-        { title: "收款管理", href: "finance/receipts.html" },
-        { title: "订单认款", href: "finance/finance-matching.html" },
-        { title: "预存账户", href: "finance/finance-predeposit.html" },
-        { title: "转单记录", href: "finance/finance-transfer-records.html" },
-        { title: "应收管理", href: "finance/finance-receivable.html" },
-        { title: "应付管理", href: "finance/finance-payable.html" },
-        { title: "付款执行", href: "finance/finance-payment.html" },
-        { title: "退款执行", href: "finance/finance-refund-execute.html" },
-        { title: "对账结算", href: "finance/finance-settlement.html" },
-        { title: "发票管理", href: "finance/finance-invoice.html" },
-        { title: "回单管理", href: "finance/finance-remittance.html" },
-        { title: "资金池", href: "finance/finance-fund-pool.html" },
-        { title: "汇率币种", href: "finance/finance-currency.html" },
+        { title: "财务工作台", href: "finance/finance-workbench.html" },
+        {
+          title: "收入应收",
+          children: [
+            { title: "到账流水", href: "finance/receipts.html" },
+            { title: "收款认款", href: "finance/finance-matching.html" },
+            { title: "应收管理", href: "finance/finance-receivable.html" },
+            { title: "预存账户", href: "finance/finance-predeposit.html" },
+            { title: "转款核销", href: "finance/finance-transfer-records.html" },
+            { title: "渠道结算", href: "finance/finance-control.html?view=channel-settlement" },
+            { title: "退款执行", href: "finance/finance-refund-execute.html" },
+          ],
+        },
+        {
+          title: "成本应付",
+          children: [
+            { title: "供应商账单", href: "finance/finance-control.html?view=supplier-bills" },
+            { title: "应付管理", href: "finance/finance-payable.html" },
+            { title: "付款申请", href: "finance/finance-control.html?view=payment-apply" },
+            { title: "付款执行", href: "finance/finance-payment.html" },
+            { title: "回单核销", href: "finance/finance-remittance.html" },
+            { title: "预付冲抵", href: "finance/finance-control.html?view=prepayment-offset" },
+          ],
+        },
+        {
+          title: "结算关账",
+          children: [
+            { title: "业务结算", href: "finance/finance-settlement.html" },
+            { title: "结算调整", href: "finance/finance-control.html?view=settlement-adjustment" },
+            { title: "门店对账", href: "finance/finance-control.html?view=store-reconciliation" },
+            { title: "期间关账", href: "finance/finance-control.html?view=period-close" },
+          ],
+        },
+        {
+          title: "税务票据",
+          children: [
+            { title: "发票管理", href: "finance/finance-invoice.html" },
+          ],
+        },
+        {
+          title: "资金管理",
+          children: [
+            { title: "资金池", href: "finance/finance-fund-pool.html" },
+            { title: "资金调拨", href: "finance/finance-control.html?view=fund-transfer" },
+            { title: "汇率币种", href: "finance/finance-currency.html" },
+          ],
+        },
         { title: "NC推送", href: "finance/finance-nc.html" },
         {
           title: "财务报表",
           children: [
-            { title: "团期盈亏", href: "finance/finance-reports.html?report=profit" },
-            { title: "收款统计", href: "finance/finance-reports.html?report=receipt" },
-            { title: "付款统计", href: "finance/finance-reports.html?report=payment" },
-            { title: "应收应付", href: "finance/finance-reports.html?report=ar-ap" },
-            { title: "预付款", href: "finance/finance-reports.html?report=prepay" },
-            { title: "资金池余额", href: "finance/finance-reports.html?report=fund" },
+            { title: "经营损益", href: "finance/finance-reports.html?report=profit" },
+            { title: "收款分析", href: "finance/finance-reports.html?report=receipt" },
+            { title: "付款分析", href: "finance/finance-reports.html?report=payment" },
+            { title: "往来分析", href: "finance/finance-reports.html?report=ar-ap" },
+            { title: "预付分析", href: "finance/finance-reports.html?report=prepay" },
+            { title: "资金余额", href: "finance/finance-reports.html?report=fund" },
           ],
         },
       ],
@@ -327,6 +361,16 @@
   const merchantNavLayoutStorageKey = "caesar-merchant-nav-layout";
 
   const reportRouteKeys = new Set(["profit", "receipt", "payment", "ar-ap", "prepay", "fund"]);
+  const financeControlViewKeys = new Set([
+    "supplier-bills",
+    "payment-apply",
+    "prepayment-offset",
+    "channel-settlement",
+    "settlement-adjustment",
+    "store-reconciliation",
+    "period-close",
+    "fund-transfer",
+  ]);
   const approvalViewKeys = new Set(["todo", "mine", "cc", "overview", "config"]);
   const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "alias"]);
   const trafficProcurementKeys = new Set(["air", "cruise", "train"]);
@@ -408,6 +452,10 @@
         return "finance/finance-fund-pool.html";
       }
       return "finance/finance-reports.html?report=" + (reportRouteKeys.has(report) ? report : "profit");
+    }
+    if (file === "finance/finance-control.html") {
+      const view = url.searchParams.get("view") || "supplier-bills";
+      return "finance/finance-control.html?view=" + (financeControlViewKeys.has(view) ? view : "supplier-bills");
     }
     if (file === "approval/approvals.html") {
       const view = url.searchParams.get("view") || "todo";
@@ -519,8 +567,8 @@
     "sales/call-center/performance.html": { href: "sales/call-center/performance.html", title: "电销业绩" },
     "tour/projects.html": { href: "tour/product-custom-list.html", title: "单团自组" },
     "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
-    "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "团期结算详情" },
-    "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转单记录" },
+    "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "业务结算详情" },
+    "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转款核销" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
     "customer/customers-detail.html": { href: "customer/list.html", title: "会员详情" },
     "customer/detail.html": { href: "customer/list.html", title: "会员详情" },

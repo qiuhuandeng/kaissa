@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>对账结算 - 凯撒旅游</title>
+  <title>业务结算 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <section class="list-page-panel">
     <div class="list-page-head">
       <div>
-        <h1 class="page-title">对账结算</h1>
+        <h1 class="page-title">业务结算</h1>
       </div>
     </div>
   </section>
@@ -21,7 +21,7 @@
     <section class="filter-card filter-card-compact settlement-filter list-surface-filter" aria-label="结算单筛选">
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="settlementKeyword">结算单/订单/团期/项目/客户</label><input id="settlementKeyword" type="search" placeholder="结算单/订单/团期/项目/客户"></div>
-        <div class="filter-item-sm"><label class="sr-only" for="settlementMode">来源类型</label><select id="settlementMode"><option>全部来源</option><option>团期结算</option><option>订单结算</option><option>项目结算</option><option>供应商结算</option><option>BSP散票结算</option><option>渠道结算</option><option>OTA平台结算</option><option>门市对账</option><option>代理结算</option><option>单项服务结算</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="settlementMode">结算类型</label><select id="settlementMode"><option>全部类型</option><option>团期结算</option><option>订单结算</option><option>项目结算</option><option>单项服务结算</option></select></div>
         <div class="filter-item-sm"><label class="sr-only" for="settlementStatus">结算状态</label><select id="settlementStatus"><option>全部状态</option><option>待生成</option><option>待核对</option><option>差异处理中</option><option>待审核</option><option>待确认</option><option>已驳回</option><option>已结算</option><option>待推送</option></select></div>
         <div class="filter-item"><label class="sr-only" for="projectNoFilter">单团项目编号</label><input id="projectNoFilter" type="search" placeholder="单团项目编号"></div>
         <div class="filter-item"><label class="sr-only" for="projectGroupFilter">项目团编号</label><input id="projectGroupFilter" type="search" placeholder="项目团编号"></div>
@@ -192,8 +192,8 @@
   <div id="settlementDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal drawer-xl" role="dialog" aria-modal="true" aria-labelledby="settlementDetailTitle">
       <div class="modal-header">
-        <div id="settlementDetailTitle" class="modal-title">结算详情</div>
-        <button class="modal-close" type="button" aria-label="关闭结算详情" data-close-layer>×</button>
+        <div id="settlementDetailTitle" class="modal-title">业务结算详情</div>
+        <button class="modal-close" type="button" aria-label="关闭业务结算详情" data-close-layer>×</button>
       </div>
       <div class="modal-body">
         <section class="order-desc-card">
@@ -332,6 +332,10 @@
 
   <script>
     (function () {
+      var businessModes = new Set(['团期结算', '订单结算', '项目结算', '单项服务结算']);
+      document.querySelectorAll('#settlementRows tr').forEach(function (row) {
+        if (!businessModes.has(row.dataset.mode)) row.remove();
+      });
       var detailDrawer = document.getElementById('settlementDetailDrawer');
       var bspCompareDrawer = document.getElementById('bspCompareDrawer');
       var confirmDrawer = document.getElementById('settlementConfirmDrawer');
@@ -526,18 +530,18 @@
 
       function openDetail(row) {
         activeRow = row;
-        document.getElementById('settlementDetailTitle').textContent = '结算详情 - ' + row.dataset.settlementNo;
+        document.getElementById('settlementDetailTitle').textContent = '业务结算详情 - ' + row.dataset.settlementNo;
         renderGrid(detailGrid, gridItems(row));
         renderProjectDetail(row);
         detailRows.innerHTML = [
           ['收入', row.dataset.income, '已汇总', isProjectSettlement(row) ? '项目订单应收' : '订单/项目应收'],
-          ['实收', row.dataset.received || row.dataset.receivable, row.dataset.received ? '已核对' : '按应收核对', isProjectSettlement(row) ? '项目订单阶段收款' : '收款管理/认款管理'],
+          ['实收', row.dataset.received || row.dataset.receivable, row.dataset.received ? '已核对' : '按应收核对', isProjectSettlement(row) ? '项目订单阶段收款' : '到账流水/收款认款'],
           ['退款', row.dataset.refund, '已核对', '退款执行'],
           ['应收', row.dataset.receivable, row.dataset.receivable.indexOf('待收 ¥0') >= 0 || row.dataset.receivable.indexOf('无应收') >= 0 ? '已核对' : '部分待收', '应收管理'],
-          ['收款', row.dataset.received || row.dataset.receivable, row.dataset.receivable.indexOf('已收') >= 0 || row.dataset.received ? '已承接' : '无收款', '收款管理/认款管理'],
+          ['收款', row.dataset.received || row.dataset.receivable, row.dataset.receivable.indexOf('已收') >= 0 || row.dataset.received ? '已承接' : '无收款', '到账流水/收款认款'],
           ['成本', row.dataset.cost || row.dataset.payable, row.dataset.cost ? '已承接' : '按应付核对', isProjectSettlement(row) ? '团期成本/项目团成本' : '团期成本'],
           ['应付', row.dataset.payable, row.dataset.payable.indexOf('待') >= 0 ? '待处理' : '已核对', '应付管理'],
-          ['付款', row.dataset.paid || row.dataset.remit, row.dataset.remit.indexOf('未') >= 0 || row.dataset.paid === '¥0' ? '待付款/待回单' : '已承接', '付款执行/回单管理'],
+          ['付款', row.dataset.paid || row.dataset.remit, row.dataset.remit.indexOf('未') >= 0 || row.dataset.paid === '¥0' ? '待付款/待回单' : '已承接', '付款执行/回单核销'],
           ['发票', row.dataset.invoice, row.dataset.invoice.indexOf('待') >= 0 ? '待处理' : '已核对', '发票管理'],
           ['差异', row.dataset.diff, row.dataset.diff === '¥0' ? '无差异' : '差异处理中', '差异处理'],
           ['NC', row.dataset.nc, row.dataset.nc, 'NC推送'],
@@ -561,11 +565,11 @@
         projectReviewRows.innerHTML = [
           ['客户验收单', data.acceptanceNo || '-', '单团项目', data.acceptanceNo ? '已上传，可作为项目结算依据' : '缺少验收单'],
           ['项目订单应收', data.income, '项目订单', '应收总额与合同金额一致'],
-          ['实收/待收', (data.received || '-') + ' / ' + (data.unreceived || '-'), '收款管理', data.unreceived === '¥0' ? '已收清' : '存在待收，财务确认时保留待收提示'],
+          ['实收/待收', (data.received || '-') + ' / ' + (data.unreceived || '-'), '到账流水', data.unreceived === '¥0' ? '已收清' : '存在待收，财务确认时保留待收提示'],
           ['退款', data.refund, '退款执行', '无项目退款或扣减'],
           ['实际成本', data.cost, '团期成本', '来自项目团实际成本确认'],
           ['应付/已付', data.payable + ' / 已付 ' + (data.paid || '¥0'), '应付/付款执行', '付款执行不在本抽屉处理'],
-          ['毛利', data.profit, '对账结算', '收入 - 退款 - 实际成本'],
+          ['毛利', data.profit, '业务结算', '收入 - 退款 - 实际成本'],
           ['NC状态', data.nc, 'NC推送', '确认结算后生成NC任务']
         ].map(function (rowItem) {
           return '<tr><td>' + escapeHtml(rowItem[0]) + '</td><td>' + statusTag(rowItem[1]) + '</td><td>' + escapeHtml(rowItem[2]) + '</td><td>' + escapeHtml(rowItem[3]) + '</td></tr>';
