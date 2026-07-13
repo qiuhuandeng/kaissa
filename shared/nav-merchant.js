@@ -83,7 +83,36 @@
             { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
-        { title: "定价策略", href: "product/product-pricing.html" },
+        {
+          title: "销售政策",
+          children: [
+            { title: "定价策略", href: "product/product-pricing.html" },
+            { title: "佣金政策", href: "channel/commission_rules.html" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "营销中心",
+      icon: "gift",
+      children: [
+        {
+          title: "营销工具",
+          children: [
+            { title: "活动管理", href: "marketing/campaigns.html" },
+            { title: "优惠券", href: "marketing/coupons.html" },
+            { title: "发券中心", href: "marketing/issue-center.html" },
+          ],
+        },
+        {
+          title: "小程序运营",
+          children: [
+            { title: "网店装修", href: "marketing/miniapp-pages.html" },
+            { title: "专题活动", href: "marketing/miniapp-templates.html" },
+            { title: "素材中心", href: "marketing/miniapp-assets.html" },
+          ],
+        },
+        { title: "营销分析", href: "marketing/marketing-analysis.html" },
       ],
     },
     {
@@ -99,7 +128,7 @@
       ],
     },
     {
-      title: "门市中心",
+      title: "门店中心",
       icon: "target",
       children: [
         {
@@ -109,7 +138,7 @@
             { title: "门店管理", href: "sales/store/index.html" },
             { title: "门店成员", href: "sales/store/members.html" },
             { title: "预存余额", href: "sales/store/predeposit.html" },
-            { title: "门店对帐", href: "sales/store/reconciliation.html" },
+            { title: "门店对账", href: "sales/store/reconciliation.html" },
           ],
         },
         {
@@ -130,7 +159,6 @@
           title: "分销合作",
           children: [
             { title: "分销渠道", href: "channel/distributors.html" },
-            { title: "佣金规则", href: "channel/commission_rules.html" },
             { title: "分销台账", href: "channel/distribution-orders.html" },
             { title: "分销对账", href: "channel/distribution-reconciliation.html" },
           ],
@@ -152,6 +180,7 @@
       children: [
         { title: "散客会员", href: "customer/list.html" },
         { title: "企业客户", href: "customer/enterprise-list.html" },
+        { title: "会员规则", href: "customer/member-rules.html" },
       ],
     },
     {
@@ -245,8 +274,9 @@
     工作: "工作",
     资源: "资源",
     产品中心: "产品",
+    营销中心: "营销",
     销售中心: "销售",
-    门市中心: "门市",
+    门店中心: "门店",
     渠道中心: "渠道",
     会员: "会员",
     财务: "财务",
@@ -259,8 +289,9 @@
     工作: "工作台",
     资源: "资源管理",
     产品中心: "产品中心",
+    营销中心: "营销中心",
     销售中心: "销售中心",
-    门市中心: "门市中心",
+    门店中心: "门店中心",
     渠道中心: "渠道中心",
     会员: "会员管理",
     财务: "财务管理",
@@ -439,6 +470,18 @@
     "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
+    "marketing/campaigns.html": { href: "marketing/campaigns.html", title: "活动管理" },
+    "marketing/campaign-edit.html": { href: "marketing/campaigns.html", title: "营销活动" },
+    "marketing/coupons.html": { href: "marketing/coupons.html", title: "优惠券" },
+    "marketing/coupon-edit.html": { href: "marketing/coupons.html", title: "优惠券" },
+    "marketing/issue-center.html": { href: "marketing/issue-center.html", title: "发券中心" },
+    "marketing/issue-create.html": { href: "marketing/issue-center.html", title: "新建发券任务" },
+    "marketing/issue-detail.html": { href: "marketing/issue-center.html", title: "发券结果" },
+    "marketing/miniapp-pages.html": { href: "marketing/miniapp-pages.html", title: "网店装修" },
+    "marketing/miniapp-editor.html": { href: "marketing/miniapp-pages.html", title: "页面配置" },
+    "marketing/miniapp-templates.html": { href: "marketing/miniapp-templates.html", title: "专题活动" },
+    "marketing/miniapp-assets.html": { href: "marketing/miniapp-assets.html", title: "素材中心" },
+    "marketing/marketing-analysis.html": { href: "marketing/marketing-analysis.html", title: "营销分析" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "tour/product-custom-inquiry-create.html": { href: "tour/product-custom-list.html", title: "发起单团询价" },
     "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "代理产品详情" },
@@ -483,6 +526,8 @@
     "customer/detail.html": { href: "customer/list.html", title: "会员详情" },
     "customer/enterprise-list.html": { href: "customer/enterprise-list.html", title: "企业客户" },
     "customer/enterprise-detail.html": { href: "customer/enterprise-list.html", title: "企业客户详情" },
+    "customer/member-rules.html": { href: "customer/member-rules.html", title: "会员规则" },
+    "customer/member-rule-config.html": { href: "customer/member-rules.html", title: "会员制度配置" },
     "channel/ota_shops.html": { href: "channel/ota_shops.html", title: "店铺配置" },
     "channel/ota_products.html": { href: "channel/ota_products.html", title: "商品映射" },
     "channel/ota_orders.html": { href: "sales/orders.html", title: "订单管理" },
@@ -491,7 +536,7 @@
     "channel/ota_exceptions.html": { href: "channel/ota_exceptions.html", title: "异常日志" },
     "channel/distributors.html": { href: "channel/distributors.html", title: "分销渠道" },
     "channel/agents.html": { href: "channel/distributors.html", title: "分销渠道" },
-    "channel/commission_rules.html": { href: "channel/commission_rules.html", title: "佣金规则" },
+    "channel/commission_rules.html": { href: "channel/commission_rules.html", title: "佣金政策" },
     "channel/distribution-orders.html": { href: "channel/distribution-orders.html", title: "分销台账" },
     "channel/distribution-reconciliation.html": { href: "channel/distribution-reconciliation.html", title: "分销对账" },
     "channel/sync_logs.html": { href: "channel/ota_exceptions.html", title: "异常日志" },
@@ -527,82 +572,146 @@
       id: "group-caesar",
       type: "group",
       typeLabel: "集团",
-      name: "凯撒旅游集团股份有限公司",
+      name: "凯撒旅游集团",
       children: [
         {
-          id: "sub-fujian",
-          type: "subsidiary",
-          typeLabel: "子公司",
-          name: "福建凯撒国际旅行社有限公司",
+          id: "plate-tourism",
+          type: "plate",
+          typeLabel: "业务板块",
+          name: "旅游板块",
           children: [
             {
-              id: "center-fj-outbound",
-              type: "center",
-              typeLabel: "中心",
-              name: "出境事业中心",
+              id: "company-fj-tourism",
+              entityId: "company-fj",
+              type: "company",
+              typeLabel: "主体公司",
+              name: "福建凯撒",
               children: [
-                { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲产品部" },
-                { id: "dept-fj-visa", type: "department", typeLabel: "部门", name: "签证运营部" },
-                { id: "store-fz-dongbai", type: "store", typeLabel: "门市", name: "福州东百门市" },
-                { id: "store-xm-siming", type: "store", typeLabel: "门市", name: "厦门思明门市" },
+                {
+                  id: "branch-fj-xiamen",
+                  type: "branch",
+                  typeLabel: "公司",
+                  name: "厦门分公司",
+                  children: [
+                    {
+                      id: "store-dept-fj-xiamen",
+                      type: "storeDepartment",
+                      typeLabel: "门市部",
+                      name: "厦门思明区门市部",
+                      children: [
+                        { id: "store-fj-xm-a", type: "store", typeLabel: "门店", name: "软件园门店" },
+                        { id: "store-fj-xm-b", type: "store", typeLabel: "门店", name: "文灶门店" },
+                        { id: "store-fj-xm-c", type: "store", typeLabel: "门店", name: "观音山门店" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  id: "branch-fj-quanzhou",
+                  type: "branch",
+                  typeLabel: "公司",
+                  name: "泉州分公司",
+                  children: [
+                    {
+                      id: "store-dept-fj-quanzhou",
+                      type: "storeDepartment",
+                      typeLabel: "门市部",
+                      name: "门市部",
+                      children: [
+                        { id: "store-fj-qz-a", type: "store", typeLabel: "门店", name: "泉州丰泽门店" },
+                        { id: "store-fj-qz-b", type: "store", typeLabel: "门店", name: "泉州鲤城门店" },
+                        { id: "store-fj-qz-c", type: "store", typeLabel: "门店", name: "泉州东海门店" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  id: "branch-fj-fuzhou",
+                  type: "branch",
+                  typeLabel: "公司",
+                  name: "福州分公司",
+                },
+                {
+                  id: "branch-fj-zhangzhou",
+                  type: "branch",
+                  typeLabel: "公司",
+                  name: "漳州分公司",
+                },
+                {
+                  id: "center-fj-product",
+                  type: "center",
+                  typeLabel: "中心",
+                  name: "产品中心",
+                },
+                {
+                  id: "center-fj-longhaul",
+                  type: "center",
+                  typeLabel: "中心",
+                  name: "长线中心",
+                  children: [
+                    { id: "dept-fj-eu", type: "department", typeLabel: "部门", name: "欧洲部" },
+                    { id: "dept-fj-au", type: "department", typeLabel: "部门", name: "澳洲部" },
+                    { id: "dept-fj-america", type: "department", typeLabel: "部门", name: "美洲部" },
+                  ],
+                },
+                {
+                  id: "center-fj-shorthaul",
+                  type: "center",
+                  typeLabel: "中心",
+                  name: "短线中心 / 销售中心",
+                },
               ],
             },
             {
-              id: "center-fj-sales",
-              type: "center",
-              typeLabel: "中心",
-              name: "门市销售中心",
-              children: [
-                { id: "dept-fj-store-ops", type: "department", typeLabel: "部门", name: "门市运营部" },
-                { id: "store-qz-fengze", type: "store", typeLabel: "门市", name: "泉州丰泽门市" },
-              ],
+              id: "company-cq-tourism",
+              entityId: "company-cq",
+              type: "company",
+              typeLabel: "主体公司",
+              name: "重庆凯撒",
+            },
+            {
+              id: "company-sh-tourism",
+              entityId: "company-sh",
+              type: "company",
+              typeLabel: "主体公司",
+              name: "上海凯撒",
             },
           ],
         },
         {
-          id: "sub-beijing",
-          type: "subsidiary",
-          typeLabel: "子公司",
-          name: "北京凯撒国际旅行社有限公司",
+          id: "plate-ocean",
+          type: "plate",
+          typeLabel: "业务板块",
+          name: "海洋文旅板块",
           children: [
             {
-              id: "center-bj-outbound",
-              type: "center",
-              typeLabel: "中心",
-              name: "出境事业中心",
+              id: "company-fj-ocean",
+              entityId: "company-fj",
+              type: "company",
+              typeLabel: "复用主体",
+              name: "福建凯撒",
               children: [
-                { id: "dept-bj-eu", type: "department", typeLabel: "部门", name: "西欧产品部" },
-                { id: "dept-bj-cruise", type: "department", typeLabel: "部门", name: "邮轮产品部" },
-                { id: "store-bj-chaoyang", type: "store", typeLabel: "门市", name: "北京朝阳门市" },
+                {
+                  id: "center-fj-ocean-distribution",
+                  type: "center",
+                  typeLabel: "业务组",
+                  name: "外采分销业务组",
+                },
               ],
             },
             {
-              id: "center-bj-mice",
-              type: "center",
-              typeLabel: "中心",
-              name: "MICE会展中心",
+              id: "company-sh-ocean",
+              entityId: "company-sh",
+              type: "company",
+              typeLabel: "复用主体",
+              name: "上海凯撒",
               children: [
-                { id: "dept-bj-mice", type: "department", typeLabel: "部门", name: "会奖项目部" },
-                { id: "store-bj-wangfujing", type: "store", typeLabel: "门市", name: "北京王府井门市" },
-              ],
-            },
-          ],
-        },
-        {
-          id: "sub-shanghai",
-          type: "subsidiary",
-          typeLabel: "子公司",
-          name: "上海凯撒国际旅行社有限公司",
-          children: [
-            {
-              id: "center-sh-sales",
-              type: "center",
-              typeLabel: "中心",
-              name: "华东销售中心",
-              children: [
-                { id: "dept-sh-store", type: "department", typeLabel: "部门", name: "门市运营部" },
-                { id: "store-sh-xuhui", type: "store", typeLabel: "门市", name: "上海徐汇门市" },
-                { id: "store-hz-hubin", type: "store", typeLabel: "门市", name: "杭州湖滨合作门市" },
+                {
+                  id: "center-sh-ocean-distribution",
+                  type: "center",
+                  typeLabel: "业务组",
+                  name: "外采分销业务组",
+                },
               ],
             },
           ],
@@ -612,25 +721,30 @@
   ];
 
   const workspaceExpandedIds = new Set([
-    "sub-fujian",
-    "center-fj-outbound",
-    "center-fj-sales",
-    "sub-beijing",
-    "center-bj-outbound",
-    "center-bj-mice",
-    "sub-shanghai",
-    "center-sh-sales",
+    "plate-tourism",
+    "company-fj-tourism",
+    "branch-fj-xiamen",
+    "store-dept-fj-xiamen",
+    "center-fj-longhaul",
+    "branch-fj-quanzhou",
+    "store-dept-fj-quanzhou",
+    "plate-ocean",
   ]);
-  let currentWorkspaceId = "sub-fujian";
-  let currentScopeId = "center-fj-outbound";
+  let currentWorkspaceId = "company-fj-tourism";
+  let currentScopeId = "branch-fj-xiamen";
   let subjectTextNode = null;
   let scopeTextNode = null;
 
   function workspaceRoots() {
-    return organizationTree.flatMap((node) => {
-      if (node.type === "group" && node.children) return node.children;
-      return [node];
+    const companies = [];
+    organizationTree.forEach((group) => {
+      (group.children || []).forEach((plate) => {
+        (plate.children || []).forEach((company) => {
+          companies.push(company);
+        });
+      });
     });
+    return companies.length ? companies : organizationTree;
   }
 
   function findActive(items, file, ancestors) {
@@ -1220,6 +1334,30 @@
     return null;
   }
 
+  function findOrgPath(nodes, id, path) {
+    const currentPath = path || [];
+    for (const node of nodes) {
+      const nextPath = currentPath.concat(node);
+      if (node.id === id) return nextPath;
+      if (node.children) {
+        const found = findOrgPath(node.children, id, nextPath);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function currentPlate() {
+    const path = findOrgPath(organizationTree, currentWorkspaceId) || [];
+    return path.find((node) => node.type === "plate") || null;
+  }
+
+  function currentSubjectLabel() {
+    const plate = currentPlate();
+    const subject = currentSubject();
+    return (plate ? plate.name + " / " : "") + subject.name;
+  }
+
   function orgNodeMatches(node, keyword) {
     if (!keyword) return true;
     const haystack = [node.typeLabel, node.name].join(" ").toLowerCase();
@@ -1229,7 +1367,7 @@
 
   function currentSubject() {
     const current = findOrgNode(organizationTree, currentWorkspaceId);
-    return current && current.type === "subsidiary" ? current : workspaceRoots()[0];
+    return current && current.type === "company" ? current : workspaceRoots()[0];
   }
 
   function firstScopeForSubject(subject) {
@@ -1244,16 +1382,15 @@
 
   function currentScope() {
     const scope = findOrgNode(scopeRoots(), currentScopeId);
-    if (scope && scope.type !== "subsidiary") return scope;
+    if (scope && scope.type !== "company") return scope;
     const fallback = firstScopeForSubject(currentSubject());
     currentScopeId = fallback.id;
     return fallback;
   }
 
   function refreshOrgTopbar() {
-    const subject = currentSubject();
     const scope = currentScope();
-    if (subjectTextNode) subjectTextNode.textContent = subject.name;
+    if (subjectTextNode) subjectTextNode.textContent = currentSubjectLabel();
     if (scopeTextNode) scopeTextNode.textContent = scope.name;
   }
 
@@ -1299,10 +1436,14 @@
     name.className = "org-node-name";
     name.textContent = node.name;
 
-    if (node.type === "department" || node.type === "store") {
+    const scopeTypeLabelMap = {
+      branch: "公司",
+      center: "中心",
+    };
+    if (scopeTypeLabelMap[node.type]) {
       const tag = document.createElement("span");
       tag.className = "org-type-tag " + node.type;
-      tag.textContent = node.typeLabel;
+      tag.textContent = scopeTypeLabelMap[node.type];
       select.append(tag);
     }
     select.append(name);
@@ -1324,14 +1465,13 @@
   }
 
   function createSubjectDisplay() {
-    const subject = currentSubject();
     const wrap = document.createElement("div");
     wrap.className = "workspace-subject-label";
-    wrap.title = "经营主体";
+    wrap.title = "业务板块 / 主体公司";
 
     subjectTextNode = document.createElement("span");
     subjectTextNode.className = "workspace-current-text";
-    subjectTextNode.textContent = subject.name;
+    subjectTextNode.textContent = currentSubjectLabel();
 
     wrap.append(subjectTextNode);
     return wrap;
@@ -1435,7 +1575,7 @@
     const switchSubjectAction = document.createElement("button");
     switchSubjectAction.type = "button";
     switchSubjectAction.className = "topbar-account-item";
-    switchSubjectAction.textContent = "切换公司主体";
+    switchSubjectAction.textContent = "切换板块/主体";
     const logoutAction = document.createElement("button");
     logoutAction.type = "button";
     logoutAction.className = "topbar-account-item danger";

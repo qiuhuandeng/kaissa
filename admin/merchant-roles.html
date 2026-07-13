@@ -23,10 +23,10 @@
             </select></div>
             <div class="filter-item-sm"><select class="form-control" aria-label="适用范围" data-scope-filter>
               <option value="">全部范围</option>
-              <option value="group">集团级</option>
+              <option value="group">租户级</option>
               <option value="company">主体公司</option>
               <option value="center">业务中心</option>
-              <option value="store">门市</option>
+              <option value="store">门店</option>
             </select></div>
             <div class="filter-item-sm"><select class="form-control" aria-label="状态" data-status-filter>
               <option value="">全部状态</option>
@@ -70,9 +70,9 @@
             <tr data-source="preset" data-scope="group" data-status="enabled" data-tab-status="启用">
               <td><strong>业务超级管理员</strong></td>
               <td><span class="tag tag-blue">系统预置</span></td>
-              <td>集团级</td>
+              <td>租户级</td>
               <td>组织、账号、业务配置、权限分配</td>
-              <td>全租户</td>
+              <td>全租户配置；集团虚拟层不作为业务数据归属</td>
               <td><span class="tag tag-green">启用</span></td>
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
             </tr>
@@ -81,7 +81,7 @@
               <td><span class="tag tag-blue">系统预置</span></td>
               <td>主体公司</td>
               <td>本主体组织、账号、产品和审批配置</td>
-              <td>本主体及下级</td>
+              <td>本主体及下级公司、中心、部门、门店</td>
               <td><span class="tag tag-green">启用</span></td>
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
             </tr>
@@ -89,17 +89,26 @@
               <td><strong>业务中心负责人</strong></td>
               <td><span class="tag tag-blue">系统预置</span></td>
               <td>业务中心</td>
-              <td>产品、出团、成本、审批和经营数据</td>
-              <td>本中心及下级</td>
+              <td>产品、团期、成本、审批和经营数据</td>
+              <td>本中心/部门；不默认包含分公司门店数据</td>
               <td><span class="tag tag-green">启用</span></td>
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
             </tr>
             <tr data-source="preset" data-scope="store" data-status="enabled" data-tab-status="启用">
-              <td><strong>门市负责人</strong></td>
+              <td><strong>门店店长</strong></td>
               <td><span class="tag tag-blue">系统预置</span></td>
-              <td>门市</td>
-              <td>门市订单、顾问、客户和业绩目标</td>
-              <td>本门市</td>
+              <td>门店</td>
+              <td>门店订单、店员、客户、合同主体、结算价规则和业绩目标</td>
+              <td>本门店全量数据</td>
+              <td><span class="tag tag-green">启用</span></td>
+              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
+            </tr>
+            <tr data-source="preset" data-scope="store" data-status="enabled" data-tab-status="启用">
+              <td><strong>门店店员</strong></td>
+              <td><span class="tag tag-blue">系统预置</span></td>
+              <td>门店</td>
+              <td>本人订单、本人客户、报价、合同发起；不可见结算价</td>
+              <td>本人销售数据</td>
               <td><span class="tag tag-green">启用</span></td>
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
             </tr>
@@ -113,11 +122,11 @@
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
             </tr>
             <tr data-source="custom" data-scope="store" data-status="disabled" data-tab-status="停用">
-              <td><strong>门市临时查看</strong></td>
+              <td><strong>门店临时查看</strong></td>
               <td><span class="tag tag-purple">业务自定义</span></td>
-              <td>门市</td>
+              <td>门店</td>
               <td>订单、客户和报价只读</td>
-              <td>授权门市</td>
+              <td>授权门店</td>
               <td><span class="tag tag-gray">停用</span></td>
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-merchant-role-modal="编辑业务角色">编辑</button></div></td>
             </tr>
@@ -126,7 +135,7 @@
       </div>
 
       <div class="pagination list-surface-pagination list-pagination-attached">
-        <span>共 6 条</span>
+        <span>共 7 条</span>
         <div class="pager">
           <button class="pager-btn active" type="button">1</button>
         </div>
@@ -153,10 +162,10 @@
           <div class="role-form-row">
             <label class="form-label required" for="merchantRoleScope">适用范围</label>
             <select class="form-control" id="merchantRoleScope">
-              <option>集团级</option>
+              <option>租户级</option>
               <option>主体公司</option>
               <option selected>业务中心</option>
-              <option>门市</option>
+              <option>门店</option>
             </select>
           </div>
           <div class="role-form-row">
@@ -190,7 +199,7 @@
                 <label><input type="checkbox" checked> 工作台</label>
               </div>
               <div class="role-tree-children">
-                <label><span></span><input type="checkbox" checked> 查看计调/集团/门市工作台</label>
+                <label><span></span><input type="checkbox" checked> 查看计调/租户/门店工作台</label>
                 <label><span></span><input type="checkbox" checked> 待办、预警、快捷入口跳转</label>
                 <label><span></span><input type="checkbox"> 申请资金调拨、生成静态收款码</label>
               </div>
@@ -248,7 +257,7 @@
                 <label><span></span><input type="checkbox"> 收款认领：手动/OTA认款、补充、解析单据、提交认款申请、拆分</label>
                 <label><span></span><input type="checkbox"> 合同管理：催签、重发、下载、作废、批量催签</label>
                 <label><span></span><input type="checkbox"> 售后处理：退款、转团、改签改期、发起申请、审批进度、执行变更</label>
-                <label><span></span><input type="checkbox"> 门市/顾问：新增、编辑、暂停、停用、批量导入、导出、添加顾问</label>
+                <label><span></span><input type="checkbox"> 门店/店员：新增、编辑、暂停、停用、批量导入、导出、添加店员</label>
               </div>
               <div class="role-tree-node">
                 <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开渠道"></button>
@@ -302,7 +311,7 @@
                 <label><span></span><input type="checkbox"> 成本差异、付款申请、结算确认审批</label>
                 <label><span></span><input type="checkbox"> 退款申请、认款/应收调整、坏账处理、发票红冲、NC异常处理审批</label>
                 <label><span></span><input type="checkbox"> 改期转团、合同作废审批</label>
-                <label><span></span><input type="checkbox"> 组织人事、门市管理审批</label>
+                <label><span></span><input type="checkbox"> 组织人事、门店管理审批</label>
               </div>
               <div class="role-tree-node">
                 <button class="role-tree-caret collapsed" type="button" data-role-tree-toggle aria-label="展开企业配置"></button>
@@ -351,7 +360,7 @@
               <label class="form-label" for="merchantOrgScope">授权组织范围</label>
               <select class="form-control" id="merchantOrgScope">
                 <option>本人所在组织</option>
-                <option>本门市/部门</option>
+                <option>本门店/部门</option>
                 <option selected>本中心及下级</option>
                 <option>本主体及下级</option>
                 <option>全租户</option>
@@ -379,7 +388,7 @@
               <label class="form-label" for="merchantSalesScope">销售/客户数据</label>
               <select class="form-control" id="merchantSalesScope">
                 <option>本人客户与订单</option>
-                <option>本门市客户与订单</option>
+                <option>本门店客户与订单</option>
                 <option selected>授权组织客户与订单</option>
                 <option>全租户客户与订单</option>
               </select>
