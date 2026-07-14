@@ -24,7 +24,7 @@
           <button class="btn btn-secondary table-more-toggle" type="button" data-action-menu-toggle aria-expanded="false">更多</button>
           <span class="dropdown-menu action-dropdown-menu">
             <span class="dropdown-group-title hidden" data-project-menu="title">项目处理</span>
-            <button class="dropdown-item hidden" type="button" data-project-menu="contract" data-open-drawer="projectContractDrawer">合同</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="contract" data-contract-entry>合同</button>
             <button class="dropdown-item hidden" type="button" data-project-menu="payment" data-open-drawer="receiptDrawer">收款</button>
             <button class="dropdown-item hidden" type="button" data-project-menu="receivable" data-open-drawer="receivableDrawer">应收调整</button>
             <button class="dropdown-item hidden" type="button" data-project-menu="roster" data-open-drawer="travelerDrawer">项目名单</button>
@@ -161,7 +161,7 @@
           <section class="order-tab-section">
             <div class="order-section-action-head">
               <div id="contractSectionTitle" class="detail-section-title">合同/确认书</div>
-              <button id="generateContractButton" class="btn btn-primary" type="button" data-open-drawer="projectContractDrawer">生成合同/确认书</button>
+              <button id="generateContractButton" class="btn btn-primary" type="button" data-contract-entry>进入合同管理</button>
             </div>
             <div class="table-wrap order-detail-table">
               <table>
@@ -295,7 +295,7 @@
   <div id="projectContractDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal drawer-lg order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="projectContractDrawerTitle">
       <div class="modal-header">
-        <div id="projectContractDrawerTitle" class="modal-title">项目合同发送</div>
+        <div id="projectContractDrawerTitle" class="modal-title">合同管理承接</div>
         <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
       </div>
       <div class="modal-body">
@@ -309,8 +309,8 @@
         <div id="contractDrawerFields" class="order-drawer-form"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button" data-result="发送项目合同">生成并发送</button>
+        <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
+        <button class="btn btn-primary" type="button" data-contract-entry>进入合同管理</button>
       </div>
     </div>
   </div>
@@ -773,6 +773,25 @@
         if (tab) href += '&tab=' + encodeURIComponent(tab);
         return href;
       }
+      function contractTypeParam() {
+        if (isProjectOrder()) return 'project';
+        const map = { 参团游: 'group', 邮轮: 'cruise', 专列: 'train', 自由行: 'free', 单项服务: 'single', 研学: 'study' };
+        return map[config.productType] || 'group';
+      }
+      function contractEntryHref() {
+        const query = new URLSearchParams();
+        query.set('type', contractTypeParam());
+        query.set('orderNo', config.orderNo);
+        query.set('customer', contactParts().name);
+        query.set('product', config.productName);
+        query.set('scheduleNo', scheduleValue());
+        if (isProjectOrder()) {
+          query.set('source', 'customProject');
+          query.set('projectNo', snapshotValue('单团项目'));
+          query.set('quoteVersion', params.get('quoteVersion') || 'A');
+        }
+        return 'contracts.html?' + query.toString();
+      }
       function activeAttachmentCategories() {
         return isProjectOrder() ? projectAttachmentCategories : attachmentCategories;
       }
@@ -782,9 +801,11 @@
         delete button.dataset.openDrawer;
         delete button.dataset.result;
         delete button.dataset.projectNav;
+        delete button.dataset.contractEntry;
         if (action.drawer) button.dataset.openDrawer = action.drawer;
         if (action.result) button.dataset.result = action.result;
         if (action.nav) button.dataset.projectNav = action.nav;
+        if (action.contract) button.dataset.contractEntry = 'true';
       }
       function updateProjectActionBar() {
         const primary = document.getElementById('orderPrimaryAction');
@@ -803,7 +824,7 @@
         setHidden(secondary, true);
         const stage = projectStage();
         const stageActions = {
-          pendingContract: { primary: ['生成项目合同', { drawer: 'projectContractDrawer' }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'attachment', 'owner', 'sales', 'void'] },
+          pendingContract: { primary: ['处理项目合同', { contract: true }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'attachment', 'owner', 'sales', 'void'] },
           pendingPayment: { primary: ['收款', { drawer: 'receiptDrawer' }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'change', 'attachment', 'owner', 'sales', 'void'] },
           inExecution: { primary: ['项目团', { nav: 'schedule' }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'change', 'settlement', 'attachment', 'owner', 'sales', 'void'] },
           settlement: { primary: ['结算', { drawer: 'projectSettlementDrawer' }], menu: ['title', 'contract', 'payment', 'receivable', 'schedule', 'change', 'settlement', 'attachment', 'owner', 'sales'] },
@@ -834,9 +855,10 @@
         setText('aftersalesSectionTitle', '项目变更记录');
         const contractButton = document.getElementById('generateContractButton');
         if (contractButton) {
-          contractButton.textContent = '生成项目合同';
+          contractButton.textContent = '处理项目合同';
           delete contractButton.dataset.result;
-          contractButton.dataset.openDrawer = 'projectContractDrawer';
+          delete contractButton.dataset.openDrawer;
+          contractButton.dataset.contractEntry = 'true';
         }
         const aftersalesButton = document.getElementById('aftersalesActionButton');
         if (aftersalesButton) {
@@ -997,29 +1019,15 @@
           textareaControl('调整原因', '', profile.reason)
         ].join('');
       }
-      function contractTemplatesFor() {
-        if (isProjectOrder()) return ['企业定制团旅游服务合同', 'MICE会务与旅游综合服务合同', '单团补充协议'];
-        const templates = {
-          邮轮: ['邮轮旅游合同', '邮轮确认单', '舱房补充协议'],
-          专列: ['专列确认书', '专列旅游合同', '铺位补充协议'],
-          自由行: ['自由行确认单', '服务确认单', '补充协议'],
-          单项服务: ['服务确认单', '委托代办协议', '材料清单确认'],
-          研学: ['研学确认书', '安全告知书', '监护人授权确认']
-        };
-        return templates[config.productType] || ['旅游合同', '出团确认单', '补充协议'];
-      }
       function contractFieldsHtml() {
-        const attachmentText = isProjectOrder()
-          ? '锁定报价附件、阶段收款计划、行程与服务标准、费用包含/不含、变更规则'
-          : '行程/服务标准、费用包含/不含、退改规则、资料清单或确认附件';
-        return [
-          selectControl('合同/确认文件', contractTemplatesFor()),
-          selectControl('合同主体', ['福建凯撒']),
-          inputControl(isProjectOrder() ? '客户签署人' : '签署人/联系人', isProjectOrder() ? contactParts().name + ' / 张建国' : contactParts().name),
-          selectControl('签署方式', ['电子签署', '线下盖章后上传', '先发送确认稿', '短信+邮件']),
-          textareaControl('随合同发送附件', attachmentText),
-          textareaControl('发送备注', '', '填写客户签署要求、盖章份数、内部审核意见或补充说明')
-        ].join('');
+        return readonlyMiniGrid([
+          ['承接页面', '合同管理 / 合同列表'],
+          ['订单号', config.orderNo],
+          ['合同金额', config.amount[0]],
+          [isProjectOrder() ? '锁定报价' : '线路/套餐', isProjectOrder() ? '方案' + (params.get('quoteVersion') || 'A') + ' / 锁定报价' : snapshotValue(['线路', '套餐', '服务项目', '方案'])],
+          [isProjectOrder() ? '项目团' : scheduleLabel(), scheduleValue()],
+          ['签署对象', contactParts().name]
+        ]);
       }
       function detailActionFields(action) {
         const base = readonlyMiniGrid([
@@ -1120,16 +1128,6 @@
       function descriptionGrid(items) {
         return items.map(descriptionItem).join('');
       }
-      function projectContractHref() {
-        const query = new URLSearchParams();
-        query.set('type', 'project');
-        query.set('source', 'customProject');
-        query.set('orderNo', config.orderNo);
-        query.set('projectNo', snapshotValue('单团项目'));
-        query.set('scheduleNo', scheduleValue());
-        query.set('customer', contactParts().name);
-        return 'contracts.html?' + query.toString();
-      }
       function moneyCard(item) {
         return '<div class="order-money-card"><span>' + escapeHtml(item[0]) + '</span><strong class="' + escapeHtml(item[2]) + '">' + escapeHtml(item[1]) + '</strong></div>';
       }
@@ -1139,13 +1137,16 @@
       function contractDocRow(item) {
         const status = item[1];
         const sendStatus = /已生成|已确认|已上传/.test(status) ? '待发送' : '未生成';
+        const contractHref = contractEntryHref();
+        const canDownload = /已生成|已确认|已签署|待签署/.test(status);
         if (isProjectOrder()) {
-          const projectHref = projectContractHref();
-          const contractActions = '<a class="table-action-primary" href="' + projectHref + '">项目合同</a><button type="button" data-open-drawer="projectContractDrawer">生成项目合同</button><button type="button" data-result="下载合同">下载合同</button><button type="button" data-open-drawer="projectContractDrawer">发送合同</button>';
+          const contractActions = '<a class="table-action-primary" href="' + contractHref + '">进入合同</a>' + (canDownload ? '<button type="button" data-result="下载合同">下载合同</button>' : '');
           const attachmentActions = '<button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button><button type="button" data-result="下载' + escapeHtml(item[0]) + '">下载</button><button type="button" data-open-drawer="attachmentDrawer" data-attachment-type="' + escapeHtml(item[0]) + '">维护</button>';
           return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml([status, statusClass(status)]) + '</td><td>' + tagHtml([sendStatus, statusClass(sendStatus)]) + '</td><td><div class="table-action">' + (item[2] === '合同' ? contractActions : attachmentActions) + '</div></td></tr>';
         }
-        return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml([status, statusClass(status)]) + '</td><td>' + tagHtml([sendStatus, statusClass(sendStatus)]) + '</td><td><div class="table-action"><button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button><button class="table-action-primary" type="button" data-result="下载' + escapeHtml(item[0]) + '">下载</button><button class="table-action-primary" type="button" data-open-drawer="projectContractDrawer">发送</button><button class="table-action-primary" type="button" data-open-drawer="projectContractDrawer">重新生成</button></div></td></tr>';
+        const mainAction = /合同|确认单|确认书|协议/.test(item[2]) ? '<a class="table-action-primary" href="' + contractHref + '">进入合同</a>' : '<button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button>';
+        const downloadAction = canDownload ? '<button type="button" data-result="下载' + escapeHtml(item[0]) + '">下载</button>' : '';
+        return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml([status, statusClass(status)]) + '</td><td>' + tagHtml([sendStatus, statusClass(sendStatus)]) + '</td><td><div class="table-action">' + mainAction + downloadAction + '</div></td></tr>';
       }
       function travelerGapItems() {
         const names = config.travelers.rows.map(function (row) { return row[0]; }).join('、');
@@ -1213,7 +1214,7 @@
           '<label class="form-group"><span class="form-label">变更后人数</span><input class="form-control" type="text" value="80"></label>',
           '<label class="form-group"><span class="form-label">金额影响</span><select class="form-control"><option>不影响总额</option><option>需补收</option><option>需减免</option><option>待重新报价</option></select></label>',
           '<label class="form-group form-group-full"><span class="form-label">客户确认依据</span><div class="upload-box">上传客户邮件、确认单、补充协议或变更报价</div></label>',
-          '<label class="form-group form-group-full"><span class="form-label">变更说明</span><textarea class="form-control" rows="4" placeholder="说明变更原因、执行影响、是否需要补充成本确认，以及是否需要重新发送合同附件"></textarea></label>'
+          '<label class="form-group form-group-full"><span class="form-label">变更说明</span><textarea class="form-control" rows="4" placeholder="说明变更原因、执行影响、是否需要补充成本确认或客户确认附件"></textarea></label>'
         ].join('');
       }
       function renderProjectDrawers() {
@@ -1224,8 +1225,8 @@
         setText('receivableDrawerTitle', '项目应收调整申请');
         setText('receivableDrawerSummary', '当前合同应收 ' + config.amount[0] + '，调整必须关联客户确认或项目变更，审批通过后由财务应收承接。');
         setHtml('receivableDrawerFields', projectReceivableFieldsHtml());
-        setText('projectContractDrawerTitle', '生成/发送项目合同');
-        setText('projectContractDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。合同发送前核对锁定报价、合同主体和阶段收款计划。');
+        setText('projectContractDrawerTitle', '合同管理承接');
+        setText('projectContractDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name);
         setText('projectContractAmount', config.amount[0]);
         setText('contractQuoteLabel', '锁定报价');
         setText('contractScheduleLabel', '项目团');
@@ -1235,8 +1236,9 @@
         setHtml('contractDrawerFields', contractFieldsHtml());
         const contractSubmit = document.querySelector('#projectContractDrawer .modal-footer .btn-primary');
         if (contractSubmit) {
-          contractSubmit.textContent = '生成并发送合同';
-          contractSubmit.dataset.result = '生成并发送项目合同';
+          contractSubmit.textContent = '进入合同管理';
+          delete contractSubmit.dataset.result;
+          contractSubmit.dataset.contractEntry = 'true';
         }
         setText('projectSettlementDrawerSummary', config.orderNo + ' / ' + scheduleValue() + '。订单详情只承接结算入口，实际成本、应付、付款和 NC 在团期成本、回团结算和财务模块处理。');
         const settlementRows = [
@@ -1369,8 +1371,8 @@
         setText('receivableDrawerTitle', receivableProfileFor().title);
         setText('receivableDrawerSummary', '当前应收 ' + config.amount[0] + '，调整提交后进入审批和财务应收审核。');
         setHtml('receivableDrawerFields', receivableFieldsHtml());
-        setText('projectContractDrawerTitle', isProjectOrder() ? '项目合同发送' : '合同/确认文件处理');
-        setText('projectContractDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + contactParts().name + '。处理前核对订单金额、签署对象和附件口径。');
+        setText('projectContractDrawerTitle', '合同管理承接');
+        setText('projectContractDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + contactParts().name);
         setText('projectContractAmount', config.amount[0]);
         setText('contractQuoteLabel', isProjectOrder() ? '锁定报价' : '线路/套餐');
         setText('contractScheduleLabel', scheduleLabel());
@@ -1468,6 +1470,13 @@
           const open = !menu.classList.contains('open');
           menu.classList.toggle('open', open);
           menuToggle.setAttribute('aria-expanded', String(open));
+          return;
+        }
+        const contractEntry = event.target.closest('[data-contract-entry]');
+        if (contractEntry) {
+          const href = contractEntryHref();
+          if (window.caesarNavigateTo) window.caesarNavigateTo(href);
+          else window.location.href = href;
           return;
         }
         const projectNav = event.target.closest('[data-project-nav]');

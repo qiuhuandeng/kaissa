@@ -93,29 +93,6 @@
       ],
     },
     {
-      title: "营销中心",
-      icon: "gift",
-      children: [
-        {
-          title: "营销工具",
-          children: [
-            { title: "活动管理", href: "marketing/campaigns.html" },
-            { title: "优惠券", href: "marketing/coupons.html" },
-            { title: "发券中心", href: "marketing/issue-center.html" },
-          ],
-        },
-        {
-          title: "小程序运营",
-          children: [
-            { title: "网店装修", href: "marketing/miniapp-pages.html" },
-            { title: "专题活动", href: "marketing/miniapp-templates.html" },
-            { title: "素材中心", href: "marketing/miniapp-assets.html" },
-          ],
-        },
-        { title: "营销分析", href: "marketing/marketing-analysis.html" },
-      ],
-    },
-    {
       title: "销售中心",
       icon: "clipboard",
       children: [
@@ -123,8 +100,8 @@
         { title: "意向订单", href: "sales/orders-intent.html" },
         { title: "订单管理", href: "sales/orders.html" },
         { title: "收款认领", href: "sales/payment-claim.html" },
-        { title: "合同管理", href: "sales/contracts.html" },
         { title: "售后处理", href: "sales/orders-after-sales.html" },
+        { title: "合同管理", href: "sales/contracts.html" },
       ],
     },
     {
@@ -172,6 +149,29 @@
             { title: "异常日志", href: "channel/ota_exceptions.html" },
           ],
         },
+      ],
+    },
+    {
+      title: "营销中心",
+      icon: "gift",
+      children: [
+        {
+          title: "营销工具",
+          children: [
+            { title: "活动管理", href: "marketing/campaigns.html" },
+            { title: "优惠券", href: "marketing/coupons.html" },
+            { title: "发券中心", href: "marketing/issue-center.html" },
+          ],
+        },
+        {
+          title: "小程序运营",
+          children: [
+            { title: "网店装修", href: "marketing/miniapp-pages.html" },
+            { title: "专题活动", href: "marketing/miniapp-templates.html" },
+            { title: "素材中心", href: "marketing/miniapp-assets.html" },
+          ],
+        },
+        { title: "营销分析", href: "marketing/marketing-analysis.html" },
       ],
     },
     {
@@ -279,6 +279,7 @@
         { title: "员工任职", href: "system/staff-management.html" },
         { title: "基础参数", href: "system/business-params.html" },
         { title: "通知模板", href: "system/notice-templates.html" },
+        { title: "合同模板", href: "sales/contract-templates.html" },
       ],
     },
   ];
@@ -534,6 +535,7 @@
     "marketing/marketing-analysis.html": { href: "marketing/marketing-analysis.html", title: "营销分析" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
     "tour/product-custom-inquiry-create.html": { href: "tour/product-custom-list.html", title: "发起单团询价" },
+    "sales/contract-template-edit.html": { href: "sales/contract-templates.html", title: "合同模板编辑" },
     "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "代理产品详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "代理产品包装" },
     "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "可代理团期" },
