@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>期间关账 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .finance-period-table table {
+      min-width: 1580px;
+    }
+    .finance-period-table col:nth-child(1) { width: 220px; }
+    .finance-period-table col:nth-child(2) { width: 150px; }
+    .finance-period-table col:nth-child(3) { width: 220px; }
+    .finance-period-table col:nth-child(4) { width: 240px; }
+    .finance-period-table col:nth-child(5) { width: 230px; }
+    .finance-period-table col:nth-child(6) { width: 210px; }
+    .finance-period-table col:nth-child(7) { width: 200px; }
+    .finance-period-table col:nth-child(8) { width: 150px; }
+    .finance-period-table th.sticky-action,
+    .finance-period-table td.sticky-action {
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: var(--surface, #fff);
+    }
+    .period-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .period-summary-item {
+      padding: 12px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      background: var(--surface-soft, #f8fafc);
+    }
+    .period-summary-label {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+    }
+    .period-summary-value {
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--text-primary, #0f172a);
+    }
+    .period-tab-panels .drawer-section[hidden] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">期间关账</h1>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" type="button" data-refresh-close>刷新预检</button>
+        <button class="btn btn-secondary" type="button" data-export>导出</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="list-surface list-surface-tabbed finance-period-list-surface" data-list-surface>
+    <div class="list-surface-tabbar-row">
+      <nav class="tab-bar list-surface-tabs" aria-label="期间关账状态">
+        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待预检">待预检 <span class="tab-count" data-status-count="待预检">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="预检中">预检中 <span class="tab-count" data-status-count="预检中">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="异常处理中">异常处理中 <span class="tab-count" data-status-count="异常处理中">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待关账">待关账 <span class="tab-count" data-status-count="待关账">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已关账">已关账 <span class="tab-count" data-status-count="已关账">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已反关">已反关 <span class="tab-count" data-status-count="已反关">0</span></button>
+      </nav>
+    </div>
+
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="期间关账筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="periodKeyword">关账单/会计期间/主体/异常项</label>
+          <input id="periodKeyword" type="search" placeholder="关账单/会计期间/主体/异常项">
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="companyFilter">主体公司</label>
+          <select id="companyFilter">
+            <option>全部主体</option>
+            <option>总部财务</option>
+            <option>北京凯撒</option>
+            <option>上海凯撒</option>
+            <option>福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="riskFilter">异常结果</label>
+          <select id="riskFilter">
+            <option>全部结果</option>
+            <option>预检通过</option>
+            <option>高风险</option>
+            <option>中风险</option>
+            <option>低风险</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="ncFilter">NC状态</label>
+          <select id="ncFilter">
+            <option>全部NC</option>
+            <option>未生成</option>
+            <option>待推送</option>
+            <option>已推送</option>
+            <option>推送失败</option>
+          </select>
+        </div>
+        <div class="filter-item-wide filter-item-date-range">
+          <label class="sr-only">会计期间</label>
+          <div class="date-range">
+            <input id="periodStart" type="month" value="2026-05" aria-label="期间开始">
+            <span>至</span>
+            <input id="periodEnd" type="month" value="2026-07" aria-label="期间结束">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button" data-search-period>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-period>重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrap finance-period-table list-surface-table list-table-with-pagination" aria-label="期间关账列表">
+      <table>
+        <colgroup>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>关账单/期间</th>
+            <th>主体公司</th>
+            <th>收入应收</th>
+            <th>成本应付</th>
+            <th>结算票据</th>
+            <th>NC凭证</th>
+            <th>预检结果</th>
+            <th class="sticky-action">操作</th>
+          </tr>
+        </thead>
+        <tbody id="periodRows">
+          <tr data-close-no="QJ202607-HQ" data-period="2026-07" data-period-start="2026-07" data-company="总部财务" data-income="待预检" data-income-unmatched="待预检" data-income-unreceived="待预检" data-refund-pending="待预检" data-predeposit-risk="待预检" data-cost="待预检" data-bill-pending="待预检" data-payable-diff="待预检" data-remittance-pending="待预检" data-prepay-pending="待预检" data-settlement="待预检" data-settlement-pending="待预检" data-adjustment-pending="待预检" data-invoice="待预检" data-output-invoice="待预检" data-input-invoice="待预检" data-red-invoice="待预检" data-nc="未生成" data-nc-pending="待预检" data-nc-failed="待预检" data-exception-count="待预检" data-risk="低风险" data-result="待发起预检" data-owner="总账会计吴越" data-close-date="-" data-reverse-reason="-" data-status="待预检">
+            <td><div class="table-cell-main"><strong>QJ202607-HQ</strong><span>2026-07 / 总部财务</span></div></td>
+            <td>总部财务</td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">待预检</span><span>收入应收待扫描</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">待预检</span><span>成本应付待扫描</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">待预检</span><span>结算票据待扫描</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>凭证任务待扫描</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">待发起预检</span><span>低风险</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="precheck">发起预检</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-close-no="QJ202606-FJ" data-period="2026-06" data-period-start="2026-06" data-company="福建凯撒" data-income="未认款 2笔 / 待收 ¥18,600" data-income-unmatched="2笔 / ¥18,600" data-income-unreceived="¥18,600" data-refund-pending="0笔" data-predeposit-risk="门店对账差异 1笔" data-cost="账单待核对 3笔 / 回单待核销 1笔" data-bill-pending="3笔" data-payable-diff="1笔 / ¥6,000" data-remittance-pending="1笔" data-prepay-pending="0笔" data-settlement="待审批结算 2笔 / 调整 1笔" data-settlement-pending="2笔" data-adjustment-pending="1笔" data-invoice="待收票 2笔 / 红冲 0笔" data-output-invoice="已完成" data-input-invoice="2笔" data-red-invoice="0笔" data-nc="推送失败" data-nc-pending="4笔" data-nc-failed="1笔" data-exception-count="9项" data-risk="高风险" data-result="异常9项" data-owner="总账会计吴越" data-close-date="-" data-reverse-reason="-" data-status="预检中">
+            <td><div class="table-cell-main"><strong>QJ202606-FJ</strong><span>2026-06 / 福建凯撒</span></div></td>
+            <td>福建凯撒</td>
+            <td><div class="table-cell-main"><span class="tag tag-red">未认款 2笔</span><span>待收 ¥18,600</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">账单待核对 3笔</span><span>回单待核销 1笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待审批 2笔</span><span>待收票 2笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">推送失败</span><span>待推送 4笔 / 失败 1笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">异常9项</span><span>高风险</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>查看预检</button><button type="button" data-open-work="exception">异常清单</button></div></td>
+          </tr>
+          <tr data-close-no="QJ202606-SH" data-period="2026-06" data-period-start="2026-06" data-company="上海凯撒" data-income="退款未执行 1笔 / 预存异常 0笔" data-income-unmatched="0笔" data-income-unreceived="¥0" data-refund-pending="1笔 / ¥12,800" data-predeposit-risk="0笔" data-cost="付款未回单 1笔 / 预付未冲抵 1笔" data-bill-pending="0笔" data-payable-diff="0笔" data-remittance-pending="1笔" data-prepay-pending="1笔 / ¥300,000" data-settlement="业务结算待审批 1笔 / 票据缺口 1笔" data-settlement-pending="1笔" data-adjustment-pending="0笔" data-invoice="销项待开 ¥1,176,200 / 进项待收 ¥996,000" data-output-invoice="¥1,176,200" data-input-invoice="¥996,000" data-red-invoice="0笔" data-nc="未生成" data-nc-pending="2笔" data-nc-failed="0笔" data-exception-count="5项" data-risk="高风险" data-result="异常处理中" data-owner="财务经理林娜" data-close-date="-" data-reverse-reason="-" data-status="异常处理中">
+            <td><div class="table-cell-main"><strong>QJ202606-SH</strong><span>2026-06 / 上海凯撒</span></div></td>
+            <td>上海凯撒</td>
+            <td><div class="table-cell-main"><span class="tag tag-red">退款未执行 1笔</span><span>待退 ¥12,800</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">付款未回单 1笔</span><span>预付未冲抵 ¥300,000</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待审批 1笔</span><span>票据缺口 1笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>待推送 2笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">异常5项</span><span>高风险</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="exception">处理异常</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-close-no="QJ202606-BJ" data-period="2026-06" data-period-start="2026-06" data-company="北京凯撒" data-income="已完成" data-income-unmatched="0笔" data-income-unreceived="¥0" data-refund-pending="0笔" data-predeposit-risk="0笔" data-cost="已完成" data-bill-pending="0笔" data-payable-diff="0笔" data-remittance-pending="0笔" data-prepay-pending="0笔" data-settlement="已完成" data-settlement-pending="0笔" data-adjustment-pending="0笔" data-invoice="已完成" data-output-invoice="已完成" data-input-invoice="已完成" data-red-invoice="0笔" data-nc="已推送" data-nc-pending="0笔" data-nc-failed="0笔" data-exception-count="0项" data-risk="预检通过" data-result="预检通过" data-owner="总账会计吴越" data-close-date="-" data-reverse-reason="-" data-status="待关账">
+            <td><div class="table-cell-main"><strong>QJ202606-BJ</strong><span>2026-06 / 北京凯撒</span></div></td>
+            <td>北京凯撒</td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>未认款 0笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>未回单 0笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>票据齐全</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>失败 0笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">预检通过</span><span>可执行关账</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="close">执行关账</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-close-no="QJ202605-HQ" data-period="2026-05" data-period-start="2026-05" data-company="总部财务" data-income="已完成" data-income-unmatched="0笔" data-income-unreceived="¥0" data-refund-pending="0笔" data-predeposit-risk="0笔" data-cost="已完成" data-bill-pending="0笔" data-payable-diff="0笔" data-remittance-pending="0笔" data-prepay-pending="0笔" data-settlement="已完成" data-settlement-pending="0笔" data-adjustment-pending="0笔" data-invoice="已完成" data-output-invoice="已完成" data-input-invoice="已完成" data-red-invoice="0笔" data-nc="已推送" data-nc-pending="0笔" data-nc-failed="0笔" data-exception-count="0项" data-risk="预检通过" data-result="已关账" data-owner="财务经理林娜" data-close-date="2026-06-05 18:30" data-reverse-reason="-" data-status="已关账">
+            <td><div class="table-cell-main"><strong>QJ202605-HQ</strong><span>2026-05 / 总部财务</span></div></td>
+            <td>总部财务</td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>历史期间锁定</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>历史期间锁定</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>已关账</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>凭证齐全</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已关账</span><span>2026-06-05 18:30</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>查看关账</button><button type="button" data-open-work="reverse">发起反关</button></div></td>
+          </tr>
+          <tr data-close-no="QJ202605-FJ" data-period="2026-05" data-period-start="2026-05" data-company="福建凯撒" data-income="已完成" data-income-unmatched="0笔" data-income-unreceived="¥0" data-refund-pending="0笔" data-predeposit-risk="0笔" data-cost="已完成" data-bill-pending="0笔" data-payable-diff="0笔" data-remittance-pending="0笔" data-prepay-pending="0笔" data-settlement="反关调整待复检" data-settlement-pending="1笔调整" data-adjustment-pending="1笔" data-invoice="已完成" data-output-invoice="已完成" data-input-invoice="已完成" data-red-invoice="1笔" data-nc="待推送" data-nc-pending="1笔" data-nc-failed="0笔" data-exception-count="2项" data-risk="中风险" data-result="已反关" data-owner="财务经理林娜" data-close-date="2026-06-04 18:10" data-reverse-reason="供应商后补账单影响5月成本" data-status="已反关">
+            <td><div class="table-cell-main"><strong>QJ202605-FJ</strong><span>2026-05 / 福建凯撒</span></div></td>
+            <td>福建凯撒</td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>反关后无收入异常</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已完成</span><span>后补账单已调整</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">反关调整</span><span>结算调整 1笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>调整凭证 1笔</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">已反关</span><span>中风险</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="precheck">重新预检</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="periodPagination">第1-6条/共6条</span>
+    </div>
+  </section>
+
+  <div id="periodDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-modal-wide" role="dialog" aria-modal="true" aria-labelledby="periodDetailTitle">
+      <div class="modal-header">
+        <div id="periodDetailTitle" class="modal-title">关账详情</div>
+        <button class="modal-close" type="button" aria-label="关闭关账详情" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="detailObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="detailObjectSubtitle">-</div>
+            </div>
+            <div id="detailObjectStatus"></div>
+          </div>
+          <div class="period-summary-grid" id="detailSummaryGrid"></div>
+        </section>
+        <nav class="tab-bar drawer-tab-bar" aria-label="期间关账详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="overview">关账总览</button>
+          <button class="tab-item" type="button" data-detail-tab="income">收入应收</button>
+          <button class="tab-item" type="button" data-detail-tab="cost">成本应付</button>
+          <button class="tab-item" type="button" data-detail-tab="settlement">结算调整</button>
+          <button class="tab-item" type="button" data-detail-tab="tax">票据税务</button>
+          <button class="tab-item" type="button" data-detail-tab="nc">NC凭证</button>
+          <button class="tab-item" type="button" data-detail-tab="exceptions">异常清单</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">关账记录</button>
+        </nav>
+        <div class="period-tab-panels">
+          <section class="drawer-section" data-detail-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">关账总览</h3></div>
+            <div class="description-grid" id="overviewGrid"></div>
+          </section>
+          <section class="drawer-section" data-detail-panel="income" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">收入应收</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>检查项</th><th>结果</th><th>处理入口</th><th>状态</th></tr></thead>
+                <tbody id="incomeRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="cost" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">成本应付</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>检查项</th><th>结果</th><th>处理入口</th><th>状态</th></tr></thead>
+                <tbody id="costRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="settlement" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">结算调整</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>检查项</th><th>结果</th><th>处理入口</th><th>状态</th></tr></thead>
+                <tbody id="settlementRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="tax" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">票据税务</h3></div>
+            <div class="description-grid" id="taxGrid"></div>
+          </section>
+          <section class="drawer-section" data-detail-panel="nc" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">NC凭证</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>凭证范围</th><th>结果</th><th>处理入口</th><th>状态</th></tr></thead>
+                <tbody id="ncRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="exceptions" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">异常清单</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>异常项</th><th>数量/金额</th><th>责任模块</th><th>入口</th></tr></thead>
+                <tbody id="exceptionRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="logs" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">关账记录</h3></div>
+            <div class="timeline compact" id="logTimeline"></div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>进入处理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="periodWorkDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="periodWorkTitle">
+      <div class="modal-header">
+        <div id="periodWorkTitle" class="modal-title">关账处理</div>
+        <button class="modal-close" type="button" aria-label="关闭关账处理" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="workObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="workObjectSubtitle">-</div>
+            </div>
+            <div id="workObjectStatus"></div>
+          </div>
+          <div class="period-summary-grid" id="workSummaryGrid"></div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title" id="workSectionTitle">本次处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workResult">处理结果</label>
+              <select id="workResult" class="form-control">
+                <option>发起预检</option>
+                <option>异常处理</option>
+                <option>执行关账</option>
+                <option>发起反关</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workOwner">经办人</label>
+              <input id="workOwner" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workRisk">预检结果</label>
+              <input id="workRisk" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workNc">NC状态</label>
+              <select id="workNc" class="form-control">
+                <option>未生成</option>
+                <option>待推送</option>
+                <option>已推送</option>
+                <option>推送失败</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="workRemark">处理备注</label>
+            <textarea id="workRemark" class="form-control" rows="4"></textarea>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-work>确认处理</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var rows = Array.from(document.querySelectorAll('#periodRows tr'));
+      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
+      var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
+      var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
+      var detailDrawer = document.getElementById('periodDetailDrawer');
+      var workDrawer = document.getElementById('periodWorkDrawer');
+      var activeStatus = '全部';
+      var activeRow = null;
+      var activeAction = 'detail';
+
+      function notify(message, type) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+        }
+      }
+
+      function openLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+          window.caesarUI.openLayer(layer);
+          return;
+        }
+        layer.hidden = false;
+        layer.classList.add('show');
+        layer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
+          window.caesarUI.closeLayer(layer);
+          return;
+        }
+        layer.hidden = true;
+        layer.classList.remove('show');
+        layer.setAttribute('aria-hidden', 'true');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function rowText(row) {
+        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function tagClass(value) {
+        if (/失败|异常|高风险|未认款|未回单|待核销|未执行|缺口/.test(value || '')) return 'tag-red';
+        if (/待|中风险|反关|未生成|待推送|预检中/.test(value || '')) return 'tag-orange';
+        if (/已|通过|完成|齐全/.test(value || '')) return 'tag-green';
+        return 'tag-gray';
+      }
+
+      function tagHtml(value) {
+        return '<span class="tag ' + tagClass(value) + '">' + escapeHtml(value || '-') + '</span>';
+      }
+
+      function linkHtml(href, text) {
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function updateCounts() {
+        var counts = { '全部': rows.length };
+        rows.forEach(function (row) {
+          counts[row.dataset.status] = (counts[row.dataset.status] || 0) + 1;
+        });
+        document.querySelectorAll('[data-status-count]').forEach(function (node) {
+          node.textContent = counts[node.dataset.statusCount] || 0;
+        });
+      }
+
+      function applyFilters() {
+        var keyword = document.getElementById('periodKeyword').value.trim().toLowerCase();
+        var company = document.getElementById('companyFilter').value;
+        var risk = document.getElementById('riskFilter').value;
+        var nc = document.getElementById('ncFilter').value;
+        var start = document.getElementById('periodStart').value;
+        var end = document.getElementById('periodEnd').value;
+        var visibleCount = 0;
+
+        rows.forEach(function (row) {
+          var data = row.dataset;
+          var visible = true;
+          if (activeStatus !== '全部' && data.status !== activeStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (company.indexOf('全部') !== 0 && data.company !== company) visible = false;
+          if (risk.indexOf('全部') !== 0 && data.risk !== risk) visible = false;
+          if (nc.indexOf('全部') !== 0 && data.nc !== nc) visible = false;
+          if (start && data.periodStart < start) visible = false;
+          if (end && data.periodStart > end) visible = false;
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+
+        document.getElementById('periodPagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '无匹配数据';
+      }
+
+      function resetFilters() {
+        document.getElementById('periodKeyword').value = '';
+        document.getElementById('companyFilter').selectedIndex = 0;
+        document.getElementById('riskFilter').selectedIndex = 0;
+        document.getElementById('ncFilter').selectedIndex = 0;
+        document.getElementById('periodStart').value = '2026-05';
+        document.getElementById('periodEnd').value = '2026-07';
+        applyFilters();
+      }
+
+      function switchStatus(status) {
+        activeStatus = status;
+        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        applyFilters();
+      }
+
+      function switchDetailTab(tabName) {
+        detailTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.detailTab === tabName); });
+        detailPanels.forEach(function (panel) { panel.hidden = panel.dataset.detailPanel !== tabName; });
+      }
+
+      function renderSummary(target, row) {
+        var data = row.dataset;
+        var items = [
+          ['收入应收', data.income],
+          ['成本应付', data.cost],
+          ['NC凭证', data.nc],
+          ['预检结果', data.result]
+        ];
+        target.innerHTML = items.map(function (item) {
+          return '<div class="period-summary-item"><div class="period-summary-label">' + escapeHtml(item[0]) + '</div><div class="period-summary-value">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function renderDescription(target, items) {
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function tableRows(items) {
+        return items.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + item[2] + '</td><td>' + tagHtml(item[3]) + '</td></tr>';
+        }).join('');
+      }
+
+      function renderDetail(row) {
+        var data = row.dataset;
+        document.getElementById('detailObjectTitle').textContent = data.closeNo + ' / ' + data.company;
+        document.getElementById('detailObjectSubtitle').textContent = data.period + ' / ' + data.owner + ' / ' + data.result;
+        document.getElementById('detailObjectStatus').innerHTML = tagHtml(data.status);
+        renderSummary(document.getElementById('detailSummaryGrid'), row);
+
+        renderDescription(document.getElementById('overviewGrid'), [
+          { label: '关账单号', value: escapeHtml(data.closeNo) },
+          { label: '会计期间', value: escapeHtml(data.period) },
+          { label: '主体公司', value: escapeHtml(data.company) },
+          { label: '当前状态', value: tagHtml(data.status) },
+          { label: '预检结果', value: tagHtml(data.result) },
+          { label: '异常数量', value: escapeHtml(data.exceptionCount) },
+          { label: '经办人', value: escapeHtml(data.owner) },
+          { label: '关账时间', value: escapeHtml(data.closeDate) },
+          { label: '反关原因', value: escapeHtml(data.reverseReason), full: true }
+        ]);
+
+        document.getElementById('incomeRows').innerHTML = tableRows([
+          ['未认款', data.incomeUnmatched, linkHtml('finance-matching.html?period=' + encodeURIComponent(data.period), '收款认款'), data.incomeUnmatched === '0笔' ? '已完成' : '待处理'],
+          ['待收款', data.incomeUnreceived, linkHtml('finance-receivable.html?period=' + encodeURIComponent(data.period), '应收管理'), data.incomeUnreceived === '¥0' ? '已完成' : '待处理'],
+          ['退款未执行', data.refundPending, linkHtml('finance-refund-execute.html?period=' + encodeURIComponent(data.period), '退款执行'), data.refundPending === '0笔' ? '已完成' : '待处理'],
+          ['预存异常', data.predepositRisk, linkHtml('finance-predeposit.html?period=' + encodeURIComponent(data.period), '预存账户'), /0笔|待预检/.test(data.predepositRisk) ? data.predepositRisk : '待处理'],
+          ['门店对账', data.predepositRisk, linkHtml('finance-store-reconciliation.html?period=' + encodeURIComponent(data.period), '门店对账'), /0笔|已完成|待预检/.test(data.predepositRisk) ? data.predepositRisk : '待处理']
+        ]);
+
+        document.getElementById('costRows').innerHTML = tableRows([
+          ['供应商账单', data.billPending, linkHtml('finance-supplier-bills.html?period=' + encodeURIComponent(data.period), '供应商账单'), data.billPending === '0笔' ? '已完成' : '待处理'],
+          ['应付差异', data.payableDiff, linkHtml('finance-payable.html?period=' + encodeURIComponent(data.period), '应付管理'), data.payableDiff === '0笔' ? '已完成' : '待处理'],
+          ['付款回单', data.remittancePending, linkHtml('finance-remittance.html?period=' + encodeURIComponent(data.period), '回单核销'), data.remittancePending === '0笔' ? '已完成' : '待处理'],
+          ['预付冲抵', data.prepayPending, linkHtml('finance-prepayment-offset.html?period=' + encodeURIComponent(data.period), '预付冲抵'), data.prepayPending === '0笔' ? '已完成' : '待处理']
+        ]);
+
+        document.getElementById('settlementRows').innerHTML = tableRows([
+          ['业务结算', data.settlementPending, linkHtml('finance-settlement.html?period=' + encodeURIComponent(data.period), '业务结算'), data.settlementPending === '0笔' ? '已完成' : '待处理'],
+          ['结算调整', data.adjustmentPending, linkHtml('finance-settlement-adjustment.html?period=' + encodeURIComponent(data.period), '结算调整'), data.adjustmentPending === '0笔' ? '已完成' : '待处理'],
+          ['锁定状态', data.settlement, linkHtml('finance-settlement.html?period=' + encodeURIComponent(data.period), '查看结算'), /已完成|待预检/.test(data.settlement) ? data.settlement : '待处理'],
+          ['毛利异常', data.result, linkHtml('finance-reports.html?report=profit&period=' + encodeURIComponent(data.period), '毛利报表'), data.risk]
+        ]);
+
+        renderDescription(document.getElementById('taxGrid'), [
+          { label: '销项开票', value: escapeHtml(data.outputInvoice) },
+          { label: '进项收票', value: escapeHtml(data.inputInvoice) },
+          { label: '红冲记录', value: escapeHtml(data.redInvoice) },
+          { label: '票据入口', value: linkHtml('finance-invoice.html?period=' + encodeURIComponent(data.period), '发票管理') },
+          { label: '票据结果', value: escapeHtml(data.invoice), full: true }
+        ]);
+
+        document.getElementById('ncRows').innerHTML = tableRows([
+          ['待推送凭证', data.ncPending, linkHtml('finance-nc.html?period=' + encodeURIComponent(data.period), 'NC推送'), data.ncPending === '0笔' ? '已完成' : '待处理'],
+          ['失败凭证', data.ncFailed, linkHtml('finance-nc.html?status=failed&period=' + encodeURIComponent(data.period), 'NC异常'), data.ncFailed === '0笔' ? '已完成' : '待处理'],
+          ['凭证状态', data.nc, linkHtml('finance-nc.html?period=' + encodeURIComponent(data.period), '凭证任务'), data.nc],
+          ['汇兑调整', data.risk, linkHtml('finance-currency.html?period=' + encodeURIComponent(data.period), '汇率币种'), data.risk]
+        ]);
+
+        document.getElementById('exceptionRows').innerHTML = tableRows([
+          ['收入应收异常', data.income, linkHtml('finance-receivable.html?period=' + encodeURIComponent(data.period), '收入应收'), /已完成|待预检/.test(data.income) ? data.income : '待处理'],
+          ['成本应付异常', data.cost, linkHtml('finance-payable.html?period=' + encodeURIComponent(data.period), '成本应付'), /已完成|待预检/.test(data.cost) ? data.cost : '待处理'],
+          ['结算票据异常', data.settlement + ' / ' + data.invoice, linkHtml('finance-settlement.html?period=' + encodeURIComponent(data.period), '结算票据'), /已完成|待预检/.test(data.settlement) ? data.settlement : '待处理'],
+          ['NC异常', data.nc, linkHtml('finance-nc.html?period=' + encodeURIComponent(data.period), 'NC凭证'), data.nc]
+        ]);
+
+        document.getElementById('logTimeline').innerHTML = [
+          ['期间建立', data.closeNo + ' / ' + data.period],
+          ['预检结果', data.result + ' / ' + data.exceptionCount],
+          ['收入成本', data.income + ' / ' + data.cost],
+          ['结算票据', data.settlement + ' / ' + data.invoice],
+          ['NC凭证', data.nc + ' / ' + data.owner]
+        ].map(function (item) {
+          return '<div class="timeline-item"><div class="timeline-title">' + escapeHtml(item[0]) + '</div><div class="timeline-desc">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function actionForStatus(status) {
+        if (status === '待预检') return 'precheck';
+        if (status === '异常处理中') return 'exception';
+        if (status === '待关账') return 'close';
+        if (status === '已关账') return 'reverse';
+        if (status === '已反关') return 'precheck';
+        return 'detail';
+      }
+
+      function openDetail(row, tabName) {
+        activeRow = row;
+        activeAction = 'detail';
+        document.getElementById('periodDetailTitle').textContent = '关账详情 - ' + row.dataset.closeNo;
+        renderDetail(row);
+        switchDetailTab(tabName || 'overview');
+        var action = actionForStatus(row.dataset.status);
+        var primaryButton = document.querySelector('[data-detail-primary]');
+        if (action === 'detail') {
+          primaryButton.textContent = row.dataset.status === '预检中' ? '查看预检' : '查看详情';
+          primaryButton.dataset.primaryAction = 'none';
+        } else {
+          primaryButton.textContent = action === 'precheck' ? (row.dataset.status === '已反关' ? '重新预检' : '发起预检') : (action === 'exception' ? '处理异常' : (action === 'close' ? '执行关账' : '发起反关'));
+          primaryButton.dataset.primaryAction = 'work';
+        }
+        openLayer(detailDrawer);
+      }
+
+      function actionTitle(action, row) {
+        if (action === 'precheck') return (row.dataset.status === '已反关' ? '重新预检 - ' : '发起预检 - ') + row.dataset.closeNo;
+        if (action === 'exception') return '处理异常 - ' + row.dataset.closeNo;
+        if (action === 'close') return '执行关账 - ' + row.dataset.closeNo;
+        if (action === 'reverse') return '发起反关 - ' + row.dataset.closeNo;
+        return '关账处理 - ' + row.dataset.closeNo;
+      }
+
+      function openWork(row, action) {
+        activeRow = row;
+        activeAction = action || actionForStatus(row.dataset.status);
+        document.getElementById('periodWorkTitle').textContent = actionTitle(activeAction, row);
+        document.getElementById('workObjectTitle').textContent = row.dataset.closeNo + ' / ' + row.dataset.company;
+        document.getElementById('workObjectSubtitle').textContent = row.dataset.period + ' / ' + row.dataset.result + ' / ' + row.dataset.owner;
+        document.getElementById('workObjectStatus').innerHTML = tagHtml(row.dataset.status);
+        renderSummary(document.getElementById('workSummaryGrid'), row);
+        document.getElementById('workSectionTitle').textContent = activeAction === 'exception' ? '异常处理' : '本次处理';
+        document.getElementById('workResult').value = activeAction === 'precheck' ? '发起预检' : (activeAction === 'exception' ? '异常处理' : (activeAction === 'close' ? '执行关账' : '发起反关'));
+        document.getElementById('workOwner').value = row.dataset.owner;
+        document.getElementById('workRisk').value = row.dataset.result;
+        document.getElementById('workNc').value = row.dataset.nc;
+        document.getElementById('workRemark').value = row.dataset.result + '；' + row.dataset.reverseReason;
+        openLayer(workDrawer);
+      }
+
+      function confirmWork() {
+        if (!activeRow) return;
+        var result = document.getElementById('workResult').value;
+        if (activeAction === 'precheck') {
+          activeRow.dataset.status = '预检中';
+          activeRow.dataset.result = '预检中';
+        } else if (activeAction === 'exception') {
+          activeRow.dataset.status = activeRow.dataset.risk === '预检通过' ? '待关账' : '异常处理中';
+        } else if (activeAction === 'close') {
+          activeRow.dataset.status = '已关账';
+          activeRow.dataset.result = '已关账';
+          activeRow.dataset.closeDate = '2026-07-13 18:30';
+        } else if (activeAction === 'reverse') {
+          activeRow.dataset.status = '已反关';
+          activeRow.dataset.result = '已反关';
+        }
+        closeLayer(workDrawer);
+        updateCounts();
+        applyFilters();
+        notify(result + '已记录');
+      }
+
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var query = params.get('closeNo') || params.get('period') || params.get('company');
+        if (!query) return;
+        var row = rows.find(function (item) { return rowText(item).indexOf(query) >= 0; });
+        if (!row) return;
+        switchStatus(row.dataset.status);
+        openDetail(row);
+      }
+
+      document.addEventListener('click', function (event) {
+        var statusTab = event.target.closest('[data-status-tab]');
+        if (statusTab) {
+          switchStatus(statusTab.dataset.statusTab);
+          return;
+        }
+
+        var detailTab = event.target.closest('[data-detail-tab]');
+        if (detailTab) {
+          switchDetailTab(detailTab.dataset.detailTab);
+          return;
+        }
+
+        var workButton = event.target.closest('[data-open-work]');
+        if (workButton) {
+          openWork(workButton.closest('tr'), workButton.dataset.openWork);
+          return;
+        }
+
+        var detailButton = event.target.closest('[data-open-detail]');
+        if (detailButton) {
+          openDetail(detailButton.closest('tr'));
+          return;
+        }
+
+        if (event.target.closest('[data-detail-primary]')) {
+          if (!activeRow) return;
+          if (event.target.closest('[data-detail-primary]').dataset.primaryAction === 'none') return;
+          closeLayer(detailDrawer);
+          openWork(activeRow, actionForStatus(activeRow.dataset.status));
+          return;
+        }
+
+        if (event.target.closest('[data-confirm-work]')) {
+          confirmWork();
+          return;
+        }
+
+        if (event.target.closest('[data-refresh-close]')) {
+          notify('期间预检数据已刷新');
+          return;
+        }
+
+        if (event.target.closest('[data-export]')) {
+          notify('期间关账列表已导出');
+          return;
+        }
+
+        if (event.target.closest('[data-search-period]')) {
+          applyFilters();
+          return;
+        }
+
+        if (event.target.closest('[data-reset-period]')) {
+          resetFilters();
+          return;
+        }
+
+        var closeButton = event.target.closest('[data-close-layer]');
+        if (closeButton) {
+          closeLayer(closeButton.closest('.modal-overlay'));
+        }
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (event) {
+          if (event.target === overlay) closeLayer(overlay);
+        });
+      });
+
+      updateCounts();
+      applyFilters();
+      openFromParams();
+    })();
+  </script>
+</body>
+</html>

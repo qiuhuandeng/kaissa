@@ -5,6 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>回单核销 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .finance-remittance-table table {
+      min-width: 2180px;
+    }
+    .finance-remittance-table col:nth-child(1) { width: 230px; }
+    .finance-remittance-table col:nth-child(2) { width: 130px; }
+    .finance-remittance-table col:nth-child(3) { width: 230px; }
+    .finance-remittance-table col:nth-child(4) { width: 180px; }
+    .finance-remittance-table col:nth-child(5) { width: 260px; }
+    .finance-remittance-table col:nth-child(6) { width: 170px; }
+    .finance-remittance-table col:nth-child(7) { width: 170px; }
+    .finance-remittance-table col:nth-child(8) { width: 210px; }
+    .finance-remittance-table col:nth-child(9) { width: 190px; }
+    .finance-remittance-table col:nth-child(10) { width: 210px; }
+    .finance-remittance-table col:nth-child(11) { width: 150px; }
+    .finance-remittance-table th.sticky-action,
+    .finance-remittance-table td.sticky-action {
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: var(--surface, #fff);
+    }
+    .remittance-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .remittance-summary-item {
+      padding: 12px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      background: var(--surface-soft, #f8fafc);
+    }
+    .remittance-summary-label {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+    }
+    .remittance-summary-value {
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--text-primary, #0f172a);
+    }
+    .remittance-tab-panels .drawer-section[hidden] {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -15,141 +65,512 @@
         <h1 class="page-title">回单核销</h1>
       </div>
       <div class="page-actions">
-        <button class="btn btn-primary" type="button" data-open-upload>上传回单</button>
+        <button class="btn btn-secondary" type="button" data-refresh-remittance>刷新状态</button>
+        <button class="btn btn-primary" type="button" data-upload-remittance>上传回单</button>
+        <button class="btn btn-secondary" type="button" data-export-remittance>导出</button>
       </div>
     </div>
   </section>
 
   <section class="list-surface list-surface-tabbed finance-remittance-list-surface" data-list-surface>
     <div class="list-surface-tabbar-row">
-      <nav class="tab-bar remittance-tabs list-function-tabs list-surface-tabs" aria-label="回单核销标签">
-        <button class="tab-item active" type="button" data-remittance-tab="pending">待核销</button>
-        <button class="tab-item" type="button" data-remittance-tab="exception">异常回单</button>
-        <button class="tab-item" type="button" data-remittance-tab="records">已核销</button>
+      <nav class="tab-bar list-surface-tabs" aria-label="回单核销主状态">
+        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待回单">待回单 <span class="tab-count" data-status-count="待回单">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待匹配">待匹配 <span class="tab-count" data-status-count="待匹配">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待核销">待核销 <span class="tab-count" data-status-count="待核销">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="有差异">有差异 <span class="tab-count" data-status-count="有差异">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已核销">已核销 <span class="tab-count" data-status-count="已核销">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
       </nav>
     </div>
 
-    <section id="remittance-pending" class="remittance-panel active">
-      <section class="filter-card filter-card-compact remittance-filter list-surface-filter" aria-label="待核销回单筛选">
-        <div class="filter-row">
-          <div class="filter-item"><label class="sr-only" for="remittanceKeyword">回单流水/付款单/退款单/对象</label><input id="remittanceKeyword" type="search" placeholder="回单流水/付款单/退款单/对象"></div>
-          <div class="filter-item-sm"><label class="sr-only" for="remittanceType">单据类型</label><select id="remittanceType"><option>全部类型</option><option>付款回单</option><option>退款回单</option><option>预存调整</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-remittance>查询</button><button class="btn btn-secondary" type="button" data-reset-remittance>重置</button></div>
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="回单核销筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="remittanceKeyword">回单号/付款单/退款单/供应商/客户/团组</label>
+          <input id="remittanceKeyword" type="search" placeholder="回单号/付款单/退款单/供应商/客户/团组">
         </div>
-      </section>
-
-      <section class="table-wrap remittance-table list-surface-table list-table-with-pagination" aria-label="待核销回单">
-        <table>
-          <thead><tr><th>回单流水</th><th>类型</th><th>交易日期</th><th>交易对象</th><th>金额</th><th>匹配单据</th><th>业务内容</th><th>校验</th><th>操作</th></tr></thead>
-          <tbody id="remittancePendingRows">
-            <tr data-tab-status="待核销" data-no="CMBCPAY20260706018" data-type="付款回单" data-date="2026-07-06" data-object="中国国际航空" data-amount="¥122,268" data-doc="PAYEX-PAY-TRF-20260818001 / AP-TRF-20260818001" data-business="欧洲十国经典游 / A线 法德意12天 / EU20260818001" data-check="金额一致" data-status="待核销" data-nc="待推送" data-file="回单_国航交通待付_20260706.pdf" data-contract-no="AIR-BLK-20260618-001 / AIR-RET-20260618-002" data-schedule-no="EU20260818001" data-resource-type="机票" data-payment-node="二压/三压待付" data-cost-source="团期成本 / 交通应付分摊" data-original-qty="30" data-effective-qty="20" data-change-no="CHG-AIR-20260710-001 / CHG-AIR-20260710-002" data-prepaid="¥6,666" data-adjustment="¥666" data-deduction="¥25,800">
-              <td>CMBCPAY20260706018<br><span class="text-muted">回单_国航交通待付</span></td><td>付款回单</td><td>2026-07-06</td><td>中国国际航空</td><td class="amount-strong">¥122,268</td><td>PAYEX-PAY-TRF-20260818001<br><span class="text-muted">AP-TRF-20260818001</span></td><td>欧洲十国经典游<br><span class="text-muted">EU20260818001</span></td><td><span class="tag tag-green">金额一致</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-writeoff>核销</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="待核销" data-no="CMBCPAY20260624001" data-type="付款回单" data-date="2026-06-24" data-object="欧洲联合地接社" data-amount="¥112,000" data-doc="PAYEX-20260624001 / AP20260624001" data-business="欧洲十国经典游 / 法德意A线" data-check="金额一致" data-status="待核销" data-nc="待推送" data-file="回单_欧洲联合地接_20260624.pdf">
-              <td>CMBCPAY20260624001<br><span class="text-muted">回单_欧洲联合地接</span></td><td>付款回单</td><td>2026-06-24</td><td>欧洲联合地接社</td><td class="amount-strong">¥112,000</td><td>PAYEX-20260624001<br><span class="text-muted">AP20260624001</span></td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td><span class="tag tag-green">金额一致</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-writeoff>核销</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="待核销" data-no="WXRF20260623008" data-type="退款回单" data-date="2026-06-23" data-object="马晓丽" data-amount="¥36,000" data-doc="RFD-20260621-0026" data-business="北欧四国15日 / 北欧峡湾线" data-check="金额一致" data-status="待核销" data-nc="待推送" data-file="回单_退款_马晓丽_20260623.pdf">
-              <td>WXRF20260623008<br><span class="text-muted">退款回单</span></td><td>退款回单</td><td>2026-06-23</td><td>马晓丽</td><td class="amount-strong">¥36,000</td><td>RFD-20260621-0026</td><td>北欧四国15日<br><span class="text-muted">北欧峡湾线</span></td><td><span class="tag tag-green">金额一致</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-writeoff>核销</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="remittanceType">回单类型</label>
+          <select id="remittanceType">
+            <option>全部类型</option>
+            <option>付款回单</option>
+            <option>退款回单</option>
+            <option>付款退回</option>
+            <option>调拨回单</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="sourceFilter">来源方式</label>
+          <select id="sourceFilter">
+            <option>全部来源</option>
+            <option>付款执行</option>
+            <option>退款执行</option>
+            <option>银行导入</option>
+            <option>银企直联</option>
+            <option>聚合支付</option>
+            <option>银行退回</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="documentType">关联单据</label>
+          <select id="documentType">
+            <option>全部单据</option>
+            <option>付款单</option>
+            <option>退款单</option>
+            <option>退回单</option>
+            <option>调拨单</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="companyFilter">付款主体</label>
+          <select id="companyFilter">
+            <option>全部主体</option>
+            <option>总部财务</option>
+            <option>北京凯撒</option>
+            <option>上海凯撒</option>
+            <option>福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="bankAccountFilter">银行账户</label>
+          <select id="bankAccountFilter">
+            <option>全部账户</option>
+            <option>民生银行北京分行</option>
+            <option>招商银行总部账户</option>
+            <option>建设银行北京账户</option>
+            <option>中国银行北京分行</option>
+            <option>工商银行福州账户</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="currencyFilter">币种</label>
+          <select id="currencyFilter">
+            <option>全部币种</option>
+            <option>CNY</option>
+            <option>USD</option>
+            <option>EUR</option>
+            <option>HKD</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="accountCheck">账户核对</label>
+          <select id="accountCheck">
+            <option>全部账户</option>
+            <option>待补回单</option>
+            <option>待匹配</option>
+            <option>账户一致</option>
+            <option>账户异常</option>
+            <option>主体异常</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="amountCheck">金额核对</label>
+          <select id="amountCheck">
+            <option>全部金额</option>
+            <option>待补回单</option>
+            <option>待匹配</option>
+            <option>金额一致</option>
+            <option>金额差异</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="ncStatusFilter">NC状态</label>
+          <select id="ncStatusFilter">
+            <option>全部NC</option>
+            <option>未生成</option>
+            <option>待推送</option>
+            <option>已推送</option>
+            <option>推送失败</option>
+          </select>
+        </div>
+        <div class="filter-item-wide filter-item-date-range">
+          <label class="sr-only">交易日期</label>
+          <div class="date-range">
+            <input id="dateStart" type="date" value="2026-06-01" aria-label="开始日期">
+            <span>至</span>
+            <input id="dateEnd" type="date" value="2026-07-31" aria-label="结束日期">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button" data-search-remittance>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-remittance>重置</button>
+        </div>
+      </div>
     </section>
 
-    <section id="remittance-exception" class="remittance-panel">
-      <section class="table-wrap remittance-table list-surface-table list-table-with-pagination" aria-label="异常回单">
-        <table>
-          <thead><tr><th>回单流水</th><th>类型</th><th>交易日期</th><th>交易对象</th><th>金额</th><th>异常原因</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody id="remittanceExceptionRows">
-            <tr data-no="UNKNOWN20260621" data-type="付款回单" data-date="2026-06-21" data-object="未识别" data-amount="¥45,000" data-doc="待匹配" data-business="待选择" data-check="无法自动匹配" data-status="异常" data-nc="未生成" data-file="回单_模糊扫描件.jpg">
-              <td>UNKNOWN20260621<br><span class="text-muted">回单_模糊扫描件</span></td><td>付款回单</td><td>2026-06-21</td><td>未识别</td><td class="amount-strong">¥45,000</td><td>无法自动匹配付款单</td><td><span class="tag tag-red">异常</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-exception>处理异常</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-1条/共1条</span></div>
+    <section class="table-wrap finance-remittance-table list-surface-table list-table-with-pagination" aria-label="回单核销列表">
+      <table>
+        <colgroup>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>回单号/来源</th>
+            <th>回单类型</th>
+            <th>关联单据</th>
+            <th>付款对象</th>
+            <th>关联团组</th>
+            <th>原币回单</th>
+            <th>汇率/本币</th>
+            <th>账户核对</th>
+            <th>金额核对</th>
+            <th>凭证NC</th>
+            <th class="sticky-action">操作</th>
+          </tr>
+        </thead>
+        <tbody id="remittanceRows">
+          <tr data-remittance-no="RM-PAY-AIR-20260706018" data-flow-no="-" data-file-name="未上传" data-source="付款执行" data-type="付款回单" data-document-type="付款单" data-company="北京凯撒" data-bank-account="民生银行北京分行" data-trade-date="2026-07-06" data-payee="中国国际航空" data-payee-type="航司" data-document-no="PAY-AIR-20260818001" data-payment-no="PAY-AIR-20260818001" data-payable-no="AP-AIR-20260818001" data-refund-no="-" data-return-no="-" data-apply-no="FK-AIR-20260706018" data-business="欧洲十国经典游 / A线 法德意12天" data-business-no="EU20260818001" data-business-type="标准团期" data-original-amount="USD 17,056" data-currency="USD" data-rate="7.1667" data-local-amount="¥122,268" data-account-check="待补回单" data-account-detail="付款执行完成后补传银行回单" data-amount-check="待补回单" data-amount-detail="回单文件未上传" data-voucher="未生成" data-nc="未生成" data-diff-original="-" data-diff-local="-" data-risk="回单未上传" data-handler="出纳刘静" data-status="待回单">
+            <td><div class="table-cell-main"><strong>RM-PAY-AIR-20260706018</strong><span>付款执行 / 未上传</span></div></td>
+            <td><span class="tag tag-blue">付款回单</span></td>
+            <td><div class="table-cell-main"><strong>PAY-AIR-20260818001</strong><span>AP-AIR-20260818001</span></div></td>
+            <td><div class="table-cell-main"><strong>中国国际航空</strong><span>航司 / 北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>欧洲十国经典游</strong><span>EU20260818001</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">USD 17,056</strong><span>USD / 2026-07-06</span></div></td>
+            <td><div class="table-cell-main"><strong>7.1667</strong><span>¥122,268</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待补回单</span><span>民生银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待补回单</span><span>回单文件未上传</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>付款回单未核销</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="upload">上传回单</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-remittance-no="RM-UNKNOWN-20260621001" data-flow-no="UNKNOWN20260621" data-file-name="回单_模糊扫描件.jpg" data-source="银行导入" data-type="付款回单" data-document-type="付款单" data-company="总部财务" data-bank-account="中国银行北京分行" data-trade-date="2026-06-21" data-payee="未识别付款对象" data-payee-type="待识别" data-document-no="待匹配" data-payment-no="-" data-payable-no="-" data-refund-no="-" data-return-no="-" data-apply-no="-" data-business="待选择团组" data-business-no="-" data-business-type="待识别" data-original-amount="¥45,000" data-currency="CNY" data-rate="1.0000" data-local-amount="¥45,000" data-account-check="主体异常" data-account-detail="收款户名无法匹配供应商白名单" data-amount-check="待匹配" data-amount-detail="缺少付款单匹配依据" data-voucher="未生成" data-nc="未生成" data-diff-original="待匹配" data-diff-local="待匹配" data-risk="付款对象未识别" data-handler="资金会计周宁" data-status="待匹配">
+            <td><div class="table-cell-main"><strong>UNKNOWN20260621</strong><span>银行导入 / 回单_模糊扫描件.jpg</span></div></td>
+            <td><span class="tag tag-blue">付款回单</span></td>
+            <td><div class="table-cell-main"><strong>待匹配</strong><span>付款单待选择</span></div></td>
+            <td><div class="table-cell-main"><strong>未识别付款对象</strong><span>待识别 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>待选择团组</strong><span>-</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥45,000</strong><span>CNY / 2026-06-21</span></div></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>¥45,000</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">主体异常</span><span>中国银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待匹配</span><span>缺少付款单匹配依据</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>回单未匹配</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="match">匹配单据</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-remittance-no="CMBCPAY20260701001" data-flow-no="CMBCPAY20260701001" data-file-name="回单_BSP散票账单_20260701.pdf" data-source="银企直联" data-type="付款回单" data-document-type="付款单" data-company="总部财务" data-bank-account="中国银行北京分行" data-trade-date="2026-07-01" data-payee="BSP结算中心" data-payee-type="航司" data-document-no="PAY-BSP-20260630001" data-payment-no="PAY-BSP-20260630001" data-payable-no="BSP-SET-202606-02" data-refund-no="-" data-return-no="-" data-apply-no="JS-BSP-20260630001" data-business="BSP散票账单 / 2026年6月下半月" data-business-no="BSP-SET-202606-02" data-business-type="单项服务" data-original-amount="¥286,400" data-currency="CNY" data-rate="1.0000" data-local-amount="¥286,400" data-account-check="账户一致" data-account-detail="付款账户、收款户名和白名单一致" data-amount-check="金额一致" data-amount-detail="付款单与银行回单金额一致" data-voucher="PAY-VCH-20260701001" data-nc="待推送" data-diff-original="¥0" data-diff-local="¥0" data-risk="无差异" data-handler="出纳李明" data-status="待核销">
+            <td><div class="table-cell-main"><strong>CMBCPAY20260701001</strong><span>银企直联 / PDF回单</span></div></td>
+            <td><span class="tag tag-blue">付款回单</span></td>
+            <td><div class="table-cell-main"><strong>PAY-BSP-20260630001</strong><span>BSP-SET-202606-02</span></div></td>
+            <td><div class="table-cell-main"><strong>BSP结算中心</strong><span>航司 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>BSP散票账单</strong><span>BSP-SET-202606-02</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥286,400</strong><span>CNY / 2026-07-01</span></div></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>¥286,400</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">账户一致</span><span>中国银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">金额一致</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>PAY-VCH-20260701001</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="writeoff">确认核销</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-remittance-no="WXRF20260623008" data-flow-no="WXRF20260623008" data-file-name="回单_退款_马晓丽_20260623.pdf" data-source="聚合支付" data-type="退款回单" data-document-type="退款单" data-company="总部财务" data-bank-account="招商银行总部账户" data-trade-date="2026-06-23" data-payee="马晓丽" data-payee-type="客户" data-document-no="RFD-20260621-0026" data-payment-no="-" data-payable-no="-" data-refund-no="RFD-20260621-0026" data-return-no="-" data-apply-no="AFS-20260621007" data-business="北欧四国15日 / 北欧峡湾线" data-business-no="KS202606180026" data-business-type="订单退款" data-original-amount="¥36,000" data-currency="CNY" data-rate="1.0000" data-local-amount="¥36,000" data-account-check="账户一致" data-account-detail="原路退回账户一致" data-amount-check="金额一致" data-amount-detail="退款执行单与商户回单一致" data-voucher="RFD-VCH-20260623008" data-nc="待推送" data-diff-original="¥0" data-diff-local="¥0" data-risk="无差异" data-handler="退款会计赵怡" data-status="待核销">
+            <td><div class="table-cell-main"><strong>WXRF20260623008</strong><span>聚合支付 / 商户回单</span></div></td>
+            <td><span class="tag tag-purple">退款回单</span></td>
+            <td><div class="table-cell-main"><strong>RFD-20260621-0026</strong><span>AFS-20260621007</span></div></td>
+            <td><div class="table-cell-main"><strong>马晓丽</strong><span>客户 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>北欧四国15日</strong><span>KS202606180026</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥36,000</strong><span>CNY / 2026-06-23</span></div></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>¥36,000</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">账户一致</span><span>招商银行总部账户</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">金额一致</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>RFD-VCH-20260623008</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="writeoff">确认核销</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-remittance-no="BOC-RET-20260618006" data-flow-no="BOC-RET-20260618006" data-file-name="银行退回回单_雅典地接_20260618.pdf" data-source="银行退回" data-type="付款退回" data-document-type="退回单" data-company="总部财务" data-bank-account="中国银行北京分行" data-trade-date="2026-06-18" data-payee="雅典本地地接社" data-payee-type="地接" data-document-no="RET-ATH-20260618006" data-payment-no="PAY-20260618-006" data-payable-no="AP20260618009" data-refund-no="-" data-return-no="RET-ATH-20260618006" data-apply-no="FK20260618009" data-business="希腊海岛游 / 雅典圣岛线" data-business-no="EU-GRC-20250708-001" data-business-type="标准团期" data-original-amount="EUR 9,680" data-currency="EUR" data-rate="7.9341" data-local-amount="¥76,800" data-account-check="账户异常" data-account-detail="境外账户信息与供应商白名单不一致" data-amount-check="金额差异" data-amount-detail="银行退回手续费折算差异 ¥320" data-voucher="未生成" data-nc="未生成" data-diff-original="EUR 40" data-diff-local="¥320" data-risk="银行退回 / 境外账户异常" data-handler="资金会计周宁" data-status="有差异">
+            <td><div class="table-cell-main"><strong>BOC-RET-20260618006</strong><span>银行退回 / PDF回单</span></div></td>
+            <td><span class="tag tag-red">付款退回</span></td>
+            <td><div class="table-cell-main"><strong>RET-ATH-20260618006</strong><span>PAY-20260618-006</span></div></td>
+            <td><div class="table-cell-main"><strong>雅典本地地接社</strong><span>地接 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>希腊海岛游</strong><span>EU-GRC-20250708-001</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">EUR 9,680</strong><span>EUR / 2026-06-18</span></div></td>
+            <td><div class="table-cell-main"><strong>7.9341</strong><span>¥76,800</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">账户异常</span><span>中国银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">金额差异</span><span>差异 ¥320</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>差异未处理</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="diff">处理差异</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-remittance-no="CMBRET20260712001" data-flow-no="CMBRET20260712001" data-file-name="邮轮保证金退回_20260712.pdf" data-source="银企直联" data-type="付款退回" data-document-type="退回单" data-company="上海凯撒" data-bank-account="招商银行总部账户" data-trade-date="2026-07-12" data-payee="理想号邮轮公司" data-payee-type="船司" data-document-no="RET-SUP-20260712001" data-payment-no="PAY-CRU-20260630001" data-payable-no="AP-CRU-20260912001" data-refund-no="-" data-return-no="RET-SUP-20260712001" data-apply-no="FK-CRU-20260630001" data-business="理想号地中海邮轮 / 地中海西线" data-business-no="CZ20260912001" data-business-type="邮轮航次" data-original-amount="¥60,000" data-currency="CNY" data-rate="1.0000" data-local-amount="¥60,000" data-account-check="账户一致" data-account-detail="退回账户与原付款账户一致" data-amount-check="金额一致" data-amount-detail="付款退回单与银行回单一致" data-voucher="RET-VCH-20260712001" data-nc="待推送" data-diff-original="¥0" data-diff-local="¥0" data-risk="无差异" data-handler="资金会计周宁" data-status="已核销">
+            <td><div class="table-cell-main"><strong>CMBRET20260712001</strong><span>银企直联 / 退回回单</span></div></td>
+            <td><span class="tag tag-red">付款退回</span></td>
+            <td><div class="table-cell-main"><strong>RET-SUP-20260712001</strong><span>PAY-CRU-20260630001</span></div></td>
+            <td><div class="table-cell-main"><strong>理想号邮轮公司</strong><span>船司 / 上海凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>理想号地中海邮轮</strong><span>CZ20260912001</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥60,000</strong><span>CNY / 2026-07-12</span></div></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>¥60,000</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">账户一致</span><span>招商银行总部账户</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">金额一致</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>RET-VCH-20260712001</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="nc">查看凭证</button></div></td>
+          </tr>
+          <tr data-remittance-no="CMBCPAY20260709011" data-flow-no="CMBCPAY20260709011" data-file-name="回单_携程服务费_20260709.pdf" data-source="银企直联" data-type="付款回单" data-document-type="付款单" data-company="总部财务" data-bank-account="招商银行总部账户" data-trade-date="2026-07-09" data-payee="携程旅行网" data-payee-type="渠道" data-document-no="PAYEX-OTA-20260709011" data-payment-no="PAYEX-OTA-20260709011" data-payable-no="AP-OTA-20260704003" data-refund-no="-" data-return-no="-" data-apply-no="FK20260709011" data-business="OTA平台对账 / 2026-07" data-business-no="OTA-REC-202607-001" data-business-type="渠道结算" data-original-amount="¥38,896" data-currency="CNY" data-rate="1.0000" data-local-amount="¥38,896" data-account-check="账户一致" data-account-detail="平台收款账户与白名单一致" data-amount-check="金额一致" data-amount-detail="付款单、平台结算单和回单一致" data-voucher="PAY-VCH-20260709011" data-nc="待推送" data-diff-original="¥0" data-diff-local="¥0" data-risk="NC待推送" data-handler="出纳李明" data-status="已核销">
+            <td><div class="table-cell-main"><strong>CMBCPAY20260709011</strong><span>银企直联 / PDF回单</span></div></td>
+            <td><span class="tag tag-blue">付款回单</span></td>
+            <td><div class="table-cell-main"><strong>PAYEX-OTA-20260709011</strong><span>AP-OTA-20260704003</span></div></td>
+            <td><div class="table-cell-main"><strong>携程旅行网</strong><span>渠道 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>OTA平台对账</strong><span>OTA-REC-202607-001</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥38,896</strong><span>CNY / 2026-07-09</span></div></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>¥38,896</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">账户一致</span><span>招商银行总部账户</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">金额一致</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>PAY-VCH-20260709011</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="nc">查看凭证</button></div></td>
+          </tr>
+          <tr data-remittance-no="PAYEX20260620001" data-flow-no="PAYEX20260620001" data-file-name="PAYEX20260620001.pdf" data-source="银企直联" data-type="付款回单" data-document-type="付款单" data-company="北京凯撒" data-bank-account="建设银行北京账户" data-trade-date="2026-06-20" data-payee="北京优选车队" data-payee-type="车队" data-document-no="PAYEX-20260620-001" data-payment-no="PAYEX-20260620-001" data-payable-no="AP20260620006" data-refund-no="-" data-return-no="-" data-apply-no="FK20260620006" data-business="北京故宫定制游 / 京城文化线" data-business-no="CN-BJG-20250701-001" data-business-type="标准团期" data-original-amount="¥18,900" data-currency="CNY" data-rate="1.0000" data-local-amount="¥18,900" data-account-check="账户一致" data-account-detail="付款账户和供应商白名单一致" data-amount-check="金额一致" data-amount-detail="付款单与回单一致" data-voucher="PAY-VCH-20260620001" data-nc="已推送" data-diff-original="¥0" data-diff-local="¥0" data-risk="已归档" data-handler="出纳李明" data-status="已关闭">
+            <td><div class="table-cell-main"><strong>PAYEX20260620001</strong><span>银企直联 / 归档回单</span></div></td>
+            <td><span class="tag tag-blue">付款回单</span></td>
+            <td><div class="table-cell-main"><strong>PAYEX-20260620-001</strong><span>AP20260620006</span></div></td>
+            <td><div class="table-cell-main"><strong>北京优选车队</strong><span>车队 / 北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>北京故宫定制游</strong><span>CN-BJG-20250701-001</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥18,900</strong><span>CNY / 2026-06-20</span></div></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>¥18,900</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">账户一致</span><span>建设银行北京账户</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">金额一致</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>PAY-VCH-20260620001</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+          </tr>
+        </tbody>
+      </table>
     </section>
-
-    <section id="remittance-records" class="remittance-panel">
-      <section class="table-wrap remittance-table list-surface-table list-table-with-pagination" aria-label="已核销回单">
-        <table>
-          <thead><tr><th>回单流水</th><th>类型</th><th>核销时间</th><th>交易对象</th><th>金额</th><th>匹配单据</th><th>NC状态</th><th>操作</th></tr></thead>
-          <tbody id="remittanceRecordRows">
-            <tr data-no="CMBCPAY20260620012" data-type="付款回单" data-date="2026-06-20" data-object="中国国际航空" data-amount="¥77,400" data-doc="PAYEX-AIR-20260620012 / AP-AIR-20260618001" data-business="AIR-BLK-20260618-001 / AIR-RET-20260618-002 / 一压预付款" data-check="已核销" data-status="已核销" data-nc="已推送" data-file="回单_国航一压预付款_20260620.pdf" data-contract-no="AIR-BLK-20260618-001 / AIR-RET-20260618-002" data-schedule-no="EU20260818001" data-resource-type="机票" data-payment-node="一压" data-cost-source="交通采购合同预付款">
-              <td>CMBCPAY20260620012</td><td>付款回单</td><td>2026-06-20 11:20</td><td>中国国际航空</td><td class="amount-strong">¥77,400</td><td>PAYEX-AIR-20260620012</td><td><span class="tag tag-green">已推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-no="PAYEX20260620001" data-type="付款回单" data-date="2026-06-20" data-object="北京优选车队" data-amount="¥18,900" data-doc="PAYEX-20260620-001 / AP20260620006" data-business="北京故宫定制游 / 京城文化线" data-check="已核销" data-status="已核销" data-nc="已推送" data-file="PAYEX20260620001.pdf">
-              <td>PAYEX20260620001</td><td>付款回单</td><td>2026-06-20 14:30</td><td>北京优选车队</td><td class="amount-strong">¥18,900</td><td>PAYEX-20260620-001</td><td><span class="tag tag-green">已推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-2条/共2条</span></div>
-    </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="remittancePagination">第1-8条/共8条</span>
+    </div>
   </section>
 
-  <div id="remittanceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="remittanceDrawerTitle">
-      <div class="modal-header">
-        <div id="remittanceDrawerTitle" class="modal-title">回单处理</div>
-        <button class="modal-close" type="button" aria-label="关闭回单处理" data-close-layer>×</button>
-      </div>
-      <div class="modal-body">
-        <section id="remittanceGrid" class="description-grid"></section>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="matchDoc">匹配单据</label>
-            <input id="matchDoc" class="form-control" type="text">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="matchAmount">核销金额</label>
-            <input id="matchAmount" class="form-control" type="number">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">回单文件</label>
-          <div class="upload-box">上传或替换回单文件</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="remittanceRemark">处理说明</label>
-          <textarea id="remittanceRemark" class="form-control" rows="4"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
-        <button class="btn btn-primary" type="button" data-confirm-remittance>确认核销</button>
-      </div>
-    </div>
-  </div>
-
   <div id="remittanceDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="remittanceDetailTitle">
+    <div class="modal drawer-modal drawer-xl" role="dialog" aria-modal="true" aria-labelledby="remittanceDetailTitle">
       <div class="modal-header">
         <div id="remittanceDetailTitle" class="modal-title">回单详情</div>
         <button class="modal-close" type="button" aria-label="关闭回单详情" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <section id="remittanceDetailGrid" class="description-grid"></section>
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="detailObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="detailObjectSubtitle">-</div>
+            </div>
+            <div id="detailObjectStatus"></div>
+          </div>
+          <div class="remittance-summary-grid" id="detailSummaryGrid"></div>
+        </section>
+
+        <nav class="tab-bar drawer-tab-bar" aria-label="回单详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="overview">回单总览</button>
+          <button class="tab-item" type="button" data-detail-tab="links">关联单据</button>
+          <button class="tab-item" type="button" data-detail-tab="currency">原币汇率</button>
+          <button class="tab-item" type="button" data-detail-tab="bank">银行流水</button>
+          <button class="tab-item" type="button" data-detail-tab="account">账户核对</button>
+          <button class="tab-item" type="button" data-detail-tab="amount">金额核对</button>
+          <button class="tab-item" type="button" data-detail-tab="diff">差异处理</button>
+          <button class="tab-item" type="button" data-detail-tab="nc">凭证NC</button>
+          <button class="tab-item" type="button" data-detail-tab="files">附件记录</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+        </nav>
+
+        <section class="remittance-tab-panels">
+          <section class="drawer-section" data-detail-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">回单总览</h3></div>
+            <section class="description-grid" id="overviewGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="links" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">关联单据</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>单据类型</th><th>单据号</th><th>应付/申请</th><th>关联团组</th><th>入口</th></tr></thead>
+                <tbody id="linkRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="currency" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">原币汇率</h3></div>
+            <section class="description-grid" id="currencyGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="bank" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">银行流水</h3></div>
+            <section class="description-grid" id="bankGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="account" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">账户核对</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>核对项</th><th>系统口径</th><th>回单口径</th><th>结果</th></tr></thead>
+                <tbody id="accountRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="amount" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">金额核对</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>核对项</th><th>系统金额</th><th>回单口径</th><th>差异</th><th>结果</th></tr></thead>
+                <tbody id="amountRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="diff" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">差异处理</h3></div>
+            <section class="description-grid" id="diffGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="nc" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">凭证NC</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>凭证号</th><th>来源事件</th><th>本币金额</th><th>NC状态</th><th>入口</th></tr></thead>
+                <tbody id="ncRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="files" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">附件记录</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>文件名称</th><th>来源方式</th><th>银行流水号</th><th>交易日期</th><th>处理人</th></tr></thead>
+                <tbody id="fileRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="logs" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>时间</th><th>处理环节</th><th>处理人</th><th>结果</th></tr></thead>
+                <tbody id="logRows"></tbody>
+              </table>
+            </section>
+          </section>
+        </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>确认处理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="remittanceWorkDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="remittanceWorkTitle">
+      <div class="modal-header">
+        <div id="remittanceWorkTitle" class="modal-title">回单处理</div>
+        <button class="modal-close" type="button" aria-label="关闭回单处理" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card" id="workObjectCard">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="workObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="workObjectSubtitle">-</div>
+            </div>
+            <div id="workObjectStatus"></div>
+          </div>
+          <div class="remittance-summary-grid" id="workSummaryGrid"></div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">核销依据</h3></div>
+          <section class="table-wrap">
+            <table>
+              <thead><tr><th>项目</th><th>系统口径</th><th>回单口径</th><th>结果</th></tr></thead>
+              <tbody id="workCheckRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">本次处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workFlowNo">银行流水号</label>
+              <input id="workFlowNo" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workDocumentNo">关联单据</label>
+              <input id="workDocumentNo" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workOriginalAmount">原币回单</label>
+              <input id="workOriginalAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workRate">锁定汇率</label>
+              <input id="workRate" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workLocalAmount">本币金额</label>
+              <input id="workLocalAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workResult">处理结果</label>
+              <select id="workResult" class="form-control">
+                <option>补传回单</option>
+                <option>匹配单据</option>
+                <option>确认核销</option>
+                <option>差异确认</option>
+                <option>关闭回单</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">回单文件</label>
+            <div class="upload-box">上传或替换回单文件</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="workRemark">处理备注</label>
+            <textarea id="workRemark" class="form-control" rows="4"></textarea>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-work>确认处理</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var panels = Array.from(document.querySelectorAll('.remittance-panel'));
-      var tabs = Array.from(document.querySelectorAll('[data-remittance-tab]'));
-      var drawer = document.getElementById('remittanceDrawer');
+      var rows = Array.from(document.querySelectorAll('#remittanceRows tr'));
+      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
+      var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
+      var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('remittanceDetailDrawer');
-      var grid = document.getElementById('remittanceGrid');
-      var detailGrid = document.getElementById('remittanceDetailGrid');
+      var workDrawer = document.getElementById('remittanceWorkDrawer');
+      var activeStatus = '全部';
       var activeRow = null;
 
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
       function notify(message, type) {
-        if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message, { type: type || 'success' });
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+          return;
+        }
+        var container = document.querySelector('.caesar-toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'caesar-toast-container';
+          document.body.appendChild(container);
+        }
+        var toast = document.createElement('div');
+        toast.className = 'caesar-toast caesar-toast-' + (type || 'success');
+        toast.textContent = message;
+        container.appendChild(toast);
+        window.setTimeout(function () {
+          toast.classList.add('closing');
+          window.setTimeout(function () { toast.remove(); }, 180);
+        }, 2200);
       }
 
       function openLayer(layer) {
@@ -157,8 +578,7 @@
           window.caesarUI.openLayer(layer);
           return;
         }
-        layer.hidden = false;
-        layer.classList.add('show');
+        layer.classList.add('is-open');
         layer.setAttribute('aria-hidden', 'false');
       }
 
@@ -167,195 +587,438 @@
           window.caesarUI.closeLayer(layer);
           return;
         }
-        layer.hidden = true;
-        layer.classList.remove('show');
+        layer.classList.remove('is-open');
         layer.setAttribute('aria-hidden', 'true');
       }
 
-      function escapeHtml(value) {
-        return String(value || '').replace(/[&<>"']/g, function (char) {
-          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
-        });
-      }
-
-      function amountNumber(value) {
-        return Number(String(value || '').replace(/[^\d.]/g, '') || 0);
-      }
-
       function rowText(row) {
-        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+        return (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ');
       }
 
-      function switchTab(tabName) {
-        tabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.remittanceTab === tabName); });
-        panels.forEach(function (panel) { panel.classList.toggle('active', panel.id === 'remittance-' + tabName); });
+      function tagClass(value) {
+        if (/异常|差异|退回|关闭|未识别/.test(value || '')) return 'tag-red';
+        if (/待|未生成|未上传|待匹配|待补/.test(value || '')) return 'tag-orange';
+        if (/已|一致|无差异|确认|核销/.test(value || '')) return 'tag-green';
+        if (/退款/.test(value || '')) return 'tag-purple';
+        return 'tag-blue';
       }
 
-      function applyFilters() {
-        var keyword = (document.getElementById('remittanceKeyword') ? document.getElementById('remittanceKeyword').value : '').trim().toLowerCase();
-        var type = document.getElementById('remittanceType') ? document.getElementById('remittanceType').value : '全部类型';
-        document.querySelectorAll('#remittancePendingRows tr').forEach(function (row) {
-          var visible = true;
-          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
-          if (type.indexOf('全部') !== 0 && row.dataset.type !== type) visible = false;
-          row.hidden = !visible;
-        });
+      function tagHtml(value) {
+        return '<span class="tag ' + tagClass(value) + '">' + escapeHtml(value || '-') + '</span>';
       }
 
-      function resetFilters() {
-        document.querySelectorAll('.remittance-filter input').forEach(function (input) { input.value = ''; });
-        document.querySelectorAll('.remittance-filter select').forEach(function (select) { select.selectedIndex = 0; });
-        applyFilters();
+      function linkHtml(href, text) {
+        if (!text || text === '-' || text === '未生成' || text === '待匹配') return escapeHtml(text || '-');
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
       }
 
-      function trafficTraceItems(data) {
-        if (!data.contractNo && !data.scheduleNo && !data.paymentNode && !data.costSource) return [];
-        var contractValue = data.contractNo
-          ? data.contractNo.split(' / ').map(function (contractNo) {
-            return '<a class="link-primary" href="../tour/resource-procurement-inventory.html?contractNo=' + encodeURIComponent(contractNo) + '">' + escapeHtml(contractNo) + '</a>';
-          }).join(' / ')
-          : '-';
-        var scheduleValue = data.scheduleNo
-          ? '<a class="link-primary" href="../tour/fulfillment-cost.html?scheduleNo=' + encodeURIComponent(data.scheduleNo) + '&tab=cost&source=traffic">' + escapeHtml(data.scheduleNo) + '</a>'
-          : '-';
-        var items = [
-          ['采购合同号', contractValue],
-          ['团期编号', scheduleValue],
-          ['资源类型', escapeHtml(data.resourceType || '-')],
-          ['付款节点', escapeHtml(data.paymentNode || '-')],
-          ['成本来源', escapeHtml(data.costSource || '-'), true]
-        ];
-        if (data.originalQty || data.effectiveQty) {
-          items.push(['原/当前数量', escapeHtml((data.originalQty || '-') + ' → ' + (data.effectiveQty || '-'))]);
-        }
-        if (data.changeNo) {
-          items.push(['变更单', escapeHtml(data.changeNo), true]);
-        }
-        if (data.prepaid || data.adjustment || data.deduction) {
-          items.push(['已预付/调整', escapeHtml((data.prepaid || '-') + ' / ' + (data.adjustment || '-'))]);
-          items.push(['抵扣金额', escapeHtml(data.deduction || '-')]);
-        }
-        return items;
-      }
-
-      function trafficTraceAttrs(data) {
-        return ' data-contract-no="' + escapeHtml(data.contractNo || '') + '" data-schedule-no="' + escapeHtml(data.scheduleNo || '') + '" data-resource-type="' + escapeHtml(data.resourceType || '') + '" data-payment-node="' + escapeHtml(data.paymentNode || '') + '" data-cost-source="' + escapeHtml(data.costSource || '') + '" data-original-qty="' + escapeHtml(data.originalQty || '') + '" data-effective-qty="' + escapeHtml(data.effectiveQty || '') + '" data-change-no="' + escapeHtml(data.changeNo || '') + '" data-prepaid="' + escapeHtml(data.prepaid || '') + '" data-adjustment="' + escapeHtml(data.adjustment || '') + '" data-deduction="' + escapeHtml(data.deduction || '') + '"';
-      }
-
-      function renderGrid(target, row) {
-        var data = row.dataset;
-        var items = [
-          ['回单流水', escapeHtml(data.no)],
-          ['类型', escapeHtml(data.type)],
-          ['交易日期', escapeHtml(data.date)],
-          ['交易对象', escapeHtml(data.object)],
-          ['金额', '<span class="amount-strong">' + escapeHtml(data.amount) + '</span>'],
-          ['匹配单据', escapeHtml(data.doc), true],
-          ['业务内容', escapeHtml(data.business), true],
-          ['校验', escapeHtml(data.check)],
-          ['状态', escapeHtml(data.status)],
-          ['NC状态', escapeHtml(data.nc)],
-          ['文件', escapeHtml(data.file), true]
-        ].concat(trafficTraceItems(data));
-        target.innerHTML = items.map(function (item) {
-          return '<div class="description-item' + (item[2] ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>';
+      function gridHtml(items) {
+        return items.map(function (item) {
+          var full = item.full ? ' description-item-full' : '';
+          return '<div class="description-item' + full + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
         }).join('');
       }
 
-      function openWriteoff(row) {
-        activeRow = row;
-        document.getElementById('remittanceDrawerTitle').textContent = '回单核销 - ' + row.dataset.no;
-        renderGrid(grid, row);
-        document.getElementById('matchDoc').value = row.dataset.doc || '';
-        document.getElementById('matchAmount').value = amountNumber(row.dataset.amount);
-        document.getElementById('remittanceRemark').value = row.dataset.check === '金额一致' ? '回单金额与业务单据一致，确认核销。' : '请补充匹配单据后核销。';
-        openLayer(drawer);
+      function summaryHtml(items) {
+        return items.map(function (item) {
+          return '<div class="remittance-summary-item"><div class="remittance-summary-label">' + escapeHtml(item.label) + '</div><div class="remittance-summary-value">' + item.value + '</div></div>';
+        }).join('');
       }
 
-      function openDetail(row) {
+      function actionByStatus(status) {
+        if (status === '待回单') return '上传回单';
+        if (status === '待匹配') return '匹配单据';
+        if (status === '待核销') return '确认核销';
+        if (status === '有差异') return '处理差异';
+        if (status === '已核销') return '查看凭证';
+        return '详情';
+      }
+
+      function actionKeyByStatus(status) {
+        if (status === '待回单') return 'upload';
+        if (status === '待匹配') return 'match';
+        if (status === '待核销') return 'writeoff';
+        if (status === '有差异') return 'diff';
+        return 'detail';
+      }
+
+      function linkedDocumentRoute(row) {
+        var data = row.dataset;
+        if (data.documentType === '退款单') return 'finance-refund-execute.html?refundNo=' + encodeURIComponent(data.refundNo || data.documentNo);
+        if (data.documentType === '退回单') return 'finance-payment-return.html?returnNo=' + encodeURIComponent(data.returnNo || data.documentNo);
+        if (data.documentType === '调拨单') return 'finance-transfer.html?transferNo=' + encodeURIComponent(data.documentNo);
+        if (data.paymentNo && data.paymentNo !== '-') return 'finance-payment.html?paymentNo=' + encodeURIComponent(data.paymentNo);
+        return 'finance-payable.html?payableNo=' + encodeURIComponent(data.payableNo || data.documentNo);
+      }
+
+      function updateCounts() {
+        var counts = { '全部': rows.length };
+        rows.forEach(function (row) {
+          counts[row.dataset.status] = (counts[row.dataset.status] || 0) + 1;
+        });
+        document.querySelectorAll('[data-status-count]').forEach(function (node) {
+          node.textContent = counts[node.dataset.statusCount] || 0;
+        });
+      }
+
+      function applyFilters() {
+        var keyword = (document.getElementById('remittanceKeyword').value || '').trim().toLowerCase();
+        var type = document.getElementById('remittanceType').value;
+        var source = document.getElementById('sourceFilter').value;
+        var documentType = document.getElementById('documentType').value;
+        var company = document.getElementById('companyFilter').value;
+        var account = document.getElementById('bankAccountFilter').value;
+        var currency = document.getElementById('currencyFilter').value;
+        var accountCheck = document.getElementById('accountCheck').value;
+        var amountCheck = document.getElementById('amountCheck').value;
+        var nc = document.getElementById('ncStatusFilter').value;
+        var start = document.getElementById('dateStart').value;
+        var end = document.getElementById('dateEnd').value;
+        var visibleCount = 0;
+        rows.forEach(function (row) {
+          var visible = true;
+          if (activeStatus !== '全部' && row.dataset.status !== activeStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (type.indexOf('全部') !== 0 && row.dataset.type !== type) visible = false;
+          if (source.indexOf('全部') !== 0 && row.dataset.source !== source) visible = false;
+          if (documentType.indexOf('全部') !== 0 && row.dataset.documentType !== documentType) visible = false;
+          if (company.indexOf('全部') !== 0 && row.dataset.company !== company) visible = false;
+          if (account.indexOf('全部') !== 0 && row.dataset.bankAccount !== account) visible = false;
+          if (currency.indexOf('全部') !== 0 && row.dataset.currency !== currency) visible = false;
+          if (accountCheck.indexOf('全部') !== 0 && row.dataset.accountCheck !== accountCheck) visible = false;
+          if (amountCheck.indexOf('全部') !== 0 && row.dataset.amountCheck !== amountCheck) visible = false;
+          if (nc.indexOf('全部') !== 0 && row.dataset.nc !== nc) visible = false;
+          if (start && row.dataset.tradeDate < start) visible = false;
+          if (end && row.dataset.tradeDate > end) visible = false;
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        document.getElementById('remittancePagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '第0条/共0条';
+      }
+
+      function switchDetailTab(tabName) {
+        detailTabs.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.detailTab === tabName);
+        });
+        detailPanels.forEach(function (panel) {
+          panel.hidden = panel.dataset.detailPanel !== tabName;
+        });
+      }
+
+      function renderObject(row, prefix) {
+        document.getElementById(prefix + 'ObjectTitle').textContent = row.dataset.remittanceNo + ' / ' + row.dataset.payee;
+        document.getElementById(prefix + 'ObjectSubtitle').textContent = row.dataset.business + ' / ' + row.dataset.businessNo;
+        document.getElementById(prefix + 'ObjectStatus').innerHTML = tagHtml(row.dataset.status);
+      }
+
+      function renderSummary(row, targetId) {
+        document.getElementById(targetId).innerHTML = summaryHtml([
+          { label: '原币回单', value: '<span class="amount-strong">' + escapeHtml(row.dataset.originalAmount) + '</span>' },
+          { label: '汇率/本币', value: escapeHtml(row.dataset.rate + ' / ' + row.dataset.localAmount) },
+          { label: '账户核对', value: tagHtml(row.dataset.accountCheck) },
+          { label: '凭证NC', value: tagHtml(row.dataset.nc) }
+        ]);
+      }
+
+      function renderOverview(row) {
+        document.getElementById('overviewGrid').innerHTML = gridHtml([
+          { label: '回单号', value: escapeHtml(row.dataset.remittanceNo) },
+          { label: '银行流水号', value: escapeHtml(row.dataset.flowNo) },
+          { label: '来源方式', value: escapeHtml(row.dataset.source) },
+          { label: '回单类型', value: tagHtml(row.dataset.type) },
+          { label: '付款对象', value: escapeHtml(row.dataset.payee + ' / ' + row.dataset.payeeType) },
+          { label: '付款主体', value: escapeHtml(row.dataset.company) },
+          { label: '交易日期', value: escapeHtml(row.dataset.tradeDate) },
+          { label: '主状态', value: tagHtml(row.dataset.status) },
+          { label: '风险结果', value: escapeHtml(row.dataset.risk), full: true }
+        ]);
+      }
+
+      function renderLinks(row) {
+        var doc = linkHtml(linkedDocumentRoute(row), row.dataset.documentNo);
+        var assist = row.dataset.refundNo !== '-' ? row.dataset.refundNo : (row.dataset.returnNo !== '-' ? row.dataset.returnNo : row.dataset.payableNo);
+        document.getElementById('linkRows').innerHTML = '<tr><td>' + escapeHtml(row.dataset.documentType) + '</td><td>' + doc + '</td><td>' + escapeHtml(assist) + '</td><td>' + escapeHtml(row.dataset.business + ' / ' + row.dataset.businessNo) + '</td><td>' + linkHtml(linkedDocumentRoute(row), '查看来源') + '</td></tr>';
+      }
+
+      function renderCurrency(row) {
+        document.getElementById('currencyGrid').innerHTML = gridHtml([
+          { label: '原币回单', value: '<span class="amount-strong">' + escapeHtml(row.dataset.originalAmount) + '</span>' },
+          { label: '币种', value: escapeHtml(row.dataset.currency) },
+          { label: '锁定汇率', value: escapeHtml(row.dataset.rate) },
+          { label: '本币金额', value: '<span class="amount-strong">' + escapeHtml(row.dataset.localAmount) + '</span>' },
+          { label: '原币差异', value: escapeHtml(row.dataset.diffOriginal) },
+          { label: '本币差异', value: row.dataset.diffLocal === '¥0' || row.dataset.diffLocal === '-' ? escapeHtml(row.dataset.diffLocal) : '<span class="amount-red">' + escapeHtml(row.dataset.diffLocal) + '</span>' }
+        ]);
+      }
+
+      function renderBank(row) {
+        document.getElementById('bankGrid').innerHTML = gridHtml([
+          { label: '银行账户', value: escapeHtml(row.dataset.bankAccount) },
+          { label: '银行流水号', value: escapeHtml(row.dataset.flowNo) },
+          { label: '回单文件', value: escapeHtml(row.dataset.fileName) },
+          { label: '交易日期', value: escapeHtml(row.dataset.tradeDate) },
+          { label: '来源方式', value: escapeHtml(row.dataset.source) },
+          { label: '处理人', value: escapeHtml(row.dataset.handler) }
+        ]);
+      }
+
+      function renderAccount(row) {
+        document.getElementById('accountRows').innerHTML = '<tr><td>付款主体</td><td>' + escapeHtml(row.dataset.company) + '</td><td>' + escapeHtml(row.dataset.bankAccount) + '</td><td>' + tagHtml(row.dataset.accountCheck) + '</td></tr>' +
+          '<tr><td>收付对象</td><td>' + escapeHtml(row.dataset.payee + ' / ' + row.dataset.payeeType) + '</td><td>' + escapeHtml(row.dataset.accountDetail) + '</td><td>' + tagHtml(row.dataset.accountCheck) + '</td></tr>';
+      }
+
+      function renderAmount(row) {
+        document.getElementById('amountRows').innerHTML = '<tr><td>原币金额</td><td>' + escapeHtml(row.dataset.originalAmount) + '</td><td>' + escapeHtml(row.dataset.originalAmount) + '</td><td>' + escapeHtml(row.dataset.diffOriginal) + '</td><td>' + tagHtml(row.dataset.amountCheck) + '</td></tr>' +
+          '<tr><td>本币金额</td><td>' + escapeHtml(row.dataset.localAmount) + '</td><td>' + escapeHtml(row.dataset.localAmount) + '</td><td>' + escapeHtml(row.dataset.diffLocal) + '</td><td>' + escapeHtml(row.dataset.amountDetail) + '</td></tr>';
+      }
+
+      function renderDiff(row) {
+        var result = row.dataset.status === '有差异' ? '差异待处理' : (row.dataset.diffLocal === '¥0' ? '无差异' : row.dataset.risk);
+        document.getElementById('diffGrid').innerHTML = gridHtml([
+          { label: '账户结果', value: tagHtml(row.dataset.accountCheck) },
+          { label: '金额结果', value: tagHtml(row.dataset.amountCheck) },
+          { label: '原币差异', value: escapeHtml(row.dataset.diffOriginal) },
+          { label: '本币差异', value: row.dataset.diffLocal === '¥0' || row.dataset.diffLocal === '-' ? escapeHtml(row.dataset.diffLocal) : '<span class="amount-red">' + escapeHtml(row.dataset.diffLocal) + '</span>' },
+          { label: '处理结果', value: tagHtml(result) },
+          { label: '差异说明', value: escapeHtml(row.dataset.amountDetail), full: true }
+        ]);
+      }
+
+      function renderNc(row) {
+        var entryText = row.dataset.voucher === '未生成' ? '未生成' : '查看凭证';
+        document.getElementById('ncRows').innerHTML = '<tr><td>' + escapeHtml(row.dataset.voucher) + '</td><td>' + escapeHtml(row.dataset.type + '核销') + '</td><td>' + escapeHtml(row.dataset.localAmount) + '</td><td>' + tagHtml(row.dataset.nc) + '</td><td>' + linkHtml('finance-nc.html?sourceNo=' + encodeURIComponent(row.dataset.remittanceNo), entryText) + '</td></tr>';
+      }
+
+      function renderFiles(row) {
+        document.getElementById('fileRows').innerHTML = '<tr><td>' + escapeHtml(row.dataset.fileName) + '</td><td>' + escapeHtml(row.dataset.source) + '</td><td>' + escapeHtml(row.dataset.flowNo) + '</td><td>' + escapeHtml(row.dataset.tradeDate) + '</td><td>' + escapeHtml(row.dataset.handler) + '</td></tr>';
+      }
+
+      function renderLogs(row) {
+        var items = [
+          [row.dataset.tradeDate + ' 09:10', row.dataset.source, row.dataset.handler, row.dataset.fileName],
+          [row.dataset.tradeDate + ' 10:20', '账户核对', '资金会计', row.dataset.accountCheck],
+          [row.dataset.tradeDate + ' 11:00', '金额核对', '出纳', row.dataset.amountCheck],
+          [row.dataset.tradeDate + ' 16:30', '凭证NC', 'NC专员', row.dataset.nc]
+        ];
+        document.getElementById('logRows').innerHTML = items.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
+        }).join('');
+      }
+
+      function openDetail(row, tabName) {
         activeRow = row;
-        document.getElementById('remittanceDetailTitle').textContent = '回单详情 - ' + row.dataset.no;
-        renderGrid(detailGrid, row);
+        document.getElementById('remittanceDetailTitle').textContent = '回单详情 - ' + row.dataset.remittanceNo;
+        renderObject(row, 'detail');
+        renderSummary(row, 'detailSummaryGrid');
+        renderOverview(row);
+        renderLinks(row);
+        renderCurrency(row);
+        renderBank(row);
+        renderAccount(row);
+        renderAmount(row);
+        renderDiff(row);
+        renderNc(row);
+        renderFiles(row);
+        renderLogs(row);
+        switchDetailTab(tabName || 'overview');
+        document.querySelector('[data-detail-primary]').textContent = actionByStatus(row.dataset.status);
         openLayer(detailDrawer);
       }
 
-      function openFromParams() {
-        var params = new URLSearchParams(window.location.search);
-        var query = params.get('paymentNo') || params.get('remittanceNo') || params.get('docNo');
-        if (!query) return;
-        var row = Array.from(document.querySelectorAll('#remittancePendingRows tr, #remittanceExceptionRows tr, #remittanceRecordRows tr')).find(function (item) {
-          return rowText(item).indexOf(query) >= 0;
-        });
-        if (!row) return;
-        if (row.closest('#remittance-pending')) {
-          switchTab('pending');
-          openWriteoff(row);
-          return;
+      function openWork(row, action) {
+        activeRow = row || null;
+        var card = document.getElementById('workObjectCard');
+        var title = row ? actionByStatus(row.dataset.status) + ' - ' + row.dataset.remittanceNo : '上传回单';
+        document.getElementById('remittanceWorkTitle').textContent = title;
+        if (row) {
+          card.hidden = false;
+          renderObject(row, 'work');
+          renderSummary(row, 'workSummaryGrid');
+          document.getElementById('workFlowNo').value = row.dataset.flowNo === '-' ? 'BANKFLOW-' + row.dataset.tradeDate.replace(/-/g, '') : row.dataset.flowNo;
+          document.getElementById('workDocumentNo').value = row.dataset.documentNo;
+          document.getElementById('workOriginalAmount').value = row.dataset.originalAmount;
+          document.getElementById('workRate').value = row.dataset.rate;
+          document.getElementById('workLocalAmount').value = row.dataset.localAmount;
+          document.getElementById('workRemark').value = row.dataset.risk;
+          document.getElementById('workCheckRows').innerHTML = [
+            ['账户核对', row.dataset.company, row.dataset.bankAccount, row.dataset.accountCheck],
+            ['付款对象', row.dataset.payee, row.dataset.accountDetail, row.dataset.accountCheck],
+            ['金额核对', row.dataset.localAmount, row.dataset.localAmount, row.dataset.amountCheck],
+            ['凭证NC', row.dataset.voucher, row.dataset.nc, row.dataset.status]
+          ].map(function (item) {
+            return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml(item[3]) + '</td></tr>';
+          }).join('');
+          document.getElementById('workResult').value = action === 'upload' ? '补传回单' : (action === 'match' ? '匹配单据' : (action === 'diff' ? '差异确认' : '确认核销'));
+        } else {
+          card.hidden = true;
+          document.getElementById('workFlowNo').value = 'BANKFLOW-' + new Date().toISOString().slice(0, 10).replace(/-/g, '');
+          document.getElementById('workDocumentNo').value = '待匹配';
+          document.getElementById('workOriginalAmount').value = '¥0';
+          document.getElementById('workRate').value = '1.0000';
+          document.getElementById('workLocalAmount').value = '¥0';
+          document.getElementById('workRemark').value = '';
+          document.getElementById('workCheckRows').innerHTML = '<tr><td>回单文件</td><td>待上传</td><td>待识别</td><td>' + tagHtml('待匹配') + '</td></tr>';
+          document.getElementById('workResult').value = '补传回单';
         }
-        if (row.closest('#remittance-exception')) {
-          switchTab('exception');
-          openWriteoff(row);
-          return;
-        }
-        if (row.closest('#remittance-records')) switchTab('records');
-        openDetail(row);
+        openLayer(workDrawer);
       }
 
-      document.addEventListener('click', function (event) {
-        var tab = event.target.closest('[data-remittance-tab]');
-        if (tab) {
-          switchTab(tab.dataset.remittanceTab);
+      function renderRowCells(row) {
+        row.children[0].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.flowNo === '-' ? row.dataset.remittanceNo : row.dataset.flowNo) + '</strong><span>' + escapeHtml(row.dataset.source + ' / ' + row.dataset.fileName) + '</span></div>';
+        row.children[1].innerHTML = tagHtml(row.dataset.type);
+        row.children[2].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.documentNo) + '</strong><span>' + escapeHtml(row.dataset.payableNo !== '-' ? row.dataset.payableNo : row.dataset.applyNo) + '</span></div>';
+        row.children[3].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.payee) + '</strong><span>' + escapeHtml(row.dataset.payeeType + ' / ' + row.dataset.company) + '</span></div>';
+        row.children[4].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.business.split(' / ')[0]) + '</strong><span>' + escapeHtml(row.dataset.businessNo) + '</span></div>';
+        row.children[5].innerHTML = '<div class="table-cell-main"><strong class="amount-strong">' + escapeHtml(row.dataset.originalAmount) + '</strong><span>' + escapeHtml(row.dataset.currency + ' / ' + row.dataset.tradeDate) + '</span></div>';
+        row.children[6].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.rate) + '</strong><span>' + escapeHtml(row.dataset.localAmount) + '</span></div>';
+        row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.accountCheck) + '<span>' + escapeHtml(row.dataset.bankAccount) + '</span></div>';
+        row.children[8].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.amountCheck) + '<span>' + escapeHtml(row.dataset.diffLocal === '-' ? row.dataset.amountDetail : '差异 ' + row.dataset.diffLocal) + '</span></div>';
+        row.children[9].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.nc) + '<span>' + escapeHtml(row.dataset.voucher) + '</span></div>';
+        var key = actionKeyByStatus(row.dataset.status);
+        if (key === 'detail') {
+          row.children[10].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail="' + (row.dataset.status === '已核销' ? 'nc' : 'overview') + '">' + actionByStatus(row.dataset.status) + '</button></div>';
+        } else {
+          row.children[10].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="' + key + '">' + actionByStatus(row.dataset.status) + '</button><button type="button" data-open-detail>详情</button></div>';
+        }
+      }
+
+      function confirmWork() {
+        var result = document.getElementById('workResult').value;
+        if (!activeRow) {
+          notify('回单已上传，待匹配单据');
+          closeLayer(workDrawer);
           return;
         }
-        if (event.target.closest('[data-open-upload]')) {
-          openWriteoff(document.querySelector('#remittancePendingRows tr') || document.querySelector('#remittanceExceptionRows tr'));
-          return;
+        activeRow.dataset.flowNo = document.getElementById('workFlowNo').value;
+        activeRow.dataset.documentNo = document.getElementById('workDocumentNo').value;
+        activeRow.dataset.originalAmount = document.getElementById('workOriginalAmount').value;
+        activeRow.dataset.rate = document.getElementById('workRate').value;
+        activeRow.dataset.localAmount = document.getElementById('workLocalAmount').value;
+        activeRow.dataset.risk = document.getElementById('workRemark').value;
+        if (result === '关闭回单') {
+          activeRow.dataset.status = '已关闭';
+        } else if (result === '补传回单') {
+          activeRow.dataset.status = '待匹配';
+          activeRow.dataset.fileName = '已补传回单.pdf';
+          activeRow.dataset.accountCheck = '待匹配';
+          activeRow.dataset.amountCheck = '待匹配';
+        } else if (result === '匹配单据') {
+          activeRow.dataset.status = '待核销';
+          activeRow.dataset.accountCheck = '账户一致';
+          activeRow.dataset.amountCheck = '金额一致';
+          activeRow.dataset.diffOriginal = activeRow.dataset.currency === 'CNY' ? '¥0' : activeRow.dataset.currency + ' 0';
+          activeRow.dataset.diffLocal = '¥0';
+        } else if (result === '差异确认') {
+          activeRow.dataset.status = '待核销';
+          activeRow.dataset.accountCheck = activeRow.dataset.accountCheck === '账户异常' ? '账户一致' : activeRow.dataset.accountCheck;
+          activeRow.dataset.amountCheck = '金额一致';
+          activeRow.dataset.diffOriginal = activeRow.dataset.currency === 'CNY' ? '¥0' : activeRow.dataset.currency + ' 0';
+          activeRow.dataset.diffLocal = '¥0';
+        } else {
+          activeRow.dataset.status = '已核销';
+          activeRow.dataset.accountCheck = '账户一致';
+          activeRow.dataset.amountCheck = '金额一致';
+          activeRow.dataset.diffOriginal = activeRow.dataset.currency === 'CNY' ? '¥0' : activeRow.dataset.currency + ' 0';
+          activeRow.dataset.diffLocal = '¥0';
+          activeRow.dataset.voucher = activeRow.dataset.voucher === '未生成' ? 'VCH-' + activeRow.dataset.remittanceNo.replace(/[^A-Z0-9]/g, '') : activeRow.dataset.voucher;
+          activeRow.dataset.nc = activeRow.dataset.nc === '未生成' ? '待推送' : activeRow.dataset.nc;
         }
-        var writeoffButton = event.target.closest('[data-open-writeoff]');
-        if (writeoffButton) {
-          openWriteoff(writeoffButton.closest('tr'));
-          return;
-        }
-        var exceptionButton = event.target.closest('[data-open-exception]');
-        if (exceptionButton) {
-          openWriteoff(exceptionButton.closest('tr'));
+        renderRowCells(activeRow);
+        updateCounts();
+        applyFilters();
+        notify(activeRow.dataset.remittanceNo + '已进入' + activeRow.dataset.status);
+        closeLayer(workDrawer);
+      }
+
+      statusTabs.forEach(function (button) {
+        button.addEventListener('click', function () {
+          activeStatus = button.dataset.statusTab;
+          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
+          applyFilters();
+        });
+      });
+
+      detailTabs.forEach(function (button) {
+        button.addEventListener('click', function () {
+          switchDetailTab(button.dataset.detailTab);
+        });
+      });
+
+      document.getElementById('remittanceRows').addEventListener('click', function (event) {
+        var workButton = event.target.closest('[data-open-work]');
+        if (workButton) {
+          openWork(workButton.closest('tr'), workButton.dataset.openWork);
           return;
         }
         var detailButton = event.target.closest('[data-open-detail]');
         if (detailButton) {
-          openDetail(detailButton.closest('tr'));
-          return;
+          openDetail(detailButton.closest('tr'), detailButton.dataset.openDetail || 'overview');
         }
-        if (event.target.closest('[data-confirm-remittance]')) {
-          if (activeRow) {
-            var recordBody = document.getElementById('remittanceRecordRows');
-            activeRow.dataset.status = '已核销';
-            activeRow.dataset.nc = '待推送';
-            recordBody.insertAdjacentHTML('afterbegin', '<tr data-no="' + escapeHtml(activeRow.dataset.no) + '" data-type="' + escapeHtml(activeRow.dataset.type) + '" data-date="' + escapeHtml(activeRow.dataset.date) + '" data-object="' + escapeHtml(activeRow.dataset.object) + '" data-amount="' + escapeHtml(activeRow.dataset.amount) + '" data-doc="' + escapeHtml(document.getElementById('matchDoc').value) + '" data-business="' + escapeHtml(activeRow.dataset.business) + '" data-check="已核销" data-status="已核销" data-nc="待推送" data-file="' + escapeHtml(activeRow.dataset.file) + '"' + trafficTraceAttrs(activeRow.dataset) + '><td>' + escapeHtml(activeRow.dataset.no) + '</td><td>' + escapeHtml(activeRow.dataset.type) + '</td><td>2026-07-04 16:30</td><td>' + escapeHtml(activeRow.dataset.object) + '</td><td class="amount-strong">' + escapeHtml(activeRow.dataset.amount) + '</td><td>' + escapeHtml(document.getElementById('matchDoc').value) + '</td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td></tr>');
-            activeRow.remove();
-          }
-          closeLayer(drawer);
-          notify('回单已核销，NC凭证进入待推送');
-          return;
-        }
-        if (event.target.closest('[data-search-remittance]')) {
-          applyFilters();
-          return;
-        }
-        if (event.target.closest('[data-reset-remittance]')) {
-          resetFilters();
-          return;
-        }
-        var closeButton = event.target.closest('[data-close-layer]');
-        if (closeButton) closeLayer(closeButton.closest('.modal-overlay'));
       });
 
+      document.querySelector('[data-detail-primary]').addEventListener('click', function () {
+        if (!activeRow) return;
+        var key = actionKeyByStatus(activeRow.dataset.status);
+        if (key === 'detail') {
+          switchDetailTab(activeRow.dataset.status === '已核销' ? 'nc' : 'overview');
+          return;
+        }
+        closeLayer(detailDrawer);
+        openWork(activeRow, key);
+      });
+
+      document.querySelector('[data-upload-remittance]').addEventListener('click', function () {
+        openWork(null, 'upload');
+      });
+      document.querySelector('[data-confirm-work]').addEventListener('click', confirmWork);
+      document.querySelector('[data-refresh-remittance]').addEventListener('click', function () {
+        notify('回单核销状态已刷新');
+      });
+      document.querySelector('[data-export-remittance]').addEventListener('click', function () {
+        notify('回单核销列表已导出');
+      });
+      document.querySelector('[data-search-remittance]').addEventListener('click', applyFilters);
+      document.getElementById('remittanceKeyword').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') applyFilters();
+      });
+      ['remittanceType', 'sourceFilter', 'documentType', 'companyFilter', 'bankAccountFilter', 'currencyFilter', 'accountCheck', 'amountCheck', 'ncStatusFilter', 'dateStart', 'dateEnd'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', applyFilters);
+      });
+      document.querySelector('[data-reset-remittance]').addEventListener('click', function () {
+        document.querySelectorAll('.finance-remittance-list-surface input').forEach(function (input) {
+          if (input.type === 'date') return;
+          input.value = '';
+        });
+        document.querySelectorAll('.finance-remittance-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
+        activeStatus = '全部';
+        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
+        applyFilters();
+      });
+      document.querySelectorAll('[data-close-layer]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var layer = button.closest('.modal-overlay');
+          if (layer) closeLayer(layer);
+        });
+      });
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
         overlay.addEventListener('click', function (event) {
           if (event.target === overlay) closeLayer(overlay);
         });
       });
 
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var keyword = params.get('docNo') || params.get('sourceNo') || params.get('paymentNo') || params.get('refundNo') || params.get('returnNo') || params.get('businessNo');
+        if (!keyword) return;
+        document.getElementById('remittanceKeyword').value = keyword;
+        applyFilters();
+        var target = rows.find(function (row) { return rowText(row).indexOf(keyword) >= 0; });
+        if (target) openDetail(target, params.get('sourceNo') ? 'nc' : 'overview');
+      }
+
+      rows.forEach(renderRowCells);
+      updateCounts();
+      applyFilters();
       openFromParams();
     })();
   </script>

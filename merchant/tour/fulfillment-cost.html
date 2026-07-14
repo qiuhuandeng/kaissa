@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期结算 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .settlement-doc-tab-panels > section[hidden] {
+      display: none;
+    }
+    .settlement-doc-tab-bar {
+      margin: 16px 0 12px;
+    }
+    .group-cost-table-wrap table {
+      min-width: 1060px;
+    }
+    .group-cost-col-select { width: 48px; }
+    .group-cost-col-item { width: 150px; }
+    .group-cost-col-supplier { width: 170px; }
+    .group-cost-col-qty { width: 110px; }
+    .group-cost-col-original { width: 150px; }
+    .group-cost-col-rate { width: 110px; }
+    .group-cost-col-local { width: 150px; }
+    .group-cost-col-note { width: 210px; }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -227,12 +246,12 @@
   <div id="scheduleCostDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal fulfillment-cost-drawer cost-maintenance-drawer group-cost-drawer" role="dialog" aria-modal="true" aria-labelledby="scheduleCostDrawerTitle">
       <div class="modal-header">
-        <div id="scheduleCostDrawerTitle" class="modal-title">添加成本</div>
+        <div id="scheduleCostDrawerTitle" class="modal-title">成本明细维护</div>
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
       </div>
       <div class="modal-body group-cost-drawer-body">
         <section id="costDrawerSummary" class="drawer-object-summary settlement-basis-summary group-cost-summary" aria-label="团期摘要"></section>
-        <section class="group-cost-editor" aria-label="添加成本明细">
+        <section class="group-cost-editor" aria-label="成本明细维护">
           <div class="group-cost-table-actions">
             <h2>成本明细</h2>
             <div>
@@ -244,20 +263,24 @@
             <table class="group-cost-table">
               <colgroup>
                 <col class="group-cost-col-select">
-                <col class="group-cost-col-type">
+                <col class="group-cost-col-item">
                 <col class="group-cost-col-supplier">
-                <col class="group-cost-col-amount">
-                <col class="group-cost-col-voucher">
-                <col class="group-cost-col-remark">
+                <col class="group-cost-col-qty">
+                <col class="group-cost-col-original">
+                <col class="group-cost-col-rate">
+                <col class="group-cost-col-local">
+                <col class="group-cost-col-note">
               </colgroup>
               <thead>
                 <tr>
                   <th><input id="selectAllGroupCostRows" type="checkbox" aria-label="选择全部成本行"></th>
-                  <th>成本类型</th>
+                  <th>费用项目</th>
                   <th>供应商</th>
-                  <th>金额</th>
-                  <th>单据号</th>
-                  <th>备注</th>
+                  <th>数量</th>
+                  <th>原币金额</th>
+                  <th>汇率</th>
+                  <th>本币金额</th>
+                  <th>成本说明</th>
                 </tr>
               </thead>
               <tbody id="groupCostRows"></tbody>
@@ -272,7 +295,7 @@
           </div>
         </section>
         <div class="cost-legacy-hooks" hidden>
-          <button class="btn btn-secondary" type="button" id="addCostItem">添加成本</button>
+          <button class="btn btn-secondary" type="button" id="addCostItem">添加明细</button>
           <table><tbody id="costItemRows"></tbody></table>
           <textarea id="costConfirmOpinion" class="form-control" rows="1"></textarea>
           <section id="costConfirmResult" class="finance-link-card receipt-result" hidden>
@@ -285,8 +308,8 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button id="saveScheduleCost" class="btn btn-secondary" type="button">保存成本</button>
-        <button id="submitScheduleCost" class="btn btn-primary" type="button">提交</button>
+        <button id="saveScheduleCost" class="btn btn-secondary" type="button">保存明细</button>
+        <button id="submitScheduleCost" class="btn btn-primary" type="button">确认维护</button>
       </div>
     </div>
   </div>
@@ -294,85 +317,151 @@
   <div id="settlementBasisDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal fulfillment-cost-drawer settlement-basis-drawer" role="dialog" aria-modal="true" aria-labelledby="settlementBasisTitle">
       <div class="modal-header">
-        <div id="settlementBasisTitle" class="modal-title">结算依据</div>
+        <div id="settlementBasisTitle" class="modal-title">单据详情</div>
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
       </div>
       <div class="modal-body settlement-basis-body">
         <section id="settlementBasisSummary" class="drawer-object-summary settlement-basis-summary"></section>
-        <section class="settlement-basis-section settlement-group-summary-section" aria-label="团组汇总信息">
-          <h2 class="detail-section-title">团组汇总信息</h2>
-          <section class="table-wrap fulfillment-cost-inner-table settlement-summary-table">
-            <table>
-              <tbody id="settlementSummaryRows"></tbody>
-            </table>
+        <nav class="tab-bar drawer-tab-bar settlement-doc-tab-bar" aria-label="单据详情标签">
+          <button class="tab-item active" type="button" data-settlement-doc-tab="overview">单据总览</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="income">收入明细</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="cost">成本明细</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="orders">订单明细</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="receipts">收款预收</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="prepay">预付付款</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="changes">变更记录</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="attachments">附件依据</button>
+          <button class="tab-item" type="button" data-settlement-doc-tab="logs">结算记录</button>
+        </nav>
+
+        <section class="settlement-doc-tab-panels">
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">单据总览</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table settlement-summary-table">
+              <table>
+                <tbody id="settlementSummaryRows"></tbody>
+              </table>
+            </section>
+            <div id="settlementBasicInfo" class="description-grid settlement-basis-basic-grid"></div>
+            <section id="projectSettlementPanel" class="settlement-basis-section" hidden>
+              <div class="drawer-section-head"><h3 class="drawer-section-title">项目回团结算</h3></div>
+              <section class="table-wrap fulfillment-cost-inner-table">
+                <table>
+                  <thead><tr><th>结算项</th><th>当前值</th><th>状态</th><th>说明</th></tr></thead>
+                  <tbody id="projectSettlementRows"></tbody>
+                </table>
+              </section>
+            </section>
+            <section id="secondSettlementActions" class="finance-link-card receipt-result" hidden>
+              <div class="finance-link-title">已结算差异</div>
+              <div class="btn-group">
+                <button id="startSecondSettlementOverview" class="btn btn-secondary" type="button">发起二次结算</button>
+              </div>
+            </section>
+            <section id="projectSettlementActions" class="finance-link-card receipt-result" hidden>
+              <div class="finance-link-title">项目结算处理</div>
+              <div class="btn-group">
+                <button id="uploadProjectAcceptance" class="btn btn-secondary" type="button">上传客户验收单</button>
+                <button id="supplementProjectBasis" class="btn btn-secondary" type="button">补结算依据</button>
+                <button id="viewProjectActualCost" class="btn btn-secondary" type="button">查看实际成本</button>
+                <button id="viewProjectSettlementApply" class="btn btn-secondary" type="button">查看结算申请</button>
+                <button id="resubmitProjectSettlement" class="btn btn-secondary" type="button">重新提交</button>
+              </div>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="income" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">收入明细</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table settlement-income-table">
+              <table>
+                <thead><tr><th>订单号</th><th>客户/渠道</th><th>类型</th><th>财务科目</th><th>应收金额</th><th>已收金额</th><th>未收金额</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
+                <tbody id="settlementIncomeRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="cost" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">成本明细</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table settlement-cost-detail-table">
+              <table>
+                <thead><tr><th>供应商</th><th>费用项目</th><th>币种</th><th>单价</th><th>数量</th><th>原币金额</th><th>汇率</th><th>本币金额</th><th>已付金额</th><th>未付金额</th><th>附件</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
+                <tbody id="settlementCostRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="orders" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">订单明细</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table">
+              <table>
+                <thead><tr><th>订单号</th><th>客户/渠道</th><th>订单类型</th><th>人数/间夜</th><th>应收</th><th>实收</th><th>退款/扣减</th><th>订单状态</th></tr></thead>
+                <tbody id="settlementOrderRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="receipts" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">收款预收</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table">
+              <table>
+                <thead><tr><th>收款对象</th><th>收款单/预收单</th><th>应收金额</th><th>已收金额</th><th>预收/转款</th><th>待收金额</th><th>状态</th></tr></thead>
+                <tbody id="settlementReceiptRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="prepay" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">预付付款</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table">
+              <table>
+                <thead><tr><th>付款对象</th><th>费用项目</th><th>预付/冲抵</th><th>已付金额</th><th>待付金额</th><th>付款申请</th><th>回单状态</th><th>状态</th></tr></thead>
+                <tbody id="settlementPrepayRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="changes" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">变更记录</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table">
+              <table>
+                <thead><tr><th>变更单</th><th>变更类型</th><th>收入影响</th><th>成本影响</th><th>毛利影响</th><th>状态</th></tr></thead>
+                <tbody id="settlementChangeRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="attachments" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">附件依据</h3></div>
+            <section class="table-wrap fulfillment-cost-inner-table settlement-attachment-table">
+              <table>
+                <thead><tr><th>附件类型</th><th>应上传</th><th>已上传</th><th>状态</th><th>最近附件</th><th>上传人/时间</th><th>操作</th></tr></thead>
+                <tbody id="settlementAttachmentRows"></tbody>
+              </table>
+            </section>
+          </section>
+
+          <section class="order-desc-card settlement-basis-section" data-settlement-doc-panel="logs" hidden>
+            <div class="detail-section-head settlement-basis-section-head">
+              <div class="drawer-section-head"><h3 class="drawer-section-title">结算记录</h3></div>
+              <button id="startSecondSettlement" class="btn btn-secondary btn-sm" type="button" hidden>发起二次结算</button>
+            </div>
+            <section class="settlement-basis-section">
+              <div class="drawer-section-head"><h3 class="drawer-section-title">当前承接状态</h3></div>
+              <div id="settlementHandoffGrid" class="description-grid settlement-basis-basic-grid"></div>
+            </section>
+            <section class="table-wrap fulfillment-cost-inner-table settlement-record-table">
+              <table>
+                <thead><tr><th>结算次数</th><th>结算单号</th><th>结算原因</th><th>收入调整</th><th>成本调整</th><th>毛利影响</th><th>附件</th><th>状态</th></tr></thead>
+                <tbody id="settlementRecordRows"></tbody>
+              </table>
+            </section>
+            <div class="form-group">
+              <label class="form-label" for="settlementRemark">结算备注</label>
+              <textarea id="settlementRemark" class="form-control" rows="3" placeholder="记录回团资料、异常关闭、实际收退款或结算提交说明"></textarea>
+            </div>
           </section>
         </section>
-        <section class="order-desc-card settlement-basis-section">
-          <h2 class="detail-section-title">团期基本信息</h2>
-          <div id="settlementBasicInfo" class="description-grid settlement-basis-basic-grid"></div>
-        </section>
-        <section id="projectSettlementPanel" class="order-desc-card" hidden>
-          <h2 class="detail-section-title">项目回团结算</h2>
-          <section class="table-wrap fulfillment-cost-inner-table">
-            <table>
-              <thead><tr><th>结算项</th><th>当前值</th><th>状态</th><th>说明</th></tr></thead>
-              <tbody id="projectSettlementRows"></tbody>
-            </table>
-          </section>
-        </section>
-        <section id="projectSettlementActions" class="finance-link-card receipt-result" hidden>
-          <div class="finance-link-title">项目结算处理</div>
-          <div class="btn-group">
-            <button id="uploadProjectAcceptance" class="btn btn-secondary" type="button">上传客户验收单</button>
-            <button id="supplementProjectBasis" class="btn btn-secondary" type="button">补结算依据</button>
-            <button id="viewProjectActualCost" class="btn btn-secondary" type="button">查看实际成本</button>
-            <button id="viewProjectSettlementApply" class="btn btn-secondary" type="button">查看结算申请</button>
-            <button id="resubmitProjectSettlement" class="btn btn-secondary" type="button">重新提交</button>
-          </div>
-        </section>
-        <section class="order-desc-card settlement-basis-section">
-          <h2 class="detail-section-title">收入明细</h2>
-          <section class="table-wrap fulfillment-cost-inner-table settlement-income-table">
-            <table>
-              <thead><tr><th>订单号</th><th>客户/渠道</th><th>类型</th><th>财务科目</th><th>应收金额</th><th>已收金额</th><th>未收金额</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
-              <tbody id="settlementIncomeRows"></tbody>
-            </table>
-          </section>
-        </section>
-        <section class="order-desc-card settlement-basis-section">
-          <h2 class="detail-section-title">成本明细</h2>
-          <section class="table-wrap fulfillment-cost-inner-table settlement-cost-detail-table">
-            <table>
-              <thead><tr><th>供应商</th><th>费用项目</th><th>币种</th><th>单价</th><th>数量</th><th>原币金额</th><th>汇率</th><th>本币金额</th><th>已付金额</th><th>未付金额</th><th>附件</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
-              <tbody id="settlementCostRows"></tbody>
-            </table>
-          </section>
-        </section>
-        <section class="order-desc-card settlement-basis-section">
-          <h2 class="detail-section-title">附件依据</h2>
-          <section class="table-wrap fulfillment-cost-inner-table settlement-attachment-table">
-            <table>
-              <thead><tr><th>附件类型</th><th>应上传</th><th>已上传</th><th>状态</th><th>最近附件</th><th>上传人/时间</th><th>操作</th></tr></thead>
-              <tbody id="settlementAttachmentRows"></tbody>
-            </table>
-          </section>
-        </section>
-        <section class="order-desc-card settlement-basis-section">
-          <div class="detail-section-head settlement-basis-section-head">
-            <h2 class="detail-section-title">结算记录</h2>
-            <button id="startSecondSettlement" class="btn btn-secondary btn-sm" type="button" hidden>发起二次结算</button>
-          </div>
-          <section class="table-wrap fulfillment-cost-inner-table settlement-record-table">
-            <table>
-              <thead><tr><th>结算次数</th><th>结算单号</th><th>结算原因</th><th>收入调整</th><th>成本调整</th><th>毛利影响</th><th>附件</th><th>状态</th></tr></thead>
-              <tbody id="settlementRecordRows"></tbody>
-            </table>
-          </section>
-        </section>
-        <div class="form-group">
-          <label class="form-label" for="settlementRemark">结算备注</label>
-          <textarea id="settlementRemark" class="form-control" rows="3" placeholder="记录回团资料、异常关闭、实际收退款或结算提交说明"></textarea>
-        </div>
+
         <section id="settlementSubmitResult" class="finance-link-card receipt-result" hidden>
           <div class="finance-link-title">结算申请已提交，等待审批。</div>
           <div class="finance-link-items">
@@ -566,6 +655,8 @@
       var paymentViewDrawer = document.getElementById('paymentViewDrawer');
       var actionResultModal = document.getElementById('actionResultModal');
       var costItemRows = document.getElementById('costItemRows');
+      var settlementDocTabs = Array.from(document.querySelectorAll('[data-settlement-doc-tab]'));
+      var settlementDocPanels = Array.from(document.querySelectorAll('[data-settlement-doc-panel]'));
       var activeSchedule = null;
       var activePaymentGroup = null;
       var activePaymentRequest = null;
@@ -2915,24 +3006,224 @@
         }).join('');
       }
 
+      function settlementDocumentAction(schedule) {
+        var info = settlementInfo(schedule);
+        var status = settlementStatus(schedule);
+        var text = [status, info.todo, info.basisStatus, schedule.status].join(' ');
+        if (/已结算|审批中|审批通过|已通过/.test(status)) return '查看终单';
+        if (info.secondSettlement || /差异|异常|驳回|待修改/.test(text)) return '查看变更';
+        if (/待提交|已补齐|已保存|客户验收单已上传/.test(text)) return '生成终单';
+        return '查看准单';
+      }
+
+      function switchSettlementDocTab(tabName) {
+        settlementDocTabs.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.settlementDocTab === tabName);
+        });
+        settlementDocPanels.forEach(function (panel) {
+          panel.hidden = panel.dataset.settlementDocPanel !== tabName;
+        });
+      }
+
+      function renderSettlementOrderRows(schedule) {
+        var info = settlementInfo(schedule);
+        var people = info.confirmedPeople || schedule.people || '-';
+        document.getElementById('settlementOrderRows').innerHTML = settlementIncomeRows(schedule).map(function (row) {
+          var refund = /退款/.test(row.type) ? Math.abs(row.receivable) : Number(info.refundAmount || info.deductionAmount || 0);
+          var status = row.unreceived > 0 ? '待收款' : (/退款/.test(row.type) ? '已退款' : '已收清');
+          return '<tr>' +
+            '<td>' + escapeHtml(row.no) + '</td>' +
+            '<td>' + escapeHtml(row.customer) + '</td>' +
+            '<td>' + tag(row.type, /退款/.test(row.type) ? 'tag tag-red' : 'tag tag-green') + '</td>' +
+            '<td>' + escapeHtml(people) + '</td>' +
+            '<td class="amount-strong">' + signedMoney(row.receivable) + '</td>' +
+            '<td>' + signedMoney(row.received) + '</td>' +
+            '<td>' + signedMoney(refund) + '</td>' +
+            '<td>' + tag(status) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function renderSettlementReceiptRows(schedule) {
+        var info = settlementInfo(schedule);
+        var baseNo = String(schedule.id || '').replace(/[^A-Z0-9]/g, '').slice(-12) || 'GROUP';
+        document.getElementById('settlementReceiptRows').innerHTML = settlementIncomeRows(schedule).map(function (row, index) {
+          var retain = index === 0 && Number(info.preReceived || 0) ? Number(info.preReceived || 0) : 0;
+          var transfer = index === 0 && schedule.traffic && schedule.traffic.prepayAdjustments && schedule.traffic.prepayAdjustments.length
+            ? schedule.traffic.prepayAdjustments.reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0)
+            : 0;
+          var retainText = retain ? money(retain) : (transfer ? '转款 ' + money(transfer) : '-');
+          var status = row.unreceived > 0 ? '待收款' : '已收清';
+          return '<tr>' +
+            '<td>' + escapeHtml(row.customer) + '</td>' +
+            '<td>' + escapeHtml('REC-' + baseNo + '-' + (index + 1)) + '</td>' +
+            '<td class="amount-strong">' + signedMoney(row.receivable) + '</td>' +
+            '<td>' + signedMoney(row.received) + '</td>' +
+            '<td>' + escapeHtml(retainText) + '</td>' +
+            '<td>' + money(row.unreceived) + '</td>' +
+            '<td>' + tag(status) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function renderSettlementPrepayRows(schedule) {
+        var rows = [];
+        if (isProjectSchedule(schedule)) {
+          paymentGroupsForSchedule(schedule).forEach(function (group) {
+            group.items.filter(function (item) { return item.scheduleNo === schedule.id; }).forEach(function (item) {
+              var available = groupItemAvailable(group, item);
+              rows.push({
+                payee: group.supplier,
+                fee: item.fee,
+                prepay: money(Number(item.applied || 0)),
+                paid: money(Number(item.paid || 0)),
+                pending: money(Math.max(Number(item.amount || 0) - Number(item.paid || 0), 0)),
+                apply: group.status,
+                remittance: group.paymentNo || group.contract || '-',
+                status: payableApplyState(group)
+              });
+            });
+          });
+        } else if (schedule.traffic && schedule.traffic.payables) {
+          schedule.traffic.payables.forEach(function (item) {
+            rows.push({
+              payee: schedule.traffic.supplier || '-',
+              fee: item.item || '-',
+              prepay: item.prepaid ? money(item.prepaid) : '-',
+              paid: money(Number(item.prepaid || 0)),
+              pending: money(Number(item.pending || 0)),
+              apply: item.contractNo || '-',
+              remittance: item.adjustment ? '调整 ' + money(item.adjustment) : '-',
+              status: item.status || '-'
+            });
+          });
+        }
+        if (!rows.length) {
+          document.getElementById('settlementPrepayRows').innerHTML = '<tr><td colspan="8" class="text-muted">无预付付款记录。</td></tr>';
+          return;
+        }
+        document.getElementById('settlementPrepayRows').innerHTML = rows.map(function (row) {
+          return '<tr>' +
+            '<td>' + escapeHtml(row.payee) + '</td>' +
+            '<td>' + escapeHtml(row.fee) + '</td>' +
+            '<td>' + escapeHtml(row.prepay) + '</td>' +
+            '<td>' + escapeHtml(row.paid) + '</td>' +
+            '<td class="amount-strong">' + escapeHtml(row.pending) + '</td>' +
+            '<td>' + escapeHtml(row.apply) + '</td>' +
+            '<td>' + escapeHtml(row.remittance) + '</td>' +
+            '<td>' + tag(row.status) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function renderSettlementChangeRows(schedule, totals) {
+        var info = settlementInfo(schedule);
+        var rows = [];
+        if (schedule.traffic && schedule.traffic.prepayAdjustments) {
+          schedule.traffic.prepayAdjustments.forEach(function (item) {
+            rows.push({
+              no: item.no,
+              type: '预付转款',
+              income: '-',
+              cost: money(item.amount),
+              profit: signedMoney(-Number(item.amount || 0)),
+              status: item.status
+            });
+          });
+        }
+        settlementCostDetailRows(schedule).filter(function (row) { return /差异|待确认|部分/.test(row.status || ''); }).forEach(function (row, index) {
+          rows.push({
+            no: 'CHG-COST-' + String(schedule.id || '').replace(/[^A-Z0-9]/g, '').slice(-8) + '-' + (index + 1),
+            type: row.item,
+            income: '-',
+            cost: money(row.localAmount),
+            profit: signedMoney(-row.localAmount),
+            status: row.status
+          });
+        });
+        if (info.secondSettlement) {
+          rows.push({
+            no: info.secondSettlement.no || '-',
+            type: info.secondSettlement.reason || '补充结算',
+            income: signedMoney(info.secondSettlement.incomeAdjust || 0),
+            cost: signedMoney(info.secondSettlement.costAdjust || 0),
+            profit: signedMoney(Number(info.secondSettlement.incomeAdjust || 0) - Number(info.secondSettlement.costAdjust || 0)),
+            status: info.secondSettlement.status || '草稿'
+          });
+        }
+        if (!rows.length) {
+          rows.push({
+            no: '无变更',
+            type: '准单口径',
+            income: money(totals.settlementIncome),
+            cost: money(totals.cost),
+            profit: money(totals.profit),
+            status: '无变更'
+          });
+        }
+        document.getElementById('settlementChangeRows').innerHTML = rows.map(function (row) {
+          return '<tr>' +
+            '<td>' + escapeHtml(row.no) + '</td>' +
+            '<td>' + escapeHtml(row.type) + '</td>' +
+            '<td>' + escapeHtml(row.income) + '</td>' +
+            '<td>' + escapeHtml(row.cost) + '</td>' +
+            '<td>' + escapeHtml(row.profit) + '</td>' +
+            '<td>' + tag(row.status) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function renderSettlementHandoff(schedule, totals) {
+        var info = settlementInfo(schedule);
+        var status = settlementStatus(schedule);
+        var settlementNo = settlementNumber(schedule, 1);
+        var financeStatus = info.financeStatus || (status === '已结算' ? '已承接' : (status === '审批中' ? '待财务对账' : '未承接'));
+        var fields = [
+          ['单据类型', settlementDocumentAction(schedule).replace('查看', '').replace('生成', '') || '准单'],
+          ['结算单号', settlementNo],
+          ['结算状态', tag(status)],
+          ['财务承接', tag(financeStatus)],
+          ['结算收入', money(totals.settlementIncome)],
+          ['结算成本', money(totals.cost)],
+          ['结算毛利', money(totals.profit) + ' / ' + totals.profitRate + '%'],
+          ['财务入口', '<a class="link-primary" href="../finance/finance-settlement.html?businessNo=' + encodeURIComponent(schedule.id || '') + '">业务结算</a>'],
+          ['NC状态', tag(info.ncStatus || (status === '已结算' ? '待推送' : '未生成'))]
+        ];
+        document.getElementById('settlementHandoffGrid').innerHTML = fields.map(function (item) {
+          var value = item[0] === '结算状态' || item[0] === '财务承接' || item[0] === '财务入口' || item[0] === 'NC状态' ? item[1] : escapeHtml(item[1]);
+          return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + value + '</div></div>';
+        }).join('');
+      }
+
       function renderSettlementBasis(schedule) {
         var detailTotals = settlementTotals(schedule);
-        document.getElementById('settlementBasisTitle').textContent = (isProjectSchedule(schedule) ? '项目结算依据 - ' : '团期结算依据 - ') + schedule.id;
+        document.getElementById('settlementBasisTitle').textContent = settlementDocumentAction(schedule) + ' - ' + schedule.id;
         renderSettlementObjectSummary(schedule, detailTotals);
         renderSettlementBasicInfo(schedule, detailTotals);
         renderProjectSettlementPanel(schedule);
         renderSettlementIncomeRows(schedule);
         renderSettlementCostRows(schedule);
+        renderSettlementOrderRows(schedule);
+        renderSettlementReceiptRows(schedule);
+        renderSettlementPrepayRows(schedule);
+        renderSettlementChangeRows(schedule, detailTotals);
         renderSettlementAttachmentRows(schedule);
+        renderSettlementHandoff(schedule, detailTotals);
         renderSettlementSummaryRows(schedule, detailTotals);
         renderSettlementRecordRows(schedule, detailTotals);
         document.getElementById('settlementRemark').value = '';
         document.getElementById('settlementSubmitResult').hidden = true;
+        switchSettlementDocTab('overview');
         var status = settlementStatus(schedule);
         var second = settlementInfo(schedule).secondSettlement;
-        var secondButton = document.getElementById('startSecondSettlement');
-        secondButton.hidden = status !== '已结算' || (second && second.status === '审批中');
-        secondButton.textContent = second && second.status === '草稿' ? '提交二次结算' : '发起二次结算';
+        var secondActionVisible = status === '已结算' && !(second && second.status === '审批中');
+        var secondActionText = second && second.status === '草稿' ? '提交二次结算' : '发起二次结算';
+        document.getElementById('secondSettlementActions').hidden = !secondActionVisible;
+        [document.getElementById('startSecondSettlement'), document.getElementById('startSecondSettlementOverview')].forEach(function (button) {
+          if (!button) return;
+          button.hidden = !secondActionVisible;
+          button.textContent = secondActionText;
+        });
         document.getElementById('saveSettlementBasis').textContent = second && second.status === '草稿' ? '保存二次结算' : '保存依据';
         document.getElementById('submitSettlementApply').textContent = status === '已结算'
           ? (second && second.status === '草稿' ? '提交二次结算' : '发起二次结算')
@@ -3071,27 +3362,43 @@
       }
 
       function groupCostCurrencyLabel(currency) {
-        var map = { CNY: '人民币', EUR: '欧元', USD: '美元', AUD: '澳元', SGD: '新加坡元' };
+        var map = { CNY: '人民币', EUR: '欧元', USD: '美元', AUD: '澳元', SGD: '新加坡元', HKD: '港币' };
         return map[currency] || currency || '人民币';
       }
 
       function groupCostCurrencyRate(currency) {
-        var map = { CNY: 1, EUR: 7.86, USD: 7.25, AUD: 4.70, SGD: 5.35 };
+        var map = { CNY: 1, EUR: 7.86, USD: 7.25, AUD: 4.70, SGD: 5.35, HKD: 0.92 };
         return map[currency] || 1;
       }
 
       function groupCostSubjectOptions(selected) {
         var options = ['', '团费', '地接费', '交通费', '住宿费', '门票活动', '签证保险', '领队服务', '餐饮费', '其他成本'];
         return options.map(function (value) {
-          var label = value || '成本类型';
+          var label = value || '费用项目';
           return '<option value="' + escapeHtml(value) + '"' + (value === selected ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
         }).join('');
       }
 
       function groupCostCurrencyOptions(selected) {
-        return ['CNY', 'EUR', 'USD', 'AUD', 'SGD'].map(function (value) {
+        return ['CNY', 'EUR', 'USD', 'AUD', 'SGD', 'HKD'].map(function (value) {
           return '<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + value + '</option>';
         }).join('');
+      }
+
+      function groupCostAutoSource(schedule) {
+        if (!schedule) return '实际成本';
+        if (schedule.status === '未维护' || schedule.status === '预估成本' || settlementStatus(schedule) === '未开始') {
+          return '预估成本';
+        }
+        if (settlementStatus(schedule) === '已结算') return '结算调整成本';
+        return '实际成本';
+      }
+
+      function groupCostAutoStatus(schedule) {
+        var status = settlementStatus(schedule);
+        if (status === '已结算') return '有差异';
+        if (status === '审批通过') return '已确认';
+        return '待确认';
       }
 
       function createGroupCostDraft(data) {
@@ -3099,16 +3406,18 @@
           selected: false,
           subject: '',
           supplier: '',
+          quantity: '1项',
           currency: 'CNY',
-          amount: '',
-          voucherNo: '',
-          remark: ''
+          originalAmount: '',
+          rate: '1.0000',
+          localAmount: '',
+          note: ''
         }, data || {});
       }
 
       function renderGroupCostDrawer(schedule) {
         var info = settlementInfo(schedule);
-        document.getElementById('scheduleCostDrawerTitle').textContent = '添加成本';
+        document.getElementById('scheduleCostDrawerTitle').textContent = '成本明细维护 - ' + schedule.id;
         document.getElementById('costDrawerSummary').innerHTML =
           '<div class="drawer-object-main">' +
             '<div>' +
@@ -3131,13 +3440,18 @@
       function renderGroupCostRows() {
         var rows = document.getElementById('groupCostRows');
         rows.innerHTML = groupCostDrafts.map(function (row, index) {
+          var rate = Number(row.rate || groupCostCurrencyRate(row.currency));
+          var original = Number(row.originalAmount || 0);
+          var localAmount = row.localAmount || (original ? Math.round(original * rate) : '');
           return '<tr data-group-cost-index="' + index + '">' +
             '<td><input type="checkbox" data-group-cost-select' + (row.selected ? ' checked' : '') + ' aria-label="选择成本行"></td>' +
             '<td><select class="form-control" data-group-cost-field="subject">' + groupCostSubjectOptions(row.subject) + '</select></td>' +
             '<td><input class="form-control" type="text" placeholder="请选择供应商/领队" value="' + escapeHtml(row.supplier) + '" data-group-cost-field="supplier"></td>' +
-            '<td><span class="group-cost-money-field"><select class="form-control" data-group-cost-field="currency">' + groupCostCurrencyOptions(row.currency) + '</select><input class="form-control" type="number" min="0" step="0.01" placeholder="金额" value="' + escapeHtml(row.amount) + '" data-group-cost-field="amount"></span></td>' +
-            '<td><input class="form-control" type="text" placeholder="单据号" value="' + escapeHtml(row.voucherNo) + '" data-group-cost-field="voucherNo"></td>' +
-            '<td><input class="form-control" type="text" placeholder="备注" value="' + escapeHtml(row.remark) + '" data-group-cost-field="remark"></td>' +
+            '<td><input class="form-control" type="text" placeholder="数量" value="' + escapeHtml(row.quantity) + '" data-group-cost-field="quantity"></td>' +
+            '<td><span class="group-cost-money-field"><select class="form-control" data-group-cost-field="currency">' + groupCostCurrencyOptions(row.currency) + '</select><input class="form-control" type="number" min="0" step="0.01" placeholder="原币金额" value="' + escapeHtml(row.originalAmount) + '" data-group-cost-field="originalAmount"></span></td>' +
+            '<td><input class="form-control" type="number" min="0" step="0.0001" value="' + escapeHtml(rate.toFixed(4)) + '" data-group-cost-field="rate"></td>' +
+            '<td><input class="form-control" type="text" value="' + escapeHtml(localAmount ? money(localAmount) : '') + '" data-group-cost-local readonly></td>' +
+            '<td><input class="form-control" type="text" placeholder="成本说明" value="' + escapeHtml(row.note) + '" data-group-cost-field="note"></td>' +
           '</tr>';
         }).join('');
         updateGroupCostSelectionState();
@@ -3175,22 +3489,44 @@
         var field = target.dataset.groupCostField;
         if (!field) return;
         groupCostDrafts[index][field] = target.value;
+        if (field === 'currency') {
+          groupCostDrafts[index].rate = groupCostCurrencyRate(target.value).toFixed(4);
+          var original = Number(groupCostDrafts[index].originalAmount || 0);
+          groupCostDrafts[index].localAmount = original ? original * Number(groupCostDrafts[index].rate || 1) : '';
+          var rateInput = row.querySelector('[data-group-cost-field="rate"]');
+          var localInput = row.querySelector('[data-group-cost-local]');
+          if (rateInput) rateInput.value = groupCostDrafts[index].rate;
+          if (localInput) localInput.value = groupCostDrafts[index].localAmount ? money(groupCostDrafts[index].localAmount) : '';
+          return;
+        }
+        if (field === 'originalAmount' || field === 'rate') {
+          var amount = Number(groupCostDrafts[index].originalAmount || 0);
+          var rate = Number(groupCostDrafts[index].rate || 1);
+          groupCostDrafts[index].localAmount = amount ? amount * rate : '';
+          var amountLocalInput = row.querySelector('[data-group-cost-local]');
+          if (amountLocalInput) amountLocalInput.value = groupCostDrafts[index].localAmount ? money(groupCostDrafts[index].localAmount) : '';
+        }
       }
 
       function groupCostRowIsEmpty(row) {
-        return !row.subject && !row.supplier && !Number(row.amount || 0) && !row.voucherNo && !row.remark;
+        return !row.subject && !row.supplier && !Number(row.originalAmount || 0) && !row.note;
       }
 
       function readGroupCostRows() {
         return groupCostDrafts.map(function (row, index) {
+          var rate = Number(row.rate || groupCostCurrencyRate(row.currency));
+          var originalAmount = Number(row.originalAmount || 0);
+          var localAmount = originalAmount * rate;
           return {
             index: index + 1,
             subject: String(row.subject || '').trim(),
             supplier: String(row.supplier || '').trim(),
+            quantity: String(row.quantity || '1项').trim(),
             currency: row.currency || 'CNY',
-            amount: Number(row.amount || 0),
-            voucherNo: String(row.voucherNo || '').trim(),
-            remark: String(row.remark || '').trim(),
+            originalAmount: originalAmount,
+            rate: rate,
+            localAmount: localAmount,
+            note: String(row.note || '').trim(),
             empty: groupCostRowIsEmpty(row)
           };
         }).filter(function (row) { return !row.empty; });
@@ -3206,20 +3542,29 @@
           openActionResult('成本明细必填', '请至少维护一条成本明细。', '未添加成本。');
           return;
         }
-        var invalid = rows.find(function (row) { return !row.subject || !row.supplier || row.amount <= 0; });
+        var invalid = rows.find(function (row) { return !row.subject || !row.supplier || row.originalAmount <= 0; });
         if (invalid) {
-          openActionResult('成本明细未完整', '第 ' + invalid.index + ' 行需补齐成本类型、供应商和金额。', '未添加成本。');
+          openActionResult('成本明细未完整', '第 ' + invalid.index + ' 行需补齐费用项目、供应商和原币金额。', '未添加成本。');
           return;
         }
         rows.forEach(function (data) {
-          var rate = groupCostCurrencyRate(data.currency);
-          var local = data.amount * rate;
-          var note = [data.voucherNo ? '单据号 ' + data.voucherNo : '', data.remark, attachmentNote, data.currency !== 'CNY' ? (groupCostCurrencyLabel(data.currency) + '成本，汇率 ' + rate) : ''].filter(Boolean).join('；') || '成本待确认';
-          var row = [data.subject, data.supplier, '1项', data.amount, local, '待确认', note];
+          var costSource = groupCostAutoSource(activeSchedule);
+          var generatedStatus = groupCostAutoStatus(activeSchedule);
+          var note = [
+            costSource,
+            data.note,
+            attachment ? '附件 ' + attachment : '',
+            attachmentNote,
+            data.currency !== 'CNY' ? (groupCostCurrencyLabel(data.currency) + '成本，汇率 ' + data.rate) : ''
+          ].filter(Boolean).join('；') || '成本待确认';
+          var row = [data.subject, data.supplier, data.quantity, data.originalAmount, data.localAmount, generatedStatus, note];
           row.currency = data.currency;
-          row.rate = rate;
-          row.originalAmount = data.amount;
-          row.voucherNo = data.voucherNo;
+          row.rate = data.rate;
+          row.originalAmount = data.originalAmount;
+          row.costSource = costSource;
+          row.billNo = '';
+          row.payableNo = '';
+          row.prepayOffset = '';
           row.attachment = attachment;
           row.attachmentNote = attachmentNote;
           activeSchedule.items.push(row);
@@ -3234,7 +3579,7 @@
         if (wasUnstarted) activeSchedule.settlement.status = '成本复核中';
         renderScheduleCosts();
         closeLayer(scheduleCostDrawer);
-        openActionResult('成本已添加', activeSchedule.id + ' 已添加 ' + rows.length + ' 条成本，合计本币金额 ' + money(rows.reduce(function (sum, row) { return sum + row.amount * groupCostCurrencyRate(row.currency); }, 0)) + '。', '成本状态为待确认，后续可继续在结算依据中核对。');
+        openActionResult('成本明细已维护', activeSchedule.id + ' 已维护 ' + rows.length + ' 条成本，合计本币金额 ' + money(rows.reduce(function (sum, row) { return sum + row.localAmount; }, 0)) + '。', '成本状态由单据阶段和财务承接自动生成。');
       }
 
       function readDraftCostRow() {
@@ -3749,6 +4094,7 @@
 
       document.addEventListener('click', function (event) {
         var tab = event.target.closest('[data-cost-tab]');
+        var settlementDocTab = event.target.closest('[data-settlement-doc-tab]');
         var openCost = event.target.closest('[data-open-cost]');
         var openSettlementBasis = event.target.closest('[data-open-settlement-basis]');
         var viewSettlementButton = event.target.closest('[data-view-settlement]');
@@ -3763,6 +4109,10 @@
 
         if (tab) {
           setTab(tab.dataset.costTab);
+          return;
+        }
+        if (settlementDocTab) {
+          switchSettlementDocTab(settlementDocTab.dataset.settlementDocTab);
           return;
         }
         if (openCost) {
@@ -3862,7 +4212,7 @@
       document.getElementById('batchCostMode').addEventListener('change', renderBatchCostPreview);
       document.getElementById('applyBatchCostAction').addEventListener('click', applyBatchCostAction);
       document.getElementById('saveScheduleCost').addEventListener('click', function () {
-        openActionResult('草稿已保留', '当前添加成本明细已保留在抽屉中。', '点击提交后才会写入团期成本。');
+        openActionResult('草稿已保留', '当前成本明细已保留在抽屉中。', '点击提交后写入团期成本。');
       });
       document.getElementById('submitScheduleCost').addEventListener('click', submitGroupCostForm);
       document.getElementById('addGroupCostRow').addEventListener('click', addGroupCostRow);
@@ -3879,7 +4229,7 @@
       });
       document.getElementById('addGroupCostAttachment').addEventListener('click', function () {
         var attachment = document.getElementById('groupCostAttachment');
-        attachment.value = attachment.value.trim() ? attachment.value.trim() + '、补充附件.pdf' : '供应商账单.pdf';
+        attachment.value = attachment.value.trim() ? attachment.value.trim() + '、补充附件.pdf' : '成本依据.pdf';
       });
       document.getElementById('uploadProjectAcceptance').addEventListener('click', uploadProjectAcceptance);
       document.getElementById('supplementProjectBasis').addEventListener('click', supplementProjectBasis);
@@ -3887,6 +4237,7 @@
       document.getElementById('viewProjectSettlementApply').addEventListener('click', viewProjectSettlementApply);
       document.getElementById('resubmitProjectSettlement').addEventListener('click', resubmitProjectSettlement);
       document.getElementById('startSecondSettlement').addEventListener('click', startSecondSettlementDraft);
+      document.getElementById('startSecondSettlementOverview').addEventListener('click', startSecondSettlementDraft);
       document.getElementById('saveSettlementBasis').addEventListener('click', saveSettlementBasisRecord);
       document.getElementById('submitSettlementApply').addEventListener('click', handleSettlementPrimaryAction);
       document.getElementById('savePaymentDraft').addEventListener('click', function () {

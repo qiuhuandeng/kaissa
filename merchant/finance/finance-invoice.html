@@ -5,6 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>发票管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .finance-invoice-table table {
+      min-width: 1760px;
+    }
+    .finance-invoice-table col:nth-child(1) { width: 230px; }
+    .finance-invoice-table col:nth-child(2) { width: 130px; }
+    .finance-invoice-table col:nth-child(3) { width: 240px; }
+    .finance-invoice-table col:nth-child(4) { width: 210px; }
+    .finance-invoice-table col:nth-child(5) { width: 230px; }
+    .finance-invoice-table col:nth-child(6) { width: 230px; }
+    .finance-invoice-table col:nth-child(7) { width: 210px; }
+    .finance-invoice-table col:nth-child(8) { width: 200px; }
+    .finance-invoice-table col:nth-child(9) { width: 180px; }
+    .finance-invoice-table col:nth-child(10) { width: 150px; }
+    .finance-invoice-table th.sticky-action,
+    .finance-invoice-table td.sticky-action {
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: var(--surface, #fff);
+    }
+    .invoice-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .invoice-summary-item {
+      padding: 12px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      background: var(--surface-soft, #f8fafc);
+    }
+    .invoice-summary-label {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+    }
+    .invoice-summary-value {
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--text-primary, #0f172a);
+    }
+    .invoice-tab-panels .drawer-section[hidden] {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -14,172 +63,397 @@
       <div>
         <h1 class="page-title">发票管理</h1>
       </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" type="button" data-sync-tax>税控同步</button>
+        <button class="btn btn-secondary" type="button" data-export-invoice>导出</button>
+      </div>
     </div>
   </section>
 
   <section class="list-surface list-surface-tabbed finance-invoice-list-surface" data-list-surface>
     <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-function-tabs list-surface-tabs" aria-label="发票管理标签页">
-        <button class="tab-item active" type="button" data-invoice-tab="issued">销售开票</button>
-        <button class="tab-item" type="button" data-invoice-tab="supplier">供应商收票</button>
-        <button class="tab-item" type="button" data-invoice-tab="red">红冲记录</button>
-        <button class="tab-item" type="button" data-invoice-tab="exception">发票异常</button>
+      <nav class="tab-bar list-surface-tabs" aria-label="发票任务状态">
+        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待开票">待开票 <span class="tab-count" data-status-count="待开票">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待收票">待收票 <span class="tab-count" data-status-count="待收票">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待验真">待验真 <span class="tab-count" data-status-count="待验真">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="异常处理中">异常处理中 <span class="tab-count" data-status-count="异常处理中">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待红冲">待红冲 <span class="tab-count" data-status-count="待红冲">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已完成">已完成 <span class="tab-count" data-status-count="已完成">0</span></button>
       </nav>
     </div>
 
-    <section id="invoice-issued" class="invoice-panel active">
-      <section class="filter-card filter-card-compact invoice-filter list-surface-filter" aria-label="销售开票筛选">
-        <div class="filter-row">
-          <div class="filter-item"><label class="sr-only" for="issuedKeyword">开票单/订单/客户/应收单</label><input id="issuedKeyword" type="search" placeholder="开票单/订单/客户/应收单"></div>
-          <div class="filter-item-sm"><label class="sr-only" for="issuedStatus">开票状态</label><select id="issuedStatus"><option>全部状态</option><option>待开票</option><option>部分开票</option><option>已开票</option><option>红冲中</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-invoice>查询</button><button class="btn btn-secondary" type="button" data-reset-invoice>重置</button></div>
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="发票任务筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="invoiceKeyword">发票单/订单/应收/应付/客户/供应商</label>
+          <input id="invoiceKeyword" type="search" placeholder="发票单/订单/应收/应付/客户/供应商">
         </div>
-      </section>
-      <section class="table-wrap invoice-table-wrap list-surface-table list-table-with-pagination" aria-label="销售开票列表">
-        <table>
-          <thead><tr><th>开票单/来源</th><th>客户/渠道</th><th>关联订单/应收</th><th>业务内容</th><th>可开金额</th><th>已开金额</th><th>本次金额</th><th>发票类型</th><th>状态</th><th>税控/NC</th><th>操作</th></tr></thead>
-          <tbody id="issuedInvoiceRows">
-            <tr data-tab-status="待开票" data-no="INV-REQ-20260617003" data-kind="销售开票" data-customer="旅途驿站" data-source="KS2024061807 / SK20240618007" data-business="丝路专列深度游 / 丝路经典线" data-available="¥38,400" data-issued="¥0" data-current="¥38,400" data-type="增值税专用发票" data-status="待开票" data-tax="未同步" data-title="旅途驿站有限公司" data-note="客户开票资料已提交">
-              <td>INV-REQ-20260617003<br><span class="text-muted">订单应收</span></td><td>旅途驿站</td><td>KS2024061807<br><span class="text-muted">SK20240618007</span></td><td>丝路专列深度游<br><span class="text-muted">丝路经典线</span></td><td>¥38,400</td><td>¥0</td><td class="amount-strong">¥38,400</td><td>专票</td><td><span class="tag tag-blue">待开票</span></td><td><span class="tag tag-gray">未同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-issue>开具</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="部分开票" data-no="INV-REQ-20260618002" data-kind="销售开票" data-customer="李梅" data-source="KS2024061802 / SK20240618002" data-business="理想号地中海邮轮 / 地中海经典线" data-available="¥49,900" data-issued="¥24,950" data-current="¥24,950" data-type="增值税专用发票" data-status="部分开票" data-tax="待同步" data-title="李梅" data-note="尾款未完全开票">
-              <td>INV-REQ-20260618002<br><span class="text-muted">订单应收</span></td><td>李梅</td><td>KS2024061802<br><span class="text-muted">SK20240618002</span></td><td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td><td>¥49,900</td><td>¥24,950</td><td class="amount-strong">¥24,950</td><td>专票</td><td><span class="tag tag-orange">部分开票</span></td><td><span class="tag tag-orange">待同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-issue>继续开票</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="已开票" data-no="INV-REQ-20260618001" data-kind="销售开票" data-customer="张建国" data-source="KS2024061801 / SK20240618001" data-business="欧洲十国经典游 / 法德意A线" data-available="¥25,600" data-issued="¥25,600" data-current="¥25,600" data-type="增值税普通发票" data-status="已开票" data-tax="已同步" data-title="张建国" data-note="已同步税控和NC">
-              <td>INV-REQ-20260618001<br><span class="text-muted">订单应收</span></td><td>张建国</td><td>KS2024061801<br><span class="text-muted">SK20240618001</span></td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td>¥25,600</td><td>¥25,600</td><td class="amount-strong">¥25,600</td><td>普票</td><td><span class="tag tag-green">已开票</span></td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="directionFilter">发票方向</label>
+          <select id="directionFilter">
+            <option>全部方向</option>
+            <option>销项开票</option>
+            <option>进项收票</option>
+            <option>红冲处理</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="sourceFilter">业务来源</label>
+          <select id="sourceFilter">
+            <option>全部来源</option>
+            <option>订单应收</option>
+            <option>供应商账单</option>
+            <option>应付单</option>
+            <option>退款单</option>
+            <option>结算单</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="companyFilter">主体公司</label>
+          <select id="companyFilter">
+            <option>全部主体</option>
+            <option>总部财务</option>
+            <option>北京凯撒</option>
+            <option>上海凯撒</option>
+            <option>福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="taxFilter">税控状态</label>
+          <select id="taxFilter">
+            <option>全部税控</option>
+            <option>未同步</option>
+            <option>待验真</option>
+            <option>已认证</option>
+            <option>同步失败</option>
+            <option>已同步</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="ncFilter">NC状态</label>
+          <select id="ncFilter">
+            <option>全部NC</option>
+            <option>未生成</option>
+            <option>待推送</option>
+            <option>已推送</option>
+            <option>推送失败</option>
+          </select>
+        </div>
+        <div class="filter-item-wide filter-item-date-range">
+          <label class="sr-only">任务日期</label>
+          <div class="date-range">
+            <input id="invoiceStart" type="date" value="2026-07-01" aria-label="开始日期">
+            <span>至</span>
+            <input id="invoiceEnd" type="date" value="2026-07-13" aria-label="结束日期">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button" data-search-invoice>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-invoice>重置</button>
+        </div>
+      </div>
     </section>
 
-    <section id="invoice-supplier" class="invoice-panel" hidden>
-      <section class="filter-card filter-card-compact invoice-filter list-surface-filter" aria-label="供应商收票筛选">
-        <div class="filter-row">
-          <div class="filter-item"><label class="sr-only" for="supplierKeyword">供应商/发票/应付单</label><input id="supplierKeyword" type="search" placeholder="供应商/发票/应付单"></div>
-          <div class="filter-item-sm"><label class="sr-only" for="supplierStatus">收票状态</label><select id="supplierStatus"><option>全部状态</option><option>待入账</option><option>已入账</option><option>金额不符</option><option>发票异常</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-invoice>查询</button><button class="btn btn-secondary" type="button" data-reset-invoice>重置</button></div>
-        </div>
-      </section>
-      <section class="table-wrap invoice-table-wrap list-surface-table list-table-with-pagination" aria-label="供应商收票列表">
-        <table>
-          <thead><tr><th>供应商/发票</th><th>关联应付</th><th>业务内容</th><th>费用项目</th><th>发票金额</th><th>应付金额</th><th>校验</th><th>入账状态</th><th>操作</th></tr></thead>
-          <tbody id="supplierInvoiceRows">
-            <tr data-tab-status="待入账" data-no="RC20260618088" data-kind="供应商收票" data-customer="皇家加勒比" data-source="AP20260624002 / FK20260624002" data-business="理想号地中海邮轮 / 地中海经典线" data-item="舱位包销" data-current="¥996,000" data-payable="¥996,000" data-status="待入账" data-check="金额一致" data-note="发票与应付单金额一致">
-              <td>皇家加勒比<br><span class="text-muted">RC20260618088</span></td><td>AP20260624002<br><span class="text-muted">FK20260624002</span></td><td>理想号地中海邮轮<br><span class="text-muted">地中海经典线</span></td><td>舱位包销</td><td class="amount-strong">¥996,000</td><td>¥996,000</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-orange">待入账</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-supplier>确认入账</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="金额不符 发票异常" data-no="TR20260615012" data-kind="供应商收票" data-customer="丝路专列运营商" data-source="AP20260623003" data-business="丝路专列深度游 / 丝路经典线" data-item="铺位包列" data-current="¥386,000" data-payable="¥380,000" data-status="发票异常" data-check="金额不符" data-note="发票金额高于应付单 ¥6,000">
-              <td>丝路专列运营商<br><span class="text-muted">TR20260615012</span></td><td>AP20260623003</td><td>丝路专列深度游<br><span class="text-muted">丝路经典线</span></td><td>铺位包列</td><td class="amount-red">¥386,000</td><td>¥380,000</td><td><span class="tag tag-red">金额不符</span></td><td><span class="tag tag-red">发票异常</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-exception>处理异常</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="已入账" data-no="FR20260618001" data-kind="供应商收票" data-customer="欧洲联合地接社" data-source="AP20260624001 / PAYEX-20260624001" data-business="欧洲十国经典游 / 法德意A线" data-item="地接综合费" data-current="¥112,000" data-payable="¥112,000" data-status="已入账" data-check="金额一致" data-note="已完成发票入账">
-              <td>欧洲联合地接社<br><span class="text-muted">FR20260618001</span></td><td>AP20260624001</td><td>欧洲十国经典游<br><span class="text-muted">法德意A线</span></td><td>地接综合费</td><td class="amount-strong">¥112,000</td><td>¥112,000</td><td><span class="tag tag-green">金额一致</span></td><td><span class="tag tag-green">已入账</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
+    <section class="table-wrap finance-invoice-table list-surface-table list-table-with-pagination" aria-label="发票任务列表">
+      <table>
+        <colgroup>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>发票单/任务</th>
+            <th>发票方向</th>
+            <th>业务来源</th>
+            <th>开票/收票对象</th>
+            <th>发票金额</th>
+            <th>税票信息</th>
+            <th>匹配校验</th>
+            <th>红冲异常</th>
+            <th>凭证NC</th>
+            <th class="sticky-action">操作</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceRows">
+          <tr data-task-no="OUT-INV-20260713001" data-direction="销项开票" data-source-type="订单应收" data-source-no="AR20260710003 / KS20240710018" data-business="丝路专列深度游 / TR-SILK-20250815-001" data-object-name="旅途驿站有限公司" data-object-type="企业客户" data-company="福建凯撒" data-title-name="旅途驿站有限公司" data-tax-no="91350100MA8T000001" data-invoice-type="增值税专用发票" data-tax-rate="6%" data-tax-status="未同步" data-nc-status="未生成" data-voucher-no="-" data-available-amount="¥38,400" data-done-amount="¥0" data-current-amount="¥38,400" data-diff-amount="¥0" data-match-result="收款已确认 / 应收已审核" data-red-result="无红冲" data-risk="无异常" data-owner="税务会计孙悦" data-date="2026-07-13" data-status="待开票">
+            <td><div class="table-cell-main"><strong>OUT-INV-20260713001</strong><span>2026-07-13 / 税务会计孙悦</span></div></td>
+            <td><span class="tag tag-blue">销项开票</span></td>
+            <td><div class="table-cell-main"><strong>AR20260710003</strong><span>KS20240710018 / 订单应收</span></div></td>
+            <td><div class="table-cell-main"><strong>旅途驿站有限公司</strong><span>企业客户 / 福建凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥38,400</strong><span>可开 ¥38,400 / 已开 ¥0</span></div></td>
+            <td><div class="table-cell-main"><strong>专票 / 6%</strong><span>抬头已核验 / 税号齐全</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">收款已确认</span><span>应收已审核</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无异常</span><span>无红冲</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>开票后生成凭证</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-process="issue">开票处理</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-task-no="OUT-INV-20260712008" data-direction="销项开票" data-source-type="结算单" data-source-no="JS-MICE-20260708002 / MICE-20250623-001" data-business="北京某科技有限公司欧洲奖励旅游 / 阶段款" data-object-name="北京某科技有限公司" data-object-type="企业客户" data-company="总部财务" data-title-name="北京某科技有限公司" data-tax-no="91110108MA6T000008" data-invoice-type="增值税普通发票" data-tax-rate="6%" data-tax-status="未同步" data-nc-status="未生成" data-voucher-no="-" data-available-amount="¥286,000" data-done-amount="¥160,000" data-current-amount="¥126,000" data-diff-amount="¥0" data-match-result="结算已审批 / 阶段款已收" data-red-result="无红冲" data-risk="无异常" data-owner="税务会计孙悦" data-date="2026-07-12" data-status="待开票">
+            <td><div class="table-cell-main"><strong>OUT-INV-20260712008</strong><span>2026-07-12 / 税务会计孙悦</span></div></td>
+            <td><span class="tag tag-blue">销项开票</span></td>
+            <td><div class="table-cell-main"><strong>JS-MICE-20260708002</strong><span>MICE-20250623-001 / 结算单</span></div></td>
+            <td><div class="table-cell-main"><strong>北京某科技有限公司</strong><span>企业客户 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥126,000</strong><span>可开 ¥286,000 / 已开 ¥160,000</span></div></td>
+            <td><div class="table-cell-main"><strong>普票 / 6%</strong><span>阶段款抬头已核验</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">结算已审批</span><span>阶段款已收</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无异常</span><span>无红冲</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>开票后生成凭证</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-process="issue">开票处理</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-task-no="INP-REG-20260712002" data-direction="进项收票" data-source-type="供应商账单" data-source-no="BN20260701002 / AP20260624002" data-business="理想号地中海邮轮 / CR-MED-20250809-002" data-object-name="皇家加勒比" data-object-type="邮轮供应商" data-company="上海凯撒" data-title-name="皇家加勒比邮轮服务有限公司" data-tax-no="91310000MA8C000002" data-invoice-type="增值税专用发票" data-tax-rate="6%" data-tax-status="未同步" data-nc-status="未生成" data-voucher-no="-" data-available-amount="¥996,000" data-done-amount="¥0" data-current-amount="¥996,000" data-diff-amount="¥0" data-match-result="账单一致 / 应付已确认" data-red-result="无异常" data-risk="无异常" data-owner="应付会计周婷" data-date="2026-07-12" data-status="待收票">
+            <td><div class="table-cell-main"><strong>INP-REG-20260712002</strong><span>2026-07-12 / 应付会计周婷</span></div></td>
+            <td><span class="tag tag-purple">进项收票</span></td>
+            <td><div class="table-cell-main"><strong>BN20260701002</strong><span>AP20260624002 / 供应商账单</span></div></td>
+            <td><div class="table-cell-main"><strong>皇家加勒比</strong><span>邮轮供应商 / 上海凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥996,000</strong><span>应收票 ¥996,000 / 已收 ¥0</span></div></td>
+            <td><div class="table-cell-main"><strong>专票 / 6%</strong><span>收款账户白名单一致</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">账单一致</span><span>应付已确认</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无异常</span><span>无红冲</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>收票后生成凭证</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-process="receive">登记收票</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-task-no="INP-AUTH-20260711006" data-direction="进项收票" data-source-type="应付单" data-source-no="AP20260624001 / PAYEX-20260624001" data-business="欧洲十国经典游 / EU-20250820-A" data-object-name="欧洲联合地接社" data-object-type="地接供应商" data-company="北京凯撒" data-title-name="欧洲联合地接社" data-tax-no="VAT-EU-20260711006" data-invoice-type="境外服务发票" data-tax-rate="免税" data-tax-status="待验真" data-nc-status="待推送" data-voucher-no="VCH-INP-20260711006" data-available-amount="¥112,000" data-done-amount="¥112,000" data-current-amount="¥112,000" data-diff-amount="¥0" data-match-result="金额一致 / 回单已核销" data-red-result="无异常" data-risk="无异常" data-owner="税务会计孙悦" data-date="2026-07-11" data-status="待验真">
+            <td><div class="table-cell-main"><strong>INP-AUTH-20260711006</strong><span>2026-07-11 / 税务会计孙悦</span></div></td>
+            <td><span class="tag tag-purple">进项收票</span></td>
+            <td><div class="table-cell-main"><strong>AP20260624001</strong><span>PAYEX-20260624001 / 应付单</span></div></td>
+            <td><div class="table-cell-main"><strong>欧洲联合地接社</strong><span>地接供应商 / 北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥112,000</strong><span>应收票 ¥112,000 / 已收 ¥112,000</span></div></td>
+            <td><div class="table-cell-main"><strong>境外服务发票</strong><span>待验真 / 免税</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">金额一致</span><span>回单已核销</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无异常</span><span>无红冲</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>VCH-INP-20260711006</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-process="verify">验真认证</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-task-no="INP-EXC-20260710003" data-direction="进项收票" data-source-type="供应商账单" data-source-no="BN20260701001 / AP20260623003" data-business="丝路专列深度游 / TR-SILK-20250815-001" data-object-name="丝路专列运营商" data-object-type="专列供应商" data-company="福建凯撒" data-title-name="丝路专列运营商" data-tax-no="91620100MA8R000003" data-invoice-type="增值税专用发票" data-tax-rate="9%" data-tax-status="同步失败" data-nc-status="未生成" data-voucher-no="-" data-available-amount="¥380,000" data-done-amount="¥386,000" data-current-amount="¥386,000" data-diff-amount="¥6,000" data-match-result="金额不符 / 应付差异待核对" data-red-result="票面高于应付" data-risk="金额差异" data-owner="应付会计周婷" data-date="2026-07-10" data-status="异常处理中">
+            <td><div class="table-cell-main"><strong>INP-EXC-20260710003</strong><span>2026-07-10 / 应付会计周婷</span></div></td>
+            <td><span class="tag tag-purple">进项收票</span></td>
+            <td><div class="table-cell-main"><strong>BN20260701001</strong><span>AP20260623003 / 供应商账单</span></div></td>
+            <td><div class="table-cell-main"><strong>丝路专列运营商</strong><span>专列供应商 / 福建凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-red">¥386,000</strong><span>应付 ¥380,000 / 差异 ¥6,000</span></div></td>
+            <td><div class="table-cell-main"><strong>专票 / 9%</strong><span>税控同步失败</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">金额不符</span><span>应付差异待核对</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">金额差异</span><span>票面高于应付</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>差异处理后生成</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-process="exception">处理异常</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-task-no="RED-INV-20260709001" data-direction="红冲处理" data-source-type="退款单" data-source-no="RFD-20260708004 / OUT-INV-20260616004" data-business="马来西亚自由行 / 退款冲减" data-object-name="刘洋" data-object-type="散客客户" data-company="总部财务" data-title-name="刘洋" data-tax-no="个人抬头" data-invoice-type="销项红字发票" data-tax-rate="6%" data-tax-status="未同步" data-nc-status="未生成" data-voucher-no="-" data-available-amount="¥15,600" data-done-amount="-¥3,200" data-current-amount="-¥3,200" data-diff-amount="¥0" data-match-result="退款已执行 / 原发票可红冲" data-red-result="退款冲减" data-risk="待红冲" data-owner="税务会计孙悦" data-date="2026-07-09" data-status="待红冲">
+            <td><div class="table-cell-main"><strong>RED-INV-20260709001</strong><span>2026-07-09 / 税务会计孙悦</span></div></td>
+            <td><span class="tag tag-orange">红冲处理</span></td>
+            <td><div class="table-cell-main"><strong>RFD-20260708004</strong><span>OUT-INV-20260616004 / 退款单</span></div></td>
+            <td><div class="table-cell-main"><strong>刘洋</strong><span>散客客户 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-red">-¥3,200</strong><span>原发票 ¥15,600</span></div></td>
+            <td><div class="table-cell-main"><strong>销项红字 / 6%</strong><span>个人抬头</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">退款已执行</span><span>原发票可红冲</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待红冲</span><span>退款冲减</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>红冲后生成凭证</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-process="red">红冲处理</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-task-no="OUT-INV-20260706002" data-direction="销项开票" data-source-type="订单应收" data-source-no="AR20260701005 / KS20240701009" data-business="欧洲十国经典游 / EU-20250820-A" data-object-name="张建国" data-object-type="散客客户" data-company="北京凯撒" data-title-name="张建国" data-tax-no="个人抬头" data-invoice-type="增值税普通发票" data-tax-rate="6%" data-tax-status="已同步" data-nc-status="已推送" data-voucher-no="VCH-OUT-20260706002" data-available-amount="¥25,600" data-done-amount="¥25,600" data-current-amount="¥25,600" data-diff-amount="¥0" data-match-result="收款已确认 / 应收已结清" data-red-result="无红冲" data-risk="无异常" data-owner="税务会计孙悦" data-date="2026-07-06" data-status="已完成">
+            <td><div class="table-cell-main"><strong>OUT-INV-20260706002</strong><span>2026-07-06 / 税务会计孙悦</span></div></td>
+            <td><span class="tag tag-blue">销项开票</span></td>
+            <td><div class="table-cell-main"><strong>AR20260701005</strong><span>KS20240701009 / 订单应收</span></div></td>
+            <td><div class="table-cell-main"><strong>张建国</strong><span>散客客户 / 北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥25,600</strong><span>可开 ¥25,600 / 已开 ¥25,600</span></div></td>
+            <td><div class="table-cell-main"><strong>普票 / 6%</strong><span>FP20260706002</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">应收已结清</span><span>收款已确认</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无异常</span><span>无红冲</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>VCH-OUT-20260706002</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+          </tr>
+        </tbody>
+      </table>
     </section>
-
-    <section id="invoice-red" class="invoice-panel" hidden>
-      <section class="filter-card filter-card-compact invoice-filter list-surface-filter" aria-label="红冲记录筛选">
-        <div class="filter-row">
-          <div class="filter-item"><label class="sr-only" for="redKeyword">红冲单/原发票/订单/客户</label><input id="redKeyword" type="search" placeholder="红冲单/原发票/订单/客户"></div>
-          <div class="filter-item-sm"><label class="sr-only" for="redStatus">红冲状态</label><select id="redStatus"><option>全部状态</option><option>待红冲</option><option>红冲中</option><option>已红冲</option><option>红冲失败</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-invoice>查询</button><button class="btn btn-secondary" type="button" data-reset-invoice>重置</button></div>
-        </div>
-      </section>
-      <section class="table-wrap invoice-table-wrap list-surface-table list-table-with-pagination" aria-label="红冲记录">
-        <table>
-          <thead><tr><th>红冲单</th><th>原发票</th><th>对象</th><th>关联业务</th><th>红冲金额</th><th>红冲原因</th><th>状态</th><th>税控/NC</th><th>操作</th></tr></thead>
-          <tbody id="redInvoiceRows">
-            <tr data-tab-status="待红冲" data-no="RED-INV-20260624001" data-kind="红冲记录" data-customer="刘洋" data-source="INV-REQ-20260616004 / KS2024061813" data-business="马来西亚自由行 / 退款冲减" data-current="-¥3,200" data-payable="原发票 ¥15,600" data-status="待红冲" data-check="退款已执行，待开红字发票" data-tax="待同步" data-note="订单退款后需冲减原销项发票">
-              <td>RED-INV-20260624001<br><span class="text-muted">销项红冲</span></td><td>INV-REQ-20260616004</td><td>刘洋</td><td>KS2024061813<br><span class="text-muted">退款冲减</span></td><td class="amount-red">-¥3,200</td><td>退款冲减</td><td><span class="tag tag-orange">待红冲</span></td><td><span class="tag tag-orange">待同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-red>红冲</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-tab-status="已红冲" data-no="RED-INV-20260618002" data-kind="红冲记录" data-customer="某科技公司" data-source="INV-REQ-20260611008 / MICE-20250623-001" data-business="会展项目 / 折扣调整" data-current="-¥12,000" data-payable="原发票 ¥286,000" data-status="已红冲" data-check="已同步税控和NC" data-tax="已同步" data-note="合同折扣调整后完成红冲">
-              <td>RED-INV-20260618002<br><span class="text-muted">销项红冲</span></td><td>INV-REQ-20260611008</td><td>某科技公司</td><td>MICE-20250623-001<br><span class="text-muted">折扣调整</span></td><td class="amount-red">-¥12,000</td><td>折扣调整</td><td><span class="tag tag-green">已红冲</span></td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-2条/共2条</span></div>
-    </section>
-
-    <section id="invoice-exception" class="invoice-panel" hidden>
-      <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="发票异常">
-        <table>
-          <thead><tr><th>异常单据</th><th>对象</th><th>关联业务</th><th>异常原因</th><th>金额</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody>
-            <tr data-no="TR20260615012" data-kind="供应商收票" data-customer="丝路专列运营商" data-source="AP20260623003" data-business="丝路专列深度游 / 丝路经典线" data-current="¥386,000" data-payable="¥380,000" data-status="发票异常" data-check="金额不符" data-note="发票金额高于应付单 ¥6,000">
-              <td>TR20260615012</td><td>丝路专列运营商</td><td>AP20260623003<br><span class="text-muted">铺位包列</span></td><td>金额不符</td><td class="amount-red">¥386,000 / ¥380,000</td><td><span class="tag tag-red">待处理</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-exception>处理异常</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-1条/共1条</span></div>
-    </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="invoicePagination">第1-7条/共7条</span>
+    </div>
   </section>
 
-  <div id="invoiceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="invoiceDrawerTitle">
-      <div class="modal-header">
-        <div id="invoiceDrawerTitle" class="modal-title">发票处理</div>
-        <button class="modal-close" type="button" aria-label="关闭发票处理" data-close-layer>×</button>
-      </div>
-      <div class="modal-body">
-        <section id="invoiceGrid" class="description-grid"></section>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="invoiceNo">发票号</label>
-            <input id="invoiceNo" class="form-control" type="text" value="FP20260704001">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="invoiceAmount">本次金额</label>
-            <input id="invoiceAmount" class="form-control" type="number" value="38400">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="invoiceRemark">处理说明</label>
-          <textarea id="invoiceRemark" class="form-control" rows="4"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
-        <button class="btn btn-primary" type="button" data-confirm-invoice>确认处理</button>
-      </div>
-    </div>
-  </div>
-
   <div id="invoiceDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="invoiceDetailTitle">
+    <div class="modal drawer-modal drawer-modal-wide" role="dialog" aria-modal="true" aria-labelledby="invoiceDetailTitle">
       <div class="modal-header">
         <div id="invoiceDetailTitle" class="modal-title">发票详情</div>
         <button class="modal-close" type="button" aria-label="关闭发票详情" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <section id="invoiceDetailGrid" class="description-grid"></section>
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="detailObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="detailObjectSubtitle">-</div>
+            </div>
+            <div id="detailObjectStatus"></div>
+          </div>
+          <div class="invoice-summary-grid" id="detailSummaryGrid"></div>
+        </section>
+        <nav class="tab-bar drawer-tab-bar" aria-label="发票详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="overview">发票总览</button>
+          <button class="tab-item" type="button" data-detail-tab="source">业务来源</button>
+          <button class="tab-item" type="button" data-detail-tab="amount">金额匹配</button>
+          <button class="tab-item" type="button" data-detail-tab="invoice">票据信息</button>
+          <button class="tab-item" type="button" data-detail-tab="exception">红冲异常</button>
+          <button class="tab-item" type="button" data-detail-tab="tax">税控认证</button>
+          <button class="tab-item" type="button" data-detail-tab="nc">凭证NC</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+        </nav>
+        <section class="invoice-tab-panels">
+          <section class="drawer-section" data-detail-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">发票总览</h3></div>
+            <section class="description-grid" id="overviewGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="source" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">业务来源</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>来源类型</th><th>来源单号</th><th>关联业务</th><th>处理入口</th></tr></thead>
+                <tbody id="sourceRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="amount" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">金额匹配</h3></div>
+            <section class="description-grid" id="amountGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="invoice" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">票据信息</h3></div>
+            <section class="description-grid" id="invoiceInfoGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="exception" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">红冲异常</h3></div>
+            <section class="description-grid" id="exceptionGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="tax" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">税控认证</h3></div>
+            <section class="description-grid" id="taxGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="nc" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">凭证NC</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>凭证环节</th><th>当前结果</th><th>处理入口</th><th>状态</th></tr></thead>
+                <tbody id="ncRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="logs" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+            <section class="timeline" id="logTimeline"></section>
+          </section>
+        </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>进入处理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="invoiceProcessDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="invoiceProcessTitle">
+      <div class="modal-header">
+        <div id="invoiceProcessTitle" class="modal-title">发票处理</div>
+        <button class="modal-close" type="button" aria-label="关闭发票处理" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="processObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="processObjectSubtitle">-</div>
+            </div>
+            <div id="processObjectStatus"></div>
+          </div>
+          <div class="invoice-summary-grid" id="processSummaryGrid"></div>
+        </section>
+
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title" id="processSectionTitle">本次处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="processAmount">本次金额</label>
+              <input id="processAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="processInvoiceNo">发票号码</label>
+              <input id="processInvoiceNo" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="processResult">处理结果</label>
+              <select id="processResult" class="form-control">
+                <option>开票完成</option>
+                <option>收票完成</option>
+                <option>认证完成</option>
+                <option>异常退回</option>
+                <option>红冲完成</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="processTaxStatus">税控状态</label>
+              <select id="processTaxStatus" class="form-control">
+                <option>已同步</option>
+                <option>已认证</option>
+                <option>待验真</option>
+                <option>同步失败</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="processOwner">经办人</label>
+              <input id="processOwner" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="processNc">NC状态</label>
+              <select id="processNc" class="form-control">
+                <option>待推送</option>
+                <option>未生成</option>
+                <option>已推送</option>
+                <option>推送失败</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="processRemark">处理备注</label>
+            <textarea id="processRemark" class="form-control" rows="4"></textarea>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-process>确认处理</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var panels = Array.from(document.querySelectorAll('.invoice-panel'));
-      var tabs = Array.from(document.querySelectorAll('[data-invoice-tab]'));
-      var invoiceDrawer = document.getElementById('invoiceDrawer');
+      var rows = Array.from(document.querySelectorAll('#invoiceRows tr'));
+      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
+      var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
+      var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('invoiceDetailDrawer');
-      var invoiceGrid = document.getElementById('invoiceGrid');
-      var detailGrid = document.getElementById('invoiceDetailGrid');
+      var processDrawer = document.getElementById('invoiceProcessDrawer');
+      var activeStatus = '全部';
       var activeRow = null;
+      var activeAction = 'detail';
 
       function notify(message, type) {
-        if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message, { type: type || 'success' });
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+        }
       }
 
       function openLayer(layer) {
+        if (!layer) return;
         if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
           window.caesarUI.openLayer(layer);
           return;
@@ -190,6 +464,7 @@
       }
 
       function closeLayer(layer) {
+        if (!layer) return;
         if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
           window.caesarUI.closeLayer(layer);
           return;
@@ -205,153 +480,359 @@
         });
       }
 
-      function amountNumber(value) {
-        return Number(String(value || '').replace(/[^\d.]/g, '') || 0);
-      }
-
       function rowText(row) {
         return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
       }
 
-      function switchTab(tabName) {
-        tabs.forEach(function (tab) {
-          var active = tab.dataset.invoiceTab === tabName;
-          tab.classList.toggle('active', active);
-          tab.setAttribute('aria-selected', active ? 'true' : 'false');
-        });
-        panels.forEach(function (panel) {
-          var active = panel.id === 'invoice-' + tabName;
-          panel.classList.toggle('active', active);
-          panel.hidden = !active;
-        });
+      function tagClass(value) {
+        if (/失败|异常|差异|不符|退回/.test(value || '')) return 'tag-red';
+        if (/已|完成|一致|确认|认证|同步|结清|无/.test(value || '')) return 'tag-green';
+        if (/待|红冲|未生成|处理中|未同步/.test(value || '')) return 'tag-orange';
+        if (/销项/.test(value || '')) return 'tag-blue';
+        if (/进项/.test(value || '')) return 'tag-purple';
+        return 'tag-gray';
       }
 
-      function currentRows() {
-        var active = document.querySelector('.invoice-panel.active tbody');
-        return active ? Array.from(active.querySelectorAll('tr')) : [];
+      function tagHtml(value) {
+        return '<span class="tag ' + tagClass(value) + '">' + escapeHtml(value || '-') + '</span>';
+      }
+
+      function linkHtml(href, text) {
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function sourceHref(data) {
+        if (data.sourceType === '订单应收') return 'finance-receivable.html?source=' + encodeURIComponent(data.sourceNo);
+        if (data.sourceType === '供应商账单') return 'finance-supplier-bills.html?source=' + encodeURIComponent(data.sourceNo);
+        if (data.sourceType === '应付单') return 'finance-payable.html?source=' + encodeURIComponent(data.sourceNo);
+        if (data.sourceType === '退款单') return 'finance-refund-execute.html?source=' + encodeURIComponent(data.sourceNo);
+        if (data.sourceType === '结算单') return 'finance-settlement.html?source=' + encodeURIComponent(data.sourceNo);
+        return 'finance-workbench.html';
+      }
+
+      function updateCounts() {
+        var counts = { '全部': rows.length };
+        rows.forEach(function (row) {
+          counts[row.dataset.status] = (counts[row.dataset.status] || 0) + 1;
+        });
+        document.querySelectorAll('[data-status-count]').forEach(function (node) {
+          node.textContent = counts[node.dataset.statusCount] || 0;
+        });
       }
 
       function applyFilters() {
-        var panel = document.querySelector('.invoice-panel.active');
-        var keywordInput = panel ? panel.querySelector('input[type="search"]') : null;
-        var statusSelect = panel ? panel.querySelector('select') : null;
-        var keyword = keywordInput ? keywordInput.value.trim().toLowerCase() : '';
-        var status = statusSelect ? statusSelect.value : '全部状态';
-        currentRows().forEach(function (row) {
+        var keyword = document.getElementById('invoiceKeyword').value.trim().toLowerCase();
+        var direction = document.getElementById('directionFilter').value;
+        var source = document.getElementById('sourceFilter').value;
+        var company = document.getElementById('companyFilter').value;
+        var tax = document.getElementById('taxFilter').value;
+        var nc = document.getElementById('ncFilter').value;
+        var start = document.getElementById('invoiceStart').value;
+        var end = document.getElementById('invoiceEnd').value;
+        var visibleCount = 0;
+
+        rows.forEach(function (row) {
+          var data = row.dataset;
           var visible = true;
-          var text = rowText(row);
-          if (keyword && text.toLowerCase().indexOf(keyword) < 0) visible = false;
-          if (status.indexOf('全部') !== 0 && String(row.dataset.tabStatus || '').indexOf(status) < 0) visible = false;
+          if (activeStatus !== '全部' && data.status !== activeStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (direction.indexOf('全部') !== 0 && data.direction !== direction) visible = false;
+          if (source.indexOf('全部') !== 0 && data.sourceType !== source) visible = false;
+          if (company.indexOf('全部') !== 0 && data.company !== company) visible = false;
+          if (tax.indexOf('全部') !== 0 && data.taxStatus !== tax) visible = false;
+          if (nc.indexOf('全部') !== 0 && data.ncStatus !== nc) visible = false;
+          if (start && data.date < start) visible = false;
+          if (end && data.date > end) visible = false;
           row.hidden = !visible;
+          if (visible) visibleCount += 1;
         });
+
+        document.getElementById('invoicePagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '无匹配数据';
       }
 
       function resetFilters() {
-        var panel = document.querySelector('.invoice-panel.active');
-        if (!panel) return;
-        panel.querySelectorAll('input').forEach(function (input) { input.value = ''; });
-        panel.querySelectorAll('select').forEach(function (select) { select.selectedIndex = 0; });
+        document.getElementById('invoiceKeyword').value = '';
+        document.getElementById('directionFilter').selectedIndex = 0;
+        document.getElementById('sourceFilter').selectedIndex = 0;
+        document.getElementById('companyFilter').selectedIndex = 0;
+        document.getElementById('taxFilter').selectedIndex = 0;
+        document.getElementById('ncFilter').selectedIndex = 0;
+        document.getElementById('invoiceStart').value = '2026-07-01';
+        document.getElementById('invoiceEnd').value = '2026-07-13';
         applyFilters();
       }
 
-      function renderGrid(target, items) {
+      function switchStatus(status) {
+        activeStatus = status;
+        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        applyFilters();
+      }
+
+      function switchDetailTab(tabName) {
+        detailTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.detailTab === tabName); });
+        detailPanels.forEach(function (panel) { panel.hidden = panel.dataset.detailPanel !== tabName; });
+      }
+
+      function renderSummary(target, row) {
+        var data = row.dataset;
+        var items = [
+          ['本次金额', data.currentAmount],
+          ['匹配结果', data.matchResult],
+          ['税控状态', data.taxStatus],
+          ['NC状态', data.ncStatus]
+        ];
         target.innerHTML = items.map(function (item) {
-          return '<div class="description-item' + (item[2] ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>';
+          return '<div class="invoice-summary-item"><div class="invoice-summary-label">' + escapeHtml(item[0]) + '</div><div class="invoice-summary-value">' + escapeHtml(item[1]) + '</div></div>';
         }).join('');
       }
 
-      function gridItems(row) {
-        var data = row.dataset;
+      function renderDescription(target, items) {
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function sourceRows(data) {
         return [
-          ['单据号', escapeHtml(data.no || '-')],
-          ['类型', escapeHtml(data.kind || '-')],
-          ['对象', escapeHtml(data.customer || '-')],
-          ['关联单据', escapeHtml(data.source || '-'), true],
-          ['业务内容', escapeHtml(data.business || '-'), true],
-          ['发票金额', '<span class="amount-strong">' + escapeHtml(data.current || '-') + '</span>'],
-          ['应付/可开', escapeHtml(data.payable || data.available || '-')],
-          ['状态', escapeHtml(data.status || '-')],
-          ['校验', escapeHtml(data.check || data.tax || '-')],
-          ['说明', escapeHtml(data.note || '-'), true]
-        ];
+          [data.sourceType, data.sourceNo, data.business, linkHtml(sourceHref(data), '查看来源')],
+          ['财务承接', data.direction, data.objectName + ' / ' + data.company, linkHtml('finance-invoice.html?taskNo=' + encodeURIComponent(data.taskNo), '发票任务')]
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + item[3] + '</td></tr>';
+        }).join('');
       }
 
-      function openProcess(row, title) {
-        activeRow = row;
-        document.getElementById('invoiceDrawerTitle').textContent = title + ' - ' + (row.dataset.no || '-');
-        renderGrid(invoiceGrid, gridItems(row));
-        document.getElementById('invoiceAmount').value = amountNumber(row.dataset.current || row.dataset.available);
-        document.getElementById('invoiceRemark').value = row.dataset.note || '';
-        openLayer(invoiceDrawer);
+      function ncRows(data) {
+        var invoiceTask = data.status === '已完成' ? '已生成' : (data.ncStatus === '未生成' ? '未生成' : '待核对');
+        return [
+          ['发票凭证', invoiceTask, linkHtml('finance-nc.html?source=' + encodeURIComponent(data.taskNo), 'NC推送'), data.ncStatus],
+          ['业务来源凭证', data.sourceNo, linkHtml(sourceHref(data), '查看来源'), data.matchResult],
+          ['凭证号', data.voucherNo, linkHtml('finance-nc.html?voucherNo=' + encodeURIComponent(data.voucherNo), '查看凭证'), data.ncStatus]
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + item[2] + '</td><td>' + tagHtml(item[3]) + '</td></tr>';
+        }).join('');
       }
 
-      function openDetail(row) {
+      function renderDetail(row) {
+        var data = row.dataset;
+        document.getElementById('detailObjectTitle').textContent = data.taskNo + ' / ' + data.objectName;
+        document.getElementById('detailObjectSubtitle').textContent = data.direction + ' / ' + data.sourceType + ' / ' + data.company + ' / ' + data.owner;
+        document.getElementById('detailObjectStatus').innerHTML = tagHtml(data.status);
+        renderSummary(document.getElementById('detailSummaryGrid'), row);
+
+        renderDescription(document.getElementById('overviewGrid'), [
+          { label: '发票任务', value: escapeHtml(data.taskNo) },
+          { label: '发票方向', value: tagHtml(data.direction) },
+          { label: '当前状态', value: tagHtml(data.status) },
+          { label: '主体公司', value: escapeHtml(data.company) },
+          { label: '客户/供应商', value: escapeHtml(data.objectName) },
+          { label: '对象类型', value: escapeHtml(data.objectType) },
+          { label: '经办人', value: escapeHtml(data.owner) },
+          { label: '任务日期', value: escapeHtml(data.date) },
+          { label: '关联业务', value: escapeHtml(data.business), full: true }
+        ]);
+
+        document.getElementById('sourceRows').innerHTML = sourceRows(data);
+
+        renderDescription(document.getElementById('amountGrid'), [
+          { label: '可开/应收票', value: escapeHtml(data.availableAmount) },
+          { label: '已开/已收', value: escapeHtml(data.doneAmount) },
+          { label: '本次金额', value: '<span class="' + (String(data.currentAmount).indexOf('-') >= 0 ? 'amount-red' : 'amount-strong') + '">' + escapeHtml(data.currentAmount) + '</span>' },
+          { label: '差异金额', value: escapeHtml(data.diffAmount) },
+          { label: '匹配结果', value: tagHtml(data.matchResult), full: true }
+        ]);
+
+        renderDescription(document.getElementById('invoiceInfoGrid'), [
+          { label: '发票类型', value: escapeHtml(data.invoiceType) },
+          { label: '税率', value: escapeHtml(data.taxRate) },
+          { label: '抬头名称', value: escapeHtml(data.titleName) },
+          { label: '税号', value: escapeHtml(data.taxNo) },
+          { label: '业务内容', value: escapeHtml(data.business), full: true }
+        ]);
+
+        renderDescription(document.getElementById('exceptionGrid'), [
+          { label: '红冲结果', value: tagHtml(data.redResult) },
+          { label: '异常结果', value: tagHtml(data.risk) },
+          { label: '差异金额', value: escapeHtml(data.diffAmount) },
+          { label: '来源单据', value: escapeHtml(data.sourceNo) },
+          { label: '处理入口', value: linkHtml(sourceHref(data), '查看来源'), full: true }
+        ]);
+
+        renderDescription(document.getElementById('taxGrid'), [
+          { label: '税控状态', value: tagHtml(data.taxStatus) },
+          { label: '认证状态', value: tagHtml(data.taxStatus === '已认证' ? '已认证' : data.taxStatus) },
+          { label: '发票方向', value: escapeHtml(data.direction) },
+          { label: '发票类型', value: escapeHtml(data.invoiceType) },
+          { label: '税票口径', value: escapeHtml(data.titleName + ' / ' + data.taxNo), full: true }
+        ]);
+
+        document.getElementById('ncRows').innerHTML = ncRows(data);
+
+        document.getElementById('logTimeline').innerHTML = [
+          ['任务建立', data.taskNo + ' / ' + data.sourceType],
+          ['来源核对', data.matchResult],
+          ['税票结果', data.taxStatus + ' / ' + data.invoiceType],
+          ['红冲异常', data.redResult + ' / ' + data.risk],
+          ['凭证NC', data.ncStatus + ' / ' + data.voucherNo]
+        ].map(function (item) {
+          return '<div class="timeline-item"><div class="timeline-title">' + escapeHtml(item[0]) + '</div><div class="timeline-desc">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function actionForStatus(status) {
+        if (status === '待开票') return 'issue';
+        if (status === '待收票') return 'receive';
+        if (status === '待验真') return 'verify';
+        if (status === '异常处理中') return 'exception';
+        if (status === '待红冲') return 'red';
+        return 'detail';
+      }
+
+      function actionTitle(action, row) {
+        if (action === 'issue') return '开票处理 - ' + row.dataset.taskNo;
+        if (action === 'receive') return '登记收票 - ' + row.dataset.taskNo;
+        if (action === 'verify') return '验真认证 - ' + row.dataset.taskNo;
+        if (action === 'exception') return '处理异常 - ' + row.dataset.taskNo;
+        if (action === 'red') return '红冲处理 - ' + row.dataset.taskNo;
+        return '发票处理 - ' + row.dataset.taskNo;
+      }
+
+      function actionResult(action) {
+        if (action === 'issue') return '开票完成';
+        if (action === 'receive') return '收票完成';
+        if (action === 'verify') return '认证完成';
+        if (action === 'exception') return '异常退回';
+        if (action === 'red') return '红冲完成';
+        return '开票完成';
+      }
+
+      function openDetail(row, tabName) {
         activeRow = row;
-        document.getElementById('invoiceDetailTitle').textContent = '发票详情 - ' + (row.dataset.no || '-');
-        renderGrid(detailGrid, gridItems(row));
+        activeAction = 'detail';
+        document.getElementById('invoiceDetailTitle').textContent = '发票详情 - ' + row.dataset.taskNo;
+        renderDetail(row);
+        switchDetailTab(tabName || 'overview');
+        var action = actionForStatus(row.dataset.status);
+        var primaryButton = document.querySelector('[data-detail-primary]');
+        primaryButton.textContent = action === 'detail' ? '查看来源' : actionTitle(action, row).split(' - ')[0];
+        primaryButton.dataset.primaryAction = action === 'detail' ? 'source' : 'work';
         openLayer(detailDrawer);
       }
 
-      function updateStatusCell(row) {
+      function openProcess(row, action) {
+        activeRow = row;
+        activeAction = action || actionForStatus(row.dataset.status);
+        document.getElementById('invoiceProcessTitle').textContent = actionTitle(activeAction, row);
+        document.getElementById('processObjectTitle').textContent = row.dataset.taskNo + ' / ' + row.dataset.objectName;
+        document.getElementById('processObjectSubtitle').textContent = row.dataset.direction + ' / ' + row.dataset.sourceType + ' / ' + row.dataset.company;
+        document.getElementById('processObjectStatus').innerHTML = tagHtml(row.dataset.status);
+        renderSummary(document.getElementById('processSummaryGrid'), row);
+        document.getElementById('processSectionTitle').textContent = actionTitle(activeAction, row).split(' - ')[0];
+        document.getElementById('processAmount').value = row.dataset.currentAmount;
+        document.getElementById('processInvoiceNo').value = row.dataset.status === '已完成' ? row.dataset.voucherNo : '';
+        document.getElementById('processResult').value = actionResult(activeAction);
+        document.getElementById('processTaxStatus').value = activeAction === 'verify' || row.dataset.direction === '进项收票' ? '已认证' : '已同步';
+        document.getElementById('processOwner').value = row.dataset.owner;
+        document.getElementById('processNc').value = '待推送';
+        document.getElementById('processRemark').value = row.dataset.matchResult + '；' + row.dataset.redResult;
+        openLayer(processDrawer);
+      }
+
+      function confirmProcess() {
+        if (!activeRow) return;
+        var result = document.getElementById('processResult').value;
+        activeRow.dataset.taxStatus = document.getElementById('processTaxStatus').value;
+        activeRow.dataset.ncStatus = document.getElementById('processNc').value;
+        activeRow.dataset.voucherNo = activeRow.dataset.voucherNo === '-' ? 'VCH-' + activeRow.dataset.taskNo.replace(/^[A-Z-]+/, '') : activeRow.dataset.voucherNo;
+        if (activeAction === 'exception' && result === '异常退回') {
+          activeRow.dataset.status = '异常处理中';
+          activeRow.dataset.risk = '已退回应付核对';
+        } else {
+          activeRow.dataset.status = '已完成';
+          activeRow.dataset.risk = activeAction === 'red' ? '红冲完成' : '无异常';
+          activeRow.dataset.redResult = activeAction === 'red' ? '红冲完成' : activeRow.dataset.redResult;
+        }
+        closeLayer(processDrawer);
+        updateCounts();
+        applyFilters();
+        notify(result + '已记录');
+      }
+
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var query = params.get('taskNo') || params.get('source') || params.get('settlementNo') || params.get('period');
+        if (!query) return;
+        var row = rows.find(function (item) { return rowText(item).indexOf(query) >= 0; });
         if (!row) return;
-        var statusIndex = 8;
-        if (row.parentElement && row.parentElement.id === 'supplierInvoiceRows') statusIndex = 7;
-        if (row.parentElement && row.parentElement.id === 'redInvoiceRows') statusIndex = 6;
-        if (row.parentElement && row.parentElement.closest('#invoice-exception')) statusIndex = 5;
-        if (row.children[statusIndex]) row.children[statusIndex].innerHTML = '<span class="tag tag-green">' + escapeHtml(row.dataset.status) + '</span>';
+        switchStatus(row.dataset.status);
+        openDetail(row);
       }
 
       document.addEventListener('click', function (event) {
-        var tab = event.target.closest('[data-invoice-tab]');
-        if (tab) {
-          switchTab(tab.dataset.invoiceTab);
+        var statusTab = event.target.closest('[data-status-tab]');
+        if (statusTab) {
+          switchStatus(statusTab.dataset.statusTab);
           return;
         }
-        var issueButton = event.target.closest('[data-open-issue]');
-        if (issueButton) {
-          openProcess(issueButton.closest('tr'), '开具发票');
+
+        var detailTab = event.target.closest('[data-detail-tab]');
+        if (detailTab) {
+          switchDetailTab(detailTab.dataset.detailTab);
           return;
         }
-        var supplierButton = event.target.closest('[data-open-supplier]');
-        if (supplierButton) {
-          openProcess(supplierButton.closest('tr'), '供应商发票入账');
+
+        var processButton = event.target.closest('[data-open-process]');
+        if (processButton) {
+          openProcess(processButton.closest('tr'), processButton.dataset.openProcess);
           return;
         }
-        var exceptionButton = event.target.closest('[data-open-exception]');
-        if (exceptionButton) {
-          openProcess(exceptionButton.closest('tr'), '发票异常处理');
-          return;
-        }
-        var redButton = event.target.closest('[data-open-red]');
-        if (redButton) {
-          openProcess(redButton.closest('tr'), '发票红冲');
-          return;
-        }
+
         var detailButton = event.target.closest('[data-open-detail]');
         if (detailButton) {
           openDetail(detailButton.closest('tr'));
           return;
         }
-        if (event.target.closest('[data-confirm-invoice]')) {
-          if (activeRow) {
-            activeRow.dataset.status = activeRow.dataset.kind === '供应商收票' ? '已入账' : activeRow.dataset.kind === '红冲记录' ? '已红冲' : '已开票';
-            activeRow.dataset.tabStatus = activeRow.dataset.status;
-            updateStatusCell(activeRow);
+
+        if (event.target.closest('[data-detail-primary]')) {
+          if (!activeRow) return;
+          var action = actionForStatus(activeRow.dataset.status);
+          if (action === 'detail') {
+            window.location.href = sourceHref(activeRow.dataset);
+            return;
           }
-          closeLayer(invoiceDrawer);
-          notify('发票处理已完成');
+          closeLayer(detailDrawer);
+          openProcess(activeRow, action);
           return;
         }
+
+        if (event.target.closest('[data-confirm-process]')) {
+          confirmProcess();
+          return;
+        }
+
+        if (event.target.closest('[data-sync-tax]')) {
+          notify('税控状态已同步');
+          return;
+        }
+
+        if (event.target.closest('[data-export-invoice]')) {
+          notify('发票任务列表已导出');
+          return;
+        }
+
         if (event.target.closest('[data-search-invoice]')) {
           applyFilters();
           return;
         }
+
         if (event.target.closest('[data-reset-invoice]')) {
           resetFilters();
           return;
         }
+
         var closeButton = event.target.closest('[data-close-layer]');
-        if (closeButton) closeLayer(closeButton.closest('.modal-overlay'));
+        if (closeButton) {
+          closeLayer(closeButton.closest('.modal-overlay'));
+        }
       });
 
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
@@ -359,6 +840,10 @@
           if (event.target === overlay) closeLayer(overlay);
         });
       });
+
+      updateCounts();
+      applyFilters();
+      openFromParams();
     })();
   </script>
 </body>

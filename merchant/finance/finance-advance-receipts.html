@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>预收管理 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .finance-advance-table table {
+      min-width: 1720px;
+    }
+    .finance-advance-table col:nth-child(1) { width: 240px; }
+    .finance-advance-table col:nth-child(2) { width: 250px; }
+    .finance-advance-table col:nth-child(3) { width: 210px; }
+    .finance-advance-table col:nth-child(4) { width: 210px; }
+    .finance-advance-table col:nth-child(5) { width: 190px; }
+    .finance-advance-table col:nth-child(6) { width: 240px; }
+    .finance-advance-table col:nth-child(7) { width: 190px; }
+    .finance-advance-table col:nth-child(8) { width: 220px; }
+    .finance-advance-table col:nth-child(9) { width: 150px; }
+    .finance-advance-table th.sticky-action,
+    .finance-advance-table td.sticky-action {
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: var(--surface, #fff);
+    }
+    .advance-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .advance-summary-item {
+      padding: 12px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      background: var(--surface-soft, #f8fafc);
+    }
+    .advance-summary-label {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+    }
+    .advance-summary-value {
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--text-primary, #0f172a);
+    }
+    .advance-tab-panels .drawer-section[hidden] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">预收管理</h1>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" type="button" data-export-advance>导出</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="list-surface list-surface-tabbed finance-advance-list-surface" data-list-surface>
+    <div class="list-surface-tabbar-row">
+      <nav class="tab-bar list-surface-tabs" aria-label="预收款状态">
+        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待确认">待确认 <span class="tab-count" data-status-count="待确认">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="可使用">可使用 <span class="tab-count" data-status-count="可使用">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="部分使用">部分使用 <span class="tab-count" data-status-count="部分使用">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已用完">已用完 <span class="tab-count" data-status-count="已用完">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已冻结">已冻结 <span class="tab-count" data-status-count="已冻结">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="退款中">退款中 <span class="tab-count" data-status-count="退款中">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
+      </nav>
+    </div>
+
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="预收管理筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="advanceKeyword">预收单/客户/订单/流水/转款单</label>
+          <input id="advanceKeyword" type="search" placeholder="预收单/客户/订单/流水/转款单">
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="customerTypeFilter">客户类型</label>
+          <select id="customerTypeFilter">
+            <option>全部客户</option>
+            <option>散客客户</option>
+            <option>企业客户</option>
+            <option>门店客户</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="sourceTypeFilter">来源类型</label>
+          <select id="sourceTypeFilter">
+            <option>全部来源</option>
+            <option>超收转预收</option>
+            <option>订单取消留存</option>
+            <option>企业预付款</option>
+            <option>转款剩余</option>
+            <option>退款转预收</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="companyFilter">财务主体</label>
+          <select id="companyFilter">
+            <option>全部主体</option>
+            <option>总部财务</option>
+            <option>北京凯撒</option>
+            <option>上海凯撒</option>
+            <option>福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="storeFilter">归属门店</label>
+          <select id="storeFilter">
+            <option>全部门店</option>
+            <option>北京王府井旗舰店</option>
+            <option>上海徐汇门市</option>
+            <option>厦门文灶门店</option>
+            <option>福州东街口门市</option>
+            <option>企业客户部</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="receiptFilter">收款来源</label>
+          <select id="receiptFilter">
+            <option>全部收款</option>
+            <option>银行转账</option>
+            <option>POS</option>
+            <option>线上支付</option>
+            <option>原订单转出</option>
+          </select>
+        </div>
+        <div class="filter-item-wide filter-item-date-range">
+          <label class="sr-only">预收日期</label>
+          <div class="date-range">
+            <input id="advanceStart" type="date" value="2026-07-01" aria-label="开始日期">
+            <span>至</span>
+            <input id="advanceEnd" type="date" value="2026-07-13" aria-label="结束日期">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button" data-search-advance>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-advance>重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrap finance-advance-table list-surface-table list-table-with-pagination" aria-label="预收款列表">
+      <table>
+        <colgroup>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>预收单/客户</th>
+            <th>来源订单</th>
+            <th>预收金额</th>
+            <th>已用金额</th>
+            <th>可用余额</th>
+            <th>使用去向</th>
+            <th>冻结退款</th>
+            <th>收款凭证</th>
+            <th class="sticky-action">操作</th>
+          </tr>
+        </thead>
+        <tbody id="advanceRows">
+          <tr data-advance-no="YS20260713001" data-customer="周敏" data-customer-type="散客客户" data-phone="139****8821" data-company="上海凯撒" data-store="上海徐汇门市" data-source-type="超收转预收" data-source-order="KS202607120018" data-source-name="理想号地中海邮轮" data-source-schedule="CR-MED-20250809-002" data-new-order="-" data-new-name="-" data-new-schedule="-" data-receipt-no="RK20260713001" data-flow-no="CMB20260713018" data-transfer-no="-" data-currency="CNY" data-original-amount="¥1,600" data-rate="1.0000" data-local-amount="¥1,600" data-used-amount="¥0" data-balance="¥1,600" data-available="¥1,600" data-use-target="待确认去向" data-freeze="¥0" data-refund="无退款" data-voucher="未生成" data-nc="未生成" data-owner="应收会计王芳" data-date="2026-07-13" data-receipt-method="银行转账" data-risk="超收待确认" data-status="待确认">
+            <td><div class="table-cell-main"><strong>YS20260713001</strong><span>周敏 / 139****8821</span><span>上海徐汇门市</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607120018</strong><span>理想号地中海邮轮</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥1,600</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥0</td>
+            <td class="amount-strong">¥1,600</td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待确认</span><span>待确认去向</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无冻结</span><span>无退款</span></div></td>
+            <td><div class="table-cell-main"><strong>RK20260713001</strong><span>CMB20260713018 / 未生成</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="confirm">确认预收</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-advance-no="YS20260712002" data-customer="旅途驿站有限公司" data-customer-type="企业客户" data-phone="企业客户部" data-company="总部财务" data-store="企业客户部" data-source-type="企业预付款" data-source-order="ENT-CON-20260712002" data-source-name="企业年度出行预付款" data-source-schedule="企业协议 2026" data-new-order="KS202607180021" data-new-name="丝路专列深度游" data-new-schedule="TR-SILK-20250815-001" data-receipt-no="RK20260712002" data-flow-no="ICBC20260712007" data-transfer-no="-" data-currency="CNY" data-original-amount="¥80,000" data-rate="1.0000" data-local-amount="¥80,000" data-used-amount="¥0" data-balance="¥80,000" data-available="¥80,000" data-use-target="待抵扣企业订单" data-freeze="¥0" data-refund="无退款" data-voucher="ADV-VCH-20260712002" data-nc="待推送" data-owner="应收会计王芳" data-date="2026-07-12" data-receipt-method="银行转账" data-risk="无异常" data-status="可使用">
+            <td><div class="table-cell-main"><strong>YS20260712002</strong><span>旅途驿站有限公司</span><span>企业客户部</span></div></td>
+            <td><div class="table-cell-main"><strong>ENT-CON-20260712002</strong><span>企业年度出行预付款</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥80,000</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥0</td>
+            <td class="amount-strong">¥80,000</td>
+            <td><div class="table-cell-main"><span class="tag tag-blue">待抵扣</span><span>KS202607180021</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无冻结</span><span>无退款</span></div></td>
+            <td><div class="table-cell-main"><strong>RK20260712002</strong><span>ADV-VCH-20260712002 / 待推送</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="use">使用登记</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-advance-no="YS20260711003" data-customer="马晓丽" data-customer-type="散客客户" data-phone="138****6612" data-company="北京凯撒" data-store="北京王府井旗舰店" data-source-type="转款剩余" data-source-order="KS202606182313306754" data-source-name="北欧四国15日" data-source-schedule="EU-NOR-20250720-001" data-new-order="KS202607010023" data-new-name="北欧四国升级团" data-new-schedule="EU-NOR-20250818-002" data-receipt-no="RK20260618001" data-flow-no="CMBC20260618088" data-transfer-no="ZK20260703001" data-currency="CNY" data-original-amount="¥31,000" data-rate="1.0000" data-local-amount="¥31,000" data-used-amount="¥29,400" data-balance="¥1,600" data-available="¥1,600" data-use-target="新订单已核销，剩余转预收" data-freeze="¥0" data-refund="无退款" data-voucher="ADV-VCH-20260711003" data-nc="待推送" data-owner="应收会计王芳" data-date="2026-07-11" data-receipt-method="原订单转出" data-risk="剩余可使用" data-status="部分使用">
+            <td><div class="table-cell-main"><strong>YS20260711003</strong><span>马晓丽 / 138****6612</span><span>北京王府井旗舰店</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202606182313306754</strong><span>北欧四国15日</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥31,000</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥29,400</td>
+            <td class="amount-strong">¥1,600</td>
+            <td><div class="table-cell-main"><span class="tag tag-blue">新订单已核销</span><span>KS202607010023</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无冻结</span><span>无退款</span></div></td>
+            <td><div class="table-cell-main"><strong>ZK20260703001</strong><span>ADV-VCH-20260711003 / 待推送</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="use">使用登记</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-advance-no="YS20260708004" data-customer="吴芳" data-customer-type="散客客户" data-phone="136****9011" data-company="上海凯撒" data-store="上海徐汇门市" data-source-type="订单取消留存" data-source-order="KS202607020009" data-source-name="理想号邮轮原航次" data-source-schedule="CR-MED-20250719-001" data-new-order="KS202607150016" data-new-name="理想号邮轮新航次" data-new-schedule="CR-MED-20250809-002" data-receipt-no="RK20260702008" data-flow-no="ICBC20260702009" data-transfer-no="ZK20260702008" data-currency="CNY" data-original-amount="¥12,000" data-rate="1.0000" data-local-amount="¥12,000" data-used-amount="¥12,000" data-balance="¥0" data-available="¥0" data-use-target="已抵扣新订单" data-freeze="¥0" data-refund="无退款" data-voucher="ADV-VCH-20260708004" data-nc="已推送" data-owner="应收会计李宁" data-date="2026-07-08" data-receipt-method="原订单转出" data-risk="无异常" data-status="已用完">
+            <td><div class="table-cell-main"><strong>YS20260708004</strong><span>吴芳 / 136****9011</span><span>上海徐汇门市</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607020009</strong><span>理想号邮轮原航次</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥12,000</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥12,000</td>
+            <td>¥0</td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已抵扣</span><span>KS202607150016</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无冻结</span><span>无退款</span></div></td>
+            <td><div class="table-cell-main"><strong>ZK20260702008</strong><span>ADV-VCH-20260708004 / 已推送</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-advance-no="YS20260707005" data-customer="陈红" data-customer-type="散客客户" data-phone="136****0918" data-company="福建凯撒" data-store="厦门文灶门店" data-source-type="退款转预收" data-source-order="KS202606220015" data-source-name="马来西亚自由行" data-source-schedule="MY-LGK-20250708-001" data-new-order="-" data-new-name="-" data-new-schedule="-" data-receipt-no="RFD20260622003" data-flow-no="RFD-ADJ-20260622003" data-transfer-no="-" data-currency="CNY" data-original-amount="¥3,200" data-rate="1.0000" data-local-amount="¥3,200" data-used-amount="¥0" data-balance="¥3,200" data-available="¥0" data-use-target="争议冻结" data-freeze="¥3,200" data-refund="无退款" data-voucher="ADV-VCH-20260707005" data-nc="待推送" data-owner="门店财务陈敏" data-date="2026-07-07" data-receipt-method="退款转预收" data-risk="争议冻结" data-status="已冻结">
+            <td><div class="table-cell-main"><strong>YS20260707005</strong><span>陈红 / 136****0918</span><span>厦门文灶门店</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202606220015</strong><span>马来西亚自由行</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥3,200</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥0</td>
+            <td>¥0</td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">冻结中</span><span>暂不可使用</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">冻结 ¥3,200</span><span>无退款</span></div></td>
+            <td><div class="table-cell-main"><strong>RFD20260622003</strong><span>ADV-VCH-20260707005 / 待推送</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="unfreeze">解冻处理</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-advance-no="YS20260706006" data-customer="刘洋" data-customer-type="散客客户" data-phone="135****2678" data-company="总部财务" data-store="线上直营" data-source-type="订单取消留存" data-source-order="KS202607030031" data-source-name="日本关西深度游" data-source-schedule="JP-KAN-20250801-001" data-new-order="-" data-new-name="-" data-new-schedule="-" data-receipt-no="RK20260703031" data-flow-no="WX20260703031" data-transfer-no="-" data-currency="CNY" data-original-amount="¥6,800" data-rate="1.0000" data-local-amount="¥6,800" data-used-amount="¥0" data-balance="¥6,800" data-available="¥6,800" data-use-target="退款申请已提交" data-freeze="¥0" data-refund="RFD-20260706006 / ¥6,800" data-voucher="ADV-VCH-20260706006" data-nc="待推送" data-owner="退款会计赵琳" data-date="2026-07-06" data-receipt-method="线上支付" data-risk="退款中" data-status="退款中">
+            <td><div class="table-cell-main"><strong>YS20260706006</strong><span>刘洋 / 135****2678</span><span>线上直营</span></div></td>
+            <td><div class="table-cell-main"><strong>KS202607030031</strong><span>日本关西深度游</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥6,800</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥0</td>
+            <td class="amount-strong">¥6,800</td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">退款申请</span><span>RFD-20260706006</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-blue">退款中</span><span>¥6,800</span></div></td>
+            <td><div class="table-cell-main"><strong>RK20260703031</strong><span>ADV-VCH-20260706006 / 待推送</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>查看退款</button></div></td>
+          </tr>
+          <tr data-advance-no="YS20260701007" data-customer="北京远行国际代理中心" data-customer-type="门店客户" data-phone="分销客户" data-company="总部财务" data-store="分销渠道部" data-source-type="企业预付款" data-source-order="DIST-CON-20260701001" data-source-name="分销保证金转预收" data-source-schedule="分销协议 2026" data-new-order="KS202607020022" data-new-name="欧洲十国经典游" data-new-schedule="EU-FRA-20250820-001" data-receipt-no="RK20260701007" data-flow-no="BOC20260701007" data-transfer-no="-" data-currency="CNY" data-original-amount="¥20,000" data-rate="1.0000" data-local-amount="¥20,000" data-used-amount="¥20,000" data-balance="¥0" data-available="¥0" data-use-target="分销订单已抵扣" data-freeze="¥0" data-refund="无退款" data-voucher="ADV-VCH-20260701007" data-nc="已推送" data-owner="渠道结算会计赵琳" data-date="2026-07-01" data-receipt-method="银行转账" data-risk="已关闭" data-status="已关闭">
+            <td><div class="table-cell-main"><strong>YS20260701007</strong><span>北京远行国际代理中心</span><span>分销渠道部</span></div></td>
+            <td><div class="table-cell-main"><strong>DIST-CON-20260701001</strong><span>分销保证金转预收</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-strong">¥20,000</strong><span>CNY / 汇率 1.0000</span></div></td>
+            <td class="amount-strong">¥20,000</td>
+            <td>¥0</td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已抵扣</span><span>KS202607020022</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无冻结</span><span>无退款</span></div></td>
+            <td><div class="table-cell-main"><strong>RK20260701007</strong><span>ADV-VCH-20260701007 / 已推送</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="advancePagination">第1-7条/共7条</span>
+    </div>
+  </section>
+
+  <div id="advanceDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-modal-wide" role="dialog" aria-modal="true" aria-labelledby="advanceDetailTitle">
+      <div class="modal-header">
+        <div id="advanceDetailTitle" class="modal-title">预收详情</div>
+        <button class="modal-close" type="button" aria-label="关闭预收详情" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="detailObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="detailObjectSubtitle">-</div>
+            </div>
+            <div id="detailObjectStatus"></div>
+          </div>
+          <div class="advance-summary-grid" id="detailSummaryGrid"></div>
+        </section>
+        <nav class="tab-bar drawer-tab-bar" aria-label="预收详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="overview">预收总览</button>
+          <button class="tab-item" type="button" data-detail-tab="source">来源订单</button>
+          <button class="tab-item" type="button" data-detail-tab="usage">使用明细</button>
+          <button class="tab-item" type="button" data-detail-tab="transfer">转款记录</button>
+          <button class="tab-item" type="button" data-detail-tab="freeze">冻结退款</button>
+          <button class="tab-item" type="button" data-detail-tab="voucher">收款凭证</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+        </nav>
+        <section class="advance-tab-panels">
+          <section class="drawer-section" data-detail-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">预收总览</h3></div>
+            <section class="description-grid" id="overviewGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="source" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">来源订单</h3></div>
+            <section class="description-grid" id="sourceGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="usage" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">使用明细</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>使用对象</th><th>业务信息</th><th>使用金额</th><th>使用后余额</th><th>处理入口</th></tr></thead>
+                <tbody id="usageRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="transfer" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">转款记录</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>转款单</th><th>原订单</th><th>新订单</th><th>转款金额</th><th>核销状态</th></tr></thead>
+                <tbody id="transferRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="freeze" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">冻结退款</h3></div>
+            <section class="description-grid" id="freezeGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="voucher" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">收款凭证</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>凭证类型</th><th>单据号</th><th>金额</th><th>状态</th><th>处理入口</th></tr></thead>
+                <tbody id="voucherRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="logs" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+            <section class="timeline" id="logTimeline"></section>
+          </section>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>进入处理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="advanceWorkDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="advanceWorkTitle">
+      <div class="modal-header">
+        <div id="advanceWorkTitle" class="modal-title">预收处理</div>
+        <button class="modal-close" type="button" aria-label="关闭预收处理" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="workObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="workObjectSubtitle">-</div>
+            </div>
+            <div id="workObjectStatus"></div>
+          </div>
+          <div class="advance-summary-grid" id="workSummaryGrid"></div>
+        </section>
+
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title" id="workSectionTitle">本次处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workAmount">本次金额</label>
+              <input id="workAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workTargetOrder">使用订单</label>
+              <input id="workTargetOrder" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workResult">处理结果</label>
+              <select id="workResult" class="form-control">
+                <option>确认预收</option>
+                <option>登记使用</option>
+                <option>解除冻结</option>
+                <option>退回申请</option>
+                <option>关闭预收</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workNc">NC状态</label>
+              <select id="workNc" class="form-control">
+                <option>待推送</option>
+                <option>未生成</option>
+                <option>已推送</option>
+                <option>推送失败</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workOwner">经办人</label>
+              <input id="workOwner" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workVoucher">凭证号</label>
+              <input id="workVoucher" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="workRemark">处理备注</label>
+            <textarea id="workRemark" class="form-control" rows="4"></textarea>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-work>确认处理</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var rows = Array.from(document.querySelectorAll('#advanceRows tr'));
+      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
+      var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
+      var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
+      var detailDrawer = document.getElementById('advanceDetailDrawer');
+      var workDrawer = document.getElementById('advanceWorkDrawer');
+      var activeStatus = '全部';
+      var activeRow = null;
+      var activeAction = 'detail';
+
+      function notify(message, type) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+        }
+      }
+
+      function openLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+          window.caesarUI.openLayer(layer);
+          return;
+        }
+        layer.hidden = false;
+        layer.classList.add('show');
+        layer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
+          window.caesarUI.closeLayer(layer);
+          return;
+        }
+        layer.hidden = true;
+        layer.classList.remove('show');
+        layer.setAttribute('aria-hidden', 'true');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function rowText(row) {
+        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function tagClass(value) {
+        if (/失败|异常|争议|冻结|退回|低/.test(value || '')) return 'tag-red';
+        if (/待|中|退款|未生成|剩余/.test(value || '')) return 'tag-orange';
+        if (/已|完成|可使用|通过|无|确认/.test(value || '')) return 'tag-green';
+        return 'tag-gray';
+      }
+
+      function tagHtml(value) {
+        return '<span class="tag ' + tagClass(value) + '">' + escapeHtml(value || '-') + '</span>';
+      }
+
+      function linkHtml(href, text) {
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function orderLink(orderNo, text) {
+        if (!orderNo || orderNo === '-') return '-';
+        return linkHtml('../sales/orders-detail.html?orderNo=' + encodeURIComponent(orderNo), text || orderNo);
+      }
+
+      function updateCounts() {
+        var counts = { '全部': rows.length };
+        rows.forEach(function (row) {
+          counts[row.dataset.status] = (counts[row.dataset.status] || 0) + 1;
+        });
+        document.querySelectorAll('[data-status-count]').forEach(function (node) {
+          node.textContent = counts[node.dataset.statusCount] || 0;
+        });
+      }
+
+      function applyFilters() {
+        var keyword = document.getElementById('advanceKeyword').value.trim().toLowerCase();
+        var customerType = document.getElementById('customerTypeFilter').value;
+        var sourceType = document.getElementById('sourceTypeFilter').value;
+        var company = document.getElementById('companyFilter').value;
+        var store = document.getElementById('storeFilter').value;
+        var receipt = document.getElementById('receiptFilter').value;
+        var start = document.getElementById('advanceStart').value;
+        var end = document.getElementById('advanceEnd').value;
+        var visibleCount = 0;
+
+        rows.forEach(function (row) {
+          var data = row.dataset;
+          var visible = true;
+          if (activeStatus !== '全部' && data.status !== activeStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (customerType.indexOf('全部') !== 0 && data.customerType !== customerType) visible = false;
+          if (sourceType.indexOf('全部') !== 0 && data.sourceType !== sourceType) visible = false;
+          if (company.indexOf('全部') !== 0 && data.company !== company) visible = false;
+          if (store.indexOf('全部') !== 0 && data.store !== store) visible = false;
+          if (receipt.indexOf('全部') !== 0 && data.receiptMethod !== receipt) visible = false;
+          if (start && data.date < start) visible = false;
+          if (end && data.date > end) visible = false;
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+
+        document.getElementById('advancePagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '无匹配数据';
+      }
+
+      function resetFilters() {
+        document.getElementById('advanceKeyword').value = '';
+        document.getElementById('customerTypeFilter').selectedIndex = 0;
+        document.getElementById('sourceTypeFilter').selectedIndex = 0;
+        document.getElementById('companyFilter').selectedIndex = 0;
+        document.getElementById('storeFilter').selectedIndex = 0;
+        document.getElementById('receiptFilter').selectedIndex = 0;
+        document.getElementById('advanceStart').value = '2026-07-01';
+        document.getElementById('advanceEnd').value = '2026-07-13';
+        applyFilters();
+      }
+
+      function switchStatus(status) {
+        activeStatus = status;
+        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        applyFilters();
+      }
+
+      function switchDetailTab(tabName) {
+        detailTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.detailTab === tabName); });
+        detailPanels.forEach(function (panel) { panel.hidden = panel.dataset.detailPanel !== tabName; });
+      }
+
+      function renderSummary(target, row) {
+        var data = row.dataset;
+        var items = [
+          ['预收金额', data.localAmount],
+          ['已用金额', data.usedAmount],
+          ['可用余额', data.available],
+          ['凭证NC', data.nc]
+        ];
+        target.innerHTML = items.map(function (item) {
+          return '<div class="advance-summary-item"><div class="advance-summary-label">' + escapeHtml(item[0]) + '</div><div class="advance-summary-value">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function renderDescription(target, items) {
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function sourceDescription(data) {
+        return [
+          { label: '来源类型', value: tagHtml(data.sourceType) },
+          { label: '来源订单', value: orderLink(data.sourceOrder, data.sourceOrder) },
+          { label: '来源产品', value: escapeHtml(data.sourceName) },
+          { label: '来源团期', value: escapeHtml(data.sourceSchedule) },
+          { label: '收款单', value: linkHtml('finance-matching.html?receiptNo=' + encodeURIComponent(data.receiptNo), data.receiptNo) },
+          { label: '到账流水', value: linkHtml('receipts.html?flowNo=' + encodeURIComponent(data.flowNo), data.flowNo) },
+          { label: '原币金额', value: escapeHtml(data.originalAmount) },
+          { label: '汇率/本币', value: escapeHtml(data.rate + ' / ' + data.localAmount) }
+        ];
+      }
+
+      function usageRows(data) {
+        var rowsHtml = [];
+        if (data.newOrder !== '-') {
+          rowsHtml.push(['新订单抵扣', data.newOrder + ' / ' + data.newName, data.usedAmount, data.balance, orderLink(data.newOrder, '查看订单')]);
+        }
+        if (data.available !== '¥0') {
+          rowsHtml.push(['预收余额', data.useTarget, data.available, data.available, linkHtml('finance-receivable.html?advanceNo=' + encodeURIComponent(data.advanceNo), '应收管理')]);
+        }
+        if (!rowsHtml.length) rowsHtml.push(['无余额', data.useTarget, data.usedAmount, data.balance, '-']);
+        return rowsHtml.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td class="amount-strong">' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td><td>' + item[4] + '</td></tr>';
+        }).join('');
+      }
+
+      function transferRows(data) {
+        var transferNo = data.transferNo === '-' ? '无转款单' : data.transferNo;
+        var status = data.transferNo === '-' ? data.sourceType : '转款核销';
+        var action = data.transferNo === '-' ? '-' : linkHtml('finance-transfer-records.html?transferNo=' + encodeURIComponent(data.transferNo), data.transferNo);
+        return '<tr><td>' + action + '</td><td>' + escapeHtml(data.sourceOrder + ' / ' + data.sourceName) + '</td><td>' + escapeHtml(data.newOrder + ' / ' + data.newName) + '</td><td class="amount-strong">' + escapeHtml(data.usedAmount) + '</td><td>' + tagHtml(status || transferNo) + '</td></tr>';
+      }
+
+      function voucherRows(data) {
+        return [
+          ['收款单', data.receiptNo, data.localAmount, '已确认', linkHtml('finance-matching.html?receiptNo=' + encodeURIComponent(data.receiptNo), '收款认款')],
+          ['到账流水', data.flowNo, data.localAmount, data.receiptMethod, linkHtml('receipts.html?flowNo=' + encodeURIComponent(data.flowNo), '到账流水')],
+          ['NC凭证', data.voucher, data.localAmount, data.nc, data.voucher === '未生成' ? '-' : linkHtml('finance-nc.html?sourceNo=' + encodeURIComponent(data.advanceNo), 'NC推送')]
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td class="amount-strong">' + escapeHtml(item[2]) + '</td><td>' + tagHtml(item[3]) + '</td><td>' + item[4] + '</td></tr>';
+        }).join('');
+      }
+
+      function renderDetail(row) {
+        var data = row.dataset;
+        document.getElementById('detailObjectTitle').textContent = data.advanceNo + ' / ' + data.customer;
+        document.getElementById('detailObjectSubtitle').textContent = data.customerType + ' / ' + data.sourceType + ' / ' + data.company + ' / ' + data.owner;
+        document.getElementById('detailObjectStatus').innerHTML = tagHtml(data.status);
+        renderSummary(document.getElementById('detailSummaryGrid'), row);
+
+        renderDescription(document.getElementById('overviewGrid'), [
+          { label: '预收单号', value: escapeHtml(data.advanceNo) },
+          { label: '客户', value: escapeHtml(data.customer + ' / ' + data.phone) },
+          { label: '客户类型', value: escapeHtml(data.customerType) },
+          { label: '当前状态', value: tagHtml(data.status) },
+          { label: '财务主体', value: escapeHtml(data.company) },
+          { label: '归属门店', value: escapeHtml(data.store) },
+          { label: '经办人', value: escapeHtml(data.owner) },
+          { label: '预收日期', value: escapeHtml(data.date) },
+          { label: '当前风险', value: tagHtml(data.risk), full: true }
+        ]);
+
+        renderDescription(document.getElementById('sourceGrid'), sourceDescription(data));
+        document.getElementById('usageRows').innerHTML = usageRows(data);
+        document.getElementById('transferRows').innerHTML = transferRows(data);
+        renderDescription(document.getElementById('freezeGrid'), [
+          { label: '冻结金额', value: escapeHtml(data.freeze) },
+          { label: '可用余额', value: escapeHtml(data.available) },
+          { label: '退款状态', value: escapeHtml(data.refund) },
+          { label: '退款入口', value: data.refund === '无退款' ? '-' : linkHtml('finance-refund-execute.html?refundNo=' + encodeURIComponent(data.refund), '退款执行') },
+          { label: '账户入口', value: linkHtml('finance-predeposit.html?advanceNo=' + encodeURIComponent(data.advanceNo), '预存账户'), full: true }
+        ]);
+        document.getElementById('voucherRows').innerHTML = voucherRows(data);
+        document.getElementById('logTimeline').innerHTML = [
+          ['预收来源', data.sourceType + ' / ' + data.sourceOrder],
+          ['收款确认', data.receiptNo + ' / ' + data.receiptMethod],
+          ['使用结果', data.useTarget + ' / 已用 ' + data.usedAmount],
+          ['冻结退款', data.freeze + ' / ' + data.refund],
+          ['凭证NC', data.voucher + ' / ' + data.nc]
+        ].map(function (item) {
+          return '<div class="timeline-item"><div class="timeline-title">' + escapeHtml(item[0]) + '</div><div class="timeline-desc">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function actionForStatus(status) {
+        if (status === '待确认') return 'confirm';
+        if (status === '可使用' || status === '部分使用') return 'use';
+        if (status === '已冻结') return 'unfreeze';
+        return 'detail';
+      }
+
+      function actionTitle(action, row) {
+        if (action === 'confirm') return '确认预收 - ' + row.dataset.advanceNo;
+        if (action === 'use') return '使用登记 - ' + row.dataset.advanceNo;
+        if (action === 'unfreeze') return '解冻处理 - ' + row.dataset.advanceNo;
+        return '预收处理 - ' + row.dataset.advanceNo;
+      }
+
+      function actionResult(action) {
+        if (action === 'confirm') return '确认预收';
+        if (action === 'use') return '登记使用';
+        if (action === 'unfreeze') return '解除冻结';
+        return '确认预收';
+      }
+
+      function openDetail(row, tabName) {
+        activeRow = row;
+        activeAction = 'detail';
+        document.getElementById('advanceDetailTitle').textContent = '预收详情 - ' + row.dataset.advanceNo;
+        renderDetail(row);
+        switchDetailTab(tabName || 'overview');
+        var action = actionForStatus(row.dataset.status);
+        var primaryButton = document.querySelector('[data-detail-primary]');
+        primaryButton.textContent = action === 'detail' ? '查看来源' : actionTitle(action, row).split(' - ')[0];
+        primaryButton.dataset.primaryAction = action === 'detail' ? 'source' : 'work';
+        openLayer(detailDrawer);
+      }
+
+      function openWork(row, action) {
+        activeRow = row;
+        activeAction = action || actionForStatus(row.dataset.status);
+        document.getElementById('advanceWorkTitle').textContent = actionTitle(activeAction, row);
+        document.getElementById('workObjectTitle').textContent = row.dataset.advanceNo + ' / ' + row.dataset.customer;
+        document.getElementById('workObjectSubtitle').textContent = row.dataset.sourceType + ' / ' + row.dataset.company + ' / ' + row.dataset.owner;
+        document.getElementById('workObjectStatus').innerHTML = tagHtml(row.dataset.status);
+        renderSummary(document.getElementById('workSummaryGrid'), row);
+        document.getElementById('workSectionTitle').textContent = actionTitle(activeAction, row).split(' - ')[0];
+        document.getElementById('workAmount').value = activeAction === 'use' ? row.dataset.available : row.dataset.localAmount;
+        document.getElementById('workTargetOrder').value = row.dataset.newOrder === '-' ? '' : row.dataset.newOrder;
+        document.getElementById('workResult').value = actionResult(activeAction);
+        document.getElementById('workNc').value = row.dataset.nc === '已推送' ? '已推送' : '待推送';
+        document.getElementById('workOwner').value = row.dataset.owner;
+        document.getElementById('workVoucher').value = row.dataset.voucher === '未生成' ? '' : row.dataset.voucher;
+        document.getElementById('workRemark').value = row.dataset.sourceType + '；' + row.dataset.useTarget + '；' + row.dataset.risk;
+        openLayer(workDrawer);
+      }
+
+      function confirmWork() {
+        if (!activeRow) return;
+        var result = document.getElementById('workResult').value;
+        activeRow.dataset.nc = document.getElementById('workNc').value;
+        activeRow.dataset.voucher = document.getElementById('workVoucher').value || ('ADV-VCH-' + activeRow.dataset.advanceNo.replace(/[^\d]/g, ''));
+        if (activeAction === 'confirm') {
+          activeRow.dataset.status = '可使用';
+          activeRow.dataset.risk = '无异常';
+        } else if (activeAction === 'use') {
+          activeRow.dataset.status = '部分使用';
+          activeRow.dataset.useTarget = document.getElementById('workTargetOrder').value || activeRow.dataset.useTarget;
+        } else if (activeAction === 'unfreeze') {
+          activeRow.dataset.status = '可使用';
+          activeRow.dataset.available = activeRow.dataset.balance;
+          activeRow.dataset.freeze = '¥0';
+          activeRow.dataset.risk = '无异常';
+        }
+        closeLayer(workDrawer);
+        updateCounts();
+        applyFilters();
+        notify(result + '已记录');
+      }
+
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var query = params.get('advanceNo') || params.get('receiptNo') || params.get('flowNo') || params.get('orderNo') || params.get('transferNo');
+        if (!query) return;
+        var row = rows.find(function (item) { return rowText(item).indexOf(query) >= 0; });
+        if (!row) return;
+        switchStatus(row.dataset.status);
+        openDetail(row);
+      }
+
+      document.addEventListener('click', function (event) {
+        var statusTab = event.target.closest('[data-status-tab]');
+        if (statusTab) {
+          switchStatus(statusTab.dataset.statusTab);
+          return;
+        }
+
+        var detailTab = event.target.closest('[data-detail-tab]');
+        if (detailTab) {
+          switchDetailTab(detailTab.dataset.detailTab);
+          return;
+        }
+
+        var workButton = event.target.closest('[data-open-work]');
+        if (workButton) {
+          openWork(workButton.closest('tr'), workButton.dataset.openWork);
+          return;
+        }
+
+        var detailButton = event.target.closest('[data-open-detail]');
+        if (detailButton) {
+          openDetail(detailButton.closest('tr'));
+          return;
+        }
+
+        if (event.target.closest('[data-detail-primary]')) {
+          if (!activeRow) return;
+          var action = actionForStatus(activeRow.dataset.status);
+          if (action === 'detail') {
+            window.location.href = activeRow.dataset.transferNo === '-' ? 'finance-receivable.html?advanceNo=' + encodeURIComponent(activeRow.dataset.advanceNo) : 'finance-transfer-records.html?transferNo=' + encodeURIComponent(activeRow.dataset.transferNo);
+            return;
+          }
+          closeLayer(detailDrawer);
+          openWork(activeRow, action);
+          return;
+        }
+
+        if (event.target.closest('[data-confirm-work]')) {
+          confirmWork();
+          return;
+        }
+
+        if (event.target.closest('[data-export-advance]')) {
+          notify('预收款列表已导出');
+          return;
+        }
+
+        if (event.target.closest('[data-search-advance]')) {
+          applyFilters();
+          return;
+        }
+
+        if (event.target.closest('[data-reset-advance]')) {
+          resetFilters();
+          return;
+        }
+
+        var closeButton = event.target.closest('[data-close-layer]');
+        if (closeButton) {
+          closeLayer(closeButton.closest('.modal-overlay'));
+        }
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (event) {
+          if (event.target === overlay) closeLayer(overlay);
+        });
+      });
+
+      updateCounts();
+      applyFilters();
+      openFromParams();
+    })();
+  </script>
+</body>
+</html>

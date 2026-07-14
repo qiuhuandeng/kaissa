@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>门店对账 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .finance-store-recon-table table {
+      min-width: 1720px;
+    }
+    .finance-store-recon-table col:nth-child(1) { width: 230px; }
+    .finance-store-recon-table col:nth-child(2) { width: 170px; }
+    .finance-store-recon-table col:nth-child(3) { width: 150px; }
+    .finance-store-recon-table col:nth-child(4) { width: 210px; }
+    .finance-store-recon-table col:nth-child(5) { width: 230px; }
+    .finance-store-recon-table col:nth-child(6) { width: 230px; }
+    .finance-store-recon-table col:nth-child(7) { width: 210px; }
+    .finance-store-recon-table col:nth-child(8) { width: 220px; }
+    .finance-store-recon-table col:nth-child(9) { width: 150px; }
+    .finance-store-recon-table th.sticky-action,
+    .finance-store-recon-table td.sticky-action {
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: var(--surface, #fff);
+    }
+    .store-recon-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .store-recon-summary-item {
+      padding: 12px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      background: var(--surface-soft, #f8fafc);
+    }
+    .store-recon-summary-label {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+    }
+    .store-recon-summary-value {
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--text-primary, #0f172a);
+    }
+    .store-recon-tab-panels .drawer-section[hidden] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">门店对账</h1>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" type="button" data-refresh-recon>刷新对账</button>
+        <button class="btn btn-secondary" type="button" data-export>导出</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="list-surface list-surface-tabbed finance-store-recon-list-surface" data-list-surface>
+    <div class="list-surface-tabbar-row">
+      <nav class="tab-bar list-surface-tabs" aria-label="门店对账状态">
+        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待生成">待生成 <span class="tab-count" data-status-count="待生成">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待复核">待复核 <span class="tab-count" data-status-count="待复核">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="差异处理中">差异处理中 <span class="tab-count" data-status-count="差异处理中">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待确认">待确认 <span class="tab-count" data-status-count="待确认">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已确认">已确认 <span class="tab-count" data-status-count="已确认">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
+      </nav>
+    </div>
+
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="门店对账筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="reconKeyword">对账单/对象/渠道/订单/结算单</label>
+          <input id="reconKeyword" type="search" placeholder="对账单/对象/渠道/订单/结算单">
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="reconTypeFilter">对账类型</label>
+          <select id="reconTypeFilter">
+            <option>全部类型</option>
+            <option>门店预存</option>
+            <option>门店扣款</option>
+            <option>OTA月结</option>
+            <option>分销结算</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="objectGroupFilter">对账对象</label>
+          <select id="objectGroupFilter">
+            <option>全部对象</option>
+            <option>门店</option>
+            <option>OTA</option>
+            <option>分销商</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="companyFilter">核算主体</label>
+          <select id="companyFilter">
+            <option>全部主体</option>
+            <option>总部财务</option>
+            <option>北京凯撒</option>
+            <option>上海凯撒</option>
+            <option>福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="diffFilter">差异类型</label>
+          <select id="diffFilter">
+            <option>全部差异</option>
+            <option>无差异</option>
+            <option>金额差异</option>
+            <option>订单缺口</option>
+            <option>重复扣款</option>
+            <option>账户异常</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="ncFilter">NC状态</label>
+          <select id="ncFilter">
+            <option>全部NC</option>
+            <option>未生成</option>
+            <option>待推送</option>
+            <option>已推送</option>
+            <option>推送失败</option>
+          </select>
+        </div>
+        <div class="filter-item-wide filter-item-date-range">
+          <label class="sr-only">对账周期</label>
+          <div class="date-range">
+            <input id="periodStart" type="month" value="2026-05" aria-label="周期开始">
+            <span>至</span>
+            <input id="periodEnd" type="month" value="2026-07" aria-label="周期结束">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button" data-search-recon>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-recon>重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrap finance-store-recon-table list-surface-table list-table-with-pagination" aria-label="门店对账列表">
+      <table>
+        <colgroup>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>对账单/对象</th>
+            <th>对账周期</th>
+            <th>对账类型</th>
+            <th>订单金额</th>
+            <th>预存扣款</th>
+            <th>渠道扣项</th>
+            <th>差异金额</th>
+            <th>结算承接</th>
+            <th class="sticky-action">操作</th>
+          </tr>
+        </thead>
+        <tbody id="reconRows">
+          <tr data-recon-no="MD20260625001" data-object-name="北京王府井旗舰店" data-object-group="门店" data-recon-type="门店预存" data-company="北京凯撒" data-period="2026-06" data-period-start="2026-06" data-period-range="2026-06-01 至 2026-06-30" data-order-total="¥186,000" data-order-received="¥164,400" data-refund="¥3,200" data-recharge="¥50,000" data-deduction="¥18,400" data-freeze="¥6,000" data-refund-to-predeposit="¥3,200" data-balance="¥124,000" data-commission="¥0" data-platform-fee="¥0" data-subsidy="¥0" data-refund-deduct="¥0" data-diff="¥3,200" data-diff-type="金额差异" data-diff-reason="退款转预存与订单退款差额待复核" data-settlement="待进入业务结算" data-predeposit-no="PD-BJWFJ-202606" data-channel-no="-" data-nc="未生成" data-voucher="未生成" data-owner="门店财务周宁" data-status="待复核">
+            <td><div class="table-cell-main"><strong>MD20260625001</strong><span>北京王府井旗舰店 / 门店</span></div></td>
+            <td><div class="table-cell-main"><strong>2026-06</strong><span>2026-06-01 至 2026-06-30</span></div></td>
+            <td><span class="tag tag-blue">门店预存</span></td>
+            <td><div class="table-cell-main"><strong>订单应收 ¥186,000</strong><span>实收 ¥164,400 / 退款 ¥3,200</span></div></td>
+            <td><div class="table-cell-main"><strong>扣款 ¥18,400</strong><span>充值 ¥50,000 / 余额 ¥124,000</span></div></td>
+            <td><div class="table-cell-main"><strong>无渠道扣项</strong><span>门店预存账户</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">金额差异</span><span>差异 ¥3,200</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>待进入业务结算</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="review">复核对账</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-recon-no="MD20260625002" data-object-name="上海徐汇门市" data-object-group="门店" data-recon-type="门店扣款" data-company="上海凯撒" data-period="2026-06" data-period-start="2026-06" data-period-range="2026-06-01 至 2026-06-30" data-order-total="¥96,800" data-order-received="¥96,800" data-refund="¥0" data-recharge="¥20,000" data-deduction="¥0" data-freeze="¥0" data-refund-to-predeposit="¥0" data-balance="¥86,600" data-commission="¥0" data-platform-fee="¥0" data-subsidy="¥0" data-refund-deduct="¥0" data-diff="待生成" data-diff-type="无差异" data-diff-reason="待生成周期对账单" data-settlement="未生成结算承接" data-predeposit-no="PD-SHXH-202606" data-channel-no="-" data-nc="未生成" data-voucher="未生成" data-owner="门店财务林悦" data-status="待生成">
+            <td><div class="table-cell-main"><strong>MD20260625002</strong><span>上海徐汇门市 / 门店</span></div></td>
+            <td><div class="table-cell-main"><strong>2026-06</strong><span>2026-06-01 至 2026-06-30</span></div></td>
+            <td><span class="tag tag-blue">门店扣款</span></td>
+            <td><div class="table-cell-main"><strong>订单应收 ¥96,800</strong><span>实收 ¥96,800 / 退款 ¥0</span></div></td>
+            <td><div class="table-cell-main"><strong>扣款 ¥0</strong><span>充值 ¥20,000 / 余额 ¥86,600</span></div></td>
+            <td><div class="table-cell-main"><strong>无渠道扣项</strong><span>门店扣款待生成</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">无差异</span><span>待生成</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>未生成结算承接</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="generate">生成对账</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-recon-no="MD20260626003" data-object-name="福州东街口门市" data-object-group="门店" data-recon-type="门店预存" data-company="福建凯撒" data-period="2026-06" data-period-start="2026-06" data-period-range="2026-06-01 至 2026-06-30" data-order-total="¥128,600" data-order-received="¥128,600" data-refund="¥0" data-recharge="¥18,000" data-deduction="¥8,000" data-freeze="¥2,000" data-refund-to-predeposit="¥0" data-balance="¥64,200" data-commission="¥0" data-platform-fee="¥0" data-subsidy="¥0" data-refund-deduct="¥0" data-diff="¥8,000" data-diff-type="重复扣款" data-diff-reason="订单KS20260626008重复预存扣款" data-settlement="退回预存账户调整" data-predeposit-no="PD-FZDJ-202606" data-channel-no="-" data-nc="未生成" data-voucher="未生成" data-owner="门店财务陈敏" data-status="差异处理中">
+            <td><div class="table-cell-main"><strong>MD20260626003</strong><span>福州东街口门市 / 门店</span></div></td>
+            <td><div class="table-cell-main"><strong>2026-06</strong><span>2026-06-01 至 2026-06-30</span></div></td>
+            <td><span class="tag tag-blue">门店预存</span></td>
+            <td><div class="table-cell-main"><strong>订单应收 ¥128,600</strong><span>实收 ¥128,600 / 退款 ¥0</span></div></td>
+            <td><div class="table-cell-main"><strong>扣款 ¥8,000</strong><span>冻结 ¥2,000 / 余额 ¥64,200</span></div></td>
+            <td><div class="table-cell-main"><strong>无渠道扣项</strong><span>重复扣款待处理</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-red">重复扣款</span><span>差异 ¥8,000</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>退回预存账户调整</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="diff">处理差异</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-recon-no="OTA-CTRIP-202606" data-object-name="携程旅行网" data-object-group="OTA" data-recon-type="OTA月结" data-company="总部财务" data-period="2026-06" data-period-start="2026-06" data-period-range="2026-06-01 至 2026-06-30" data-order-total="¥286,400" data-order-received="¥274,400" data-refund="¥12,000" data-recharge="¥0" data-deduction="¥0" data-freeze="¥0" data-refund-to-predeposit="¥0" data-balance="¥0" data-commission="¥18,600" data-platform-fee="¥6,800" data-subsidy="¥4,000" data-refund-deduct="¥12,000" data-diff="¥0" data-diff-type="无差异" data-diff-reason="平台回款、佣金和退款折减一致" data-settlement="渠道结算已确认，待业务结算承接" data-predeposit-no="-" data-channel-no="QD202606-CTRIP" data-nc="待推送" data-voucher="REC-VCH-OTA-202606" data-owner="渠道结算会计赵琳" data-status="待确认">
+            <td><div class="table-cell-main"><strong>OTA-CTRIP-202606</strong><span>携程旅行网 / OTA</span></div></td>
+            <td><div class="table-cell-main"><strong>2026-06</strong><span>2026-06-01 至 2026-06-30</span></div></td>
+            <td><span class="tag tag-purple">OTA月结</span></td>
+            <td><div class="table-cell-main"><strong>订单应收 ¥286,400</strong><span>实收 ¥274,400 / 退款 ¥12,000</span></div></td>
+            <td><div class="table-cell-main"><strong>无预存扣款</strong><span>平台回款到账</span></div></td>
+            <td><div class="table-cell-main"><strong>佣金 ¥18,600</strong><span>服务费 ¥6,800 / 补贴 ¥4,000</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无差异</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>渠道结算已确认</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="confirm">确认对账</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-recon-no="DIST202606-001" data-object-name="北京远行国际代理中心" data-object-group="分销商" data-recon-type="分销结算" data-company="总部财务" data-period="2026-06" data-period-start="2026-06" data-period-range="2026-06-01 至 2026-06-30" data-order-total="¥64,800" data-order-received="¥64,800" data-refund="¥0" data-recharge="¥0" data-deduction="¥0" data-freeze="¥0" data-refund-to-predeposit="¥0" data-balance="¥0" data-commission="¥5,420" data-platform-fee="¥0" data-subsidy="¥0" data-refund-deduct="¥0" data-diff="¥0" data-diff-type="无差异" data-diff-reason="分销订单和佣金一致" data-settlement="已生成业务结算" data-predeposit-no="-" data-channel-no="QD202606-TONGYE" data-nc="待推送" data-voucher="REC-VCH-DIST-202606" data-owner="渠道结算会计赵琳" data-status="已确认">
+            <td><div class="table-cell-main"><strong>DIST202606-001</strong><span>北京远行国际代理中心 / 分销商</span></div></td>
+            <td><div class="table-cell-main"><strong>2026-06</strong><span>2026-06-01 至 2026-06-30</span></div></td>
+            <td><span class="tag tag-purple">分销结算</span></td>
+            <td><div class="table-cell-main"><strong>订单应收 ¥64,800</strong><span>实收 ¥64,800 / 退款 ¥0</span></div></td>
+            <td><div class="table-cell-main"><strong>无预存扣款</strong><span>分销月结</span></div></td>
+            <td><div class="table-cell-main"><strong>佣金 ¥5,420</strong><span>保证金无变动</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无差异</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>已生成业务结算</span></div></td>
+            <td class="sticky-action"><div class="table-action"><a class="table-action-primary" href="finance-settlement.html?source=DIST202606-001">查看结算</a><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-recon-no="MD20260531001" data-object-name="福州东街口门市" data-object-group="门店" data-recon-type="门店扣款" data-company="福建凯撒" data-period="2026-05" data-period-start="2026-05" data-period-range="2026-05-01 至 2026-05-31" data-order-total="¥118,600" data-order-received="¥118,600" data-refund="¥0" data-recharge="¥12,000" data-deduction="¥8,000" data-freeze="¥0" data-refund-to-predeposit="¥0" data-balance="¥54,200" data-commission="¥0" data-platform-fee="¥0" data-subsidy="¥0" data-refund-deduct="¥0" data-diff="¥0" data-diff-type="无差异" data-diff-reason="历史对账已归档" data-settlement="已归档" data-predeposit-no="PD-FZDJ-202605" data-channel-no="-" data-nc="已推送" data-voucher="REC-VCH-MD20260531001" data-owner="门店财务陈敏" data-status="已关闭">
+            <td><div class="table-cell-main"><strong>MD20260531001</strong><span>福州东街口门市 / 门店</span></div></td>
+            <td><div class="table-cell-main"><strong>2026-05</strong><span>2026-05-01 至 2026-05-31</span></div></td>
+            <td><span class="tag tag-blue">门店扣款</span></td>
+            <td><div class="table-cell-main"><strong>订单应收 ¥118,600</strong><span>实收 ¥118,600 / 退款 ¥0</span></div></td>
+            <td><div class="table-cell-main"><strong>扣款 ¥8,000</strong><span>充值 ¥12,000 / 余额 ¥54,200</span></div></td>
+            <td><div class="table-cell-main"><strong>无渠道扣项</strong><span>历史归档</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">无差异</span><span>差异 ¥0</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>已归档</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <div class="pagination list-surface-pagination list-pagination-attached">
+      <span id="reconPagination">第1-6条/共6条</span>
+    </div>
+  </section>
+
+  <div id="reconDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-modal-wide" role="dialog" aria-modal="true" aria-labelledby="reconDetailTitle">
+      <div class="modal-header">
+        <div id="reconDetailTitle" class="modal-title">对账详情</div>
+        <button class="modal-close" type="button" aria-label="关闭对账详情" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="detailObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="detailObjectSubtitle">-</div>
+            </div>
+            <div id="detailObjectStatus"></div>
+          </div>
+          <div class="store-recon-summary-grid" id="detailSummaryGrid"></div>
+        </section>
+        <nav class="tab-bar drawer-tab-bar" aria-label="门店对账详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="overview">对账总览</button>
+          <button class="tab-item" type="button" data-detail-tab="orders">订单明细</button>
+          <button class="tab-item" type="button" data-detail-tab="predeposit">预存流水</button>
+          <button class="tab-item" type="button" data-detail-tab="channel">渠道扣项</button>
+          <button class="tab-item" type="button" data-detail-tab="diff">差异处理</button>
+          <button class="tab-item" type="button" data-detail-tab="nc">结算NC</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+        </nav>
+        <div class="store-recon-tab-panels">
+          <section class="drawer-section" data-detail-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">对账总览</h3></div>
+            <div class="description-grid" id="overviewGrid"></div>
+          </section>
+          <section class="drawer-section" data-detail-panel="orders" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">订单明细</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>项目</th><th>金额</th><th>来源</th><th>状态</th></tr></thead>
+                <tbody id="orderRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="predeposit" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">预存流水</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>流水类型</th><th>金额</th><th>余额影响</th><th>入口</th></tr></thead>
+                <tbody id="predepositRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="channel" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">渠道扣项</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>扣项</th><th>金额</th><th>来源</th><th>状态</th></tr></thead>
+                <tbody id="channelRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="diff" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">差异处理</h3></div>
+            <div class="description-grid" id="diffGrid"></div>
+          </section>
+          <section class="drawer-section" data-detail-panel="nc" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">结算NC</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>承接环节</th><th>单据号</th><th>金额/状态</th><th>入口</th></tr></thead>
+                <tbody id="ncRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="drawer-section" data-detail-panel="logs" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+            <div class="timeline compact" id="logTimeline"></div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>进入处理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reconWorkDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="reconWorkTitle">
+      <div class="modal-header">
+        <div id="reconWorkTitle" class="modal-title">对账处理</div>
+        <button class="modal-close" type="button" aria-label="关闭对账处理" data-close-layer>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="workObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="workObjectSubtitle">-</div>
+            </div>
+            <div id="workObjectStatus"></div>
+          </div>
+          <div class="store-recon-summary-grid" id="workSummaryGrid"></div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title" id="workSectionTitle">本次处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workResult">处理结果</label>
+              <select id="workResult" class="form-control">
+                <option>生成对账</option>
+                <option>复核通过</option>
+                <option>差异确认</option>
+                <option>确认对账</option>
+                <option>发起调整</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workOwner">经办人</label>
+              <input id="workOwner" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workDiff">差异金额</label>
+              <input id="workDiff" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workNc">NC状态</label>
+              <select id="workNc" class="form-control">
+                <option>未生成</option>
+                <option>待推送</option>
+                <option>已推送</option>
+                <option>推送失败</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="workRemark">处理备注</label>
+            <textarea id="workRemark" class="form-control" rows="4"></textarea>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
+        <button class="btn btn-primary" type="button" data-confirm-work>确认处理</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var rows = Array.from(document.querySelectorAll('#reconRows tr'));
+      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
+      var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
+      var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
+      var detailDrawer = document.getElementById('reconDetailDrawer');
+      var workDrawer = document.getElementById('reconWorkDrawer');
+      var activeStatus = '全部';
+      var activeRow = null;
+      var activeAction = 'detail';
+
+      function notify(message, type) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+        }
+      }
+
+      function openLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+          window.caesarUI.openLayer(layer);
+          return;
+        }
+        layer.hidden = false;
+        layer.classList.add('show');
+        layer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
+          window.caesarUI.closeLayer(layer);
+          return;
+        }
+        layer.hidden = true;
+        layer.classList.remove('show');
+        layer.setAttribute('aria-hidden', 'true');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function rowText(row) {
+        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function tagClass(value) {
+        if (/差异|异常|重复|缺口|失败/.test(value || '')) return 'tag-red';
+        if (/待|未|处理中/.test(value || '')) return 'tag-orange';
+        if (/已|无差异|通过|归档/.test(value || '')) return 'tag-green';
+        return 'tag-gray';
+      }
+
+      function tagHtml(value) {
+        return '<span class="tag ' + tagClass(value) + '">' + escapeHtml(value || '-') + '</span>';
+      }
+
+      function linkHtml(href, text) {
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function updateCounts() {
+        var counts = { '全部': rows.length };
+        rows.forEach(function (row) {
+          counts[row.dataset.status] = (counts[row.dataset.status] || 0) + 1;
+        });
+        document.querySelectorAll('[data-status-count]').forEach(function (node) {
+          node.textContent = counts[node.dataset.statusCount] || 0;
+        });
+      }
+
+      function applyFilters() {
+        var keyword = document.getElementById('reconKeyword').value.trim().toLowerCase();
+        var reconType = document.getElementById('reconTypeFilter').value;
+        var objectGroup = document.getElementById('objectGroupFilter').value;
+        var company = document.getElementById('companyFilter').value;
+        var diff = document.getElementById('diffFilter').value;
+        var nc = document.getElementById('ncFilter').value;
+        var start = document.getElementById('periodStart').value;
+        var end = document.getElementById('periodEnd').value;
+        var visibleCount = 0;
+
+        rows.forEach(function (row) {
+          var data = row.dataset;
+          var visible = true;
+          if (activeStatus !== '全部' && data.status !== activeStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (reconType.indexOf('全部') !== 0 && data.reconType !== reconType) visible = false;
+          if (objectGroup.indexOf('全部') !== 0 && data.objectGroup !== objectGroup) visible = false;
+          if (company.indexOf('全部') !== 0 && data.company !== company) visible = false;
+          if (diff.indexOf('全部') !== 0 && data.diffType !== diff) visible = false;
+          if (nc.indexOf('全部') !== 0 && data.nc !== nc) visible = false;
+          if (start && data.periodStart < start) visible = false;
+          if (end && data.periodStart > end) visible = false;
+          row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+
+        document.getElementById('reconPagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '无匹配数据';
+      }
+
+      function resetFilters() {
+        document.getElementById('reconKeyword').value = '';
+        document.getElementById('reconTypeFilter').selectedIndex = 0;
+        document.getElementById('objectGroupFilter').selectedIndex = 0;
+        document.getElementById('companyFilter').selectedIndex = 0;
+        document.getElementById('diffFilter').selectedIndex = 0;
+        document.getElementById('ncFilter').selectedIndex = 0;
+        document.getElementById('periodStart').value = '2026-05';
+        document.getElementById('periodEnd').value = '2026-07';
+        applyFilters();
+      }
+
+      function switchStatus(status) {
+        activeStatus = status;
+        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        applyFilters();
+      }
+
+      function switchDetailTab(tabName) {
+        detailTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.detailTab === tabName); });
+        detailPanels.forEach(function (panel) { panel.hidden = panel.dataset.detailPanel !== tabName; });
+      }
+
+      function renderSummary(target, row) {
+        var data = row.dataset;
+        var items = [
+          ['订单应收', data.orderTotal],
+          ['订单实收', data.orderReceived],
+          ['预存扣款', data.deduction],
+          ['差异金额', data.diff]
+        ];
+        target.innerHTML = items.map(function (item) {
+          return '<div class="store-recon-summary-item"><div class="store-recon-summary-label">' + escapeHtml(item[0]) + '</div><div class="store-recon-summary-value">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function renderDescription(target, items) {
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function renderDetail(row) {
+        var data = row.dataset;
+        document.getElementById('detailObjectTitle').textContent = data.reconNo + ' / ' + data.objectName;
+        document.getElementById('detailObjectSubtitle').textContent = data.reconType + ' / ' + data.periodRange + ' / ' + data.company;
+        document.getElementById('detailObjectStatus').innerHTML = tagHtml(data.status);
+        renderSummary(document.getElementById('detailSummaryGrid'), row);
+
+        renderDescription(document.getElementById('overviewGrid'), [
+          { label: '对账单号', value: escapeHtml(data.reconNo) },
+          { label: '对账对象', value: escapeHtml(data.objectName) },
+          { label: '对象类型', value: escapeHtml(data.objectGroup) },
+          { label: '对账类型', value: escapeHtml(data.reconType) },
+          { label: '对账周期', value: escapeHtml(data.periodRange) },
+          { label: '核算主体', value: escapeHtml(data.company) },
+          { label: '经办人', value: escapeHtml(data.owner) },
+          { label: '当前差异', value: tagHtml(data.diffType) }
+        ]);
+
+        document.getElementById('orderRows').innerHTML = [
+          ['订单应收', data.orderTotal, data.reconNo, '已汇总'],
+          ['订单实收', data.orderReceived, '收款认款', data.orderReceived === '¥0' ? '无实收' : '已核对'],
+          ['退款金额', data.refund, '退款执行', data.refund === '¥0' ? '无退款' : '已承接'],
+          ['对账差异', data.diff, '财务对账', data.diffType]
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td class="amount-strong">' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml(item[3]) + '</td></tr>';
+        }).join('');
+
+        document.getElementById('predepositRows').innerHTML = [
+          ['门店充值', data.recharge, data.balance, data.predepositNo === '-' ? '-' : linkHtml('finance-predeposit.html?accountNo=' + encodeURIComponent(data.predepositNo), '预存账户')],
+          ['订单扣款', data.deduction, data.balance, data.predepositNo === '-' ? '-' : linkHtml('finance-predeposit.html?deductionNo=' + encodeURIComponent(data.reconNo), '扣款明细')],
+          ['冻结金额', data.freeze, data.balance, data.predepositNo === '-' ? '-' : linkHtml('finance-predeposit.html?freezeNo=' + encodeURIComponent(data.reconNo), '冻结明细')],
+          ['退款转预存', data.refundToPredeposit, data.balance, data.predepositNo === '-' ? '-' : linkHtml('finance-predeposit.html?refundNo=' + encodeURIComponent(data.reconNo), '退款留存')]
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td class="amount-strong">' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + item[3] + '</td></tr>';
+        }).join('');
+
+        document.getElementById('channelRows').innerHTML = [
+          ['平台佣金', data.commission, data.channelNo, data.commission === '¥0' ? '无扣项' : '已核对'],
+          ['平台服务费', data.platformFee, data.channelNo, data.platformFee === '¥0' ? '无扣项' : '已核对'],
+          ['活动补贴', data.subsidy, data.channelNo, data.subsidy === '¥0' ? '无补贴' : '已承接'],
+          ['退款折减', data.refundDeduct, data.channelNo, data.refundDeduct === '¥0' ? '无折减' : '已核对']
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td class="amount-strong">' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml(item[3]) + '</td></tr>';
+        }).join('');
+
+        renderDescription(document.getElementById('diffGrid'), [
+          { label: '差异类型', value: tagHtml(data.diffType) },
+          { label: '差异金额', value: '<span class="amount-strong">' + escapeHtml(data.diff) + '</span>' },
+          { label: '差异原因', value: escapeHtml(data.diffReason), full: true },
+          { label: '处理方向', value: escapeHtml(data.settlement), full: true }
+        ]);
+
+        document.getElementById('ncRows').innerHTML = [
+          ['预存账户', data.predepositNo, data.balance, data.predepositNo === '-' ? '-' : linkHtml('finance-predeposit.html?accountNo=' + encodeURIComponent(data.predepositNo), '查看预存')],
+          ['渠道结算', data.channelNo, data.channelNo === '-' ? '-' : data.settlement, data.channelNo === '-' ? '-' : linkHtml('finance-channel-settlement.html?settlementNo=' + encodeURIComponent(data.channelNo), '查看渠道')],
+          ['业务结算', data.reconNo, data.settlement, linkHtml('finance-settlement.html?source=' + encodeURIComponent(data.reconNo), '查看结算')],
+          ['NC凭证', data.voucher, data.nc, data.nc === '未生成' ? '-' : linkHtml('finance-nc.html?sourceNo=' + encodeURIComponent(data.reconNo), data.nc === '已推送' ? '查看NC' : '处理NC')]
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + item[3] + '</td></tr>';
+        }).join('');
+
+        document.getElementById('logTimeline').innerHTML = [
+          ['对账周期', data.periodRange],
+          ['订单汇总', data.orderTotal + ' / 实收 ' + data.orderReceived],
+          ['预存流水', '充值 ' + data.recharge + ' / 扣款 ' + data.deduction + ' / 余额 ' + data.balance],
+          ['差异结果', data.diffType + ' / ' + data.diff],
+          ['结算NC', data.settlement + ' / ' + data.nc]
+        ].map(function (item) {
+          return '<div class="timeline-item"><div class="timeline-title">' + escapeHtml(item[0]) + '</div><div class="timeline-desc">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function actionForStatus(status) {
+        if (status === '待生成') return 'generate';
+        if (status === '待复核') return 'review';
+        if (status === '差异处理中') return 'diff';
+        if (status === '待确认') return 'confirm';
+        if (status === '已确认') return 'adjust';
+        return 'detail';
+      }
+
+      function openDetail(row, tabName) {
+        activeRow = row;
+        activeAction = 'detail';
+        document.getElementById('reconDetailTitle').textContent = '对账详情 - ' + row.dataset.reconNo;
+        renderDetail(row);
+        switchDetailTab(tabName || 'overview');
+        var action = actionForStatus(row.dataset.status);
+        var primaryButton = document.querySelector('[data-detail-primary]');
+        if (action === 'detail') {
+          primaryButton.textContent = row.dataset.nc === '已推送' ? '查看NC' : '查看详情';
+          primaryButton.dataset.primaryAction = row.dataset.nc === '已推送' ? 'nc' : 'none';
+        } else if (action === 'adjust') {
+          primaryButton.textContent = '发起调整';
+          primaryButton.dataset.primaryAction = 'adjust';
+        } else {
+          primaryButton.textContent = action === 'generate' ? '生成对账' : (action === 'review' ? '复核对账' : (action === 'diff' ? '处理差异' : '确认对账'));
+          primaryButton.dataset.primaryAction = 'work';
+        }
+        openLayer(detailDrawer);
+      }
+
+      function actionTitle(action, row) {
+        if (action === 'generate') return '生成对账 - ' + row.dataset.reconNo;
+        if (action === 'review') return '复核对账 - ' + row.dataset.reconNo;
+        if (action === 'diff') return '处理差异 - ' + row.dataset.reconNo;
+        if (action === 'confirm') return '确认对账 - ' + row.dataset.reconNo;
+        return '对账处理 - ' + row.dataset.reconNo;
+      }
+
+      function openWork(row, action) {
+        activeRow = row;
+        activeAction = action || actionForStatus(row.dataset.status);
+        document.getElementById('reconWorkTitle').textContent = actionTitle(activeAction, row);
+        document.getElementById('workObjectTitle').textContent = row.dataset.reconNo + ' / ' + row.dataset.objectName;
+        document.getElementById('workObjectSubtitle').textContent = row.dataset.reconType + ' / ' + row.dataset.periodRange + ' / ' + row.dataset.company;
+        document.getElementById('workObjectStatus').innerHTML = tagHtml(row.dataset.status);
+        renderSummary(document.getElementById('workSummaryGrid'), row);
+        document.getElementById('workSectionTitle').textContent = activeAction === 'diff' ? '差异处理' : '本次处理';
+        document.getElementById('workResult').value = activeAction === 'generate' ? '生成对账' : (activeAction === 'review' ? '复核通过' : (activeAction === 'diff' ? '差异确认' : (activeAction === 'confirm' ? '确认对账' : '发起调整')));
+        document.getElementById('workOwner').value = row.dataset.owner;
+        document.getElementById('workDiff').value = row.dataset.diff;
+        document.getElementById('workNc').value = row.dataset.nc;
+        document.getElementById('workRemark').value = row.dataset.diffReason + '；' + row.dataset.settlement;
+        openLayer(workDrawer);
+      }
+
+      function confirmWork() {
+        if (!activeRow) return;
+        var result = document.getElementById('workResult').value;
+        if (activeAction === 'generate') {
+          activeRow.dataset.status = '待复核';
+        } else if (activeAction === 'review') {
+          activeRow.dataset.status = activeRow.dataset.diffType === '无差异' ? '待确认' : '差异处理中';
+        } else if (activeAction === 'diff') {
+          activeRow.dataset.status = '待确认';
+        } else if (activeAction === 'confirm') {
+          activeRow.dataset.status = '已确认';
+          activeRow.dataset.nc = '待推送';
+        }
+        closeLayer(workDrawer);
+        updateCounts();
+        applyFilters();
+        notify(result + '已记录');
+      }
+
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var query = params.get('reconNo') || params.get('store') || params.get('settlementNo') || params.get('source');
+        if (!query) return;
+        var row = rows.find(function (item) { return rowText(item).indexOf(query) >= 0; });
+        if (!row) return;
+        switchStatus(row.dataset.status);
+        openDetail(row);
+      }
+
+      document.addEventListener('click', function (event) {
+        var statusTab = event.target.closest('[data-status-tab]');
+        if (statusTab) {
+          switchStatus(statusTab.dataset.statusTab);
+          return;
+        }
+
+        var detailTab = event.target.closest('[data-detail-tab]');
+        if (detailTab) {
+          switchDetailTab(detailTab.dataset.detailTab);
+          return;
+        }
+
+        var workButton = event.target.closest('[data-open-work]');
+        if (workButton) {
+          openWork(workButton.closest('tr'), workButton.dataset.openWork);
+          return;
+        }
+
+        var detailButton = event.target.closest('[data-open-detail]');
+        if (detailButton) {
+          openDetail(detailButton.closest('tr'));
+          return;
+        }
+
+        if (event.target.closest('[data-detail-primary]')) {
+          if (!activeRow) return;
+          var primaryAction = event.target.closest('[data-detail-primary]').dataset.primaryAction;
+          if (primaryAction === 'nc') {
+            window.location.href = 'finance-nc.html?sourceNo=' + encodeURIComponent(activeRow.dataset.reconNo);
+            return;
+          }
+          if (primaryAction === 'adjust') {
+            window.location.href = 'finance-settlement-adjustment.html?sourceNo=' + encodeURIComponent(activeRow.dataset.reconNo);
+            return;
+          }
+          if (primaryAction === 'none') return;
+          closeLayer(detailDrawer);
+          openWork(activeRow, actionForStatus(activeRow.dataset.status));
+          return;
+        }
+
+        if (event.target.closest('[data-confirm-work]')) {
+          confirmWork();
+          return;
+        }
+
+        if (event.target.closest('[data-refresh-recon]')) {
+          notify('对账数据已刷新');
+          return;
+        }
+
+        if (event.target.closest('[data-export]')) {
+          notify('门店对账列表已导出');
+          return;
+        }
+
+        if (event.target.closest('[data-search-recon]')) {
+          applyFilters();
+          return;
+        }
+
+        if (event.target.closest('[data-reset-recon]')) {
+          resetFilters();
+          return;
+        }
+
+        var closeButton = event.target.closest('[data-close-layer]');
+        if (closeButton) {
+          closeLayer(closeButton.closest('.modal-overlay'));
+        }
+      });
+
+      document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (event) {
+          if (event.target === overlay) closeLayer(overlay);
+        });
+      });
+
+      updateCounts();
+      applyFilters();
+      openFromParams();
+    })();
+  </script>
+</body>
+</html>

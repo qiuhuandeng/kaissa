@@ -5,6 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>付款执行 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .payment-execute-table table {
+      min-width: 2060px;
+    }
+    .payment-execute-table col:nth-child(1) { width: 220px; }
+    .payment-execute-table col:nth-child(2) { width: 180px; }
+    .payment-execute-table col:nth-child(3) { width: 230px; }
+    .payment-execute-table col:nth-child(4) { width: 240px; }
+    .payment-execute-table col:nth-child(5) { width: 170px; }
+    .payment-execute-table col:nth-child(6) { width: 170px; }
+    .payment-execute-table col:nth-child(7) { width: 220px; }
+    .payment-execute-table col:nth-child(8) { width: 220px; }
+    .payment-execute-table col:nth-child(9) { width: 180px; }
+    .payment-execute-table col:nth-child(10) { width: 170px; }
+    .payment-execute-table col:nth-child(11) { width: 150px; }
+    .payment-execute-table th.sticky-action,
+    .payment-execute-table td.sticky-action {
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: var(--surface, #fff);
+    }
+    .payment-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .payment-summary-item {
+      padding: 12px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      background: var(--surface-soft, #f8fafc);
+    }
+    .payment-summary-label {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+    }
+    .payment-summary-value {
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--text-primary, #0f172a);
+    }
+    .payment-tab-panels .drawer-section[hidden] {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -15,359 +65,485 @@
         <h1 class="page-title">付款执行</h1>
       </div>
       <div class="page-actions">
-        <button class="btn btn-secondary" type="button" data-open-batch-payment>批量付款</button>
-        <button class="btn btn-primary" type="button" data-open-merge-payment>合并付款</button>
+        <button class="btn btn-secondary" type="button" data-refresh-check>刷新校验</button>
+        <button class="btn btn-secondary" type="button" data-export-payment>导出</button>
       </div>
     </div>
   </section>
 
   <section class="list-surface list-surface-tabbed finance-payment-list-surface" data-list-surface>
     <div class="list-surface-tabbar-row">
-      <nav class="tab-bar finance-payment-tabs list-function-tabs list-surface-tabs" aria-label="付款执行标签">
-        <button class="tab-item active" type="button" data-payment-tab="pending">待执行付款</button>
-        <button class="tab-item" type="button" data-payment-tab="exception">付款异常</button>
-        <button class="tab-item" type="button" data-payment-tab="records">付款记录</button>
-        <button class="tab-item" type="button" data-payment-tab="prepay">预付款</button>
+      <nav class="tab-bar list-surface-tabs" aria-label="付款执行状态">
+        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待执行">待执行 <span class="tab-count" data-status-count="待执行">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待补资料">待补资料 <span class="tab-count" data-status-count="待补资料">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="执行中">执行中 <span class="tab-count" data-status-count="执行中">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="待回单">待回单 <span class="tab-count" data-status-count="待回单">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已付款">已付款 <span class="tab-count" data-status-count="已付款">0</span></button>
+        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
       </nav>
     </div>
 
-    <section id="payment-pending" class="finance-payment-panel active">
-      <section class="filter-card filter-card-compact payment-filter list-surface-filter" aria-label="待执行付款筛选">
-        <div class="filter-row">
-          <div class="filter-item"><label class="sr-only" for="paymentKeyword">付款单/应付单/供应商/团期/账单</label><input id="paymentKeyword" type="search" placeholder="付款单/应付单/供应商/团期/账单"></div>
-          <div class="filter-item-sm"><label class="sr-only" for="paymentMethod">付款方式</label><select id="paymentMethod"><option>全部方式</option><option>银企直联</option><option>线下付款</option><option>境外汇款</option></select></div>
-          <div class="filter-item-sm"><label class="sr-only" for="paymentRisk">风险校验</label><select id="paymentRisk"><option>全部校验</option><option>已校验</option><option>需复核</option><option>异常</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-payment>查询</button><button class="btn btn-secondary" type="button" data-reset-payment>重置</button></div>
+    <section class="filter-card filter-card-compact payment-filter list-surface-filter" aria-label="付款执行筛选">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="sr-only" for="paymentKeyword">付款单/申请单/供应商/团组</label>
+          <input id="paymentKeyword" type="search" placeholder="付款单/申请单/供应商/团组">
         </div>
-      </section>
-
-      <section class="table-wrap payment-execute-table list-surface-table list-table-with-pagination" aria-label="待执行付款">
-        <table>
-          <thead>
-            <tr>
-              <th><input id="selectAllPendingPayments" type="checkbox" aria-label="选择全部待执行付款"></th>
-              <th>付款单/申请</th>
-              <th>应付单</th>
-              <th>付款对象</th>
-              <th>付款金额</th>
-              <th>关联业务</th>
-              <th>收款账户</th>
-              <th>审批通过</th>
-              <th>风险校验</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="paymentPendingRows">
-            <tr data-payment-no="PAY-TRF-20260818001" data-apply-no="APR-TRF-20260818001" data-payable="AP-TRF-20260818001" data-supplier="中国国际航空" data-amount="¥122,268" data-business="欧洲十国经典游 / A线 法德意12天 / EU20260818001" data-account="中国国际航空 / 中国银行尾号6688" data-approved="2026-07-06 10:30" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验" data-contract-no="AIR-BLK-20260618-001 / AIR-RET-20260618-002" data-schedule-no="EU20260818001" data-resource-type="机票" data-payment-node="二压/三压待付" data-cost-source="团期成本 / 交通应付分摊" data-original-qty="30" data-effective-qty="20" data-change-no="CHG-AIR-20260710-001 / CHG-AIR-20260710-002" data-prepaid="¥6,666" data-adjustment="¥666" data-deduction="¥25,800">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-TRF-20260818001"></td>
-              <td>PAY-TRF-20260818001<br><span class="text-muted">APR-TRF-20260818001</span></td>
-              <td>AP-TRF-20260818001</td>
-              <td>中国国际航空</td>
-              <td class="amount-strong">¥122,268</td>
-              <td>欧洲十国经典游<br><span class="text-muted">EU20260818001</span></td>
-              <td>中国银行尾号6688</td>
-              <td>2026-07-06 10:30</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-CRU-20260912001" data-apply-no="APR-CRU-LOSS-20260912001" data-payable="AP-CRU-20260912001" data-supplier="地中海邮轮中国销售中心" data-amount="¥528,000" data-business="理想号地中海邮轮 / 地中海西线 / CZ20260912001" data-account="地中海邮轮中国销售中心 / 中国银行尾号8821" data-approved="2026-07-06 11:20" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验" data-contract-no="CRU-BLK-20260622-003" data-schedule-no="CZ20260912001" data-resource-type="邮轮" data-payment-node="三压/尾款" data-cost-source="团期成本 / 舱损确认">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-CRU-20260912001"></td>
-              <td>PAY-CRU-20260912001<br><span class="text-muted">APR-CRU-LOSS-20260912001</span></td>
-              <td>AP-CRU-20260912001</td>
-              <td>地中海邮轮中国销售中心</td>
-              <td class="amount-strong">¥528,000</td>
-              <td>理想号地中海邮轮<br><span class="text-muted">CZ20260912001</span></td>
-              <td>中国银行尾号8821</td>
-              <td>2026-07-06 11:20</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-TRN-20260920001" data-apply-no="APR-TRN-LOSS-20260920001" data-payable="AP-TRN-20260920001" data-supplier="丝路文旅专列结算公司" data-amount="¥360,720" data-business="东方丝路专列 / 西安敦煌乌鲁木齐线 / TR20260920001" data-account="丝路文旅专列结算公司 / 工商银行尾号5520" data-approved="2026-07-06 11:35" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验" data-contract-no="TRN-BLK-20260628-004" data-schedule-no="TR20260920001" data-resource-type="专列" data-payment-node="三压/尾款" data-cost-source="团期成本 / 铺损确认">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-TRN-20260920001"></td>
-              <td>PAY-TRN-20260920001<br><span class="text-muted">APR-TRN-LOSS-20260920001</span></td>
-              <td>AP-TRN-20260920001</td>
-              <td>丝路文旅专列结算公司</td>
-              <td class="amount-strong">¥360,720</td>
-              <td>东方丝路专列<br><span class="text-muted">TR20260920001</span></td>
-              <td>工商银行尾号5520</td>
-              <td>2026-07-06 11:35</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-BSP-20260630001" data-apply-no="JS-BSP-20260630001" data-payable="BSP-SET-202606-02" data-supplier="BSP结算中心" data-amount="¥286,400" data-business="BSP散票账单 / 2026年6月下半月 / BSP-SET-202606-02" data-account="BSP结算中心 / 中国银行尾号1024" data-approved="2026-06-30 17:40" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验" data-settlement-no="JS-BSP-20260630001" data-bsp-source="BSP-SET-202606-02" data-resource-type="BSP散票" data-payment-node="BSP账单付款" data-cost-source="BSP账单比对 / 业务结算">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-BSP-20260630001"></td>
-              <td>PAY-BSP-20260630001<br><span class="text-muted">JS-BSP-20260630001</span></td>
-              <td>BSP-SET-202606-02</td>
-              <td>BSP结算中心</td>
-              <td class="amount-strong">¥286,400</td>
-              <td>BSP散票账单<br><span class="text-muted">2026年6月下半月</span></td>
-              <td>中国银行尾号1024</td>
-              <td>2026-06-30 17:40</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-REQ-20240715-003" data-apply-no="APR-20240715-003" data-payable="YF20240715003" data-supplier="巴黎中餐厅Le Bonheur" data-amount="¥8,640" data-business="欧洲十国经典游 / 经济款 法德意12天 / EU20240715001" data-account="巴黎中餐厅Le Bonheur / 招商银行尾号6208" data-approved="2026-07-15 15:30" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-REQ-20240715-003"></td>
-              <td>PAY-REQ-20240715-003<br><span class="text-muted">APR-20240715-003</span></td>
-              <td>YF20240715003</td>
-              <td>巴黎中餐厅Le Bonheur</td>
-              <td class="amount-strong">¥8,640</td>
-              <td>欧洲十国经典游<br><span class="text-muted">EU20240715001</span></td>
-              <td>招商银行尾号6208</td>
-              <td>2026-07-15 15:30</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-20260624-002" data-apply-no="APR-20260624-028" data-payable="AP20260624002" data-supplier="皇家加勒比" data-amount="¥996,000" data-business="理想号地中海邮轮 / 地中海经典线 / CR-MED-20250803-001" data-account="皇家加勒比 / 招商银行尾号1188" data-approved="2026-06-24 15:30" data-method="银企直联" data-risk="需复核" data-status="待执行" data-tab-status="待执行 需复核">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-20260624-002"></td>
-              <td>PAY-20260624-002<br><span class="text-muted">APR-20260624-028</span></td>
-              <td>AP20260624002</td>
-              <td>皇家加勒比</td>
-              <td class="amount-strong">¥996,000</td>
-              <td>理想号地中海邮轮<br><span class="text-muted">CR-MED-20250803-001</span></td>
-              <td>招商银行尾号1188</td>
-              <td>2026-06-24 15:30</td>
-              <td><span class="tag tag-orange">港务费复核</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-20260622-003" data-apply-no="APR-20260622-019" data-payable="AP20260623003" data-supplier="西北铁路文旅集团" data-amount="¥760,000" data-business="丝路专列深度游 / 丝路经典线 / TR-SILK-20250815-001" data-account="西北铁路文旅集团 / 工商银行尾号7308" data-approved="2026-06-22 17:20" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-20260622-003"></td>
-              <td>PAY-20260622-003<br><span class="text-muted">APR-20260622-019</span></td>
-              <td>AP20260623003</td>
-              <td>西北铁路文旅集团</td>
-              <td class="amount-strong">¥760,000</td>
-              <td>丝路专列深度游<br><span class="text-muted">TR-SILK-20250815-001</span></td>
-              <td>工商银行尾号7308</td>
-              <td>2026-06-22 17:20</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-20260622-004" data-apply-no="APR-20260622-020" data-payable="AP20260622008" data-supplier="新加坡研学营地" data-amount="¥98,400" data-business="新加坡研学营 / 科技营线 / ST-SG-20250812-001" data-account="Singapore Study Camp / DBS" data-approved="2026-06-22 17:25" data-method="境外汇款" data-risk="需复核" data-status="待执行" data-tab-status="待执行 需复核">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-20260622-004"></td>
-              <td>PAY-20260622-004<br><span class="text-muted">APR-20260622-020</span></td>
-              <td>AP20260622008</td>
-              <td>新加坡研学营地</td>
-              <td class="amount-strong">¥98,400</td>
-              <td>新加坡研学营<br><span class="text-muted">ST-SG-20250812-001</span></td>
-              <td>DBS 境外账户</td>
-              <td>2026-06-22 17:25</td>
-              <td><span class="tag tag-orange">境外账号复核</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-20260704-008" data-apply-no="APR-20260704-031" data-payable="AP20260704008" data-supplier="北京远行国际代理中心" data-amount="¥22,420" data-business="分销对账 / DR202607-001 / 2026-07" data-account="北京远行国际代理中心 / 招商银行尾号8871" data-approved="2026-07-04 13:20" data-method="银企直联" data-risk="已校验" data-status="待执行" data-tab-status="待执行 已校验">
-              <td><input type="checkbox" data-payment-select aria-label="选择PAY-20260704-008"></td>
-              <td>PAY-20260704-008<br><span class="text-muted">APR-20260704-031</span></td>
-              <td>AP20260704008</td>
-              <td>北京远行国际代理中心</td>
-              <td class="amount-strong">¥22,420</td>
-              <td>分销对账<br><span class="text-muted">DR202607-001</span></td>
-              <td>招商银行尾号8871</td>
-              <td>2026-07-04 13:20</td>
-              <td><span class="tag tag-green">已校验</span></td>
-              <td><div class="table-action"><button class="table-action-primary" type="button" data-open-execute>执行付款</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-9条/共9条</span></div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="applyType">申请类型</label>
+          <select id="applyType">
+            <option>全部类型</option>
+            <option>普通付款</option>
+            <option>预付款</option>
+            <option>保证金</option>
+            <option>备用金</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="paymentMethod">付款方式</label>
+          <select id="paymentMethod">
+            <option>全部方式</option>
+            <option>银企直联</option>
+            <option>境外汇款</option>
+            <option>线下转账</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="payeeType">付款对象类型</label>
+          <select id="payeeType">
+            <option>全部对象</option>
+            <option>地接</option>
+            <option>酒店</option>
+            <option>船司</option>
+            <option>航司</option>
+            <option>渠道</option>
+            <option>领队</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="businessType">业务类型</label>
+          <select id="businessType">
+            <option>全部业务</option>
+            <option>标准团期</option>
+            <option>邮轮航次</option>
+            <option>专列班期</option>
+            <option>MICE项目</option>
+            <option>渠道结算</option>
+            <option>单项服务</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="paymentCompany">付款主体</label>
+          <select id="paymentCompany">
+            <option>全部主体</option>
+            <option>总部财务</option>
+            <option>北京凯撒</option>
+            <option>上海凯撒</option>
+            <option>福建凯撒</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="currencyFilter">币种</label>
+          <select id="currencyFilter">
+            <option>全部币种</option>
+            <option>CNY</option>
+            <option>USD</option>
+            <option>EUR</option>
+            <option>HKD</option>
+            <option>SGD</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="checkStatus">执行校验</label>
+          <select id="checkStatus">
+            <option>全部校验</option>
+            <option>已校验</option>
+            <option>需复核</option>
+            <option>账户异常</option>
+            <option>余额不足</option>
+            <option>币种异常</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="remitStatus">回单状态</label>
+          <select id="remitStatus">
+            <option>全部回单</option>
+            <option>未生成</option>
+            <option>待回单</option>
+            <option>待核销</option>
+            <option>已核销</option>
+          </select>
+        </div>
+        <div class="filter-item-wide filter-item-date-range">
+          <label class="sr-only">计划付款日期</label>
+          <div class="date-range">
+            <input id="dateStart" type="date" value="2026-06-01" aria-label="开始日期">
+            <span>至</span>
+            <input id="dateEnd" type="date" value="2026-07-31" aria-label="结束日期">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="button" data-search-payment>查询</button>
+          <button class="btn btn-secondary" type="button" data-reset-payment>重置</button>
+        </div>
+      </div>
     </section>
 
-    <section id="payment-exception" class="finance-payment-panel">
-      <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="付款异常">
-        <table>
-          <thead><tr><th>付款单</th><th>应付单</th><th>付款对象</th><th>金额</th><th>异常原因</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody id="paymentExceptionRows">
-            <tr data-payment-no="PAY-20260618-006" data-apply-no="APR-20260618-006" data-payable="AP20260618009" data-supplier="雅典本地地接社" data-amount="¥76,800" data-business="希腊海岛游 / 雅典圣岛线 / EU-GRC-20250708-001" data-account="Athens Ground Service / Alpha Bank" data-approved="2026-06-18 11:20" data-method="境外汇款" data-risk="异常" data-status="付款退回" data-exception="境外账户信息与供应商档案不一致">
-              <td>PAY-20260618-006</td><td>AP20260618009</td><td>雅典本地地接社</td><td class="amount-strong">¥76,800</td><td>境外账户信息不一致</td><td><span class="tag tag-red">付款退回</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-exception>处理异常</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PAY-20260617-010" data-apply-no="APR-20260617-010" data-payable="AP20260617010" data-supplier="港务代理" data-amount="¥24,600" data-business="理想号地中海邮轮 / CR-MED-20250803-001" data-account="港务代理 / 中银香港" data-approved="2026-06-17 15:00" data-method="境外汇款" data-risk="异常" data-status="待补资料" data-exception="Swift Code缺失，需补充账户资料">
-              <td>PAY-20260617-010</td><td>AP20260617010</td><td>港务代理</td><td class="amount-strong">¥24,600</td><td>账户资料缺失</td><td><span class="tag tag-orange">待补资料</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-exception>处理异常</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-2条/共2条</span></div>
-    </section>
-
-    <section id="payment-records" class="finance-payment-panel">
-      <section class="table-wrap payment-record-table list-surface-table list-table-with-pagination" aria-label="付款记录">
-        <table>
-          <thead><tr><th>付款单号</th><th>应付单号</th><th>付款时间</th><th>付款对象</th><th>金额</th><th>付款方式</th><th>回单</th><th>NC状态</th><th>操作</th></tr></thead>
-          <tbody id="paymentRecordRows">
-            <tr data-payment-no="PAYEX-AIR-20260620012" data-payable="AP-AIR-20260618001" data-supplier="中国国际航空" data-amount="¥77,400" data-business="AIR-BLK-20260618-001 / AIR-RET-20260618-002 / 一压预付款" data-account="中国银行尾号6688" data-method="银企直联" data-paid-time="2026-06-20 11:20" data-remittance="已核销" data-nc="已推送" data-status="已付款" data-contract-no="AIR-BLK-20260618-001 / AIR-RET-20260618-002" data-schedule-no="EU20260818001" data-resource-type="机票" data-payment-node="一压" data-cost-source="交通采购合同预付款">
-              <td>PAYEX-AIR-20260620012</td><td>AP-AIR-20260618001</td><td>2026-06-20 11:20</td><td>中国国际航空</td><td class="amount-strong">¥77,400</td><td>银企直联</td><td><span class="tag tag-green">已核销</span></td><td><span class="tag tag-green">已推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button><button type="button" data-open-remittance>查看回单</button></div></td>
-            </tr>
-            <tr data-payment-no="PAYEX-20260620-001" data-payable="AP20260620006" data-supplier="北京优选车队" data-amount="¥18,900" data-business="北京故宫定制游 / 京城文化线" data-account="建设银行尾号8801" data-method="银企直联" data-paid-time="2026-06-20 14:30" data-remittance="已核销" data-nc="已推送" data-status="已付款">
-              <td>PAYEX-20260620-001</td><td>AP20260620006</td><td>2026-06-20 14:30</td><td>北京优选车队</td><td class="amount-strong">¥18,900</td><td>银企直联</td><td><span class="tag tag-green">已核销</span></td><td><span class="tag tag-green">已推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button><button type="button" data-open-remittance>查看回单</button></div></td>
-            </tr>
-            <tr data-payment-no="PAYEX-REQ-20240715-003" data-payable="YF20240715003" data-supplier="巴黎中餐厅Le Bonheur" data-amount="¥8,640" data-business="欧洲十国经典游 / EU20240715001" data-account="招商银行尾号6208" data-method="银企直联" data-paid-time="2026-07-15 16:45" data-remittance="已核销" data-nc="待推送" data-status="已付款">
-              <td>PAYEX-REQ-20240715-003</td><td>YF20240715003</td><td>2026-07-15 16:45</td><td>巴黎中餐厅Le Bonheur</td><td class="amount-strong">¥8,640</td><td>银企直联</td><td><span class="tag tag-green">已核销</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button><button type="button" data-open-remittance>查看回单</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
-    </section>
-
-    <section id="payment-prepay" class="finance-payment-panel">
-      <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="预付款">
-        <table>
-          <thead><tr><th>供应商</th><th>预付款余额</th><th>最近预付</th><th>最近冲抵</th><th>可冲抵应付</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody id="prepayRows">
-            <tr data-payment-no="PREPAY-AIR-20260618" data-supplier="中国国际航空" data-amount="¥77,400" data-business="AIR-BLK-20260618-001 / AIR-RET-20260618-002 / EU20260818001" data-account="中国银行尾号6688" data-method="预付款余额" data-status="待冲抵" data-risk="正常" data-contract-no="AIR-BLK-20260618-001 / AIR-RET-20260618-002" data-schedule-no="EU20260818001" data-resource-type="机票" data-payment-node="一压已付/二压待申请" data-cost-source="交通采购合同预付款 / 变更单抵扣" data-original-qty="30" data-effective-qty="20" data-change-no="CHG-AIR-20260710-001 / CHG-AIR-20260710-002" data-prepaid="¥6,666" data-adjustment="¥666" data-deduction="¥25,800">
-              <td>中国国际航空</td><td class="amount-strong">¥77,400</td><td>一压已付 ¥77,400 / 二压待人工申请 ¥43,000</td><td>转团调整 ¥666</td><td>AP-TRF-20260818001</td><td><span class="tag tag-orange">待冲抵</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-prepay-offset>冲抵</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PREPAY-20260612001" data-supplier="皇家加勒比" data-amount="¥300,000" data-business="理想号地中海邮轮 / 地中海经典线" data-account="招商银行尾号1188" data-method="预付款余额" data-status="待冲抵" data-risk="正常">
-              <td>皇家加勒比</td><td class="amount-strong">¥300,000</td><td>2026-06-12</td><td>-</td><td>AP20260624002</td><td><span class="tag tag-orange">待冲抵</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-prepay-offset>冲抵</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-            <tr data-payment-no="PREPAY-20260615002" data-supplier="研学基地联盟" data-amount="¥20,000" data-business="新加坡研学营 / 科技营线" data-account="DBS 境外账户" data-method="预付款余额" data-status="正常" data-risk="正常">
-              <td>研学基地联盟</td><td class="amount-strong">¥20,000</td><td>2026-06-15</td><td>-</td><td>AP20260622008</td><td><span class="tag tag-green">正常</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-prepay-offset>冲抵</button><button type="button" data-open-detail>详情</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-3条/共3条</span></div>
+    <section class="table-wrap payment-execute-table list-surface-table list-table-with-pagination" aria-label="付款执行列表">
+      <table>
+        <colgroup>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>付款单/申请</th>
+            <th>付款对象</th>
+            <th>付款依据</th>
+            <th>关联团组</th>
+            <th>原币付款</th>
+            <th>汇率/本币</th>
+            <th>付款账户</th>
+            <th>收款账户</th>
+            <th>执行校验</th>
+            <th>回单NC</th>
+            <th class="sticky-action">操作</th>
+          </tr>
+        </thead>
+        <tbody id="paymentRows">
+          <tr data-payment-no="PAY-PRE-AIR-20260716001" data-apply-no="FK-PRE-20260713002" data-approval-no="APR-FKPRE20260713002" data-apply-type="预付款" data-basis-type="采购批次" data-basis-no="AIR-BLK-20260618-001" data-payable-no="-" data-bill-no="-" data-prepay-no="待生成" data-payee="中国国际航空" data-payee-type="航司" data-business-type="标准团期" data-company="北京凯撒" data-business="欧洲十国经典游 / A线 法德意12天" data-business-no="EU20260818001" data-fee-item="包机一压预付款" data-original-amount="USD 10,800" data-currency="USD" data-rate="7.1667" data-local-amount="¥77,400" data-method="境外汇款" data-pay-account="集团汇总账户 / 中国银行北京分行" data-pay-balance="¥2,860,000" data-receive-account="中国国际航空 / Bank of China HK" data-account-status="白名单已校验" data-check="已校验" data-risk="余额充足 / 户名一致 / USD" data-plan-date="2026-07-16" data-execute-date="" data-payment-node="包机一压" data-contract-no="AIR-BLK-20260618-001" data-cost-source="交通采购批次锁位" data-prepay-action="付款后生成包机预付" data-prepay-result="进入预付管理按团期分摊" data-remittance="未生成" data-bank-flow="-" data-voucher="未生成" data-nc="未生成" data-exception="-" data-status="待执行" data-note="预付款审批通过，付款后生成预付余额。">
+            <td><div class="table-cell-main"><strong>PAY-PRE-AIR-20260716001</strong><span>FK-PRE-20260713002 / 预付款</span></div></td>
+            <td><div class="table-cell-main"><strong>中国国际航空</strong><span>航司 / 北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>AIR-BLK-20260618-001</strong><span>采购批次 / 包机一压</span></div></td>
+            <td><div class="table-cell-main"><strong>欧洲十国经典游</strong><span>EU20260818001</span></div></td>
+            <td><strong class="amount-strong">USD 10,800</strong></td>
+            <td><div class="table-cell-main"><strong>7.1667</strong><span>本币 ¥77,400</span></div></td>
+            <td><div class="table-cell-main"><strong>集团汇总账户</strong><span>中国银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><strong>中国国际航空</strong><span>Bank of China HK</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>USD账户通过</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>未付款</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="execute">执行付款</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-payment-no="PAY-CRU-ADV-20260714001" data-apply-no="FK-PRE-20260712001" data-approval-no="APR-FKPRE20260712001" data-apply-type="预付款" data-basis-type="合同节点" data-basis-no="CRU-BLK-20260520-002" data-payable-no="-" data-bill-no="-" data-prepay-no="PP-CRU-20260714001" data-payee="理想号邮轮公司" data-payee-type="船司" data-business-type="邮轮航次" data-company="上海凯撒" data-business="理想号地中海邮轮 / 地中海经典线" data-business-no="CR-MED-20250803-001" data-fee-item="包舱二压款" data-original-amount="¥300,000" data-currency="CNY" data-rate="1.0000" data-local-amount="¥300,000" data-method="银企直联" data-pay-account="招商银行上海分行" data-pay-balance="¥1,993,400" data-receive-account="理想号邮轮公司 / 招商银行尾号1188" data-account-status="白名单已校验" data-check="已校验" data-risk="付款已提交 / 等待银行受理" data-plan-date="2026-07-14" data-execute-date="2026-07-14" data-payment-node="包舱二压" data-contract-no="CRU-BLK-20260520-002" data-cost-source="邮轮包舱合同节点" data-prepay-action="付款后生成预付余额" data-prepay-result="PP-CRU-20260714001 待回单核销" data-remittance="待回单" data-bank-flow="待银行回单" data-voucher="PAY-VCH-20260714001" data-nc="未生成" data-exception="-" data-status="执行中" data-note="银企付款已提交，等待银行回单。">
+            <td><div class="table-cell-main"><strong>PAY-CRU-ADV-20260714001</strong><span>FK-PRE-20260712001 / 预付款</span></div></td>
+            <td><div class="table-cell-main"><strong>理想号邮轮公司</strong><span>船司 / 上海凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>CRU-BLK-20260520-002</strong><span>合同节点 / 包舱二压</span></div></td>
+            <td><div class="table-cell-main"><strong>理想号地中海邮轮</strong><span>CR-MED-20250803-001</span></div></td>
+            <td><strong class="amount-strong">¥300,000</strong></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>本币 ¥300,000</span></div></td>
+            <td><div class="table-cell-main"><strong>招商银行上海分行</strong><span>上海凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>理想号邮轮公司</strong><span>招商银行尾号1188</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>银行受理中</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待回单</span><span>PAY-VCH-20260714001</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="execute">查看进度</button></div></td>
+          </tr>
+          <tr data-payment-no="PAY-GRD-20260715001" data-apply-no="FK20260702004" data-approval-no="APR-FK20260702004" data-apply-type="普通付款" data-basis-type="应付单" data-basis-no="AP20260701001" data-payable-no="AP20260701001" data-bill-no="BN20260701001" data-prepay-no="-" data-payee="欧洲联合地接社" data-payee-type="地接" data-business-type="标准团期" data-company="福建凯撒" data-business="欧洲十国经典游 / 法德意A线" data-business-no="EU-FRA-20250720-001" data-fee-item="地接综合费" data-original-amount="EUR 27,300" data-currency="EUR" data-rate="7.9341" data-local-amount="¥216,600" data-method="境外汇款" data-pay-account="集团汇总账户 / 中国银行北京分行" data-pay-balance="¥2,860,000" data-receive-account="Europe Ground Union / Deutsche Bank" data-account-status="境外账户待复核" data-check="需复核" data-risk="Swift与收款地址待复核" data-plan-date="2026-07-15" data-execute-date="" data-payment-node="行前首款" data-contract-no="SUP-EU-GROUND-2026" data-cost-source="供应商账单确认" data-prepay-action="本次不冲抵预付" data-prepay-result="无预付承接" data-remittance="未生成" data-bank-flow="-" data-voucher="未生成" data-nc="未生成" data-exception="境外Swift与收款地址待复核" data-status="待补资料" data-note="境外汇款资料需补齐后执行。">
+            <td><div class="table-cell-main"><strong>PAY-GRD-20260715001</strong><span>FK20260702004 / 普通付款</span></div></td>
+            <td><div class="table-cell-main"><strong>欧洲联合地接社</strong><span>地接 / 福建凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>AP20260701001</strong><span>应付单 / 地接综合费</span></div></td>
+            <td><div class="table-cell-main"><strong>欧洲十国经典游</strong><span>EU-FRA-20250720-001</span></div></td>
+            <td><strong class="amount-strong">EUR 27,300</strong></td>
+            <td><div class="table-cell-main"><strong>7.9341</strong><span>本币 ¥216,600</span></div></td>
+            <td><div class="table-cell-main"><strong>集团汇总账户</strong><span>中国银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><strong>Europe Ground Union</strong><span>Deutsche Bank</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">需复核</span><span>Swift待复核</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>未付款</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="material">补充资料</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-payment-no="PAY-BSP-20260630001" data-apply-no="JS-BSP-20260630001" data-approval-no="APR-BSP-20260630001" data-apply-type="普通付款" data-basis-type="应付单" data-basis-no="BSP-SET-202606-02" data-payable-no="BSP-SET-202606-02" data-bill-no="BSP-SET-202606-02" data-prepay-no="-" data-payee="BSP结算中心" data-payee-type="航司" data-business-type="单项服务" data-company="总部财务" data-business="BSP散票账单 / 2026年6月下半月" data-business-no="BSP-SET-202606-02" data-fee-item="散票结算" data-original-amount="¥286,400" data-currency="CNY" data-rate="1.0000" data-local-amount="¥286,400" data-method="银企直联" data-pay-account="集团汇总账户 / 中国银行北京分行" data-pay-balance="¥2,860,000" data-receive-account="BSP结算中心 / 中国银行尾号1024" data-account-status="白名单已校验" data-check="已校验" data-risk="付款成功 / 回单待核销" data-plan-date="2026-06-30" data-execute-date="2026-07-01" data-payment-node="BSP账单付款" data-contract-no="BSP-SETTLE-2026" data-cost-source="BSP账单比对 / 业务结算" data-prepay-action="无需预付处理" data-prepay-result="无预付承接" data-remittance="待核销" data-bank-flow="CMBCPAY20260701001" data-voucher="PAY-VCH-20260701001" data-nc="待推送" data-exception="-" data-status="待回单" data-note="付款已成功，等待回单核销。">
+            <td><div class="table-cell-main"><strong>PAY-BSP-20260630001</strong><span>JS-BSP-20260630001 / 普通付款</span></div></td>
+            <td><div class="table-cell-main"><strong>BSP结算中心</strong><span>航司 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>BSP-SET-202606-02</strong><span>应付单 / 散票结算</span></div></td>
+            <td><div class="table-cell-main"><strong>BSP散票账单</strong><span>2026年6月下半月</span></div></td>
+            <td><strong class="amount-strong">¥286,400</strong></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>本币 ¥286,400</span></div></td>
+            <td><div class="table-cell-main"><strong>集团汇总账户</strong><span>中国银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><strong>BSP结算中心</strong><span>中国银行尾号1024</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>付款成功</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待核销</span><span>PAY-VCH-20260701001</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="remittance">查看回单</button></div></td>
+          </tr>
+          <tr data-payment-no="PAYEX-20260620-001" data-apply-no="FK20260620006" data-approval-no="APR-FK20260620006" data-apply-type="普通付款" data-basis-type="应付单" data-basis-no="AP20260620006" data-payable-no="AP20260620006" data-bill-no="BN20260620006" data-prepay-no="-" data-payee="北京优选车队" data-payee-type="车队" data-business-type="标准团期" data-company="北京凯撒" data-business="北京故宫定制游 / 京城文化线" data-business-no="CN-BJG-20250701-001" data-fee-item="用车服务" data-original-amount="¥18,900" data-currency="CNY" data-rate="1.0000" data-local-amount="¥18,900" data-method="银企直联" data-pay-account="建设银行北京账户" data-pay-balance="¥820,000" data-receive-account="北京优选车队 / 建设银行尾号8801" data-account-status="白名单已校验" data-check="已校验" data-risk="回单已核销 / NC已推送" data-plan-date="2026-06-20" data-execute-date="2026-06-20" data-payment-node="服务完成付款" data-contract-no="BUS-BJ-2026-001" data-cost-source="团期成本确认" data-prepay-action="无需预付处理" data-prepay-result="无预付承接" data-remittance="已核销" data-bank-flow="PAYEX20260620001" data-voucher="PAY-VCH-20260620001" data-nc="已推送" data-exception="-" data-status="已付款" data-note="付款、回单和 NC 已完成。">
+            <td><div class="table-cell-main"><strong>PAYEX-20260620-001</strong><span>FK20260620006 / 普通付款</span></div></td>
+            <td><div class="table-cell-main"><strong>北京优选车队</strong><span>车队 / 北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>AP20260620006</strong><span>应付单 / 用车服务</span></div></td>
+            <td><div class="table-cell-main"><strong>北京故宫定制游</strong><span>CN-BJG-20250701-001</span></div></td>
+            <td><strong class="amount-strong">¥18,900</strong></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>本币 ¥18,900</span></div></td>
+            <td><div class="table-cell-main"><strong>建设银行北京账户</strong><span>北京凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>北京优选车队</strong><span>建设银行尾号8801</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>回单已核销</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>PAY-VCH-20260620001</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="remittance">查看回单</button></div></td>
+          </tr>
+          <tr data-payment-no="PAY-DEP-20260708005" data-apply-no="FK-DEP-20260708005" data-approval-no="APR-FKDEP20260708005" data-apply-type="保证金" data-basis-type="合同节点" data-basis-no="MICE-MO-20260722-001" data-payable-no="-" data-bill-no="-" data-prepay-no="-" data-payee="澳门会展中心" data-payee-type="酒店" data-business-type="MICE项目" data-company="福建凯撒" data-business="厦门企业奖励旅游 / 澳门会奖项目" data-business-no="MICE-MO-20260722-001" data-fee-item="场地保证金" data-original-amount="HKD 80,000" data-currency="HKD" data-rate="0.9148" data-local-amount="¥73,184" data-method="境外汇款" data-pay-account="工商银行福州账户" data-pay-balance="¥620,000" data-receive-account="Macau Convention Centre / BOC Macau" data-account-status="白名单已校验" data-check="已校验" data-risk="保证金付款已核销" data-plan-date="2026-07-08" data-execute-date="2026-07-08" data-payment-node="场地保证金" data-contract-no="MICE-VENUE-MO-2026" data-cost-source="MICE合同保证金节点" data-prepay-action="付款后登记保证金" data-prepay-result="退回时进入付款退回" data-remittance="已核销" data-bank-flow="ICBCPAY20260708005" data-voucher="PAY-VCH-20260708005" data-nc="已推送" data-exception="-" data-status="已付款" data-note="保证金付款已完成，后续退回由付款退回承接。">
+            <td><div class="table-cell-main"><strong>PAY-DEP-20260708005</strong><span>FK-DEP-20260708005 / 保证金</span></div></td>
+            <td><div class="table-cell-main"><strong>澳门会展中心</strong><span>酒店 / 福建凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>MICE-MO-20260722-001</strong><span>合同节点 / 保证金</span></div></td>
+            <td><div class="table-cell-main"><strong>澳门会奖项目</strong><span>MICE-MO-20260722-001</span></div></td>
+            <td><strong class="amount-strong">HKD 80,000</strong></td>
+            <td><div class="table-cell-main"><strong>0.9148</strong><span>本币 ¥73,184</span></div></td>
+            <td><div class="table-cell-main"><strong>工商银行福州账户</strong><span>福建凯撒</span></div></td>
+            <td><div class="table-cell-main"><strong>澳门会展中心</strong><span>BOC Macau</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>保证金已付款</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>PAY-VCH-20260708005</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="remittance">查看回单</button></div></td>
+          </tr>
+          <tr data-payment-no="PAYEX-LD-20260625001" data-apply-no="FK-LD-20260625001" data-approval-no="APR-FKLD20260625001" data-apply-type="备用金" data-basis-type="合同节点" data-basis-no="LD-CT-2026-001" data-payable-no="-" data-bill-no="-" data-prepay-no="PP-LEADER-20260625001" data-payee="领队陈涛" data-payee-type="领队" data-business-type="专列班期" data-company="总部财务" data-business="丝路专列深度游 / 丝路经典线" data-business-no="TR-SILK-20250815-001" data-fee-item="领队备用金" data-original-amount="¥30,000" data-currency="CNY" data-rate="1.0000" data-local-amount="¥30,000" data-method="银企直联" data-pay-account="集团汇总账户 / 民生银行北京分行" data-pay-balance="¥3,214,000" data-receive-account="陈涛 / 招商银行尾号7718" data-account-status="白名单已校验" data-check="已校验" data-risk="备用金已核销 / 余额待退回" data-plan-date="2026-06-25" data-execute-date="2026-06-25" data-payment-node="出团备用金" data-contract-no="LD-CT-2026-001" data-cost-source="班期领队备用金节点" data-prepay-action="付款后形成备用金预付" data-prepay-result="PP-LEADER-20260625001 余额 ¥11,400" data-remittance="已核销" data-bank-flow="CMBCPAY20260625011" data-voucher="PAY-VCH-20260625011" data-nc="待推送" data-exception="-" data-status="已付款" data-note="备用金付款已完成，余额退回由预付管理和付款退回承接。">
+            <td><div class="table-cell-main"><strong>PAYEX-LD-20260625001</strong><span>FK-LD-20260625001 / 备用金</span></div></td>
+            <td><div class="table-cell-main"><strong>领队陈涛</strong><span>领队 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>LD-CT-2026-001</strong><span>合同节点 / 领队备用金</span></div></td>
+            <td><div class="table-cell-main"><strong>丝路专列深度游</strong><span>TR-SILK-20250815-001</span></div></td>
+            <td><strong class="amount-strong">¥30,000</strong></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>本币 ¥30,000</span></div></td>
+            <td><div class="table-cell-main"><strong>集团汇总账户</strong><span>民生银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><strong>领队陈涛</strong><span>招商银行尾号7718</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>备用金已付款</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-orange">待推送</span><span>PAY-VCH-20260625011</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail="prepay">查看预付</button></div></td>
+          </tr>
+          <tr data-payment-no="PAY-OLD-20260601009" data-apply-no="FK20260601009" data-approval-no="APR-FK20260601009" data-apply-type="普通付款" data-basis-type="应付单" data-basis-no="AP20260531009" data-payable-no="AP20260531009" data-bill-no="BN20260531009" data-prepay-no="-" data-payee="维也纳酒店集团" data-payee-type="酒店" data-business-type="标准团期" data-company="总部财务" data-business="欧洲十国经典游 / 维也纳段" data-business-no="EU-FRA-20250720-001" data-fee-item="酒店住宿" data-original-amount="¥29,400" data-currency="CNY" data-rate="1.0000" data-local-amount="¥29,400" data-method="银企直联" data-pay-account="集团汇总账户 / 民生银行北京分行" data-pay-balance="¥3,214,000" data-receive-account="维也纳酒店集团 / 工商银行尾号9206" data-account-status="白名单已校验" data-check="已校验" data-risk="已归档" data-plan-date="2026-06-01" data-execute-date="2026-06-01" data-payment-node="入住前尾款" data-contract-no="HOTEL-VIE-2026" data-cost-source="团期成本确认" data-prepay-action="无需预付处理" data-prepay-result="无预付承接" data-remittance="已核销" data-bank-flow="CMBCPAY20260601009" data-voucher="PAY-VCH-20260601009" data-nc="已推送" data-exception="-" data-status="已关闭" data-note="付款链路已归档。">
+            <td><div class="table-cell-main"><strong>PAY-OLD-20260601009</strong><span>FK20260601009 / 普通付款</span></div></td>
+            <td><div class="table-cell-main"><strong>维也纳酒店集团</strong><span>酒店 / 总部财务</span></div></td>
+            <td><div class="table-cell-main"><strong>AP20260531009</strong><span>应付单 / 酒店住宿</span></div></td>
+            <td><div class="table-cell-main"><strong>维也纳段酒店</strong><span>EU-FRA-20250720-001</span></div></td>
+            <td><strong class="amount-strong">¥29,400</strong></td>
+            <td><div class="table-cell-main"><strong>1.0000</strong><span>本币 ¥29,400</span></div></td>
+            <td><div class="table-cell-main"><strong>集团汇总账户</strong><span>民生银行北京分行</span></div></td>
+            <td><div class="table-cell-main"><strong>维也纳酒店集团</strong><span>工商银行尾号9206</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已校验</span><span>已归档</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-green">已推送</span><span>PAY-VCH-20260601009</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="paymentPagination" class="table-pagination">第1-8条/共8条</div>
     </section>
   </section>
 
-  <div id="paymentExecuteDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="paymentExecuteTitle">
-      <div class="modal-header">
-        <div id="paymentExecuteTitle" class="modal-title">执行付款</div>
-        <button class="modal-close" type="button" aria-label="关闭执行付款" data-close-layer>×</button>
-      </div>
-      <div class="modal-body">
-        <section class="order-desc-card">
-          <h2 class="detail-section-title">付款信息</h2>
-          <div id="paymentExecuteGrid" class="description-grid"></div>
-        </section>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="executeMode">执行方式</label>
-            <select id="executeMode" class="form-control">
-              <option>银企直联</option>
-              <option>线下付款登记</option>
-              <option>境外汇款</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="executeAmount">本次付款金额</label>
-            <input id="executeAmount" class="form-control" type="number" value="8640">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">付款凭证</label>
-          <div class="upload-box">线下付款时上传银行回单或付款截图</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="executeRemark">付款备注</label>
-          <textarea id="executeRemark" class="form-control" rows="3"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
-        <button class="btn btn-primary" type="button" data-confirm-payment-execute>确认执行付款</button>
-      </div>
-    </div>
-  </div>
-
   <div id="paymentDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="paymentDetailTitle">
+    <div class="modal drawer-modal drawer-modal-wide" role="dialog" aria-modal="true" aria-labelledby="paymentDetailTitle">
       <div class="modal-header">
         <div id="paymentDetailTitle" class="modal-title">付款详情</div>
         <button class="modal-close" type="button" aria-label="关闭付款详情" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <section id="paymentDetailGrid" class="description-grid"></section>
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="detailObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="detailObjectSubtitle">-</div>
+            </div>
+            <div id="detailObjectStatus"></div>
+          </div>
+          <div class="payment-summary-grid" id="detailSummaryGrid"></div>
+        </section>
+
+        <nav class="tab-bar drawer-tab-bar" aria-label="付款详情标签">
+          <button class="tab-item active" type="button" data-detail-tab="overview">付款总览</button>
+          <button class="tab-item" type="button" data-detail-tab="source">申请来源</button>
+          <button class="tab-item" type="button" data-detail-tab="account">账户校验</button>
+          <button class="tab-item" type="button" data-detail-tab="currency">原币汇率</button>
+          <button class="tab-item" type="button" data-detail-tab="execute">执行记录</button>
+          <button class="tab-item" type="button" data-detail-tab="remittance">回单核销</button>
+          <button class="tab-item" type="button" data-detail-tab="prepay">预付承接</button>
+          <button class="tab-item" type="button" data-detail-tab="exception">异常记录</button>
+          <button class="tab-item" type="button" data-detail-tab="nc">凭证NC</button>
+        </nav>
+
+        <section class="payment-tab-panels">
+          <section class="drawer-section" data-detail-panel="overview">
+            <div class="drawer-section-head"><h3 class="drawer-section-title">付款总览</h3></div>
+            <section class="description-grid" id="overviewGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="source" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">申请来源</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>付款申请</th><th>付款依据</th><th>应付单</th><th>供应商账单</th><th>审批单</th></tr></thead>
+                <tbody id="sourceRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="account" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">账户校验</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>校验项</th><th>结果</th><th>依据</th></tr></thead>
+                <tbody id="accountRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="currency" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">原币汇率</h3></div>
+            <section class="description-grid" id="currencyGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="execute" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">执行记录</h3></div>
+            <section class="description-grid" id="executeGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="remittance" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">回单核销</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>银行流水/回单</th><th>付款单</th><th>回单状态</th><th>核销入口</th></tr></thead>
+                <tbody id="remittanceRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="prepay" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">预付承接</h3></div>
+            <section class="description-grid" id="prepayGrid"></section>
+          </section>
+          <section class="drawer-section" data-detail-panel="exception" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">异常记录</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>异常类型</th><th>异常原因</th><th>处理状态</th><th>处理口径</th></tr></thead>
+                <tbody id="exceptionRows"></tbody>
+              </table>
+            </section>
+          </section>
+          <section class="drawer-section" data-detail-panel="nc" hidden>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">凭证NC</h3></div>
+            <section class="table-wrap">
+              <table>
+                <thead><tr><th>付款凭证</th><th>NC任务</th><th>推送状态</th><th>失败原因</th></tr></thead>
+                <tbody id="ncRows"></tbody>
+              </table>
+            </section>
+          </section>
+        </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>执行付款</button>
       </div>
     </div>
   </div>
 
-  <div id="paymentExceptionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="paymentExceptionTitle">
+  <div id="paymentWorkDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="paymentWorkTitle">
       <div class="modal-header">
-        <div id="paymentExceptionTitle" class="modal-title">付款异常处理</div>
-        <button class="modal-close" type="button" aria-label="关闭付款异常处理" data-close-layer>×</button>
+        <div id="paymentWorkTitle" class="modal-title">执行付款</div>
+        <button class="modal-close" type="button" aria-label="关闭执行付款" data-close-layer>×</button>
       </div>
       <div class="modal-body">
-        <section id="paymentExceptionGrid" class="description-grid"></section>
-        <div class="form-group">
-          <label class="form-label" for="exceptionResult">处理方式</label>
-          <select id="exceptionResult" class="form-control">
-            <option>退回业务补充账户</option>
-            <option>修正账户后重新付款</option>
-            <option>作废本次付款</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="exceptionRemark">处理说明</label>
-          <textarea id="exceptionRemark" class="form-control" rows="4"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
-        <button class="btn btn-primary" type="button" data-confirm-payment-exception>确认处理</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="paymentBatchDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="paymentBatchTitle">
-      <div class="modal-header">
-        <div id="paymentBatchTitle" class="modal-title">批量付款</div>
-        <button class="modal-close" type="button" aria-label="关闭批量付款" data-close-layer>×</button>
-      </div>
-      <div class="modal-body">
-        <section id="paymentBatchGrid" class="description-grid"></section>
-        <section class="table-wrap">
-          <table>
-            <thead><tr><th>付款单</th><th>付款对象</th><th>金额</th><th>方式</th><th>校验</th></tr></thead>
-            <tbody id="paymentBatchRows"></tbody>
-          </table>
+        <section class="drawer-object-card">
+          <div class="drawer-object-main">
+            <div>
+              <div class="drawer-object-title" id="workObjectTitle">-</div>
+              <div class="drawer-object-subtitle" id="workObjectSubtitle">-</div>
+            </div>
+            <div id="workObjectStatus"></div>
+          </div>
+          <div class="payment-summary-grid" id="workSummaryGrid"></div>
         </section>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="batchExecuteMode">执行方式</label>
-            <select id="batchExecuteMode" class="form-control">
-              <option>银企直联批量付款</option>
-              <option>线下付款登记</option>
-              <option>境外汇款批量登记</option>
-            </select>
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">执行依据</h3></div>
+          <section class="table-wrap">
+            <table>
+              <thead><tr><th>项目</th><th>状态</th><th>依据</th></tr></thead>
+              <tbody id="workCheckRows"></tbody>
+            </table>
+          </section>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">本次处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workResult">处理结果</label>
+              <select id="workResult" class="form-control">
+                <option>确认付款，待回单核销</option>
+                <option>资料已补齐，转待执行</option>
+                <option>账户已修正，重新付款</option>
+                <option>付款作废，关闭付款单</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workAmount">原币付款</label>
+              <input id="workAmount" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workRate">汇率</label>
+              <input id="workRate" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workLocalAmount">本币金额</label>
+              <input id="workLocalAmount" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workPayAccount">付款账户</label>
+              <input id="workPayAccount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workBankFlow">银行流水/回单号</label>
+              <input id="workBankFlow" class="form-control" type="text">
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="batchPayDate">付款日期</label>
-            <input id="batchPayDate" class="form-control" type="date" value="2026-07-04">
+            <label class="form-label" for="workRemark">处理备注</label>
+            <textarea id="workRemark" class="form-control" rows="4"></textarea>
           </div>
-        </div>
+        </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
-        <button id="confirmBatchPayment" class="btn btn-primary" type="button" data-confirm-batch-payment>确认付款</button>
+        <button class="btn btn-primary" type="button" data-confirm-work>确认执行</button>
       </div>
     </div>
   </div>
 
   <script>
     (function () {
-      var panels = Array.from(document.querySelectorAll('.finance-payment-panel'));
-      var tabButtons = Array.from(document.querySelectorAll('[data-payment-tab]'));
-      var executeDrawer = document.getElementById('paymentExecuteDrawer');
+      var rows = Array.from(document.querySelectorAll('#paymentRows tr'));
+      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
+      var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
+      var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('paymentDetailDrawer');
-      var exceptionDrawer = document.getElementById('paymentExceptionDrawer');
-      var batchDrawer = document.getElementById('paymentBatchDrawer');
-      var executeGrid = document.getElementById('paymentExecuteGrid');
-      var detailGrid = document.getElementById('paymentDetailGrid');
-      var exceptionGrid = document.getElementById('paymentExceptionGrid');
-      var batchGrid = document.getElementById('paymentBatchGrid');
-      var batchRows = document.getElementById('paymentBatchRows');
-      var batchMode = 'batch';
+      var workDrawer = document.getElementById('paymentWorkDrawer');
+      var activeStatus = '全部';
       var activeRow = null;
 
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
       function notify(message, type) {
-        if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message, { type: type || 'success' });
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+          return;
+        }
+        var container = document.querySelector('.caesar-toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'caesar-toast-container';
+          document.body.appendChild(container);
+        }
+        var toast = document.createElement('div');
+        toast.className = 'caesar-toast caesar-toast-' + (type || 'success');
+        toast.textContent = message;
+        container.appendChild(toast);
+        window.setTimeout(function () {
+          toast.classList.add('closing');
+          window.setTimeout(function () { toast.remove(); }, 180);
+        }, 2200);
       }
 
       function openLayer(layer) {
@@ -375,8 +551,7 @@
           window.caesarUI.openLayer(layer);
           return;
         }
-        layer.hidden = false;
-        layer.classList.add('show');
+        layer.classList.add('is-open');
         layer.setAttribute('aria-hidden', 'false');
       }
 
@@ -385,289 +560,396 @@
           window.caesarUI.closeLayer(layer);
           return;
         }
-        layer.hidden = true;
-        layer.classList.remove('show');
+        layer.classList.remove('is-open');
         layer.setAttribute('aria-hidden', 'true');
       }
 
-      function escapeHtml(value) {
-        return String(value || '').replace(/[&<>"']/g, function (char) {
-          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
-        });
-      }
-
-      function amountNumber(value) {
-        return Number(String(value || '').replace(/[^\d.]/g, '') || 0);
-      }
-
       function rowText(row) {
-        return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+        return (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ');
       }
 
-      function switchTab(tabName) {
-        tabButtons.forEach(function (button) { button.classList.toggle('active', button.dataset.paymentTab === tabName); });
-        panels.forEach(function (panel) { panel.classList.toggle('active', panel.id === 'payment-' + tabName); });
+      function statusClass(value) {
+        if (/异常|不足|关闭|作废|缺失/.test(value)) return 'tag-red';
+        if (/待|需复核|执行中|未生成|未推送|受理中/.test(value)) return 'tag-orange';
+        if (/已|通过|核销|校验|充足|一致|付款/.test(value)) return 'tag-green';
+        return 'tag-blue';
       }
 
-      function currentRows() {
-        var active = document.querySelector('.finance-payment-panel.active tbody');
-        return active ? Array.from(active.querySelectorAll('tr')) : [];
+      function tagHtml(value) {
+        return '<span class="tag ' + statusClass(value) + '">' + escapeHtml(value) + '</span>';
+      }
+
+      function linkHtml(href, text) {
+        if (!text || text === '-' || text === '待生成' || text === '未生成') return escapeHtml(text || '-');
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function gridHtml(items) {
+        return items.map(function (item) {
+          return '<div class="description-item' + (item.full ? ' description-item-full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function summaryHtml(items) {
+        return items.map(function (item) {
+          return '<div class="payment-summary-item"><div class="payment-summary-label">' + escapeHtml(item.label) + '</div><div class="payment-summary-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function actionByStatus(status) {
+        if (status === '待执行') return '执行付款';
+        if (status === '待补资料') return '补充资料';
+        if (status === '执行中') return '查看进度';
+        if (status === '待回单') return '查看回单';
+        if (status === '已付款') return '查看回单';
+        return '详情';
+      }
+
+      function actionKeyByStatus(status) {
+        if (status === '待执行') return 'execute';
+        if (status === '待补资料') return 'material';
+        return 'detail';
+      }
+
+      function updateCounts() {
+        var counts = { 全部: rows.length };
+        rows.forEach(function (row) {
+          counts[row.dataset.status] = (counts[row.dataset.status] || 0) + 1;
+        });
+        document.querySelectorAll('[data-status-count]').forEach(function (item) {
+          item.textContent = counts[item.dataset.statusCount] || 0;
+        });
       }
 
       function applyFilters() {
-        var keyword = (document.getElementById('paymentKeyword') ? document.getElementById('paymentKeyword').value : '').trim().toLowerCase();
-        var method = document.getElementById('paymentMethod') ? document.getElementById('paymentMethod').value : '全部方式';
-        var risk = document.getElementById('paymentRisk') ? document.getElementById('paymentRisk').value : '全部校验';
-        currentRows().forEach(function (row) {
-          var text = rowText(row);
+        var keyword = (document.getElementById('paymentKeyword').value || '').trim().toLowerCase();
+        var applyType = document.getElementById('applyType').value;
+        var method = document.getElementById('paymentMethod').value;
+        var payeeType = document.getElementById('payeeType').value;
+        var businessType = document.getElementById('businessType').value;
+        var company = document.getElementById('paymentCompany').value;
+        var currency = document.getElementById('currencyFilter').value;
+        var check = document.getElementById('checkStatus').value;
+        var remittance = document.getElementById('remitStatus').value;
+        var start = document.getElementById('dateStart').value;
+        var end = document.getElementById('dateEnd').value;
+        var visibleCount = 0;
+        rows.forEach(function (row) {
           var visible = true;
-          if (keyword && text.toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (activeStatus !== '全部' && row.dataset.status !== activeStatus) visible = false;
+          if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (applyType.indexOf('全部') !== 0 && row.dataset.applyType !== applyType) visible = false;
           if (method.indexOf('全部') !== 0 && row.dataset.method !== method) visible = false;
-          if (risk.indexOf('全部') !== 0 && row.dataset.risk !== risk) visible = false;
+          if (payeeType.indexOf('全部') !== 0 && row.dataset.payeeType !== payeeType) visible = false;
+          if (businessType.indexOf('全部') !== 0 && row.dataset.businessType !== businessType) visible = false;
+          if (company.indexOf('全部') !== 0 && row.dataset.company !== company) visible = false;
+          if (currency.indexOf('全部') !== 0 && row.dataset.currency !== currency) visible = false;
+          if (check.indexOf('全部') !== 0 && row.dataset.check !== check) visible = false;
+          if (remittance.indexOf('全部') !== 0 && row.dataset.remittance !== remittance) visible = false;
+          if (start && row.dataset.planDate < start) visible = false;
+          if (end && row.dataset.planDate > end) visible = false;
           row.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        document.getElementById('paymentPagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '第0条/共0条';
+      }
+
+      function switchDetailTab(tabName) {
+        detailTabs.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.detailTab === tabName);
+        });
+        detailPanels.forEach(function (panel) {
+          panel.hidden = panel.dataset.detailPanel !== tabName;
         });
       }
 
-      function resetFilters() {
-        document.querySelectorAll('.payment-filter input').forEach(function (input) { input.value = ''; });
-        document.querySelectorAll('.payment-filter select').forEach(function (select) { select.selectedIndex = 0; });
-        applyFilters();
+      function renderObject(row, prefix) {
+        document.getElementById(prefix + 'ObjectTitle').textContent = row.dataset.paymentNo + ' / ' + row.dataset.payee;
+        document.getElementById(prefix + 'ObjectSubtitle').textContent = row.dataset.business + ' / ' + row.dataset.businessNo;
+        document.getElementById(prefix + 'ObjectStatus').innerHTML = tagHtml(row.dataset.status);
       }
 
-      function renderGrid(target, items) {
-        target.innerHTML = items.map(function (item) {
-          return '<div class="description-item' + (item[2] ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>';
-        }).join('');
-      }
-
-      function trafficTraceItems(data) {
-        if (data.settlementNo || data.bspSource) {
-          var sourceNo = data.bspSource || data.payable || '';
-          var settlementValue = data.settlementNo
-            ? '<a class="link-primary" href="finance-settlement.html?mode=' + encodeURIComponent('BSP散票结算') + '&source=' + encodeURIComponent(sourceNo) + '">' + escapeHtml(data.settlementNo) + '</a>'
-            : '-';
-          return [
-            ['结算单号', settlementValue],
-            ['BSP账单号', escapeHtml(sourceNo || '-')],
-            ['资源类型', escapeHtml(data.resourceType || '-')],
-            ['付款节点', escapeHtml(data.paymentNode || '-')],
-            ['成本来源', escapeHtml(data.costSource || '-'), true]
-          ];
-        }
-        if (!data.contractNo && !data.scheduleNo && !data.paymentNode && !data.costSource) return [];
-        var contractValue = data.contractNo
-          ? data.contractNo.split(' / ').map(function (contractNo) {
-            return '<a class="link-primary" href="../tour/resource-procurement-inventory.html?contractNo=' + encodeURIComponent(contractNo) + '">' + escapeHtml(contractNo) + '</a>';
-          }).join(' / ')
-          : '-';
-        var scheduleValue = data.scheduleNo
-          ? '<a class="link-primary" href="../tour/fulfillment-cost.html?scheduleNo=' + encodeURIComponent(data.scheduleNo) + '&tab=cost&source=traffic">' + escapeHtml(data.scheduleNo) + '</a>'
-          : '-';
-        var items = [
-          ['采购合同号', contractValue],
-          ['团期编号', scheduleValue],
-          ['资源类型', escapeHtml(data.resourceType || '-')],
-          ['付款节点', escapeHtml(data.paymentNode || '-')],
-          ['成本来源', escapeHtml(data.costSource || '-'), true]
-        ];
-        if (data.originalQty || data.effectiveQty) {
-          items.push(['原/当前数量', escapeHtml((data.originalQty || '-') + ' → ' + (data.effectiveQty || '-'))]);
-        }
-        if (data.changeNo) {
-          items.push(['变更单', escapeHtml(data.changeNo), true]);
-        }
-        if (data.prepaid || data.adjustment || data.deduction) {
-          items.push(['已预付/调整', escapeHtml((data.prepaid || '-') + ' / ' + (data.adjustment || '-'))]);
-          items.push(['抵扣金额', escapeHtml(data.deduction || '-')]);
-        }
-        return items;
-      }
-
-      function commonGrid(row) {
-        var data = row.dataset;
-        return [
-          ['付款单号', escapeHtml(data.paymentNo || '-')],
-          ['申请单号', escapeHtml(data.applyNo || '-')],
-          ['应付单号', escapeHtml(data.payable || '-')],
-          ['付款对象', escapeHtml(data.supplier || '-')],
-          ['付款金额', '<span class="amount-strong">' + escapeHtml(data.amount || '-') + '</span>'],
-          ['付款方式', escapeHtml(data.method || '-')],
-          ['关联业务', escapeHtml(data.business || '-'), true],
-          ['收款账户', escapeHtml(data.account || '-'), true],
-          ['风险校验', escapeHtml(data.risk || '-')],
-          ['状态', escapeHtml(data.status || '-')]
-        ].concat(trafficTraceItems(data));
-      }
-
-      function selectedPendingRows() {
-        return Array.from(document.querySelectorAll('#paymentPendingRows [data-payment-select]:checked')).map(function (box) {
-          return box.closest('tr');
-        }).filter(function (row) { return row && !row.hidden; });
-      }
-
-      function defaultPendingRows() {
-        return Array.from(document.querySelectorAll('#paymentPendingRows tr')).filter(function (row) {
-          return !row.hidden;
-        }).slice(0, 2);
-      }
-
-      function openBatchPayment(mode) {
-        batchMode = mode || 'batch';
-        var rows = selectedPendingRows();
-        if (!rows.length) rows = defaultPendingRows();
-        var total = rows.reduce(function (sum, row) { return sum + amountNumber(row.dataset.amount); }, 0);
-        var suppliers = rows.map(function (row) { return row.dataset.supplier; }).filter(Boolean);
-        var sameSupplier = suppliers.every(function (item) { return item === suppliers[0]; });
-        document.getElementById('paymentBatchTitle').textContent = batchMode === 'merge' ? '合并付款' : '批量付款';
-        document.getElementById('confirmBatchPayment').textContent = batchMode === 'merge' ? '确认合并付款' : '确认批量付款';
-        renderGrid(batchGrid, [
-          ['付款笔数', String(rows.length)],
-          ['付款合计', '<span class="amount-strong">¥' + total.toLocaleString('zh-CN') + '</span>'],
-          ['付款对象', escapeHtml(batchMode === 'merge' && sameSupplier ? suppliers[0] : '按付款单分别执行'), true],
-          ['处理规则', batchMode === 'merge' ? '同供应商、同账户可合并生成一笔付款记录；不同对象自动拆分。' : '按选中付款单批量执行，逐笔保留回单和NC状态。', true]
+      function renderSummary(row, targetId) {
+        document.getElementById(targetId).innerHTML = summaryHtml([
+          { label: '申请类型', value: escapeHtml(row.dataset.applyType) },
+          { label: '原币付款', value: '<span class="amount-strong">' + escapeHtml(row.dataset.originalAmount) + '</span>' },
+          { label: '汇率/本币', value: escapeHtml(row.dataset.rate + ' / ' + row.dataset.localAmount) },
+          { label: '回单NC', value: tagHtml(row.dataset.remittance) + ' ' + tagHtml(row.dataset.nc) }
         ]);
-        batchRows.innerHTML = rows.map(function (row) {
-          return '<tr><td>' + escapeHtml(row.dataset.paymentNo) + '</td><td>' + escapeHtml(row.dataset.supplier) + '</td><td class="amount-strong">' + escapeHtml(row.dataset.amount) + '</td><td>' + escapeHtml(row.dataset.method) + '</td><td><span class="' + (row.dataset.risk === '已校验' ? 'tag tag-green' : 'tag tag-orange') + '">' + escapeHtml(row.dataset.risk) + '</span></td></tr>';
+      }
+
+      function renderOverview(row) {
+        document.getElementById('overviewGrid').innerHTML = gridHtml([
+          { label: '付款单号', value: escapeHtml(row.dataset.paymentNo) },
+          { label: '申请单号', value: linkHtml('finance-payment-apply.html?applyNo=' + encodeURIComponent(row.dataset.applyNo), row.dataset.applyNo) },
+          { label: '付款对象', value: escapeHtml(row.dataset.payee + ' / ' + row.dataset.payeeType) },
+          { label: '付款主体', value: escapeHtml(row.dataset.company) },
+          { label: '付款方式', value: escapeHtml(row.dataset.method) },
+          { label: '付款节点', value: escapeHtml(row.dataset.paymentNode) },
+          { label: '计划付款日期', value: escapeHtml(row.dataset.planDate) },
+          { label: '执行日期', value: escapeHtml(row.dataset.executeDate || '-') },
+          { label: '备注', value: escapeHtml(row.dataset.note), full: true }
+        ]);
+      }
+
+      function renderSource(row) {
+        document.getElementById('sourceRows').innerHTML = '<tr><td>' + linkHtml('finance-payment-apply.html?applyNo=' + encodeURIComponent(row.dataset.applyNo), row.dataset.applyNo) + '</td><td>' + escapeHtml(row.dataset.basisType + ' / ' + row.dataset.basisNo) + '</td><td>' + linkHtml('finance-payable.html?payableNo=' + encodeURIComponent(row.dataset.payableNo), row.dataset.payableNo) + '</td><td>' + linkHtml('finance-supplier-bills.html?billNo=' + encodeURIComponent(row.dataset.billNo), row.dataset.billNo) + '</td><td>' + escapeHtml(row.dataset.approvalNo) + '</td></tr>';
+      }
+
+      function renderAccount(row) {
+        var items = [
+          ['付款账户余额', row.dataset.payBalance, row.dataset.check === '余额不足' ? '余额不足' : '余额充足'],
+          ['收款账户白名单', row.dataset.accountStatus, row.dataset.check === '账户异常' ? '账户异常' : '已校验'],
+          ['户名一致性', row.dataset.receiveAccount, row.dataset.check === '账户异常' ? '需处理' : '一致'],
+          ['币种校验', row.dataset.currency, row.dataset.check === '币种异常' ? '币种异常' : '通过'],
+          ['风险校验', row.dataset.risk, row.dataset.check]
+        ];
+        document.getElementById('accountRows').innerHTML = items.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + tagHtml(item[2]) + '</td><td>' + escapeHtml(item[1]) + '</td></tr>';
         }).join('');
-        openLayer(batchDrawer);
       }
 
-      function openExecute(row) {
-        activeRow = row;
-        document.getElementById('paymentExecuteTitle').textContent = '执行付款 - ' + row.dataset.paymentNo;
-        renderGrid(executeGrid, commonGrid(row));
-        document.getElementById('executeMode').value = row.dataset.method === '境外汇款' ? '境外汇款' : '银企直联';
-        document.getElementById('executeAmount').value = amountNumber(row.dataset.amount);
-        openLayer(executeDrawer);
+      function renderCurrency(row) {
+        document.getElementById('currencyGrid').innerHTML = gridHtml([
+          { label: '原币付款', value: '<span class="amount-strong">' + escapeHtml(row.dataset.originalAmount) + '</span>' },
+          { label: '币种', value: escapeHtml(row.dataset.currency) },
+          { label: '锁定汇率', value: escapeHtml(row.dataset.rate) },
+          { label: '本币金额', value: '<span class="amount-strong">' + escapeHtml(row.dataset.localAmount) + '</span>' },
+          { label: '付款账户', value: escapeHtml(row.dataset.payAccount) },
+          { label: '收款账户', value: escapeHtml(row.dataset.receiveAccount) }
+        ]);
       }
 
-      function openDetail(row) {
+      function renderExecute(row) {
+        document.getElementById('executeGrid').innerHTML = gridHtml([
+          { label: '执行状态', value: tagHtml(row.dataset.status) },
+          { label: '付款方式', value: escapeHtml(row.dataset.method) },
+          { label: '银行流水', value: escapeHtml(row.dataset.bankFlow) },
+          { label: '执行时间', value: escapeHtml(row.dataset.executeDate || '-') },
+          { label: '执行金额', value: '<span class="amount-strong">' + escapeHtml(row.dataset.originalAmount + ' / ' + row.dataset.localAmount) + '</span>' },
+          { label: '执行结果', value: escapeHtml(row.dataset.risk), full: true }
+        ]);
+      }
+
+      function renderRemittance(row) {
+        var flow = row.dataset.bankFlow === '-' ? '-' : row.dataset.bankFlow;
+        document.getElementById('remittanceRows').innerHTML = '<tr><td>' + escapeHtml(flow) + '</td><td>' + escapeHtml(row.dataset.paymentNo) + '</td><td>' + tagHtml(row.dataset.remittance) + '</td><td>' + linkHtml('finance-remittance.html?paymentNo=' + encodeURIComponent(row.dataset.paymentNo), row.dataset.remittance === '已核销' ? '查看回单' : '回单核销') + '</td></tr>';
+      }
+
+      function renderPrepay(row) {
+        document.getElementById('prepayGrid').innerHTML = gridHtml([
+          { label: '预付单', value: linkHtml('finance-prepayment-offset.html?prepayNo=' + encodeURIComponent(row.dataset.prepayNo), row.dataset.prepayNo) },
+          { label: '预付口径', value: escapeHtml(row.dataset.prepayAction), full: true },
+          { label: '后续承接', value: escapeHtml(row.dataset.prepayResult), full: true }
+        ]);
+      }
+
+      function renderException(row) {
+        var type = row.dataset.status === '待补资料' ? '资料缺失' : row.dataset.check;
+        var handle = row.dataset.status === '待执行' || row.dataset.status === '待回单' || row.dataset.status === '已付款' || row.dataset.status === '执行中' ? '无异常' : '待处理';
+        document.getElementById('exceptionRows').innerHTML = '<tr><td>' + escapeHtml(type) + '</td><td>' + escapeHtml(row.dataset.exception || '-') + '</td><td>' + tagHtml(handle) + '</td><td>' + escapeHtml(row.dataset.status === '待补资料' ? '补齐境外账户资料后再付款' : '无需处理') + '</td></tr>';
+      }
+
+      function renderNc(row) {
+        var voucher = linkHtml('finance-nc.html?businessNo=' + encodeURIComponent(row.dataset.paymentNo), row.dataset.voucher);
+        document.getElementById('ncRows').innerHTML = '<tr><td>' + voucher + '</td><td>' + escapeHtml('NC-PAY-' + row.dataset.paymentNo.replace(/[^\d]/g, '')) + '</td><td>' + tagHtml(row.dataset.nc) + '</td><td>' + escapeHtml(row.dataset.nc === '推送失败' ? '辅助核算缺失' : '-') + '</td></tr>';
+      }
+
+      function openDetail(row, tabName) {
         activeRow = row;
-        document.getElementById('paymentDetailTitle').textContent = '付款详情 - ' + (row.dataset.paymentNo || row.children[0].textContent.trim());
-        renderGrid(detailGrid, commonGrid(row));
+        document.getElementById('paymentDetailTitle').textContent = '付款详情 - ' + row.dataset.paymentNo;
+        renderObject(row, 'detail');
+        renderSummary(row, 'detailSummaryGrid');
+        renderOverview(row);
+        renderSource(row);
+        renderAccount(row);
+        renderCurrency(row);
+        renderExecute(row);
+        renderRemittance(row);
+        renderPrepay(row);
+        renderException(row);
+        renderNc(row);
+        switchDetailTab(tabName || 'overview');
+        document.querySelector('[data-detail-primary]').textContent = actionByStatus(row.dataset.status);
         openLayer(detailDrawer);
       }
 
-      function openException(row) {
+      function openWork(row, action) {
         activeRow = row;
-        renderGrid(exceptionGrid, commonGrid(row).concat([['异常原因', escapeHtml(row.dataset.exception || row.dataset.risk || '-'), true]]));
-        document.getElementById('exceptionRemark').value = row.dataset.exception || '';
-        openLayer(exceptionDrawer);
+        var actionText = action === 'material' ? '补充资料' : '执行付款';
+        document.getElementById('paymentWorkTitle').textContent = actionText + ' - ' + row.dataset.paymentNo;
+        renderObject(row, 'work');
+        renderSummary(row, 'workSummaryGrid');
+        document.getElementById('workCheckRows').innerHTML = [
+          ['付款申请', row.dataset.applyNo, '已审批'],
+          ['付款依据', row.dataset.basisNo, row.dataset.basisType],
+          ['付款账户', row.dataset.payAccount, row.dataset.check === '余额不足' ? '余额不足' : '通过'],
+          ['收款账户', row.dataset.receiveAccount, row.dataset.check === '账户异常' ? '账户异常' : '通过'],
+          ['币种汇率', row.dataset.currency + ' / ' + row.dataset.rate, row.dataset.check === '币种异常' ? '币种异常' : '通过']
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + tagHtml(item[2]) + '</td></tr>';
+        }).join('');
+        document.getElementById('workAmount').value = row.dataset.originalAmount;
+        document.getElementById('workRate').value = row.dataset.rate;
+        document.getElementById('workLocalAmount').value = row.dataset.localAmount;
+        document.getElementById('workPayAccount').value = row.dataset.payAccount;
+        document.getElementById('workBankFlow').value = row.dataset.bankFlow === '-' || row.dataset.bankFlow === '待银行回单' ? '' : row.dataset.bankFlow;
+        document.getElementById('workResult').value = action === 'material' ? '资料已补齐，转待执行' : '确认付款，待回单核销';
+        document.getElementById('workRemark').value = row.dataset.status === '待补资料' ? '补齐账户资料后重新校验。' : '确认付款后进入回单核销。';
+        openLayer(workDrawer);
       }
 
-      function markPaid(row, executeMethod) {
-        if (!row) return;
-        var recordBody = document.getElementById('paymentRecordRows');
-        var data = row.dataset;
-        var method = executeMethod || document.getElementById('executeMode').value;
-        recordBody.insertAdjacentHTML('afterbegin', '<tr data-payment-no="PAYEX-' + escapeHtml(data.paymentNo || '') + '" data-payable="' + escapeHtml(data.payable || '-') + '" data-supplier="' + escapeHtml(data.supplier || '-') + '" data-amount="' + escapeHtml(data.amount || '-') + '" data-business="' + escapeHtml(data.business || '-') + '" data-account="' + escapeHtml(data.account || '-') + '" data-method="' + escapeHtml(method) + '" data-paid-time="2026-07-04 16:30" data-remittance="待核销" data-nc="待推送" data-status="已付款" data-contract-no="' + escapeHtml(data.contractNo || '') + '" data-schedule-no="' + escapeHtml(data.scheduleNo || '') + '" data-settlement-no="' + escapeHtml(data.settlementNo || '') + '" data-bsp-source="' + escapeHtml(data.bspSource || '') + '" data-resource-type="' + escapeHtml(data.resourceType || '') + '" data-payment-node="' + escapeHtml(data.paymentNode || '') + '" data-cost-source="' + escapeHtml(data.costSource || '') + '" data-original-qty="' + escapeHtml(data.originalQty || '') + '" data-effective-qty="' + escapeHtml(data.effectiveQty || '') + '" data-change-no="' + escapeHtml(data.changeNo || '') + '" data-prepaid="' + escapeHtml(data.prepaid || '') + '" data-adjustment="' + escapeHtml(data.adjustment || '') + '" data-deduction="' + escapeHtml(data.deduction || '') + '"><td>PAYEX-' + escapeHtml(data.paymentNo || '-') + '</td><td>' + escapeHtml(data.payable || '-') + '</td><td>2026-07-04 16:30</td><td>' + escapeHtml(data.supplier || '-') + '</td><td class="amount-strong">' + escapeHtml(data.amount || '-') + '</td><td>' + escapeHtml(method) + '</td><td><span class="tag tag-orange">待核销</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button><button type="button" data-open-remittance>查看回单</button></div></td></tr>');
-        row.remove();
-      }
-
-      function markSelectedPaid() {
-        var rows = selectedPendingRows();
-        if (!rows.length) rows = defaultPendingRows();
-        var method = document.getElementById('batchExecuteMode').value;
-        rows.forEach(function (row) { markPaid(row, method); });
-        var all = document.getElementById('selectAllPendingPayments');
-        if (all) all.checked = false;
-      }
-
-      function openFromParams() {
-        var params = new URLSearchParams(window.location.search);
-        var query = params.get('paymentNo') || params.get('payableNo');
-        if (!query) return;
-        var row = Array.from(document.querySelectorAll('#paymentPendingRows tr, #paymentExceptionRows tr, #paymentRecordRows tr, #prepayRows tr')).find(function (item) {
-          return rowText(item).indexOf(query) >= 0;
-        });
-        if (!row) return;
-        if (row.closest('#payment-pending')) switchTab('pending');
-        if (row.closest('#payment-exception')) switchTab('exception');
-        if (row.closest('#payment-records')) switchTab('records');
-        if (row.closest('#payment-prepay')) switchTab('prepay');
-        openDetail(row);
-      }
-
-      document.addEventListener('click', function (event) {
-        var tab = event.target.closest('[data-payment-tab]');
-        if (tab) {
-          switchTab(tab.dataset.paymentTab);
-          return;
+      function updateRowVisual(row) {
+        var checkCell = row.children[8];
+        var ncCell = row.children[9];
+        var actionCell = row.children[10];
+        if (checkCell) {
+          checkCell.innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.check) + '<span>' + escapeHtml(row.dataset.risk) + '</span></div>';
         }
-        var executeButton = event.target.closest('[data-open-execute]');
-        if (executeButton) {
-          openExecute(executeButton.closest('tr'));
+        if (ncCell) {
+          ncCell.innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.remittance) + '<span>' + escapeHtml(row.dataset.voucher) + '</span></div>';
+        }
+        if (actionCell) {
+          var key = actionKeyByStatus(row.dataset.status);
+          if (key === 'execute' || key === 'material') {
+            actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="' + key + '">' + actionByStatus(row.dataset.status) + '</button><button type="button" data-open-detail>详情</button></div>';
+          } else {
+            actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
+          }
+        }
+      }
+
+      function confirmWork() {
+        if (!activeRow) return;
+        var result = document.getElementById('workResult').value;
+        var bankFlow = document.getElementById('workBankFlow').value.trim();
+        activeRow.dataset.originalAmount = document.getElementById('workAmount').value;
+        activeRow.dataset.rate = document.getElementById('workRate').value;
+        activeRow.dataset.localAmount = document.getElementById('workLocalAmount').value;
+        activeRow.dataset.payAccount = document.getElementById('workPayAccount').value;
+        if (/确认付款/.test(result)) {
+          activeRow.dataset.status = '待回单';
+          activeRow.dataset.remittance = '待核销';
+          activeRow.dataset.bankFlow = bankFlow || '待银行回单';
+          activeRow.dataset.voucher = activeRow.dataset.voucher === '未生成' ? 'PAY-VCH-' + activeRow.dataset.paymentNo.replace(/[^\d]/g, '') : activeRow.dataset.voucher;
+          activeRow.dataset.nc = '待推送';
+          activeRow.dataset.risk = '付款已提交，回单待核销';
+          activeRow.dataset.executeDate = '2026-07-13';
+          if (activeRow.dataset.applyType === '预付款' && activeRow.dataset.prepayNo === '待生成') {
+            activeRow.dataset.prepayNo = 'PP-' + activeRow.dataset.paymentNo.replace(/[^\d]/g, '');
+            activeRow.dataset.prepayResult = activeRow.dataset.prepayNo + ' 待回单核销';
+          }
+          notify(activeRow.dataset.paymentNo + '已执行付款');
+        } else if (/资料已补齐/.test(result) || /账户已修正/.test(result)) {
+          activeRow.dataset.status = '待执行';
+          activeRow.dataset.check = '已校验';
+          activeRow.dataset.risk = '资料已补齐';
+          activeRow.dataset.accountStatus = '白名单已校验';
+          notify(activeRow.dataset.paymentNo + '资料已补齐');
+        } else {
+          activeRow.dataset.status = '已关闭';
+          activeRow.dataset.risk = '付款单已作废';
+          notify(activeRow.dataset.paymentNo + '已关闭');
+        }
+        updateRowVisual(activeRow);
+        updateCounts();
+        applyFilters();
+        closeLayer(workDrawer);
+      }
+
+      statusTabs.forEach(function (button) {
+        button.addEventListener('click', function () {
+          activeStatus = button.dataset.statusTab;
+          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
+          applyFilters();
+        });
+      });
+
+      detailTabs.forEach(function (button) {
+        button.addEventListener('click', function () {
+          switchDetailTab(button.dataset.detailTab);
+        });
+      });
+
+      document.getElementById('paymentRows').addEventListener('click', function (event) {
+        var workButton = event.target.closest('[data-open-work]');
+        if (workButton) {
+          openWork(workButton.closest('tr'), workButton.dataset.openWork);
           return;
         }
         var detailButton = event.target.closest('[data-open-detail]');
         if (detailButton) {
-          openDetail(detailButton.closest('tr'));
-          return;
+          openDetail(detailButton.closest('tr'), detailButton.dataset.openDetail || 'overview');
         }
-        var exceptionButton = event.target.closest('[data-open-exception]');
-        if (exceptionButton) {
-          openException(exceptionButton.closest('tr'));
-          return;
-        }
-        if (event.target.closest('[data-open-batch-payment]')) {
-          openBatchPayment('batch');
-          return;
-        }
-        if (event.target.closest('[data-open-merge-payment]')) {
-          openBatchPayment('merge');
-          return;
-        }
-        if (event.target.closest('[data-confirm-batch-payment]')) {
-          markSelectedPaid();
-          closeLayer(batchDrawer);
-          notify(batchMode === 'merge' ? '合并付款已执行，已生成付款记录' : '批量付款已执行，已生成付款记录');
-          return;
-        }
-        if (event.target.id === 'selectAllPendingPayments') {
-          document.querySelectorAll('#paymentPendingRows [data-payment-select]').forEach(function (box) {
-            box.checked = event.target.checked;
-          });
-          return;
-        }
-        if (event.target.closest('[data-open-prepay-offset]')) {
-          notify('预付款冲抵已登记，冲抵后会更新应付待付金额');
-          return;
-        }
-        if (event.target.closest('[data-open-remittance]')) {
-          var row = event.target.closest('tr');
-          var paymentNo = row ? row.dataset.paymentNo || '' : '';
-          window.location.href = 'finance-remittance.html?paymentNo=' + encodeURIComponent(paymentNo);
-          return;
-        }
-        if (event.target.closest('[data-confirm-payment-execute]')) {
-          markPaid(activeRow);
-          closeLayer(executeDrawer);
-          notify('付款已执行，已生成付款记录和回单待核销');
-          return;
-        }
-        if (event.target.closest('[data-confirm-payment-exception]')) {
-          closeLayer(exceptionDrawer);
-          notify('付款异常已处理');
-          return;
-        }
-        if (event.target.closest('[data-search-payment]')) {
-          applyFilters();
-          return;
-        }
-        if (event.target.closest('[data-reset-payment]')) {
-          resetFilters();
-          return;
-        }
-        var closeButton = event.target.closest('[data-close-layer]');
-        if (closeButton) closeLayer(closeButton.closest('.modal-overlay'));
       });
 
+      document.querySelector('[data-detail-primary]').addEventListener('click', function () {
+        if (!activeRow) return;
+        var key = actionKeyByStatus(activeRow.dataset.status);
+        if (key === 'execute' || key === 'material') {
+          closeLayer(detailDrawer);
+          openWork(activeRow, key);
+          return;
+        }
+        if (activeRow.dataset.status === '执行中') {
+          switchDetailTab('execute');
+          return;
+        }
+        if (activeRow.dataset.status === '待回单' || activeRow.dataset.status === '已付款') {
+          switchDetailTab('remittance');
+          return;
+        }
+        switchDetailTab('overview');
+      });
+
+      document.querySelector('[data-confirm-work]').addEventListener('click', confirmWork);
+      document.querySelector('[data-search-payment]').addEventListener('click', applyFilters);
+      document.getElementById('paymentKeyword').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') applyFilters();
+      });
+      ['applyType', 'paymentMethod', 'payeeType', 'businessType', 'paymentCompany', 'currencyFilter', 'checkStatus', 'remitStatus', 'dateStart', 'dateEnd'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', applyFilters);
+      });
+      document.querySelector('[data-reset-payment]').addEventListener('click', function () {
+        document.querySelectorAll('.finance-payment-list-surface input').forEach(function (input) {
+          if (input.type === 'date') return;
+          input.value = '';
+        });
+        document.querySelectorAll('.finance-payment-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
+        activeStatus = '全部';
+        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
+        applyFilters();
+      });
+      document.querySelector('[data-refresh-check]').addEventListener('click', function () {
+        notify('付款执行校验已刷新');
+      });
+      document.querySelector('[data-export-payment]').addEventListener('click', function () {
+        notify('付款执行列表已导出');
+      });
+      document.querySelectorAll('[data-close-layer]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var layer = button.closest('.modal-overlay');
+          if (layer) closeLayer(layer);
+        });
+      });
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
         overlay.addEventListener('click', function (event) {
           if (event.target === overlay) closeLayer(overlay);
         });
       });
 
+      function openFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var keyword = params.get('paymentNo') || params.get('payableNo') || params.get('applyNo');
+        if (!keyword) return;
+        document.getElementById('paymentKeyword').value = keyword;
+        applyFilters();
+        var target = rows.find(function (row) { return rowText(row).indexOf(keyword) >= 0; });
+        if (target) openDetail(target);
+      }
+
+      updateCounts();
+      applyFilters();
       openFromParams();
     })();
   </script>
