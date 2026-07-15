@@ -59,18 +59,18 @@
       </div>
     </section>
 
-    <nav class="tab-bar custom-project-tabs list-surface-tabs" aria-label="项目状态筛选" data-custom-status-tabs>
-      <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
-      <button class="tab-item" type="button" data-filter-value="待计调">待计调</button>
-      <button class="tab-item" type="button" data-filter-value="报价中">报价中</button>
-      <button class="tab-item" type="button" data-filter-value="待销售确认">待销售确认</button>
-      <button class="tab-item" type="button" data-filter-value="销售跟进中">销售跟进中</button>
-      <button class="tab-item" type="button" data-filter-value="待确认成团">待确认成团</button>
-      <button class="tab-item" type="button" data-filter-value="已成团">已成团</button>
-      <button class="tab-item" type="button" data-filter-value="执行中">执行中</button>
-      <button class="tab-item" type="button" data-filter-value="已回团">已回团</button>
-      <button class="tab-item" type="button" data-filter-value="已结算">已结算</button>
-      <button class="tab-item" type="button" data-filter-value="已关闭">已关闭</button>
+    <nav class="tab-bar custom-project-tabs list-surface-tabs list-filter-tabs" aria-label="项目状态筛选" data-custom-status-tabs data-filter-tabs>
+      <button class="tab-item active" type="button" data-filter-value="全部"><span class="list-tab-label">全部</span></button>
+      <button class="tab-item" type="button" data-filter-value="待计调"><span class="list-tab-label">待计调</span></button>
+      <button class="tab-item" type="button" data-filter-value="报价中"><span class="list-tab-label">报价中</span></button>
+      <button class="tab-item" type="button" data-filter-value="待销售确认"><span class="list-tab-label">待销售确认</span></button>
+      <button class="tab-item" type="button" data-filter-value="销售跟进中"><span class="list-tab-label">销售跟进中</span></button>
+      <button class="tab-item" type="button" data-filter-value="待确认成团"><span class="list-tab-label">待确认成团</span></button>
+      <button class="tab-item" type="button" data-filter-value="已成团"><span class="list-tab-label">已成团</span></button>
+      <button class="tab-item" type="button" data-filter-value="执行中"><span class="list-tab-label">执行中</span></button>
+      <button class="tab-item" type="button" data-filter-value="已回团"><span class="list-tab-label">已回团</span></button>
+      <button class="tab-item" type="button" data-filter-value="已结算"><span class="list-tab-label">已结算</span></button>
+      <button class="tab-item" type="button" data-filter-value="已关闭"><span class="list-tab-label">已关闭</span></button>
     </nav>
 
     <section class="table-wrap custom-project-table list-surface-table list-table-with-pagination" aria-label="单团项目列表">
@@ -146,7 +146,7 @@
             <td class="custom-project-travel-cell"><span class="custom-project-main" data-travel-date>08-08 / 08-12</span><span class="custom-project-meta" data-travel-scope>新加坡 · 15人</span></td>
             <td class="custom-project-owner-cell" data-owner-cell><span class="custom-project-main">销售：王芳</span><span class="custom-project-meta" data-planner-cell>计调：李梅</span></td>
             <td class="custom-project-execution-cell"><span class="custom-project-main" data-progress-main>已生成订单/项目团</span><span class="custom-project-meta" data-progress-note>KSMICE20260708004</span></td>
-            <td class="custom-project-quote-cell"><span class="custom-project-main" data-quote-main>锁定 V1 ¥350,000</span><span class="custom-project-meta" data-quote-note>阶段收款待确认</span></td>
+            <td class="custom-project-quote-cell"><span class="custom-project-main" data-quote-main>锁定 V1 ¥350,000</span><span class="custom-project-meta" data-quote-note>订单应收待承接</span></td>
             <td class="custom-project-status-cell"><span class="tag tag-green" data-main-status>已成团</span></td>
             <td class="custom-project-action-cell"><div class="table-action"></div></td>
           </tr>
@@ -384,10 +384,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>项目订单</td><td id="listConfirmOrderNo">KSCUS20260708002</td><td>合同、阶段应收、收款和售后</td></tr>
+              <tr><td>项目订单</td><td id="listConfirmOrderNo">KSCUS20260708002</td><td>合同、应收计划、收款和售后</td></tr>
               <tr><td>项目合同草稿</td><td id="listConfirmContractNo">CTR-CUS-20260708-002</td><td>合同管理签署</td></tr>
               <tr><td>项目团</td><td id="listConfirmScheduleNo">JP20250912001</td><td>名单、资源确认、执行和成本</td></tr>
-              <tr><td>阶段收款计划</td><td id="listConfirmReceivableNo">YS-CUS-20260708-002</td><td>应收管理承接</td></tr>
+              <tr><td>应收计划</td><td id="listConfirmReceivableNo">YS-CUS-20260708-002</td><td>订单应收承接</td></tr>
             </tbody>
           </table>
         </section>
@@ -434,6 +434,7 @@
   </div>
 
   <script src="../../shared/custom-inquiry-drawer.js"></script>
+  <script src="../../shared/custom-quote-edit-drawer.js"></script>
   <script>
     (function () {
       var modal = document.getElementById('customProjectModal');
@@ -592,11 +593,6 @@
             product: data.name,
             amount: amount
           }),
-          receivable: buildHref('../finance/finance-receivable.html', {
-            source: 'customProject',
-            projectNo: data.projectNo,
-            orderNo: numbers.orderNo
-          }),
           roster: buildHref('fulfillment-roster.html', {
             source: 'customProject',
             projectNo: data.projectNo,
@@ -655,31 +651,31 @@
         var status = typeof data === 'string' ? data : data.status;
         var links = typeof data === 'string' ? { detail: row || 'product-custom-detail.html' } : projectLinks(data, row);
         if (status === '待计调') {
-          return actionButton('accept-inquiry', '计调接单', true) + actionButton('return-inquiry', '退回销售') + moreMenu([{ href: links.detail, label: '详情' }]);
+          return actionButton('accept-inquiry', '接单', true) + moreMenu([{ action: 'return-inquiry', label: '退回销售' }, { href: links.detail, label: '项目详情' }]);
         }
         if (status === '报价中') {
-          return actionLink(links.detail, '查看报价', true) + moreMenu([{ href: links.detail, label: '项目详情' }]);
+          return actionButton('quote-workbench', '处理报价', true) + moreMenu([{ href: links.detail, label: '项目详情' }]);
         }
         if (status === '待销售确认') {
-          return actionLink(links.detail, '查看报价', true) + moreMenu([{ href: links.detail, label: '项目详情' }]);
+          return actionButton('sales-confirm', '确认报价', true) + moreMenu([{ action: 'sales-return', label: '退回计调' }, { href: links.detail, label: '项目详情' }]);
         }
         if (status === '销售跟进中') {
-          return actionLink(links.detail, '查看报价', true) + moreMenu([{ href: links.detail, label: '项目详情' }]);
+          return actionButton('lock-quote', '锁定报价', true) + moreMenu([{ action: 'customer-feedback', label: '记录反馈' }, { action: 'send-to-customer', label: '重新发送' }, { href: links.detail, label: '项目详情' }]);
         }
         if (status === '待确认成团') {
-          return confirmGroupButton('确认成团', true) + actionLink(links.detail, '详情');
+          return confirmGroupButton('确认成团', true) + moreMenu([{ href: links.detail, label: '项目详情' }]);
         }
         if (status === '已成团') {
-          return actionLink(links.schedule, '项目团', true) + actionLink(links.order, '项目订单') + moreMenu([{ href: links.detail, label: '项目详情' }, { href: links.receivable, label: '阶段收款' }]);
+          return actionLink(links.schedule, '项目团', true) + moreMenu([{ href: links.order, label: '项目订单' }, { href: links.detail, label: '项目详情' }]);
         }
         if (status === '执行中') {
-          return actionLink(links.schedule, '项目团', true) + actionLink(links.order, '项目订单') + moreMenu([{ href: links.detail, label: '项目详情' }, { href: links.receivable, label: '阶段收款' }]);
+          return actionLink(links.schedule, '项目团', true) + moreMenu([{ href: links.order, label: '项目订单' }, { href: links.detail, label: '项目详情' }]);
         }
         if (status === '已回团') {
-          return actionLink(links.financeSettlement, '查看结算', true) + actionLink(links.schedule, '项目团') + moreMenu([{ href: links.detail, label: '项目详情' }, { href: links.order, label: '项目订单' }]);
+          return actionButton('return-settlement', '回团结算', true) + moreMenu([{ href: links.schedule, label: '项目团' }, { href: links.order, label: '项目订单' }, { href: links.detail, label: '项目详情' }]);
         }
         if (status === '已结算') {
-          return actionLink(links.financeSettlement, '查看结算', true) + actionLink(links.detail, '详情') + moreMenu([{ href: links.schedule, label: '项目团' }, { href: links.order, label: '项目订单' }]);
+          return actionLink(links.financeSettlement, '查看结算', true) + moreMenu([{ href: links.schedule, label: '项目团' }, { href: links.order, label: '项目订单' }, { href: links.detail, label: '项目详情' }]);
         }
         return actionLink(links.detail, '详情', true);
       }
@@ -760,6 +756,7 @@
           quoteNote: textOf(row, '[data-quote-note]'),
           progress: textOf(row, '[data-progress-main]'),
           progressNote: textOf(row, '[data-progress-note]'),
+          quoteWorkflowStatus: row.dataset.quoteWorkflowStatus || '',
           owner: row.dataset.owner || textOf(row, '[data-owner-cell]'),
           planner: row.dataset.planner || textOf(row, '[data-planner-cell]').replace(/^计调：/, ''),
           contact: params.get('contact') || '',
@@ -869,6 +866,258 @@
         openLayer(listConfirmGroupModal);
       }
 
+      function amountNumber(value) {
+        var result = Number(String(value || '').replace(/[^\d.-]/g, ''));
+        return isFinite(result) ? result : 0;
+      }
+
+      function moneyText(value) {
+        return '¥' + Math.round(amountNumber(value)).toLocaleString('zh-CN');
+      }
+
+      function quoteVersionFromText(value) {
+        var match = String(value || '').match(/V(\d+)/i);
+        return match ? 'V' + Number(match[1]) : '';
+      }
+
+      function nextQuoteVersionForRow(data) {
+        var current = quoteVersionFromText(data.quote);
+        var number = current ? Number(current.replace('V', '')) : 0;
+        return 'V' + (number + 1 || 1);
+      }
+
+      function quoteMetaText(result) {
+        var cost = amountNumber(result.costTotal);
+        var quoteAmount = amountNumber(result.quoteTotal);
+        var margin = quoteAmount - cost;
+        var marginRate = quoteAmount ? ((margin / quoteAmount) * 100).toFixed(1) : '0.0';
+        return '成本' + moneyText(cost) + ' · 毛利' + marginRate + '%';
+      }
+
+      function quoteAmountText(value) {
+        var amount = amountNumber(value);
+        return amount ? moneyText(amount) : '待汇总';
+      }
+
+      function quoteStatusMeta(status) {
+        return {
+          draft: ['草稿', 'tag tag-gray'],
+          'pending-sales': ['待销售确认', 'tag tag-orange'],
+          'sales-following': ['销售跟进中', 'tag tag-blue'],
+          locked: ['已锁定', 'tag tag-green'],
+          replaced: ['已替换', 'tag tag-gray'],
+          void: ['已作废', 'tag tag-gray']
+        }[status] || ['草稿', 'tag tag-gray'];
+      }
+
+      function quoteStatusForRow(data) {
+        if (/^锁定/.test(data.quote || '')) return 'locked';
+        if (data.status === '待销售确认') return 'pending-sales';
+        if (data.status === '销售跟进中') return 'sales-following';
+        if ((data.quote || '').indexOf('草稿') >= 0 || data.status === '报价中') return 'draft';
+        return 'draft';
+      }
+
+      function quoteNameByVersion(version, data) {
+        if (!version) return '客户初版报价';
+        if (version === 'V1') return '客户初版报价';
+        if ((data.quote || '').indexOf('草稿') >= 0) return '调整报价草稿';
+        return '客户调整方案';
+      }
+
+      function quoteVersionFromRow(data) {
+        return quoteVersionFromText(data.quote) || rowQuoteVersionFallback(data);
+      }
+
+      function rowQuoteVersionFallback(data) {
+        if (data.status === '报价中' || data.status === '待销售确认') return 'V1';
+        return '';
+      }
+
+      function quoteVersionNumber(version) {
+        var match = String(version || '').match(/V(\d+)/i);
+        return match ? Number(match[1]) : 0;
+      }
+
+      function quoteObjectForRow(data, version, status, amount, cost) {
+        var quantity = data.people || '1';
+        var unitPrice = amount && amountNumber(quantity) ? Math.round(amount / amountNumber(quantity)) : '';
+        var unitCost = cost && amountNumber(quantity) ? Math.round(cost / amountNumber(quantity)) : '';
+        return {
+          id: 'quote-' + String(version || 'v1').toLowerCase(),
+          version: version || 'V1',
+          name: quoteNameByVersion(version, data),
+          quoteType: version === 'V1' ? '首次报价' : '客户反馈调整',
+          status: status || 'draft',
+          validDate: '2026-08-08',
+          quoteBasis: data.source === '引用产品询价' || data.source === '引用产品线路' ? '引用产品线路' : '手工方案',
+          currencyTax: '人民币含税报价',
+          quoteOwner: data.planner || '李梅',
+          quotedAt: '2026-07-11',
+          route: data.route || data.productName || data.destination,
+          serviceStandard: data.quoteBasis || data.quoteNote || '按客户需求重新报价',
+          differenceRequirement: [data.destination, formatPeople(data.people), data.quoteBasis || data.quoteNote].filter(Boolean).join(' · '),
+          adjustmentReason: version === 'V1' ? '' : '基于上一版客户反馈调整报价口径。',
+          updatedBy: data.planner || '李梅',
+          updatedAt: '2026-07-11 10:30',
+          itinerary: [{ day: 'D1', plan: data.destination || '目的地待确认', hotel: '按客户标准确认', transport: '团队用车/交通资源待确认', activity: '按服务要求执行' }],
+          costItems: [{ name: '团队资源成本', supplier: '待确认供应商', quantity: quantity || '1', unit: amountNumber(quantity) ? '人' : '项', unitCost: unitCost || '', validDate: '2026-07-25', note: data.quoteNote || '成本待复核' }],
+          priceItems: [{ name: '项目团费', basis: data.quoteBasis || '按本次客户需求报价', quantity: quantity || '1', unit: amountNumber(quantity) ? '人' : '项', unitPrice: unitPrice || '' }],
+          included: '包含行程内交通、住宿、用车、餐饮活动、领队及项目服务。',
+          excluded: '不含个人消费、单房差及客户临时新增项目。',
+          cancellation: '按供应商实际损失和合同约定执行。',
+          paymentNodes: [{ name: '项目首款', ratio: '30', amount: '', condition: '合同签署后', planDate: '合同签署后5个工作日' }, { name: '项目尾款', ratio: '70', amount: '', condition: '出发前资源确认', planDate: '出发前30日' }],
+          feedbacks: []
+        };
+      }
+
+      function quoteVersionsForRow(data) {
+        if (!data.quote || data.quote === '未报价') return [];
+        var version = quoteVersionFromRow(data);
+        if (!version) return [];
+        var amount = amountNumber(data.quote);
+        var cost = amountNumber(data.quoteNote);
+        var status = data.quoteWorkflowStatus || quoteStatusForRow(data);
+        var current = quoteObjectForRow(data, version, status, amount, cost);
+        var versions = [current];
+        var previousNo = quoteVersionNumber(version) - 1;
+        if (previousNo > 0) {
+          var previousVersion = 'V' + previousNo;
+          var previousAmount = amount ? Math.round(amount * 0.94) : 0;
+          var previousCost = cost ? Math.round(cost * 0.96) : 0;
+          versions.push(Object.assign(quoteObjectForRow(data, previousVersion, 'replaced', previousAmount, previousCost), {
+            name: previousNo === 1 ? '客户初版报价' : '上一版调整方案',
+            quoteType: '历史报价',
+            updatedAt: '2026-07-10 16:30'
+          }));
+        }
+        return versions;
+      }
+
+      function quoteByWorkbenchId(row, quoteId) {
+        return quoteVersionsForRow(readRow(row)).filter(function (item) { return item.id === quoteId; })[0] || null;
+      }
+
+      function quoteWorkbenchActionHtml(item) {
+        if (item.status === 'draft') {
+          return '<button class="table-action-primary" type="button" data-quote-workbench-action="edit" data-quote-id="' + escapeHtml(item.id) + '">编辑报价</button><button type="button" data-quote-workbench-action="submit" data-quote-id="' + escapeHtml(item.id) + '">提交销售确认</button>';
+        }
+        if (item.status === 'replaced' || item.status === 'void') {
+          return '<button class="table-action-primary" type="button" data-quote-workbench-action="copy" data-quote-id="' + escapeHtml(item.id) + '">复制调整</button>';
+        }
+        if (item.status === 'pending-sales') return '<span class="custom-project-muted">等待销售确认</span>';
+        return '<button class="table-action-primary" type="button" data-quote-workbench-action="copy" data-quote-id="' + escapeHtml(item.id) + '">复制调整</button>';
+      }
+
+      function quoteVersionRowsHtml(items, detailHref) {
+        return items.map(function (item, index) {
+          var status = quoteStatusMeta(item.status);
+          var amount = amountNumber(item.quoteTotal) || amountNumber(item.priceItems && item.priceItems[0] && item.priceItems[0].unitPrice) * amountNumber(item.priceItems && item.priceItems[0] && item.priceItems[0].quantity);
+          var cost = amountNumber(item.costTotal) || amountNumber(item.costItems && item.costItems[0] && item.costItems[0].unitCost) * amountNumber(item.costItems && item.costItems[0] && item.costItems[0].quantity);
+          var margin = amount - cost;
+          var marginText = amount ? '毛利 ' + moneyText(margin) + ' / ' + ((margin / amount) * 100).toFixed(1) + '%' : '毛利待测算';
+          return '<tr class="' + (index === 0 ? 'is-selected' : '') + '">' +
+            '<td><div class="table-cell-title">' + escapeHtml(item.version) + '</div><div class="table-cell-meta">' + escapeHtml(item.quoteType || '-') + '</div></td>' +
+            '<td><a class="link-primary table-main-link" href="' + escapeHtml(detailHref) + '">' + escapeHtml(item.name) + '</a><div class="table-cell-meta">' + escapeHtml(item.route || '-') + '</div></td>' +
+            '<td><div class="table-cell-title">' + quoteAmountText(amount) + '</div><div class="table-cell-meta">成本 ' + quoteAmountText(cost) + ' · ' + marginText + '</div></td>' +
+            '<td><span class="' + status[1] + '">' + status[0] + '</span></td>' +
+            '<td><div class="table-action">' + quoteWorkbenchActionHtml(item) + '</div></td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function quoteWorkbenchHtml(data, row) {
+        var items = quoteVersionsForRow(data);
+        var detailHref = projectLinks(data, row).detail;
+        if (!items.length) {
+          return '<section class="custom-empty-state quote-workbench-empty"><strong>暂无报价版本</strong><span>可以先按单团详情的报价模板新建一个报价版本。</span><button class="btn btn-primary" type="button" data-quote-workbench-action="new">新建报价版本</button></section>';
+        }
+        return '<section class="drawer-section quote-workbench-panel">' +
+          '<div class="drawer-section-head"><h3 class="drawer-section-title">报价版本</h3><button class="btn btn-primary btn-sm" type="button" data-quote-workbench-action="new">新建报价版本</button></div>' +
+          '<section class="table-wrap custom-quote-version-table" aria-label="报价版本"><table><thead><tr><th>版本</th><th>方案</th><th>报价/成本</th><th>状态</th><th>操作</th></tr></thead><tbody>' + quoteVersionRowsHtml(items, detailHref) + '</tbody></table></section>' +
+        '</section>';
+      }
+
+      function refreshQuoteWorkbench(row) {
+        if (currentActionRow === row && currentListAction === 'quote-workbench' && !listQuickActionModal.hidden) {
+          listQuickActionBody.innerHTML = quoteWorkbenchHtml(readRow(row), row);
+        }
+      }
+
+      function submitQuoteVersionFromWorkbench(row, quote) {
+        if (!quote) return;
+        var amount = amountNumber(quote.quoteTotal) || amountNumber(quote.priceItems && quote.priceItems[0] && quote.priceItems[0].unitPrice) * amountNumber(quote.priceItems && quote.priceItems[0] && quote.priceItems[0].quantity);
+        if (!amount) {
+          toast('请先完善报价金额后再提交销售确认。', 'warning');
+          return;
+        }
+        updateRowStatus(row, '待销售确认');
+        setCellLines(row, 3, '报价已提交销售', '等待销售确认客户口径', '[data-progress-main]', '[data-progress-note]');
+        var cost = amountNumber(quote.costTotal) || amountNumber(quote.costItems && quote.costItems[0] && quote.costItems[0].unitCost) * amountNumber(quote.costItems && quote.costItems[0] && quote.costItems[0].quantity);
+        var marginRate = amount ? (((amount - cost) / amount) * 100).toFixed(1) : '0.0';
+        row.dataset.quoteWorkflowStatus = 'pending-sales';
+        setCellLines(row, 4, quote.version + ' ' + quoteAmountText(amount), '成本' + quoteAmountText(cost) + ' · 毛利' + marginRate + '%', '[data-quote-main]', '[data-quote-note]');
+        setGapText(row, '销售未确认，客户版报价单未发送');
+        updateRowActions(row);
+        applyFilters();
+        closeLayer(listQuickActionModal);
+        currentActionRow = null;
+        currentListAction = '';
+        toast('报价已提交销售确认。');
+      }
+
+      function openQuoteVersionDrawer(row, action, sourceQuote) {
+        var data = readRow(row);
+        if (!window.caesarQuoteDrawer) {
+          toast('报价抽屉组件未加载，请刷新后重试。', 'warning');
+          return;
+        }
+        action = action || 'new';
+        sourceQuote = sourceQuote || {};
+        window.caesarQuoteDrawer.open({
+          projectNo: data.projectNo,
+          projectName: data.name,
+          customer: data.customer,
+          dateText: (data.travelStart || '待定') + (data.travelEnd ? ' 至 ' + data.travelEnd : ''),
+          people: data.people,
+          owner: data.owner,
+          planner: data.planner,
+          requirement: [data.destination, formatPeople(data.people), data.quoteBasis || data.quoteNote].filter(Boolean).join(' · '),
+          route: data.route || data.productName || data.destination,
+          serviceStandard: data.quoteBasis || data.quoteNote || '',
+          quoteBasis: data.source === '引用产品询价' || data.source === '引用产品线路' ? '引用产品线路' : '手工方案',
+          quotedAt: '2026-07-11',
+          quoteVersion: sourceQuote.version || quoteVersionFromText(data.quote) || 'V0',
+          nextVersion: nextQuoteVersionForRow(data),
+          action: action,
+          quote: sourceQuote
+        }, {
+          onSave: function (result) {
+            row.dataset.quoteWorkflowStatus = 'draft';
+            updateRowStatus(row, '报价中');
+            setCellLines(row, 3, '报价草稿已保存', '继续完善后提交销售确认', '[data-progress-main]', '[data-progress-note]');
+            setCellLines(row, 4, result.version + ' 草稿', '客户报价' + moneyText(result.quoteTotal) + ' · 成本待复核', '[data-quote-main]', '[data-quote-note]');
+            setGapText(row, '报价草稿待提交销售、供应商成本待复核');
+            updateRowActions(row);
+            applyFilters();
+            refreshQuoteWorkbench(row);
+          },
+          onSubmit: function (result) {
+            row.dataset.quoteWorkflowStatus = 'pending-sales';
+            updateRowStatus(row, '待销售确认');
+            setCellLines(row, 3, '报价已提交销售', '等待销售确认客户口径', '[data-progress-main]', '[data-progress-note]');
+            setCellLines(row, 4, result.version + ' ' + moneyText(result.quoteTotal), quoteMetaText(result), '[data-quote-main]', '[data-quote-note]');
+            setGapText(row, '销售未确认，客户版报价单未发送');
+            updateRowActions(row);
+            applyFilters();
+            closeLayer(listQuickActionModal);
+            currentActionRow = null;
+            currentListAction = '';
+            toast('报价已提交销售确认。');
+          }
+        });
+      }
+
       function updateRowActions(row) {
         if (!row) return;
         row.children[6].innerHTML = '<div class="table-action">' + operationHtml(readRow(row), row) + '</div>';
@@ -929,17 +1178,11 @@
             done: '需求确认单已生成，可发送客户确认。',
             body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>确认项</th><th>内容</th></tr></thead><tbody><tr><td>客户</td><td>' + customer + '</td></tr><tr><td>项目</td><td>' + project + '</td></tr><tr><td>出行</td><td>' + travelDate + ' / ' + people + '</td></tr><tr><td>生成后</td><td>记录到项目资料，客户确认后继续报价。</td></tr></tbody></table></section>'
           },
-          'new-quote': {
-            title: '新建报价',
-            primary: '保存报价草稿',
-            done: '新报价草稿已创建，可继续发送客户或锁定确认。',
-            body: '<div class="form-row"><div class="form-group"><label class="form-label">报价版本</label><input class="form-control" type="text" value="V1 / 客户初版报价"></div><div class="form-group"><label class="form-label">报价口径</label><select class="form-control"><option>按客户需求重新报价</option><option>引用产品线路后调整报价</option><option>复制历史项目后报价</option></select></div><div class="form-group"><label class="form-label">报价有效期</label><input class="form-control" type="date" value="2025-06-30"></div><div class="form-group"><label class="form-label">付款节点</label><input class="form-control" type="text" value="项目首款 / 项目进度款 / 项目尾款按锁定报价节点"></div></div><section class="table-wrap quote-cost-table"><table><thead><tr><th>费用项</th><th>客户口径</th><th>客户报价</th><th>预算成本</th><th>成本状态</th></tr></thead><tbody><tr><td>交通资源</td><td><input class="form-control" type="text" value="往返机票/车船交通"></td><td><input class="form-control" type="text" value="¥576,000"></td><td><input class="form-control" type="text" value="¥508,000"></td><td>待锁位复核</td></tr><tr><td>酒店住宿</td><td><input class="form-control" type="text" value="全程酒店及早餐"></td><td><input class="form-control" type="text" value="¥864,000"></td><td><input class="form-control" type="text" value="¥760,000"></td><td>供应商待确认</td></tr><tr><td>地接用车</td><td><input class="form-control" type="text" value="境外用车及地接服务"></td><td><input class="form-control" type="text" value="¥156,000"></td><td><input class="form-control" type="text" value="¥128,000"></td><td>待地接报价</td></tr><tr><td>活动会务</td><td><input class="form-control" type="text" value="商务晚宴/团建活动"></td><td><input class="form-control" type="text" value="¥120,000"></td><td><input class="form-control" type="text" value="¥97,000"></td><td>待方案确认</td></tr><tr><td>签证保险</td><td><input class="form-control" type="text" value="签证服务及旅游保险"></td><td><input class="form-control" type="text" value="¥122,000"></td><td><input class="form-control" type="text" value="¥92,000"></td><td>按人数复核</td></tr><tr><td>服务费</td><td><input class="form-control" type="text" value="领队/项目服务费"></td><td><input class="form-control" type="text" value="¥68,000"></td><td><input class="form-control" type="text" value="¥0"></td><td>内部服务收入</td></tr></tbody></table></section><section class="table-wrap quote-cost-table"><table><thead><tr><th>汇总项</th><th>金额</th><th>业务含义</th></tr></thead><tbody><tr><td>客户报价合计</td><td><input class="form-control" type="text" value="' + (data.quote && data.quote !== '未报价' ? quote : '¥1,906,000') + '"></td><td>锁定后作为合同金额和阶段应收口径</td></tr><tr><td>预算成本合计</td><td><input class="form-control" type="text" value="¥1,585,000"></td><td>报价阶段毛利测算，不直接生成应付</td></tr><tr><td>预计毛利</td><td><input class="form-control" type="text" value="¥321,000 / 16.8%"></td><td>低毛利需发起报价审批</td></tr></tbody></table></section><div class="form-row"><div class="form-group form-group-full"><label class="form-label">费用包含</label><textarea class="form-control" rows="3">包含行程内交通、酒店、地接用车、餐饮会务、签证保险、领队及凯撒项目服务。</textarea></div><div class="form-group form-group-full"><label class="form-label">费用不含与变更规则</label><textarea class="form-control" rows="3">不含个人消费、单房差、客户临时新增项目；客户确认报价后人数、日期和服务标准变化进入项目变更。</textarea></div></div>'
-          },
           'quote-workbench': {
             title: '处理报价',
-            primary: '保存报价处理',
-            done: '报价处理已保存，客户确认后可锁定报价。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>报价项</th><th>当前值</th><th>处理</th></tr></thead><tbody><tr><td>客户报价</td><td>' + quote + '</td><td>按人数、日期和服务差异复核。</td></tr><tr><td>预算成本</td><td>' + escapeHtml(data.quoteNote || '待成本询价') + '</td><td>交通、酒店、地接和活动资源询价。</td></tr><tr><td>客户状态</td><td>' + escapeHtml(data.status) + '</td><td>发送报价或确认锁定。</td></tr></tbody></table></section><div class="quote-footer-actions"><button class="btn btn-secondary" type="button" data-list-action="new-quote">新建报价版本</button><button class="btn btn-secondary" type="button" data-list-action="send-quote">发送报价</button><button class="btn btn-primary" type="button" data-list-action="lock-quote">锁定报价</button></div>'
+            primary: '',
+            done: '',
+            body: quoteWorkbenchHtml(data, row)
           },
           'send-quote': {
             title: '发送报价',
@@ -948,9 +1191,9 @@
             body: '<div class="form-row"><div class="form-group"><label class="form-label">发送对象</label><input class="form-control" type="text" value="' + customer + '联系人"></div><div class="form-group"><label class="form-label">发送方式</label><select class="form-control"><option>邮件+微信</option><option>邮件</option><option>企业微信</option></select></div><div class="form-group form-group-full"><label class="form-label">发送备注</label><textarea class="form-control" rows="4">附客户版报价单，请确认报价版本、出行日期、人数和服务标准是否进入锁定。</textarea></div></div>'
           },
           'sales-confirm': {
-            title: '确认客户版报价',
+            title: '确认报价',
             primary: '确认并进入跟进',
-            done: '销售已确认客户版报价，项目进入销售跟进中。',
+            done: '报价已确认，项目进入销售跟进中。',
             body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>确认项</th><th>内容</th></tr></thead><tbody><tr><td>报价版本</td><td>' + quote + '</td></tr><tr><td>客户口径</td><td>确认客户版价格、费用包含/不含、付款节点和有效期。</td></tr><tr><td>下一步</td><td>发送客户并记录客户反馈。</td></tr></tbody></table></section>'
           },
           'sales-return': {
@@ -971,17 +1214,11 @@
             done: '客户反馈已记录。',
             body: '<div class="form-row"><div class="form-group"><label class="form-label">反馈结果</label><select class="form-control"><option>原则认可，待内部成团</option><option>要求调整价格</option><option>要求调整服务标准</option><option>暂缓确认</option></select></div><div class="form-group"><label class="form-label">反馈时间</label><input class="form-control" type="datetime-local"></div><div class="form-group form-group-full"><label class="form-label">反馈内容</label><textarea class="form-control" rows="4">记录客户对报价版本、价格、服务标准、付款节点和有效期的意见。</textarea></div></div>'
           },
-          'customer-confirm': {
-            title: '确认客户报价',
-            primary: '确认客户已接受',
-            done: '客户确认报价已记录，项目进入待确认成团。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>锁定项</th><th>当前数据</th></tr></thead><tbody><tr><td>客户确认版本</td><td>' + quote + '</td></tr><tr><td>确认依据</td><td>客户邮件、盖章确认单或企业微信确认记录。</td></tr><tr><td>下一步</td><td>内部确认成团后生成项目订单、合同草稿、项目团和阶段收款计划。</td></tr></tbody></table></section>'
-          },
           'lock-quote': {
             title: '锁定报价',
             primary: '确认锁定',
             done: '报价已锁定，下一步可确认成团。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>锁定项</th><th>当前数据</th></tr></thead><tbody><tr><td>项目</td><td>' + project + '</td></tr><tr><td>客户报价</td><td>' + quote + '</td></tr><tr><td>预算成本/毛利</td><td>' + escapeHtml(data.quoteNote || '待成本复核') + '</td></tr><tr><td>锁定后</td><td>金额、人数、日期和服务标准变化进入变更记录。</td></tr></tbody></table></section>'
+            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>锁定项</th><th>当前数据</th></tr></thead><tbody><tr><td>项目</td><td>' + project + '</td></tr><tr><td>客户报价</td><td>' + quote + '</td></tr><tr><td>预算成本/毛利</td><td>' + escapeHtml(data.quoteNote || '待成本复核') + '</td></tr><tr><td>锁定后</td><td>金额、人数、日期和服务标准变化进入变更记录。</td></tr></tbody></table></section><div class="form-row"><div class="form-group"><label class="form-label">客户确认依据</label><select class="form-control"><option>企业微信确认</option><option>邮件确认</option><option>盖章确认单</option><option>线下确认补传</option></select></div><div class="form-group form-group-full"><label class="form-label">确认说明</label><textarea class="form-control" rows="3">记录客户确认的报价版本、人数、日期、服务标准和付款节点。</textarea></div></div>'
           },
           'quote-approval': {
             title: '发起报价审批',
@@ -999,7 +1236,7 @@
             title: '订单合同',
             primary: '记录处理',
             done: '订单合同处理记录已更新。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>对象</th><th>编号</th><th>状态</th><th>入口</th></tr></thead><tbody><tr><td>项目订单</td><td>' + orderNo + '</td><td>承接名单、阶段应收、收款和售后</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.order) + '">进入订单</a></div></td></tr><tr><td>项目合同</td><td>' + contractNo + '</td><td>合同签署和客户盖章确认</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.contract) + '">进入合同</a></div></td></tr><tr><td>阶段应收</td><td>' + receivableNo + '</td><td>财务在收款认领/订单认款承接</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.receivable) + '">应收计划</a></div></td></tr></tbody></table></section>'
+            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>对象</th><th>编号</th><th>状态</th><th>入口</th></tr></thead><tbody><tr><td>项目订单</td><td>' + orderNo + '</td><td>承接名单、应收计划、收款和售后</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.order) + '">进入订单</a></div></td></tr><tr><td>项目合同</td><td>' + contractNo + '</td><td>合同签署和客户盖章确认</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.contract) + '">进入合同</a></div></td></tr></tbody></table></section>'
           },
           'execution-workbench': {
             title: '执行处理',
@@ -1025,12 +1262,6 @@
             done: '出团通知草稿已生成，名单锁定后可发送客户。',
             body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>通知内容</th><th>状态</th></tr></thead><tbody><tr><td>行程安排</td><td>读取锁定报价和项目团行程</td></tr><tr><td>交通酒店</td><td>读取资源确认号</td></tr><tr><td>游客名单</td><td>读取项目名单和特殊要求</td></tr><tr><td>发送对象</td><td>客户联系人、销售、领队</td></tr></tbody></table></section><div class="quote-footer-actions"><a class="btn btn-secondary" href="' + escapeHtml(links.notice) + '">进入出团通知</a></div>'
           },
-          'claim-payment': {
-            title: '登记收款',
-            primary: '提交认款线索',
-            done: '收款线索已提交，财务在收款认领中完成认款。',
-            body: '<div class="form-row"><div class="form-group"><label class="form-label">收款阶段</label><select class="form-control"><option>预付款</option><option>中期款</option><option>尾款</option><option>补差款</option></select></div><div class="form-group"><label class="form-label">到账金额</label><input class="form-control" type="text" placeholder="按银行流水填写"></div><div class="form-group form-group-full"><label class="form-label">流水备注</label><textarea class="form-control" rows="4">客户对公转账，提交后由财务核对银行流水并完成认领。</textarea></div></div><div class="finance-link-card"><div class="finance-link-title">财务联动</div><div class="finance-link-items"><div class="finance-link-item">提交后进入收款认领/订单认款，不在单团列表直接确认实收。</div></div></div>'
-          },
           'confirm-cost': {
             title: '成本确认',
             primary: '保存成本处理',
@@ -1047,7 +1278,7 @@
             title: '回团结算',
             primary: '生成结算草稿',
             done: '回团结算草稿已生成，待成本复核后提交。',
-            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>结算检查项</th><th>当前判断</th><th>处理入口</th></tr></thead><tbody><tr><td>客户验收材料</td><td>' + escapeHtml(data.gap || '待检查') + '</td><td><div class="table-action"><button class="table-action-primary" type="button" data-list-action="acceptance-file">上传验收单</button></div></td></tr><tr><td>实际成本</td><td>回团后复核交通、酒店、地接和活动成本</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.cost) + '">团期成本</a></div></td></tr><tr><td>结算单</td><td>业务侧形成结算依据，财务侧对账结算承接</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.financeSettlement) + '">财务对账</a></div></td></tr></tbody></table></section>'
+            body: '<section class="table-wrap quote-cost-table"><table><thead><tr><th>结算检查项</th><th>当前判断</th><th>处理入口</th></tr></thead><tbody><tr><td>客户验收材料</td><td>' + escapeHtml(data.gap || '待检查') + '</td><td><div class="table-action"><button class="table-action-primary" type="button" data-list-action="acceptance-file">上传验收单</button></div></td></tr><tr><td>实际成本</td><td>回团后复核交通、酒店、地接和活动成本</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.cost) + '">团期成本</a></div></td></tr><tr><td>结算单</td><td>业务侧形成结算依据，完成后再进入财务结算</td><td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(links.settlement) + '">结算承接</a></div></td></tr></tbody></table></section>'
           },
           'view-settlement': {
             title: '查看结算',
@@ -1062,7 +1293,12 @@
             body: '<div class="form-row"><div class="form-group"><label class="form-label">变更类型</label><select class="form-control"><option>人数变更</option><option>日期变更</option><option>服务标准变更</option><option>金额变更</option></select></div><div class="form-group"><label class="form-label">影响金额</label><input class="form-control" type="text" value="待评估"></div><div class="form-group form-group-full"><label class="form-label">变更说明</label><textarea class="form-control" rows="4">记录客户提出的变更原因、影响范围、是否重新报价以及是否影响合同订单。</textarea></div></div>'
           }
         };
-        return configs[action] || configs['quote-workbench'];
+        return configs[action] || {
+          title: '项目处理',
+          primary: '保存',
+          done: '项目处理记录已保存。',
+          body: '<section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div><div class="form-row"><div class="form-group form-group-full"><label class="form-label">处理备注</label><textarea class="form-control" rows="4" placeholder="填写处理备注"></textarea></div></div></section>'
+        };
       }
 
       function openListAction(action, row) {
@@ -1077,6 +1313,8 @@
         document.getElementById('listQuickOwner').textContent = data.owner;
         listQuickActionBody.innerHTML = config.body;
         listQuickActionSubmit.textContent = config.primary || '确认';
+        listQuickActionSubmit.hidden = action === 'quote-workbench';
+        listQuickActionSubmit.style.display = action === 'quote-workbench' ? 'none' : '';
         openLayer(listQuickActionModal);
       }
 
@@ -1102,21 +1340,9 @@
           updateRowStatus(currentActionRow, '报价中');
           setCellLines(currentActionRow, 3, '需求已补充', '计调可继续报价', '[data-progress-main]', '[data-progress-note]');
           setGapText(currentActionRow, '报价未发送、资源报价待维护');
-        } else if (currentListAction === 'new-quote') {
-          var quoteTotal = data.quote && data.quote !== '未报价' ? data.quote.replace(/^锁定\s*/, '').replace(/^V\d+\s*/, '') : '¥1,906,000';
-          updateRowStatus(currentActionRow, '报价中');
-          setCellLines(currentActionRow, 3, '报价版本编辑中', 'V' + (data.quote.indexOf('V') >= 0 ? '新' : '1') + ' 草稿', '[data-progress-main]', '[data-progress-note]');
-          setCellLines(currentActionRow, 4, 'V新 草稿', '客户报价 ' + quoteTotal + ' · 成本待复核', '[data-quote-main]', '[data-quote-note]');
-          setGapText(currentActionRow, '报价草稿待提交销售、供应商成本待复核');
-          updateRowActions(currentActionRow);
-        } else if (currentListAction === 'quote-workbench') {
-          updateRowStatus(currentActionRow, '待销售确认');
-          setCellLines(currentActionRow, 3, '报价已提交销售', '等待销售确认客户口径', '[data-progress-main]', '[data-progress-note]');
-          setCellLines(currentActionRow, 4, data.quote === '未报价' ? 'V1 ¥1,906,000' : data.quote, data.quoteNote || '成本与毛利已测算', '[data-quote-main]', '[data-quote-note]');
-          setGapText(currentActionRow, '销售未确认，客户版报价单未发送');
         } else if (currentListAction === 'sales-confirm') {
           updateRowStatus(currentActionRow, '销售跟进中');
-          setCellLines(currentActionRow, 3, '已确认客户版报价', '销售可生成客户版报价或直接锁定', '[data-progress-main]', '[data-progress-note]');
+          setCellLines(currentActionRow, 3, '报价已确认', '销售可继续跟进或锁定报价', '[data-progress-main]', '[data-progress-note]');
           setGapText(currentActionRow, '报价有效期、资源有效期待核对');
         } else if (currentListAction === 'sales-return') {
           updateRowStatus(currentActionRow, '报价中');
@@ -1129,14 +1355,12 @@
         } else if (currentListAction === 'customer-feedback') {
           setCellLines(currentActionRow, 3, '客户沟通已记录', '如需调整可新建报价版本', '[data-progress-main]', '[data-progress-note]');
           setGapText(currentActionRow, '报价有效期、资源有效期待核对');
-        } else if (currentListAction === 'customer-confirm' || currentListAction === 'lock-quote') {
+        } else if (currentListAction === 'lock-quote') {
           updateRowStatus(currentActionRow, '待确认成团');
           setCellLines(currentActionRow, 3, '客户报价已确认', '等待内部确认成团', '[data-progress-main]', '[data-progress-note]');
           setCellLines(currentActionRow, 4, '锁定 ' + (data.quote === '未报价' ? 'V1 待补金额' : data.quote.replace(/^锁定\s*/, '')), data.quoteNote || '锁定报价快照', '[data-quote-main]', '[data-quote-note]');
           setGapText(currentActionRow, '项目订单、项目合同、项目团未生成');
           updateRowActions(currentActionRow);
-        } else if (currentListAction === 'claim-payment') {
-          setCellLines(currentActionRow, 3, '收款线索已提交', '财务认款待处理', '[data-progress-main]', '[data-progress-note]');
         } else if (currentListAction === 'import-roster') {
           setGapText(currentActionRow, '名单导入处理中、证件资料待补');
         } else if (currentListAction === 'resource-confirm') {
@@ -1167,13 +1391,13 @@
         currentConfirmRow.dataset.receivableNo = numbers.receivableNo;
         updateRowStatus(currentConfirmRow, '已成团');
         setCellLines(currentConfirmRow, 3, '已生成订单/项目团', numbers.orderNo, '[data-progress-main]', '[data-progress-note]');
-        setCellLines(currentConfirmRow, 4, data.quote || '锁定报价', '阶段收款计划待确认', '[data-quote-main]', '[data-quote-note]');
+        setCellLines(currentConfirmRow, 4, data.quote || '锁定报价', '订单应收待承接', '[data-quote-main]', '[data-quote-note]');
         setGapText(currentConfirmRow, '名单待导入、项目合同待发送、预付款待认款');
         updateRowActions(currentConfirmRow);
         closeLayer(listConfirmGroupModal);
         currentConfirmRow = null;
         applyFilters();
-        toast('已确认成团，项目订单、项目合同、项目团和阶段收款计划已生成。');
+        toast('已确认成团，项目订单、项目合同、项目团和应收计划已生成。');
       }
 
       function createProject() {
@@ -1315,6 +1539,21 @@
       });
 
       document.addEventListener('click', function (event) {
+        var quoteWorkbenchAction = event.target.closest('[data-quote-workbench-action]');
+        if (quoteWorkbenchAction) {
+          event.preventDefault();
+          var quoteRow = currentActionRow;
+          if (!quoteRow) return;
+          var quoteAction = quoteWorkbenchAction.getAttribute('data-quote-workbench-action');
+          var quoteId = quoteWorkbenchAction.getAttribute('data-quote-id') || '';
+          var quoteItem = quoteId ? quoteByWorkbenchId(quoteRow, quoteId) : null;
+          if (quoteAction === 'submit') {
+            submitQuoteVersionFromWorkbench(quoteRow, quoteItem);
+          } else {
+            openQuoteVersionDrawer(quoteRow, quoteAction, quoteItem || {});
+          }
+          return;
+        }
         var actionTarget = event.target.closest('[data-list-action]');
         if (actionTarget) {
           event.preventDefault();

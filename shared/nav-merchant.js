@@ -50,7 +50,6 @@
             { title: "目的地分类", href: "product/product-destination-config.html" },
             { title: "出发地配置", href: "product/product-departure-config.html" },
             { title: "签证国家", href: "resource/visa-library.html" },
-            { title: "退改规则", href: "resource/refund-rules.html" },
           ],
         },
         { title: "供应商", href: "resource/suppliers.html" },
@@ -80,6 +79,7 @@
           children: [
             { title: "定价策略", href: "product/product-pricing.html" },
             { title: "佣金政策", href: "channel/commission_rules.html" },
+            { title: "退改规则", href: "resource/refund-rules.html" },
           ],
         },
       ],

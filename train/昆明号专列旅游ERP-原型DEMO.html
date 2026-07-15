@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>昆明号 · 专列旅游 ERP 系统 原型 DEMO（一期）</title>
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#fff; --line:#e3e6ea; --line2:#eef1f4;
+  --tx:#1d2129; --tx2:#4e5969; --mut:#86909c;
+  --brand:#0a5c4d; --brand2:#0f7c67;
+  --gold:#a8791c; --goldbg:#fdf3e0; --goldln:#e8cf9e;
+  --blue:#1e5eb8; --bluebg:#eaf1fc; --blueln:#bcd3f0;
+  --ok:#16a34a; --okbg:#e7f6ec;
+  --hold:#d97706; --holdbg:#fdf1dd;
+  --lock:#7c3aed; --lockbg:#f0eafd;
+  --dep:#0891b2; --depbg:#e2f6fa;
+  --sold:#c0392b; --soldbg:#fbeceb;
+  --blk:#8a94a6; --blkbg:#f0f2f5;
+  --rd:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:13px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+#app{display:flex;min-height:100vh}
+
+/* ---------- sidebar ---------- */
+#side{width:196px;background:#0d1b26;color:#b9c4cf;flex-shrink:0;display:flex;flex-direction:column}
+.logo{padding:16px 16px 14px;border-bottom:1px solid #1e2f3d}
+.logo b{color:#fff;font-size:15px;letter-spacing:.5px;display:block}
+.logo span{font-size:11px;color:#6b7c8c}
+#nav{padding:8px 0;flex:1}
+.ngrp{font-size:10px;color:#5a6b7a;padding:12px 16px 4px;letter-spacing:1px}
+.nitem{padding:8px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;border-left:3px solid transparent}
+.nitem:hover{background:#152633;color:#e6edf3}
+.nitem.on{background:#152633;color:#fff;border-left-color:var(--brand2);font-weight:600}
+.nitem small{font-size:10px;background:#c0392b;color:#fff;border-radius:8px;padding:0 5px}
+.sfoot{padding:10px 16px;border-top:1px solid #1e2f3d;font-size:11px;color:#5a6b7a}
+
+/* ---------- main ---------- */
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#top{background:var(--panel);border-bottom:1px solid var(--line);padding:0 20px;height:52px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+#top h1{font-size:15px;font-weight:600}
+#top .crumb{color:var(--mut);font-size:12px}
+.spacer{flex:1}
+.usr{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
+.avt{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px}
+#view{padding:18px 20px 40px;overflow:auto}
+
+/* ---------- shared ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rd);margin-bottom:14px}
+.card>h3{font-size:13px;padding:11px 14px;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:8px}
+.card>h3 .sub{font-weight:400;color:var(--mut);font-size:11px}
+.card>h3 .spacer{flex:1}
+.cbody{padding:14px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--rd);padding:13px 14px}
+.kpi .l{font-size:11px;color:var(--mut)}
+.kpi .v{font-size:24px;font-weight:600;margin:3px 0 2px;letter-spacing:-.5px}
+.kpi .d{font-size:11px;color:var(--tx2)}
+.kpi .v small{font-size:12px;font-weight:400;color:var(--mut)}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#fafbfc;color:var(--tx2);font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#fafbfc}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px}
+
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;line-height:18px;white-space:nowrap}
+.t-ok{background:var(--okbg);color:var(--ok)}
+.t-hold{background:var(--holdbg);color:var(--hold)}
+.t-lock{background:var(--lockbg);color:var(--lock)}
+.t-dep{background:var(--depbg);color:var(--dep)}
+.t-sold{background:var(--soldbg);color:var(--sold)}
+.t-blk{background:var(--blkbg);color:var(--blk)}
+.t-gold{background:var(--goldbg);color:var(--gold)}
+.t-blue{background:var(--bluebg);color:var(--blue)}
+.t-gray{background:#f0f2f5;color:var(--tx2)}
+
+.btn{border:1px solid var(--line);background:#fff;border-radius:4px;padding:5px 11px;font-size:12px;cursor:pointer;color:var(--tx2)}
+.btn:hover{border-color:#c3cad2;color:var(--tx)}
+.btn.p{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.p:hover{background:var(--brand2)}
+.btn.sm{padding:2px 8px;font-size:11px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+select,input[type=text]{border:1px solid var(--line);border-radius:4px;padding:5px 8px;font-size:12px;background:#fff;color:var(--tx)}
+
+.hint{background:#fffbe9;border:1px solid #f5e3a8;border-left:3px solid #d9a441;padding:8px 11px;border-radius:4px;font-size:12px;color:#6b5316;margin-bottom:12px}
+.hint b{color:#4a3a0d}
+.src{font-size:11px;color:var(--mut);margin-top:8px}
+
+/* ---------- inventory ---------- */
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--tx2);align-items:center}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:-1px}
+.consist{display:flex;gap:3px;align-items:stretch;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.cc{min-width:44px;height:38px;border:1px solid var(--line);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--mut);background:#fafbfc;flex-shrink:0}
+.cc b{font-size:11px;color:var(--tx2)}
+.cc.s{background:var(--goldbg);border-color:var(--goldln);color:var(--gold)} .cc.s b{color:var(--gold)}
+.cc.y{background:var(--bluebg);border-color:var(--blueln);color:var(--blue)} .cc.y b{color:var(--blue)}
+
+.carline{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:5px;margin-bottom:6px;background:#fff;overflow:hidden}
+.carhd{width:126px;flex-shrink:0;padding:9px 10px;border-right:1px solid var(--line2);background:#fafbfc}
+.carhd b{font-size:12px;display:block}
+.carhd span{font-size:10px;color:var(--mut)}
+.rooms{display:flex;gap:6px;padding:8px 10px;flex-wrap:wrap;flex:1}
+.rm{width:96px;border:1px solid var(--line);border-radius:4px;padding:5px 6px;cursor:pointer;background:#fff;position:relative}
+.rm:hover{box-shadow:0 0 0 2px rgba(15,124,103,.18);border-color:var(--brand2)}
+.rm .no{font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.rm .st{font-size:10px;margin-top:1px}
+.beds{display:flex;gap:2px;margin-top:4px}
+.bd{flex:1;height:5px;border-radius:2px;background:var(--okbg);border:1px solid #bfe5cc}
+.bd.hold{background:var(--holdbg);border-color:#eccb92}
+.bd.lock{background:var(--lockbg);border-color:#cfbcf7}
+.bd.deposit{background:var(--depbg);border-color:#a9dfe9}
+.bd.sold{background:var(--soldbg);border-color:#eec0bb}
+.bd.blocked{background:var(--blkbg);border-color:#d3d8e0}
+.rm.avail{background:var(--okbg);border-color:#bfe5cc} .rm.avail .st{color:var(--ok)}
+.rm.hold{background:var(--holdbg);border-color:#eccb92} .rm.hold .st{color:var(--hold)}
+.rm.lock{background:var(--lockbg);border-color:#cfbcf7} .rm.lock .st{color:var(--lock)}
+.rm.deposit{background:var(--depbg);border-color:#a9dfe9} .rm.deposit .st{color:var(--dep)}
+.rm.sold{background:var(--soldbg);border-color:#eec0bb} .rm.sold .st{color:var(--sold)}
+.rm.blocked{background:var(--blkbg);border-color:#d3d8e0} .rm.blocked .st{color:var(--blk)}
+.rm.mix{background:#fff}
+.rm.mix .st{color:var(--tx2)}
+
+/* client view */
+.cview{border:1px solid var(--line);border-radius:6px;padding:0;overflow:hidden;background:#fff;max-width:360px}
+.cvhd{background:linear-gradient(135deg,#0d5b4c,#128a70);color:#fff;padding:12px 14px}
+.cvhd b{font-size:14px}.cvhd div{font-size:11px;opacity:.85}
+.cvrow{padding:11px 14px;border-bottom:1px solid var(--line2);display:flex;justify-content:space-between;align-items:center}
+.cvrow:last-child{border:0}
+.cvrow .n{font-size:13px;font-weight:600}
+.cvrow .p{font-size:11px;color:var(--mut)}
+.cvrow .r{text-align:right}
+.cvrow .pr{color:#c0392b;font-weight:600;font-size:15px}
+.cvrow .pr small{font-weight:400;font-size:10px;color:var(--mut)}
+.stk{font-size:11px;margin-top:2px}
+.stk.a{color:var(--ok)}.stk.b{color:#d97706}.stk.c{color:var(--sold)}
+
+/* drawer */
+#mask{position:fixed;inset:0;background:rgba(15,23,32,.35);display:none;z-index:50}
+#dw{position:fixed;top:0;right:0;bottom:0;width:420px;background:#fff;box-shadow:-4px 0 18px rgba(0,0,0,.12);transform:translateX(100%);transition:.22s;z-index:51;display:flex;flex-direction:column}
+#dw.open{transform:none}
+#dwh{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+#dwh b{font-size:14px}
+#dwb{padding:16px;overflow:auto;flex:1}
+#dwf{padding:11px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+.kv{display:grid;grid-template-columns:88px 1fr;gap:6px 10px;font-size:12px;margin-bottom:14px}
+.kv .k{color:var(--mut)}
+.sect{font-size:12px;font-weight:600;margin:14px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--line2)}
+.close{cursor:pointer;color:var(--mut);font-size:18px;line-height:1}
+
+/* misc */
+.bar{height:6px;background:#eef1f4;border-radius:3px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--brand2)}
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;font-size:11px}
+.fl{padding:4px 10px;border:1px solid var(--line);border-radius:3px;background:#fafbfc;color:var(--tx2)}
+.fl.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.fl.done{background:var(--okbg);border-color:#bfe5cc;color:var(--ok)}
+.fa{color:var(--mut);padding:0 5px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab{padding:7px 14px;font-size:12px;cursor:pointer;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.todo{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line2);font-size:12px}
+.todo:last-child{border:0}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.paper{background:#fff;border:1px solid var(--line);padding:22px;font-size:12px}
+.paper h4{text-align:center;font-size:15px;margin-bottom:3px}
+.paper .pm{text-align:center;color:var(--mut);font-size:11px;margin-bottom:14px}
+.sig{margin-top:18px;display:flex;justify-content:space-between;color:var(--tx2);font-size:11px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="side">
+    <div class="logo"><b>昆明号 · 专列 ERP</b><span>Charter Train ERP v0.1 · 原型</span></div>
+    <div id="nav"></div>
+    <div class="sfoot">一期：库存 / 销售 / 订单 / 操作 / 财务</div>
+  </div>
+  <div id="main">
+    <div id="top">
+      <h1 id="ttl">工作台</h1>
+      <span class="crumb" id="crumb"></span>
+      <span class="spacer"></span>
+      <div class="usr"><span>销售部 · 计调组</span><div class="avt">兰</div></div>
+    </div>
+    <div id="view"></div>
+  </div>
+</div>
+<div id="mask"></div>
+<div id="dw">
+  <div id="dwh"><b id="dwt"></b><span class="spacer"></span><span class="close" onclick="closeDw()">×</span></div>
+  <div id="dwb"></div>
+  <div id="dwf" style="display:none"></div>
+</div>
+
+<script>
+/* =====================================================================
+   数据层 —— 全部来自两份源文件，未编造的字段已标注「假设」
+   来源A《昆明号-列车介绍3.0.pdf》p6/p9/p10
+   来源B《【同】昆明号10月-12月销售政策-定稿.pdf》
+   ===================================================================== */
+const TODAY = new Date('2026-07-14');
+
+// 编组（来源A p6：全列16辆 / 72包厢 / 定员264）
+const CONSIST = [
+  {no:'1', kind:'发电车', t:'x'}, {no:'2', kind:'工作车', t:'x'},
+  {no:'3', kind:'尊享01', t:'s'}, {no:'4', kind:'尊享02', t:'s'},
+  {no:'5', kind:'尊享03', t:'s'}, {no:'6', kind:'尊享04', t:'s'},
+  {no:'7', kind:'彩云多功能', t:'x'}, {no:'8', kind:'特色餐车', t:'x'},
+  {no:'9', kind:'品质01', t:'y'}, {no:'10',kind:'品质02', t:'y'},
+  {no:'11',kind:'品质03', t:'y'}, {no:'12',kind:'品质04', t:'y'},
+  {no:'13',kind:'品质05', t:'y'}, {no:'14',kind:'品质06', t:'y'},
+  {no:'15',kind:'品质07', t:'y'}, {no:'16',kind:'品质08', t:'y'}
+];
+
+// 房型（来源A p9/p10）
+const ROOMTYPE = {
+  S:{code:'S', name:'安途尊享房', star:'5钻', cars:4, perCar:6, rooms:24, cap:3, minPax:2,
+     bath:'独立卫浴（干湿分离）', bed:'200×150 双人床 + 200×75 上铺 + 抽拉沙发床',
+     rule:'不接受单人拼房，整间售卖', color:'gold'},
+  Y:{code:'Y', name:'悦途品质房', star:'4钻', cars:8, perCar:6, rooms:48, cap:4, minPax:1,
+     bath:'公共卫浴（每车厢 2淋浴+2洗漱+2卫生间）', bed:'上下铺 200×75 ×4',
+     rule:'可按铺位散拼；2人可加价独享整间', color:'blue'}
+};
+
+// 价格（来源B，单位 元/人；F=同业返佣，结算价=门市价-返佣）
+const PRICE = {
+  S:{ two:{label:'两人入住',   list:12999, f:1800},
+      third:{label:'第三人（成人需补地面单房差）', list:7999, f:1000},
+      single:{label:'单房差', list:1200, f:0} },
+  Y:{ upper:{label:'上铺',     list:5999, f:1000},
+      lower:{label:'下铺',     list:6399, f:1000},
+      excl :{label:'两人享专属包厢', list:8299, f:1200},
+      single:{label:'单房差', list:700, f:0} }
+};
+const REFUND = [
+  {d:'30天以上', r:'免费取消（同一客户累计取消3间及以上，收10%取消费）', pct:0},
+  {d:'15–30天',  r:'订单金额的30%作为取消费', pct:30},
+  {d:'8–14天',   r:'订单金额的50%作为取消费', pct:50},
+  {d:'1–7天',    r:'订单金额的70%作为取消费', pct:70},
+  {d:'当天',     r:'订单金额的90%作为取消费', pct:90}
+];
+const PRODUCT = '环云南9天（蒙自·建水·腾冲·普洱·版纳·抚仙湖）';
+const DEPS = [
+  {id:'KM260925', date:'2026-09-25'},
+  {id:'KM261017', date:'2026-10-17'},
+  {id:'KM261114', date:'2026-11-14'},
+  {id:'KM261219', date:'2026-12-19'},
+  {id:'KM261228', date:'2026-12-28'}
+];
+// 地接站点（来源B线路名）
+const STOPS=['蒙自','建水','腾冲','普洱','西双版纳','抚仙湖'];
+const AGENTS=['红河国旅（蒙自·建水）','腾冲康辉地接','普洱茶乡国旅','版纳雨林假日','玉溪抚仙湖接待中心'];
+
+/* ---------- 状态机（会议共识 + 老柯原话「提前锁半年，半年内不下定金则释放」） ---------- */
+const ST = {
+  avail  :{n:'可售',   c:'t-ok'},
+  hold   :{n:'预留',   c:'t-hold'},
+  lock   :{n:'锁仓',   c:'t-lock'},
+  deposit:{n:'已付定', c:'t-dep'},
+  sold   :{n:'已成交', c:'t-sold'},
+  blocked:{n:'不可售', c:'t-blk'}
+};
+
+/* ---------- 伪随机生成演示库存（种子固定，每次打开一致） ---------- */
+function rng(seed){let s=seed;return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
+const CHANNELS=['银发俱乐部·北京朝阳','中旅·云南分社','某机构团（国企工会）','携程专列频道','未签约渠道分销'];
+const NAMES=['王建国','李淑芬','张伟','陈桂英','刘志强','杨秀兰','赵德海','孙丽华','周国庆','吴金枝','郑福生','冯玉梅'];
+
+// 按 load 抽一个状态（同一分布用于「整间」与「单铺」两种粒度）
+function draw(r,load){
+  const x=r();
+  if(x<load*0.60) return 'sold';
+  if(x<load*0.76) return 'deposit';
+  if(x<load*0.88) return 'hold';
+  if(x<load*1.00) return 'lock';
+  return 'avail';
+}
+function buildInv(dep,idx){
+  const r=rng(9001+idx*137);
+  const load=[0.86,0.71,0.55,0.42,0.63][idx]; // 越近的班期越满
+  const cars=[];
+  CONSIST.filter(c=>c.t!=='x').forEach(c=>{
+    const T=c.t==='s'?'S':'Y';
+    const rooms=[];
+    for(let i=1;i<=6;i++){
+      const roomNo=c.no.padStart(2,'0')+'-'+String(i).padStart(2,'0');
+      const nb=T==='S'?3:4;
+      let beds;
+      if(T==='S'){
+        // 尊享房：整间售卖、不接受单人拼房 → 房间级抽一次状态，占 2 人或 3 人
+        const st=draw(r,load), third=r()<0.4;
+        beds=Array.from({length:nb},(_,b)=> st==='avail'?'avail':(b<2||third?st:'avail'));
+      }else{
+        // 品质房：铺位级库存，上/下铺可散拼
+        beds=Array.from({length:nb},()=>draw(r,load));
+      }
+      rooms.push({no:roomNo,car:c.no,carName:c.kind,type:T,beds,
+        ch: CHANNELS[Math.floor(r()*CHANNELS.length)],
+        exp: new Date(new Date(dep.date).getTime()-Math.floor(30+r()*150)*864e5)});
+    }
+    cars.push({...c,type:T,rooms});
+  });
+  return cars;
+}
+const INV={}; DEPS.forEach((d,i)=>INV[d.id]=buildInv(d,i));
+
+function roomState(rm){
+  const s=new Set(rm.beds);
+  if(s.size===1) return [...s][0];
+  const pri=['sold','deposit','lock','hold','avail'];
+  if(rm.type==='S') return pri.find(p=>s.has(p));
+  return 'mix';
+}
+function stats(depId){
+  const o={avail:0,hold:0,lock:0,deposit:0,sold:0,blocked:0,paxSold:0,rev:0,roomsAvail:0};
+  INV[depId].forEach(c=>c.rooms.forEach(rm=>{
+    rm.beds.forEach(b=>o[b]++);
+    const st=roomState(rm); if(st==='avail')o.roomsAvail++;
+    rm.beds.forEach(b=>{
+      if(b==='sold'||b==='deposit'){
+        o.paxSold++;
+        o.rev += rm.type==='S'?PRICE.S.two.list:PRICE.Y.lower.list;
+      }
+    });
+  }));
+  return o;
+}
+function days(d){return Math.round((new Date(d)-TODAY)/864e5)}
+function refundTier(d){const n=days(d);if(n>30)return REFUND[0];if(n>=15)return REFUND[1];if(n>=8)return REFUND[2];if(n>=1)return REFUND[3];return REFUND[4]}
+function money(n){return '¥'+n.toLocaleString('zh-CN')}
+
+/* ---------- 订单（手工构造，覆盖 To B / To C 与全部单据状态） ---------- */
+const ORDERS=[
+ {id:'DD26071401',dep:'KM260925',ch:'TOB',cust:'银发俱乐部·北京朝阳',con:'周主任',pax:24,rooms:'品质×6间(整间)',type:'Y',
+  list:5999*24,fy:1000*24,st:'settled',doc:{confirm:1,receipt:1,notice:1,cabin:1},sales:'李静',ctime:'2026-06-12'},
+ {id:'DD26071402',dep:'KM260925',ch:'TOB',cust:'中旅·云南分社',con:'刘经理',pax:12,rooms:'尊享×4间(2人)+品质×1间',type:'S',
+  list:12999*8+5999*4,fy:1800*8+1000*4,st:'paid',doc:{confirm:1,receipt:1,notice:1,cabin:0},sales:'李静',ctime:'2026-06-20'},
+ {id:'DD26071403',dep:'KM261017',ch:'TOC',cust:'王建国（散客）',con:'王建国',pax:2,rooms:'尊享×1间(2人)',type:'S',
+  list:12999*2,fy:0,st:'deposit',doc:{confirm:1,receipt:1,notice:0,cabin:0},sales:'小程序自助',ctime:'2026-07-03'},
+ {id:'DD26071404',dep:'KM261017',ch:'TOB',cust:'某机构团（国企工会）',con:'张科长',pax:48,rooms:'品质×12间(整节)',type:'Y',
+  list:6399*24+5999*24,fy:1000*48,st:'confirmed',doc:{confirm:1,receipt:0,notice:0,cabin:0},sales:'赵磊',ctime:'2026-07-05'},
+ {id:'DD26071405',dep:'KM261114',ch:'TOC',cust:'陈桂英（小红书线索）',con:'陈桂英',pax:3,rooms:'尊享×1间(2人+第三人)',type:'S',
+  list:12999*2+7999,fy:0,st:'paid',doc:{confirm:1,receipt:1,notice:1,cabin:0},sales:'客服·王悦',ctime:'2026-07-08'},
+ {id:'DD26071406',dep:'KM261114',ch:'TOB',cust:'携程专列频道',con:'API对接',pax:8,rooms:'品质×2间(2人独享)',type:'Y',
+  list:8299*8,fy:1200*8,st:'confirmed',doc:{confirm:1,receipt:0,notice:0,cabin:0},sales:'分销自动单',ctime:'2026-07-10'},
+ {id:'DD26071407',dep:'KM261219',ch:'TOC',cust:'刘志强（12306引流）',con:'刘志强',pax:4,rooms:'品质×1间(整间)',type:'Y',
+  list:6399*2+5999*2,fy:0,st:'pending',doc:{confirm:0,receipt:0,notice:0,cabin:0},sales:'客服·王悦',ctime:'2026-07-13'},
+ {id:'DD26071408',dep:'KM261228',ch:'TOB',cust:'未签约渠道分销（元旦团）',con:'孙总',pax:16,rooms:'品质×4间',type:'Y',
+  list:6399*8+5999*8,fy:1000*16,st:'pending',doc:{confirm:0,receipt:0,notice:0,cabin:0},sales:'分销自动单',ctime:'2026-07-14'},
+ {id:'DD26071409',dep:'KM260925',ch:'TOC',cust:'杨秀兰（散客·单房差）',con:'杨秀兰',pax:1,rooms:'品质×1铺(下铺)+单房差',type:'Y',
+  list:6399+700,fy:0,st:'cancelled',doc:{confirm:1,receipt:1,notice:0,cabin:0},sales:'客服·王悦',ctime:'2026-05-28'}
+];
+const OST={pending:{n:'待确认',c:'t-gray'},confirmed:{n:'已确认·待收款',c:'t-hold'},deposit:{n:'已收定金',c:'t-dep'},
+  paid:{n:'已收全款·待选舱',c:'t-blue'},settled:{n:'已选舱·已出通知书',c:'t-ok'},cancelled:{n:'已取消',c:'t-sold'}};
+
+/* =====================================================================
+   路由
+   ===================================================================== */
+const NAV=[
+ {g:'销售运营'},
+ {k:'dash', n:'工作台'},
+ {k:'inv',  n:'库存管理'},
+ {k:'price',n:'价格与政策'},
+ {k:'order',n:'订单管理', b:2},
+ {k:'cabin',n:'选舱中心', b:2},
+ {g:'旅游操作'},
+ {k:'ops',  n:'团队操作'},
+ {k:'land', n:'地接计划'},
+ {g:'财务'},
+ {k:'fin',  n:'财务对账'},
+ {g:'系统'},
+ {k:'sys',  n:'基础设置'}
+];
+let cur='dash', curDep=DEPS[0].id, clientView=false;
+
+function nav(){
+  document.getElementById('nav').innerHTML=NAV.map(i=>i.g
+    ?`<div class="ngrp">${i.g}</div>`
+    :`<div class="nitem ${i.k===cur?'on':''}" onclick="go('${i.k}')">${i.n}${i.b?`<small>${i.b}</small>`:''}</div>`).join('');
+}
+function go(k){cur=k;nav();render()}
+function render(){
+  const t={dash:'工作台',inv:'库存管理',price:'价格与政策',order:'订单管理',cabin:'选舱中心',ops:'团队操作',land:'地接计划',fin:'财务对账',sys:'基础设置'}[cur];
+  document.getElementById('ttl').textContent=t;
+  document.getElementById('crumb').textContent='昆明号 / '+PRODUCT;
+  document.getElementById('view').innerHTML=({dash:vDash,inv:vInv,price:vPrice,order:vOrder,cabin:vCabin,ops:vOps,land:vLand,fin:vFin,sys:vSys})[cur]();
+  window.scrollTo(0,0);
+}
+
+/* ---------------- 工作台 ---------------- */
+function vDash(){
+  const all=DEPS.map(d=>({d,s:stats(d.id)}));
+  const totPax=all.reduce((a,b)=>a+b.s.paxSold,0);
+  const totRev=all.reduce((a,b)=>a+b.s.rev,0);
+  const cap=264*DEPS.length;
+  const lock=all.reduce((a,b)=>a+b.s.lock,0);
+  const hold=all.reduce((a,b)=>a+b.s.hold,0);
+  return `
+  <div class="hint"><b>原型说明：</b>这是一期 ERP 的可点击 DEMO。库存/编组/房型来自《昆明号-列车介绍3.0》，价格/退改来自《【同】昆明号10-12月销售政策-定稿》；订单与客户为演示数据。
+  <span style="color:#9a7a2a">带「假设」标记的字段需业务方确认。</span></div>
+
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="kpi"><div class="l">在售班期</div><div class="v">${DEPS.length}<small> 个</small></div><div class="d">最近发车 ${DEPS[0].date}（${days(DEPS[0].date)}天后）</div></div>
+    <div class="kpi"><div class="l">总铺位售出 / 总运力</div><div class="v">${totPax}<small> / ${cap}</small></div><div class="bar"><i style="width:${(totPax/cap*100).toFixed(0)}%"></i></div></div>
+    <div class="kpi"><div class="l">销售额（门市价口径）</div><div class="v">${(totRev/10000).toFixed(1)}<small> 万元</small></div><div class="d">含已付定 + 已成交</div></div>
+    <div class="kpi"><div class="l">锁仓 / 预留铺位</div><div class="v" style="color:var(--lock)">${lock}<small> / ${hold}</small></div><div class="d">${hold} 个预留将按规则到期释放</div></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h3>班期销售看板<span class="spacer"></span><span class="sub">点击进入库存</span></h3>
+      <table><thead><tr><th>班期</th><th>发车</th><th class="num">距发车</th><th class="num">已售铺位</th><th>上座率</th><th class="num">可售包间</th><th>当前退改档</th></tr></thead><tbody>
+      ${all.map(({d,s})=>`<tr style="cursor:pointer" onclick="curDep='${d.id}';go('inv')">
+        <td class="mono">${d.id}</td><td>${d.date}</td><td class="num">${days(d.date)}天</td>
+        <td class="num">${s.paxSold}/264</td>
+        <td style="width:120px"><div class="bar"><i style="width:${(s.paxSold/264*100).toFixed(0)}%"></i></div></td>
+        <td class="num">${s.roomsAvail}</td>
+        <td><span class="tag t-gray">${refundTier(d.date).d}</span></td></tr>`).join('')}
+      </tbody></table></div>
+
+    <div class="card"><h3>今日待办 <span class="sub">系统自动生成</span></h3><div class="cbody" style="padding:4px 14px">
+      <div class="todo"><span class="dot" style="background:var(--sold)"></span><b>2 张订单待确认</b><span class="spacer"></span><span style="color:var(--mut)">DD26071407 / DD26071408</span><button class="btn sm" onclick="go('order')">去处理</button></div>
+      <div class="todo"><span class="dot" style="background:var(--hold)"></span><b>3 间预留今日到期</b><span class="spacer"></span><span style="color:var(--mut)">未付定金将自动释放</span><button class="btn sm" onclick="go('inv')">查看</button></div>
+      <div class="todo"><span class="dot" style="background:var(--blue)"></span><b>2 张订单已收全款待选舱</b><span class="spacer"></span><span style="color:var(--mut)">DD26071402 / DD26071405</span><button class="btn sm" onclick="go('cabin')">去选舱</button></div>
+      <div class="todo"><span class="dot" style="background:var(--dep)"></span><b>9-25 班期地接计划未下发</b><span class="spacer"></span><span style="color:var(--mut)">6 个站点</span><button class="btn sm" onclick="go('land')">下发</button></div>
+      <div class="todo"><span class="dot" style="background:var(--ok)"></span><b>应收团款 ${money(ORDERS.filter(o=>o.st==='confirmed').reduce((a,b)=>a+b.list-b.fy,0))}</b><span class="spacer"></span><span style="color:var(--mut)">2 家渠道逾期未付</span><button class="btn sm" onclick="go('fin')">对账</button></div>
+    </div></div>
+  </div>
+
+  <div class="card"><h3>一期业务主流程 <span class="sub">会议共识：先库存→再销售→再操作→再财务</span></h3><div class="cbody">
+    <div class="flow">
+      <span class="fl done">① 开班期（系列团）</span><span class="fa">→</span>
+      <span class="fl done">② 建库存（车厢/包间/铺位）</span><span class="fa">→</span>
+      <span class="fl done">③ 配价格政策（门市/结算/返佣）</span><span class="fa">→</span>
+      <span class="fl on">④ 销售下单 To B / To C</span><span class="fa">→</span>
+      <span class="fl">⑤ 确认件 · 认款 · 出团通知书</span><span class="fa">→</span>
+      <span class="fl">⑥ 付款后选舱</span><span class="fa">→</span>
+      <span class="fl">⑦ 分团 · 名单 · 打票</span><span class="fa">→</span>
+      <span class="fl">⑧ 地接计划 · 结算单</span><span class="fa">→</span>
+      <span class="fl">⑨ 应收应付对账（金蝶/用友）</span>
+    </div>
+    <div class="src">③④⑤⑥ 对应老柯原话「确认完做确认件→系统自动生成认款→生成通知书→分团全自动化」；⑥ 对应「付完钱才选舱，免得扯皮」。</div>
+  </div></div>`;
+}
+
+/* ---------------- 库存 ---------------- */
+function vInv(){
+  const dep=DEPS.find(d=>d.id===curDep);
+  const s=stats(curDep);
+  const tot=s.avail+s.hold+s.lock+s.deposit+s.sold+s.blocked;
+  return `
+  <div class="card"><h3>
+    班期
+    <select onchange="curDep=this.value;render()">${DEPS.map(d=>`<option value="${d.id}" ${d.id===curDep?'selected':''}>${d.date} · ${d.id}</option>`).join('')}</select>
+    <span class="sub">${PRODUCT}</span>
+    <span class="spacer"></span>
+    <label style="font-size:12px;color:var(--tx2)"><input type="checkbox" ${clientView?'checked':''} onchange="clientView=this.checked;render()"> 客户端视图（机票式模糊库存）</label>
+    <button class="btn sm" onclick="alert('演示：批量锁仓 → 选择渠道、锁定间数、设置释放日期')">批量锁仓</button>
+    <button class="btn sm p" onclick="alert('演示：库存变更日志 / 逾期自动释放任务')">释放规则</button>
+  </h3>
+  <div class="cbody">
+    ${clientView?clientPanel(s):''}
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="kpi"><div class="l">总铺位（定员）</div><div class="v">${tot}</div><div class="d">72间 · 尊享24×3 + 品质48×4</div></div>
+      <div class="kpi"><div class="l">可售</div><div class="v" style="color:var(--ok)">${s.avail}</div><div class="d">可售整间 ${s.roomsAvail} 间</div></div>
+      <div class="kpi"><div class="l">锁仓 + 预留</div><div class="v" style="color:var(--lock)">${s.lock+s.hold}</div><div class="d">硬切渠道 ${s.lock} · 销售占位 ${s.hold}</div></div>
+      <div class="kpi"><div class="l">已付定 + 已成交</div><div class="v" style="color:var(--sold)">${s.deposit+s.sold}</div><div class="d">上座率 ${(s.paxSold/264*100).toFixed(0)}%</div></div>
+    </div>
+
+    <div class="sect">全列编组（16辆 · 灰色为非载客车厢）</div>
+    <div class="consist">${CONSIST.map(c=>`<div class="cc ${c.t}"><b>${c.no}</b>${c.kind}</div>`).join('')}</div>
+
+    <div class="legend" style="margin-bottom:10px">
+      <span><i style="background:var(--okbg);border:1px solid #bfe5cc"></i>可售</span>
+      <span><i style="background:var(--holdbg);border:1px solid #eccb92"></i>预留（销售占位·到期释放）</span>
+      <span><i style="background:var(--lockbg);border:1px solid #cfbcf7"></i>锁仓（硬切渠道）</span>
+      <span><i style="background:var(--depbg);border:1px solid #a9dfe9"></i>已付定</span>
+      <span><i style="background:var(--soldbg);border:1px solid #eec0bb"></i>已成交</span>
+      <span style="color:var(--mut)">｜ 每格 = 1 个包间，格内小条 = 铺位；点击查看/操作</span>
+    </div>
+
+    ${INV[curDep].map(c=>`
+      <div class="carline">
+        <div class="carhd"><b>${c.no}车 · ${c.kind}</b><span>${ROOMTYPE[c.type].name} · ${ROOMTYPE[c.type].cap}人/间</span></div>
+        <div class="rooms">${c.rooms.map(rm=>{
+          const st=roomState(rm);
+          const meta=ST[st]||{n:'部分占用'};
+          const occ=rm.beds.filter(b=>b!=='avail').length;
+          return `<div class="rm ${st}" onclick="openRoom('${curDep}','${rm.no}')">
+            <div class="no"><span>${rm.no}</span><span style="font-weight:400;color:var(--mut);font-size:10px">${occ}/${rm.beds.length}</span></div>
+            <div class="st">${meta.n}</div>
+            <div class="beds">${rm.beds.map(b=>`<span class="bd ${b}"></span>`).join('')}</div>
+          </div>`;
+        }).join('')}</div>
+      </div>`).join('')}
+
+    <div class="src">
+      编组与房型数据核对：安途尊享 4节×6间=24间（2–3人/间，独立卫浴）；悦途品质 8节×6间=48间（2–4人/间，公共卫浴）；合计 72 间，定员 24×3 + 48×4 = <b>264 人</b>，与《列车介绍3.0》p6「72包厢 / 定员264」一致。
+      <br><span style="color:#9a7a2a">「假设」：车厢在编组中的物理排序（3–6为尊享、9–16为品质）为演示假设，实际以铁路局编组表为准。</span>
+    </div>
+  </div></div>`;
+}
+function clientPanel(s){
+  const sAvail=INV[curDep].filter(c=>c.type==='S').reduce((a,c)=>a+c.rooms.filter(r=>roomState(r)==='avail').length,0);
+  const yBeds=INV[curDep].filter(c=>c.type==='Y').reduce((a,c)=>a+c.rooms.reduce((x,r)=>x+r.beds.filter(b=>b==='avail').length,0),0);
+  const lvl=n=>n===0?['c','已售罄']:n<=3?['b',`仅剩最后 ${n} ${n===sAvail?'间':'个'}，手慢无`]:n<=8?['b','库存紧张']:['a','库存充足'];
+  const a=lvl(sAvail),b=lvl(yBeds);
+  const dep=DEPS.find(d=>d.id===curDep);
+  return `
+  <div class="hint" style="background:#eef6ff;border-color:#bcd3f0;border-left-color:#1e5eb8;color:#1a4a86">
+    <b>客户端只看到这个</b> —— 会议决策「前端不展示真实库存明细」。C 端仅展示可售状态与模糊余量（机票式），付款后再进入选舱。
+  </div>
+  <div class="cview" style="margin-bottom:16px">
+    <div class="cvhd"><b>彩云之南 · 昆明号</b><div>${PRODUCT} · ${dep.date} 发车</div></div>
+    <div class="cvrow"><div><div class="n">安途尊享房 <span class="tag t-gold">5钻</span></div><div class="p">2–3人 · 独立卫浴 · 整间入住</div><div class="stk ${a[0]}">● ${a[1]}</div></div>
+      <div class="r"><div class="pr">${money(PRICE.S.two.list)}<small>/人起</small></div><button class="btn sm p" style="margin-top:4px">立即报名</button></div></div>
+    <div class="cvrow"><div><div class="n">悦途品质房 <span class="tag t-blue">4钻</span></div><div class="p">4人间 · 公共卫浴 · 可散拼</div><div class="stk ${b[0]}">● ${b[1]}</div></div>
+      <div class="r"><div class="pr">${money(PRICE.Y.upper.list)}<small>/人起</small></div><button class="btn sm p" style="margin-top:4px">立即报名</button></div></div>
+    <div class="cvrow" style="background:#fafbfc"><div class="p" style="color:var(--mut)">支付成功后 24h 内开放「在线选舱选铺」，先付先选</div></div>
+  </div>`;
+}
+function openRoom(depId,no){
+  let rm,car;
+  INV[depId].forEach(c=>c.rooms.forEach(r=>{if(r.no===no){rm=r;car=c}}));
+  const T=ROOMTYPE[rm.type], P=PRICE[rm.type];
+  const st=roomState(rm);
+  const priceRows = rm.type==='S'
+    ? [P.two,P.third,P.single] : [P.upper,P.lower,P.excl,P.single];
+  dw(`包间 ${rm.no}`,`
+    <div class="kv">
+      <div class="k">车厢</div><div>${car.no}车 · ${car.kind}</div>
+      <div class="k">房型</div><div><span class="tag t-${T.color==='gold'?'gold':'blue'}">${T.name} ${T.star}</span></div>
+      <div class="k">床型</div><div>${T.bed}</div>
+      <div class="k">卫浴</div><div>${T.bath}</div>
+      <div class="k">售卖规则</div><div>${T.rule}</div>
+      <div class="k">当前状态</div><div><span class="tag ${(ST[st]||{c:'t-gray'}).c}">${(ST[st]||{n:'部分占用'}).n}</span></div>
+    </div>
+    <div class="sect">铺位级库存</div>
+    <table><thead><tr><th>铺位</th><th>类型</th><th>状态</th><th>占用方</th></tr></thead><tbody>
+    ${rm.beds.map((b,i)=>{
+      const bn = rm.type==='S' ? ['双人床A','双人床B','上铺'][i] : ['下铺1','下铺2','上铺1','上铺2'][i];
+      const own = b==='avail'?'—':b==='lock'?rm.ch:b==='hold'?rm.ch+'（预留）':NAMES[(i+rm.no.charCodeAt(4))%NAMES.length];
+      return `<tr><td>${i+1}</td><td>${bn}</td><td><span class="tag ${ST[b].c}">${ST[b].n}</span></td><td>${own}</td></tr>`;
+    }).join('')}
+    </tbody></table>
+
+    <div class="sect">适用价格（门市 / 返佣 / 同业结算）</div>
+    <table><thead><tr><th>价类</th><th class="num">门市价</th><th class="num">返佣 F</th><th class="num">同业结算价</th></tr></thead><tbody>
+    ${priceRows.map(p=>`<tr><td>${p.label}</td><td class="num">${money(p.list)}</td><td class="num">${p.f?'-'+money(p.f):'—'}</td><td class="num"><b>${money(p.list-p.f)}</b></td></tr>`).join('')}
+    </tbody></table>
+
+    ${(st==='lock'||st==='hold')?`<div class="sect">锁仓 / 预留规则</div>
+    <div class="kv"><div class="k">占用渠道</div><div>${rm.ch}</div>
+    <div class="k">释放日期</div><div>${rm.exp.toISOString().slice(0,10)}</div>
+    <div class="k">规则</div><div>到期未收定金 → 自动释放回可售池（可提前锁 6 个月）</div></div>`:''}
+  `,[
+    {t:'锁仓/预留',f:"alert('演示：选择渠道 + 释放日期 → 库存转为锁仓')"},
+    {t:'直接下单',f:"alert('演示：跳转订单创建，带入班期/车厢/包间/价类')",p:1}
+  ]);
+}
+
+/* ---------------- 价格与政策 ---------------- */
+function vPrice(){
+  const row=(t,p)=>`<tr><td><span class="tag t-${t==='S'?'gold':'blue'}">${ROOMTYPE[t].name}</span></td><td>${p.label}</td>
+    <td class="num">${money(p.list)}</td><td class="num" style="color:var(--sold)">${p.f?'-'+money(p.f):'—'}</td>
+    <td class="num"><b>${money(p.list-p.f)}</b></td><td class="num">${p.f?((p.f/p.list*100).toFixed(1)+'%'):'—'}</td></tr>`;
+  return `
+  <div class="hint"><b>需业务确认（假设）：</b>价格表中的 <b>F1800 / F1000 / F1200</b> 已按「同业返佣」建模 → <b>同业结算价 = 门市价 − F</b>。文件名带「【同】」也支持这一读法。若 F 实为儿童价/不占床价，改一处价类定义即可。</div>
+
+  <div class="card"><h3>价格体系 · ${PRODUCT} <span class="sub">来源：销售政策定稿</span>
+    <span class="spacer"></span><span class="sub">适用班期：${DEPS.map(d=>d.date.slice(5)).join(' / ')}</span></h3>
+    <table><thead><tr><th>房型</th><th>价类</th><th class="num">门市价（元/人）</th><th class="num">返佣 F</th><th class="num">同业结算价</th><th class="num">佣金率</th></tr></thead><tbody>
+      ${row('S',PRICE.S.two)}${row('S',PRICE.S.third)}${row('S',PRICE.S.single)}
+      ${row('Y',PRICE.Y.upper)}${row('Y',PRICE.Y.lower)}${row('Y',PRICE.Y.excl)}${row('Y',PRICE.Y.single)}
+    </tbody></table>
+    <div class="cbody src">
+      政策原文：1、安途尊享房各包厢内含独立卫浴，<b>不接受单人拼房</b>；2、悦途品质房各包厢内含4张铺，每节车厢含6个包厢，共用两个公共淋浴。<br>
+      → 系统落地：尊享房库存粒度 = <b>整间</b>（最小成团2人，第三人另计价）；品质房库存粒度 = <b>铺位</b>（上/下铺不同价），2人可选「专属包厢」价独享整间。
+    </div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h3>退改规则（阶梯违约金）</h3>
+      <table><thead><tr><th>发车前天数</th><th>违约责任</th><th class="num">取消费</th></tr></thead><tbody>
+      ${REFUND.map(r=>`<tr><td>${r.d}</td><td>${r.r}</td><td class="num"><b>${r.pct}%</b></td></tr>`).join('')}
+      </tbody></table>
+      <div class="cbody src">系统按订单所属班期发车日自动判定档位并计算退款金额，销售无需手算。</div>
+    </div>
+    <div class="card"><h3>各班期当前退改档位 <span class="sub">今天 ${TODAY.toISOString().slice(0,10)}</span></h3>
+      <table><thead><tr><th>班期</th><th class="num">距发车</th><th>当前档位</th><th class="num">取消费</th></tr></thead><tbody>
+      ${DEPS.map(d=>{const t=refundTier(d.date);return `<tr><td>${d.date}</td><td class="num">${days(d.date)} 天</td><td>${t.d}</td><td class="num"><b>${t.pct}%</b></td></tr>`}).join('')}
+      </tbody></table>
+      <div class="cbody src">全部班期距发车 &gt;30 天，当前均为免费取消档。</div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- 订单 ---------------- */
+function vOrder(){
+  return `
+  <div class="card"><h3>订单列表
+    <span class="spacer"></span>
+    <select><option>全部渠道</option><option>To B（渠道/机构）</option><option>To C（直客）</option></select>
+    <select><option>全部班期</option>${DEPS.map(d=>`<option>${d.date}</option>`).join('')}</select>
+    <button class="btn sm p" onclick="alert('演示：新建订单 → 选班期 → 选房型/价类 → 占库存 → 录客人（AI识别身份证/护照）')">＋ 新建订单</button>
+  </h3>
+  <table><thead><tr><th>订单号</th><th>班期</th><th>渠道</th><th>客户 / 渠道方</th><th class="num">人数</th><th>房型占用</th><th class="num">门市金额</th><th class="num">返佣</th><th class="num">应收</th><th>单据</th><th>状态</th><th></th></tr></thead><tbody>
+  ${ORDERS.map(o=>`<tr>
+    <td class="mono">${o.id}</td>
+    <td>${DEPS.find(d=>d.id===o.dep).date}</td>
+    <td><span class="tag ${o.ch==='TOB'?'t-blue':'t-gold'}">${o.ch==='TOB'?'To B':'To C'}</span></td>
+    <td>${o.cust}</td>
+    <td class="num">${o.pax}</td>
+    <td style="font-size:11px;color:var(--tx2)">${o.rooms}</td>
+    <td class="num">${money(o.list)}</td>
+    <td class="num" style="color:var(--sold)">${o.fy?'-'+money(o.fy):'—'}</td>
+    <td class="num"><b>${money(o.list-o.fy)}</b></td>
+    <td>${docDots(o.doc)}</td>
+    <td><span class="tag ${OST[o.st].c}">${OST[o.st].n}</span></td>
+    <td><button class="btn sm" onclick="openOrder('${o.id}')">详情</button></td>
+  </tr>`).join('')}
+  </tbody></table>
+  <div class="cbody src">单据列 4 个点依次为：确认件 · 认款单 · 出团通知书 · 选舱单 —— 会议原话「确认完了系统自动生成确认件，然后自动生成认款，然后生成通知书，分团全自动化」。</div>
+  </div>`;
+}
+function docDots(d){
+  const m=[['确认件',d.confirm],['认款单',d.receipt],['通知书',d.notice],['选舱单',d.cabin]];
+  return m.map(([n,v])=>`<span title="${n}" style="display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;background:${v?'var(--ok)':'#e3e6ea'}"></span>`).join('');
+}
+function openOrder(id){
+  const o=ORDERS.find(x=>x.id===id), dep=DEPS.find(d=>d.id===o.dep);
+  const steps=['pending','confirmed','deposit','paid','settled'];
+  const si=steps.indexOf(o.st);
+  const t=refundTier(dep.date);
+  dw('订单 '+o.id,`
+    <div class="kv">
+      <div class="k">班期</div><div>${dep.date} · ${PRODUCT}</div>
+      <div class="k">渠道</div><div><span class="tag ${o.ch==='TOB'?'t-blue':'t-gold'}">${o.ch==='TOB'?'To B 渠道':'To C 直客'}</span> ${o.sales}</div>
+      <div class="k">客户</div><div>${o.cust}（联系人 ${o.con}）</div>
+      <div class="k">下单时间</div><div>${o.ctime}</div>
+      <div class="k">占用库存</div><div>${o.rooms} · ${o.pax} 人</div>
+      <div class="k">状态</div><div><span class="tag ${OST[o.st].c}">${OST[o.st].n}</span></div>
+    </div>
+    <div class="sect">单据自动流转</div>
+    <div class="flow" style="margin-bottom:6px">
+      ${['下单','确认件','认款单','出团通知书','选舱单'].map((n,i)=>
+        `<span class="fl ${o.st==='cancelled'?'':(i<si?'done':i===si?'on':'')}">${i+1} ${n}</span>${i<4?'<span class="fa">→</span>':''}`).join('')}
+    </div>
+    <div class="sect">金额</div>
+    <table><tbody>
+      <tr><td>门市价合计</td><td class="num">${money(o.list)}</td></tr>
+      <tr><td>同业返佣 F</td><td class="num" style="color:var(--sold)">${o.fy?'-'+money(o.fy):'—'}</td></tr>
+      <tr><td><b>应收团款</b></td><td class="num"><b>${money(o.list-o.fy)}</b></td></tr>
+      <tr><td>已收</td><td class="num">${o.st==='settled'||o.st==='paid'?money(o.list-o.fy):o.st==='deposit'?money(Math.round((o.list-o.fy)*0.3)):'¥0'}</td></tr>
+    </tbody></table>
+    <div class="sect">退改（按发车日自动判定）</div>
+    <div class="kv"><div class="k">距发车</div><div>${days(dep.date)} 天</div>
+      <div class="k">当前档位</div><div>${t.d} · 取消费 <b>${t.pct}%</b></div>
+      <div class="k">若现在取消</div><div>扣 ${money(Math.round((o.list-o.fy)*t.pct/100))}，退 ${money(Math.round((o.list-o.fy)*(1-t.pct/100)))}</div></div>
+    <div class="sect">客人信息（AI 证件识别录入）</div>
+    <table><thead><tr><th>姓名</th><th>证件</th><th>铺位</th></tr></thead><tbody>
+    ${NAMES.slice(0,Math.min(o.pax,5)).map((n,i)=>`<tr><td>${n}</td><td class="mono">5301**********${(1000+i*7).toString().slice(-4)}</td><td>${o.doc.cabin?'已选':'待选舱'}</td></tr>`).join('')}
+    ${o.pax>5?`<tr><td colspan="3" style="color:var(--mut)">… 共 ${o.pax} 人</td></tr>`:''}
+    </tbody></table>
+  `,[{t:'生成确认件',f:"alert('演示：PDF 确认件自动生成并推送渠道')"},{t:'认款',f:"alert('演示：认款 → 触发应收核销 → 同步金蝶/用友')",p:1}]);
+}
+
+/* ---------------- 选舱 ---------------- */
+function vCabin(){
+  const q=ORDERS.filter(o=>o.st==='paid');
+  return `
+  <div class="hint"><b>规则：</b>先付款、后选舱，<b>先付先选</b>。C 端不展示真实库存，避免上下铺/靠厕所之类的事前争议（会议原话：「付完钱了你就可以选舱了…免得扯皮」）。</div>
+  <div class="card"><h3>待选舱队列 <span class="sub">已收全款、未选舱的订单</span></h3>
+  <table><thead><tr><th class="num">选舱顺位</th><th>订单号</th><th>班期</th><th>客户</th><th class="num">人数</th><th>房型</th><th>付款时间</th><th>开放选舱</th><th></th></tr></thead><tbody>
+  ${q.map((o,i)=>`<tr><td class="num"><b>${i+1}</b></td><td class="mono">${o.id}</td><td>${DEPS.find(d=>d.id===o.dep).date}</td>
+    <td>${o.cust}</td><td class="num">${o.pax}</td><td>${ROOMTYPE[o.type].name}</td><td>${o.ctime}</td>
+    <td><span class="tag t-ok">已开放</span></td><td><button class="btn sm p" onclick="alert('演示：进入选舱面板 → 只显示该房型可选包间/铺位 → 锁定 15 分钟')">代客选舱</button></td></tr>`).join('')}
+  </tbody></table></div>
+
+  <div class="card"><h3>选舱面板（客户端）<span class="sub">仅显示可选，不显示他人信息</span></h3><div class="cbody">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;max-width:640px">
+      ${INV[curDep].filter(c=>c.type==='S').flatMap(c=>c.rooms).slice(0,12).map(rm=>{
+        const st=roomState(rm);const ok=st==='avail';
+        return `<div class="rm ${ok?'avail':'blocked'}" style="cursor:${ok?'pointer':'not-allowed'}" onclick="${ok?`alert('已选 ${rm.no}，锁定15分钟')`:''}">
+          <div class="no"><span>${rm.no}</span></div><div class="st">${ok?'可选':'不可选'}</div>
+          <div class="beds">${rm.beds.map(b=>`<span class="bd ${b==='avail'?'':'blocked'}"></span>`).join('')}</div></div>`;
+      }).join('')}
+    </div>
+    <div class="src">客户只看到「可选/不可选」，看不到别人是谁、也看不到总余量。</div>
+  </div></div>`;
+}
+
+/* ---------------- 团队操作 ---------------- */
+let opsTab=0;
+function vOps(){
+  const dep=DEPS[0];
+  const list=NAMES.map((n,i)=>({n,id:'5301'+String(19500101+i*37).slice(0,8)+'****',g:i%2?'女':'男',
+    car:i<6?'03':'09',rm:(i<6?'03-0':'09-0')+((i%6)+1),bed:i%2?'下铺':'上铺',ph:'138****'+String(1000+i*13).slice(-4),
+    t:i<6?'安途尊享':'悦途品质'}));
+  const tabs=['团队名单','打票格式（铁路提报）','分团 / 房态表'];
+  return `
+  <div class="card"><h3>团队操作 · ${dep.date} 班期 <span class="sub">${PRODUCT}</span>
+    <span class="spacer"></span><button class="btn sm">导出 Excel</button><button class="btn sm p">推送铁路局</button></h3>
+  <div class="cbody">
+    <div class="tabs">${tabs.map((t,i)=>`<div class="tab ${i===opsTab?'on':''}" onclick="opsTab=${i};render()">${t}</div>`).join('')}</div>
+    ${opsTab===0?`
+    <table><thead><tr><th class="num">#</th><th>姓名</th><th>性别</th><th>证件号</th><th>手机</th><th>房型</th><th>车厢</th><th>包间</th><th>铺位</th><th>订单</th></tr></thead><tbody>
+    ${list.map((p,i)=>`<tr><td class="num">${i+1}</td><td>${p.n}</td><td>${p.g}</td><td class="mono">${p.id}</td><td class="mono">${p.ph}</td>
+      <td><span class="tag ${p.t==='安途尊享'?'t-gold':'t-blue'}">${p.t}</span></td><td>${p.car}车</td><td class="mono">${p.rm}</td><td>${p.bed}</td><td class="mono">DD260714${'0'+(i%3+1)}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="src">名单由订单 + 选舱结果自动汇总，证件号由 AI 识别身份证/护照录入，无需手工敲。</div>`
+    :opsTab===1?`
+    <div class="paper mono" style="background:#fbfcfd;white-space:pre;overflow-x:auto">
+铁路旅游专列旅客名单（打票用）
+车次：昆明号 Y801    开行日期：${dep.date}    编组：16辆
+------------------------------------------------------------------
+序号  姓名      性别  证件类型  证件号码              车厢  铺位号  铺别
+------------------------------------------------------------------
+${list.map((p,i)=>`${String(i+1).padStart(3,' ')}   ${p.n.padEnd(8,'　')} ${p.g}    身份证    ${p.id}   ${p.car}    ${p.rm}  ${p.bed}`).join('\n')}
+------------------------------------------------------------------
+合计：${list.length} 人    制表：计调组    ${TODAY.toISOString().slice(0,10)}
+    </div>
+    <div class="src">固定宽度文本格式，可直接导出给铁路局售票系统 / 打票窗口（格式待与昆明局对齐 — <span style="color:#9a7a2a">假设</span>）。</div>`
+    :`
+    <div class="grid g3">
+      ${['A团（尊享·北京出发）','B团（品质·昆明集合）','C团（散客拼团）'].map((g,i)=>`
+      <div class="card" style="margin:0"><h3>${g}<span class="spacer"></span><span class="tag t-gray">${[24,48,12][i]}人</span></h3>
+      <div class="cbody" style="font-size:12px;color:var(--tx2)">
+        领队：${['张敏','李强','王芳'][i]}<br>车厢：${['03-06车','09-12车','13-16车'][i]}<br>
+        地接：${AGENTS[i]}<br>用餐：${['VIP餐车','包间送餐','VIP餐车'][i]}<br>
+        <button class="btn sm" style="margin-top:8px">导出分团名单</button>
+      </div></div>`).join('')}
+    </div>
+    <div class="src">分团按「房型 + 集合地 + 领队」自动拆分，可手工调整。</div>`}
+  </div></div>`;
+}
+
+/* ---------------- 地接计划 ---------------- */
+function vLand(){
+  const dep=DEPS[0];
+  const plan=STOPS.map((s,i)=>({s,ag:AGENTS[i%AGENTS.length],day:'D'+(i+2),pax:264,
+    bus:Math.ceil(264/45),guide:Math.ceil(264/45),
+    fee:[68,55,120,80,150,60][i], hotel:i%2?'车上住宿':'当地四星'}));
+  const tot=plan.reduce((a,p)=>a+p.fee*p.pax,0);
+  return `
+  <div class="card"><h3>地接计划 · ${dep.date} 班期 <span class="sub">发车 ${days(dep.date)} 天后</span>
+    <span class="spacer"></span><button class="btn sm">打印</button><button class="btn sm p" onclick="alert('演示：一键下发至各地接社（邮件/短信/系统消息），回执状态回写')">一键下发地接社</button></h3>
+  <table><thead><tr><th>行程日</th><th>站点</th><th>地接社</th><th class="num">人数</th><th class="num">用车</th><th class="num">导游</th><th>住宿</th><th class="num">地接单价</th><th class="num">小计</th><th>下发状态</th></tr></thead><tbody>
+  ${plan.map(p=>`<tr><td>${p.day}</td><td><b>${p.s}</b></td><td>${p.ag}</td><td class="num">${p.pax}</td><td class="num">${p.bus} 台</td><td class="num">${p.guide} 名</td>
+    <td>${p.hotel}</td><td class="num">${money(p.fee)}</td><td class="num"><b>${money(p.fee*p.pax)}</b></td>
+    <td><span class="tag t-gray">未下发</span></td></tr>`).join('')}
+  <tr style="background:#fafbfc"><td colspan="8"><b>应付地接款合计</b></td><td class="num"><b style="color:var(--sold)">${money(tot)}</b></td><td></td></tr>
+  </tbody></table>
+  <div class="cbody src">地接单价为演示数据（<span style="color:#9a7a2a">假设</span>，源文件未提供地接成本）。计划下发后自动生成应付单，进入财务对账。</div>
+  </div>
+
+  <div class="card"><h3>地接结算单预览 <span class="sub">腾冲康辉地接</span></h3><div class="cbody">
+    <div class="paper" style="max-width:620px;margin:0 auto">
+      <h4>昆明号专列 · 地接结算单</h4>
+      <div class="pm">结算单号 JS26071401　｜　班期 ${dep.date}　｜　供应商：腾冲康辉地接</div>
+      <table><thead><tr><th>项目</th><th class="num">人数/数量</th><th class="num">单价</th><th class="num">金额</th></tr></thead><tbody>
+        <tr><td>地面接待（D4 腾冲）</td><td class="num">264 人</td><td class="num">¥120</td><td class="num">¥31,680</td></tr>
+        <tr><td>空调巴士（45座）</td><td class="num">6 台</td><td class="num">¥1,800</td><td class="num">¥10,800</td></tr>
+        <tr><td>导游服务</td><td class="num">6 名</td><td class="num">¥500</td><td class="num">¥3,000</td></tr>
+        <tr><td>景区门票（含）</td><td class="num">264 人</td><td class="num">—</td><td class="num">含</td></tr>
+        <tr style="background:#fafbfc"><td colspan="3"><b>合计应付</b></td><td class="num"><b>¥45,480</b></td></tr>
+      </tbody></table>
+      <div class="sig"><span>制单：计调 · 李静</span><span>审核：____</span><span>地接社盖章：____</span></div>
+    </div>
+  </div></div>`;
+}
+
+/* ---------------- 财务 ---------------- */
+let finTab=0;
+function vFin(){
+  const ar=ORDERS.filter(o=>o.st!=='cancelled');
+  const arTot=ar.reduce((a,o)=>a+o.list-o.fy,0);
+  const got=ar.filter(o=>o.st==='paid'||o.st==='settled').reduce((a,o)=>a+o.list-o.fy,0);
+  const dpt=ar.filter(o=>o.st==='deposit').reduce((a,o)=>a+Math.round((o.list-o.fy)*0.3),0);
+  const ap=STOPS.length*264*90;
+  return `
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="kpi"><div class="l">应收团款（全部班期）</div><div class="v">${(arTot/10000).toFixed(1)}<small>万</small></div><div class="d">${ar.length} 张有效订单</div></div>
+    <div class="kpi"><div class="l">已收</div><div class="v" style="color:var(--ok)">${((got+dpt)/10000).toFixed(1)}<small>万</small></div><div class="bar"><i style="width:${((got+dpt)/arTot*100).toFixed(0)}%"></i></div></div>
+    <div class="kpi"><div class="l">未收</div><div class="v" style="color:var(--sold)">${((arTot-got-dpt)/10000).toFixed(1)}<small>万</small></div><div class="d">含 2 家渠道逾期</div></div>
+    <div class="kpi"><div class="l">应付地接款（预估）</div><div class="v" style="color:var(--hold)">${(ap/10000).toFixed(1)}<small>万</small></div><div class="d">5 个班期 · 6 个站点</div></div>
+  </div>
+
+  <div class="card"><h3>对账
+    <span class="spacer"></span>
+    <span class="tag t-gray">已对接：金蝶 / 用友（凭证自动推送）</span>
+    <button class="btn sm p" onclick="alert('演示：生成记账凭证并推送至金蝶')">推送凭证</button></h3>
+  <div class="cbody">
+    <div class="tabs">${['应收（团款）','应付（地接款）'].map((t,i)=>`<div class="tab ${i===finTab?'on':''}" onclick="finTab=${i};render()">${t}</div>`).join('')}</div>
+    ${finTab===0?`
+    <table><thead><tr><th>订单号</th><th>班期</th><th>付款方</th><th>渠道</th><th class="num">门市价</th><th class="num">返佣</th><th class="num">应收</th><th class="num">已收</th><th class="num">未收</th><th>账期</th><th>状态</th></tr></thead><tbody>
+    ${ar.map(o=>{
+      const due=o.list-o.fy;
+      const rec=(o.st==='paid'||o.st==='settled')?due:o.st==='deposit'?Math.round(due*0.3):0;
+      const over=(o.st==='confirmed');
+      return `<tr><td class="mono">${o.id}</td><td>${DEPS.find(d=>d.id===o.dep).date}</td><td>${o.cust}</td>
+        <td><span class="tag ${o.ch==='TOB'?'t-blue':'t-gold'}">${o.ch==='TOB'?'To B':'To C'}</span></td>
+        <td class="num">${money(o.list)}</td><td class="num" style="color:var(--sold)">${o.fy?'-'+money(o.fy):'—'}</td>
+        <td class="num"><b>${money(due)}</b></td><td class="num">${money(rec)}</td>
+        <td class="num" style="color:${due-rec?'var(--sold)':'var(--mut)'}">${due-rec?money(due-rec):'—'}</td>
+        <td>${o.ch==='TOB'?'发车前15天':'即时'}</td>
+        <td>${rec===due?'<span class="tag t-ok">已结清</span>':over?'<span class="tag t-sold">逾期未付</span>':'<span class="tag t-hold">待收</span>'}</td></tr>`;
+    }).join('')}
+    </tbody></table>
+    <div class="src">To B 应收按渠道账期自动预警；To C 为即时收款（小程序/客服链接）。会议原话：「应收应该大部分都是应收账款…除非地接落地时做地接款结算」。</div>`
+    :`
+    <table><thead><tr><th>结算单号</th><th>班期</th><th>供应商（地接社）</th><th>站点</th><th class="num">人数</th><th class="num">应付</th><th class="num">已付</th><th>状态</th></tr></thead><tbody>
+    ${AGENTS.map((a,i)=>{const amt=264*[68,55,120,80,150][i]+10800+3000;
+      return `<tr><td class="mono">JS2607140${i+1}</td><td>${DEPS[0].date}</td><td>${a}</td><td>${STOPS[i]}</td><td class="num">264</td>
+      <td class="num"><b>${money(amt)}</b></td><td class="num">${i<2?money(amt):'¥0'}</td>
+      <td>${i<2?'<span class="tag t-ok">已付</span>':'<span class="tag t-hold">待审核</span>'}</td></tr>`}).join('')}
+    </tbody></table>
+    <div class="src">地接款在专列靠站落地后结算，金额随实际成团人数自动回算。</div>`}
+  </div></div>`;
+}
+
+/* ---------------- 设置 ---------------- */
+function vSys(){
+  return `
+  <div class="grid g2">
+    <div class="card"><h3>专列 / 编组管理 <span class="sub">支持多专列扩展</span></h3>
+    <table><thead><tr><th>专列</th><th class="num">编组</th><th class="num">可售车厢</th><th class="num">包厢</th><th class="num">定员</th><th>状态</th></tr></thead><tbody>
+      <tr><td><b>彩云之南 · 昆明号</b></td><td class="num">16 辆</td><td class="num">12</td><td class="num">72</td><td class="num">264</td><td><span class="tag t-ok">在运营</span></td></tr>
+      <tr><td style="color:var(--mut)">（预留：第二列专列）</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="tag t-gray">未启用</span></td></tr>
+    </tbody></table>
+    <div class="cbody src">会议明确「后续还会有其他专列」→ 库存模型按「专列 → 班期 → 车厢 → 包间 → 铺位」五级建模，加第二列只需新增专列档案。</div></div>
+
+    <div class="card"><h3>库存状态机 <span class="sub">一期核心规则</span></h3><div class="cbody">
+      <div class="flow" style="margin-bottom:10px">
+        <span class="fl" style="background:var(--okbg);border-color:#bfe5cc;color:var(--ok)">可售</span><span class="fa">→</span>
+        <span class="fl" style="background:var(--lockbg);border-color:#cfbcf7;color:var(--lock)">锁仓（硬切渠道）</span><span class="fa">→</span>
+        <span class="fl" style="background:var(--holdbg);border-color:#eccb92;color:var(--hold)">预留（销售占位）</span><span class="fa">→</span>
+        <span class="fl" style="background:var(--depbg);border-color:#a9dfe9;color:var(--dep)">已付定</span><span class="fa">→</span>
+        <span class="fl" style="background:var(--soldbg);border-color:#eec0bb;color:var(--sold)">已成交</span>
+      </div>
+      <table><tbody>
+        <tr><td>锁仓时长</td><td>可提前锁 <b>6 个月</b>（会议原话）</td></tr>
+        <tr><td>释放规则</td><td>到期未收定金 → <b>自动释放回可售池</b>，并通知销售</td></tr>
+        <tr><td>粒度</td><td>尊享房 = 整间；品质房 = 铺位（上/下铺分价）</td></tr>
+        <tr><td>C 端可见性</td><td>只显示 可售 / 紧张 / 售罄，<b>不展示真实余量</b></td></tr>
+        <tr><td>选舱时机</td><td>付全款后开放，<b>先付先选</b></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+
+  <div class="card"><h3>角色与权限（一期）</h3>
+    <table><thead><tr><th>角色</th><th>库存</th><th>价格</th><th>订单</th><th>选舱</th><th>操作</th><th>财务</th></tr></thead><tbody>
+      <tr><td><b>销售</b></td><td>查看 / 预留</td><td>查看</td><td>建单 / 改单</td><td>代客选舱</td><td>—</td><td>查看应收</td></tr>
+      <tr><td><b>销售主管</b></td><td>锁仓 / 释放</td><td>查看</td><td>审批</td><td>—</td><td>—</td><td>查看</td></tr>
+      <tr><td><b>计调 / 操作</b></td><td>查看</td><td>—</td><td>查看</td><td>—</td><td>名单 / 打票 / 地接计划</td><td>录成本</td></tr>
+      <tr><td><b>财务</b></td><td>—</td><td>—</td><td>认款</td><td>—</td><td>—</td><td>对账 / 推凭证</td></tr>
+      <tr><td><b>管理员</b></td><td>全部</td><td>维护</td><td>全部</td><td>全部</td><td>全部</td><td>全部</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="card"><h3>交付与部署（会议要求：系统掌握在自己手里）</h3><div class="cbody">
+    <table><tbody>
+      <tr><td style="width:110px">开发方式</td><td>定制开发</td></tr>
+      <tr><td>源码</td><td>交付甲方，知识产权归甲方</td></tr>
+      <tr><td>部署</td><td>甲方自有服务器，数据不出域</td></tr>
+      <tr><td>运维</td><td>交接甲方信息部</td></tr>
+      <tr><td>后续阶段</td><td>二期：C端小程序 / 海外平台 / 智能客服 / 自动化推广（「毛坯先上」）；三期：管家 · 备品 · 餐饮 · 车上仓库</td></tr>
+    </tbody></table>
+  </div></div>`;
+}
+
+/* ---------------- drawer ---------------- */
+function dw(title,html,btns){
+  document.getElementById('dwt').textContent=title;
+  document.getElementById('dwb').innerHTML=html;
+  const f=document.getElementById('dwf');
+  if(btns&&btns.length){f.style.display='flex';f.innerHTML=btns.map(b=>`<button class="btn ${b.p?'p':''}" onclick="${b.f}">${b.t}</button>`).join('')}
+  else f.style.display='none';
+  document.getElementById('mask').style.display='block';
+  document.getElementById('dw').classList.add('open');
+}
+function closeDw(){document.getElementById('dw').classList.remove('open');document.getElementById('mask').style.display='none'}
+document.getElementById('mask').onclick=closeDw;
+
+nav();render();
+</script>
+</body>
+</html>
