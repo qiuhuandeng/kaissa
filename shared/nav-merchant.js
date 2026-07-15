@@ -49,6 +49,8 @@
           children: [
             { title: "目的地分类", href: "product/product-destination-config.html" },
             { title: "出发地配置", href: "product/product-departure-config.html" },
+            { title: "签证国家", href: "resource/visa-library.html" },
+            { title: "退改规则", href: "resource/refund-rules.html" },
           ],
         },
         { title: "供应商", href: "resource/suppliers.html" },
@@ -71,16 +73,6 @@
           children: [
             { title: "产品管理", href: "product/products.html" },
             { title: "单团项目", href: "tour/product-custom-list.html" },
-            { title: "团期管控", href: "tour/schedules.html" },
-            { title: "团期结算", href: "tour/fulfillment-cost.html" },
-          ],
-        },
-        {
-          title: "交通采购",
-          children: [
-            { title: "机票切位", href: "tour/resource-procurement-inventory.html?kind=air" },
-            { title: "邮轮包舱", href: "tour/resource-procurement-inventory.html?kind=cruise" },
-            { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
         {
@@ -88,6 +80,23 @@
           children: [
             { title: "定价策略", href: "product/product-pricing.html" },
             { title: "佣金政策", href: "channel/commission_rules.html" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "履约中心",
+      icon: "clipboard",
+      children: [
+        { title: "团期管控", href: "tour/schedules.html" },
+        { title: "团期结算", href: "tour/fulfillment-cost.html" },
+        { title: "签证办理", href: "tour/visa-processing.html" },
+        {
+          title: "交通采购",
+          children: [
+            { title: "机票切位", href: "tour/resource-procurement-inventory.html?kind=air" },
+            { title: "邮轮包舱", href: "tour/resource-procurement-inventory.html?kind=cruise" },
+            { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
       ],
@@ -520,6 +529,8 @@
     "product/product-schedules.html": { href: "product/products.html", title: "产品团期" },
     "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
+    "resource/visa-library.html": { href: "resource/visa-library.html", title: "签证国家" },
+    "resource/refund-rules.html": { href: "resource/refund-rules.html", title: "退改规则" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "marketing/campaigns.html": { href: "marketing/campaigns.html", title: "活动管理" },
     "marketing/campaign-edit.html": { href: "marketing/campaigns.html", title: "营销活动" },
@@ -539,6 +550,7 @@
     "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "代理产品详情" },
     "product/product-outsource-package.html": { href: "product/product-outsource-list.html", title: "代理产品包装" },
     "product/product-outsource-quota.html": { href: "product/product-outsource-list.html", title: "可代理团期" },
+    "product/product-outsource-schedules.html": { href: "product/product-outsource-list.html", title: "代理团期" },
     "approval/approval-product-review.html": { href: "approval/approvals.html?view=todo", title: "审批详情" },
     "system/role-assignment.html": { href: "system/staff-management.html", title: "员工任职" },
     "system/data-scope.html": { href: "system/staff-management.html", title: "员工任职" },
@@ -547,6 +559,7 @@
     "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期" },
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
+    "tour/visa-processing.html": { href: "tour/visa-processing.html", title: "签证办理" },
     "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
     "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
@@ -2191,6 +2204,7 @@
   }
 
   function isFilterSubmitAction(control) {
+    if (control.hasAttribute("data-filter-submit-action")) return true;
     const text = compactText(control.textContent);
     if (!text) return false;
     return /^(搜索|查询|重置)$/.test(text);

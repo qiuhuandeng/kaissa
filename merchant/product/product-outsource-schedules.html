@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>代理团期 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="product-schedule-page outsource-schedule-page">
+    <section class="page-workbar product-schedule-workbar">
+      <div class="page-title-row">
+        <a class="page-back-link" href="product-outsource-list.html">返回</a>
+        <h1 class="page-title">代理团期</h1>
+      </div>
+      <div class="btn-group">
+        <a id="outsourceProductDetailLink" class="btn btn-secondary" href="product-outsource-detail.html">代理产品详情</a>
+      </div>
+    </section>
+
+    <section class="card product-schedule-hero" aria-label="当前代理产品信息">
+      <figure class="product-schedule-cover">
+        <img id="summaryProductCover" src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80" alt="代理产品封面">
+        <figcaption class="product-schedule-cover-overlay">
+          <span id="summaryProductStatus" class="tag tag-green">销售中</span>
+          <strong id="summaryProductName">-</strong>
+          <small id="summaryProductMeta">-</small>
+        </figcaption>
+      </figure>
+      <div class="product-schedule-info">
+        <div class="product-schedule-field-grid">
+          <div class="product-schedule-field"><span>来源供应商</span><strong id="summarySupplier">-</strong></div>
+          <div class="product-schedule-field"><span>产品类型</span><strong id="summaryProductType">-</strong></div>
+          <div class="product-schedule-field"><span>出发地</span><strong id="summaryDeparture">-</strong></div>
+          <div class="product-schedule-field"><span>目的地</span><strong id="summaryDestination">-</strong></div>
+          <div class="product-schedule-field"><span>销售范围</span><strong id="summarySaleScope">-</strong></div>
+        </div>
+        <div class="product-schedule-context">
+          <div class="product-schedule-sale-metric">
+            <span>当前可售</span>
+            <div><strong id="summarySaleCount">0</strong><em id="summarySaleObject">个团期</em></div>
+          </div>
+          <div id="summaryScheduleStats" class="product-schedule-context-stat">-</div>
+          <div id="summaryOwnerLine" class="product-schedule-context-audit">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="product-schedule-route-section" aria-label="代理产品线路">
+      <div id="outsourceScheduleRoutes" class="product-schedule-route-grid"></div>
+    </section>
+
+    <section class="filter-card filter-card-compact product-schedule-filter-surface" aria-label="代理团期筛选">
+      <div class="filter-row">
+        <div class="filter-item filter-item-search product-schedule-filter-keyword">
+          <label class="sr-only" for="scheduleKeyword">团期编号/线路名称</label>
+          <input id="scheduleKeyword" type="text" placeholder="团期编号/线路名称">
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="scheduleStatusFilter">销售状态</label>
+          <select id="scheduleStatusFilter">
+            <option value="">全部状态</option>
+            <option>审核中</option>
+            <option>销售中</option>
+            <option>停售</option>
+          </select>
+        </div>
+        <div class="filter-item-sm">
+          <label class="sr-only" for="priceLockFilter">售价状态</label>
+          <select id="priceLockFilter">
+            <option value="">全部售价状态</option>
+            <option>未锁定</option>
+            <option>已锁定</option>
+          </select>
+        </div>
+        <label class="filter-check"><input id="hideStoppedSchedules" type="checkbox" checked> 隐藏停售</label>
+        <div class="filter-actions">
+          <button id="resetScheduleFilters" class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="list-surface product-schedule-table-surface" data-list-surface>
+      <section class="table-wrap list-surface-table list-table-with-pagination product-schedule-table-wrap" aria-label="代理团期列表">
+        <table class="product-schedule-table agency-product-schedule-table">
+          <colgroup>
+            <col class="agency-schedule-col-code">
+            <col class="agency-schedule-col-route">
+            <col class="agency-schedule-col-date">
+            <col class="agency-schedule-col-deadline">
+            <col class="agency-schedule-col-stock">
+            <col class="agency-schedule-col-settlement">
+            <col class="agency-schedule-col-price">
+            <col class="agency-schedule-col-lock">
+            <col class="agency-schedule-col-status">
+            <col class="agency-schedule-col-confirm">
+            <col class="agency-schedule-col-action">
+          </colgroup>
+          <thead>
+            <tr>
+              <th id="scheduleCodeHead">代理团期</th>
+              <th>使用线路</th>
+              <th>出发/返回</th>
+              <th>报名截止</th>
+              <th>名额/已售</th>
+              <th>供应商结算价</th>
+              <th>我方销售价</th>
+              <th>售价状态</th>
+              <th>销售状态</th>
+              <th>供应商确认</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="productScheduleRows"></tbody>
+        </table>
+      </section>
+      <div class="pagination list-surface-pagination list-pagination-attached">
+        <span id="productSchedulePager">0条</span>
+      </div>
+    </section>
+  </main>
+
+  <div id="schedulePriceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outsource-product-modal" role="dialog" aria-modal="true" aria-labelledby="schedulePriceTitle">
+      <div class="modal-header">
+        <div id="schedulePriceTitle" class="modal-title">设置售价</div>
+        <button class="modal-close" type="button" data-close-price aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">代理团期</h3>
+          </div>
+          <div id="schedulePriceSummary" class="description-grid"></div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">本次售价</h3>
+          </div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group"><label class="form-label" for="scheduleSalePrice">我方销售价</label><input id="scheduleSalePrice" class="form-control" type="number" min="0"></div>
+            <div class="form-group"><label class="form-label" for="scheduleChildPrice">儿童销售价</label><input id="scheduleChildPrice" class="form-control" type="number" min="0"></div>
+            <div class="form-group"><label class="form-label" for="scheduleSingleRoom">单房差</label><input id="scheduleSingleRoom" class="form-control" type="number" min="0"></div>
+            <div class="form-group"><label class="form-label" for="scheduleLockAfterSave">保存后锁价</label><select id="scheduleLockAfterSave" class="form-control"><option>否</option><option>是</option></select></div>
+            <div class="form-group form-group-full"><label class="form-label" for="schedulePriceRemark">调价原因</label><textarea id="schedulePriceRemark" class="form-control" rows="3"></textarea></div>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-price>取消</button>
+        <button id="saveSchedulePrice" class="btn btn-primary" type="button">确认设置</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scheduleDetailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal outsource-schedule-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="scheduleDetailTitle">
+      <div class="modal-header">
+        <div id="scheduleDetailTitle" class="modal-title">代理团期详情</div>
+        <button class="modal-close" type="button" data-close-detail aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">代理团期</h3>
+          </div>
+          <div id="scheduleDetailSummary" class="description-grid"></div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">订单占用</h3>
+          </div>
+          <div class="table-wrap product-outsource-drawer-table">
+            <table>
+              <thead><tr><th>订单号</th><th>客户/渠道</th><th>占用</th><th>收款</th></tr></thead>
+              <tbody id="scheduleOrderRows"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">操作记录</h3>
+          </div>
+          <div id="scheduleLogRows" class="timeline-list"></div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-detail>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="stopScheduleModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm outsource-stop-modal" role="dialog" aria-modal="true" aria-labelledby="stopScheduleTitle">
+      <div class="modal-header">
+        <div id="stopScheduleTitle" class="modal-title">停售团期</div>
+        <button class="modal-close" type="button" data-close-stop aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="stopScheduleSummary" class="outsource-stop-summary"></div>
+        <div class="form-group outsource-stop-reason"><label class="form-label" for="stopScheduleReason">停售原因</label><textarea id="stopScheduleReason" class="form-control" rows="3"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-stop>取消</button>
+        <button id="confirmStopSchedule" class="btn btn-warning" type="button">确认停售</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var productKey = params.get('product') || 'group';
+      var activeRoute = '__all';
+      var activeScheduleNo = '';
+      var scheduleRows = document.getElementById('productScheduleRows');
+      var priceDrawer = document.getElementById('schedulePriceDrawer');
+      var detailDrawer = document.getElementById('scheduleDetailDrawer');
+      var stopScheduleModal = document.getElementById('stopScheduleModal');
+      var products = {
+        group: {
+          name: '西欧精选8日散拼',
+          type: '参团游',
+          supplier: '欧洲联合地接社',
+          departure: '北京',
+          destination: '法国/德国/瑞士',
+          scope: '门店+分销 / 华东直营',
+          status: '销售中',
+          owner: '代理运营陈琳',
+          unit: '人',
+          objectName: '团期',
+          detailHref: 'product-outsource-detail.html?type=group&source=OUT-EU-0001',
+          cover: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80',
+          routes: [
+            { name: 'A线 法德意12天', meta: '欧洲十国经典游 12日11晚' },
+            { name: 'B线 荷比德法12天', meta: '莱茵河与低地国家连线' },
+            { name: 'C线 瑞意深度10天', meta: '瑞士意大利深度线' }
+          ],
+          schedules: [
+            { no: 'AGY-EU-20260705-001', route: 'A线 法德意12天', routeMeta: '欧洲十国经典游 12日11晚', depart: '2026-07-05', back: '2026-07-12', deadline: '2026-07-04', settlement: '成人 ¥5,750', salePrice: 9800, childPrice: 8600, singleRoom: 1800, quota: 12, sold: 8, priceStatus: '已锁定', status: '销售中', confirm: '已确认', confirmNo: 'SUP-CFM-20260705-001', orders: [['KS20260701001', '张建国 / 软件园门店', '2人', '已收款'], ['KS20260702008', '李娜 / 分销渠道', '4人', '定金已付']], logs: [['2026-06-29 09:40', '上线审核通过，开放销售。'], ['2026-06-30 11:10', '供应商回传确认号。']] },
+            { no: 'AGY-EU-20260918-002', route: 'A线 法德意12天', routeMeta: '欧洲十国经典游 12日11晚', depart: '2026-09-18', back: '2026-09-25', deadline: '2026-09-01', settlement: '成人 ¥5,750', salePrice: 9800, childPrice: 8600, singleRoom: 1800, quota: 18, sold: 3, priceStatus: '未锁定', status: '销售中', confirm: '待确认', confirmNo: '-', orders: [['KS20260828009', '赵敏 / 文灶门店', '3人', '已收款']], logs: [['2026-06-29 09:40', '上线审核通过，待供应商二次确认。']] },
+            { no: 'AGY-EU-20260418-003', route: 'C线 瑞意深度10天', routeMeta: '瑞士意大利深度线', depart: '2026-04-18', back: '2026-04-25', deadline: '2026-04-01', settlement: '成人 ¥5,750', salePrice: 9600, childPrice: 8200, singleRoom: 1800, quota: 12, sold: 12, priceStatus: '已锁定', status: '停售', confirm: '已确认', confirmNo: 'SUP-CFM-20260418-003', orders: [['KS20260401011', '周明 / 厦门门店', '2人', '已收款']], logs: [['2026-04-02 18:30', '团期售罄后停售。']] }
+          ]
+        },
+        jp: {
+          name: '日本本州经典8日',
+          type: '参团游',
+          supplier: '樱花旅游地接',
+          departure: '广州',
+          destination: '东京/大阪/京都',
+          scope: '门店销售 / 华南直营',
+          status: '审核中',
+          owner: '代理运营陈琳',
+          unit: '人',
+          objectName: '团期',
+          detailHref: 'product-outsource-detail.html?type=group&source=OUT-JP-0005',
+          cover: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=900&q=80',
+          routes: [
+            { name: 'A线 东京大阪京都8天', meta: '本州经典观光线' },
+            { name: 'B线 关西亲子8天', meta: '大阪京都奈良亲子线' }
+          ],
+          schedules: [
+            { no: 'AGY-JP-20260812-001', route: 'A线 东京大阪京都8天', routeMeta: '本州经典观光线', depart: '2026-08-12', back: '2026-08-19', deadline: '2026-08-01', settlement: '成人 ¥4,900', salePrice: 7200, childPrice: 6600, singleRoom: 1200, quota: 13, sold: 0, priceStatus: '未锁定', status: '审核中', confirm: '待确认', confirmNo: '-', orders: [], logs: [['2026-07-06 10:12', '代理入库提交审核。']] },
+            { no: 'AGY-JP-20260826-002', route: 'B线 关西亲子8天', routeMeta: '大阪京都奈良亲子线', depart: '2026-08-26', back: '2026-09-02', deadline: '2026-08-15', settlement: '成人 ¥4,900', salePrice: 7200, childPrice: 6600, singleRoom: 1200, quota: 13, sold: 0, priceStatus: '未锁定', status: '审核中', confirm: '待确认', confirmNo: '-', orders: [], logs: [['2026-07-06 10:12', '代理入库提交审核。']] }
+          ]
+        },
+        cruise: {
+          name: '理想号地中海邮轮舱房包销',
+          type: '邮轮',
+          supplier: '地中海旅游集团',
+          departure: '巴塞罗那母港',
+          destination: '巴塞罗那/罗马/马赛',
+          scope: '门店+分销 / 邮轮销售组',
+          status: '销售中',
+          owner: '邮轮产品周婷',
+          unit: '间',
+          objectName: '航次',
+          detailHref: 'product-outsource-detail.html?type=cruise&source=OUT-CR-0006',
+          cover: 'https://images.unsplash.com/photo-1544550285-f813152fb2fd?auto=format&fit=crop&w=900&q=80',
+          routes: [
+            { name: '地中海西线8日', meta: '巴塞罗那/罗马/马赛' }
+          ],
+          schedules: [
+            { no: 'AGY-CR-20260801-001', route: '地中海西线8日', routeMeta: '巴塞罗那/罗马/马赛', depart: '2026-08-01', back: '2026-08-08', deadline: '2026-07-15', settlement: '阳台舱 ¥12,800', salePrice: 18800, childPrice: 12800, singleRoom: 3200, quota: 18, sold: 0, priceStatus: '未锁定', status: '销售中', confirm: '待确认', confirmNo: '-', orders: [], logs: [['2026-07-08 11:30', '上线后等待船司回传确认。']] }
+          ]
+        },
+        free: {
+          name: '兰卡威机票酒店套餐',
+          type: '自由行',
+          supplier: '兰卡威酒店直采',
+          departure: '全国',
+          destination: '兰卡威',
+          scope: '官网+小程序 / 全部门店',
+          status: '停售',
+          owner: '自由行运营陈红',
+          unit: '套',
+          objectName: '出行日期',
+          detailHref: 'product-outsource-detail.html?type=free&source=OUT-FT-0008',
+          cover: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80',
+          routes: [
+            { name: '机票酒店亲子套餐', meta: '兰卡威5晚自由行' }
+          ],
+          schedules: [
+            { no: 'AGY-FT-20260720-001', route: '机票酒店亲子套餐', routeMeta: '兰卡威5晚自由行', depart: '2026-07-20', back: '2026-07-25', deadline: '2026-07-16', settlement: '套餐 ¥3,200', salePrice: 4200, childPrice: 4200, singleRoom: 0, quota: 30, sold: 0, priceStatus: '已锁定', status: '停售', confirm: '已关闭', confirmNo: '-', orders: [], logs: [['2026-07-09 15:30', '酒店房态关闭，团期停售。']] }
+          ]
+        },
+        offline: {
+          name: '西葡经典10日散拼',
+          type: '参团游',
+          supplier: '布拉格优选旅游',
+          departure: '北京',
+          destination: '西班牙/葡萄牙',
+          scope: '门店销售 / 历史订单保留',
+          status: '停售',
+          owner: '代理运营陈琳',
+          unit: '人',
+          objectName: '团期',
+          detailHref: 'product-outsource-detail.html?type=group&source=OUT-EU-0012',
+          cover: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=900&q=80',
+          routes: [
+            { name: 'A线 西葡经典10天', meta: '马德里/巴塞罗那/里斯本' },
+            { name: 'B线 西葡深度10天', meta: '安达卢西亚与葡萄牙线' }
+          ],
+          schedules: [
+            { no: 'AGY-EU-20260418-001', route: 'A线 西葡经典10天', routeMeta: '马德里/巴塞罗那/里斯本', depart: '2026-04-18', back: '2026-04-27', deadline: '2026-04-01', settlement: '成人 ¥7,600', salePrice: 11200, childPrice: 9800, singleRoom: 2100, quota: 18, sold: 18, priceStatus: '已锁定', status: '停售', confirm: '已确认', confirmNo: 'SUP-CFM-20260418-001', orders: [['KS20260403018', '马宁 / 软件园门店', '2人', '已收款']], logs: [['2026-04-12 16:00', '团期销售结束后停售。']] },
+            { no: 'AGY-EU-20260509-002', route: 'B线 西葡深度10天', routeMeta: '安达卢西亚与葡萄牙线', depart: '2026-05-09', back: '2026-05-18', deadline: '2026-04-25', settlement: '成人 ¥7,600', salePrice: 11200, childPrice: 9800, singleRoom: 2100, quota: 14, sold: 14, priceStatus: '已锁定', status: '停售', confirm: '已确认', confirmNo: 'SUP-CFM-20260509-002', orders: [['KS20260419007', '陈雨 / 直营网点', '4人', '已收款']], logs: [['2026-05-01 09:20', '供应商余位关闭，团期停售。']] }
+          ]
+        }
+      };
+
+      var product = products[productKey] || products.group;
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+      }
+
+      function money(value) {
+        return '¥' + Number(value || 0).toLocaleString('zh-CN');
+      }
+
+      function toast(message) {
+        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
+      }
+
+      function openLayer(modal) {
+        if (window.caesarUI && window.caesarUI.openLayer) window.caesarUI.openLayer(modal);
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLayer(modal) {
+        if (window.caesarUI && window.caesarUI.closeLayer) window.caesarUI.closeLayer(modal);
+        else modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      function tagClass(status) {
+        if (status === '销售中' || status === '已确认' || status === '已锁定') return 'tag tag-green';
+        if (status === '审核中' || status === '待确认' || status === '未锁定') return 'tag tag-blue';
+        if (status === '停售' || status === '已关闭') return 'tag tag-gray';
+        return 'tag tag-gray';
+      }
+
+      function setText(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+
+      function saleCount() {
+        return product.schedules.filter(function (item) { return item.status === '销售中'; }).length;
+      }
+
+      function routeStats(route) {
+        var list = product.schedules.filter(function (item) { return item.route === route.name; });
+        var saleRows = list.filter(function (item) { return item.status === '销售中'; });
+        var sold = list.reduce(function (sum, item) { return sum + Number(item.sold || 0); }, 0);
+        var nextDepart = saleRows.map(function (item) { return item.depart; }).sort()[0] || list.map(function (item) { return item.depart; }).sort()[0] || '暂无';
+        return { total: list.length, saleCount: saleRows.length, sold: sold, nextDepart: nextDepart };
+      }
+
+      function renderRoutes() {
+        var routeList = product.routes || [];
+        document.getElementById('outsourceScheduleRoutes').innerHTML = routeList.map(function (route) {
+          var stats = routeStats(route);
+          return [
+            '<button class="product-schedule-route-card' + (activeRoute === route.name ? ' active' : '') + '" type="button" data-route-filter="' + escapeHtml(route.name) + '">',
+            '<strong>' + escapeHtml(route.name) + '</strong>',
+            '<span>' + escapeHtml(stats.saleCount + '个可售' + product.objectName + ' / 已售' + stats.sold + product.unit) + '</span>',
+            '<em>最近 ' + escapeHtml(stats.nextDepart) + '</em>',
+            '</button>'
+          ].join('');
+        }).join('');
+      }
+
+      function renderSummary() {
+        var nextDepart = product.schedules.filter(function (item) { return item.status === '销售中'; }).map(function (item) { return item.depart; }).sort()[0] || '暂无';
+        document.title = product.name + ' - 代理团期 - 凯撒旅游';
+        document.getElementById('outsourceProductDetailLink').href = product.detailHref;
+        document.getElementById('summaryProductCover').src = product.cover;
+        document.getElementById('summaryProductCover').alt = product.name + '封面';
+        setText('summaryProductName', product.name);
+        setText('summaryProductMeta', product.type + ' · 代理产品');
+        setText('summarySupplier', product.supplier);
+        setText('summaryProductType', product.type);
+        setText('summaryDeparture', product.departure);
+        setText('summaryDestination', product.destination);
+        setText('summarySaleScope', product.scope);
+        setText('summarySaleCount', saleCount());
+        setText('summarySaleObject', '个' + product.objectName);
+        setText('summaryScheduleStats', (product.routes || []).length + '条线路 / 共' + product.schedules.length + '个' + product.objectName + ' / ' + product.schedules.filter(function (item) { return item.priceStatus === '未锁定'; }).length + '个未锁价');
+        setText('summaryOwnerLine', '操作人 ' + product.owner + ' · 最近出发 ' + nextDepart);
+        setText('scheduleCodeHead', '代理' + product.objectName);
+        document.getElementById('summaryProductStatus').textContent = product.status;
+        document.getElementById('summaryProductStatus').className = tagClass(product.status);
+      }
+
+      function filteredSchedules() {
+        var keyword = document.getElementById('scheduleKeyword').value.trim().toLowerCase();
+        var status = document.getElementById('scheduleStatusFilter').value;
+        var priceLock = document.getElementById('priceLockFilter').value;
+        var hideStopped = document.getElementById('hideStoppedSchedules').checked;
+        return product.schedules.filter(function (item) {
+          if (activeRoute !== '__all' && item.route !== activeRoute) return false;
+          if (keyword && [item.no, item.route, item.routeMeta, item.depart, item.back, product.name].join(' ').toLowerCase().indexOf(keyword) < 0) return false;
+          if (status && item.status !== status) return false;
+          if (priceLock && item.priceStatus !== priceLock) return false;
+          if (hideStopped && item.status === '停售') return false;
+          return true;
+        });
+      }
+
+      function actionHtml(item) {
+        var parts = [];
+        if (item.priceStatus === '未锁定') {
+          parts.push('<button class="table-action-primary" type="button" data-lock-price data-schedule-no="' + escapeHtml(item.no) + '">锁定售价</button>');
+          parts.push('<button type="button" data-open-price data-schedule-no="' + escapeHtml(item.no) + '">设置售价</button>');
+        } else {
+          parts.push('<button class="table-action-primary" type="button" data-open-price data-schedule-no="' + escapeHtml(item.no) + '">设置售价</button>');
+        }
+        if (item.status === '停售') {
+          parts.push('<button type="button" data-restore-schedule data-schedule-no="' + escapeHtml(item.no) + '">恢复销售</button>');
+        } else {
+          parts.push('<button type="button" data-open-stop data-schedule-no="' + escapeHtml(item.no) + '">停售团期</button>');
+        }
+        parts.push('<button type="button" data-open-detail data-schedule-no="' + escapeHtml(item.no) + '">详情</button>');
+        return parts.join('');
+      }
+
+      function renderRows() {
+        var list = filteredSchedules();
+        scheduleRows.innerHTML = list.map(function (item) {
+          var left = Math.max(Number(item.quota || 0) - Number(item.sold || 0), 0);
+          return [
+            '<tr data-schedule-no="' + escapeHtml(item.no) + '">',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(item.no) + '</strong><span>' + escapeHtml(product.name) + '</span></div></td>',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(item.route || '-') + '</strong><span>' + escapeHtml(item.routeMeta || product.name) + '</span></div></td>',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(item.depart) + '</strong><span>返回 ' + escapeHtml(item.back) + '</span></div></td>',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(item.deadline) + '</strong><span>截止报名</span></div></td>',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(left + '/' + item.quota + product.unit) + '</strong><span>已售 ' + escapeHtml(item.sold + product.unit) + '</span></div></td>',
+            '<td><strong>' + escapeHtml(item.settlement) + '</strong></td>',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(money(item.salePrice)) + '</strong><span>儿童 ' + escapeHtml(money(item.childPrice)) + '</span></div></td>',
+            '<td><span class="' + tagClass(item.priceStatus) + '">' + escapeHtml(item.priceStatus) + '</span></td>',
+            '<td><span class="' + tagClass(item.status) + '">' + escapeHtml(item.status) + '</span></td>',
+            '<td><div class="table-cell-main"><strong><span class="' + tagClass(item.confirm) + '">' + escapeHtml(item.confirm) + '</span></strong><span>' + escapeHtml(item.confirmNo || '-') + '</span></div></td>',
+            '<td><div class="table-action">' + actionHtml(item) + '</div></td>',
+            '</tr>'
+          ].join('');
+        }).join('');
+        if (!list.length) {
+          scheduleRows.innerHTML = '<tr><td colspan="11" class="text-muted">当前线路暂无符合条件的代理团期</td></tr>';
+        }
+        document.getElementById('productSchedulePager').textContent = list.length + '条';
+        renderRoutes();
+        renderSummary();
+      }
+
+      function findSchedule(no) {
+        return product.schedules.find(function (item) { return item.no === no; }) || product.schedules[0];
+      }
+
+      function description(items) {
+        return items.map(function (item) {
+          return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>';
+        }).join('');
+      }
+
+      function scheduleSummary(item) {
+        return description([
+          ['代理团期', escapeHtml(item.no)],
+          ['出发/返回', escapeHtml(item.depart + ' / ' + item.back)],
+          ['代理产品', escapeHtml(product.name)],
+          ['销售状态', '<span class="' + tagClass(item.status) + '">' + escapeHtml(item.status) + '</span>'],
+          ['售价状态', '<span class="' + tagClass(item.priceStatus) + '">' + escapeHtml(item.priceStatus) + '</span>'],
+          ['供应商确认', '<span class="' + tagClass(item.confirm) + '">' + escapeHtml(item.confirm) + '</span>']
+        ]);
+      }
+
+      function stopScheduleSummary(item) {
+        var left = Math.max(Number(item.quota || 0) - Number(item.sold || 0), 0);
+        return [
+          '<div class="outsource-stop-object">',
+          '<strong>' + escapeHtml(item.no) + '</strong>',
+          '<span>' + escapeHtml(product.name + ' · ' + item.depart + ' / ' + item.back) + '</span>',
+          '</div>',
+          '<div class="outsource-stop-metrics">',
+          '<div><span>销售状态</span><strong><span class="' + tagClass(item.status) + '">' + escapeHtml(item.status) + '</span></strong></div>',
+          '<div><span>售价状态</span><strong><span class="' + tagClass(item.priceStatus) + '">' + escapeHtml(item.priceStatus) + '</span></strong></div>',
+          '<div><span>剩余/总名额</span><strong>' + escapeHtml(left + '/' + item.quota + product.unit) + '</strong></div>',
+          '<div><span>供应商确认</span><strong><span class="' + tagClass(item.confirm) + '">' + escapeHtml(item.confirm) + '</span></strong></div>',
+          '</div>'
+        ].join('');
+      }
+
+      function openPrice(no) {
+        var item = findSchedule(no);
+        activeScheduleNo = item.no;
+        document.getElementById('schedulePriceSummary').innerHTML = scheduleSummary(item);
+        document.getElementById('scheduleSalePrice').value = item.salePrice || 0;
+        document.getElementById('scheduleChildPrice').value = item.childPrice || 0;
+        document.getElementById('scheduleSingleRoom').value = item.singleRoom || 0;
+        document.getElementById('scheduleLockAfterSave').value = item.priceStatus === '未锁定' ? '否' : '是';
+        document.getElementById('schedulePriceRemark').value = '';
+        openLayer(priceDrawer);
+      }
+
+      function openDetail(no) {
+        var item = findSchedule(no);
+        document.getElementById('scheduleDetailSummary').innerHTML = scheduleSummary(item) + description([
+          ['供应商结算价', escapeHtml(item.settlement)],
+          ['我方销售价', escapeHtml(money(item.salePrice))],
+          ['名额/已售', escapeHtml(item.quota + product.unit + ' / 已售' + item.sold + product.unit)],
+          ['报名截止', escapeHtml(item.deadline)]
+        ]);
+        document.getElementById('scheduleOrderRows').innerHTML = item.orders.length ? item.orders.map(function (row) {
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><span class="' + tagClass(row[3]) + '">' + escapeHtml(row[3]) + '</span></td></tr>';
+        }).join('') : '<tr><td colspan="4" class="text-muted">暂无订单占用</td></tr>';
+        document.getElementById('scheduleLogRows').innerHTML = item.logs.map(function (row) {
+          return '<div class="timeline-item"><strong>' + escapeHtml(row[0]) + '</strong><span>' + escapeHtml(row[1]) + '</span></div>';
+        }).join('');
+        openLayer(detailDrawer);
+      }
+
+      function openStop(no) {
+        var item = findSchedule(no);
+        activeScheduleNo = item.no;
+        document.getElementById('stopScheduleSummary').innerHTML = stopScheduleSummary(item);
+        document.getElementById('stopScheduleReason').value = '';
+        openLayer(stopScheduleModal);
+      }
+
+      function resetFilters() {
+        document.getElementById('scheduleKeyword').value = '';
+        document.getElementById('scheduleStatusFilter').value = '';
+        document.getElementById('priceLockFilter').value = '';
+        document.getElementById('hideStoppedSchedules').checked = true;
+        renderRows();
+      }
+
+      ['scheduleKeyword', 'scheduleStatusFilter', 'priceLockFilter', 'hideStoppedSchedules'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', renderRows);
+        document.getElementById(id).addEventListener('change', renderRows);
+      });
+      document.getElementById('resetScheduleFilters').addEventListener('click', resetFilters);
+      document.getElementById('outsourceScheduleRoutes').addEventListener('click', function (event) {
+        var card = event.target.closest('[data-route-filter]');
+        if (!card) return;
+        activeRoute = activeRoute === card.dataset.routeFilter ? '__all' : card.dataset.routeFilter;
+        renderRows();
+      });
+      document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-close-price]')) closeLayer(priceDrawer);
+        if (event.target.closest('[data-close-detail]')) closeLayer(detailDrawer);
+        if (event.target.closest('[data-close-stop]')) closeLayer(stopScheduleModal);
+        var priceButton = event.target.closest('[data-open-price]');
+        if (priceButton) openPrice(priceButton.dataset.scheduleNo);
+        var detailButton = event.target.closest('[data-open-detail]');
+        if (detailButton) openDetail(detailButton.dataset.scheduleNo);
+        var stopButton = event.target.closest('[data-open-stop]');
+        if (stopButton) openStop(stopButton.dataset.scheduleNo);
+        var lockButton = event.target.closest('[data-lock-price]');
+        if (lockButton) {
+          findSchedule(lockButton.dataset.scheduleNo).priceStatus = '已锁定';
+          renderRows();
+          toast('售价已锁定');
+        }
+        var restoreButton = event.target.closest('[data-restore-schedule]');
+        if (restoreButton) {
+          findSchedule(restoreButton.dataset.scheduleNo).status = '销售中';
+          renderRows();
+          toast('团期已恢复销售');
+        }
+        if (event.target.classList.contains('modal-overlay')) closeLayer(event.target);
+      });
+      document.getElementById('saveSchedulePrice').addEventListener('click', function () {
+        var item = findSchedule(activeScheduleNo);
+        item.salePrice = Number(document.getElementById('scheduleSalePrice').value || item.salePrice);
+        item.childPrice = Number(document.getElementById('scheduleChildPrice').value || item.childPrice);
+        item.singleRoom = Number(document.getElementById('scheduleSingleRoom').value || item.singleRoom);
+        if (document.getElementById('scheduleLockAfterSave').value === '是') item.priceStatus = '已锁定';
+        item.logs.unshift(['2026-07-14 10:30', '代理运营更新团期售价。']);
+        closeLayer(priceDrawer);
+        renderRows();
+        toast('团期售价已更新');
+      });
+      document.getElementById('confirmStopSchedule').addEventListener('click', function () {
+        var item = findSchedule(activeScheduleNo);
+        item.status = '停售';
+        item.logs.unshift(['2026-07-14 10:35', '代理运营停售团期。']);
+        closeLayer(stopScheduleModal);
+        renderRows();
+        toast('团期已停售');
+      });
+
+      renderSummary();
+      renderRoutes();
+      renderRows();
+    })();
+  </script>
+</body>
+</html>

@@ -418,6 +418,31 @@
         }).join('');
       }
 
+      function subtractDays(dateText, days) {
+        var date = new Date(dateText + 'T00:00:00');
+        if (Number.isNaN(date.getTime())) return '按出发日期计算';
+        date.setDate(date.getDate() - days);
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return date.getFullYear() + '-' + month + '-' + day;
+      }
+
+      function visaSalesFacts(card) {
+        if (travelTypeText(card) !== '出境游') return [['签证要求', '不涉及出境签证']];
+        var text = (card.dataset.product || '') + ' ' + (card.dataset.destination || '');
+        var profile;
+        if (/日本/.test(text)) profile = ['日本 / 日本个人旅游签证', 14, '旅行社代办（单独收费）', '无需面签，按领区审核'];
+        else if (/新加坡/.test(text)) profile = ['新加坡 / 旅游电子签', 10, '旅行社代办（包含在团费中）', '无需本人到场'];
+        else if (/马来西亚|泰国|东南亚/.test(text)) profile = ['免签入境 / 护照有效期核验', 7, '客人自理，旅行社核验', '无需本人到场'];
+        else profile = ['法国 / 申根旅游签证', 21, '旅行社代办（包含在团费中）', '需要录指纹'];
+        return [
+          ['签证要求', profile[0]],
+          ['办理方式', profile[2]],
+          ['材料截止', subtractDays(card.dataset.scheduleDate || '', profile[1]) + '（出发前' + profile[1] + '天）'],
+          ['本人到场', profile[3]]
+        ];
+      }
+
       function itineraryHtml(items) {
         return items.map(function (item) {
           var extra = item[3] ? '<div class="product-itinerary-meal">' + escapeHtml(item[3]) + '</div>' : '';
@@ -592,6 +617,7 @@
           facts.push(['可售范围', card.dataset.saleScope || '按产品设置']);
           facts.push(['来源单号', card.dataset.sourceProduct || '-']);
         }
+        facts = facts.concat(visaSalesFacts(card));
         return {
           tags: [card.dataset.type, card.dataset.model || '自营', productSaleStatus(card)],
           facts: facts,

@@ -10,22 +10,16 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <main class="pricing-page">
-    <section class="list-page-panel">
-      <div class="list-page-head">
-        <h1 class="page-title">销售定价策略</h1>
-        <div class="list-page-actions"><button id="openAiPricingAdvice" class="btn btn-ai" type="button">🤖 AI价格建议</button><button id="addPricingStrategy" class="btn btn-primary" type="button">新增价格策略</button></div>
-      </div>
-    </section>
-
     <section class="list-surface pricing-list-surface" data-list-surface>
       <section class="filter-card filter-card-compact pricing-filter list-surface-filter" aria-label="销售定价策略筛选">
         <div class="filter-row">
-          <div class="filter-item filter-item-search"><label class="sr-only" for="pricingKeyword">策略名称、产品或团期</label><input id="pricingKeyword" type="search" placeholder="策略名称、产品或团期"></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="pricingTypeFilter">价格类型</label><select id="pricingTypeFilter"><option value="">全部价格类型</option><option>基础销售价</option><option>日期价格</option><option>团期特殊售价</option><option>价格矩阵</option><option>渠道协议价</option><option>价格约束</option></select></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="pricingProductFilter">产品类型</label><select id="pricingProductFilter"><option value="">全部产品类型</option><option>参团游</option><option>邮轮</option><option>专列</option><option>自由行</option><option>研学</option><option>单项服务</option></select></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="pricingScopeFilter">销售范围</label><select id="pricingScopeFilter"><option value="">全部销售范围</option><option>直营零售</option><option>合作分销商</option><option>OTA</option></select></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="pricingStatusFilter">策略状态</label><select id="pricingStatusFilter"><option value="">全部状态</option><option>草稿</option><option>审批中</option><option>待生效</option><option>已生效</option><option>调整审批中</option><option>已驳回</option><option>已停用</option></select></div>
-          <div class="filter-actions"><button class="btn btn-secondary" type="button" data-filter-pricing>查询</button><button class="btn btn-secondary" type="button" data-reset-pricing>重置</button></div>
+          <div class="pricing-filter-fields">
+            <div class="filter-item filter-item-search"><label class="sr-only" for="pricingKeyword">策略名称、产品或团期</label><input id="pricingKeyword" type="search" placeholder="策略名称、产品或团期"></div>
+            <div class="filter-item filter-item-sm"><label class="sr-only" for="pricingProductFilter">产品类型</label><select id="pricingProductFilter"><option value="">全部产品类型</option><option>参团游</option><option>邮轮</option><option>专列</option><option>自由行</option><option>研学</option><option>单项服务</option></select></div>
+            <div class="filter-item filter-item-sm"><label class="sr-only" for="pricingStatusFilter">策略状态</label><select id="pricingStatusFilter"><option value="">全部状态</option><option>草稿</option><option>审批中</option><option>待生效</option><option>已生效</option><option>调整审批中</option><option>已驳回</option><option>已停用</option></select></div>
+            <div class="filter-actions pricing-query-actions"><button class="btn btn-secondary" type="button" data-filter-pricing>查询</button><button class="btn btn-secondary" type="button" data-reset-pricing>重置</button></div>
+          </div>
+          <div class="filter-actions pricing-page-actions"><button id="openAiPricingAdvice" class="btn btn-ai" type="button">🤖 AI价格建议</button><button id="addPricingStrategy" class="btn btn-primary" type="button">新增价格策略</button></div>
         </div>
       </section>
 
@@ -136,7 +130,7 @@
       function closeLayer(layer) { if (window.caesarUI && window.caesarUI.closeLayer) window.caesarUI.closeLayer(layer); else if (layer) { layer.classList.remove('show'); layer.hidden = true; } }
       function pricingRows() { return Array.prototype.slice.call(document.querySelectorAll('.pricing-table tbody tr')); }
       function updatePricingPagination() { var rows = pricingRows(); var visible = rows.filter(function (row) { return !row.hidden; }).length; document.getElementById('pricingEmptyState').hidden = visible !== 0; document.getElementById('pricingPagination').textContent = visible ? '第1-' + visible + '条/共' + rows.length + '条' : '无匹配/共' + rows.length + '条'; }
-      function applyPricingFilters() { var keyword = document.getElementById('pricingKeyword').value.trim().toLowerCase(); var type = document.getElementById('pricingTypeFilter').value; var product = document.getElementById('pricingProductFilter').value; var scope = document.getElementById('pricingScopeFilter').value; var status = document.getElementById('pricingStatusFilter').value; pricingRows().forEach(function (row) { var text = (row.textContent + ' ' + row.dataset.type + ' ' + row.dataset.product + ' ' + row.dataset.scope + ' ' + row.dataset.status).toLowerCase(); var matched = (!keyword || text.indexOf(keyword) > -1) && (!type || row.dataset.type === type) && (!product || row.dataset.product === product) && (!scope || row.dataset.scope === scope) && (!status || row.dataset.status === status); row.hidden = !matched; }); updatePricingPagination(); }
+      function applyPricingFilters() { var keyword = document.getElementById('pricingKeyword').value.trim().toLowerCase(); var product = document.getElementById('pricingProductFilter').value; var status = document.getElementById('pricingStatusFilter').value; pricingRows().forEach(function (row) { var text = (row.textContent + ' ' + row.dataset.type + ' ' + row.dataset.product + ' ' + row.dataset.scope + ' ' + row.dataset.status).toLowerCase(); var matched = (!keyword || text.indexOf(keyword) > -1) && (!product || row.dataset.product === product) && (!status || row.dataset.status === status); row.hidden = !matched; }); updatePricingPagination(); }
       function openDrawer(mode) { var titles = { create: '新增价格策略', edit: '编辑价格策略', view: '价格策略详情', adjust: '发起价格调整', resubmit: '修改后提交', copy: '复制价格策略' }; drawerTitle.textContent = titles[mode] || '价格策略详情'; openLayer(drawer); }
       function openConfirm(action, row) { var configs = { submit: ['提交审批', '确认提交该销售定价策略审批？', '确认提交'], withdraw: ['撤回审批', '确认撤回该策略审批？撤回后策略回到草稿状态。', '确认撤回'], stop: ['停用申请', '确认发起停用申请？停用后不再用于新订单定价。', '发起停用'], delete: ['删除草稿', '确认删除该策略草稿？删除后不可恢复。', '确认删除'] }; var config = configs[action]; if (!config) return; pendingAction = action; pendingRow = row || null; confirmTitle.textContent = config[0]; confirmText.textContent = config[1]; confirmButton.textContent = config[2]; confirmButton.classList.toggle('btn-danger', action === 'delete' || action === 'stop'); confirmButton.classList.toggle('btn-primary', action !== 'delete' && action !== 'stop'); openLayer(confirmModal); }
       document.getElementById('addPricingStrategy').addEventListener('click', function () { openDrawer('create'); });
@@ -147,7 +141,7 @@
       confirmButton.addEventListener('click', function () { if (pendingAction === 'delete' && pendingRow) pendingRow.remove(); closeLayer(confirmModal); updatePricingPagination(); var messages = { submit: '价格策略已提交审批', withdraw: '策略审批已撤回，状态回到草稿', stop: '停用申请已提交审批', delete: '价格策略草稿已删除' }; toast(messages[pendingAction] || '操作已完成'); });
       document.getElementById('applyAiPricingAdvice').addEventListener('click', function () { closeLayer(aiPricingModal); openDrawer('create'); toast('AI建议已生成价格策略草稿'); });
       document.getElementById('pricingKeyword').addEventListener('keydown', function (event) { if (event.key === 'Enter') applyPricingFilters(); });
-      ['pricingTypeFilter', 'pricingProductFilter', 'pricingScopeFilter', 'pricingStatusFilter'].forEach(function (id) { document.getElementById(id).addEventListener('change', applyPricingFilters); });
+      ['pricingProductFilter', 'pricingStatusFilter'].forEach(function (id) { document.getElementById(id).addEventListener('change', applyPricingFilters); });
       updatePricingPagination();
     })();
   </script>
