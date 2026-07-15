@@ -923,6 +923,34 @@
         renderList();
       }
 
+      function closePricingMenus(exceptNode) {
+        document.querySelectorAll('.pricing-table-more.open').forEach(function (node) {
+          if (node !== exceptNode) {
+            node.classList.remove('open');
+            var cell = node.closest('.pricing-action-cell');
+            if (cell) cell.classList.remove('pricing-action-cell-open');
+            var menu = node.querySelector('.pricing-table-menu');
+            if (menu) {
+              menu.style.top = '';
+              menu.style.left = '';
+            }
+          }
+        });
+      }
+
+      function positionPricingMenu(node) {
+        var button = node.querySelector('[data-more-toggle]');
+        var menu = node.querySelector('.pricing-table-menu');
+        if (!button || !menu) return;
+        var rect = button.getBoundingClientRect();
+        var menuWidth = menu.offsetWidth || 130;
+        var left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+        menu.style.top = rect.bottom + 6 + 'px';
+        menu.style.left = left + 'px';
+        var cell = node.closest('.pricing-action-cell');
+        if (cell) cell.classList.add('pricing-action-cell-open');
+      }
+
       document.addEventListener('click', function (event) {
         var tab = event.target.closest('[data-category-tab]');
         if (tab) {
@@ -932,17 +960,23 @@
         }
         var more = event.target.closest('[data-more-toggle]');
         if (more) {
-          document.querySelectorAll('.pricing-table-more.open').forEach(function (node) {
-            if (node !== more.closest('.pricing-table-more')) node.classList.remove('open');
-          });
-          more.closest('.pricing-table-more').classList.toggle('open');
+          var moreNode = more.closest('.pricing-table-more');
+          closePricingMenus(moreNode);
+          moreNode.classList.toggle('open');
+          if (moreNode.classList.contains('open')) {
+            positionPricingMenu(moreNode);
+          } else {
+            var cell = moreNode.closest('.pricing-action-cell');
+            if (cell) cell.classList.remove('pricing-action-cell-open');
+          }
           return;
         }
         if (!event.target.closest('.pricing-table-more')) {
-          document.querySelectorAll('.pricing-table-more.open').forEach(function (node) { node.classList.remove('open'); });
+          closePricingMenus();
         }
         var action = event.target.closest('[data-pricing-action]');
         if (action) {
+          closePricingMenus();
           handlePricingAction(action.dataset.pricingAction, Number(action.dataset.id));
           return;
         }
