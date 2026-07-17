@@ -101,7 +101,7 @@
 | 2. 菜单与页面对象地图 | 已完成 | 已建立 [系统菜单与业务对象地图](system-menu-object-map.md)。 |
 | 3. 产品类型链路矩阵 | 已完成 | 已建立 [产品类型主链路验收矩阵](system-product-type-link-matrix.md)。 |
 | 4. 全系统硬检查 | 已完成 | 已建立 [全系统硬检查报告](system-hard-check-report.md)，未发现 P0 机器断点。 |
-| 5. 按产品类型跑链路 | 进行中 | 已完成 [第 5.1 步：单团自组全链路源码级验收](system-single-group-link-walkthrough-report.md)、[第 5.2 步：标准跟团/国内游/出境游链路验收](system-standard-group-link-walkthrough-report.md) 和 [第 5.3 步：邮轮/专列/自由行/单项服务/研学/外采链路验收](system-product-type-link-walkthrough-report.md)；第 5.3 未发现 P0，研学营期抽屉按钮断点已整改。邮轮/专列产品线路配置页的开排入口不按传参补丁处理，后续应收敛到产品中心 > 自营产品 > 团期管控。 |
+| 5. 按产品类型跑链路 | 进行中 | 已完成 [第 5.1 步：单团自组全链路源码级验收](system-single-group-link-walkthrough-report.md)、[第 5.2 步：标准跟团/国内游/出境游链路验收](system-standard-group-link-walkthrough-report.md) 和 [第 5.3 步：邮轮/专列/自由行/单项服务/研学/外采链路验收](system-product-type-link-walkthrough-report.md)；第 5.3 未发现 P0，研学营期抽屉按钮断点已整改。邮轮/专列产品线路配置页的开排入口不按传参补丁处理，后续应收敛到履约中心 > 团期管控。 |
 | 6. 业财专项验收 | 待执行 | 财务模块集中检查。 |
 | 7. 问题分级和整改建议 | 待执行 | 汇总所有发现。 |
 | 8. 最终报告 | 待执行 | 形成完整报告。 |

@@ -67,39 +67,39 @@
 | product/product-train-routes.html | 产品中心 / 自营产品 / 产品管理 | 专列产品线路配置 | 专列产品、专列资源 | 专列团期、铺位库存 | 车厢、席别、铺位结构、经停站、下车游览 | 草稿/已发布 | 无 | 包列和铺位成本后续进 NC | product-train-edit.html、team-create.html | 专列产品线路维护铺位结构，不维护当期库存 |
 | product/products-detail.html | 产品中心 / 自营产品 / 产品管理 | 产品详情 | 自营产品 | 产品线路、团期、渠道授权、订单 | 产品摘要、线路列表、团期、素材、政策 | 上架状态、审核状态 | 无 | 无 | products.html、schedules-detail.html | 详情能进入团期和订单链路 |
 | product/product-study-edit.html | 产品中心 / 自营产品 / 产品管理 | 研学产品编辑 | 产品管理、教育资源 | 课程、导师、团期 | 教育目标、课程体系、基地、导师、安全预案 | 草稿/审核中/已发布 | 无 | 学校直签收款后影响 NC | products.html、team-create.html | 教育字段完整且可生成研学团期 |
-| tour/team-create.html | 产品中心 / 自营产品 / 团期管控 | 新建团期 | 产品、产品线路 | 团期库存、价格、渠道 | 团号、日期、容量、价格、库存矩阵、截止日 | 筹备中/开放报名 | 无 | 无 | schedules.html、schedules-detail.html | 团期层不重复完整行程 |
-| tour/schedules.html | 产品中心 / 自营产品 / 团期管控 | 团期 | 产品、产品线路 | 订单、执行、成本、结算 | 团号、出发日、库存、价格、渠道、领队 | 销售状态、执行状态、结算状态 | 无 | 无 | schedules-detail.html、team-create.html | 标准团期三组状态可筛选 |
-| tour/schedules-calendar.html | 产品中心 / 自营产品 / 团期管控 | 团期日历 | 团期 | 批量开排、团期详情 | 日期、产品、余位、状态、截止节点 | 销售状态 | 无 | 无 | schedules-detail.html、schedules-batch.html | 日历是视图，不另建对象 |
-| tour/schedules-batch.html | 产品中心 / 自营产品 / 团期管控 | 批量开排 | 产品线路、价格模板 | 多个团期 | 线路、日期规则、价格、库存、渠道 | 筹备中 | 无 | 无 | schedules.html | 批量生成团期不生成订单或财务单据 |
-| tour/schedules-detail.html | 产品中心 / 自营产品 / 团期管控 | 团期详情 | 团期 | 订单、名单、收款、执行、成本、结算 | 产品线路、库存矩阵、名单、收款、执行、成本、结算 | 销售/执行/结算状态 | BF-SALE-001、BF-COST-002、BF-SETTLE-001 | 收款、成本、结算进入 NC | orders.html、fulfillment-cost.html、finance-settlement-detail.html | 从团期能看完整业财链路 |
-| tour/fulfillment-outbound.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 团队执行总览 | 团期、订单名单 | 名单、证件、签证、通知、回团 | 团号、名单、资料、负责人、风险 | 未出团/操作中/已出发/已回团 | 无 | 无 | fulfillment-roster.html、fulfillment-return.html | 执行状态不替代销售状态 |
-| tour/fulfillment-roster.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 名单管理 | 订单、游客 | 出团通知、保险、成本人数 | 游客、证件、房型、特殊需求、收款风险 | 名单待确认/已锁定 | 无 | 无 | orders-detail.html、fulfillment-documents.html | 名单锁定和订单人数一致 |
-| tour/fulfillment-documents.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 证件资料 | 游客名单 | 签证、保险、出团校验 | 护照、证件有效期、附件、材料状态 | 待补/已齐/异常 | 无 | 无 | fulfillment-visa.html | 资料风险能回写订单详情 |
-| tour/fulfillment-visa.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 签证进度 | 证件资料、签证供应商 | 出团校验、签证成本 | 签证国家、材料、送签日、出签日、费用 | 待送签/送签中/已出签/拒签 | BF-COST-002 | 签证成本确认后进入 NC | fulfillment-documents.html、finance-payable.html | 签证异常触发订单风险 |
-| tour/fulfillment-notice.html | 产品中心 / 自营产品 / 团期管控 / 团队执行 | 出团通知 | 团期、名单、集合信息 | 客户通知、执行记录 | 集合点、领队、行前说明、发送渠道 | 待发送/已发送/失败 | 无 | 无 | orders-detail.html | 通知记录可追溯到游客 |
-| tour/fulfillment-return.html | 产品中心 / 自营产品 / 团期结算 / 回团处理 | 回团记录 | 团队执行 | 实际成本、异常关闭、结算草稿 | 回团日期、满意度、异常、归档资料、实际成本入口 | 已回团/已归档 | BF-COST-002、BF-SETTLE-001 | 成本确认和结算进入 NC | fulfillment-cost.html、finance-settlement.html | 回团后才开启实际成本确认 |
-| tour/fulfillment-cost.html | 产品中心 / 自营产品 / 团期结算 | 团期成本 | 团期、回团记录、成本项 | 成本确认单、应付草稿 | 预估成本、实际成本、供应商、科目、毛利 | 未维护/预估/实际确认 | BF-COST-001、BF-COST-002 | 成本确认后进入 NC | fulfillment-supplier-fees.html、finance-payable.html | 预估成本不生成应付 |
-| tour/fulfillment-supplier-fees.html | 产品中心 / 自营产品 / 团期结算 | 供应商费用 | 成本项、供应商账单 | 应付单、差异记录 | 供应商、费用项、数量、金额、发票要求 | 待对账/有差异/已确认 | BF-COST-009、BF-COST-010、BF-COST-011 | 应付和进项发票影响 NC | finance-payable.html | 无业务对象账单不得生成应付 |
-| tour/fulfillment-payment-apply.html | 产品中心 / 自营产品 / 团期结算 | 付款申请 | 应付草稿、预付款申请 | 审批、财务付款执行 | 供应商、应付单、金额、账户、用途 | 草稿/审批中/通过/拒绝 | BF-PAY-001、BF-PAY-002 | 审批通过后不推 NC，付款后推 | approval/approvals.html、finance-payment.html | 付款申请不等于已付款 |
-| sales/sales-product-quote.html | 订单中心 / 线路浏览与报价 | 线路浏览和报价单 | 线路、团期、套餐、需求 | 报价单、订单 | 产品、团期、价格、客户、报价有效期 | 草稿/已发送/已确认 | 无，报价确认后生成订单应收 | 无 | booking.html、orders.html | 报价不直接生成财务单据 |
-| sales/orders-intent.html | 订单中心 / 意向订单 | 意向订单 | 客户线索、咨询、AI 建议 | 报价单、销售订单、跟进记录 | 客户、需求、预算、日期、产品偏好、跟进人 | 新建/跟进中/已转订单/已关闭 | 无 | 无 | sales-product-quote.html、booking.html | 意向不触发财务，转订单后才生成应收 |
-| sales/booking.html | 订单中心 / 订单管理 | 新建订单 | 报价、团期、套餐、服务项目 | 应收、库存占用、合同 | 客户、出行人、产品、库存、价格、收款计划 | 待提交/待收款 | BF-SALE-001、BF-SALE-002、BF-SALE-003 | 认款后推 NC，可开票 | orders-detail.html、payment-claim.html | 下单生成应收且占用正确库存 |
-| sales/orders.html | 订单中心 / 订单管理 | 销售订单列表 | 报价、下单 | 应收、合同、售后、执行 | 订单号、客户、产品、团期、金额、收款 | 待收款/部分收款/已收清/售后中 | BF-SALE-001、BF-CASH-002 | 收款后进入 NC | orders-detail.html、orders-transfer.html、orders-refund.html | 订单状态和财务状态分开展示 |
-| sales/orders-detail.html | 订单中心 / 订单管理 | 订单详情 | 销售订单 | 收款、合同、游客、售后、结算 | 订单、游客、收款、合同、发票、售后、风险 | 订单状态、收款状态、售后状态 | BF-CASH-002、BF-AFTER-001、BF-SALE-006 | 收款、退款、开票进入 NC/税务 | payment-claim.html、contracts.html、orders-after-sales.html | 订单详情能看到财务联动区块 |
-| sales/payment-claim.html | 订单中心 / 收款认领 | 收款认领 | 应收、银行流水 | 认款记录、收款凭证 | 流水、应收单、订单、客户、金额 | 待认领/已认领/异常 | BF-CASH-002、BF-CASH-003 | 生成收款凭证和 NC 任务 | finance-matching.html、orders-detail.html | 认款完成回写订单收款状态 |
-| sales/contracts.html | 订单中心 / 合同管理 | 合同 | 订单、报价 | 收款、售后、发票、审计 | 合同号、客户、产品、金额、签署、附件 | 草稿/已发送/已签署/作废 | 无，作废可能触发 BF-AFTER | 开票校验 | orders-detail.html、orders-after-sales.html | 合同金额作为应收校验依据 |
-| sales/orders-after-sales.html | 订单中心 / 售后处理 / 售后总览 | 售后申请 | 订单、客户申请 | 审批、应收调整、退款执行、库存释放 | 售后单、类型、资源、金额、审批、财务联动 | 待审批/处理中/待财务执行/完成 | BF-AFTER-001、BF-AFTER-002、BF-SALE-006、BF-SALE-007 | 退款执行和红冲进入 NC | orders-transfer.html、orders-refund.html、finance-refund-execute.html | 售后申请不直接等于财务已执行 |
-| sales/orders-transfer.html | 订单中心 / 售后处理 / 转团/改期 | 变更申请 | 订单、原团期、新团期/资源 | 应收调整、库存释放/重占、审批 | 原安排、新安排、差额、资源确认、凭证 | 草稿/审批中/已生效 | BF-AFTER-005、BF-AFTER-006、BF-AFTER-007、BF-AFTER-008 | 补差/退差生成 NC 任务 | orders-after-sales.html、approval/approvals.html | 新资源未锁定不得生效 |
-| sales/orders-refund.html | 订单中心 / 售后处理 / 退款申请 | 退款申请 | 订单、售后规则、供应商扣损 | 审批、退款单、财务退款执行 | 可退金额、扣损、退款账户、库存释放 | 草稿/待审批/待执行/已完成 | BF-AFTER-001、BF-AFTER-002 | 执行后生成退款 NC | orders-after-sales.html、finance-refund-execute.html | 退款申请和退款执行分离 |
+| tour/team-create.html | 履约中心 / 团期管控 | 新建团期 | 产品、产品线路 | 团期库存、价格、渠道 | 团号、日期、容量、价格、库存矩阵、截止日 | 筹备中/开放报名 | 无 | 无 | schedules.html、schedules-detail.html | 团期层不重复完整行程 |
+| tour/schedules.html | 履约中心 / 团期管控 | 团期 | 产品、产品线路 | 订单、执行、成本、结算 | 团号、出发日、库存、价格、渠道、领队 | 销售状态、执行状态、结算状态 | 无 | 无 | schedules-detail.html、team-create.html | 标准团期三组状态可筛选 |
+| tour/schedules-calendar.html | 履约中心 / 团期管控 | 团期日历 | 团期 | 批量开排、团期详情 | 日期、产品、余位、状态、截止节点 | 销售状态 | 无 | 无 | schedules-detail.html、schedules-batch.html | 日历是视图，不另建对象 |
+| tour/schedules-batch.html | 履约中心 / 团期管控 | 批量开排 | 产品线路、价格模板 | 多个团期 | 线路、日期规则、价格、库存、渠道 | 筹备中 | 无 | 无 | schedules.html | 批量生成团期不生成订单或财务单据 |
+| tour/schedules-detail.html | 履约中心 / 团期管控 | 团期详情 | 团期 | 订单、名单、收款、执行、成本、结算 | 产品线路、库存矩阵、名单、收款、执行、成本、结算 | 销售/执行/结算状态 | BF-SALE-001、BF-COST-002、BF-SETTLE-001 | 收款、成本、结算进入 NC | orders.html、fulfillment-cost.html、finance-settlement-detail.html | 从团期能看完整业财链路 |
+| tour/fulfillment-outbound.html | 履约中心 / 团期管控 / 团队执行 | 团队执行总览 | 团期、订单名单 | 名单、证件、签证、通知、回团 | 团号、名单、资料、负责人、风险 | 未出团/操作中/已出发/已回团 | 无 | 无 | fulfillment-roster.html、fulfillment-return.html | 执行状态不替代销售状态 |
+| tour/fulfillment-roster.html | 履约中心 / 团期管控 / 团队执行 | 名单管理 | 订单、游客 | 出团通知、保险、成本人数 | 游客、证件、房型、特殊需求、收款风险 | 名单待确认/已锁定 | 无 | 无 | orders-detail.html、fulfillment-documents.html | 名单锁定和订单人数一致 |
+| tour/fulfillment-documents.html | 履约中心 / 团期管控 / 团队执行 | 证件资料 | 游客名单 | 签证、保险、出团校验 | 护照、证件有效期、附件、材料状态 | 待补/已齐/异常 | 无 | 无 | fulfillment-visa.html | 资料风险能回写订单详情 |
+| tour/fulfillment-visa.html | 履约中心 / 团期管控 / 团队执行 | 签证进度 | 证件资料、签证供应商 | 出团校验、签证成本 | 签证国家、材料、送签日、出签日、费用 | 待送签/送签中/已出签/拒签 | BF-COST-002 | 签证成本确认后进入 NC | fulfillment-documents.html、finance-payable.html | 签证异常触发订单风险 |
+| tour/fulfillment-notice.html | 履约中心 / 团期管控 / 团队执行 | 出团通知 | 团期、名单、集合信息 | 客户通知、执行记录 | 集合点、领队、行前说明、发送渠道 | 待发送/已发送/失败 | 无 | 无 | orders-detail.html | 通知记录可追溯到游客 |
+| tour/fulfillment-return.html | 履约中心 / 团期结算 / 回团处理 | 回团记录 | 团队执行 | 实际成本、异常关闭、结算草稿 | 回团日期、满意度、异常、归档资料、实际成本入口 | 已回团/已归档 | BF-COST-002、BF-SETTLE-001 | 成本确认和结算进入 NC | fulfillment-cost.html、finance-settlement.html | 回团后才开启实际成本确认 |
+| tour/fulfillment-cost.html | 履约中心 / 团期结算 | 团期成本 | 团期、回团记录、成本项 | 成本确认单、应付草稿 | 预估成本、实际成本、供应商、科目、毛利 | 未维护/预估/实际确认 | BF-COST-001、BF-COST-002 | 成本确认后进入 NC | fulfillment-supplier-fees.html、finance-payable.html | 预估成本不生成应付 |
+| tour/fulfillment-supplier-fees.html | 履约中心 / 团期结算 | 供应商费用 | 成本项、供应商账单 | 应付单、差异记录 | 供应商、费用项、数量、金额、发票要求 | 待对账/有差异/已确认 | BF-COST-009、BF-COST-010、BF-COST-011 | 应付和进项发票影响 NC | finance-payable.html | 无业务对象账单不得生成应付 |
+| tour/fulfillment-payment-apply.html | 履约中心 / 团期结算 | 付款申请 | 应付草稿、预付款申请 | 审批、财务付款执行 | 供应商、应付单、金额、账户、用途 | 草稿/审批中/通过/拒绝 | BF-PAY-001、BF-PAY-002 | 审批通过后不推 NC，付款后推 | approval/approvals.html、finance-payment.html | 付款申请不等于已付款 |
+| sales/sales-product-quote.html | 销售中心 / 线路浏览与报价 | 线路浏览和报价单 | 线路、团期、套餐、需求 | 报价单、订单 | 产品、团期、价格、客户、报价有效期 | 草稿/已发送/已确认 | 无，报价确认后生成订单应收 | 无 | booking.html、orders.html | 报价不直接生成财务单据 |
+| sales/orders-intent.html | 销售中心 / 意向订单 | 意向订单 | 客户线索、咨询、AI 建议 | 报价单、销售订单、跟进记录 | 客户、需求、预算、日期、产品偏好、跟进人 | 新建/跟进中/已转订单/已关闭 | 无 | 无 | sales-product-quote.html、booking.html | 意向不触发财务，转订单后才生成应收 |
+| sales/booking.html | 销售中心 / 订单管理 | 新建订单 | 报价、团期、套餐、服务项目 | 应收、库存占用、合同 | 客户、出行人、产品、库存、价格、收款计划 | 待提交/待收款 | BF-SALE-001、BF-SALE-002、BF-SALE-003 | 认款后推 NC，可开票 | orders-detail.html、payment-claim.html | 下单生成应收且占用正确库存 |
+| sales/orders.html | 销售中心 / 订单管理 | 销售订单列表 | 报价、下单 | 应收、合同、售后、执行 | 订单号、客户、产品、团期、金额、收款 | 待收款/部分收款/已收清/售后中 | BF-SALE-001、BF-CASH-002 | 收款后进入 NC | orders-detail.html、orders-transfer.html、orders-refund.html | 订单状态和财务状态分开展示 |
+| sales/orders-detail.html | 销售中心 / 订单管理 | 订单详情 | 销售订单 | 收款、合同、游客、售后、结算 | 订单、游客、收款、合同、发票、售后、风险 | 订单状态、收款状态、售后状态 | BF-CASH-002、BF-AFTER-001、BF-SALE-006 | 收款、退款、开票进入 NC/税务 | payment-claim.html、contracts.html、orders-after-sales.html | 订单详情能看到财务联动区块 |
+| sales/payment-claim.html | 销售中心 / 收款认领 | 收款认领 | 应收、银行流水 | 认款记录、收款凭证 | 流水、应收单、订单、客户、金额 | 待认领/已认领/异常 | BF-CASH-002、BF-CASH-003 | 生成收款凭证和 NC 任务 | finance-matching.html、orders-detail.html | 认款完成回写订单收款状态 |
+| sales/contracts.html | 销售中心 / 合同管理 | 合同 | 订单、报价 | 收款、售后、发票、审计 | 合同号、客户、产品、金额、签署、附件 | 草稿/已发送/已签署/作废 | 无，作废可能触发 BF-AFTER | 开票校验 | orders-detail.html、orders-after-sales.html | 合同金额作为应收校验依据 |
+| sales/orders-after-sales.html | 销售中心 / 售后处理 / 售后总览 | 售后申请 | 订单、客户申请 | 审批、应收调整、退款执行、库存释放 | 售后单、类型、资源、金额、审批、财务联动 | 待审批/处理中/待财务执行/完成 | BF-AFTER-001、BF-AFTER-002、BF-SALE-006、BF-SALE-007 | 退款执行和红冲进入 NC | orders-transfer.html、orders-refund.html、finance-refund-execute.html | 售后申请不直接等于财务已执行 |
+| sales/orders-transfer.html | 销售中心 / 售后处理 / 转团/改期 | 变更申请 | 订单、原团期、新团期/资源 | 应收调整、库存释放/重占、审批 | 原安排、新安排、差额、资源确认、凭证 | 草稿/审批中/已生效 | BF-AFTER-005、BF-AFTER-006、BF-AFTER-007、BF-AFTER-008 | 补差/退差生成 NC 任务 | orders-after-sales.html、approval/approvals.html | 新资源未锁定不得生效 |
+| sales/orders-refund.html | 销售中心 / 售后处理 / 退款申请 | 退款申请 | 订单、售后规则、供应商扣损 | 审批、退款单、财务退款执行 | 可退金额、扣损、退款账户、库存释放 | 草稿/待审批/待执行/已完成 | BF-AFTER-001、BF-AFTER-002 | 执行后生成退款 NC | orders-after-sales.html、finance-refund-execute.html | 退款申请和退款执行分离 |
 | finance/finance-matching.html | 财务 / 认款管理 | 认款记录 | 银行流水、应收 | 收款凭证、订单回写 | 流水、应收单、匹配规则、金额、差异 | 待认款/已认款/异常 | BF-CASH-001、BF-CASH-002、BF-CASH-003 | 收款凭证生成 NC 任务 | receipts.html、orders-detail.html | 认错款只能冲正不能删除 |
-| finance/receipts.html | 财务 / 收款管理 | 收款凭证 | 认款记录、资金池扣款 | NC 收款凭证、结算单 | 凭证号、订单、客户、金额、账户、NC状态 | 待推送/已推送/失败 | BF-CASH-002、BF-CASH-004、BF-CASH-005 | 生成 NC 收款凭证 | finance-nc.html、orders-detail.html | 收款凭证必须有来源应收 |
+| finance/receipts.html | 财务 / 到账流水 | 收款凭证 | 认款记录、资金池扣款 | NC 收款凭证、结算单 | 凭证号、订单、客户、金额、账户、NC状态 | 待推送/已推送/失败 | BF-CASH-002、BF-CASH-004、BF-CASH-005 | 生成 NC 收款凭证 | finance-nc.html、orders-detail.html | 收款凭证必须有来源应收 |
 | finance/finance-receivable.html | 财务 / 应收管理 | 应收单 | 订单、补差、应收计划 | 认款、收款、发票、结算 | 应收单、来源、客户、金额、余额、账龄 | 待收/部分/已收清/已冲减 | BF-SALE-001、BF-SALE-005、BF-SALE-006、BF-SALE-007 | 收款和红冲进 NC，可开票 | finance-matching.html、finance-invoice.html | 应收余额按调整事件计算 |
-| finance/finance-settlement.html | 财务 / 对账结算 | 结算单列表 | 团期、订单、服务单、项目、成本确认 | 应付、付款、报表、NC | 收入、退款、成本、应付、已付、毛利 | 待生成/待确认/待审批/已结算 | BF-SETTLE-001、BF-SETTLE-002、BF-SETTLE-003 | 结转凭证进入 NC | finance-settlement-detail.html、finance-nc.html | 结算完成后金额只走调整 |
-| finance/finance-settlement-detail.html | 财务 / 对账结算 | 结算详情 | 结算单 | 应付、付款、NC、报表 | 结算快照、收入、成本、差异、付款、NC | 待确认/待审批/已结算 | BF-SETTLE-003、BF-SETTLE-008 | 结转和调整进入 NC | finance-payable.html、finance-nc.html | 结算详情能追溯来源订单和成本 |
+| finance/finance-settlement.html | 财务 / 业务结算 | 结算单列表 | 团期、订单、服务单、项目、成本确认 | 应付、付款、报表、NC | 收入、退款、成本、应付、已付、毛利 | 待生成/待确认/待审批/已结算 | BF-SETTLE-001、BF-SETTLE-002、BF-SETTLE-003 | 结转凭证进入 NC | finance-settlement-detail.html、finance-nc.html | 结算完成后金额只走调整 |
+| finance/finance-settlement-detail.html | 财务 / 业务结算 | 结算详情 | 结算单 | 应付、付款、NC、报表 | 结算快照、收入、成本、差异、付款、NC | 待确认/待审批/已结算 | BF-SETTLE-003、BF-SETTLE-008 | 结转和调整进入 NC | finance-payable.html、finance-nc.html | 结算详情能追溯来源订单和成本 |
 | finance/finance-payable.html | 财务 / 应付管理 | 应付单 | 成本确认、供应商账单 | 付款申请、进项发票、NC | 应付单、供应商、费用项、金额、账期、发票 | 待对账/已确认/已申请/已付款 | BF-COST-010、BF-COST-012 | 应付和付款影响 NC，进项发票影响税务 | finance-payment.html、finance-invoice.html | 应付确认不等于已付款 |
 | finance/finance-payment.html | 财务 / 付款执行 | 付款单 | 付款申请审批通过 | 回单、应付核销、NC | 付款申请、供应商、账户、金额、银行流水 | 待执行/已付款/失败/回单待核销 | BF-PAY-003、BF-PAY-004、BF-PAY-007 | 付款完成生成 NC 付款凭证 | finance-remittance.html、finance-nc.html | 银行失败不覆盖原申请 |
 | finance/finance-refund-execute.html | 财务 / 退款执行 | 退款执行 | 退款申请审批通过 | 退款凭证、订单回写、NC | 退款单、客户账户、金额、扣损、执行人 | 待执行/已退款/失败 | BF-AFTER-003 | 退款凭证进入 NC 红冲 | orders-refund.html、finance-nc.html | 退款执行完成才释放财务状态 |
-| finance/finance-remittance.html | 财务 / 回单管理 | 回单 | 付款单、银行流水 | 付款核销、审计、NC校验 | 回单号、付款单、金额、附件、流水号 | 待核销/已核销/异常 | BF-PAY-005、BF-PAY-006 | 校验 NC 付款凭证 | finance-payment.html | 回单金额不一致进入异常 |
+| finance/finance-remittance.html | 财务 / 回单核销 | 回单 | 付款单、银行流水 | 付款核销、审计、NC校验 | 回单号、付款单、金额、附件、流水号 | 待核销/已核销/异常 | BF-PAY-005、BF-PAY-006 | 校验 NC 付款凭证 | finance-payment.html | 回单金额不一致进入异常 |
 | finance/finance-invoice.html | 财务 / 发票管理 | 发票台账 | 订单、收款、应付、供应商账单 | 税务台账、NC | 抬头、税号、金额、税率、发票号、来源单据 | 申请中/已开票/红冲/已认证 | BF-TAX-001 至 BF-TAX-006 | 销项/进项进入税务和 NC | finance-receivable.html、finance-payable.html | 发票可追溯业务来源 |
 | finance/finance-nc.html | 财务 / NC推送 | NC 凭证和推送任务 | 收款、退款、成本、付款、结算、发票 | NC 侧凭证号、失败重推 | 凭证类型、来源单据、科目、辅助核算、状态 | 待推送/推送中/成功/失败 | BF-NC-001 至 BF-NC-010 | 核心 NC 队列 | 来源单据详情 | 推送失败不回滚业务 |
 
@@ -109,10 +109,10 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | product/product-free-travel-list.html | 产品中心 / 自营产品 / 产品管理 | 自由行套餐 | 酒店、航班、车型、POI、供应商 | 出行日期价格库存、订单、采购批次 | 套餐、日期库存、房量、价格、采购规则 | 草稿/在售/停售 | BF-SALE-002 | 订单收款和批次成本进入 NC | booking.html、finance-settlement.html | 自由行不出现在团期列表 |
 | product/product-single-orders.html | 产品中心 / 自营产品 / 产品管理 | 服务项目和服务单入口 | 服务项目规则、客户 | 服务单、服务费、代垫、结算 | 服务项目、材料、服务费、代垫、办理节点 | 启用/停用/待处理/执行中 | BF-SALE-003、BF-COST-007、BF-SETTLE-005 | 服务费和代垫科目分离 | sales/booking.html、finance-settlement.html | 单项服务不进入新建线路 |
-| tour/product-custom-list.html | 产品中心 / 自营产品 / 单团自组 | MICE/定制需求列表 | 客户需求、销售线索 | 报价版本、锁定报价、项目 | 客户、人数、预算、日期、需求、负责人 | 需求确认/报价中/已确认/取消 | BF-SALE-004 | 阶段应收后进入 NC | product-custom-detail.html、projects.html | MICE 不进入标准线路库 |
-| tour/product-custom-detail.html | 产品中心 / 自营产品 / 单团自组 | 单团需求/报价详情 | 需求单 | 报价版本、合同、项目执行 | 报价版本、行程、费用、资源、客户反馈 | 草稿/已发送/已确认/已作废 | BF-SALE-004 | 锁定报价后阶段收款进入 NC | projects-detail.html、contracts.html | 锁定报价不得覆盖 |
-| tour/projects.html | 产品中心 / 自营产品 / 单团自组 | 项目执行列表 | 锁定报价、合同 | 项目成本、阶段应收、项目结算 | 项目、客户、阶段、应收、成本、负责人 | 筹备中/操作中/执行中/已完成 | BF-SALE-005、BF-COST-008 | 阶段收款、项目成本进 NC | projects-detail.html | 项目按锁定报价核算 |
-| tour/projects-detail.html | 产品中心 / 自营产品 / 单团自组 | 项目执行详情 | 项目执行单 | 成本确认、项目结算、NC | 锁定报价、变更单、阶段收款、实际成本 | 项目执行状态、项目结算状态 | BF-COST-008、BF-SETTLE-006 | 项目结算生成 NC 结转 | finance-settlement-detail.html、finance-nc.html | 项目变更生成变更单 |
+| tour/product-custom-list.html | 产品中心 / 自营产品 / 单团项目 | MICE/定制需求列表 | 客户需求、销售线索 | 报价版本、锁定报价、项目 | 客户、人数、预算、日期、需求、负责人 | 需求确认/报价中/已确认/取消 | BF-SALE-004 | 阶段应收后进入 NC | product-custom-detail.html、projects.html | MICE 不进入标准线路库 |
+| tour/product-custom-detail.html | 产品中心 / 自营产品 / 单团项目 | 单团需求/报价详情 | 需求单 | 报价版本、合同、项目执行 | 报价版本、行程、费用、资源、客户反馈 | 草稿/已发送/已确认/已作废 | BF-SALE-004 | 锁定报价后阶段收款进入 NC | projects-detail.html、contracts.html | 锁定报价不得覆盖 |
+| tour/projects.html | 产品中心 / 自营产品 / 单团项目 | 项目执行列表 | 锁定报价、合同 | 项目成本、阶段应收、项目结算 | 项目、客户、阶段、应收、成本、负责人 | 筹备中/操作中/执行中/已完成 | BF-SALE-005、BF-COST-008 | 阶段收款、项目成本进 NC | projects-detail.html | 项目按锁定报价核算 |
+| tour/projects-detail.html | 产品中心 / 自营产品 / 单团项目 | 项目执行详情 | 项目执行单 | 成本确认、项目结算、NC | 锁定报价、变更单、阶段收款、实际成本 | 项目执行状态、项目结算状态 | BF-COST-008、BF-SETTLE-006 | 项目结算生成 NC 结转 | finance-settlement-detail.html、finance-nc.html | 项目变更生成变更单 |
 
 ## 5. P2 外采和渠道任务卡
 
@@ -150,11 +150,11 @@
 | dashboard-store.html | 工作 / 首页工作台 | 门店店长工作台 | 门店订单、顾问、资金池 | 门店订单、顾问目标、资金池 | 门店业绩、顾问排行、资金池、待办 | 达成/预警 | BF-CASH-004、BF-CASH-005 | 资金池影响 NC | sales/store/index.html、finance-reports.html?report=fund&view=pool | 门店资金节点可追踪 |
 | sales/store/index.html | 门店中心 / 门店管理 | 门店 | 组织架构、门店配置 | 门店订单、顾问、资金池、对账 | 门店、组织、账户、负责人、数据范围 | 启用/停用 | BF-CASH-004、BF-CASH-005 | 资金池收支进入 NC | sales/store/detail.html、finance-reports.html?report=fund&view=pool | 门店不等于渠道代理商 |
 | sales/store/detail.html | 门店中心 / 门店管理 | 门店详情 | 门店列表 | 门店订单、顾问、资金池 | 门店信息、订单、顾问、资金、对账 | 启用/停用/预警 | BF-CASH-004、BF-CASH-005 | 资金池和收款进 NC | sales/store/index.html、orders.html | 门店详情可追踪订单和资金 |
-| sales/store/members.html | 门店中心 / 门市成员 | 门市成员 | 门店、员工任职 | 门店订单、合同、售后、对账 | 门市角色、负责范围、门市业务权限 | 正常/待审批/停用 | 审批中心 | 员工任职 | sales/store/detail.html | 门市成员是门店内角色和业务权限，不承担员工入离调转 |
-| sales/consultant/detail.html | 门店中心 / 顾问业绩 | 顾问详情 | 门市成员/销售顾问 | 客户、意向、订单 | 业绩、客户、跟进、订单、目标 | 在岗/停用 | 无 | 无 | orders.html、customers-detail.html | 顾问详情偏业绩和客户经营，不做员工任职主数据 |
-| customer/list.html | 客户 / 客户列表 | 客户 | 咨询、订单、导入 | 意向订单、订单、跟进 | 姓名、联系方式、标签、来源、最近互动 | 有效/沉睡/风险 | 无 | 发票抬头可关联 | customers-detail.html、orders-intent.html | 客户不直接触发财务 |
-| customer/detail.html | 客户 / 客户列表 | 客户详情 | 客户列表 | 跟进、订单、会员 | 客户、联系人、历史订单、标签、AI建议 | 活跃/沉睡/风险 | 无 | 发票抬头关联 | orders.html、orders-intent.html | 客户详情展示 AI 复购建议 |
-| customer/customers-detail.html | 客户 / 客户列表 | 客户详情 | 客户列表 | 跟进、订单、会员 | 客户、联系人、历史订单、标签、AI建议 | 活跃/沉睡/风险 | 无 | 发票抬头关联 | orders.html、orders-intent.html | 与 customer/detail.html 口径一致 |
+| sales/store/members.html | 门店中心 / 门店成员 | 门店成员 | 门店、员工任职 | 门店订单、合同、售后、对账 | 门市角色、负责范围、门市业务权限 | 正常/待审批/停用 | 审批中心 | 员工任职 | sales/store/detail.html | 门店成员是门店内角色和业务权限，不承担员工入离调转 |
+| sales/consultant/detail.html | 门店中心 / 顾问业绩 | 顾问详情 | 门店成员/销售顾问 | 客户、意向、订单 | 业绩、客户、跟进、订单、目标 | 在岗/停用 | 无 | 无 | orders.html、customers-detail.html | 顾问详情偏业绩和客户经营，不做员工任职主数据 |
+| customer/list.html | 客户 / 散客会员 | 客户 | 咨询、订单、导入 | 意向订单、订单、跟进 | 姓名、联系方式、标签、来源、最近互动 | 有效/沉睡/风险 | 无 | 发票抬头可关联 | customers-detail.html、orders-intent.html | 客户不直接触发财务 |
+| customer/detail.html | 客户 / 散客会员 | 客户详情 | 客户列表 | 跟进、订单、会员 | 客户、联系人、历史订单、标签、AI建议 | 活跃/沉睡/风险 | 无 | 发票抬头关联 | orders.html、orders-intent.html | 客户详情展示 AI 复购建议 |
+| customer/customers-detail.html | 客户 / 散客会员 | 客户详情 | 客户列表 | 跟进、订单、会员 | 客户、联系人、历史订单、标签、AI建议 | 活跃/沉睡/风险 | 无 | 发票抬头关联 | orders.html、orders-intent.html | 与 customer/detail.html 口径一致 |
 | approval/approvals.html | 审批 | 审批单列表 | 业务动作、审批配置 | 业务生效、财务执行、日志 | 审批事项、来源对象、金额、节点、意见 | 待我审批/已通过/已拒绝 | 审批通过触发对应事件 | 付款、退款、结算、红冲可进 NC | approval-product-review.html、来源页面 | 审批不替代业务单据 |
 | approval/approval-product-review.html | 审批 | 审批详情 | 审批单 | 业务回写、财务事件 | 来源对象、变更前后、审批意见、附件 | 待审批/通过/拒绝 | 取决于来源事件 | 取决于来源单据 | approvals.html、来源页面 | 审批通过必须回写原对象 |
 | ai/route_parser.html | AI / 线路拆解 | 线路拆解任务 | 上传文件、外部行程 | 线路草稿、方案草稿 | 文件、解析结果、线路字段、行程节点 | 待解析/成功/失败 | 无 | 无 | product-self-edit.html | AI 生成草稿不直接发布 |
@@ -180,7 +180,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | 我的待办 | 工作 / 我的待办 | 待办任务 | 审批、订单、财务异常 | 来源页面 | 来源对象、节点、超时、负责人 | 待办/已办/逾期 | 取决于来源 | 取决于来源 | P4 | 待办能跳回来源对象 |
 | 消息中心 | 工作 / 消息中心 | 消息通知 | 系统事件、审批、财务异常 | 用户提醒 | 消息类型、来源、阅读状态 | 未读/已读 | 无 | 无 | P4 | 消息不替代审批 |
-| 报价单列表 | 订单中心 / 报价单 | 报价单 | 线路、团期、套餐、需求 | 订单、合同 | 报价单号、客户、产品、金额、有效期 | 草稿/已发送/已确认/失效 | 无 | 无 | P0 | 报价确认后才能转订单 |
+| 报价单列表 | 销售中心 / 报价单 | 报价单 | 线路、团期、套餐、需求 | 订单、合同 | 报价单号、客户、产品、金额、有效期 | 草稿/已发送/已确认/失效 | 无 | 无 | P0 | 报价确认后才能转订单 |
 | 门店订单 | 门店中心 / 门店管理 / 门店订单 | 门店订单视图 | 订单 | 门店业绩、收款、对账 | 门店、顾问、订单、收款、售后 | 待收/已收/售后中 | BF-CASH-005 | 资金池扣款进 NC | P4 | 只是门店视图，不新建订单对象 |
 | 业绩目标 | 门店中心 / 门店管理 / 业绩目标 | 门店/顾问目标 | 组织、员工 | 工作台、报表 | 目标、周期、对象、完成值 | 进行中/达成/预警 | 无 | 无 | P4 | 业绩来自订单和收款 |
 | 预充值账户 | 门店中心 / 门店管理 / 预充值账户 | 资金池账户 | 门店、财务入账 | 资金池流水、订单扣款 | 账户、余额、冻结、阈值 | 正常/预警/冻结 | BF-CASH-004、BF-CASH-005 | 资金池凭证进 NC | P3 | 与财务资金池口径一致 |
@@ -188,7 +188,7 @@
 | 渠道来源 | 渠道中心 / 渠道来源 | 渠道来源字典 | 系统配置 | 订单来源、佣金规则 | 来源、渠道、归属、有效期 | 启用/停用 | 无 | 无 | P2 | 渠道来源不等于供应商 |
 | 同步日志 | 渠道中心 / 同步日志 | 渠道同步任务 | OTA、接口 | 失败重试、审计 | 任务、对象、状态、错误、重试 | 成功/失败/重试中 | 无 | 无 | P2 | 不删除失败日志 |
 | 跟进记录 | 客户 / 跟进记录 | 客户跟进 | 客户、意向 | 意向订单、订单 | 客户、方式、内容、下一步、负责人 | 待跟进/已跟进 | 无 | 无 | P4 | 跟进可转意向 |
-| 会员管理 | 客户 / 会员管理 | 会员账户 | 客户 | 积分、权益、订单优惠 | 会员号、等级、积分、权益 | 有效/冻结 | 无 | 发票无直接影响 | P4 | 会员抵扣进入订单金额 |
+| 散客会员 | 客户 / 散客会员 | 会员账户 | 客户 | 积分、权益、订单优惠 | 会员号、等级、积分、权益 | 有效/冻结 | 无 | 发票无直接影响 | P4 | 会员抵扣进入订单金额 |
 | 客户标签 | 客户 / 客户标签 | 标签字典 | 客户、AI 建议 | 客户分群、营销 | 标签、规则、来源、适用范围 | 启用/停用 | 无 | 无 | P4 | 标签不做状态色滥用 |
 | 客户分群 | 客户 / 客户分群 | 客户分群 | 标签、订单、跟进 | 营销、AI 推荐 | 分群规则、人数、更新时间 | 启用/停用 | 无 | 无 | P4 | 分群口径可解释 |
 | Prompt模板 | AI / Prompt模板 | Prompt 模板 | AI 配置 | AI 任务 | 模板、变量、场景、版本 | 启用/停用 | 无 | 无 | P4 | 模板变量来自业务对象 |

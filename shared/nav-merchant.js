@@ -324,7 +324,7 @@
     销售中心: "销售",
     门店中心: "门店",
     渠道中心: "渠道",
-    会员: "会员",
+    客户: "客户",
     财务: "财务",
     审批: "审批",
     AI: "AI",
@@ -339,7 +339,7 @@
     销售中心: "销售中心",
     门店中心: "门店中心",
     渠道中心: "渠道中心",
-    会员: "会员管理",
+    客户: "客户",
     财务: "财务管理",
     审批: "审批中心",
     AI: "AI工具",
@@ -466,8 +466,8 @@
       return "finance/finance-reports.html?report=" + (reportRouteKeys.has(report) ? report : "profit");
     }
     if (file === "finance/finance-control.html") {
-      const view = url.searchParams.get("view") || "supplier-bills";
-      return "finance/finance-control.html?view=" + (financeControlViewKeys.has(view) ? view : "supplier-bills");
+      const view = url.searchParams.get("view") || "fund-transfer";
+      return "finance/finance-control.html?view=" + (financeControlViewKeys.has(view) ? view : "fund-transfer");
     }
     if (file === "approval/approvals.html") {
       const view = url.searchParams.get("view") || "todo";
@@ -544,7 +544,7 @@
     "marketing/miniapp-templates.html": { href: "marketing/miniapp-templates.html", title: "专题活动" },
     "marketing/miniapp-assets.html": { href: "marketing/miniapp-assets.html", title: "素材中心" },
     "marketing/marketing-analysis.html": { href: "marketing/marketing-analysis.html", title: "营销分析" },
-    "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
+    "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团项目详情" },
     "tour/product-custom-inquiry-create.html": { href: "tour/product-custom-list.html", title: "发起单团询价" },
     "sales/contract-template-edit.html": { href: "sales/contract-templates.html", title: "合同模板编辑" },
     "product/product-outsource-detail.html": { href: "product/product-outsource-list.html", title: "代理产品详情" },
@@ -582,8 +582,8 @@
     "sales/call-center/intents.html": { href: "sales/call-center/intents.html", title: "电销意向" },
     "sales/call-center/consultants.html": { href: "sales/call-center/consultants.html", title: "电销顾问" },
     "sales/call-center/performance.html": { href: "sales/call-center/performance.html", title: "电销业绩" },
-    "tour/projects.html": { href: "tour/product-custom-list.html", title: "单团自组" },
-    "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团自组详情" },
+    "tour/projects.html": { href: "tour/product-custom-list.html", title: "单团项目" },
+    "tour/projects-detail.html": { href: "tour/product-custom-list.html", title: "单团项目详情" },
     "finance/finance-settlement-detail.html": { href: "finance/finance-settlement.html", title: "业务结算详情" },
     "finance/finance-transfer-records.html": { href: "finance/finance-transfer-records.html", title: "转款核销" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
@@ -2234,7 +2234,7 @@
     "门店", "门店渠道", "门店POS", "小程序", "官网", "OTA", "OTA平台", "OTA结算", "携程", "飞猪", "同程", "代理", "代理渠道", "分销", "分销渠道",
     "银行流水", "线下转账", "手动认款", "OTA认款", "OTA批量", "门店POS", "直客", "官网直客",
     "欧洲", "东南亚", "国内", "法国", "德国", "意大利", "荷兰", "比利时", "日本", "英国", "MICE", "全线路",
-    "资源", "产品中心", "团期管理", "销售中心", "门店中心", "渠道中心", "客户", "财务", "审批", "AI", "系统设置",
+    "资源", "产品中心", "履约中心", "销售中心", "门店中心", "渠道中心", "营销中心", "客户", "财务", "审批", "AI", "系统设置",
     "产品发布", "价格调整", "渠道授权", "成本差异", "交通资源付款", "超DL还位", "损耗确认", "付款申请", "退款申请", "坏账处理", "结算确认", "发票红冲", "NC异常", "组织人事", "改期转团", "合同作废",
     "产品经理", "产品总监", "销售顾问", "高级顾问", "顾问", "计调", "财务", "管理层", "门店店长", "审批管理员", "超管",
     "专业版", "旗舰版", "基础版", "组织账号", "权限安全", "AI模型", "系统配置", "审计只读", "产品文案生成", "行程生成", "话术建议", "财务异常分析", "客户洞察", "其他"
@@ -2244,7 +2244,7 @@
     /^(产品管理|自营|外采|代理|参团游|邮轮|专列|研学|自由行|单项服务|MICE)(产品|线路|团期)?$/,
     /^(普通|邮轮|专列|研学)(团期|航次|班期|营期)$/,
     /^(门店|小程序|官网|OTA|携程|飞猪|同程|代理|分销|直客|官网直客|银行流水|线下转账|手动认款|OTA认款|OTA结算)$/,
-    /^(资源|产品中心|团期管理|销售中心|门店中心|渠道中心|客户|财务|审批|AI|系统设置)$/,
+    /^(资源|产品中心|履约中心|销售中心|门店中心|渠道中心|营销中心|客户|财务|审批|AI|系统设置)$/,
     /^(产品发布|价格调整|渠道授权|成本差异|交通资源付款|超DL还位|损耗确认|付款申请|退款申请|坏账处理|结算确认|发票红冲|NC异常|组织人事|改期转团|合同作废)$/,
     /^(产品经理|产品总监|销售顾问|高级顾问|顾问|计调|财务|管理层|门店店长|审批管理员|超管)$/,
     /^(专业版|旗舰版|基础版|组织账号|权限安全|AI模型|系统配置|审计只读)$/,

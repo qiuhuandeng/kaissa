@@ -38,7 +38,8 @@
           <label class="sr-only" for="proxyStatus">销售状态</label>
           <select id="proxyStatus">
             <option value="">全部状态</option>
-            <option>审核中</option>
+            <option>待定价</option>
+            <option>开售审核中</option>
             <option>销售中</option>
             <option>停售</option>
           </select>
@@ -66,7 +67,7 @@
             <th>代理产品</th>
             <th>出发/目的地</th>
             <th>代理团期</th>
-            <th>售价</th>
+            <th>定价进度</th>
             <th>销售范围</th>
             <th>状态</th>
             <th>操作人</th>
@@ -80,39 +81,6 @@
       <span id="outsourcePagination">0条</span>
     </div>
   </section>
-
-  <div id="priceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal outsource-product-modal" role="dialog" aria-modal="true" aria-labelledby="priceDrawerTitle">
-      <div class="modal-header">
-        <div id="priceDrawerTitle" class="modal-title">设置售价</div>
-        <button class="modal-close" type="button" data-close-price aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <section class="drawer-section">
-          <div class="drawer-section-head">
-            <h3 class="drawer-section-title">代理产品</h3>
-          </div>
-          <div id="priceProductSummary" class="description-grid"></div>
-        </section>
-        <section class="drawer-section">
-          <div class="drawer-section-head">
-            <h3 class="drawer-section-title">本次售价</h3>
-          </div>
-          <div class="form-grid form-grid-2">
-            <div class="form-group"><label class="form-label" for="priceAdult">成人销售价</label><input id="priceAdult" class="form-control" type="number" min="0"></div>
-            <div class="form-group"><label class="form-label" for="priceChild">儿童销售价</label><input id="priceChild" class="form-control" type="number" min="0"></div>
-            <div class="form-group"><label class="form-label" for="priceSingleRoom">单房差</label><input id="priceSingleRoom" class="form-control" type="number" min="0"></div>
-            <div class="form-group"><label class="form-label" for="priceScope">生效范围</label><select id="priceScope" class="form-control"><option>全部销售中团期</option><option>未锁价团期</option><option>指定团期</option></select></div>
-            <div class="form-group form-group-full"><label class="form-label" for="priceRemark">调价原因</label><textarea id="priceRemark" class="form-control" rows="3"></textarea></div>
-          </div>
-        </section>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-price>取消</button>
-        <button id="savePrice" class="btn btn-primary" type="button">确认设置</button>
-      </div>
-    </div>
-  </div>
 
   <div id="ownerDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal outsource-product-modal" role="dialog" aria-modal="true" aria-labelledby="ownerDrawerTitle">
@@ -165,7 +133,6 @@
   <script>
     (function () {
       var rows = document.getElementById('outsourceRows');
-      var priceDrawer = document.getElementById('priceDrawer');
       var ownerDrawer = document.getElementById('ownerDrawer');
       var stopProductModal = document.getElementById('stopProductModal');
       var activeKey = '';
@@ -179,14 +146,14 @@
           destination: '法国/德国/瑞士',
           schedules: 3,
           scheduleObject: '团期',
-          scheduleStatus: '销售中2 / 停售1',
+          scheduleStatus: '已定价2 / 待定价1 / 停售1',
           quota: '总代理名额42人',
-          price: '成人 ¥9,800',
-          priceSub: '儿童 ¥8,600 / 单房差 ¥1,800',
+          price: '起售价 ¥9,800',
+          priceSub: '2/3个团期已定价 · 1个待开售审核',
           priceAdult: 9800,
           priceChild: 8600,
           singleRoom: 1800,
-          lockText: '1个团期未锁价',
+          lockText: '1个团期待定价',
           scope: '门店+分销 / 华东直营',
           status: '销售中',
           owner: '陈琳',
@@ -201,16 +168,16 @@
           destination: '东京/大阪/京都',
           schedules: 2,
           scheduleObject: '团期',
-          scheduleStatus: '审核中2',
+          scheduleStatus: '待定价2',
           quota: '总代理名额26人',
-          price: '成人 ¥7,200',
-          priceSub: '儿童 ¥6,600 / 单房差 ¥1,200',
+          price: '待定价',
+          priceSub: '0/2个团期已定价 · 入库审核通过后维护',
           priceAdult: 7200,
           priceChild: 6600,
           singleRoom: 1200,
-          lockText: '2个团期未锁价',
+          lockText: '2个团期待定价',
           scope: '门店销售 / 华南直营',
-          status: '审核中',
+          status: '待定价',
           owner: '陈琳',
           detailHref: 'product-outsource-detail.html?type=group&source=OUT-JP-0005'
         },
@@ -223,14 +190,14 @@
           destination: '巴塞罗那/罗马/马赛',
           schedules: 1,
           scheduleObject: '航次',
-          scheduleStatus: '销售中1',
+          scheduleStatus: '待定价1',
           quota: '阳台舱18间',
-          price: '阳台舱 ¥18,800',
-          priceSub: '海景舱 ¥16,600 / 儿童占位 ¥12,800',
+          price: '待定价',
+          priceSub: '1个航次需按舱型矩阵定价',
           priceAdult: 18800,
           priceChild: 12800,
           singleRoom: 3200,
-          lockText: '1个航次未锁价',
+          lockText: '1个航次待定价',
           scope: '门店+分销 / 邮轮销售组',
           status: '销售中',
           owner: '周婷',
@@ -245,14 +212,14 @@
           destination: '兰卡威',
           schedules: 1,
           scheduleObject: '出行日期',
-          scheduleStatus: '停售1',
+          scheduleStatus: '已定价1 / 停售1',
           quota: '套餐名额30套',
-          price: '套餐 ¥4,200',
-          priceSub: '亲子套餐 ¥5,600',
+          price: '起售价 ¥4,200',
+          priceSub: '1/1个出行日期已定价',
           priceAdult: 4200,
           priceChild: 4200,
           singleRoom: 0,
-          lockText: '已锁价',
+          lockText: '已定价',
           scope: '官网+小程序 / 全部门店',
           status: '停售',
           owner: '陈红',
@@ -267,14 +234,14 @@
           destination: '西班牙/葡萄牙',
           schedules: 2,
           scheduleObject: '团期',
-          scheduleStatus: '停售2',
+          scheduleStatus: '已定价2 / 停售2',
           quota: '历史名额32人',
-          price: '成人 ¥11,200',
-          priceSub: '儿童 ¥9,800 / 单房差 ¥2,100',
+          price: '起售价 ¥11,200',
+          priceSub: '2/2个团期已定价',
           priceAdult: 11200,
           priceChild: 9800,
           singleRoom: 2100,
-          lockText: '已锁价',
+          lockText: '已定价',
           scope: '门店销售 / 历史订单保留',
           status: '停售',
           owner: '陈琳',
@@ -306,7 +273,7 @@
 
       function tagClass(status) {
         if (status === '销售中') return 'tag tag-green';
-        if (status === '审核中') return 'tag tag-blue';
+        if (status === '待定价' || status === '开售审核中') return 'tag tag-blue';
         if (status === '停售') return 'tag tag-gray';
         return 'tag tag-gray';
       }
@@ -342,11 +309,10 @@
       }
 
       function actionHtml(item) {
-        var main = '<a class="table-action-primary" href="' + escapeHtml(scheduleHref(item)) + '" data-open-schedules>团期</a>';
+        var main = '<a class="table-action-primary" href="' + escapeHtml(scheduleHref(item)) + '" data-open-schedules>' + escapeHtml(item.scheduleObject) + '/定价</a>';
         var menu = [];
         if (item.status === '销售中') {
           menu = [
-            '<button class="dropdown-item" type="button" data-open-price data-key="' + escapeHtml(item.key) + '">设置售价</button>',
             '<button class="dropdown-item" type="button" data-open-stop data-key="' + escapeHtml(item.key) + '">停售</button>',
             '<button class="dropdown-item" type="button" data-open-owner data-key="' + escapeHtml(item.key) + '">更新操作人</button>',
             '<a class="dropdown-item" href="' + escapeHtml(item.detailHref) + '">详情</a>'
@@ -416,22 +382,10 @@
           '<div class="outsource-stop-metrics">',
           '<div><span>当前状态</span><strong><span class="' + tagClass(item.status) + '">' + escapeHtml(item.status) + '</span></strong></div>',
           '<div><span>代理团期</span><strong>' + escapeHtml(item.schedules + '个' + item.scheduleObject) + '</strong></div>',
-          '<div><span>当前售价</span><strong>' + escapeHtml(item.price) + '</strong></div>',
+          '<div><span>定价进度</span><strong>' + escapeHtml(item.priceSub) + '</strong></div>',
           '<div><span>操作人</span><strong>' + escapeHtml(item.owner) + '</strong></div>',
           '</div>'
         ].join('');
-      }
-
-      function openPrice(key) {
-        var item = findProduct(key);
-        activeKey = item.key;
-        document.getElementById('priceProductSummary').innerHTML = productSummary(item);
-        document.getElementById('priceAdult').value = item.priceAdult || '';
-        document.getElementById('priceChild').value = item.priceChild || '';
-        document.getElementById('priceSingleRoom').value = item.singleRoom || 0;
-        document.getElementById('priceScope').value = item.status === '销售中' ? '未锁价团期' : '全部销售中团期';
-        document.getElementById('priceRemark').value = '';
-        openLayer(priceDrawer);
       }
 
       function openOwner(key) {
@@ -467,11 +421,8 @@
         renderRows();
       });
       document.addEventListener('click', function (event) {
-        if (event.target.closest('[data-close-price]')) closeLayer(priceDrawer);
         if (event.target.closest('[data-close-owner]')) closeLayer(ownerDrawer);
         if (event.target.closest('[data-close-stop]')) closeLayer(stopProductModal);
-        var priceButton = event.target.closest('[data-open-price]');
-        if (priceButton) openPrice(priceButton.dataset.key);
         var ownerButton = event.target.closest('[data-open-owner]');
         if (ownerButton) openOwner(ownerButton.dataset.key);
         var stopButton = event.target.closest('[data-open-stop]');
@@ -483,22 +434,6 @@
           toast('已恢复销售');
         }
         if (event.target.classList.contains('modal-overlay')) closeLayer(event.target);
-      });
-      document.getElementById('savePrice').addEventListener('click', function () {
-        var item = findProduct(activeKey);
-        var adult = Number(document.getElementById('priceAdult').value || 0);
-        var child = Number(document.getElementById('priceChild').value || 0);
-        var singleRoom = Number(document.getElementById('priceSingleRoom').value || 0);
-        if (adult) {
-          item.priceAdult = adult;
-          item.priceChild = child;
-          item.singleRoom = singleRoom;
-          item.price = '成人 ¥' + adult.toLocaleString('zh-CN');
-          item.priceSub = '儿童 ¥' + (child || adult).toLocaleString('zh-CN') + ' / 单房差 ¥' + singleRoom.toLocaleString('zh-CN');
-        }
-        closeLayer(priceDrawer);
-        renderRows();
-        toast('售价已更新');
       });
       document.getElementById('saveOwner').addEventListener('click', function () {
         var item = findProduct(activeKey);

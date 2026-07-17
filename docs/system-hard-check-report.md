@@ -105,8 +105,8 @@ node scripts/system-hard-check.mjs --summary
 
 | 检查方向 | 当前结果 | 判断 |
 |---|---|---|
-| 单团主入口 | `产品中心 > 自营产品 > 单团自组` 指向 `merchant/tour/product-custom-list.html` | 通过 |
-| 单团详情归属 | `product-custom-detail.html` 归属单团自组 | 通过 |
+| 单团主入口 | `产品中心 > 自营产品 > 单团项目` 指向 `merchant/tour/product-custom-list.html` | 通过 |
+| 单团详情归属 | `product-custom-detail.html` 归属单团项目 | 通过 |
 | 项目团承接 | `schedules.html`、`schedules-detail.html` 支持项目团、来源单团项目、项目订单 | 通过，下一步需点击验收内容 |
 | 项目订单承接 | `orders.html`、`orders-detail.html` 支持 `type=project/source=customProject` | 通过，下一步需点击验收抽屉同源 |
 | 项目合同承接 | `contracts.html` 有单团项目合同、项目订单、项目团、锁定报价、阶段应收 | 通过 |
