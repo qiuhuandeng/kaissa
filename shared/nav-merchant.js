@@ -526,7 +526,7 @@
     "product/product-cruise-edit.html": { href: "product/products.html", title: "自营产品编辑" },
     "product/product-train-edit.html": { href: "product/products.html", title: "自营产品编辑" },
     "product/products-detail.html": { href: "product/products.html", title: "自营产品详情" },
-    "product/product-schedules.html": { href: "tour/schedules.html", title: "团期管控" },
+    "product/product-schedules.html": { href: "product/products.html", title: "产品团期" },
     "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "resource/visa-library.html": { href: "resource/visa-library.html", title: "签证国家" },

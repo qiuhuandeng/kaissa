@@ -3,25 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>团期管控 - 凯撒旅游</title>
+  <title>产品团期 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
-  <script>
-    (function () {
-      var target = '../tour/schedules.html' + window.location.search;
-      if (window.caesarNavigateTo) window.caesarNavigateTo(target);
-      else window.location.replace(target);
-    })();
-  </script>
   <script src="../../shared/schedule-route-catalog.js"></script>
 
   <main class="product-schedule-page">
     <section class="page-workbar product-schedule-workbar">
       <div class="page-title-row">
         <a class="page-back-link" href="products.html">返回</a>
-        <h1 class="page-title">团期管控</h1>
+        <h1 id="productSchedulePageTitle" class="page-title">产品团期</h1>
       </div>
       <div class="btn-group">
         <a id="productScheduleDetailLink" class="btn btn-secondary" href="products-detail.html">产品详情</a>
@@ -63,7 +56,7 @@
       <div id="productScheduleRoutes" class="product-schedule-route-grid"></div>
     </section>
 
-    <section class="filter-card filter-card-compact product-schedule-filter-surface" aria-label="团期管控筛选">
+    <section class="filter-card filter-card-compact product-schedule-filter-surface" aria-label="产品团期筛选">
       <div class="filter-row">
         <div class="filter-item filter-item-search product-schedule-filter-keyword">
           <label class="sr-only" for="scheduleKeyword">团期编号/线路名称</label>
@@ -96,7 +89,7 @@
     </section>
 
     <section class="list-surface product-schedule-table-surface" data-list-surface>
-      <section class="table-wrap list-surface-table list-table-with-pagination product-schedule-table-wrap" aria-label="团期管控列表">
+      <section class="table-wrap list-surface-table list-table-with-pagination product-schedule-table-wrap" aria-label="产品团期列表">
         <table class="product-schedule-table">
           <colgroup>
             <col class="product-schedule-col-code">
@@ -262,7 +255,10 @@
         var nextDepart = schedules.filter(function (item) { return item.status !== "已停售"; }).map(function (item) { return item.depart; }).sort()[0] || "暂无";
         var cover = document.getElementById("summaryProductCover");
         var status = document.getElementById("summaryProductStatus");
-        document.title = (profile.productTitle || profile.product || "产品") + " - 团期管控 - 凯撒旅游";
+        var pageTitle = "产品" + currentObjectName;
+        document.title = (profile.productTitle || profile.product || "产品") + " - " + pageTitle + " - 凯撒旅游";
+        setText("productSchedulePageTitle", pageTitle);
+        setText("openProductScheduleDrawer", "新建" + currentObjectName);
         setText("summaryProductCode", profile.productCode || "-");
         setText("summaryProductName", profile.productTitle || profile.product || "-");
         setText("summaryProductMeta", [profile.type || "", profile.travelType || ""].filter(Boolean).join(" · "));
@@ -285,6 +281,8 @@
           status.className = saleCount ? "tag tag-green" : "tag tag-gray";
         }
         setText("scheduleCodeHead", currentObjectName + "编号");
+        document.getElementById("scheduleKeyword").placeholder = currentObjectName + "编号/线路名称";
+        document.getElementById("productScheduleBatchDrawerFrame").title = "新建" + currentObjectName;
         document.getElementById("productScheduleDetailLink").href = "products-detail.html?productName=" + encodeURIComponent(profile.product || productNameParam) + "&type=" + encodeURIComponent(profile.typeKey || typeParam);
       }
 
@@ -338,7 +336,8 @@
           ].join("");
         }).join("");
         if (!rows.length) {
-          tbody.innerHTML = '<tr><td colspan="8" class="text-muted">当前线路暂无团期，可点击右上角新建团期。</td></tr>';
+          var currentObjectName = objectName(profile.batchType || "普通团期");
+          tbody.innerHTML = '<tr><td colspan="8" class="text-muted">当前线路暂无' + escapeHtml(currentObjectName) + '，可点击右上角新建' + escapeHtml(currentObjectName) + '。</td></tr>';
         }
         document.getElementById("productSchedulePager").textContent = rows.length + " 条";
         renderRoutes();
@@ -435,7 +434,7 @@
             renderRows();
           }
           if (window.caesarUI && window.caesarUI.toast) {
-            window.caesarUI.toast("团期已创建，可在团期管控页继续查看和管理");
+            window.caesarUI.toast(objectName(profile.batchType || "普通团期") + "已创建，可在当前页继续查看和管理");
           }
         }
         if (data.type === "caesar:batch-drawer:close") {
