@@ -13,16 +13,15 @@
       margin: 16px 0 12px;
     }
     .group-cost-table-wrap table {
-      min-width: 1060px;
+      min-width: 960px;
     }
     .group-cost-col-select { width: 48px; }
     .group-cost-col-item { width: 150px; }
-    .group-cost-col-supplier { width: 170px; }
-    .group-cost-col-qty { width: 110px; }
+    .group-cost-col-supplier { width: 210px; }
     .group-cost-col-original { width: 150px; }
     .group-cost-col-rate { width: 110px; }
     .group-cost-col-local { width: 150px; }
-    .group-cost-col-note { width: 210px; }
+    .group-cost-col-note { width: 240px; }
   </style>
 </head>
 <body>
@@ -249,17 +248,16 @@
           <div class="group-cost-table-actions">
             <h2>成本明细</h2>
             <div>
-              <button id="addGroupCostRow" class="btn btn-secondary" type="button">新增</button>
-              <button id="deleteGroupCostRows" class="btn btn-secondary" type="button">删除</button>
+              <button id="addGroupCostRow" class="table-link pricing-module-add" type="button">新增成本项</button>
+              <button id="deleteGroupCostRows" class="table-link danger table-row-delete" type="button">删除</button>
             </div>
           </div>
-          <section class="table-wrap group-cost-table-wrap drawer-table-scroll drawer-table-cols-8">
+          <section class="table-wrap group-cost-table-wrap drawer-table-scroll drawer-table-cols-7">
             <table class="group-cost-table">
               <colgroup>
                 <col class="group-cost-col-select">
                 <col class="group-cost-col-item">
                 <col class="group-cost-col-supplier">
-                <col class="group-cost-col-qty">
                 <col class="group-cost-col-original">
                 <col class="group-cost-col-rate">
                 <col class="group-cost-col-local">
@@ -270,7 +268,6 @@
                   <th><input id="selectAllGroupCostRows" type="checkbox" aria-label="选择全部成本行"></th>
                   <th>费用项目</th>
                   <th>供应商</th>
-                  <th>数量</th>
                   <th>原币金额</th>
                   <th>汇率</th>
                   <th>本币金额</th>
@@ -3191,7 +3188,7 @@
 
       function renderSettlementBasis(schedule) {
         var detailTotals = settlementTotals(schedule);
-        document.getElementById('settlementBasisTitle').textContent = settlementDocumentAction(schedule) + ' - ' + schedule.id;
+        document.getElementById('settlementBasisTitle').textContent = settlementDocumentAction(schedule);
         renderSettlementObjectSummary(schedule, detailTotals);
         renderSettlementBasicInfo(schedule, detailTotals);
         renderProjectSettlementPanel(schedule);
@@ -3373,6 +3370,14 @@
         }).join('');
       }
 
+      function groupCostSupplierOptions(selected) {
+        var options = ['', '欧洲联合地接社', '中国国际航空', '欧洲酒店会务联盟', '京都酒店集团', '地中海邮轮中国销售中心', '西北铁路文旅集团', '丝路文旅专列结算公司', '欧洲活动执行公司', '巴黎中餐厅Le Bonheur', '巴黎酒店池', '皇家加勒比', '新加坡研学营地', '领队/导游个人', '其他供应商'];
+        return options.map(function (value) {
+          var label = value || '请选择供应商';
+          return '<option value="' + escapeHtml(value) + '"' + (value === selected ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+        }).join('');
+      }
+
       function groupCostCurrencyOptions(selected) {
         return ['CNY', 'EUR', 'USD', 'AUD', 'SGD', 'HKD'].map(function (value) {
           return '<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + value + '</option>';
@@ -3400,7 +3405,6 @@
           selected: false,
           subject: '',
           supplier: '',
-          quantity: '1项',
           currency: 'CNY',
           originalAmount: '',
           rate: '1.0000',
@@ -3411,7 +3415,7 @@
 
       function renderGroupCostDrawer(schedule) {
         var info = settlementInfo(schedule);
-        document.getElementById('scheduleCostDrawerTitle').textContent = '成本明细维护 - ' + schedule.id;
+        document.getElementById('scheduleCostDrawerTitle').textContent = '成本明细维护';
         document.getElementById('costDrawerSummary').innerHTML =
           '<div class="drawer-object-main">' +
             '<div>' +
@@ -3440,10 +3444,9 @@
           return '<tr data-group-cost-index="' + index + '">' +
             '<td><input type="checkbox" data-group-cost-select' + (row.selected ? ' checked' : '') + ' aria-label="选择成本行"></td>' +
             '<td><select class="form-control" data-group-cost-field="subject">' + groupCostSubjectOptions(row.subject) + '</select></td>' +
-            '<td><input class="form-control" type="text" placeholder="请选择供应商/领队" value="' + escapeHtml(row.supplier) + '" data-group-cost-field="supplier"></td>' +
-            '<td><input class="form-control" type="text" placeholder="数量" value="' + escapeHtml(row.quantity) + '" data-group-cost-field="quantity"></td>' +
+            '<td><select class="form-control" data-group-cost-field="supplier">' + groupCostSupplierOptions(row.supplier) + '</select></td>' +
             '<td><span class="group-cost-money-field"><select class="form-control" data-group-cost-field="currency">' + groupCostCurrencyOptions(row.currency) + '</select><input class="form-control" type="number" min="0" step="0.01" placeholder="原币金额" value="' + escapeHtml(row.originalAmount) + '" data-group-cost-field="originalAmount"></span></td>' +
-            '<td><input class="form-control" type="number" min="0" step="0.0001" value="' + escapeHtml(rate.toFixed(4)) + '" data-group-cost-field="rate"></td>' +
+            '<td><input class="form-control" type="number" min="0" step="0.0001" value="' + escapeHtml(rate.toFixed(4)) + '" data-group-cost-field="rate" readonly aria-readonly="true"></td>' +
             '<td><input class="form-control" type="text" value="' + escapeHtml(localAmount ? money(localAmount) : '') + '" data-group-cost-local readonly></td>' +
             '<td><input class="form-control" type="text" placeholder="成本说明" value="' + escapeHtml(row.note) + '" data-group-cost-field="note"></td>' +
           '</tr>';
@@ -3515,7 +3518,7 @@
             index: index + 1,
             subject: String(row.subject || '').trim(),
             supplier: String(row.supplier || '').trim(),
-            quantity: String(row.quantity || '1项').trim(),
+            quantity: '1项',
             currency: row.currency || 'CNY',
             originalAmount: originalAmount,
             rate: rate,
@@ -3706,7 +3709,7 @@
         var available = Math.max(totals.amount - totals.applied, 0);
         var request = existingRequestForGroup(activePaymentGroup);
         var projectMode = activePaymentGroup.sourceType === 'project';
-        document.getElementById('paymentApplyDrawerTitle').textContent = (projectMode ? '项目付款申请' : (request ? '付款申请' : '申请付款')) + ' - ' + activePaymentGroup.supplier;
+        document.getElementById('paymentApplyDrawerTitle').textContent = projectMode ? '项目付款申请' : (request ? '付款申请' : '申请付款');
         document.getElementById('paymentApplySummary').innerHTML =
           '<div class="description-item"><div class="description-label">付款对象</div><div class="description-value">' + escapeHtml(activePaymentGroup.supplier) + '</div></div>' +
           '<div class="description-item"><div class="description-label">收款账户</div><div class="description-value">' + escapeHtml(activePaymentGroup.account) + '</div></div>' +
@@ -3943,7 +3946,7 @@
       function openPaymentView(index) {
         var request = paymentRequests[Number(index)] || paymentRequests[0];
         activePaymentRequest = request;
-        document.getElementById('paymentViewTitle').textContent = '付款申请详情 - ' + request.id;
+        document.getElementById('paymentViewTitle').textContent = '付款申请详情';
         document.getElementById('paymentViewSummary').innerHTML =
           '<div class="description-item"><div class="description-label">申请单号</div><div class="description-value">' + escapeHtml(request.id) + '</div></div>' +
           '<div class="description-item"><div class="description-label">审批单号</div><div class="description-value">' + escapeHtml(request.approvalNo || '未提交审批') + '</div></div>' +

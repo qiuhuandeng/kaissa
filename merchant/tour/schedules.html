@@ -721,7 +721,7 @@
   <div id="costModal" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal drawer-lg schedule-cost-drawer" role="dialog" aria-modal="true" aria-labelledby="costModalTitle">
       <div class="modal-header">
-        <div id="costModalTitle" class="modal-title">成本摘要 - EU20260715001</div>
+        <div id="costModalTitle" class="modal-title">成本摘要</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-cost>×</button>
       </div>
       <div class="modal-body">
@@ -1465,14 +1465,7 @@
 
         <section class="drawer-section">
           <div class="drawer-section-head">
-            <h2 class="drawer-section-title">当前价格</h2>
-          </div>
-          <div id="schedulePriceFieldGrid" class="form-grid schedule-price-field-grid"></div>
-        </section>
-
-        <section class="drawer-section">
-          <div class="drawer-section-head">
-            <h2 class="drawer-section-title">策略模块调用</h2>
+            <h2 class="drawer-section-title">定价依据</h2>
             <div class="schedule-policy-toolbar">
               <select id="schedulePricingPolicySelect" class="form-control" aria-label="绑定定价策略">
                 <option>欧洲线路标准定价策略 2026</option>
@@ -1483,30 +1476,29 @@
                 <option>研学营期标准策略</option>
                 <option>项目团报价锁价策略</option>
               </select>
-              <button id="applySchedulePolicySuggestion" class="btn btn-secondary" type="button">应用建议价</button>
+              <button id="applySchedulePolicySuggestion" class="btn btn-secondary" type="button">重新计算建议价</button>
             </div>
           </div>
-          <div class="table-wrap schedule-price-module-table drawer-table-fit drawer-table-cols-4">
-            <table>
-              <thead>
-                <tr><th>模块</th><th>当前命中</th><th>本团处理</th><th>操作</th></tr>
-              </thead>
-              <tbody id="schedulePolicyModuleRows"></tbody>
-            </table>
-          </div>
+          <div id="schedulePolicyModuleRows" class="schedule-policy-hit-list"></div>
         </section>
 
         <section class="drawer-section">
           <div class="drawer-section-head">
-            <h2 class="drawer-section-title">渠道价格控制</h2>
-            <span id="scheduleChannelPricePill" class="tag tag-green">渠道价正常</span>
+            <h2 class="drawer-section-title">本次调价</h2>
+            <span id="scheduleChannelPricePill" class="tag tag-green">价格正常</span>
           </div>
-          <div class="table-wrap schedule-channel-price-table drawer-table-fit drawer-table-cols-4">
+          <div class="table-wrap schedule-price-adjust-table drawer-table-fit">
             <table>
               <thead>
-                <tr><th>渠道</th><th>售卖状态</th><th>渠道价</th><th>操作</th></tr>
+                <tr>
+                  <th>价格项</th>
+                  <th>供应商结算价</th>
+                  <th>销售价</th>
+                  <th>同行价</th>
+                  <th>OTA价</th>
+                </tr>
               </thead>
-              <tbody id="scheduleChannelPriceRows"></tbody>
+              <tbody id="schedulePriceFieldGrid"></tbody>
             </table>
           </div>
         </section>
@@ -1548,7 +1540,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-price-drawer>取消</button>
-        <button id="saveSchedulePrice" class="btn btn-primary" type="button">保存调价</button>
+        <button id="saveSchedulePrice" class="btn btn-primary" type="button">保存草稿</button>
         <button id="submitSchedulePriceApproval" class="btn btn-warning" type="button">提交调价审批</button>
       </div>
     </div>
@@ -1944,7 +1936,6 @@
       var schedulePricingPolicySelect = document.getElementById('schedulePricingPolicySelect');
       var applySchedulePolicySuggestion = document.getElementById('applySchedulePolicySuggestion');
       var schedulePolicyModuleRows = document.getElementById('schedulePolicyModuleRows');
-      var scheduleChannelPriceRows = document.getElementById('scheduleChannelPriceRows');
       var schedulePriceReason = document.getElementById('schedulePriceReason');
       var schedulePriceScope = document.getElementById('schedulePriceScope');
       var schedulePriceEffectiveAt = document.getElementById('schedulePriceEffectiveAt');
@@ -2938,7 +2929,7 @@
 
       function fillCostModal(item) {
         var status = item.settlementStatus || item.costStatus || '未维护成本';
-        document.getElementById('costModalTitle').textContent = '成本摘要 - ' + item.code;
+        document.getElementById('costModalTitle').textContent = '成本摘要';
         var summary = costModal.querySelector('.schedule-cost-summary');
         if (summary) {
           summary.innerHTML = '<span>产品：' + escapeHtml(item.product) + '</span><span>线路：' + escapeHtml(item.route || '-') + '</span><span>已售：' + escapeHtml(stockText(item.sold, item.unit)) + '</span><span>成本状态：' + escapeHtml(status) + '</span>';
@@ -3189,96 +3180,112 @@
       }
 
       function renderPolicyModuleRows(item, policy) {
-        schedulePolicyModuleRows.innerHTML = policyModuleData(item, policy).map(function (row, index) {
+        schedulePolicyModuleRows.innerHTML = policyModuleData(item, policy).map(function (row) {
           var locked = /最低/.test(row[0]);
           var tagClass = row[2] === '未启用' || row[2] === '本团停用' ? 'tag tag-gray' : locked ? 'tag tag-orange' : 'tag tag-blue';
-          var action = locked
-            ? '<button type="button" disabled>不可停用</button>'
-            : row[2] === '未启用'
-              ? '<button type="button" data-price-module-action="调用">调用</button>'
-              : '<button type="button" data-price-module-action="本团覆盖">本团覆盖</button><button type="button" data-price-module-action="停用本团">停用本团</button>';
-          return '<tr data-price-module-index="' + index + '"><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td><span class="' + tagClass + '">' + escapeHtml(row[2]) + '</span></td><td><div class="table-action">' + action + '<button type="button" data-price-module-action="查看规则">查看规则</button></div></td></tr>';
+          return '<span class="schedule-policy-hit"><strong>' + escapeHtml(row[0]) + '</strong><em>' + escapeHtml(row[1]) + '</em><i class="' + tagClass + '">' + escapeHtml(locked ? '强制规则' : row[2]) + '</i></span>';
         }).join('');
+      }
+
+      function channelPriceKey(key, channel) {
+        return key + '_' + channel;
+      }
+
+      function settlementPriceText(value, ratio) {
+        var amount = moneyNumber(value);
+        return amount ? moneyText(amount * (ratio || 0.76)) : '-';
+      }
+
+      function channelPriceText(value, channel) {
+        var amount = moneyNumber(value);
+        if (!amount) return value || '¥0';
+        var multipliers = { peer: 0.94, ota: 1.08 };
+        return moneyText(amount * (multipliers[channel] || 1));
+      }
+
+      function priceRow(item, options) {
+        var value = item[options.key] || options.value || '';
+        return {
+          key: options.key,
+          label: options.label,
+          value: value,
+          primary: !!options.primary,
+          ratio: options.ratio == null ? 1 : options.ratio,
+          settlement: item[options.key + '_settlement'] || settlementPriceText(value, options.settlementRatio),
+          peer: item[channelPriceKey(options.key, 'peer')] || options.primary && item.peerPrice || channelPriceText(value, 'peer'),
+          ota: item[channelPriceKey(options.key, 'ota')] || channelPriceText(value, 'ota')
+        };
       }
 
       function schedulePriceFields(item) {
         var type = normalizeBatchType(item.batchType);
-        var selectedPolicy = schedulePricingPolicySelect && schedulePricingPolicySelect.value || schedulePolicyName(item);
-        var floor = policyFloorValue(selectedPolicy, item);
         if (type === '邮轮航次') {
           return [
-            { key: 'insideAdultPrice', label: '内舱成人价', value: item.insideAdultPrice || item.price || '¥23,800', required: true, primary: true },
-            { key: 'oceanAdultPrice', label: '海景舱成人价', value: item.oceanAdultPrice || '¥26,800' },
-            { key: 'balconyAdultPrice', label: '阳台舱成人价', value: item.balconyAdultPrice || '¥28,800' },
-            { key: 'suiteAdultPrice', label: '套房成人价', value: item.suiteAdultPrice || '¥42,800' },
-            { key: 'thirdFourthPrice', label: '第三/第四人价', value: item.thirdFourthPrice || '¥20,800' },
-            { key: 'childPrice', label: '儿童价', value: item.childPrice || '¥18,800' },
-            { key: 'portServiceFee', label: '港务税/服务费', value: item.portServiceFee || '¥980' },
-            { key: 'singleRoomDiff', label: '单人补房差', value: item.singleRoomDiff || '¥6,800' },
-            { key: 'priceFloor', label: '最低限价', value: moneyText(floor), readonly: true }
+            priceRow(item, { key: 'insideAdultPrice', label: '内舱 IC', value: item.insideAdultPrice || item.price || '¥23,800', primary: true, ratio: 1, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'oceanAdultPrice', label: '海景 OV', value: item.oceanAdultPrice || '¥26,800', ratio: 1.12, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'balconyAdultPrice', label: '阳台 BA', value: item.balconyAdultPrice || '¥28,800', ratio: 1.22, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'thirdFourthPrice', label: '第三/第四人', value: item.thirdFourthPrice || '¥20,800', ratio: 0.78, settlementRatio: 0.72 }),
+            priceRow(item, { key: 'childPrice', label: '儿童价', value: item.childPrice || '¥18,800', ratio: 0.72, settlementRatio: 0.72 }),
+            priceRow(item, { key: 'portServiceFee', label: '港务税/服务费', value: item.portServiceFee || '¥980', ratio: 0.06, settlementRatio: 0.88 }),
+            priceRow(item, { key: 'singleRoomDiff', label: '单房差', value: item.singleRoomDiff || '¥6,800', ratio: 0.28, settlementRatio: 0.7 })
           ];
         }
         if (type === '专列班期') {
           return [
-            { key: 'hardUpperPrice', label: '硬卧上铺', value: item.hardUpperPrice || '¥15,800', required: true, primary: true },
-            { key: 'hardMiddlePrice', label: '硬卧中铺', value: item.hardMiddlePrice || '¥16,800' },
-            { key: 'hardLowerPrice', label: '硬卧下铺', value: item.hardLowerPrice || '¥17,800' },
-            { key: 'softUpperPrice', label: '软卧上铺', value: item.softUpperPrice || item.price || '¥19,800' },
-            { key: 'softLowerPrice', label: '软卧下铺', value: item.softLowerPrice || '¥21,800' },
-            { key: 'compartmentPrice', label: '包厢价', value: item.compartmentPrice || '¥36,800' },
-            { key: 'childCompanionPrice', label: '儿童/陪同价', value: item.childCompanionPrice || item.childPrice || '¥13,800' },
-            { key: 'singleBerthDiff', label: '单铺差', value: item.singleBerthDiff || item.singleRoomDiff || '¥3,000' },
-            { key: 'priceFloor', label: '最低限价', value: moneyText(floor), readonly: true }
+            priceRow(item, { key: 'hardUpperPrice', label: '硬卧上铺', value: item.hardUpperPrice || '¥15,800', primary: true, ratio: 0.82, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'hardMiddlePrice', label: '硬卧中铺', value: item.hardMiddlePrice || '¥16,800', ratio: 0.86, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'hardLowerPrice', label: '硬卧下铺', value: item.hardLowerPrice || '¥17,800', ratio: 0.9, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'softUpperPrice', label: '软卧上铺', value: item.softUpperPrice || item.price || '¥19,800', ratio: 1, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'softLowerPrice', label: '软卧下铺', value: item.softLowerPrice || '¥21,800', ratio: 1.1, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'childCompanionPrice', label: '儿童/陪同价', value: item.childCompanionPrice || item.childPrice || '¥13,800', ratio: 0.7, settlementRatio: 0.72 }),
+            priceRow(item, { key: 'singleBerthDiff', label: '单铺差', value: item.singleBerthDiff || item.singleRoomDiff || '¥3,000', ratio: 0.16, settlementRatio: 0.7 })
           ];
         }
         if (type === '自由行出行日期') {
           return [
-            { key: 'packageBasePrice', label: '套餐基础价', value: item.packageBasePrice || item.price || '¥6,800', required: true, primary: true },
-            { key: 'singleRoomDiff', label: '单房差', value: item.singleRoomDiff || '¥900' },
-            { key: 'childPrice', label: '儿童价', value: item.childPrice || '¥4,800' },
-            { key: 'addonServicePrice', label: '加购服务价', value: item.addonServicePrice || '¥680' },
-            { key: 'hotelUpgradeDiff', label: '酒店升级差价', value: item.hotelUpgradeDiff || '¥1,200' },
-            { key: 'priceFloor', label: '最低限价', value: moneyText(floor), readonly: true }
+            priceRow(item, { key: 'packageBasePrice', label: '套餐基础价', value: item.packageBasePrice || item.price || '¥6,800', primary: true, ratio: 1, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'childPrice', label: '儿童价', value: item.childPrice || '¥4,800', ratio: 0.72, settlementRatio: 0.72 }),
+            priceRow(item, { key: 'singleRoomDiff', label: '单房差', value: item.singleRoomDiff || '¥900', ratio: 0.14, settlementRatio: 0.66 }),
+            priceRow(item, { key: 'addonServicePrice', label: '加购服务价', value: item.addonServicePrice || '¥680', ratio: 0.1, settlementRatio: 0.62 }),
+            priceRow(item, { key: 'hotelUpgradeDiff', label: '酒店升级差价', value: item.hotelUpgradeDiff || '¥1,200', ratio: 0.18, settlementRatio: 0.72 })
           ];
         }
         if (type === '研学营期') {
           return [
-            { key: 'studentPrice', label: '学生价', value: item.studentPrice || item.price || '¥6,980', required: true, primary: true },
-            { key: 'teacherPrice', label: '带队老师价', value: item.teacherPrice || '¥0' },
-            { key: 'parentPrice', label: '家长陪同价', value: item.parentPrice || '¥6,200' },
-            { key: 'courseMaterialFee', label: '课程材料费', value: item.courseMaterialFee || '¥480' },
-            { key: 'lodgingDiff', label: '单房差/住宿差价', value: item.lodgingDiff || item.singleRoomDiff || '¥800' },
-            { key: 'priceFloor', label: '最低限价', value: moneyText(floor), readonly: true }
+            priceRow(item, { key: 'studentPrice', label: '学生价', value: item.studentPrice || item.price || '¥6,980', primary: true, ratio: 1, settlementRatio: 0.74 }),
+            priceRow(item, { key: 'teacherPrice', label: '带队老师价', value: item.teacherPrice || '¥0', ratio: 0, settlementRatio: 0 }),
+            priceRow(item, { key: 'parentPrice', label: '家长陪同价', value: item.parentPrice || '¥6,200', ratio: 0.9, settlementRatio: 0.74 }),
+            priceRow(item, { key: 'courseMaterialFee', label: '课程材料费', value: item.courseMaterialFee || '¥480', ratio: 0.08, settlementRatio: 0.6 }),
+            priceRow(item, { key: 'lodgingDiff', label: '单房差/住宿差价', value: item.lodgingDiff || item.singleRoomDiff || '¥800', ratio: 0.12, settlementRatio: 0.7 })
           ];
         }
         if (type === '项目团' || isProjectGroup(item)) {
           var total = moneyNumber(item.price) || 1906000;
           var people = Math.max(stockNumber(item.stock), 1);
           return [
-            { key: 'projectTotalPrice', label: '项目总价', value: item.projectTotalPrice || item.price || moneyText(total), required: true, primary: true },
-            { key: 'perPersonQuote', label: '人均报价', value: item.perPersonQuote || moneyText(total / people) },
-            { key: 'budgetCost', label: '预算成本', value: item.budgetCost || moneyText(total * 0.76) },
-            { key: 'expectedMargin', label: '预计毛利', value: item.expectedMargin || moneyText(total * 0.24) },
-            { key: 'addPersonPrice', label: '加人单价', value: item.addPersonPrice || moneyText(total / people) },
-            { key: 'reducePersonRefund', label: '减人退价', value: item.reducePersonRefund || moneyText(total / people * 0.9) },
-            { key: 'marginFloor', label: '最低毛利线', value: item.marginFloor || '15%', readonly: true }
+            priceRow(item, { key: 'projectTotalPrice', label: '项目总价', value: item.projectTotalPrice || item.price || moneyText(total), primary: true, ratio: 1, settlementRatio: 0.76 }),
+            priceRow(item, { key: 'perPersonQuote', label: '人均报价', value: item.perPersonQuote || moneyText(total / people), ratio: 1 / people, settlementRatio: 0.76 }),
+            priceRow(item, { key: 'addPersonPrice', label: '加人单价', value: item.addPersonPrice || moneyText(total / people), ratio: 1 / people, settlementRatio: 0.76 }),
+            priceRow(item, { key: 'reducePersonRefund', label: '减人退价', value: item.reducePersonRefund || moneyText(total / people * 0.9), ratio: 0.9 / people, settlementRatio: 0.72 })
           ];
         }
         return [
-          { key: 'adultPrice', label: '成人价', value: item.adultPrice || item.price || '', required: true, primary: true },
-          { key: 'childPrice', label: '儿童价', value: item.childPrice || '' },
-          { key: 'elderPrice', label: '老人价', value: item.elderPrice || '' },
-          { key: 'singleRoomDiff', label: '单房差', value: item.singleRoomDiff || '' },
-          { key: 'priceFloor', label: '最低限价', value: moneyText(floor), readonly: true }
+          priceRow(item, { key: 'adultPrice', label: '成人价', value: item.adultPrice || item.price || '', primary: true, ratio: 1, settlementRatio: 0.76 }),
+          priceRow(item, { key: 'childPrice', label: '儿童价', value: item.childPrice || '¥0', ratio: 0.72, settlementRatio: 0.72 }),
+          priceRow(item, { key: 'elderPrice', label: '老人价', value: item.elderPrice || '¥0', ratio: 0.96, settlementRatio: 0.76 }),
+          priceRow(item, { key: 'singleRoomDiff', label: '单房差', value: item.singleRoomDiff || '¥0', ratio: 0.15, settlementRatio: 0.68 })
         ];
       }
 
       function renderSchedulePriceFields(item) {
         schedulePriceFieldGrid.innerHTML = schedulePriceFields(item).map(function (field) {
-          return '<div class="form-group">' +
-            '<label class="form-label" for="schedulePriceField_' + escapeHtml(field.key) + '">' + escapeHtml(field.label) + (field.required ? ' <span class="req">*</span>' : '') + '</label>' +
-            '<input id="schedulePriceField_' + escapeHtml(field.key) + '" class="form-control" type="text" value="' + escapeHtml(field.value || '') + '" data-schedule-price-field="' + escapeHtml(field.key) + '"' + (field.primary ? ' data-price-primary="true"' : '') + (field.readonly ? ' readonly' : '') + '>' +
-          '</div>';
+          return '<tr data-schedule-price-row="' + escapeHtml(field.key) + '" data-suggest-ratio="' + escapeHtml(String(field.ratio)) + '"' + (field.primary ? ' data-primary-row="true"' : '') + '>' +
+            '<td><strong data-price-row-label>' + escapeHtml(field.label) + '</strong></td>' +
+            '<td class="schedule-price-settlement">' + escapeHtml(field.settlement) + '</td>' +
+            '<td><input class="form-control" type="text" value="' + escapeHtml(field.value || '') + '" data-schedule-price-field="' + escapeHtml(field.key) + '"' + (field.primary ? ' data-price-primary="true"' : '') + ' aria-label="' + escapeHtml(field.label + '销售价') + '"></td>' +
+            '<td><input class="form-control" type="text" value="' + escapeHtml(field.peer || '') + '" data-schedule-price-field="' + escapeHtml(channelPriceKey(field.key, 'peer')) + '" data-price-related-input aria-label="' + escapeHtml(field.label + '同行价') + '"></td>' +
+            '<td><input class="form-control" type="text" value="' + escapeHtml(field.ota || '') + '" data-schedule-price-field="' + escapeHtml(channelPriceKey(field.key, 'ota')) + '" data-price-related-input aria-label="' + escapeHtml(field.label + 'OTA价') + '"></td>' +
+          '</tr>';
         }).join('');
       }
 
@@ -3305,7 +3312,12 @@
           item[input.dataset.schedulePriceField] = input.value.trim();
         });
         var primary = schedulePrimaryPriceValue(item);
+        var primaryInput = schedulePrimaryPriceInput();
+        var primaryRow = primaryInput && primaryInput.closest('[data-schedule-price-row]');
+        var primaryKey = primaryRow && primaryRow.dataset.schedulePriceRow;
         item.price = primary;
+        if (primaryKey && schedulePriceFieldValue(channelPriceKey(primaryKey, 'peer'))) item.peerPrice = schedulePriceFieldValue(channelPriceKey(primaryKey, 'peer'));
+        if (primaryKey && schedulePriceFieldValue(channelPriceKey(primaryKey, 'ota'))) item.otaPrice = schedulePriceFieldValue(channelPriceKey(primaryKey, 'ota'));
         if (schedulePriceFieldValue('adultPrice')) item.adultPrice = schedulePriceFieldValue('adultPrice');
         if (schedulePriceFieldValue('childPrice')) item.childPrice = schedulePriceFieldValue('childPrice');
         if (schedulePriceFieldValue('elderPrice')) item.elderPrice = schedulePriceFieldValue('elderPrice');
@@ -3328,39 +3340,25 @@
       function applySchedulePolicySuggestionToFields(item, policy) {
         var primaryInput = schedulePrimaryPriceInput();
         if (!primaryInput) return;
-        primaryInput.value = suggestedSchedulePolicyPrice(item, policy);
-        var childInput = schedulePriceFieldGrid.querySelector('[data-schedule-price-field="childPrice"]');
-        var elderInput = schedulePriceFieldGrid.querySelector('[data-schedule-price-field="elderPrice"]');
-        var singleInput = schedulePriceFieldGrid.querySelector('[data-schedule-price-field="singleRoomDiff"]');
-        var primaryValue = moneyNumber(primaryInput.value);
-        if (childInput && !childInput.readOnly) childInput.value = moneyText(primaryValue * 0.72);
-        if (elderInput && !elderInput.readOnly) elderInput.value = moneyText(Math.max(primaryValue - 40, 0));
-        if (singleInput && !singleInput.readOnly && !moneyNumber(singleInput.value)) singleInput.value = '¥1,800';
-        renderChannelPriceRows(item);
+        var baseText = suggestedSchedulePolicyPrice(item, policy);
+        var baseValue = moneyNumber(baseText);
+        schedulePriceFieldGrid.querySelectorAll('[data-schedule-price-row]').forEach(function (row) {
+          var ratio = Number(row.dataset.suggestRatio || 1);
+          var internalInput = row.querySelector('[data-schedule-price-field]:not([data-price-related-input])');
+          if (!internalInput) return;
+          internalInput.value = moneyText(baseValue * ratio);
+          ['peer', 'ota'].forEach(function (channel) {
+            var input = row.querySelector('[data-schedule-price-field="' + channelPriceKey(row.dataset.schedulePriceRow, channel) + '"]');
+            if (input) input.value = channelPriceText(internalInput.value, channel);
+          });
+        });
         updateSchedulePriceValidation();
-      }
-
-      function channelPriceData(item) {
-        var base = moneyNumber(schedulePrimaryPriceValue(item));
-        return [
-          ['门店', '开启', moneyText(base)],
-          ['官网', '开启', moneyText(base)],
-          ['携程', '开启', moneyText(base * 1.1)],
-          ['飞猪', '开启', moneyText(base * 1.08)],
-          ['B2B', '开启', moneyText(base * 0.88)]
-        ];
-      }
-
-      function renderChannelPriceRows(item) {
-        scheduleChannelPriceRows.innerHTML = channelPriceData(item).map(function (row, index) {
-          var open = row[1] === '开启';
-          return '<tr data-channel-price-row="' + index + '"><td>' + escapeHtml(row[0]) + '</td><td><span class="' + (open ? 'tag tag-green' : 'tag tag-gray') + '">' + row[1] + '</span></td><td data-channel-price-value>' + escapeHtml(open ? row[2] : '-') + '</td><td><div class="table-action"><button type="button" data-channel-price-toggle>' + (open ? '关闭' : '开启') + '</button><button type="button" data-channel-price-restore>恢复策略价</button></div></td></tr>';
-        }).join('');
       }
 
       function priceValidationMessages(item) {
         var primaryInput = schedulePrimaryPriceInput();
-        var primaryLabel = primaryInput ? document.querySelector('label[for="' + primaryInput.id + '"]').textContent.replace('*', '').trim() : '价格';
+        var primaryRow = primaryInput && primaryInput.closest('[data-schedule-price-row]');
+        var primaryLabel = primaryRow ? primaryRow.querySelector('[data-price-row-label]').textContent.trim() : '价格';
         var primary = moneyNumber(schedulePrimaryPriceValue(item));
         var child = moneyNumber(schedulePriceFieldValue('childPrice') || schedulePriceFieldValue('childCompanionPrice'));
         var elder = moneyNumber(schedulePriceFieldValue('elderPrice'));
@@ -3372,12 +3370,12 @@
         if (elder && primary && elder > primary) messages.push(['老人价高于成人价，请核对', 'warning']);
         if (stockNumber(item.sold) > 0) messages.push(['已有订单，本次调价默认只影响后续订单', 'warning']);
         var channelLow = false;
-        scheduleChannelPriceRows.querySelectorAll('[data-channel-price-value]').forEach(function (cell) {
-          var value = moneyNumber(cell.textContent);
+        if (primaryRow) primaryRow.querySelectorAll('[data-price-related-input]').forEach(function (input) {
+          var value = moneyNumber(input.value);
           if (value && floor && value < floor) channelLow = true;
         });
-        if (channelLow) messages.push(['存在渠道价低于最低限价', 'error']);
-        if (!messages.length) messages.push(['价格校验通过，可以保存调价', 'ok']);
+        if (channelLow) messages.push(['存在同行价或OTA价低于最低限价', 'error']);
+        if (!messages.length) messages.push(['价格校验通过，可以提交调价审核', 'ok']);
         return messages;
       }
 
@@ -3386,15 +3384,14 @@
         var messages = priceValidationMessages(currentSchedule);
         var hasError = messages.some(function (item) { return item[1] === 'error'; });
         var hasWarning = messages.some(function (item) { return item[1] === 'warning'; });
-        var needsApproval = hasError || stockNumber(currentSchedule.sold) > 0;
         schedulePriceValidationPill.textContent = hasError ? '需审批' : hasWarning ? '需确认' : '校验通过';
         schedulePriceValidationPill.className = hasError ? 'tag tag-orange' : hasWarning ? 'tag tag-blue' : 'tag tag-green';
         schedulePriceValidationList.innerHTML = messages.map(function (item) {
           return '<span class="schedule-price-validation-item ' + item[1] + '">' + escapeHtml(item[0]) + '</span>';
         }).join('');
-        saveSchedulePrice.disabled = hasError || stockNumber(currentSchedule.sold) > 0;
-        submitSchedulePriceApproval.disabled = !needsApproval;
-        scheduleChannelPricePill.textContent = hasError ? '渠道需核对' : '渠道价正常';
+        saveSchedulePrice.disabled = !moneyNumber(schedulePrimaryPriceValue(currentSchedule));
+        submitSchedulePriceApproval.disabled = !moneyNumber(schedulePrimaryPriceValue(currentSchedule));
+        scheduleChannelPricePill.textContent = hasError ? '价格需核对' : '价格正常';
         scheduleChannelPricePill.className = hasError ? 'tag tag-orange' : 'tag tag-green';
       }
 
@@ -3416,7 +3413,6 @@
         schedulePriceScope.value = stockNumber(item.sold) > 0 ? '仅后续订单' : '全部渠道';
         schedulePriceEffectiveAt.value = '立即生效';
         renderPolicyModuleRows(item, schedulePricingPolicySelect.value);
-        renderChannelPriceRows(item);
         updateSchedulePriceValidation();
       }
 
@@ -3465,7 +3461,7 @@
 
       function fillScheduleResourceDrawer(item) {
         var project = isProjectGroup(item);
-        document.getElementById('scheduleResourceTitle').textContent = (project ? '项目资源确认 - ' : '资源/票务确认 - ') + item.code;
+        document.getElementById('scheduleResourceTitle').textContent = project ? '项目资源确认' : '资源/票务确认';
         document.getElementById('resourceScheduleName').textContent = item.product + ' / ' + (item.route || '-');
         document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (project ? item.privateCustomer || '-' : item.planner || '-');
         document.getElementById('resourceRosterText').textContent = project ? stockText(item.stock, item.unit) + '项目人数，名单待导入' : stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
@@ -6323,7 +6319,6 @@
       });
       schedulePriceFieldGrid.addEventListener('input', function (event) {
         if (!event.target.matches('[data-schedule-price-field]') || !currentSchedule) return;
-        if (event.target.matches('[data-price-primary="true"]')) renderChannelPriceRows(currentSchedule);
         updateSchedulePriceValidation();
       });
       schedulePricingPolicySelect.addEventListener('change', function () {
@@ -6336,44 +6331,6 @@
         if (!currentSchedule) return;
         applySchedulePolicySuggestionToFields(currentSchedule, schedulePricingPolicySelect.value || schedulePolicyName(currentSchedule));
         if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('已按所选策略生成建议价', { type: 'success' });
-      });
-      scheduleChannelPriceRows.addEventListener('click', function (event) {
-        var toggleButton = event.target.closest('[data-channel-price-toggle]');
-        var restoreButton = event.target.closest('[data-channel-price-restore]');
-        var row = event.target.closest('[data-channel-price-row]');
-        if (!row || !currentSchedule) return;
-        if (toggleButton) {
-          var status = row.children[1].querySelector('.tag');
-          var valueCell = row.querySelector('[data-channel-price-value]');
-          var opening = status.textContent === '关闭';
-          status.textContent = opening ? '开启' : '关闭';
-          status.className = opening ? 'tag tag-green' : 'tag tag-gray';
-          valueCell.textContent = opening ? moneyText(moneyNumber(schedulePrimaryPriceValue(currentSchedule))) : '-';
-          toggleButton.textContent = opening ? '关闭' : '开启';
-          updateSchedulePriceValidation();
-        }
-        if (restoreButton) {
-          renderChannelPriceRows(currentSchedule);
-          updateSchedulePriceValidation();
-        }
-      });
-      schedulePolicyModuleRows.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-price-module-action]');
-        if (!button) return;
-        var action = button.dataset.priceModuleAction;
-        var row = button.closest('tr');
-        var status = row && row.children[2].querySelector('.tag');
-        if (status && action === '调用') {
-          status.textContent = '继承';
-          status.className = 'tag tag-blue';
-        } else if (status && action === '停用本团') {
-          status.textContent = '本团停用';
-          status.className = 'tag tag-gray';
-        } else if (status && action === '本团覆盖') {
-          status.textContent = '本团覆盖';
-          status.className = 'tag tag-orange';
-        }
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(action + '已记录在本团价格草稿', { type: 'success' });
       });
 
       saveQuotaPrice.addEventListener('click', function () {
@@ -6416,7 +6373,7 @@
         currentSchedule.priceAdjustReason = schedulePriceReason.value.trim();
         currentSchedule.tabStatus = stateTokens(currentSchedule).replace(/\s*调价待审/g, '');
         window.caesarUI.closeLayer(schedulePriceDrawer);
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('团期调价已保存', { type: 'success' });
+        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('团期调价草稿已保存', { type: 'success' });
         currentSchedule = null;
         renderRows();
       });
@@ -6433,6 +6390,7 @@
           schedulePriceReason.focus();
           return;
         }
+        persistSchedulePriceFields(currentSchedule);
         currentSchedule.pricingPolicy = schedulePricingPolicySelect.value || schedulePolicyName(currentSchedule);
         currentSchedule.pendingPrice = schedulePrimaryPriceValue(currentSchedule);
         currentSchedule.priceAdjustReason = schedulePriceReason.value.trim();
