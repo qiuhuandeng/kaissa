@@ -642,12 +642,12 @@
       extraHtml: groupExtraHtml,
       planStructureHtml: groupPlanStructureHtml,
       costHtml: groupCostHtml,
-      publishTiles: [['基础信息', '字段完整，可提交'], ['产品线路', '2条线路，均可售'], ['费用规则', '包含/不含/退改已维护'], ['后续动作', '审核通过后在团期管控承接团期']],
+      publishTiles: [['基础信息', '字段完整，可提交'], ['产品线路', '2条线路，均可售'], ['费用规则', '包含/不含/退改已维护'], ['后续动作', '审核通过后在产品团期页查看团期']],
       modalTitle: '已提交产品发布审核',
       modalFocus: '产品发布审批',
       navigateText: '查看团期',
-      scheduleHref: '../tour/schedules.html?type=outbound',
-      modalNext: '通过后在团期管控承接团期'
+      scheduleHref: 'product-schedules.html?type=outbound',
+      modalNext: '通过后在产品团期页查看团期'
     },
     cruise: {
       scheduleType: 'cruise',
@@ -706,8 +706,8 @@
       modalTitle: '已提交邮轮产品审核',
       modalFocus: '航程登离船与舱房售卖',
       navigateText: '查看航次',
-      scheduleHref: '../tour/schedules.html?type=cruise',
-      modalNext: '通过后在团期管控承接航次'
+      scheduleHref: 'product-schedules.html?type=cruise',
+      modalNext: '通过后在产品航次页查看航次'
     },
     train: {
       scheduleType: 'train',
@@ -765,8 +765,8 @@
       modalTitle: '已提交专列产品审核',
       modalFocus: '线路接驳与车厢铺位',
       navigateText: '查看班期',
-      scheduleHref: '../tour/schedules.html?type=train',
-      modalNext: '通过后在团期管控承接班期'
+      scheduleHref: 'product-schedules.html?type=train',
+      modalNext: '通过后在产品班期页查看班期'
     },
     free: {
       scheduleType: 'free',
@@ -926,7 +926,7 @@
     if (modalItems[0]) modalItems[0].innerHTML = '<span>产品类型</span><strong>' + htmlEscape(preset.tagText) + '</strong>';
     if (modalItems[1]) modalItems[1].innerHTML = isSupplierRoute ? '<span>处理方式</span><strong>凯撒代理采用确认</strong>' : '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
     if (modalItems[2]) modalItems[2].innerHTML = '<span>产品线路</span><strong>' + htmlEscape(String(preset.plans.length)) + '条</strong>';
-    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可包装销售</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在团期管控承接团期') + '</strong>';
+    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可包装销售</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在产品团期页查看团期') + '</strong>';
 
     page.querySelectorAll('input, textarea').forEach(updateCounter);
   }
