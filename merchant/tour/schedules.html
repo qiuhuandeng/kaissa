@@ -732,7 +732,7 @@
         <div class="batch-section-subhead schedule-cost-head">
           <h3>费用项目</h3>
         </div>
-        <div class="table-wrap cost-table-wrap">
+        <div class="table-wrap cost-table-wrap drawer-table-compact drawer-table-cols-6">
           <table>
             <thead>
               <tr>
@@ -823,7 +823,7 @@
           <div class="drawer-section-head">
             <h2 class="drawer-section-title">重点订单</h2>
           </div>
-          <div class="table-wrap">
+          <div class="table-wrap drawer-table-scroll drawer-table-cols-9">
             <table>
               <thead>
                 <tr>
@@ -1221,7 +1221,7 @@
               <strong id="batchPreviewLeaderText">-</strong>
             </div>
           </section>
-          <section class="table-wrap batch-preview-table" aria-label="即将创建的团期预览">
+          <section class="table-wrap batch-preview-table drawer-table-fit drawer-table-cols-5" aria-label="即将创建的团期预览">
             <table>
               <thead>
                 <tr>
@@ -1496,7 +1496,7 @@
               <button id="applySchedulePolicySuggestion" class="btn btn-secondary" type="button">应用建议价</button>
             </div>
           </div>
-          <div class="table-wrap schedule-price-module-table">
+          <div class="table-wrap schedule-price-module-table drawer-table-fit drawer-table-cols-4">
             <table>
               <thead>
                 <tr><th>模块</th><th>当前命中</th><th>本团处理</th><th>操作</th></tr>
@@ -1511,7 +1511,7 @@
             <h2 class="drawer-section-title">渠道价格控制</h2>
             <span id="scheduleChannelPricePill" class="tag tag-green">渠道价正常</span>
           </div>
-          <div class="table-wrap schedule-channel-price-table">
+          <div class="table-wrap schedule-channel-price-table drawer-table-fit drawer-table-cols-4">
             <table>
               <thead>
                 <tr><th>渠道</th><th>售卖状态</th><th>渠道价</th><th>操作</th></tr>
@@ -1581,7 +1581,7 @@
           <div class="description-item"><span class="description-label">出票/确认截止</span><span id="resourceDeadlineText" class="description-value">2026-07-05</span></div>
           <div class="description-item"><span class="description-label">成本/应付</span><span id="resourceFinanceText" class="description-value">成本待确认</span></div>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap drawer-table-compact drawer-table-cols-7">
           <table>
             <thead>
               <tr>
@@ -1614,7 +1614,7 @@
       </div>
       <div class="modal-body">
         <div id="executionRosterSummary" class="readonly-summary"></div>
-        <section class="table-wrap fulfillment-table" aria-label="团期名单">
+        <section class="table-wrap fulfillment-table drawer-table-scroll drawer-table-cols-8" aria-label="团期名单">
           <table>
             <thead><tr><th>游客/订单</th><th>手机</th><th>人数</th><th>收款</th><th>证件/实名</th><th>资源安排</th><th>确认状态</th><th>操作</th></tr></thead>
             <tbody id="executionRosterRows"></tbody>
@@ -1637,7 +1637,7 @@
       </div>
       <div class="modal-body">
         <div id="executionDocumentsSummary" class="readonly-summary"></div>
-        <section class="table-wrap fulfillment-table" aria-label="证件签证资料">
+        <section class="table-wrap fulfillment-table drawer-table-compact drawer-table-cols-7" aria-label="证件签证资料">
           <table>
             <thead><tr><th>游客/订单</th><th>资料类型</th><th>有效期/节点</th><th>资料状态</th><th>缺失项</th><th>最近跟进</th><th>操作</th></tr></thead>
             <tbody id="executionDocumentsRows"></tbody>
@@ -2228,7 +2228,7 @@
           trafficHint: '选择已采购邮轮包舱资源后，保存航次时占用可分配库存。',
           fields: [],
           matrixTitle: '舱型价格与舱房',
-          matrixHeads: ['舱型结构', '成人价', '儿童价', '单房差', '港务税/服务费', '升舱差价'],
+          matrixHeads: ['舱房售卖', '成人价', '儿童价', '单房差', '港务税/服务费', '升舱差价'],
           matrixRows: [
             ['内舱 IC', '¥23,800', '¥18,800', '¥6,800', '¥1,800', '¥0'],
             ['海景 OV', '¥26,800', '¥21,800', '¥7,800', '¥1,800', '¥3,000'],
@@ -5460,14 +5460,16 @@
         var batchType = card.dataset.batchType || '普通团期';
         var unit = card.dataset.unit || '人';
         var plans = (card.dataset.routeOptions || card.dataset.route || '').split('|').filter(Boolean);
-        batchRoutePlanLabel.innerHTML = '选择产品线路 <span class="req">*</span>';
+        var routeLabelText = batchType === '邮轮航次' ? '选择产品航线' : batchType === '专列班期' ? '选择专列线路' : '选择产品线路';
+        var routeCardPrefix = batchType === '邮轮航次' ? '航线' : '线路';
+        batchRoutePlanLabel.innerHTML = routeLabelText + ' <span class="req">*</span>';
         routeSelect.innerHTML = plans.map(function (plan) {
           return '<option' + (plan === card.dataset.route ? ' selected' : '') + '>' + escapeHtml(plan) + '</option>';
         }).join('');
         routeSelect.disabled = plans.length === 0;
         document.getElementById('batchRoutePlanCards').innerHTML = plans.map(function (plan, index) {
           var active = batchPlanPicked && plan === routeSelect.value;
-          var label = '线路' + String.fromCharCode(65 + index);
+          var label = routeCardPrefix + String.fromCharCode(65 + index);
           return '<button class="batch-plan-card' + (active ? ' active' : '') + '" type="button" data-route-plan="' + escapeHtml(plan) + '"><span class="batch-plan-radio"></span><span class="batch-plan-main"><strong>' + label + '：' + escapeHtml(plan) + '</strong><em>行程时长：' + escapeHtml(card.dataset.days || '-') + '天</em></span><span class="batch-plan-days">天数: ' + escapeHtml(card.dataset.days || '-') + 'D</span></button>';
         }).join('');
       }
@@ -5736,7 +5738,7 @@
         batchTrafficResource.disabled = !bound;
         batchTrafficQty.disabled = !bound;
         if (batchTrafficResourceLabel) batchTrafficResourceLabel.textContent = config.trafficLabel || (batchType === '邮轮航次' ? '邮轮舱房' : batchType === '专列班期' ? '专列铺位' : '交通资源');
-        if (batchTrafficQtyLabel) batchTrafficQtyLabel.textContent = batchType === '邮轮航次' ? '占用客数' : batchType === '专列班期' ? '占用铺位' : '占用座位';
+        if (batchTrafficQtyLabel) batchTrafficQtyLabel.textContent = batchType === '邮轮航次' ? '占用舱房' : batchType === '专列班期' ? '占用铺位' : '占用座位';
         if (!bound) {
           batchTrafficQty.value = 0;
           if (batchTrafficBindingPill) {

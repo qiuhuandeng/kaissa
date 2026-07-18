@@ -819,11 +819,11 @@ BSP 账单导入后与出票台账比对：
    - 子类型：软卧下铺
    - 损耗：7铺 / ¥75,600
    - 成本单：`CB-TR20260920001`
-3. `merchant/tour/fulfillment-cost.html` 增加邮轮团期 `CZ20260912001` 的交通成本：
+3. `merchant/tour/fulfillment-cost.html` 增加邮轮航次 `CZ20260912001` 的交通成本：
    - 邮轮舱室成本 ¥310,400
    - 舱损 ¥132,000
    - 交通成本承接区可反查交通资源来源合同。
-4. `merchant/tour/fulfillment-cost.html` 增加专列团期 `TR20260920001` 的交通成本：
+4. `merchant/tour/fulfillment-cost.html` 增加专列班期 `TR20260920001` 的交通成本：
    - 专列铺位成本 ¥129,600
    - 铺损 ¥75,600
    - 交通成本承接区可反查交通资源来源合同。

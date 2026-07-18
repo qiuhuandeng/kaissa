@@ -36,7 +36,7 @@
 | 资源 > 航空资源 > 航线库 | `merchant/resource/resource-flight-routes.html` | 常用航线模板 | 航司、机场、目的地 | 方案交通、机票切位 | 不维护具体日期数量。 |
 | 资源 > 航空资源 > 航司协议 | `merchant/resource/resource-flight-block.html` | 航司协议规则 | 航司、供应商 | 交通采购、成本付款节点 | 协议规则和具体锁位要分开。 |
 | 资源 > 邮轮资源 > 船公司 | `merchant/resource/resource-cruise-companies.html` | 船公司档案 | 船司资料 | 船只、协议、包舱 | 不直接处理航次订单。 |
-| 资源 > 邮轮资源 > 船只档案 | `merchant/resource/resource-cruise-ships.html` | 船只和基础舱型 | 船公司 | 邮轮方案舱型结构 | 船只模板不是可售方案。 |
+| 资源 > 邮轮资源 > 船只档案 | `merchant/resource/resource-cruise-ships.html` | 船只和基础舱型 | 船公司 | 邮轮方案舱房售卖 | 船只模板不是可售方案。 |
 | 资源 > 邮轮资源 > 邮轮模板 | `merchant/resource/resource-cruise-routes.html` | 邮轮航线/航次模板 | 船只、母港 | 邮轮线路和方案 | 不等同于具体团期库存。 |
 | 资源 > 专列资源 > 运营商 | `merchant/resource/resource-train-operators.html` | 专列运营商 | 运营商资料 | 专列模板、包铺 | 不直接做班期结算。 |
 | 资源 > 专列资源 > 车次库 | `merchant/resource/resource-train-trips.html` | 车次基础档案 | 运营商 | 专列模板、包铺 | 不维护具体包铺库存。 |
@@ -66,7 +66,7 @@
 | 履约中心 > 团期结算 | `merchant/tour/fulfillment-cost.html` | 成本项、成本确认、付款申请发起 | 团期、项目团、资源确认 | 应付、付款审批、结算 | 业务侧确认成本，不做财务付款执行。 |
 | 履约中心 > 签证办理 | `merchant/tour/visa-processing.html` | 签证办理单、游客材料状态 | 订单游客、签证国家配置 | 出团校验、签证成本、客户通知 | 办理进度不替代资源配置。 |
 | 履约中心 > 交通采购 > 机票切位 | `merchant/tour/resource-procurement-inventory.html?kind=air` | 机票切位库存 | 航司、航线、协议 | 团期分配、成本、应付 | 动态库存放履约中心，不回资源日常操作。 |
-| 履约中心 > 交通采购 > 邮轮包舱 | `merchant/tour/resource-procurement-inventory.html?kind=cruise` | 邮轮舱房采购库存 | 船公司、船只、模板 | 邮轮团期舱型库存、成本 | 舱房采购与邮轮资源模板分开。 |
+| 履约中心 > 交通采购 > 邮轮包舱 | `merchant/tour/resource-procurement-inventory.html?kind=cruise` | 邮轮舱房采购库存 | 船公司、船只、模板 | 邮轮航次舱型库存、成本 | 舱房采购与邮轮资源模板分开。 |
 | 履约中心 > 交通采购 > 专列包铺 | `merchant/tour/resource-procurement-inventory.html?kind=train` | 专列铺位采购库存 | 运营商、车次、模板 | 专列班期铺位、成本 | 铺位采购与专列资源模板分开。 |
 
 ## 5. 销售中心地图

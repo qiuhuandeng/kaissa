@@ -59,12 +59,12 @@
 | resource/suppliers.html | 资源 / 供应商 | 供应商 | 人工维护、合同、业务设置 | 成本项、应付单、进项发票 | 名称、类型、服务范围、资质、合同、结算账户 | 合作中/暂停/终止 | BF-COST-009 | 应付、付款、进项发票、NC | 合同管理抽屉、供应商设置抽屉 | 供应商不与分销商、代理商混用 |
 | resource/resource-tour-leaders.html | 资源 / 领队资源 | 领队/导师资源 | 人工维护、排班 | 团期执行、成本项 | 姓名、证件、语种、资质、档期 | 可用/占用/停用 | 无 | 领队费用确认后影响 NC | resource-leader-schedule.html | 领队是资源，不是员工账号 |
 | resource/resource-leader-schedule.html | 资源 / 领队资源 | 领队排班 | 领队资源、团期 | 团队执行、领队成本 | 领队、团期、日期、目的地、费用 | 待确认/已确认/冲突 | BF-COST-002 | 领队费用进入成本和应付 | resource-tour-leaders.html、schedules-detail.html | 排班冲突可识别 |
-| product/products.html | 产品中心 / 自营产品 / 产品管理 | 自营产品列表 | 产品创建、AI 解析、资源引用 | 产品线路、团期、渠道授权 | 产品名称、产品类型、目的地、素材、费用政策 | 草稿/审核中/已上架/已下架 | 无 | 无 | product-self-edit.html、products-detail.html | 参团游/邮轮/专列/自由行/研学/单项服务统一筛选 |
-| product/product-self-edit.html | 产品中心 / 自营产品 / 产品管理 | 参团游产品编辑 | 产品管理、资源 | 产品线路、团期 | 产品信息、费用政策、分日行程、酒店、交通、POI | 草稿/审核中/已发布 | 无 | 无 | products.html、team-create.html | 产品层不维护具体日期价格库存 |
-| product/product-cruise-edit.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品编辑 | 产品管理、邮轮资源 | 邮轮产品线路、舱型结构、团期 | 船公司、船名、航线、舱型、岸上游、费用政策 | 草稿/审核中/已发布 | 无 | 港务费、船方成本后续影响 NC | products.html、team-create.html | 舱型结构在线路层，库存在团期层 |
-| product/product-cruise-routes.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品线路配置 | 邮轮产品、邮轮资源 | 邮轮团期、舱型库存 | 航次、船只、舱型结构、靠港行程、岸上游 | 草稿/已发布 | 无 | 港务费和船方成本后续进 NC | product-cruise-edit.html、team-create.html | 邮轮产品线路维护售卖结构，不维护当期库存 |
-| product/product-train-edit.html | 产品中心 / 自营产品 / 产品管理 | 专列产品编辑 | 产品管理、专列资源 | 专列产品线路、铺位结构、团期 | 运营商、线路、车厢、铺位、经停站、接驳 | 草稿/审核中/已发布 | 无 | 包列成本后续影响 NC | products.html、team-create.html | 铺位结构在线路层，库存在团期层 |
-| product/product-train-routes.html | 产品中心 / 自营产品 / 产品管理 | 专列产品线路配置 | 专列产品、专列资源 | 专列团期、铺位库存 | 车厢、席别、铺位结构、经停站、下车游览 | 草稿/已发布 | 无 | 包列和铺位成本后续进 NC | product-train-edit.html、team-create.html | 专列产品线路维护铺位结构，不维护当期库存 |
+| product/products.html | 产品中心 / 自营产品 / 产品管理 | 自营产品列表 | 产品创建、AI 解析、资源引用 | 产品线路、团期、渠道授权 | 产品名称、产品类型、目的地、素材、线路费用规则 | 草稿/审核中/已上架/已下架 | 无 | 无 | product-self-edit.html、products-detail.html | 参团游/邮轮/专列/自由行/研学/单项服务统一筛选 |
+| product/product-self-edit.html | 产品中心 / 自营产品 / 产品管理 | 参团游产品编辑 | 产品管理、资源 | 产品线路、团期 | 基础信息、线路基础、行程安排、大交通、费用规则、签证与证件 | 草稿/审核中/已发布 | 无 | 无 | products.html、team-create.html | 产品层不维护具体日期价格库存；费用和签证按线路维护 |
+| product/product-cruise-edit.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品编辑 | 产品管理、邮轮资源 | 邮轮产品航线、舱房售卖、航次 | 船公司、船只/船号、航线、登离船、舱房售卖、岸上游、费用规则、签证与证件 | 草稿/审核中/已发布 | 无 | 港务费、船方成本后续影响 NC | products.html、schedules.html?type=cruise | 舱房售卖和费用规则在线路层，库存和价格在航次层 |
+| product/product-cruise-routes.html | 产品中心 / 自营产品 / 产品管理 | 邮轮产品航线 | 邮轮产品、邮轮资源 | 邮轮航次、舱房库存 | 航线、船只/船号、舱房售卖、靠港行程、岸上游 | 草稿/已发布 | 无 | 港务费和船方成本后续进 NC | product-cruise-edit.html、schedules.html?type=cruise | 邮轮产品航线页只辅助查看和反查航次，不承担航次开排 |
+| product/product-train-edit.html | 产品中心 / 自营产品 / 产品管理 | 专列产品编辑 | 产品管理、专列资源 | 专列产品线路、车厢铺位、班期 | 运营商、线路、车厢、铺位、经停站、接驳 | 草稿/审核中/已发布 | 无 | 包列成本后续影响 NC | products.html、schedules.html?type=train | 车厢铺位在线路层，库存和价格在班期层 |
+| product/product-train-routes.html | 产品中心 / 自营产品 / 产品管理 | 专列产品线路 | 专列产品、专列资源 | 专列班期、铺位库存 | 车厢、席别、车厢铺位、经停站、下车游览 | 草稿/已发布 | 无 | 包列和铺位成本后续进 NC | product-train-edit.html、schedules.html?type=train | 专列产品线路页只辅助查看和反查班期，不承担班期开排 |
 | product/products-detail.html | 产品中心 / 自营产品 / 产品管理 | 产品详情 | 自营产品 | 产品线路、团期、渠道授权、订单 | 产品摘要、线路列表、团期、素材、政策 | 上架状态、审核状态 | 无 | 无 | products.html、schedules-detail.html | 详情能进入团期和订单链路 |
 | product/product-study-edit.html | 产品中心 / 自营产品 / 产品管理 | 研学产品编辑 | 产品管理、教育资源 | 课程、导师、团期 | 教育目标、课程体系、基地、导师、安全预案 | 草稿/审核中/已发布 | 无 | 学校直签收款后影响 NC | products.html、team-create.html | 教育字段完整且可生成研学团期 |
 | tour/team-create.html | 履约中心 / 团期管控 | 新建团期 | 产品、产品线路 | 团期库存、价格、渠道 | 团号、日期、容量、价格、库存矩阵、截止日 | 筹备中/开放报名 | 无 | 无 | schedules.html、schedules-detail.html | 团期层不重复完整行程 |
@@ -120,7 +120,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | product/product-market.html | 产品中心 / 外采产品 / 产品市场 | 可外采线路产品 | 供应商供给 | 代理入库、包装、渠道销售 | 商品来源、产品类型、供给模式、可售状态 | 待引入/已引入/已放弃 | 无 | 订单后影响 NC | product-outsource-list.html | 产品市场只放可外采产品，不放自营产品 |
 | product/product-outsource-list.html | 产品中心 / 外采产品 / 代理产品 | 代理产品 | 产品市场、供应商报价 | 采购价、配额、按原类型销售 | 来源、原类型、采购价、包装价、供应商 | 待引入/已引入/销售中/下架 | 无，订单后 BF-SALE | 差额结算后进 NC | product-outsource-package.html、product-outsource-quota.html | 外采跟随原产品类型 |
-| product/product-outsource-package.html | 产品中心 / 外采产品 / 代理产品 | 代理产品包装 | 代理产品 | 包装产品、渠道价、上架 | 名称、亮点、费用政策、渠道价、采购价 | 待包装/待上架/销售中 | 无 | 订单后按差额进入 NC | product-outsource-list.html | 包装不改变原产品结构 |
+| product/product-outsource-package.html | 产品中心 / 外采产品 / 代理产品 | 代理产品包装 | 代理产品 | 包装产品、渠道价、上架 | 名称、亮点、费用规则、渠道价、采购价 | 待包装/待上架/销售中 | 无 | 订单后按差额进入 NC | product-outsource-list.html | 包装不改变原产品结构 |
 | product/product-outsource-quota.html | 产品中心 / 外采产品 / 代理产品 | 可代理团期/配额 | 代理产品、供应商确认 | 销售占用、配额预警 | 配额对象、数量、有效期、供应商确认 | 待申请/已确认/告急/售罄 | BF-SALE-001/002 | 订单成交后影响 NC | product-outsource-list.html、orders.html | 配额不是独立左侧菜单 |
 | product/product-channel-auth.html | 产品中心 / 渠道授权 | 渠道授权 | 线路、团期、定价策略 | 渠道可售、佣金计算 | 授权对象、渠道、价格、库存、有效期 | 待生效/生效中/停用 | BF-SALE-008 | 佣金结算影响 NC | channel/commission_rules.html | 授权按产品对象生效 |
 | product/product-pricing.html | 产品中心 / 定价策略 | 定价策略 | 产品、渠道、节假日、库存 | 团期价格、订单价格、补退差 | 策略、适用范围、价格模型、触发条件 | 启用/停用 | BF-SALE-006、BF-SALE-007 | 调整收款后进 NC | product-competitor-price.html、orders-transfer.html | 改价不直接覆盖已生效订单 |

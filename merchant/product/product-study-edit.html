@@ -31,7 +31,7 @@
           <button class="product-step" type="button" data-step-target="teacherConfig"><span>师资配置</span></button>
           <button class="product-step" type="button" data-step-target="studentFields"><span>学员字段</span></button>
           <button class="product-step" type="button" data-step-target="educationCert"><span>教育资质</span></button>
-          <button class="product-step" type="button" data-step-target="feeNote"><span>费用说明</span></button>
+          <button class="product-step" type="button" data-step-target="feeNote"><span>费用规则</span></button>
           <button class="product-step" type="button" data-step-target="channelPublish"><span>渠道发布</span></button>
         </div>
       </aside>
@@ -505,7 +505,13 @@
       var toast = document.getElementById('studyToast');
       var submitModal = document.getElementById('studySubmitModal');
       var formDirty = false;
-      var isViewMode = new URLSearchParams(window.location.search).get('mode') === 'view';
+      var studyParams = new URLSearchParams(window.location.search);
+      var studyMode = studyParams.get('mode') || 'create';
+      var isViewMode = studyMode === 'view';
+      if (studyMode === 'create') {
+        document.getElementById('studyEditTitle').textContent = '研学产品新建';
+        document.title = document.title.replace('编辑', '新建');
+      }
 
       function markDirty() {
         if (!isViewMode) formDirty = true;
@@ -681,7 +687,7 @@
         if (!isViewMode) return;
         document.getElementById('studyEditTitle').textContent = '研学产品详情';
         var actions = document.querySelector('[data-edit-actions]');
-        actions.innerHTML = '<a class="btn btn-primary" href="product-study-edit.html">编辑</a>';
+        actions.innerHTML = '<a class="btn btn-primary" href="product-study-edit.html?mode=edit">编辑</a>';
         document.querySelectorAll('input, textarea, select').forEach(function (field) {
           field.disabled = true;
         });

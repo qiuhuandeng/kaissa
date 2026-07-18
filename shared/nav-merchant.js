@@ -519,14 +519,14 @@
     "dashboard-group.html": { href: "dashboard.html", title: "集团汇总视角工作台" },
     "dashboard-store.html": { href: "dashboard.html", title: "门店店长工作台" },
     "ai/ai-assistant.html": { href: "dashboard.html", title: "工作台助手" },
-    "product/product-cruise-routes.html": { href: "product/products.html", title: "邮轮产品线路配置" },
-    "product/product-train-routes.html": { href: "product/products.html", title: "专列产品线路配置" },
+    "product/product-cruise-routes.html": { href: "product/products.html", title: "邮轮产品航线" },
+    "product/product-train-routes.html": { href: "product/products.html", title: "专列产品线路" },
     "product/product-free-travel-list.html": { href: "product/products.html", title: "出行日期" },
     "product/product-self-edit.html": { href: "product/products.html", title: "自营产品编辑" },
     "product/product-cruise-edit.html": { href: "product/products.html", title: "自营产品编辑" },
     "product/product-train-edit.html": { href: "product/products.html", title: "自营产品编辑" },
     "product/products-detail.html": { href: "product/products.html", title: "自营产品详情" },
-    "product/product-schedules.html": { href: "product/products.html", title: "产品团期" },
+    "product/product-schedules.html": { href: "tour/schedules.html", title: "团期管控" },
     "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "resource/visa-library.html": { href: "resource/visa-library.html", title: "签证国家" },
@@ -2226,7 +2226,7 @@
   }
 
   const metaTagTexts = new Set([
-    "线路", "团期", "自由行", "单项服务", "普通团期", "邮轮团期", "专列团期", "研学团期", "邮轮航次", "专列班期", "研学营期",
+    "线路", "团期", "自由行", "单项服务", "普通团期", "邮轮航次", "专列班期", "研学团期", "邮轮航次", "专列班期", "研学营期",
     "景点", "酒店", "餐厅", "车型", "航线", "锁位", "船公司", "船只", "邮轮模板", "运营商", "专列模板", "供应商", "领队",
     "产品管理", "自营", "自营产品", "外采", "外采产品", "代理", "代理产品", "团期结算", "按团期配额", "按航次舱房配额", "按班期铺位配额", "按出行日期配额", "按服务单额度", "邮轮", "邮轮产品", "专列", "专列产品", "研学", "研学产品", "服务单",
     "参团游", "出境游", "入境游", "境内游", "港澳台", "小包团", "定制团", "半自由行", "普通报价", "团队报价",

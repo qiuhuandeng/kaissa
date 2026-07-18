@@ -349,6 +349,15 @@
       var modal = document.getElementById('templateSubmitModal');
       var activePreset = null;
       var clauseMap = {};
+      var templateParams = new URLSearchParams(window.location.search);
+      var isTemplateEditMode = templateParams.get('mode') === 'edit' || (templateParams.has('template') && templateParams.get('mode') !== 'create' && templateParams.get('mode') !== 'new') || document.querySelector('.contract-template-edit-page').hasAttribute('data-edit-entry');
+      document.querySelector('.contract-template-edit-page').classList.toggle('template-edit-mode', isTemplateEditMode);
+      document.querySelector('.contract-template-edit-page').classList.toggle('template-create-mode', !isTemplateEditMode);
+      var templateHero = document.querySelector('.contract-template-edit-page .route-edit-hero');
+      if (templateHero) templateHero.hidden = !isTemplateEditMode;
+      if (!isTemplateEditMode) {
+        document.querySelector('.contract-template-edit-page .page-title').textContent = '合同模板新增';
+      }
 
       var templatePresets = {
         group: {
@@ -759,7 +768,7 @@
 
       function applyPreset(preset) {
         activePreset = preset;
-        document.title = preset.title + ' - 合同模板编辑 - 凯撒旅游';
+        document.title = preset.title + (isTemplateEditMode ? ' - 合同模板编辑 - 凯撒旅游' : ' - 合同模板新增 - 凯撒旅游');
         setText('heroTemplateCode', preset.code);
         setText('heroTemplateStatus', preset.status);
         document.getElementById('heroTemplateStatus').className = statusClass(preset.status);
@@ -795,10 +804,9 @@
       }
 
       function resolvePreset() {
-        var params = new URLSearchParams(window.location.search);
-        if (params.get('mode') === 'new') return templatePresets.newTemplate;
-        if (params.has('copy')) return templatePresets.groupCopy;
-        var key = params.get('template') || 'T-GROUP-2026';
+        if (templateParams.get('mode') === 'new' || templateParams.get('mode') === 'create') return templateParams.has('copy') ? templatePresets.groupCopy : templatePresets.newTemplate;
+        if (templateParams.has('copy')) return templatePresets.groupCopy;
+        var key = templateParams.get('template') || 'T-GROUP-2026';
         if (/CRUISE/i.test(key)) return templatePresets.cruise;
         if (/MICE/i.test(key)) return templatePresets.mice;
         if (/STUDY|AUTH|研学/i.test(key)) return templatePresets.study;

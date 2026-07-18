@@ -16,7 +16,7 @@
       tagClass: 'tag tag-blue',
       prefix: 'GT',
       unit: '人',
-      planLabel: '产品线路',
+      planLabel: '产品航线',
       departLabel: '出发日期',
       returnLabel: '返回日期',
       startLabel: '出发城市',
@@ -134,20 +134,20 @@
           name: '理想号地中海邮轮',
           meta: '巴塞罗那母港往返，停靠马赛、热那亚、那不勒斯。',
           plans: [
-            { name: '阳台舱优选', days: 8, basis: '阳台舱为主，含港务费与精选岸上行程' },
-            { name: '套房礼遇', days: 8, basis: '套房权益，小团岸上游，优先登船' }
+            { name: '地中海经典航线', days: 8, basis: '巴塞罗那登离船，停靠马赛、热那亚、那不勒斯，舱房按航次售卖' },
+            { name: '爱琴海岛屿航线', days: 8, basis: '雅典登离船，米科诺斯、圣托里尼等港口，舱房按航次售卖' }
           ]
         },
         {
           name: '海洋交响号地中海邮轮',
           meta: '罗马登船，西地中海经典航次。',
           plans: [
-            { name: '西地中海精华7晚', days: 8, basis: '内舱、海景、阳台、套房全舱型开售' }
+            { name: '西地中海精华航线', days: 8, basis: '罗马登船，西地中海经典停靠港，舱房按航次售卖' }
           ]
         }
       ],
       matrixTitle: '舱型价格与舱房',
-      matrixColumns: ['舱型结构', '成人价', '儿童价', '单房差', '港务税/服务费', '升舱差价'],
+      matrixColumns: ['舱房售卖', '成人价', '儿童价', '单房差', '港务税/服务费', '升舱差价'],
       matrix: [
         {
           label: '内舱 IC',
@@ -213,7 +213,7 @@
       tagClass: 'tag tag-green',
       prefix: 'TR',
       unit: '铺',
-      planLabel: '产品线路',
+      planLabel: '专列线路',
       departLabel: '发车日期',
       returnLabel: '回程日期',
       startLabel: '出发站',
@@ -230,8 +230,8 @@
           name: '丝绸之路专列',
           meta: '西安始发，兰州、张掖、敦煌、吐鲁番、乌鲁木齐连线。',
           plans: [
-            { name: '舒适软卧', days: 12, basis: '软卧为主，标准地接，随车服务团队' },
-            { name: '尊享包厢', days: 12, basis: '双人包厢权益，小团讲解，餐饮升级' }
+            { name: '丝路经典线', days: 12, basis: '西安始发，兰州、张掖、敦煌、吐鲁番、乌鲁木齐串联，铺位按班期售卖' },
+            { name: '丝路深度线', days: 12, basis: '增加敦煌与吐鲁番深度游览，车厢铺位按班期售卖' }
           ]
         },
         {
@@ -706,6 +706,16 @@
     var type = selectedType();
     var product = selectedProduct();
     var plan = selectedPlan();
+    if (mode !== 'batch') {
+      var pageTitleText = '新建' + type.objectName;
+      var pageTitle = document.querySelector('.page-title');
+      var submitButton = $('[data-submit-builder]');
+      var successButton = $('[data-builder-success]');
+      document.title = pageTitleText + ' - 凯撒旅游';
+      if (pageTitle) pageTitle.textContent = pageTitleText;
+      if (submitButton) submitButton.textContent = '生成' + type.objectName;
+      if (successButton) successButton.textContent = '进入' + type.objectName + '列表';
+    }
     $('#heroType').textContent = type.label;
     $('#heroType').className = type.tagClass;
     $('#heroTitle').textContent = product.name;
@@ -716,7 +726,7 @@
     $('#heroUnit').textContent = type.defaultStock + type.unit;
     $('#planLabel').innerHTML = type.planLabel + ' <span class="req">*</span>';
     $('#planBasis').textContent = plan.basis;
-    $('#lineMeta').value = product.meta + '\n' + type.planLabel + '：' + plan.name + '；' + plan.basis;
+    $('#lineMeta').value = product.meta + '\n' + type.planLabel + '：' + plan.name + '；' + plan.basis + '\n' + inheritedConfigText(type);
     $('#departLabel').innerHTML = type.departLabel + ' <span class="req">*</span>';
     $('#returnLabel').innerHTML = type.returnLabel + ' <span class="req">*</span>';
     $('#startLabel').innerHTML = type.startLabel + ' <span class="req">*</span>';
@@ -801,6 +811,15 @@
     $('#matrixHead').innerHTML = '<tr>' + matrixHeader() + '</tr>';
     $('#matrixRows').innerHTML = selectedType().matrix.map(matrixRow).join('');
     updateMatrixTotals();
+  }
+
+  function inheritedConfigText(type) {
+    if (!type) return '继承配置：行程安排、费用规则、签证与证件';
+    if (type.objectName === '航次') return '继承配置：航线与船舶、航程与登离船、舱房售卖、费用与证件';
+    if (type.objectName === '班期') return '继承配置：线路与运营、行程与接驳、车厢铺位、费用与证件';
+    if (type.objectName === '出行日期') return '继承配置：套餐基础、资源组合、可售规则、费用与证件';
+    if (type.objectName === '营期') return '继承配置：课程行程、安全材料、费用规则、证件要求';
+    return '继承配置：行程安排、大交通、费用规则、签证与证件';
   }
 
   function renderTypeNodes() {
@@ -969,7 +988,7 @@
       customProjectNo: customProjectNo,
       privateSaleScope: privateSaleScope,
       privateGroupNote: privateGroupNote,
-      remark: (privateGroupNote || type.label + '按' + type.planLabel + '生成，价格与余量已确认') + (groupMode === '项目团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
+      remark: (privateGroupNote || type.label + '按' + type.planLabel + '生成，团期日期、价格与余量已确认') + (groupMode === '项目团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
       deadline: $('#deadlineDate').value || addDays(depart, -10)
     };
   }
@@ -1084,6 +1103,7 @@
     if (!lineMeta) return;
     var pieces = ['来源产品：' + routeContext.product];
     if (routeContext.route) pieces.push('承接产品线路：' + routeContext.route);
+    pieces.push(inheritedConfigText(selectedType()));
     if (routeContext.ownerOrg) pieces.push('承接组织：' + routeContext.ownerOrg);
     if (routeContext.supplier) pieces.push('供货方：' + routeContext.supplier);
     if (routeContext.flightRouteResource) pieces.push('航线资源：' + routeContext.flightRouteResource);
@@ -1193,7 +1213,7 @@
     $('#successTitle').textContent = isSupplierSchedule ? '批量团期已提交凯撒确认' : '批量开排完成';
     $('#successText').textContent = isSupplierSchedule ? '已生成' + items.length + '个供应商' + selectedType().objectName + '草稿并提交凯撒确认。' : '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
     $('#approvalNo').textContent = isSupplierSchedule ? '待凯撒确认' : '无需审批';
-    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒代理运营' : '已进入团期列表';
+    $('#approvalNode').textContent = isSupplierSchedule ? '凯撒代理运营' : '已进入' + selectedType().objectName + '列表';
     $('#approvalLink').style.display = 'none';
     dirty = false;
     openModal();
