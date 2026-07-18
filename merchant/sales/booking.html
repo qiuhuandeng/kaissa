@@ -217,7 +217,8 @@
             <section class="booking-section" aria-labelledby="bookingPeopleTitle">
               <div class="booking-section-head">
                 <h2 id="bookingPeopleTitle" class="booking-section-title">人数与价格</h2>
-                <span id="inventoryHint" class="tag tag-green">可售</span>
+                <button id="addCompositionRow" class="table-link booking-composition-add" type="button" hidden>新增舱型</button>
+                <span id="inventoryHint" class="tag tag-green" hidden>可售</span>
               </div>
               <div id="coreFields" class="form-grid booking-core-grid"></div>
               <div id="countRows" class="booking-count-grid booking-compact-counts"></div>
@@ -365,10 +366,11 @@
       </div>
 
       <div class="modal-footer booking-drawer-footer">
-        <div class="booking-footer-total">
+        <button id="footerTotalTrigger" class="booking-footer-total" type="button" aria-expanded="false">
           <span>合计应收</span>
           <strong id="footerTotal">¥25,600</strong>
-        </div>
+        </button>
+        <div id="footerPricePopover" class="booking-price-popover" hidden></div>
         <div id="formActions" class="booking-actions">
           <button class="btn btn-secondary" type="button" data-close-booking>取消</button>
           <button id="createOrder" class="btn btn-primary" type="button">生成预留订单</button>
@@ -550,6 +552,23 @@
             { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 },
             { id: 'roomCount', label: '房间数', price: 0, value: 1, min: 1 }
           ],
+          priceMatrix: {
+            field: 'room',
+            rows: {
+              '海景房': [
+                { id: 'adult', label: '成人', price: 6800, value: 2, min: 1 },
+                { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 }
+              ],
+              '家庭房': [
+                { id: 'adult', label: '成人', price: 4000, value: 2, min: 1 },
+                { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 }
+              ],
+              '高级双床房': [
+                { id: 'adult', label: '成人', price: 6200, value: 2, min: 1 },
+                { id: 'child', label: '儿童', price: 3800, value: 0, min: 0 }
+              ]
+            }
+          },
           after: ['供应商二次确认', '补充出行资料', '收款或认款', '生成确认单']
         },
         {
@@ -642,6 +661,10 @@
       const coreFields = document.getElementById('coreFields');
       const stockRows = document.getElementById('stockRows');
       const countRows = document.getElementById('countRows');
+      const addCompositionRow = document.getElementById('addCompositionRow');
+      const footerTotal = document.getElementById('footerTotal');
+      const footerTotalTrigger = document.getElementById('footerTotalTrigger');
+      const footerPricePopover = document.getElementById('footerPricePopover');
       const channelSource = document.getElementById('channelSource');
       const distributorField = document.getElementById('distributorField');
       const distributorMemberField = document.getElementById('distributorMemberField');
@@ -663,6 +686,7 @@
       let presetMode = false;
       let presetPlanOverride = '';
       let presetStockOverride = null;
+      let saleCompositionRows = [];
       let createdDetailHref = 'orders-detail.html?type=group';
       const manualTypeFieldMap = {
         '参团游': [],
@@ -1112,7 +1136,172 @@
         return planOptions()[selectedPlanIndex] || planOptions()[0] || currentProduct.name;
       }
 
+      function usesCompositionRows() {
+        return !isManualMode() && currentProduct && ['cruise', 'train', 'free'].indexOf(currentProduct.type) >= 0 && currentProduct.priceMatrix && currentProduct.priceMatrix.rows;
+      }
+
+      function compositionKindLabel() {
+        if (currentProduct.type === 'free') return '房型';
+        return currentProduct.type === 'cruise' ? '舱型' : '铺位';
+      }
+
+      function compositionStockUnit() {
+        if (currentProduct.type === 'free') return '房间';
+        return currentProduct.type === 'cruise' ? '舱房' : '铺位';
+      }
+
+      function compositionOptions() {
+        if (!usesCompositionRows()) return [];
+        return Object.keys(currentProduct.priceMatrix.rows || {});
+      }
+
+      function compositionDefaultSpec(exceptId) {
+        const used = saleCompositionRows.filter(function (row) {
+          return row.id !== exceptId;
+        }).map(function (row) {
+          return row.spec;
+        });
+        return compositionOptions().find(function (option) {
+          return used.indexOf(option) < 0;
+        }) || compositionOptions()[0] || '';
+      }
+
+      function compositionRowId() {
+        return 'composition_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+      }
+
+      function priceRowsForSpec(spec) {
+        if (!usesCompositionRows()) return [];
+        const rows = currentProduct.priceMatrix.rows || {};
+        const sourceRows = rows[spec] || rows[compositionOptions()[0]] || [];
+        return sourceRows.map(function (item) {
+          return Object.assign({}, item);
+        });
+      }
+
+      function priceItemForSpec(spec, id) {
+        return priceRowsForSpec(spec).find(function (item) {
+          return item.id === id;
+        });
+      }
+
+      function defaultCompositionValue(spec, id, fallback) {
+        const item = priceItemForSpec(spec, id);
+        if (item && item.value !== undefined) return Number(item.value || 0);
+        return Number(fallback || 0);
+      }
+
+      function makeCompositionRow(spec, useDefaultPeople) {
+        const valueFromPrice = useDefaultPeople ? defaultCompositionValue : function () { return 0; };
+        const row = {
+          id: compositionRowId(),
+          spec: spec || compositionDefaultSpec()
+        };
+        if (currentProduct.type === 'cruise') {
+          row.cabinCount = 1;
+          row.adultOccupancy = valueFromPrice(row.spec, 'adultOccupancy', 0);
+          row.childOccupancy = valueFromPrice(row.spec, 'childOccupancy', 0);
+          row.childNoBerth = valueFromPrice(row.spec, 'childNoBerth', 0);
+          row.thirdFourth = valueFromPrice(row.spec, 'thirdFourth', 0);
+          row.portTax = valueFromPrice(row.spec, 'portTax', row.adultOccupancy + row.childOccupancy + row.childNoBerth + row.thirdFourth);
+        } else if (currentProduct.type === 'free') {
+          row.roomCount = valueFromPrice(row.spec, 'roomCount', 1);
+          row.adult = valueFromPrice(row.spec, 'adult', 0);
+          row.child = valueFromPrice(row.spec, 'child', 0);
+        } else {
+          row.adultOccupancy = valueFromPrice(row.spec, 'adultOccupancy', 0);
+          row.childOccupancy = valueFromPrice(row.spec, 'childOccupancy', 0);
+          row.childNoBerth = valueFromPrice(row.spec, 'childNoBerth', 0);
+        }
+        return row;
+      }
+
+      function ensureCompositionRows() {
+        if (!usesCompositionRows()) {
+          saleCompositionRows = [];
+          return;
+        }
+        const options = compositionOptions();
+        saleCompositionRows = saleCompositionRows.filter(function (row) {
+          return options.indexOf(row.spec) >= 0;
+        });
+        if (!saleCompositionRows.length) {
+          saleCompositionRows = [makeCompositionRow(options[0], true)];
+        }
+      }
+
+      function compositionPassengerCount(row) {
+        if (currentProduct.type === 'free') {
+          return Number(row.adult || 0) + Number(row.child || 0);
+        }
+        return Number(row.adultOccupancy || 0) + Number(row.childOccupancy || 0) + Number(row.childNoBerth || 0) + Number(row.thirdFourth || 0);
+      }
+
+      function compositionRequiredPeopleCount(row) {
+        if (currentProduct.type === 'free') {
+          return Number(row.adult || 0) + Number(row.child || 0);
+        }
+        return Number(row.adultOccupancy || 0) + Number(row.childOccupancy || 0) + Number(row.thirdFourth || 0);
+      }
+
+      function syncCompositionRow(row, changedField) {
+        if (!row || currentProduct.type !== 'cruise') return;
+        if (['adultOccupancy', 'childOccupancy', 'childNoBerth', 'thirdFourth'].indexOf(changedField) >= 0) {
+          row.portTax = compositionPassengerCount(row);
+        }
+      }
+
+      function compositionRowTotal(row) {
+        return priceRowsForSpec(row.spec).reduce(function (sum, item) {
+          return sum + Number(row[item.id] || 0) * Number(item.price || 0);
+        }, 0);
+      }
+
+      function compositionTotal() {
+        if (!usesCompositionRows()) return 0;
+        ensureCompositionRows();
+        return saleCompositionRows.reduce(function (sum, row) {
+          return sum + compositionRowTotal(row);
+        }, 0);
+      }
+
+      function compositionCountValue(id) {
+        if (!usesCompositionRows()) return 0;
+        ensureCompositionRows();
+        return saleCompositionRows.reduce(function (sum, row) {
+          return sum + Number(row[id] || 0);
+        }, 0);
+      }
+
+      function compositionPriceGroups() {
+        if (!usesCompositionRows()) return [];
+        ensureCompositionRows();
+        return saleCompositionRows.map(function (row) {
+          const lines = priceRowsForSpec(row.spec).map(function (item) {
+            const quantity = Number(row[item.id] || 0);
+            if (!quantity) return null;
+            return {
+              label: item.label,
+              quantity: quantity,
+              price: Number(item.price || 0),
+              amount: quantity * Number(item.price || 0)
+            };
+          }).filter(Boolean);
+          return {
+            title: row.spec,
+            meta: currentProduct.type === 'cruise'
+              ? '舱房数 ' + Number(row.cabinCount || 0)
+              : (currentProduct.type === 'free' ? '房间数 ' + Number(row.roomCount || 0) : ''),
+            total: compositionRowTotal(row),
+            lines: lines
+          };
+        }).filter(function (group) {
+          return group.lines.length > 0;
+        });
+      }
+
       function calcTotal() {
+        if (usesCompositionRows()) return compositionTotal();
         return Array.from(countRows.querySelectorAll('[data-count-input]')).reduce(function (sum, input) {
           return sum + Number(input.value || 0) * Number(input.dataset.price || 0);
         }, 0);
@@ -1151,7 +1340,15 @@
       }
 
       function renderCoreFields() {
+        if (usesCompositionRows()) {
+          coreFields.hidden = true;
+          coreFields.innerHTML = '';
+          return;
+        }
         const hiddenIds = ['plan', 'package', 'line', 'service', 'schedule'];
+        if (currentProduct.type === 'cruise') hiddenIds.push('cabin', 'cabinCount');
+        if (currentProduct.type === 'train') hiddenIds.push('berth');
+        if (currentProduct.type === 'free') hiddenIds.push('room');
         const fields = currentProduct.core.filter(function (field) {
           return hiddenIds.indexOf(field.id) < 0;
         });
@@ -1172,6 +1369,7 @@
       }
 
       function applySelectedPriceMatrix() {
+        if (usesCompositionRows()) return;
         const matrix = currentProduct.priceMatrix;
         if (!matrix || !matrix.rows) return;
         const selected = coreFieldValue(matrix.field);
@@ -1199,8 +1397,116 @@
         }).join('');
       }
 
+      function compositionColumns() {
+        if (currentProduct.type === 'cruise') {
+          return [
+            { id: 'cabinCount', label: '舱房数', min: 1 },
+            { id: 'adultOccupancy', label: '成人占位', min: 0 },
+            { id: 'childOccupancy', label: '儿童占位', min: 0 },
+            { id: 'childNoBerth', label: '儿童不占位', min: 0 },
+            { id: 'thirdFourth', label: '第三/第四人', min: 0 }
+          ];
+        }
+        if (currentProduct.type === 'free') {
+          return [
+            { id: 'roomCount', label: '房间数', min: 1 },
+            { id: 'adult', label: '成人', min: 0 },
+            { id: 'child', label: '儿童', min: 0 }
+          ];
+        }
+        return [
+          { id: 'adultOccupancy', label: '成人占铺', min: 0 },
+          { id: 'childOccupancy', label: '儿童占铺', min: 0 },
+          { id: 'childNoBerth', label: '儿童不占铺', min: 0 }
+        ];
+      }
+
+      function compositionStepper(row, column) {
+        const value = Number(row[column.id] || 0);
+        return '<span class="booking-stepper booking-composition-stepper" data-composition-stepper>' +
+          '<button type="button" data-composition-step="-1" data-composition-row="' + escapeHtml(row.id) + '" data-composition-field="' + escapeHtml(column.id) + '" aria-label="减少' + escapeHtml(column.label) + '">-</button>' +
+          '<input type="text" value="' + value + '" readonly data-composition-input data-composition-row="' + escapeHtml(row.id) + '" data-composition-field="' + escapeHtml(column.id) + '" data-min="' + Number(column.min || 0) + '">' +
+          '<button type="button" data-composition-step="1" data-composition-row="' + escapeHtml(row.id) + '" data-composition-field="' + escapeHtml(column.id) + '" aria-label="增加' + escapeHtml(column.label) + '">+</button>' +
+        '</span>';
+      }
+
+      function compositionSpecSelect(row) {
+        const used = saleCompositionRows.filter(function (item) {
+          return item.id !== row.id;
+        }).map(function (item) {
+          return item.spec;
+        });
+        return '<select class="form-control booking-composition-select" data-composition-select data-composition-row="' + escapeHtml(row.id) + '" aria-label="选择' + escapeHtml(compositionKindLabel()) + '">' +
+          compositionOptions().map(function (option) {
+            const selected = option === row.spec ? ' selected' : '';
+            const disabled = used.indexOf(option) >= 0 ? ' disabled' : '';
+            return '<option value="' + escapeHtml(option) + '"' + selected + disabled + '>' + escapeHtml(option) + '</option>';
+          }).join('') +
+        '</select>';
+      }
+
+      function compositionColgroup(columns) {
+        return '<colgroup><col class="booking-composition-col-spec" style="width:150px">' +
+          columns.map(function () { return '<col class="booking-composition-col-count">'; }).join('') +
+          '<col class="booking-composition-col-action" style="width:58px"></colgroup>';
+      }
+
+      function syncCompositionAddButton() {
+        if (!addCompositionRow) return;
+        if (!usesCompositionRows() || !hasSaleObject) {
+          addCompositionRow.hidden = true;
+          addCompositionRow.disabled = true;
+          return;
+        }
+        ensureCompositionRows();
+        addCompositionRow.hidden = false;
+        addCompositionRow.disabled = saleCompositionRows.length >= compositionOptions().length;
+        addCompositionRow.textContent = '新增' + compositionKindLabel();
+      }
+
+      function addCompositionLine() {
+        if (!usesCompositionRows()) return;
+        const spec = compositionDefaultSpec();
+        if (spec) saleCompositionRows.push(makeCompositionRow(spec, false));
+        renderCounts();
+        renderFee();
+      }
+
+      function renderCompositionCounts() {
+        ensureCompositionRows();
+        const columns = compositionColumns();
+        syncCompositionAddButton();
+        countRows.classList.remove('booking-manual-price-table');
+        countRows.classList.add('booking-composition-grid');
+        const specCellStyle = ' style="width:150px;min-width:150px;max-width:150px"';
+        const actionCellStyle = ' style="width:58px;min-width:58px;max-width:58px"';
+        countRows.innerHTML = '<div class="booking-composition-panel">' +
+          '<div class="booking-composition-table-wrap">' +
+            '<table class="booking-composition-table">' +
+              compositionColgroup(columns) +
+              '<thead><tr><th' + specCellStyle + '>' + escapeHtml(compositionKindLabel()) + '</th>' + columns.map(function (column) {
+                return '<th>' + escapeHtml(column.label) + '</th>';
+              }).join('') + '<th' + actionCellStyle + '>操作</th></tr></thead>' +
+              '<tbody>' + saleCompositionRows.map(function (row) {
+                const removeDisabled = saleCompositionRows.length <= 1 ? ' disabled' : '';
+                return '<tr data-composition-row-item="' + escapeHtml(row.id) + '">' +
+                  '<td' + specCellStyle + '>' + compositionSpecSelect(row) + '</td>' +
+                  columns.map(function (column) {
+                    return '<td>' + compositionStepper(row, column) + '</td>';
+                  }).join('') +
+                  '<td' + actionCellStyle + '><button class="table-link table-link-danger" type="button" data-remove-composition-row="' + escapeHtml(row.id) + '"' + removeDisabled + '>删除</button></td>' +
+                '</tr>';
+              }).join('') + '</tbody>' +
+            '</table>' +
+          '</div>' +
+        '</div>';
+        renderOccupancySummary();
+      }
+
       function renderCounts() {
         if (isManualMode()) {
+          syncCompositionAddButton();
+          countRows.classList.remove('booking-composition-grid');
           countRows.classList.add('booking-manual-price-table');
           countRows.innerHTML = '<div class="table-wrap booking-price-table-wrap"><table class="booking-price-table">' +
             '<thead><tr><th>费用项</th><th>数量</th><th>单价</th><th>小计</th></tr></thead>' +
@@ -1220,6 +1526,12 @@
           renderOccupancySummary();
           return;
         }
+        if (usesCompositionRows()) {
+          renderCompositionCounts();
+          return;
+        }
+        syncCompositionAddButton();
+        countRows.classList.remove('booking-composition-grid');
         countRows.classList.remove('booking-manual-price-table');
         countRows.innerHTML = currentProduct.counts.map(function (item) {
           const hint = item.hint ? '<em>' + escapeHtml(item.hint) + '</em>' : '';
@@ -1237,6 +1549,7 @@
       }
 
       function countValue(id) {
+        if (usesCompositionRows()) return compositionCountValue(id);
         const row = currentProduct.counts.find(function (item) { return item.id === id; });
         return row ? Number(row.value || 0) : 0;
       }
@@ -1250,6 +1563,10 @@
       function renderOccupancySummary() {
         const box = document.getElementById('occupancySummary');
         if (!box) return;
+        if (usesCompositionRows()) {
+          box.innerHTML = '';
+          return;
+        }
         if (currentProduct.type !== 'cruise' && currentProduct.type !== 'train') {
           box.innerHTML = '';
           return;
@@ -1272,29 +1589,86 @@
         }).join('');
       }
 
+      function countInputPriceGroups() {
+        const lines = Array.from(countRows.querySelectorAll('[data-count-input]')).map(function (input) {
+          const labelNode = input.closest('.booking-count-item, tr').querySelector('.booking-count-label');
+          const label = input.dataset.countLabel || (labelNode ? labelNode.textContent : '');
+          const quantity = Number(input.value || 0);
+          const price = Number(input.dataset.price || 0);
+          if (!quantity) return null;
+          return {
+            label: label,
+            quantity: quantity,
+            price: price,
+            amount: quantity * price
+          };
+        }).filter(Boolean);
+        return lines.length ? [{ title: currentProduct.name, meta: isManualMode() ? '手工产品' : selectedPlanName(), total: calcTotal(), lines: lines }] : [];
+      }
+
+      function renderFooterPriceDetail(groups) {
+        if (!footerPricePopover || !footerTotalTrigger) return;
+        const hasLines = groups && groups.some(function (group) {
+          return group.lines && group.lines.length;
+        });
+        footerTotalTrigger.disabled = !hasLines;
+        footerTotalTrigger.classList.toggle('is-disabled', !hasLines);
+        footerTotalTrigger.setAttribute('aria-expanded', 'false');
+        if (!hasLines) {
+          footerPricePopover.hidden = true;
+          footerPricePopover.innerHTML = '';
+          return;
+        }
+        footerPricePopover.hidden = true;
+        footerPricePopover.innerHTML = '<div class="booking-price-popover-title">价格明细</div>' + groups.map(function (group) {
+          return '<div class="booking-price-popover-group">' +
+            '<div class="booking-price-popover-group-head"><strong>' + escapeHtml(group.title) + '</strong>' + (group.meta ? '<span>' + escapeHtml(group.meta) + '</span>' : '') + '</div>' +
+            group.lines.map(function (line) {
+              return '<div class="booking-price-popover-row"><span>' + escapeHtml(line.label) + ' ' + line.quantity + ' × ' + money(line.price) + '</span><strong>' + money(line.amount) + '</strong></div>';
+            }).join('') +
+            '<div class="booking-price-popover-subtotal"><span>小计</span><strong>' + money(group.total) + '</strong></div>' +
+          '</div>';
+        }).join('');
+      }
+
       function renderFee() {
-        const footerTotal = document.getElementById('footerTotal');
         if (!hasSaleObject) {
           document.getElementById('feeLines').innerHTML = '<div><span>暂无费用</span><strong>¥0</strong></div>';
           document.getElementById('payableTotal').textContent = '¥0';
           footerTotal.textContent = '待选团期';
           footerTotal.classList.add('is-placeholder');
+          renderFooterPriceDetail([]);
           return;
         }
-        const rows = Array.from(countRows.querySelectorAll('[data-count-input]')).map(function (input) {
-          const item = currentProduct.counts.find(function (count) { return count.price === Number(input.dataset.price) && count.min === Number(input.dataset.min); });
-          const labelNode = input.closest('.booking-count-item, tr').querySelector('.booking-count-label');
-          const label = input.dataset.countLabel || (labelNode ? labelNode.textContent : '');
-          const count = Number(input.value || 0);
-          const price = Number(input.dataset.price || 0);
-          if (!count) return '';
-          return '<div><span>' + escapeHtml(label) + ' × ' + count + '</span><strong>' + money(count * price) + '</strong></div>';
-        }).filter(Boolean);
+        if (usesCompositionRows()) {
+          const groups = compositionPriceGroups();
+          const rows = groups.reduce(function (items, group) {
+            group.lines.forEach(function (line) {
+              items.push('<div><span>' + escapeHtml(group.title + ' / ' + line.label) + ' × ' + line.quantity + '</span><strong>' + money(line.amount) + '</strong></div>');
+            });
+            return items;
+          }, []);
+          const total = calcTotal();
+          document.getElementById('feeLines').innerHTML = rows.join('') || '<div><span>暂无费用</span><strong>¥0</strong></div>';
+          document.getElementById('payableTotal').textContent = money(total);
+          footerTotal.textContent = money(total);
+          footerTotal.classList.remove('is-placeholder');
+          renderFooterPriceDetail(groups);
+          return;
+        }
+        const groups = countInputPriceGroups();
+        const rows = groups.reduce(function (items, group) {
+          group.lines.forEach(function (line) {
+            items.push('<div><span>' + escapeHtml(line.label) + ' × ' + line.quantity + '</span><strong>' + money(line.amount) + '</strong></div>');
+          });
+          return items;
+        }, []);
         const total = calcTotal();
         document.getElementById('feeLines').innerHTML = rows.join('') || '<div><span>暂无费用</span><strong>¥0</strong></div>';
         document.getElementById('payableTotal').textContent = money(total);
         footerTotal.textContent = money(total);
         footerTotal.classList.remove('is-placeholder');
+        renderFooterPriceDetail(groups);
       }
 
       function syncSummary() {
@@ -1513,6 +1887,7 @@
         currentProduct = cloneProduct(item);
         selectedPlanIndex = Number(record.planIndex || 0);
         selectedStockIndex = -1;
+        saleCompositionRows = [];
         clearPresetContext();
         hasSaleObject = false;
         objectStep = 'pick';
@@ -1526,6 +1901,7 @@
         currentProduct = cloneProduct(products[0]);
         selectedPlanIndex = 0;
         selectedStockIndex = 0;
+        saleCompositionRows = [];
         hasSaleObject = false;
         objectStep = 'search';
         objectKeyword.value = '';
@@ -1546,6 +1922,7 @@
       }
 
       function applyPresetPrice(priceText) {
+        if (usesCompositionRows()) return;
         const price = priceNumber(priceText);
         if (!price) return;
         const primaryCount = currentProduct.counts.find(function (item) { return Number(item.min || 0) > 0; }) || currentProduct.counts[0];
@@ -1578,10 +1955,17 @@
         Array.from(coreFields.querySelectorAll('[data-core-required="true"]')).forEach(function (field) {
           if (!field.value) missing.push(field.dataset.coreLabel || '必填项');
         });
+        if (usesCompositionRows()) {
+          ensureCompositionRows();
+          const hasEmptyLine = saleCompositionRows.some(function (row) {
+            return !row.spec || compositionRequiredPeopleCount(row) <= 0;
+          });
+          if (hasEmptyLine) missing.push(compositionKindLabel() + '人数');
+        }
         if (!document.getElementById('contactName').value.trim()) missing.push('联系人');
         if (!document.getElementById('contactPhone').value.trim()) missing.push('手机号');
         if (calcTotal() <= 0) missing.push('人数/份数');
-        if ((currentProduct.type === 'cruise' || currentProduct.type === 'train') && countValue('adultOccupancy') + countValue('childOccupancy') <= 0) {
+        if ((currentProduct.type === 'cruise' || currentProduct.type === 'train') && countValue('adultOccupancy') + countValue('childOccupancy') + countValue('thirdFourth') <= 0) {
           missing.push(currentProduct.type === 'cruise' ? '占位乘客' : '占位乘客');
         }
         return missing;
@@ -1710,6 +2094,37 @@
       });
 
       countRows.addEventListener('click', function (event) {
+        const addComposition = event.target.closest('[data-add-composition-row]');
+        if (addComposition) {
+          addCompositionLine();
+          return;
+        }
+        const removeComposition = event.target.closest('[data-remove-composition-row]');
+        if (removeComposition) {
+          if (saleCompositionRows.length > 1) {
+            saleCompositionRows = saleCompositionRows.filter(function (row) {
+              return row.id !== removeComposition.dataset.removeCompositionRow;
+            });
+          }
+          renderCounts();
+          renderFee();
+          return;
+        }
+        const compositionStep = event.target.closest('[data-composition-step]');
+        if (compositionStep) {
+          const row = saleCompositionRows.find(function (item) {
+            return item.id === compositionStep.dataset.compositionRow;
+          });
+          if (!row) return;
+          const field = compositionStep.dataset.compositionField;
+          const input = compositionStep.closest('[data-composition-stepper]').querySelector('[data-composition-input]');
+          const min = Number(input.dataset.min || 0);
+          row[field] = Math.max(min, Number(row[field] || 0) + Number(compositionStep.dataset.compositionStep || 0));
+          syncCompositionRow(row, field);
+          renderCounts();
+          renderFee();
+          return;
+        }
         const button = event.target.closest('[data-step]');
         if (!button) return;
         const input = button.closest('[data-stepper]').querySelector('[data-count-input]');
@@ -1722,6 +2137,22 @@
         renderFee();
         renderOccupancySummary();
       });
+
+      countRows.addEventListener('change', function (event) {
+        const select = event.target.closest('[data-composition-select]');
+        if (!select) return;
+        const row = saleCompositionRows.find(function (item) {
+          return item.id === select.dataset.compositionRow;
+        });
+        if (!row) return;
+        row.spec = select.value;
+        syncCompositionRow(row, 'spec');
+        renderCounts();
+        renderFee();
+      });
+      if (addCompositionRow) {
+        addCompositionRow.addEventListener('click', addCompositionLine);
+      }
 
       countRows.addEventListener('input', function (event) {
         const priceInput = event.target.closest('[data-manual-price]');
@@ -1803,6 +2234,22 @@
         renderSuggestions();
       });
       objectKeyword.addEventListener('focus', renderSuggestions);
+      if (footerTotalTrigger && footerPricePopover) {
+        footerTotalTrigger.addEventListener('click', function (event) {
+          event.stopPropagation();
+          if (footerTotalTrigger.disabled) return;
+          const nextOpen = footerPricePopover.hidden;
+          footerPricePopover.hidden = !nextOpen;
+          footerTotalTrigger.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+        });
+        footerPricePopover.addEventListener('click', function (event) {
+          event.stopPropagation();
+        });
+        document.addEventListener('click', function () {
+          footerPricePopover.hidden = true;
+          footerTotalTrigger.setAttribute('aria-expanded', 'false');
+        });
+      }
 
       document.getElementById('createOrder').addEventListener('click', showResult);
       document.getElementById('createdNextSteps').addEventListener('click', function (event) {
