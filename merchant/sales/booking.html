@@ -802,6 +802,22 @@
         return Number(String(value || '').replace(/[^\d.]/g, '')) || 0;
       }
 
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeStored(key, value) {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          // localStorage may be unavailable in some preview contexts; the order can still open by URL.
+        }
+      }
+
       function cloneProduct(item) {
         return Object.assign({}, item, {
           core: item.core.map(function (field) { return Object.assign({}, field, { options: field.options ? field.options.slice() : field.options }); }),
@@ -1608,6 +1624,140 @@
         return lines.length ? [{ title: currentProduct.name, meta: isManualMode() ? '手工产品' : selectedPlanName(), total: calcTotal(), lines: lines }] : [];
       }
 
+      function orderTypeLabel() {
+        if (isManualMode()) return manualTypeLabel();
+        return currentProduct.tag || '参团游';
+      }
+
+      function salesPriceGroupsSnapshot() {
+        const groups = usesCompositionRows() ? compositionPriceGroups() : countInputPriceGroups();
+        return groups.map(function (group) {
+          return {
+            title: group.title,
+            meta: group.meta || '',
+            total: Number(group.total || 0),
+            lines: (group.lines || []).map(function (line) {
+              return {
+                label: line.label,
+                quantity: Number(line.quantity || 0),
+                price: Number(line.price || 0),
+                amount: Number(line.amount || 0)
+              };
+            })
+          };
+        });
+      }
+
+      function salesCompositionRowsSnapshot() {
+        if (!usesCompositionRows()) return [];
+        ensureCompositionRows();
+        return saleCompositionRows.map(function (row) {
+          const copy = {
+            spec: row.spec,
+            total: compositionRowTotal(row),
+            priceLines: priceRowsForSpec(row.spec).map(function (item) {
+              const quantity = Number(row[item.id] || 0);
+              return {
+                id: item.id,
+                label: item.label,
+                quantity: quantity,
+                price: Number(item.price || 0),
+                amount: quantity * Number(item.price || 0),
+                hint: item.hint || ''
+              };
+            }).filter(function (item) {
+              return item.quantity > 0;
+            })
+          };
+          if (currentProduct.type === 'cruise') {
+            copy.cabinCount = Number(row.cabinCount || 0);
+            copy.adultOccupancy = Number(row.adultOccupancy || 0);
+            copy.childOccupancy = Number(row.childOccupancy || 0);
+            copy.childNoBerth = Number(row.childNoBerth || 0);
+            copy.thirdFourth = Number(row.thirdFourth || 0);
+            copy.portTax = Number(row.portTax || 0);
+          } else if (currentProduct.type === 'train') {
+            copy.adultOccupancy = Number(row.adultOccupancy || 0);
+            copy.childOccupancy = Number(row.childOccupancy || 0);
+            copy.childNoBerth = Number(row.childNoBerth || 0);
+          } else if (currentProduct.type === 'free') {
+            copy.roomCount = Number(row.roomCount || 0);
+            copy.adult = Number(row.adult || 0);
+            copy.child = Number(row.child || 0);
+          }
+          return copy;
+        });
+      }
+
+      function salesPeopleCountSnapshot() {
+        if (usesCompositionRows()) {
+          ensureCompositionRows();
+          return saleCompositionRows.reduce(function (sum, row) {
+            return sum + compositionPassengerCount(row);
+          }, 0);
+        }
+        return currentProduct.counts.reduce(function (sum, item) {
+          if (!/成人|儿童|学员|委托|办理份数|团体/.test(item.label)) return sum;
+          return sum + Number(item.value || 0);
+        }, 0);
+      }
+
+      function saveCreatedOrderSnapshot(orderNo, stock, totalText, process) {
+        const store = readStored('caesarOrderFinanceEvents');
+        if (!store.orders) store.orders = {};
+        const typeLabel = orderTypeLabel();
+        const customer = document.getElementById('contactName').value.trim();
+        const phone = document.getElementById('contactPhone').value.trim();
+        const scheduleNo = stock && stock[1] ? stock[1] : '';
+        const travelDate = stock && stock[0] ? stock[0] : '';
+        const amountNumber = calcTotal();
+        store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
+          orderNo: orderNo,
+          orderType: typeLabel,
+          productName: currentProduct.name,
+          productSource: isManualMode() ? '手工产品' : '指定产品',
+          routeText: isManualMode() ? (currentProduct.manualDisplay || currentProduct.meta || currentProduct.name) : selectedPlanName(),
+          sourceLabel: currentProduct.stockLabel || '团期',
+          sourceNo: scheduleNo,
+          sourceDate: travelDate,
+          customer: customer,
+          contactPhone: phone,
+          store: document.getElementById('storeName').value || '软件园门店',
+          advisor: document.getElementById('salesName').value || '',
+          amount: totalText,
+          amountValue: amountNumber,
+          received: '¥0',
+          pending: totalText,
+          orderStatus: process.status,
+          paymentStatus: '未收款',
+          resourceStatus: isManualMode() ? '不占用标准库存' : process.inventory,
+          resourceMeta: isManualMode() ? '订单内产品快照' : ((salesPeopleCountSnapshot() || 0) + '人'),
+          docStatus: '待补资料',
+          productMeta: currentProduct.meta || '',
+          manualSupplier: currentProduct.manualSupplier || '',
+          manualDestination: currentProduct.manualDestination || '',
+          salesSnapshot: {
+            type: typeLabel,
+            productName: currentProduct.name,
+            planName: isManualMode() ? currentProduct.name : selectedPlanName(),
+            sourceLabel: currentProduct.stockLabel || '团期',
+            scheduleNo: scheduleNo,
+            travelDate: travelDate,
+            stockText: stock ? stock.join(' / ') : '',
+            total: amountNumber,
+            totalText: totalText,
+            peopleCount: salesPeopleCountSnapshot(),
+            compositionKind: usesCompositionRows() ? compositionKindLabel() : '',
+            stockUnit: usesCompositionRows() ? compositionStockUnit() : '',
+            compositionRows: salesCompositionRowsSnapshot(),
+            priceGroups: salesPriceGroupsSnapshot()
+          },
+          createdAt: new Date().toLocaleString('zh-CN', { hour12: false })
+        });
+        writeStored('caesarOrderFinanceEvents', store);
+        return store.orders[orderNo];
+      }
+
       function renderFooterPriceDetail(groups) {
         if (!footerPricePopover || !footerTotalTrigger) return;
         const hasLines = groups && groups.some(function (group) {
@@ -2003,6 +2153,7 @@
         detailParams.set('orderNo', orderNo);
         detailParams.set('product', currentProduct.name);
         detailParams.set('customer', document.getElementById('contactName').value.trim());
+        detailParams.set('amount', String(calcTotal()));
         if (isManualMode()) {
           detailParams.set('source', 'manualProduct');
           detailParams.set('productSource', 'manual');
@@ -2023,6 +2174,7 @@
           if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
           if (sourceContext.people) detailParams.set('people', sourceContext.people);
         }
+        saveCreatedOrderSnapshot(orderNo, stock, total, process);
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
         document.getElementById('createdText').textContent = isManualMode()

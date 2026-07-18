@@ -24,7 +24,6 @@
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
           <button id="openManualClaim" class="btn btn-primary" type="button">添加认款</button>
-          <button id="openOtaClaim" class="btn btn-secondary" type="button">OTA认款</button>
         </div>
       </div>
       <div class="filter-row">
@@ -185,7 +184,7 @@
           <td class="claim-match-cell"><strong>待选择平台订单</strong><span class="claim-cell-sub">平台订单需上传单据</span></td>
           <td class="claim-receivable-cell"><strong>待匹配应收</strong><span class="claim-cell-sub">已认 ¥0 · 待认 ¥9,600</span></td>
           <td class="claim-status-cell"><span class="tag tag-orange">待认领</span><span class="claim-cell-sub">需匹配平台订单</span></td>
-          <td class="payment-claim-action-cell"><div class="table-action"><button type="button" data-open-manual-claim class="table-action-primary">OTA认款</button></div></td>
+          <td class="payment-claim-action-cell"><div class="table-action"><button type="button" data-open-manual-claim class="table-action-primary">认款</button></div></td>
         </tr>
         <tr data-tab-status="待认领" data-product-type="">
           <td class="claim-id-cell"><strong>CMBC20260623021</strong><span class="claim-cell-sub">未生成认款申请</span></td>
@@ -407,142 +406,256 @@
         <button class="modal-close" type="button" aria-label="关闭添加认款" data-close-payment-drawer>×</button>
       </div>
       <div class="modal-body">
-        <section class="readonly-summary" id="selectedFlowSummary">
-          <strong>未选择流水</strong>
-          <span>请先从财务上传的流水中选择一笔可认金额。</span>
-        </section>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">待认流水</h3>
+            <button class="table-action-primary claim-toggle-button" type="button" data-toggle-flow-selector hidden>重新选择</button>
+          </div>
+          <section id="selectedFlowSummary" class="claim-flow-summary" hidden>
+            <div class="claim-flow-summary-main">
+              <div>
+                <span>当前可认金额</span>
+                <strong id="currentFlowAvailable">¥25,600</strong>
+              </div>
+              <div>
+                <span>流水总金额</span>
+                <strong id="currentFlowTotal">¥25,600</strong>
+              </div>
+            </div>
+            <div class="claim-flow-meta">
+              <span id="currentFlowNo">CMBC20260625001</span>
+              <span id="currentFlowAccount">35120188000082473</span>
+              <span id="currentFlowMethod">电汇</span>
+              <span id="currentFlowTime">2026-06-25 09:12</span>
+              <span>付款方 <strong id="currentFlowPayer">张建国</strong></span>
+              <span>收款主体 <strong id="claimCompanyScope">福建凯撒</strong></span>
+            </div>
+          </section>
 
-        <section id="claimProjectContext" class="finance-link-card" hidden>
-          <div class="finance-link-title">项目反查</div>
-          <div class="table-action">
+          <section id="claimFlowSelector" class="claim-flow-selector">
+            <div class="claim-flow-filter">
+              <div class="filter-item">
+                <label class="sr-only" for="flowSearchName">客户名称/付款方</label>
+                <input id="flowSearchName" class="form-control" type="search" placeholder="客户名称/付款方/流水号">
+              </div>
+              <div class="filter-item-sm">
+                <label class="sr-only" for="flowSearchAmount">流水金额</label>
+                <input id="flowSearchAmount" class="form-control" type="search" placeholder="金额">
+              </div>
+              <label class="btn btn-secondary claim-flow-upload-button">
+                上传凭证
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" hidden data-flow-voucher-input>
+              </label>
+              <button class="btn btn-secondary" type="button" data-flow-reset>重置</button>
+            </div>
+            <div id="claimFlowRows" class="claim-flow-card-list">
+              <button class="claim-flow-option" type="button" data-flow-no="CMBC20260704088" data-flow-amount="571800" data-flow-total="571800" data-flow-name="北京某科技有限公司" data-flow-company="福建凯撒" data-flow-account="民生银行企业收款户" data-flow-method="对公转账" data-flow-time="2026-07-04 11:06">
+                <span class="claim-flow-option-main">
+                  <strong>北京某科技有限公司</strong>
+                  <small>CMBC20260704088 · 民生银行企业收款户 · 对公转账</small>
+                  <small>付款时间 2026-07-04 11:06</small>
+                </span>
+                <span class="claim-flow-option-amount">
+                  <strong>¥571,800</strong>
+                  <small>可认 ¥571,800</small>
+                </span>
+              </button>
+              <button class="claim-flow-option" type="button" data-flow-no="CMBC20260625001" data-flow-amount="25600" data-flow-total="25600" data-flow-name="张建国" data-flow-company="福建凯撒" data-flow-account="35120188000082473" data-flow-method="电汇" data-flow-time="2026-06-25 09:12">
+                <span class="claim-flow-option-main">
+                  <strong>张建国</strong>
+                  <small>CMBC20260625001 · 35120188000082473 · 电汇</small>
+                  <small>付款时间 2026-06-25 09:12</small>
+                </span>
+                <span class="claim-flow-option-amount">
+                  <strong>¥25,600</strong>
+                  <small>可认 ¥25,600</small>
+                </span>
+              </button>
+              <button class="claim-flow-option" type="button" data-flow-no="CASH20260625012" data-flow-amount="6400" data-flow-total="6400" data-flow-name="软件园门店" data-flow-company="福建凯撒" data-flow-account="软件园门店现金户" data-flow-method="现金收款" data-flow-time="2026-06-25 12:05">
+                <span class="claim-flow-option-main">
+                  <strong>软件园门店</strong>
+                  <small>CASH20260625012 · 软件园门店现金户 · 现金收款</small>
+                  <small>付款时间 2026-06-25 12:05</small>
+                </span>
+                <span class="claim-flow-option-amount">
+                  <strong>¥6,400</strong>
+                  <small>可认 ¥6,400</small>
+                </span>
+              </button>
+              <button class="claim-flow-option" type="button" data-flow-no="CMB20260623021" data-flow-amount="38400" data-flow-total="38400" data-flow-name="未识别" data-flow-company="福建凯撒" data-flow-account="招商银行收款户" data-flow-method="电汇" data-flow-time="2026-06-23 15:42">
+                <span class="claim-flow-option-main">
+                  <strong>未识别</strong>
+                  <small>CMB20260623021 · 招商银行收款户 · 电汇</small>
+                  <small>付款时间 2026-06-23 15:42</small>
+                </span>
+                <span class="claim-flow-option-amount">
+                  <strong>¥38,400</strong>
+                  <small>可认 ¥38,400</small>
+                </span>
+              </button>
+            </div>
+            <div id="claimFlowEmpty" class="claim-flow-empty">请输入客户名称、付款方、流水号或金额搜索待认流水</div>
+          </section>
+
+          <section id="claimProjectContext" class="claim-context-actions" hidden>
             <a class="table-action-primary" href="../finance/finance-receivable.html?source=customProject&amp;orderNo=KSMICE20260704001&amp;projectNo=MICE-20250623-001&amp;scheduleNo=MICE20250915001">查看应收</a>
             <a href="orders-detail.html?type=project&amp;source=customProject&amp;orderNo=KSMICE20260704001&amp;projectNo=MICE-20250623-001&amp;scheduleNo=MICE20250915001">查看订单</a>
             <a href="../tour/product-custom-detail.html?source=customProject&amp;projectNo=MICE-20250623-001&amp;projectName=某科技公司2025年会欧洲行&amp;customer=北京某科技有限公司&amp;orderNo=KSMICE20260704001&amp;scheduleNo=MICE20250915001&amp;projectStatus=已成团">查看项目</a>
             <button type="button" data-view-claim-flow>查看流水</button>
-          </div>
-        </section>
-
-        <section class="order-desc-card">
-          <div class="order-detail-section-head">
-            <h2 class="detail-section-title">选择流水</h2>
-            <span class="tag tag-orange">财务已上传</span>
-          </div>
-          <div class="filter-row">
-            <div class="filter-item">
-              <label class="sr-only" for="flowSearchName">客户名称</label>
-              <input id="flowSearchName" class="form-control" type="search" placeholder="客户名称/付款方">
-            </div>
-            <div class="filter-item">
-              <label class="sr-only" for="flowSearchAmount">流水总金额</label>
-              <input id="flowSearchAmount" class="form-control" type="search" placeholder="流水总金额">
-            </div>
-            <div class="filter-actions">
-              <button class="btn btn-secondary" type="button">搜索</button>
-              <button class="btn btn-secondary" type="button">重置</button>
-            </div>
-          </div>
-          <section class="table-wrap drawer-table-scroll drawer-table-cols-9">
-            <table>
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>客户名称</th>
-                  <th>流水号</th>
-                  <th>收款账号</th>
-                  <th>主体公司</th>
-                  <th>付款方式</th>
-                  <th>总金额</th>
-                  <th>可认金额</th>
-                  <th>付款时间</th>
-                </tr>
-              </thead>
-              <tbody id="claimFlowRows">
-                <tr data-flow-no="CMBC20260704088" data-flow-amount="571800" data-flow-name="北京某科技有限公司" data-flow-company="福建凯撒"><td><input type="radio" name="claimFlow"></td><td>北京某科技有限公司</td><td>CMBC20260704088</td><td>民生银行企业收款户</td><td>福建凯撒</td><td>对公转账</td><td class="amount-strong">¥571,800</td><td class="amount-strong">¥571,800</td><td>2026-07-04 11:06</td></tr>
-                <tr data-flow-no="CMBC20260625001" data-flow-amount="25600" data-flow-name="张建国" data-flow-company="福建凯撒"><td><input type="radio" name="claimFlow" checked></td><td>张建国</td><td>CMBC20260625001</td><td>35120188000082473</td><td>福建凯撒</td><td>电汇</td><td class="amount-strong">¥25,600</td><td class="amount-strong">¥25,600</td><td>2026-06-25 09:12</td></tr>
-                <tr data-flow-no="CASH20260625012" data-flow-amount="6400" data-flow-name="软件园门店" data-flow-company="福建凯撒"><td><input type="radio" name="claimFlow"></td><td>软件园门店</td><td>CASH20260625012</td><td>软件园门店现金户</td><td>福建凯撒</td><td>现金收款</td><td class="amount-strong">¥6,400</td><td class="amount-strong">¥6,400</td><td>2026-06-25 12:05</td></tr>
-                <tr data-flow-no="CMB20260623021" data-flow-amount="38400" data-flow-name="未识别" data-flow-company="福建凯撒"><td><input type="radio" name="claimFlow"></td><td>未识别</td><td>CMB20260623021</td><td>招商银行收款户</td><td>福建凯撒</td><td>电汇</td><td class="amount-strong">¥38,400</td><td class="amount-strong">¥38,400</td><td>2026-06-23 15:42</td></tr>
-              </tbody>
-            </table>
           </section>
         </section>
 
-        <section class="order-desc-card">
-          <div class="order-detail-section-head">
-            <h2 id="claimReceivableTitle" class="detail-section-title">分配订单应收</h2>
-            <span id="claimReceivableModeTag" class="tag tag-blue">可一笔流水认多单</span>
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <h3 id="claimReceivableTitle" class="drawer-section-title">分配订单应收</h3>
           </div>
-          <div class="filter-row">
-            <div class="filter-item">
-              <label class="sr-only" for="claimCustomerSearch">客户名称</label>
-              <input id="claimCustomerSearch" class="form-control" type="search" placeholder="客户名称">
-            </div>
-            <div class="filter-item">
-              <label class="sr-only" for="claimTourSearch">团号</label>
-              <input id="claimTourSearch" class="form-control" type="search" placeholder="团号">
-            </div>
-            <div class="filter-item">
-              <label class="sr-only" for="claimOrderSearch">订单号</label>
-              <input id="claimOrderSearch" class="form-control" type="search" placeholder="订单号">
-            </div>
-            <div class="filter-actions">
-              <button class="btn btn-secondary" type="button">搜索</button>
-              <button class="btn btn-secondary" type="button">重置</button>
-            </div>
+          <div class="claim-receivable-search">
+            <label class="sr-only" for="claimReceivableSearch">客户名称/订单号/团号</label>
+            <input id="claimReceivableSearch" class="form-control" type="search" placeholder="客户名称/订单号/团号">
           </div>
-          <section class="table-wrap drawer-table-scroll drawer-table-cols-8">
-            <table>
-              <thead>
-                <tr>
-                  <th><input id="claimOrderCheckAll" type="checkbox" aria-label="选择全部可认订单"></th>
-                  <th id="claimStockHead">团号</th>
-                  <th>订单号</th>
-                  <th>应收金额</th>
-                  <th>可认金额</th>
-                  <th>已认金额</th>
-                  <th>认款金额</th>
-                  <th>客户名称</th>
-                </tr>
-              </thead>
-              <tbody id="claimOrderRows">
-                <tr data-claim-type="customProject" data-project-no="MICE-20250623-001" data-stage="项目首款 / 锁定报价节点"><td><input type="checkbox" data-claim-order></td><td>MICE20250915001<br><span class="text-muted">项目首款 / 锁定报价节点</span></td><td>KSMICE20260704001<br><span class="text-muted">YS-MICE-20260704-001</span></td><td>¥571,800</td><td>¥571,800</td><td>¥0</td><td><input class="form-control" type="number" value="0" data-claim-amount></td><td>北京某科技有限公司</td></tr>
-                <tr data-claim-type="customProject" data-project-no="MICE-20250623-001" data-stage="项目进度款 / 锁定报价节点"><td><input type="checkbox" data-claim-order></td><td>MICE20250915001<br><span class="text-muted">项目进度款 / 锁定报价节点</span></td><td>KSMICE20260704001<br><span class="text-muted">YS-MICE-20260704-002</span></td><td>待合同确认</td><td>待触发</td><td>¥0</td><td><input class="form-control" type="number" value="0" data-claim-amount></td><td>北京某科技有限公司</td></tr>
-                <tr data-claim-type="customProject" data-project-no="MICE-20250623-001" data-stage="项目尾款 / 锁定报价节点"><td><input type="checkbox" data-claim-order></td><td>MICE20250915001<br><span class="text-muted">项目尾款 / 锁定报价节点</span></td><td>KSMICE20260704001<br><span class="text-muted">YS-MICE-20260704-003</span></td><td>待合同确认</td><td>待触发</td><td>¥0</td><td><input class="form-control" type="number" value="0" data-claim-amount></td><td>北京某科技有限公司</td></tr>
-                <tr><td><input type="checkbox" data-claim-order checked></td><td>EU20240715001</td><td>KS202406180001</td><td>¥25,600</td><td>¥25,600</td><td>¥0</td><td><input class="form-control" type="number" value="25600" data-claim-amount></td><td>张建国</td></tr>
-                <tr><td><input type="checkbox" data-claim-order></td><td>JP20240722001</td><td>KS202406180002</td><td>¥49,900</td><td>¥24,950</td><td>¥24,950</td><td><input class="form-control" type="number" value="0" data-claim-amount></td><td>李梅</td></tr>
-                <tr><td><input type="checkbox" data-claim-order></td><td>TH20240730001</td><td>KS202406180007</td><td>¥38,400</td><td>¥38,400</td><td>¥0</td><td><input class="form-control" type="number" value="0" data-claim-amount></td><td>王强</td></tr>
-                <tr><td><input type="checkbox" data-claim-order></td><td>WT20250701001</td><td>KS202406180017</td><td>¥7,200</td><td>¥7,200</td><td>¥0</td><td><input class="form-control" type="number" value="0" data-claim-amount></td><td>孙丽</td></tr>
-              </tbody>
-            </table>
-          </section>
-          <div class="finance-link-card">
-            <div class="finance-link-title">认款汇总</div>
-            <div class="finance-link-items">
-              <span id="claimCompanyScope" class="finance-link-item">主体公司 福建凯撒</span>
-              <span id="selectedFlowAmount" class="finance-link-item">已选流水可认金额 ¥25,600</span>
-              <span id="selectedOrderClaimAmount" class="finance-link-item">已选认款合计 ¥25,600</span>
-              <span id="claimDiffAmount" class="finance-link-item">差额 ¥0</span>
-            </div>
+          <div id="claimOrderRows" class="claim-order-card-list">
+            <article class="claim-order-card" data-claim-row data-claim-type="customProject" data-project-no="MICE-20250623-001" data-stage="项目首款 / 锁定报价节点" data-claim-receivable="571800" data-claim-available="571800" data-claim-claimed="0">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order></label>
+              <div class="claim-order-main">
+                <strong>北京某科技有限公司</strong>
+                <span>MICE20250915001 · KSMICE20260704001</span>
+                <span>项目首款 / 锁定报价节点 · YS-MICE-20260704-001</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>¥571,800</strong></span>
+                <span>已认 <strong>¥0</strong></span>
+                <span>可认 <strong>¥571,800</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="0" min="0" data-claim-amount>
+              </div>
+            </article>
+            <article class="claim-order-card" data-claim-row data-claim-type="customProject" data-project-no="MICE-20250623-001" data-stage="项目进度款 / 锁定报价节点" data-claim-receivable="0" data-claim-available="0" data-claim-claimed="0">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order></label>
+              <div class="claim-order-main">
+                <strong>北京某科技有限公司</strong>
+                <span>MICE20250915001 · KSMICE20260704001</span>
+                <span>项目进度款 / 锁定报价节点 · 待合同确认</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>待确认</strong></span>
+                <span>已认 <strong>¥0</strong></span>
+                <span>可认 <strong>待触发</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="0" min="0" data-claim-amount>
+              </div>
+            </article>
+            <article class="claim-order-card" data-claim-row data-claim-type="customProject" data-project-no="MICE-20250623-001" data-stage="项目尾款 / 锁定报价节点" data-claim-receivable="0" data-claim-available="0" data-claim-claimed="0">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order></label>
+              <div class="claim-order-main">
+                <strong>北京某科技有限公司</strong>
+                <span>MICE20250915001 · KSMICE20260704001</span>
+                <span>项目尾款 / 锁定报价节点 · 待合同确认</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>待确认</strong></span>
+                <span>已认 <strong>¥0</strong></span>
+                <span>可认 <strong>待触发</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="0" min="0" data-claim-amount>
+              </div>
+            </article>
+            <article class="claim-order-card" data-claim-row data-claim-receivable="25600" data-claim-available="25600" data-claim-claimed="0">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order checked></label>
+              <div class="claim-order-main">
+                <strong>张建国</strong>
+                <span>KS202406180001 · EU20240715001</span>
+                <span>欧洲十国经典游 · 主客付款</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>¥25,600</strong></span>
+                <span>已认 <strong>¥0</strong></span>
+                <span>可认 <strong>¥25,600</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="25600" min="0" data-claim-amount>
+              </div>
+            </article>
+            <article class="claim-order-card" data-claim-row data-claim-receivable="49900" data-claim-available="24950" data-claim-claimed="24950">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order></label>
+              <div class="claim-order-main">
+                <strong>李梅</strong>
+                <span>KS202406180002 · JP20240722001</span>
+                <span>日本关西深度游 · 部分尾款</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>¥49,900</strong></span>
+                <span>已认 <strong>¥24,950</strong></span>
+                <span>可认 <strong>¥24,950</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="0" min="0" data-claim-amount>
+              </div>
+            </article>
+            <article class="claim-order-card" data-claim-row data-claim-receivable="38400" data-claim-available="38400" data-claim-claimed="0">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order></label>
+              <div class="claim-order-main">
+                <strong>王强</strong>
+                <span>KS202406180007 · TH20240730001</span>
+                <span>泰国尾款 · 付款方摘要待确认</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>¥38,400</strong></span>
+                <span>已认 <strong>¥0</strong></span>
+                <span>可认 <strong>¥38,400</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="0" min="0" data-claim-amount>
+              </div>
+            </article>
+            <article class="claim-order-card" data-claim-row data-claim-receivable="7200" data-claim-available="7200" data-claim-claimed="0">
+              <label class="claim-order-check"><input type="checkbox" data-claim-order></label>
+              <div class="claim-order-main">
+                <strong>孙丽</strong>
+                <span>KS202406180017 · WT20250701001</span>
+                <span>单项服务 · 可直接认款</span>
+              </div>
+              <div class="claim-order-money">
+                <span>应收 <strong>¥7,200</strong></span>
+                <span>已认 <strong>¥0</strong></span>
+                <span>可认 <strong>¥7,200</strong></span>
+              </div>
+              <div class="claim-order-input">
+                <label>本次认款</label>
+                <input class="form-control" type="number" value="0" min="0" data-claim-amount>
+              </div>
+            </article>
           </div>
         </section>
 
-        <div class="form-group">
-          <label class="form-label">补充凭证</label>
-          <label class="upload-box">
-            <span data-upload-text>上传客户付款截图、聊天记录、银行回单或现金收据</span>
-            <input type="file" accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx" hidden data-upload-input>
-          </label>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="manualClaimRemark">认款说明</label>
-          <textarea id="manualClaimRemark" class="form-control" rows="4" placeholder="请说明认款依据、付款人与订单关系、拆分原因"></textarea>
-        </div>
-        <section class="finance-link-box">
-          <span id="manualClaimFinanceHint">财务联动：提交后生成认款申请，财务复核通过后更新应收余额、订单收款状态和资金流水占用。</span>
-        </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-payment-drawer>取消</button>
-        <button class="btn btn-primary" type="button" data-submit-manual-claim>提交认款申请</button>
+        <div class="claim-footer-summary">
+          <div>
+            <span>流水可认金额</span>
+            <strong id="selectedFlowAmount">¥0</strong>
+          </div>
+          <div>
+            <span>本次认款合计</span>
+            <strong id="selectedOrderClaimAmount">¥0</strong>
+          </div>
+          <div>
+            <span>差额</span>
+            <strong id="claimDiffAmount" class="amount-green">¥0</strong>
+          </div>
+        </div>
+        <div class="claim-footer-actions">
+          <button class="btn btn-secondary" type="button" data-close-payment-drawer>取消</button>
+          <button class="btn btn-primary" type="button" data-submit-manual-claim>提交认款申请</button>
+        </div>
       </div>
     </div>
   </div>
@@ -557,7 +670,8 @@
       var otaResultArea = document.getElementById('otaResultArea');
       var pageParams = new URLSearchParams(window.location.search);
       var currentClaimMode = 'order';
-      var currentFlowAmount = 25600;
+      var currentFlowAmount = 0;
+      var hasSelectedFlow = false;
 
       function plainText(node) {
         return (node ? node.textContent : '').replace(/\s+/g, ' ').trim();
@@ -587,7 +701,7 @@
       }
 
       function selectedFlowRow() {
-        return document.querySelector('#claimFlowRows input[name="claimFlow"]:checked')?.closest('tr') || document.querySelector('#claimFlowRows tr');
+        return document.querySelector('#claimFlowRows .claim-flow-option.active') || null;
       }
 
       function isProjectStageClaim() {
@@ -595,7 +709,7 @@
       }
 
       function rowIsProjectStage(row) {
-        return row && (row.dataset.claimType === 'customProject' || /单团项目|项目首款|项目进度款|项目尾款|MICE/i.test(plainText(row)));
+        return row && (row.dataset.claimType === 'customProject' || row.dataset.productType === '单团项目' || /单团项目|项目首款|项目进度款|项目尾款|MICE/i.test(plainText(row)));
       }
 
       function setInputValue(id, value) {
@@ -615,88 +729,181 @@
         });
       }
 
-      function syncClaimMode(mode) {
-        currentClaimMode = mode === 'projectStage' ? 'projectStage' : 'order';
-        var projectMode = isProjectStageClaim();
-        document.getElementById('manualClaimTitle').textContent = projectMode ? '项目阶段认款' : '添加认款';
-        document.getElementById('claimProjectContext').hidden = !projectMode;
-        document.getElementById('claimReceivableTitle').textContent = projectMode ? '分配项目阶段应收' : '分配订单应收';
-        document.getElementById('claimReceivableModeTag').textContent = projectMode ? '按阶段应收核销' : '可一笔流水认多单';
-        document.getElementById('claimStockHead').textContent = projectMode ? '项目团/阶段' : '团号';
-        document.getElementById('claimTourSearch').placeholder = projectMode ? '项目编号/项目团/阶段' : '团号';
-        document.getElementById('manualClaimFinanceHint').textContent = projectMode
-          ? '财务联动：提交后生成项目阶段认款申请，财务复核通过后按首款/进度款/尾款核销对应项目应收，并回写项目订单收款状态。'
-          : '财务联动：提交后生成认款申请，财务复核通过后更新应收余额、订单收款状态和资金流水占用。';
-        document.getElementById('manualClaimRemark').placeholder = projectMode ? '请说明付款公司、阶段节点、流水与项目应收的对应关系' : '请说明认款依据、付款人与订单关系、拆分原因';
-        document.querySelectorAll('#claimOrderRows tr').forEach(function (row) {
-          var isProject = rowIsProjectStage(row);
-          row.hidden = projectMode ? !isProject : isProject;
+      function claimRows() {
+        return Array.from(document.querySelectorAll('#claimOrderRows [data-claim-row]'));
+      }
+
+      function rowMatchesCurrentMode(row) {
+        var isProject = rowIsProjectStage(row);
+        return isProjectStageClaim() ? isProject : !isProject;
+      }
+
+      function resetReceivableSelection() {
+        claimRows().forEach(function (row) {
           var checkbox = row.querySelector('[data-claim-order]');
           var amount = row.querySelector('[data-claim-amount]');
           if (checkbox) checkbox.checked = false;
           if (amount) amount.value = 0;
+          updateOrderProgress(row);
         });
-        var targetFlow = Array.from(document.querySelectorAll('#claimFlowRows tr')).find(function (row) {
-          return projectMode ? /CMBC20260704088/.test(row.dataset.flowNo || '') : row.querySelector('input[name="claimFlow"]')?.checked;
-        }) || document.querySelector('#claimFlowRows tr');
-        if (targetFlow) {
-          var radio = targetFlow.querySelector('input[name="claimFlow"]');
-          if (radio) radio.checked = true;
+      }
+
+      function applyDefaultReceivableSelection() {
+        var firstReceivable = claimRows().find(function (row) {
+          return rowMatchesCurrentMode(row) && !row.hidden && moneyNumber(row.dataset.claimAvailable) > 0;
+        });
+        if (!firstReceivable) return;
+        var firstCheckbox = firstReceivable.querySelector('[data-claim-order]');
+        var firstAmount = firstReceivable.querySelector('[data-claim-amount]');
+        var available = moneyNumber(firstReceivable.dataset.claimAvailable);
+        if (firstCheckbox) firstCheckbox.checked = true;
+        if (firstAmount) firstAmount.value = Math.min(currentFlowAmount, available);
+        updateOrderProgress(firstReceivable);
+      }
+
+      function showFlowSelection() {
+        var panel = document.getElementById('claimFlowSelector');
+        var summary = document.getElementById('selectedFlowSummary');
+        var button = document.querySelector('[data-toggle-flow-selector]');
+        hasSelectedFlow = false;
+        currentFlowAmount = 0;
+        if (summary) summary.hidden = true;
+        if (panel) panel.hidden = false;
+        if (button) {
+          button.hidden = true;
+          button.textContent = '重新选择';
         }
-        var firstReceivable = Array.from(document.querySelectorAll('#claimOrderRows tr')).find(function (row) { return !row.hidden; });
-        if (firstReceivable) {
-          var firstCheckbox = firstReceivable.querySelector('[data-claim-order]');
-          var firstAmount = firstReceivable.querySelector('[data-claim-amount]');
-          if (firstCheckbox) firstCheckbox.checked = true;
-          if (firstAmount) firstAmount.value = projectMode ? 571800 : moneyNumber(firstReceivable.children[4].textContent);
+        document.querySelectorAll('#claimFlowRows .claim-flow-option').forEach(function (row) {
+          row.classList.remove('active');
+        });
+        setInputValue('flowSearchName', '');
+        setInputValue('flowSearchAmount', '');
+        filterFlowCards();
+        resetReceivableSelection();
+        updateClaimSummary();
+      }
+
+      function selectFlow(row) {
+        if (!row) return;
+        var panel = document.getElementById('claimFlowSelector');
+        var summary = document.getElementById('selectedFlowSummary');
+        var button = document.querySelector('[data-toggle-flow-selector]');
+        hasSelectedFlow = true;
+        if (summary) summary.hidden = false;
+        if (panel) panel.hidden = true;
+        if (button) {
+          button.hidden = false;
+          button.textContent = '重新选择';
         }
-        updateFlowSummary(targetFlow);
+        updateFlowSummary(row);
+        resetReceivableSelection();
+        applyDefaultReceivableSelection();
+        updateClaimSummary();
+      }
+
+      function filterReceivableCards() {
+        var input = document.getElementById('claimReceivableSearch');
+        var keyword = (input ? input.value : '').trim().toLowerCase();
+        claimRows().forEach(function (row) {
+          var matched = rowMatchesCurrentMode(row) && (!keyword || plainText(row).toLowerCase().indexOf(keyword) >= 0);
+          row.hidden = !matched;
+        });
+      }
+
+      function filterFlowCards() {
+        var keyword = (selectedFilterValue('flowSearchName') || '').trim().toLowerCase();
+        var amount = (selectedFilterValue('flowSearchAmount') || '').trim();
+        var hasQuery = !!keyword || !!amount;
+        var visibleCount = 0;
+        var empty = document.getElementById('claimFlowEmpty');
+        var list = document.getElementById('claimFlowRows');
+        document.querySelectorAll('#claimFlowRows .claim-flow-option').forEach(function (row) {
+          var text = plainText(row).toLowerCase();
+          var amountText = String(row.dataset.flowAmount || '') + moneyText(moneyNumber(row.dataset.flowAmount || 0));
+          var matched = hasQuery && (!keyword || text.indexOf(keyword) >= 0) && (!amount || amountText.indexOf(amount.replace(/[^\d]/g, '')) >= 0);
+          row.hidden = !matched;
+          if (matched) visibleCount += 1;
+        });
+        if (list) list.hidden = !hasQuery || visibleCount === 0;
+        if (empty) {
+          empty.hidden = hasQuery && visibleCount > 0;
+          empty.textContent = hasQuery ? '未找到匹配流水，请调整客户名称、付款方、流水号或金额' : '请输入客户名称、付款方、流水号或金额搜索待认流水';
+        }
+      }
+
+      function updateOrderProgress(row) {
+        if (!row) return;
+        var checkbox = row.querySelector('[data-claim-order]');
+        row.classList.toggle('is-selected', !!(checkbox && checkbox.checked));
+      }
+
+      function syncClaimMode(mode, actionTitle) {
+        currentClaimMode = mode === 'projectStage' ? 'projectStage' : 'order';
+        var projectMode = isProjectStageClaim();
+        document.getElementById('manualClaimTitle').textContent = actionTitle || (projectMode ? '阶段认款' : '添加认款');
+        document.getElementById('claimProjectContext').hidden = !projectMode;
+        document.getElementById('claimReceivableTitle').textContent = projectMode ? '分配项目阶段应收' : '分配订单应收';
+        document.getElementById('claimReceivableSearch').placeholder = projectMode ? '项目编号/项目团/阶段' : '客户名称/订单号/团号';
+        claimRows().forEach(function (row) {
+          var checkbox = row.querySelector('[data-claim-order]');
+          var amount = row.querySelector('[data-claim-amount]');
+          if (checkbox) checkbox.checked = false;
+          if (amount) amount.value = 0;
+          updateOrderProgress(row);
+        });
+        filterReceivableCards();
+        showFlowSelection();
       }
 
       function updateClaimSummary() {
         var total = 0;
-        document.querySelectorAll('#claimOrderRows tr').forEach(function (row) {
-          if (row.hidden) return;
+        claimRows().forEach(function (row) {
+          if (!rowMatchesCurrentMode(row)) return;
           var checked = row.querySelector('[data-claim-order]');
           var amount = row.querySelector('[data-claim-amount]');
           if (checked && checked.checked && amount) total += moneyNumber(amount.value);
+          updateOrderProgress(row);
         });
         var diff = currentFlowAmount - total;
-        document.getElementById('selectedOrderClaimAmount').textContent = '已选认款合计 ' + moneyText(total);
-        document.getElementById('claimDiffAmount').textContent = '差额 ' + moneyText(diff);
-        document.getElementById('claimDiffAmount').className = 'finance-link-item ' + (diff === 0 ? 'amount-green' : 'amount-red');
+        var diffNode = document.getElementById('claimDiffAmount');
+        document.getElementById('selectedFlowAmount').textContent = moneyText(currentFlowAmount);
+        document.getElementById('selectedOrderClaimAmount').textContent = moneyText(total);
+        diffNode.textContent = moneyText(diff);
+        diffNode.className = diff === 0 ? 'amount-green' : 'amount-red';
       }
 
       function updateFlowSummary(row) {
         var selected = row || selectedFlowRow();
         if (!selected) return;
         var company = selected.dataset.flowCompany || '福建凯撒';
-        currentFlowAmount = moneyNumber(selected.dataset.flowAmount || selected.children[7].textContent);
-        document.getElementById('selectedFlowSummary').innerHTML =
-          '<strong>' + selected.children[2].textContent.trim() + ' ｜ ' + moneyText(currentFlowAmount) + '</strong>' +
-          '<span>' + selected.children[8].textContent.trim() + ' 到账，主体公司 ' + company + '，付款方 ' + (selected.dataset.flowName || selected.children[1].textContent.trim()) + '</span>';
-        document.getElementById('claimCompanyScope').textContent = '主体公司 ' + company;
-        document.getElementById('selectedFlowAmount').textContent = '已选流水可认金额 ' + moneyText(currentFlowAmount);
-        updateClaimSummary();
+        currentFlowAmount = moneyNumber(selected.dataset.flowAmount);
+        document.querySelectorAll('#claimFlowRows .claim-flow-option').forEach(function (row) {
+          row.classList.toggle('active', row === selected);
+        });
+        document.getElementById('currentFlowAvailable').textContent = moneyText(currentFlowAmount);
+        document.getElementById('currentFlowTotal').textContent = moneyText(moneyNumber(selected.dataset.flowTotal || selected.dataset.flowAmount));
+        document.getElementById('currentFlowNo').textContent = selected.dataset.flowNo || '-';
+        document.getElementById('currentFlowAccount').textContent = selected.dataset.flowAccount || '-';
+        document.getElementById('currentFlowMethod').textContent = selected.dataset.flowMethod || '-';
+        document.getElementById('currentFlowTime').textContent = selected.dataset.flowTime || '-';
+        document.getElementById('currentFlowPayer').textContent = selected.dataset.flowName || '-';
+        document.getElementById('claimCompanyScope').textContent = company;
+        document.getElementById('selectedFlowAmount').textContent = moneyText(currentFlowAmount);
       }
 
-      function openManualClaim(row) {
+      function openManualClaim(row, actionTitle) {
         var projectContext = rowIsProjectStage(row) || pageParams.get('claimMode') === 'projectStage' || pageParams.get('type') === 'customProject' || pageParams.get('source') === 'customProject';
-        syncClaimMode(projectContext ? 'projectStage' : 'order');
+        syncClaimMode(projectContext ? 'projectStage' : 'order', actionTitle);
         if (row) {
           var idCell = row.querySelector('.claim-id-cell');
           var mainId = idCell ? plainText(idCell.querySelector('strong')) : '';
           var subId = idCell ? plainText(idCell.querySelector('.claim-cell-sub')) : '';
           var flowNo = row.dataset.tabStatus === '待认领' ? mainId : subId;
-          var flow = Array.from(document.querySelectorAll('#claimFlowRows tr')).find(function (item) {
+          var flow = Array.from(document.querySelectorAll('#claimFlowRows .claim-flow-option')).find(function (item) {
             return item.dataset.flowNo === flowNo;
           });
-          if (flow) {
-            var radio = flow.querySelector('input[name="claimFlow"]');
-            if (radio) radio.checked = true;
-          }
+          if (flow) selectFlow(flow);
         }
-        updateFlowSummary();
         window.caesarUI.openLayer(manualDrawer);
       }
 
@@ -740,12 +947,8 @@
         });
       }
 
-      document.getElementById('openOtaClaim').addEventListener('click', function () {
-        window.caesarUI.openLayer(otaDrawer);
-      });
-
       document.getElementById('openManualClaim').addEventListener('click', function () {
-        openManualClaim(null);
+        openManualClaim(null, '添加认款');
       });
 
       if (pageParams.get('orderNo')) setInputValue('claimKeyword', pageParams.get('orderNo'));
@@ -756,7 +959,7 @@
 
       document.querySelectorAll('[data-open-manual-claim]').forEach(function (button) {
         button.addEventListener('click', function () {
-          openManualClaim(button.closest('tr'));
+          openManualClaim(button.closest('tr'), plainText(button));
         });
       });
 
@@ -772,16 +975,16 @@
         });
       });
 
-      document.getElementById('claimFlowRows').addEventListener('change', function (event) {
-        if (event.target.matches('input[name="claimFlow"]')) updateFlowSummary(event.target.closest('tr'));
+      document.getElementById('claimFlowRows').addEventListener('click', function (event) {
+        selectFlow(event.target.closest('.claim-flow-option'));
       });
 
       document.getElementById('claimOrderRows').addEventListener('change', function (event) {
         if (event.target.matches('[data-claim-order]')) {
-          var row = event.target.closest('tr');
+          var row = event.target.closest('[data-claim-row]');
           var input = row.querySelector('[data-claim-amount]');
           if (input && event.target.checked && moneyNumber(input.value) === 0) {
-            input.value = moneyNumber(row.children[4].textContent);
+            input.value = moneyNumber(row.dataset.claimAvailable);
           }
         }
         updateClaimSummary();
@@ -789,22 +992,40 @@
 
       document.getElementById('claimOrderRows').addEventListener('input', function (event) {
         if (event.target.matches('[data-claim-amount]')) {
-          var row = event.target.closest('tr');
+          var row = event.target.closest('[data-claim-row]');
           var checkbox = row.querySelector('[data-claim-order]');
           if (checkbox && moneyNumber(event.target.value) > 0) checkbox.checked = true;
           updateClaimSummary();
         }
       });
 
-      document.getElementById('claimOrderCheckAll').addEventListener('change', function (event) {
-        document.querySelectorAll('#claimOrderRows [data-claim-order]').forEach(function (checkbox) {
-          if (checkbox.closest('tr').hidden) return;
-          checkbox.checked = event.target.checked;
-          var row = checkbox.closest('tr');
-          var input = row.querySelector('[data-claim-amount]');
-          if (input) input.value = event.target.checked ? moneyNumber(row.children[4].textContent) : 0;
+      document.querySelector('[data-toggle-flow-selector]').addEventListener('click', function () {
+        showFlowSelection();
+      });
+
+      document.querySelectorAll('#flowSearchName, #flowSearchAmount').forEach(function (input) {
+        input.addEventListener('input', filterFlowCards);
+      });
+
+      document.querySelector('[data-flow-reset]').addEventListener('click', function () {
+        setInputValue('flowSearchName', '');
+        setInputValue('flowSearchAmount', '');
+        filterFlowCards();
+      });
+
+      document.getElementById('claimReceivableSearch').addEventListener('input', filterReceivableCards);
+
+      document.querySelector('[data-flow-voucher-input]').addEventListener('change', function (event) {
+        var input = event.target;
+        var matchedFlow = Array.from(document.querySelectorAll('#claimFlowRows .claim-flow-option')).find(function (row) {
+          return row.dataset.flowNo === 'CMBC20260625001';
         });
-        updateClaimSummary();
+        if (!input.files || !input.files.length || !matchedFlow) return;
+        setInputValue('flowSearchName', matchedFlow.dataset.flowNo);
+        setInputValue('flowSearchAmount', '');
+        filterFlowCards();
+        selectFlow(matchedFlow);
+        showToast('已识别流水 ' + matchedFlow.dataset.flowNo);
       });
 
       document.querySelector('[data-submit-manual-claim]').addEventListener('click', function () {
@@ -856,9 +1077,9 @@
         showToast('OTA认款申请已提交，进入待财务复核');
       });
 
-      syncClaimMode(pageParams.get('claimMode') === 'projectStage' || pageParams.get('type') === 'customProject' || pageParams.get('source') === 'customProject' ? 'projectStage' : 'order');
-      if (isProjectStageClaim()) openManualClaim(null);
-      else updateFlowSummary();
+      syncClaimMode(pageParams.get('claimMode') === 'projectStage' || pageParams.get('type') === 'customProject' || pageParams.get('source') === 'customProject' ? 'projectStage' : 'order', '添加认款');
+      if (isProjectStageClaim()) openManualClaim(null, '添加认款');
+      else updateClaimSummary();
     })();
   </script>
 </body>

@@ -1637,6 +1637,11 @@
         window.localStorage.setItem(key, JSON.stringify(value));
       }
 
+      function storedOrderFor(orderNo) {
+        var store = readStored('caesarOrderFinanceEvents');
+        return store.orders && orderNo ? store.orders[orderNo] : null;
+      }
+
       function detailType(productType) {
         if (productType === '邮轮') return 'cruise';
         if (productType === '专列') return 'train';
@@ -2323,7 +2328,15 @@
           var order = store.orders[orderNo];
           if (!order || rowExists(orderNo)) return;
           var type = order.orderType || '参团游';
-          var href = 'orders-detail.html?type=' + detailType(type) + '&orderNo=' + encodeURIComponent(orderNo);
+          var baseParams = new URLSearchParams();
+          baseParams.set('type', detailType(type));
+          baseParams.set('orderNo', orderNo);
+          if (order.productName) baseParams.set('product', order.productName);
+          if (order.customer) baseParams.set('customer', order.customer);
+          if (order.sourceNo) baseParams.set('scheduleNo', order.sourceNo);
+          if (order.sourceDate) baseParams.set('travelDate', order.sourceDate);
+          if (order.amountValue) baseParams.set('amount', order.amountValue);
+          var href = 'orders-detail.html?' + baseParams.toString();
           if (type === '自由行') {
             var detailParams = new URLSearchParams();
             detailParams.set('type', 'free');
@@ -2333,6 +2346,7 @@
             if (order.routeText) detailParams.set('package', order.routeText);
             if (order.customer) detailParams.set('customer', order.customer);
             if (order.sourceNo || order.batchCode) detailParams.set('batch', order.sourceNo || order.batchCode);
+            if (order.amountValue) detailParams.set('amount', order.amountValue);
             href = 'orders-detail.html?' + detailParams.toString();
           }
           if (type === '单项服务') {
@@ -2342,6 +2356,7 @@
             if (order.sourceNo) singleParams.set('serviceNo', order.sourceNo);
             if (order.productName) singleParams.set('product', order.productName);
             if (order.customer) singleParams.set('customer', order.customer);
+            if (order.amountValue) singleParams.set('amount', order.amountValue);
             href = 'orders-detail.html?' + singleParams.toString();
           }
           var serviceNo = type === '单项服务' ? (order.sourceNo || order.lockNo || '') : '';
@@ -2368,6 +2383,8 @@
           row.dataset.paymentStatus = createdPaymentStatus;
           row.dataset.travelDate = order.sourceDate || '';
           row.dataset.package = order.routeText || '';
+          if (order.sourceNo) row.dataset.scheduleNo = order.sourceNo;
+          if (order.salesSnapshot && order.salesSnapshot.peopleCount) row.dataset.people = String(order.salesSnapshot.peopleCount);
           if (serviceNo) row.dataset.serviceNo = serviceNo;
           row.dataset.search = [
             orderNo,
@@ -2436,30 +2453,32 @@
         var orderLink = row.querySelector('a[href^="orders-detail"]');
         var orderNo = plainText(row.children[1]);
         orderNo = rowOrderNo(row) || orderNo;
+        var storedOrder = storedOrderFor(orderNo);
         var productCell = row.children[2];
         var productText = plainText(productCell.querySelector('.table-main-link')) || plainText(productCell);
-        var type = row.dataset.productType || plainText(productCell.querySelector('.tag')) || '参团游';
+        var type = (storedOrder && storedOrder.orderType) || row.dataset.productType || plainText(productCell.querySelector('.tag')) || '参团游';
         var contactText = rowAllText(row);
         var passengerMatch = contactText.match(/名单\d+\/(\d+)/) || contactText.match(/(\d+人|\d+学员)/);
         var passengers = row.dataset.people ? row.dataset.people + '人' : passengerMatch ? (passengerMatch[1].indexOf('人') >= 0 || passengerMatch[1].indexOf('学员') >= 0 ? passengerMatch[1] : passengerMatch[1] + '人') : '2人';
         return {
           row: row,
           orderNo: orderNo,
-          product: productText,
+          product: (storedOrder && storedOrder.productName) || productText,
           type: type,
-          plan: rowPackageName(row) || plainText(productCell),
-          customer: rowCustomer(row),
+          plan: (storedOrder && storedOrder.routeText) || rowPackageName(row) || plainText(productCell),
+          customer: (storedOrder && storedOrder.customer) || rowCustomer(row),
           resource: row.dataset.resourceStatus || '-',
           purchase: row.dataset.purchaseStatus || '-',
           docs: row.dataset.docStatus || '-',
-          receivable: receivable,
-          received: received,
+          receivable: (storedOrder && storedOrder.amount) || receivable,
+          received: (storedOrder && storedOrder.received) || received,
           orderStatus: row.dataset.orderStatus || plainText(orderStatusCell(row)),
           paymentStatus: row.dataset.paymentStatus || inferPaymentStatus(row),
           time: plainText(orderTimeCell(row)),
-          serviceNo: row.dataset.serviceNo || rowSchedule(row),
-          passengers: passengers,
-          detailHref: orderLink ? orderLink.getAttribute('href') : 'orders-detail.html'
+          serviceNo: (storedOrder && storedOrder.sourceNo) || row.dataset.serviceNo || rowSchedule(row),
+          passengers: storedOrder && storedOrder.salesSnapshot && storedOrder.salesSnapshot.peopleCount ? storedOrder.salesSnapshot.peopleCount + '人' : passengers,
+          detailHref: orderLink ? orderLink.getAttribute('href') : 'orders-detail.html',
+          salesSnapshot: storedOrder ? storedOrder.salesSnapshot : null
         };
       }
 
@@ -3269,6 +3288,21 @@
       }
 
       function receivableItemsFor(data, receivableAmount) {
+        var snapshot = data && data.salesSnapshot;
+        if (snapshot && snapshot.priceGroups && snapshot.priceGroups.length) {
+          var snapshotRows = [];
+          snapshot.priceGroups.forEach(function (group) {
+            (group.lines || []).forEach(function (line) {
+              if (!Number(line.amount || 0)) return;
+              snapshotRows.push([
+                String(snapshotRows.length + 1),
+                [group.title, line.label, line.quantity + '×' + moneyText(line.price)].filter(Boolean).join(' / '),
+                Number(line.amount || 0)
+              ]);
+            });
+          });
+          if (snapshotRows.length) return snapshotRows;
+        }
         var secondary = Math.min(Math.max(Math.round(receivableAmount * 0.02), 0), 1200);
         if (data.type === '单团项目') {
           return [
