@@ -540,12 +540,12 @@
       }
       function normalizeQuote(result, status) { var existing = quoteById(result.quoteId) || {}; return Object.assign({}, existing, result, { id: result.quoteId, status: status || existing.status || 'draft', createdBy: existing.createdBy || project.planner, updatedBy: project.planner, updatedAt: timestamp(), feedbacks: existing.feedbacks || [] }); }
       function upsertQuote(result, status) { var next = normalizeQuote(result, status); var index = quotes.findIndex(function (item) { return item.id === next.id; }); if (index >= 0) quotes[index] = next; else quotes.unshift(next); selectedQuoteId = next.id; }
-      function openQuoteDrawer(action, id) {
+      function openQuoteDrawer(action, id, actionTitle) {
         var item = id ? quoteById(id) : null;
         var sourceQuoteId = id || '';
         if (action === 'edit' && (!item || item.status !== 'draft')) { toast('仅草稿版本可以直接编辑。', 'warning'); return; }
         if (!window.caesarQuoteDrawer) return;
-        window.caesarQuoteDrawer.open({ projectNo: project.projectNo, projectName: project.name, customer: project.customer, dateText: project.travelStart + ' 至 ' + project.travelEnd, people: project.people, owner: project.owner, planner: project.planner, requirement: project.eventNeed, route: project.product || project.destination, serviceStandard: project.hotelNeed + '，' + project.vehicleNeed, quoteBasis: project.product ? '引用产品线路' : '手工方案', quotedAt: '2026-07-11', quoteVersion: quotes[0] ? quotes[0].version : 'V0', nextVersion: nextQuoteVersion(), action: action, quote: item || {} }, {
+        window.caesarQuoteDrawer.open({ projectNo: project.projectNo, projectName: project.name, customer: project.customer, dateText: project.travelStart + ' 至 ' + project.travelEnd, people: project.people, owner: project.owner, planner: project.planner, requirement: project.eventNeed, route: project.product || project.destination, serviceStandard: project.hotelNeed + '，' + project.vehicleNeed, quoteBasis: project.product ? '引用产品线路' : '手工方案', quotedAt: '2026-07-11', quoteVersion: quotes[0] ? quotes[0].version : 'V0', nextVersion: nextQuoteVersion(), action: action, actionTitle: actionTitle, quote: item || {} }, {
           onSave: function (result) { if (action === 'copy' && quoteById(sourceQuoteId)) quoteById(sourceQuoteId).status = 'replaced'; upsertQuote(result, 'draft'); project.status = 'quoting'; project.statusText = '报价中'; activeTab = 'quote'; renderAll(); switchTab('quote'); },
           onSubmit: function (result) { if (action === 'copy' && quoteById(sourceQuoteId)) quoteById(sourceQuoteId).status = 'replaced'; upsertQuote(result, 'pending-sales'); project.status = 'pending-sales'; project.statusText = '待销售确认'; activeTab = 'quote'; renderAll(); switchTab('quote'); toast('报价已提交销售确认。'); }
         });
@@ -646,11 +646,11 @@
         switchTab('quote');
         toast('报价已锁定。');
       }
-      function openCustomerQuotePreview(id) {
+      function openCustomerQuotePreview(id, actionTitle) {
         var quote = quoteById(id) || selectedQuote();
         if (!quote) return;
         selectedQuoteId = quote.id;
-        document.getElementById('customerQuotePreviewTitle').textContent = quote.version + ' / ' + quote.name + ' 客户报价单';
+        document.getElementById('customerQuotePreviewTitle').textContent = actionTitle || '客户版报价单';
         document.getElementById('customerQuotePreviewBody').innerHTML =
           '<section class="customer-quote-preview">' +
             '<div class="customer-quote-summary-grid">' +
@@ -710,13 +710,13 @@
         if (quoteAction) {
           var type = quoteAction.getAttribute('data-quote-action');
           var id = quoteAction.getAttribute('data-quote-id') || '';
-          if (type === 'new' || type === 'edit' || type === 'copy') openQuoteDrawer(type, id);
+          if (type === 'new' || type === 'edit' || type === 'copy') openQuoteDrawer(type, id, quoteAction.textContent.trim());
           else if (type === 'submit') { var draft = quoteById(id); if (draft) { draft.status = 'pending-sales'; draft.updatedAt = timestamp(); project.status = 'pending-sales'; project.statusText = '待销售确认'; selectedQuoteId = id; renderAll(); switchTab('quote'); toast('报价已提交销售确认。'); } }
           else if (type === 'void') { var voided = quoteById(id); if (voided) { voided.status = 'void'; voided.updatedAt = timestamp(); renderAll(); toast('报价版本已作废。'); } }
           else if (type === 'sales-confirm' || type === 'sales-return' || type === 'feedback') openActionDrawer(type, id);
           else if (type === 'lock') openLockModal(id);
           else if (type === 'view-lock') { selectedQuoteId = id; renderQuotes(); switchTab('quote'); }
-          else if (type === 'preview') openCustomerQuotePreview(id);
+          else if (type === 'preview') openCustomerQuotePreview(id, quoteAction.textContent.trim());
           return;
         }
         var projectAction = event.target.closest('[data-project-action]');

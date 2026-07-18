@@ -2296,6 +2296,12 @@
         });
       }
 
+      function actionTitleFromControl(control, fallback) {
+        var text = control ? String(control.getAttribute('data-drawer-title') || control.getAttribute('data-modal-title') || control.textContent || control.getAttribute('aria-label') || '') : '';
+        text = text.replace(/\s+/g, ' ').trim();
+        return text && !/^\d+$/.test(text) ? text : fallback;
+      }
+
       function addDays(value, days) {
         if (!value) return '';
         var date = new Date(value + 'T00:00:00');
@@ -2948,10 +2954,10 @@
         }
       }
 
-      function fillScheduleOrderDrawer(item) {
+      function fillScheduleOrderDrawer(item, actionTitle) {
         var summary = scheduleOrderSummary(item);
         var hasRisk = summary.pendingPay > 0 || summary.rosterPending > 0;
-        document.getElementById('scheduleOrderTitle').textContent = '团期订单概览';
+        document.getElementById('scheduleOrderTitle').textContent = actionTitle || '查看订单';
         document.getElementById('scheduleOrderName').textContent = item.code || '-';
         document.getElementById('scheduleOrderContext').textContent = (item.product || '-') + ' / ' + (item.route || '-') + ' / 出发 ' + (item.depart || '-') + ' / ' + batchTypeDisplay(item.batchType);
         document.getElementById('scheduleOrderTotal').textContent = summary.totalOrders + '单';
@@ -2993,14 +2999,14 @@
         return '../sales/booking.html?' + params.toString();
       }
 
-      function fillStockLineage(item) {
+      function fillStockLineage(item, actionTitle) {
         var unit = item.unit || '人';
         var stage = scheduleMainStage(item);
         var sold = stockNumber(item.sold);
         var stock = stockNumber(item.stock);
         var left = stockNumber(item.left);
         if (!left && stock >= sold) left = Math.max(stock - sold, 0);
-        document.getElementById('stockLineageTitle').textContent = '调整库存';
+        document.getElementById('stockLineageTitle').textContent = actionTitle || '调整库存';
         document.getElementById('stockLineageName').textContent = item.code || '-';
         document.getElementById('stockLineageContext').textContent = (item.product || '-') + ' / ' + (item.route || '-') + ' / 出发 ' + (item.depart || '-') + ' / ' + batchTypeDisplay(item.batchType);
         document.getElementById('stockLineageStatus').textContent = stage;
@@ -3395,10 +3401,10 @@
         scheduleChannelPricePill.className = hasError ? 'tag tag-orange' : 'tag tag-green';
       }
 
-      function fillSchedulePriceDrawer(item) {
+      function fillSchedulePriceDrawer(item, actionTitle) {
         var stage = scheduleMainStage(item);
         var status = priceStatusText(item);
-        document.getElementById('schedulePriceTitle').textContent = '团期定价';
+        document.getElementById('schedulePriceTitle').textContent = actionTitle || '团期定价';
         document.getElementById('schedulePriceName').textContent = item.code || '-';
         document.getElementById('schedulePriceContext').textContent = (item.product || '-') + ' / ' + (item.route || '-') + ' / 出发 ' + (item.depart || '-') + ' / ' + batchTypeDisplay(item.batchType);
         document.getElementById('schedulePriceStatus').textContent = status;
@@ -3459,9 +3465,9 @@
         ];
       }
 
-      function fillScheduleResourceDrawer(item) {
+      function fillScheduleResourceDrawer(item, actionTitle) {
         var project = isProjectGroup(item);
-        document.getElementById('scheduleResourceTitle').textContent = project ? '项目资源确认' : '资源/票务确认';
+        document.getElementById('scheduleResourceTitle').textContent = actionTitle || (project ? '项目资源确认' : '资源/票务确认');
         document.getElementById('resourceScheduleName').textContent = item.product + ' / ' + (item.route || '-');
         document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (project ? item.privateCustomer || '-' : item.planner || '-');
         document.getElementById('resourceRosterText').textContent = project ? stockText(item.stock, item.unit) + '项目人数，名单待导入' : stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
@@ -3488,10 +3494,10 @@
         ];
       }
 
-      function fillExecutionRosterDrawer(item) {
+      function fillExecutionRosterDrawer(item, actionTitle) {
         currentExecutionSchedule = item;
         var type = normalizeBatchType(item.batchType);
-        document.getElementById('executionRosterTitle').textContent = type === '邮轮航次' ? '游客名单' : type === '专列班期' ? '实名名单' : '名单管理';
+        document.getElementById('executionRosterTitle').textContent = actionTitle || (type === '邮轮航次' ? '游客名单' : type === '专列班期' ? '实名名单' : '名单管理');
         document.getElementById('executionRosterSummary').textContent = scheduleExecutionSummary(item);
         document.getElementById('executionRosterRows').innerHTML = scheduleGuestRows(item).map(function (row, index) {
           var phone = index === 0 ? '138****8899' : index === 1 ? '186****2234' : '135****6677';
@@ -3500,11 +3506,11 @@
         }).join('');
       }
 
-      function fillExecutionDocumentsDrawer(item) {
+      function fillExecutionDocumentsDrawer(item, actionTitle) {
         currentExecutionSchedule = item;
         var type = normalizeBatchType(item.batchType);
         var title = type === '邮轮航次' ? '登船资料' : type === '专列班期' ? '实名制资料' : '证件/签证';
-        document.getElementById('executionDocumentsTitle').textContent = title;
+        document.getElementById('executionDocumentsTitle').textContent = actionTitle || title;
         document.getElementById('executionDocumentsSummary').textContent = scheduleExecutionSummary(item);
         document.getElementById('executionDocumentsRows').innerHTML = scheduleGuestRows(item).map(function (row, index) {
           var pending = row.roster !== '已齐' || index === 1 && rosterStatusText(item) !== '已齐';
@@ -3514,10 +3520,10 @@
         }).join('');
       }
 
-      function fillExecutionNoticeDrawer(item) {
+      function fillExecutionNoticeDrawer(item, actionTitle) {
         currentExecutionSchedule = item;
         var rows = scheduleGuestRows(item);
-        document.getElementById('executionNoticeTitle').textContent = normalizeBatchType(item.batchType) === '邮轮航次' ? '发送登船通知' : normalizeBatchType(item.batchType) === '专列班期' ? '发送发车通知' : '发送出团通知';
+        document.getElementById('executionNoticeTitle').textContent = actionTitle || (normalizeBatchType(item.batchType) === '邮轮航次' ? '发送登船通知' : normalizeBatchType(item.batchType) === '专列班期' ? '发送发车通知' : '发送出团通知');
         document.getElementById('executionNoticeSummary').textContent = scheduleExecutionSummary(item);
         executionCheckAllGuests.checked = true;
         executionNoticeGuestList.innerHTML = rows.map(function (row) {
@@ -3548,10 +3554,10 @@
         ];
       }
 
-      function fillExecutionLeaderDrawer(item) {
+      function fillExecutionLeaderDrawer(item, actionTitle) {
         currentExecutionSchedule = item;
         var type = normalizeBatchType(item.batchType);
-        document.getElementById('executionLeaderTitle').textContent = type === '邮轮航次' ? '安排邮轮管家' : type === '专列班期' ? '安排随车领队' : '安排领队';
+        document.getElementById('executionLeaderTitle').textContent = actionTitle || (type === '邮轮航次' ? '安排邮轮管家' : type === '专列班期' ? '安排随车领队' : '安排领队');
         document.getElementById('executionLeaderSummary').textContent = scheduleExecutionSummary(item);
         document.getElementById('executionLeaderRule').textContent = type === '邮轮航次' ? '优先匹配邮轮登船经验、港口协调能力和岸上观光供应商熟悉度。' : type === '专列班期' ? '优先匹配专列带团经验、铁路站点协调能力和沿途地接熟悉度。' : '优先匹配线路经验、语言能力、出发日期无冲突和满意度。';
         document.getElementById('executionLeaderMeetTime').value = (item.depart || businessToday) + 'T07:30';
@@ -3562,23 +3568,23 @@
         }).join('');
       }
 
-      function openExecutionDrawer(item, key) {
+      function openExecutionDrawer(item, key, actionTitle) {
         currentExecutionSchedule = item;
         currentSchedule = item;
         if (key === 'roster') {
-          fillExecutionRosterDrawer(item);
+          fillExecutionRosterDrawer(item, actionTitle);
           window.caesarUI.openLayer(executionRosterDrawer);
         } else if (key === 'documents') {
-          fillExecutionDocumentsDrawer(item);
+          fillExecutionDocumentsDrawer(item, actionTitle);
           window.caesarUI.openLayer(executionDocumentsDrawer);
         } else if (key === 'resource') {
-          fillScheduleResourceDrawer(item);
+          fillScheduleResourceDrawer(item, actionTitle);
           window.caesarUI.openLayer(scheduleResourceDrawer);
         } else if (key === 'notice') {
-          fillExecutionNoticeDrawer(item);
+          fillExecutionNoticeDrawer(item, actionTitle);
           window.caesarUI.openLayer(executionNoticeDrawer);
         } else if (key === 'leader') {
-          fillExecutionLeaderDrawer(item);
+          fillExecutionLeaderDrawer(item, actionTitle);
           window.caesarUI.openLayer(executionLeaderDrawer);
         }
       }
@@ -5072,10 +5078,10 @@
         window.caesarUI.openLayer(createModal);
       }
 
-      function openEdit(item) {
+      function openEdit(item, actionTitle) {
         currentMode = 'edit';
         currentSchedule = item;
-        document.getElementById('createScheduleTitle').textContent = '编辑' + scheduleObjectName(item.batchType);
+        document.getElementById('createScheduleTitle').textContent = actionTitle || '编辑';
         saveSchedule.textContent = '确认保存';
         fillForm(item);
         window.caesarUI.openLayer(createModal);
@@ -5281,7 +5287,7 @@
         batchPreviewCapacityHead.textContent = config.capacityLabel;
         batchPreviewPriceHead.textContent = config.priceLabel;
         batchPreviewCapacityInputLabel.textContent = config.capacityLabel;
-        document.getElementById('batchPreviewEditTitle').textContent = '编辑' + config.capacityLabel;
+        document.getElementById('batchPreviewEditTitle').textContent = '编辑';
         document.getElementById('batchTypeSpecificPanel').hidden = !matrixHtml;
         if (matrixHtml) {
           batchTypeSpecificTitle.textContent = config.title;
@@ -6471,7 +6477,7 @@
         if (editButton && item) {
           currentSchedule = item;
           closeMenus();
-          openEdit(item);
+          openEdit(item, actionTitleFromControl(editButton, '编辑'));
           return;
         }
         if (copyButton && item) {
@@ -6493,7 +6499,7 @@
           if (item.saleStatus !== '开放报名' && (!item.price || item.price === '¥0' || moneyNumber(item.price) < schedulePriceFloor(item))) {
             currentSchedule = item;
             closeMenus();
-            fillSchedulePriceDrawer(item);
+            fillSchedulePriceDrawer(item, '确认价格');
             window.caesarUI.openLayer(schedulePriceDrawer);
             if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('发布销售前需完成价格校验', { type: 'warning' });
             return;
@@ -6512,7 +6518,7 @@
           event.stopPropagation();
           currentSchedule = item;
           closeMenus();
-          fillScheduleOrderDrawer(item);
+          fillScheduleOrderDrawer(item, actionTitleFromControl(scheduleOrderButton, '查看订单'));
           window.caesarUI.openLayer(scheduleOrderDrawer);
           return;
         }
@@ -6527,7 +6533,7 @@
           event.stopPropagation();
           currentSchedule = item;
           closeMenus();
-          fillSchedulePriceDrawer(item);
+          fillSchedulePriceDrawer(item, actionTitleFromControl(priceButton, '团期定价'));
           window.caesarUI.openLayer(schedulePriceDrawer);
           return;
         }
@@ -6535,7 +6541,7 @@
           event.stopPropagation();
           currentSchedule = item;
           closeMenus();
-          fillStockLineage(item);
+          fillStockLineage(item, actionTitleFromControl(stockAdjustButton, '调整库存'));
           window.caesarUI.openLayer(stockLineageDrawer);
           return;
         }
@@ -6543,21 +6549,21 @@
           event.preventDefault();
           event.stopPropagation();
           closeMenus();
-          openExecutionDrawer(item, 'roster');
+          openExecutionDrawer(item, 'roster', actionTitleFromControl(rosterButton, '名单'));
           return;
         }
         if (documentsButton && item) {
           event.preventDefault();
           event.stopPropagation();
           closeMenus();
-          openExecutionDrawer(item, 'documents');
+          openExecutionDrawer(item, 'documents', actionTitleFromControl(documentsButton, '证件/签证'));
           return;
         }
         if (executionResourceButton && item) {
           event.preventDefault();
           event.stopPropagation();
           closeMenus();
-          openExecutionDrawer(item, 'resource');
+          openExecutionDrawer(item, 'resource', actionTitleFromControl(executionResourceButton, '资源/票务确认'));
           return;
         }
         if (markDepartedButton && item) {

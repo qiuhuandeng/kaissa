@@ -36,6 +36,7 @@
     return currentContext.nextVersion || nextVersion(currentContext.quoteVersion || quote().version || 'V0');
   }
   function title() {
+    if (currentContext.actionTitle) return currentContext.actionTitle;
     if (currentContext.action === 'copy') return '复制报价版本';
     if (currentContext.action === 'edit') return '编辑报价草稿';
     return '新建报价版本';

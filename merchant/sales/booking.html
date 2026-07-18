@@ -109,7 +109,7 @@
               <div class="booking-mode-switch" role="group" aria-label="下单方式">
                 <button class="booking-mode-option active" type="button" data-booking-mode="standard">
                   <strong>选择已有产品下单</strong>
-                  <span>从产品、线路、团期/航次中选择</span>
+                  <span>从产品线路、团期/航次中选择</span>
                 </button>
                 <button class="booking-mode-option" type="button" data-booking-mode="manual">
                   <strong>手工填写产品下单</strong>
@@ -167,18 +167,23 @@
               </div>
 
               <div id="saleObjectSearchPanel" class="booking-product-search-panel" hidden>
-                <h2 id="bookingProductTitle" class="booking-section-title">选择产品</h2>
+                <div class="booking-route-search-head">
+                  <span class="booking-route-step-index">1</span>
+                  <div>
+                    <h2 id="bookingProductTitle">选择产品线路</h2>
+                  </div>
+                </div>
                 <div class="booking-product-search-control">
                   <span aria-hidden="true">⌕</span>
-                  <input id="objectKeyword" type="search" autocomplete="off" placeholder="搜索产品名称、目的地、编号...">
-                  <button id="clearProductSearch" class="booking-product-clear" type="button" aria-label="清除已选产品" hidden>×</button>
+                  <input id="objectKeyword" type="search" autocomplete="off" placeholder="搜索线路名称" aria-label="搜索线路名称">
+                  <button id="clearProductSearch" class="booking-product-clear" type="button" aria-label="清除已选产品线路" hidden>×</button>
                 </div>
                 <div id="objectSuggestionList" class="booking-product-suggestions" hidden></div>
               </div>
 
               <div id="bookingPresetPanel" class="booking-preset-panel booking-object-summary" hidden>
                 <div class="booking-preset-main">
-                  <span>已选可售对象</span>
+                  <span>已选产品线路</span>
                   <strong id="presetProductName">欧洲十国经典游·12天</strong>
                   <em id="presetProductMeta">线路 / 团期已从产品预订带入</em>
                 </div>
@@ -196,7 +201,7 @@
 
               <div id="saleObjectPicker" class="booking-object-picker" hidden>
                 <div id="planSelectBlock" class="booking-object-plan-block">
-                  <div class="booking-plan-title">线路</div>
+                  <div id="planSelectTitle" class="booking-plan-title">产品线路</div>
                   <div id="planCards" class="booking-plan-card-list"></div>
                 </div>
                 <div id="stockSelectSection" class="booking-object-stock-block" aria-labelledby="bookingStockTitle">
@@ -637,6 +642,7 @@
       const objectKeyword = document.getElementById('objectKeyword');
       const clearProductSearch = document.getElementById('clearProductSearch');
       const objectSuggestionList = document.getElementById('objectSuggestionList');
+      const planSelectTitle = document.getElementById('planSelectTitle');
       const planCards = document.getElementById('planCards');
       const coreFields = document.getElementById('coreFields');
       const stockRows = document.getElementById('stockRows');
@@ -1126,24 +1132,26 @@
       }
 
       function planOptions() {
-        const planField = currentProduct.core.find(function (field) {
-          return field.id === 'plan' || field.id === 'package' || field.id === 'line' || field.id === 'service';
-        });
-        return planField && planField.options ? planField.options : [currentProduct.name];
+        return planOptionsFromProduct(currentProduct);
       }
 
-      function planMeta(planName) {
-        if (currentProduct.type === 'single') {
+      function planMetaForProduct(product, planName) {
+        if (product.type === 'single') {
           if (/加急/.test(planName)) return { meta: '办理时效：5个工作日', badge: '时效：5D' };
           if (/翻译/.test(planName)) return { meta: '办理时效：3个工作日', badge: '时效：3D' };
           return { meta: '办理时效：8-10个工作日', badge: '时效：8D' };
         }
-        const match = String(planName + currentProduct.meta).match(/(\d+)\s*天/);
+        const match = String(planName + product.meta).match(/(\d+)\s*天/);
         const days = match ? match[1] : '12';
         return { meta: '行程时长：' + days + '天', badge: '天数：' + days + 'D' };
       }
 
+      function planMeta(planName) {
+        return planMetaForProduct(currentProduct, planName);
+      }
+
       function renderPlanCards() {
+        if (planSelectTitle) planSelectTitle.textContent = routeObjectLabel(currentProduct);
         planCards.innerHTML = planOptions().map(function (name, index) {
           const selected = index === selectedPlanIndex ? ' selected' : '';
           const meta = planMeta(name);
@@ -1315,7 +1323,7 @@
           document.getElementById('inventoryHint').className = 'tag tag-gray';
           document.getElementById('inventoryHint').textContent = '待选团期';
           document.getElementById('createOrder').disabled = true;
-          document.getElementById('createOrder').textContent = '请选择团期';
+          document.getElementById('createOrder').textContent = '请选择' + currentProduct.stockLabel;
           return;
         }
         const stock = selectedStock();
@@ -1348,8 +1356,8 @@
         });
         if (!showSummary) return;
         const stock = selectedStock();
-        presetProductName.textContent = currentProduct.name;
-        presetProductMeta.textContent = selectedPlanName() + ' / ' + currentProduct.stockLabel + ' ' + stock[1] + ' / ' + stock[0] + ' / ' + stock[2] + ' / ' + money(stock[3]);
+        presetProductName.textContent = selectedPlanName();
+        presetProductMeta.textContent = currentProduct.name + ' / ' + currentProduct.stockLabel + ' ' + stock[1] + ' / ' + stock[0] + ' / ' + stock[2] + ' / ' + money(stock[3]);
       }
 
       function renderAll() {
@@ -1396,16 +1404,58 @@
         presetStockOverride = null;
       }
 
-      function productSearchText(item) {
-        return (item.name + ' ' + item.meta + ' ' + item.tag + ' ' + item.stocks.map(function (row) { return row.join(' '); }).join(' ')).toLowerCase();
+      function routeObjectLabel(product) {
+        if (product.type === 'cruise') return '产品航线';
+        if (product.type === 'train') return '专列线路';
+        if (product.type === 'free') return '资源套餐';
+        if (product.type === 'single') return '服务项目';
+        if (product.type === 'customProject') return '锁定报价';
+        return '产品线路';
       }
 
-      function searchProducts(keyword) {
+      function planOptionsFromProduct(product) {
+        const planField = product.core.find(function (field) {
+          return field.id === 'plan' || field.id === 'package' || field.id === 'line' || field.id === 'service';
+        });
+        return planField && planField.options ? planField.options : [product.name];
+      }
+
+      function routeSearchRecords() {
+        return products.reduce(function (records, item) {
+          planOptionsFromProduct(item).forEach(function (routeName, planIndex) {
+            const meta = planMetaForProduct(item, routeName);
+            const stock = item.stocks[0] || [];
+            records.push({
+              product: item,
+              planIndex: planIndex,
+              routeName: routeName,
+              routeType: routeObjectLabel(item),
+              meta: meta,
+              stock: stock
+            });
+          });
+          return records;
+        }, []);
+      }
+
+      function routeSearchText(record) {
+        const stockText = record.product.stocks.map(function (row) { return row.join(' '); }).join(' ');
+        return [
+          record.routeName,
+          record.product.name,
+          record.product.meta,
+          record.product.tag,
+          record.routeType,
+          stockText
+        ].join(' ').toLowerCase();
+      }
+
+      function searchRoutes(keyword) {
         const value = String(keyword || '').trim().toLowerCase();
         if (!value) return [];
-        return products.filter(function (item) {
-          return productSearchText(item).indexOf(value) >= 0;
-        }).slice(0, 6);
+        return routeSearchRecords().filter(function (record) {
+          return routeSearchText(record).indexOf(value) >= 0;
+        }).slice(0, 8);
       }
 
       function renderSuggestions() {
@@ -1414,35 +1464,37 @@
           objectSuggestionList.innerHTML = '';
           return;
         }
-        const matches = searchProducts(objectKeyword.value);
+        const matches = searchRoutes(objectKeyword.value);
         objectSuggestionList.hidden = !objectKeyword.value.trim();
         if (!objectKeyword.value.trim()) {
           objectSuggestionList.innerHTML = '';
           return;
         }
         if (!matches.length) {
-          objectSuggestionList.innerHTML = '<div class="booking-product-no-result">未找到匹配产品</div>';
+          objectSuggestionList.innerHTML = '<div class="booking-product-no-result">未找到匹配线路</div>';
           return;
         }
-        objectSuggestionList.innerHTML = matches.map(function (item) {
-          const stock = item.stocks[0] || [];
-          return '<button class="booking-product-suggestion" type="button" data-product-id="' + item.id + '">' +
-            '<strong>' + escapeHtml(item.name) + '</strong>' +
-            '<span>' + escapeHtml(item.tag + ' / ' + item.meta + ' / ' + (stock[1] || item.stockLabel)) + '</span>' +
+        objectSuggestionList.innerHTML = matches.map(function (record) {
+          const stock = record.stock;
+          return '<button class="booking-product-suggestion" type="button" data-route-product-id="' + escapeHtml(record.product.id) + '" data-route-plan-index="' + record.planIndex + '">' +
+            '<strong>' + escapeHtml(record.routeName) + '</strong>' +
+            '<span>' + escapeHtml(record.product.name + ' / ' + record.product.tag + ' / ' + record.meta.meta + ' / ' + record.product.stockLabel + ' ' + (stock[1] || '待选')) + '</span>' +
             '<em>' + money(stock[3]) + '</em>' +
           '</button>';
         }).join('');
       }
 
-      function selectProduct(item) {
+      function selectRoute(record) {
+        if (!record || !record.product) return;
+        const item = record.product;
         currentProduct = cloneProduct(item);
-        selectedPlanIndex = 0;
+        selectedPlanIndex = Number(record.planIndex || 0);
         selectedStockIndex = 0;
         clearPresetContext();
         hasSaleObject = false;
         objectStep = 'pick';
         objectSuggestionList.hidden = true;
-        objectKeyword.value = item.name + ' / ' + item.tag;
+        objectKeyword.value = planOptions()[selectedPlanIndex] || item.name;
         renderAll();
       }
 
@@ -1497,7 +1549,7 @@
           if (startDate && endDate && endDate < startDate) missing.push('回团日期不能早于出团日期');
           if (serviceDate && finishDate && finishDate < serviceDate) missing.push('预计完成日期不能早于服务日期');
         } else if (!hasSaleObject) {
-          missing.push('可售对象');
+          missing.push(routeObjectLabel(currentProduct) + '/' + currentProduct.stockLabel);
         }
         Array.from(coreFields.querySelectorAll('[data-core-required="true"]')).forEach(function (field) {
           if (!field.value) missing.push(field.dataset.coreLabel || '必填项');
@@ -1708,16 +1760,16 @@
         objectKeyword.focus();
       });
       objectSuggestionList.addEventListener('click', function (event) {
-        const button = event.target.closest('[data-product-id]');
+        const button = event.target.closest('[data-route-product-id]');
         if (!button) return;
-        const product = products.find(function (item) { return item.id === button.dataset.productId; });
-        if (product) selectProduct(product);
+        const product = products.find(function (item) { return item.id === button.dataset.routeProductId; });
+        if (product) selectRoute({ product: product, planIndex: button.dataset.routePlanIndex });
       });
       objectKeyword.addEventListener('keydown', function (event) {
         if (event.key !== 'Enter') return;
         event.preventDefault();
-        const product = searchProducts(objectKeyword.value)[0];
-        if (product) selectProduct(product);
+        const route = searchRoutes(objectKeyword.value)[0];
+        if (route) selectRoute(route);
       });
       objectKeyword.addEventListener('input', function () {
         if (objectStep !== 'search') {

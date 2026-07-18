@@ -1457,9 +1457,9 @@
           modal.setAttribute('aria-hidden', 'true');
         }
       }
-      function setAfterSalesDrawer(kind) {
+      function setAfterSalesDrawer(kind, actionTitle) {
         const title = kind || '售后';
-        setText('aftersalesDrawerTitle', title + '申请');
+        setText('aftersalesDrawerTitle', actionTitle || title);
         setText('aftersalesDrawerSummary', isProjectOrder() && title === '项目变更' ? config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。项目变更会影响合同附件、阶段应收和项目团执行，审批通过后再交财务应收承接。' : config.orderNo + ' / ' + config.productName + ' / 当前收款 ' + config.paymentStatus[0]);
         setHtml('aftersalesDrawerFields', afterSalesFieldsHtml(title));
         const submit = document.querySelector('#aftersalesDrawer .modal-footer .btn-primary');
@@ -1518,15 +1518,17 @@
         }
         const drawerButton = event.target.closest('[data-open-drawer]');
         if (drawerButton) {
+          const drawerActionTitle = drawerButton.textContent.trim();
           if (drawerButton.dataset.openDrawer === 'travelerDrawer') {
             const travelerName = drawerButton.dataset.travelerName;
             const mode = drawerButton.dataset.travelerMode;
-            setText('travelerDrawerTitle', travelerName ? travelerName + (isProjectOrder() ? '名单维护' : (mode === 'material' ? '材料维护' : '资料维护')) : (isProjectOrder() ? '项目名单维护' : '游客信息维护'));
+            setText('travelerDrawerTitle', drawerActionTitle || (travelerName ? (isProjectOrder() ? '名单维护' : (mode === 'material' ? '材料维护' : '资料维护')) : (isProjectOrder() ? '项目名单维护' : '游客信息维护')));
             setText('travelerDrawerSummary', travelerName ? '当前维护：' + travelerName + (isProjectOrder() ? '。可在下方维护名单导入、资料状态、房型和交通分组。' : '。可在下方补齐证件、材料和当前产品类型所需资料。') : config.travelers.summary + (isProjectOrder() ? '。按客户分组维护项目名单、证件资料、房型和交通分组。' : '。按游客维护证件、材料和产品类型资料，保存后同步用于资料预检、合同资料和后续执行。'));
           }
-          if (drawerButton.dataset.openDrawer === 'aftersalesDrawer') setAfterSalesDrawer(drawerButton.dataset.aftersalesType || '退款');
+          if (drawerButton.dataset.openDrawer === 'aftersalesDrawer') setAfterSalesDrawer(drawerButton.dataset.aftersalesType || '退款', drawerActionTitle);
           if (drawerButton.dataset.openDrawer === 'attachmentDrawer') {
             const attachmentType = drawerButton.dataset.attachmentType;
+            setText('attachmentDrawerTitle', drawerActionTitle || '附件');
             setText('attachmentDrawerSummary', attachmentType ? '当前维护：' + attachmentType + (isProjectOrder() ? '。项目附件用于合同签署、阶段收款和回团结算承接。' : '。也可以在下方继续维护其他出行文件类型。') : (isProjectOrder() ? '按项目附件类型上传和维护，上传后在项目合同页、阶段收款和回团结算承接中查看。' : '按出行文件类型上传和维护，上传后在订单的合同资料页按分类查看。'));
           }
           openLayer(drawerButton.dataset.openDrawer);

@@ -30,6 +30,21 @@
     return field ? String(field.value || '').trim() : '';
   }
 
+  function normalizeTitle(next) {
+    return String(next || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function actionTitleFromTrigger(trigger, fallback) {
+    if (!trigger) return fallback;
+    return normalizeTitle(
+      trigger.getAttribute('data-drawer-title') ||
+      trigger.getAttribute('data-modal-title') ||
+      trigger.textContent ||
+      trigger.getAttribute('aria-label') ||
+      fallback
+    );
+  }
+
   function setValue(id, next) {
     var field = input(id);
     if (field && next !== undefined && next !== null) field.value = next;
@@ -416,9 +431,11 @@
     };
   }
 
-  function open(context) {
+  function open(context, options) {
     currentContext = Object.assign({}, context || {});
     var layer = ensureDrawer();
+    var title = normalizeTitle((options && options.title) || currentContext.actionTitle || '发起单团询价');
+    input('customInquiryDrawerTitle').textContent = title;
     applyContext(currentContext);
     openLayer(layer);
   }
@@ -427,7 +444,7 @@
     var trigger = event.target.closest('[data-open-custom-inquiry]');
     if (!trigger) return;
     event.preventDefault();
-    open(contextFromTrigger(trigger));
+    open(contextFromTrigger(trigger), { title: actionTitleFromTrigger(trigger, '发起单团询价') });
   });
 
   window.caesarInquiryDrawer = { open: open };

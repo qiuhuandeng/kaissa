@@ -202,7 +202,7 @@
   <div id="detailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal drawer-lg resource-procurement-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
       <div class="modal-header">
-        <div id="detailTitle" class="modal-title">交通采购合同详情</div>
+        <div id="detailTitle" class="modal-title">详情</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
       </div>
       <div class="modal-body">
@@ -1153,6 +1153,40 @@
         return Array.from((root || document).querySelectorAll(selector));
       }
 
+      var drawerTitleCapture = { title: '', time: 0 };
+
+      function normalizeActionTitle(value) {
+        return String(value || '').replace(/\s+/g, ' ').trim();
+      }
+
+      function triggerCanProvideDrawerTitle(trigger) {
+        if (!trigger) return false;
+        if (trigger.classList && trigger.classList.contains('modal-close')) return false;
+        if (trigger.hasAttribute && (trigger.hasAttribute('data-drawer-title') || trigger.hasAttribute('data-modal-title'))) return true;
+        if (trigger.matches && trigger.matches('button, [role="button"]')) return true;
+        return trigger.matches && trigger.matches('a.btn, a.table-action-primary, a.table-action-secondary, a.dropdown-item');
+      }
+
+      function actionTitleFromTrigger(trigger, fallback) {
+        var title = trigger ? normalizeActionTitle(
+          trigger.getAttribute('data-drawer-title') ||
+          trigger.getAttribute('data-modal-title') ||
+          trigger.textContent ||
+          trigger.getAttribute('aria-label') ||
+          ''
+        ) : '';
+        return title || fallback || '';
+      }
+
+      document.addEventListener('click', function (event) {
+        var trigger = event.target.closest ? event.target.closest('button, a, [role="button"], [data-drawer-title], [data-modal-title]') : null;
+        if (!triggerCanProvideDrawerTitle(trigger)) return;
+        var title = actionTitleFromTrigger(trigger, '');
+        if (!title) return;
+        drawerTitleCapture.title = title;
+        drawerTitleCapture.time = Date.now();
+      }, true);
+
       function escapeHtml(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
@@ -1832,8 +1866,18 @@
         $('#contractPagination').textContent = rows.length ? '第1-' + rows.length + '条/共' + rows.length + '条' : '第0-0条/共0条';
       }
 
-      function openLayer(layer) {
+      function applyLayerTitle(layer, title) {
         if (!layer) return;
+        var dialog = layer.querySelector('[role="dialog"][aria-labelledby]');
+        var titleNode = dialog ? document.getElementById(dialog.getAttribute('aria-labelledby')) : layer.querySelector('.modal-title');
+        var capturedFresh = drawerTitleCapture.title && Date.now() - drawerTitleCapture.time < 1400;
+        var nextTitle = normalizeActionTitle(title || (capturedFresh ? drawerTitleCapture.title : ''));
+        if (titleNode && nextTitle) titleNode.textContent = nextTitle;
+      }
+
+      function openLayer(layer, title) {
+        if (!layer) return;
+        applyLayerTitle(layer, title);
         layer.classList.add('show');
         layer.setAttribute('aria-hidden', 'false');
       }
@@ -1860,8 +1904,7 @@
         var risk = riskText(contract);
         var lifecycle = contractLifecycleStatus(contract);
         var unit = contractUnitText(contract);
-        var detailTitleMap = { '机票': '机票切位详情', '邮轮': '邮轮包舱详情', '专列': '专列包铺详情' };
-        $('#detailTitle').textContent = detailTitleMap[contract.type] || '交通采购详情';
+        $('#detailTitle').textContent = '详情';
         $('#detailMainName').textContent = contract.resourceName;
         $('#detailMainMeta').textContent = contract.contractNo + ' · ' + (contract.direction || '单程') + ' · ' + contract.route;
         $('#detailType').className = tagClass(contract.type);
@@ -1928,11 +1971,11 @@
         }).join('') : '<tr><td colspan="5">暂无待确认损耗</td></tr>';
       }
 
-      function openDetail(contractNo, tab) {
+      function openDetail(contractNo, tab, actionTitle) {
         selectedContractNo = contractNo;
         fillDetail(contractByNo(contractNo));
         activateDetailTab(tab || 'contract');
-        openLayer($('#detailDrawer'));
+        openLayer($('#detailDrawer'), actionTitle || '详情');
       }
 
       function currentCreateConfig() {
@@ -1970,7 +2013,7 @@
         var config = currentCreateConfig();
         $('#pageTitle').textContent = config.title;
         $('#openCreateContract').textContent = '新增' + config.title;
-        $('#createContractTitle').textContent = config.createTitle;
+        $('#createContractTitle').textContent = $('#openCreateContract').textContent;
         $('#listResourceHead').textContent = config.listResourceLabel;
         $('#listDepartHead').textContent = '出行/DL';
         $('#listInventoryHead').textContent = config.listInventoryLabel;
@@ -2335,7 +2378,7 @@
         created.slice().reverse().forEach(function (item) { contracts.unshift(item); });
         closeLayer($('#createContractDrawer'));
         renderContracts();
-        openDetail(contract.contractNo, 'inventory');
+        openDetail(contract.contractNo, 'inventory', '详情');
         toast(inboundNo ? '已保存去程/返程关联协议' : config.title + '已保存');
       }
 

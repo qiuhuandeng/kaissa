@@ -1224,18 +1224,19 @@
         return "";
       }
 
-      function modalTitleFor(action, item) {
-        if (action === "approve") return item.matter + "审批";
+      function modalTitleFor(action, item, actionTitle) {
+        if (actionTitle) return actionTitle;
+        if (action === "approve") return "审批";
         if (action === "progress") return "审批流转记录";
         if (action === "withdraw") return "撤回申请";
         if (action === "supplement") return "补充材料";
         return "审批详情";
       }
 
-      function openModal(item, action) {
+      function openModal(item, action, actionTitle) {
         activeApproval = item;
         activeAction = action;
-        modalTitle.textContent = modalTitleFor(action, item);
+        modalTitle.textContent = modalTitleFor(action, item, actionTitle);
         detailSectionTitle.textContent = action === "approve" ? "判断依据" : "申请内容";
         summaryGrid.innerHTML = summaryGridHtml(summaryItems(item));
         detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action));
@@ -1360,11 +1361,11 @@
         return approvals.find((item) => item.no === no);
       }
 
-      function openConfigModal(matter, action) {
+      function openConfigModal(matter, action, actionTitle) {
         const row = configItems.find((item) => item[0] === matter) || configItems[0];
         activeApproval = null;
         activeAction = "config";
-        modalTitle.textContent = action === "log" ? matter + "配置记录" : matter + "配置";
+        modalTitle.textContent = actionTitle || (action === "log" ? "记录" : "配置");
         summaryGrid.innerHTML = summaryGridHtml([
           ["审批事项", row[0]],
           ["适用模块", row[2]],
@@ -1462,13 +1463,13 @@
         const item = findApproval(button.dataset.approvalNo);
         if (!item) return;
         const action = button.dataset.approvalAction;
-        openModal(item, action);
+        openModal(item, action, button.textContent.trim());
       });
 
       configBody.addEventListener("click", (event) => {
         const button = event.target.closest("[data-config-action]");
         if (!button) return;
-        openConfigModal(button.dataset.configMatter, button.dataset.configAction);
+        openConfigModal(button.dataset.configMatter, button.dataset.configAction, button.textContent.trim());
       });
 
       document.querySelectorAll("[data-close-approval-modal]").forEach((button) => {

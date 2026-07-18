@@ -1066,7 +1066,7 @@
         toast('报价已提交销售确认。');
       }
 
-      function openQuoteVersionDrawer(row, action, sourceQuote) {
+      function openQuoteVersionDrawer(row, action, sourceQuote, actionTitle) {
         var data = readRow(row);
         if (!window.caesarQuoteDrawer) {
           toast('报价抽屉组件未加载，请刷新后重试。', 'warning');
@@ -1090,6 +1090,7 @@
           quoteVersion: sourceQuote.version || quoteVersionFromText(data.quote) || 'V0',
           nextVersion: nextQuoteVersionForRow(data),
           action: action,
+          actionTitle: actionTitle,
           quote: sourceQuote
         }, {
           onSave: function (result) {
@@ -1491,7 +1492,7 @@
           phone: params.get('phone') || '',
           projectName: params.get('projectName') || params.get('customer') + '单团询价',
           owner: params.get('owner') || ''
-        });
+        }, { title: '新建单团询价' });
       }
 
       document.getElementById('applyCustomFilters').addEventListener('click', applyFilters);
@@ -1550,7 +1551,7 @@
           if (quoteAction === 'submit') {
             submitQuoteVersionFromWorkbench(quoteRow, quoteItem);
           } else {
-            openQuoteVersionDrawer(quoteRow, quoteAction, quoteItem || {});
+            openQuoteVersionDrawer(quoteRow, quoteAction, quoteItem || {}, quoteWorkbenchAction.textContent.trim());
           }
           return;
         }

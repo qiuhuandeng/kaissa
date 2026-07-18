@@ -116,22 +116,27 @@
     });
   }
 
+  function triggerCanProvideDrawerTitle(trigger) {
+    if (!trigger) return false;
+    if (trigger.hasAttribute && (trigger.hasAttribute("data-drawer-title") || trigger.hasAttribute("data-modal-title"))) return true;
+    if (trigger.matches && trigger.matches("button, [role='button']")) return true;
+    return trigger.matches && trigger.matches("a.btn, a.table-action-primary, a.table-action-secondary, a.dropdown-item");
+  }
+
   function drawerTitleFromTrigger(trigger) {
     if (!trigger) return "";
     return normalizeActionTitle(
       trigger.getAttribute("data-drawer-title") ||
-      normalizeActionTitle(trigger.textContent) ||
       trigger.getAttribute("data-modal-title") ||
+      normalizeActionTitle(trigger.textContent) ||
       trigger.getAttribute("aria-label") ||
       ""
     );
   }
 
   function rememberDrawerTitleTrigger(event) {
-    let trigger = event.target && event.target.closest ? event.target.closest("button, a, [role='button'], [data-drawer-title]") : null;
-    while (trigger && trigger !== document.documentElement && !triggerHasLayerIntent(trigger)) {
-      trigger = trigger.parentElement;
-    }
+    const trigger = event.target && event.target.closest ? event.target.closest("button, a, [role='button'], [data-drawer-title], [data-modal-title]") : null;
+    if (!triggerCanProvideDrawerTitle(trigger)) return;
     const title = drawerTitleFromTrigger(trigger);
     if (!title) return;
     drawerTitleCapture.title = title;
@@ -172,9 +177,10 @@
     const capturedFresh = drawerTitleCapture.title && Date.now() - drawerTitleCapture.time < 1400;
     return normalizeActionTitle(
       (options && options.title) ||
+      (capturedFresh ? drawerTitleCapture.title : "") ||
       (dialog && dialog.getAttribute("data-drawer-title")) ||
       (layer && layer.getAttribute && layer.getAttribute("data-drawer-title")) ||
-      (capturedFresh ? drawerTitleCapture.title : "")
+      ""
     );
   }
 
