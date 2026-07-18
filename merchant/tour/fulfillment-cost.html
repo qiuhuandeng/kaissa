@@ -363,9 +363,17 @@
 
           <section class="order-desc-card settlement-basis-section drawer-tab-panel" data-settlement-doc-panel="cost" hidden>
             <div class="drawer-section-head"><h3 class="drawer-section-title">成本明细</h3></div>
-            <section class="table-wrap fulfillment-cost-inner-table settlement-cost-detail-table drawer-table-scroll drawer-table-cols-14">
+            <section class="table-wrap fulfillment-cost-inner-table settlement-cost-detail-table drawer-table-fit drawer-table-cols-6">
               <table>
-                <thead><tr><th>供应商</th><th>费用项目</th><th>币种</th><th>单价</th><th>数量</th><th>原币金额</th><th>汇率</th><th>本币金额</th><th>已付金额</th><th>未付金额</th><th>附件</th><th>状态</th><th>结算状态</th><th>结算次数</th></tr></thead>
+                <colgroup>
+                  <col class="settlement-cost-detail-col-supplier">
+                  <col class="settlement-cost-detail-col-item">
+                  <col class="settlement-cost-detail-col-pricing">
+                  <col class="settlement-cost-detail-col-amount">
+                  <col class="settlement-cost-detail-col-payment">
+                  <col class="settlement-cost-detail-col-status">
+                </colgroup>
+                <thead><tr><th>供应商</th><th>费用项目</th><th>计价口径</th><th>金额折算</th><th>付款余额</th><th>凭证/结算</th></tr></thead>
                 <tbody id="settlementCostRows"></tbody>
               </table>
             </section>
@@ -2889,25 +2897,19 @@
       function renderSettlementCostRows(schedule) {
         var rows = settlementCostDetailRows(schedule);
         if (!rows.length) {
-          document.getElementById('settlementCostRows').innerHTML = '<tr><td colspan="14" class="text-muted">暂无成本明细，需先维护团期成本。</td></tr>';
+          document.getElementById('settlementCostRows').innerHTML = '<tr><td colspan="6" class="text-muted">暂无成本明细，需先维护团期成本。</td></tr>';
           return;
         }
         document.getElementById('settlementCostRows').innerHTML = rows.map(function (row) {
+          var rateText = row.currency === 'CNY' ? '本币计价' : ('汇率 ' + row.rate);
+          var attachmentHtml = row.attachments ? '<button class="table-action-primary" type="button" data-toast="已打开成本附件">' + row.attachments + '份附件</button>' : '<span class="text-muted">待上传</span>';
           return '<tr>' +
-            '<td>' + escapeHtml(row.supplier || '-') + '</td>' +
-            '<td><strong>' + escapeHtml(row.item || '-') + '</strong><span class="text-muted schedule-route-name">' + escapeHtml(row.note || '-') + '</span></td>' +
-            '<td>' + escapeHtml(row.currency) + '</td>' +
-            '<td>' + escapeHtml(row.unit) + '</td>' +
-            '<td>' + escapeHtml(row.quantity || '-') + '</td>' +
-            '<td>' + escapeHtml(row.originalAmount) + '</td>' +
-            '<td>' + (row.currency === 'CNY' ? '-' : row.rate) + '</td>' +
-            '<td class="amount-strong">' + money(row.localAmount) + '</td>' +
-            '<td>' + money(row.paid) + '</td>' +
-            '<td>' + money(row.pending) + '</td>' +
-            '<td>' + (row.attachments ? '<button class="table-action-primary" type="button" data-toast="已打开成本附件">' + row.attachments + '份</button>' : '<span class="text-muted">待上传</span>') + '</td>' +
-            '<td>' + tag(row.status) + '</td>' +
-            '<td>' + tag(row.settlementStatus) + '</td>' +
-            '<td>' + escapeHtml(row.round) + '</td>' +
+            '<td><div class="cost-cell-stack"><strong>' + escapeHtml(row.supplier || '-') + '</strong><span class="cost-cell-sub">' + escapeHtml(row.currency || '-') + '</span></div></td>' +
+            '<td><div class="cost-cell-stack"><strong>' + escapeHtml(row.item || '-') + '</strong><span class="cost-cell-sub">' + escapeHtml(row.note || '-') + '</span></div></td>' +
+            '<td><div class="cost-cell-stack"><span>' + escapeHtml(row.unit) + '</span><span class="cost-cell-sub">数量 ' + escapeHtml(row.quantity || '-') + '</span></div></td>' +
+            '<td><div class="cost-cell-stack"><strong class="amount-strong">' + money(row.localAmount) + '</strong><span class="cost-cell-sub">' + escapeHtml(row.originalAmount) + ' · ' + escapeHtml(rateText) + '</span></div></td>' +
+            '<td><div class="cost-cell-stack"><span>已付 ' + money(row.paid) + '</span><strong>未付 ' + money(row.pending) + '</strong></div></td>' +
+            '<td><div class="cost-cell-stack">' + attachmentHtml + '<span class="cost-status-line">' + tag(row.status) + tag(row.settlementStatus) + '<span class="cost-cell-sub">第' + escapeHtml(row.round) + '次</span></span></div></td>' +
           '</tr>';
         }).join('');
       }
