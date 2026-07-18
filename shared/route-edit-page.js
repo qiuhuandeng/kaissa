@@ -325,6 +325,213 @@
     });
   }
 
+  var destinationTreeOptions = [
+    {
+      value: '欧洲',
+      label: '欧洲',
+      children: [
+        { value: '欧洲 / 法国', label: '法国', children: [{ value: '欧洲 / 法国 / 巴黎', label: '巴黎' }] },
+        { value: '欧洲 / 意大利', label: '意大利', children: [{ value: '欧洲 / 意大利 / 罗马', label: '罗马' }] },
+        { value: '欧洲 / 地中海', label: '地中海', children: [] }
+      ]
+    },
+    {
+      value: '东南亚',
+      label: '东南亚',
+      children: [
+        { value: '东南亚 / 泰国', label: '泰国', children: [{ value: '东南亚 / 泰国 / 曼谷', label: '曼谷' }] }
+      ]
+    },
+    {
+      value: '国内',
+      label: '国内',
+      children: [
+        { value: '国内 / 西北', label: '西北', children: [{ value: '国内 / 西北 / 敦煌', label: '敦煌' }] }
+      ]
+    }
+  ];
+
+  function destinationTreeSelectHtml(id, selectedValues) {
+    var selected = selectedValues || [];
+    var triggerId = id + 'Trigger';
+    var firstSelected = selected[0] || '';
+    var firstParts = firstSelected.split(' / ');
+    var activeRoot = firstParts[0] || '欧洲';
+    var activeBranch = firstParts.length > 1 ? firstParts.slice(0, 2).join(' / ') : '';
+    var labelText = selected.length ? selected.join('、') : '请选择目的地分类';
+    return [
+      '<div class="form-group">',
+      '<label class="form-label" for="' + htmlEscape(triggerId) + '">目的地分类 <span class="req">*</span></label>',
+      '<input id="' + htmlEscape(id) + '" type="hidden" value="' + htmlEscape(selected.join('|')) + '" data-destination-tree-value>',
+      '<div class="multi-select route-destination-tree-select" data-destination-tree data-destination-root="' + htmlEscape(activeRoot) + '" data-destination-branch="' + htmlEscape(activeBranch) + '">',
+      '<button id="' + htmlEscape(triggerId) + '" class="multi-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" data-destination-tree-trigger>',
+      '<span data-destination-tree-label>' + htmlEscape(labelText) + '</span>',
+      '</button>',
+      '<div class="multi-select-menu destination-cascade-menu" role="listbox" aria-label="目的地分类"></div>',
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function destinationSelectedValues(select) {
+    var valueInput = select && select.parentElement && select.parentElement.querySelector('[data-destination-tree-value]');
+    return (valueInput && valueInput.value || '').split('|').map(function (item) {
+      return item.trim();
+    }).filter(Boolean);
+  }
+
+  function setDestinationSelectedValue(select, value, checked) {
+    var valueInput = select && select.parentElement && select.parentElement.querySelector('[data-destination-tree-value]');
+    if (!valueInput) return;
+    var values = destinationSelectedValues(select).filter(function (item) {
+      return item !== value;
+    });
+    if (checked) values.push(value);
+    valueInput.value = values.join('|');
+  }
+
+  function findDestinationNode(value, nodes) {
+    var list = nodes || destinationTreeOptions;
+    for (var index = 0; index < list.length; index += 1) {
+      if (list[index].value === value) return list[index];
+      var child = findDestinationNode(value, list[index].children || []);
+      if (child) return child;
+    }
+    return null;
+  }
+
+  function destinationOptionHtml(node, level, selectedValues, activeValue) {
+    var hasChildren = node.children && node.children.length;
+    var isSelected = selectedValues.indexOf(node.value) >= 0;
+    var checked = isSelected ? ' checked' : '';
+    var active = node.value === activeValue ? ' active' : '';
+    return [
+      '<div class="destination-cascade-option' + active + (isSelected ? ' is-selected' : '') + (hasChildren ? ' has-children' : '') + '" data-destination-option data-destination-level="' + level + '" data-destination-value="' + htmlEscape(node.value) + '">',
+      '<label><input type="checkbox" value="' + htmlEscape(node.value) + '" data-destination-checkbox' + checked + '><span>' + htmlEscape(node.label) + '</span></label>',
+      hasChildren ? '<button type="button" aria-label="查看下级" data-destination-drill>›</button>' : '<i aria-hidden="true"></i>',
+      '</div>'
+    ].join('');
+  }
+
+  function ensureDestinationCascadeActive(select) {
+    var selectedValues = destinationSelectedValues(select);
+    var firstSelected = selectedValues[0] || '';
+    if (!select.dataset.destinationRoot) select.dataset.destinationRoot = firstSelected.split(' / ')[0] || (destinationTreeOptions[0] && destinationTreeOptions[0].value) || '';
+    var rootNode = findDestinationNode(select.dataset.destinationRoot) || destinationTreeOptions[0];
+    if (!rootNode) return;
+    select.dataset.destinationRoot = rootNode.value;
+    if (!select.dataset.destinationBranch || !(rootNode.children || []).some(function (child) { return child.value === select.dataset.destinationBranch; })) {
+      var parts = firstSelected.split(' / ');
+      var branchValue = parts.length > 1 ? parts.slice(0, 2).join(' / ') : '';
+      var branchNode = (rootNode.children || []).find(function (child) { return child.value === branchValue; }) || (rootNode.children || [])[0];
+      select.dataset.destinationBranch = branchNode ? branchNode.value : '';
+    }
+  }
+
+  function renderDestinationCascade(select) {
+    if (!select) return;
+    ensureDestinationCascadeActive(select);
+    var menu = select.querySelector('.destination-cascade-menu');
+    if (!menu) return;
+    var selectedValues = destinationSelectedValues(select);
+    var rootNode = findDestinationNode(select.dataset.destinationRoot) || destinationTreeOptions[0];
+    var branchNode = findDestinationNode(select.dataset.destinationBranch);
+    var secondLevel = rootNode && rootNode.children || [];
+    var thirdLevel = branchNode && branchNode.children || [];
+    menu.innerHTML = [
+      '<div class="destination-cascade-column">',
+      destinationTreeOptions.map(function (node) { return destinationOptionHtml(node, 0, selectedValues, rootNode && rootNode.value); }).join(''),
+      '</div>',
+      '<div class="destination-cascade-column">',
+      secondLevel.length ? secondLevel.map(function (node) { return destinationOptionHtml(node, 1, selectedValues, branchNode && branchNode.value); }).join('') : '<div class="destination-cascade-empty">暂无下级</div>',
+      '</div>',
+      '<div class="destination-cascade-column">',
+      thirdLevel.length ? thirdLevel.map(function (node) { return destinationOptionHtml(node, 2, selectedValues, ''); }).join('') : '<div class="destination-cascade-empty">暂无下级</div>',
+      '</div>'
+    ].join('');
+    alignDestinationCascade(select);
+  }
+
+  function alignDestinationCascade(select) {
+    if (!select) return;
+    var menuWidth = Math.min(680, Math.max(0, window.innerWidth - 64));
+    var rect = select.getBoundingClientRect();
+    var container = select.closest('.modal-body, .route-form-section, .route-blue-card, .edit-form-card, .pricing-drawer, main') || document.documentElement;
+    var containerRect = container.getBoundingClientRect ? container.getBoundingClientRect() : { left: 16, right: window.innerWidth - 16 };
+    var rightLimit = Math.min(window.innerWidth - 16, containerRect.right - 16);
+    var leftLimit = Math.max(16, containerRect.left + 16);
+    var shouldAlignRight = rect.left + menuWidth > rightLimit && rect.right - menuWidth >= leftLimit;
+    select.classList.toggle('destination-cascade-align-right', shouldAlignRight);
+  }
+
+  function activateDestinationCascadeOption(select, value, level) {
+    var node = findDestinationNode(value);
+    if (!node) return;
+    if (level === 0) {
+      select.dataset.destinationRoot = node.value;
+      select.dataset.destinationBranch = (node.children && node.children[0] && node.children[0].value) || '';
+    }
+    if (level === 1) {
+      select.dataset.destinationBranch = node.value;
+    }
+    renderDestinationCascade(select);
+  }
+
+  function syncDestinationTreeSelect(select) {
+    if (!select) return;
+    var values = destinationSelectedValues(select);
+    var label = select.querySelector('[data-destination-tree-label]');
+    if (label) label.textContent = values.length ? values.join('、') : '请选择目的地分类';
+  }
+
+  function closeDestinationTreeSelects(except) {
+    page.querySelectorAll('[data-destination-tree].open').forEach(function (select) {
+      if (except && select === except) return;
+      select.classList.remove('open');
+      var trigger = select.querySelector('[data-destination-tree-trigger]');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function initDestinationTreeSelects() {
+    page.querySelectorAll('[data-destination-tree]').forEach(function (select) {
+      renderDestinationCascade(select);
+      syncDestinationTreeSelect(select);
+    });
+  }
+
+  function renderProductTargetHtml(config) {
+    var settings = config || {};
+    var departOptions = settings.departOptions || ['北京', '上海', '广州', '成都', '全国'];
+    var tags = settings.tags || [];
+    var selectedDestinations = settings.destinations || [];
+    return [
+      '<div class="route-subsection-titlebar"><h3 class="route-subsection-title">目的地与目标客群</h3></div>',
+      '<div class="route-field-grid">',
+      '<div class="form-group">',
+      '<label class="form-label" for="departCity">出发地 <span class="req">*</span></label>',
+      '<select id="departCity" class="form-control">',
+      selectedOptionHtml(departOptions, settings.departCity || departOptions[0]),
+      '</select>',
+      '</div>',
+      destinationTreeSelectHtml('destinationTree', selectedDestinations),
+      '<div class="form-group route-field-full">',
+      '<label class="form-label">主题标签</label>',
+      '<div class="route-chip-field">',
+      tags.map(function (tag) {
+        return '<span class="route-chip">' + htmlEscape(tag) + '<button type="button" data-tag-remove aria-label="删除' + htmlEscape(tag) + '">×</button></span>';
+      }).join(''),
+      '<button class="route-chip-add" type="button">新增标签</button>',
+      '</div>',
+      '</div>',
+      '<div class="form-group route-field-full">',
+      '<label class="form-label" for="audience">适合人群</label>',
+      '<input id="audience" class="form-control" type="text" value="' + htmlEscape(settings.audience || '') + '">',
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
   function routeTypeToKind(value) {
     if (/国内/.test(value)) return 'domestic';
     if (/出境/.test(value)) return 'outbound';
@@ -572,7 +779,7 @@
           '<div class="form-group"><label class="form-label" for="packageType">套餐类型 <span class="req">*</span></label><select id="packageType" class="form-control"><option selected>机票+酒店</option><option>纯酒店</option><option>酒店+接送机</option><option>机票+酒店+当地玩乐</option></select></div>',
           '<div class="form-group"><label class="form-label" for="packageDays">适用天数 <span class="req">*</span></label><input id="packageDays" class="form-control" type="text" value="5-7日"></div>',
           '<div class="form-group"><label class="form-label" for="departCity">出发城市 <span class="req">*</span></label><select id="departCity" class="form-control"><option selected>全国</option><option>北京</option><option>上海</option><option>广州</option></select></div>',
-          '<div class="form-group"><label class="form-label" for="destinationCity">目的地 <span class="req">*</span></label><select id="destinationCity" class="form-control"><option selected>巴黎</option><option>曼谷 / 清迈</option><option>三亚</option></select></div>',
+          destinationTreeSelectHtml('lineDestinationTree', ['欧洲 / 法国 / 巴黎']),
           '<div class="form-group route-field-full"><label class="form-label" for="planFeature">套餐特色 <span class="req">*</span></label><textarea id="planFeature" class="form-control" rows="3">巴黎市区酒店与国际机票组合，可按出行日期选择房型、接送机和当地玩乐。</textarea></div>'
         ].join('');
       }
@@ -655,12 +862,12 @@
       tagClass: 'tag tag-purple',
       title: '理想号地中海邮轮 8天7晚',
       desc: '巴塞罗那母港往返，停靠马赛、热那亚、那不勒斯等经典港口。',
-      subtitle: '巴塞罗那母港往返，按航线维护船只/船号、登离船、岸上游和舱房售卖',
+      subtitle: '地中海邮轮度假产品，含岸上游、接送机与航前航后服务可选',
       supplier: ['凯撒邮轮资源部', '皇家加勒比', '地中海邮轮'],
       ownerOrg: ['邮轮产品中心', '欧洲产品中心', '渠道运营组'],
       routeType: '邮轮',
       travelType: '出境游',
-      chips: [['邮轮公司', '凯撒理想号'], ['船名', '理想号'], ['母港', '巴塞罗那']],
+      chips: [['供货方', '凯撒邮轮资源部'], ['承接组织', '邮轮产品中心'], ['出发城市', '全国']],
       heroTags: ['阳台舱', '岸上游', '接送机'],
       readiness: [['线路数', '2条'], ['参考起价', '¥12,800/人'], ['数据完整度', '100%']],
       plans: [
@@ -669,22 +876,12 @@
       ],
       planTitle: '产品航线',
       planSummary: '当前线路关联 4 类舱型，参考价 ¥12,800 - ¥26,800/人',
-      extraHtml: [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">航线与船舶</h2></div>',
-        '<div class="route-field-grid three">',
-        '<div class="form-group"><label class="form-label" for="cruiseCompany">邮轮公司 <span class="req">*</span></label><select id="cruiseCompany" class="form-control" data-resource-ref><option selected>地中海邮轮 MSC Cruises</option><option>皇家加勒比国际游轮</option><option>歌诗达邮轮 Costa Cruises</option></select></div>',
-        '<div class="form-group"><label class="form-label" for="shipName">船只/船号档案 <span class="req">*</span></label><select id="shipName" class="form-control" data-resource-ref><option selected>地中海荣耀号 MSC-GLORY</option><option>海洋绿洲号 OASIS</option><option>歌诗达威尼斯号 COSTA-VENICE</option></select></div>',
-        '<div class="form-group"><label class="form-label" for="cruiseRoute">邮轮模板 <span class="req">*</span></label><select id="cruiseRoute" class="form-control" data-resource-ref><option selected>西地中海精华</option><option>地中海经典线</option><option>日韩短线</option><option>直接填写</option></select></div>',
-        '<div class="form-group"><label class="form-label" for="cruiseLineCode">航线编号</label><input id="cruiseLineCode" class="form-control" type="text" value="CR-WMED-BCN-8D"></div>',
-        '<div class="form-group"><label class="form-label" for="homePort">母港 <span class="req">*</span></label><input id="homePort" class="form-control" type="text" value="巴塞罗那"></div>',
-        '<div class="form-group"><label class="form-label" for="boardingPort">登船港 <span class="req">*</span></label><input id="boardingPort" class="form-control" type="text" value="巴塞罗那港"></div>',
-        '<div class="form-group"><label class="form-label" for="disembarkPort">离船港 <span class="req">*</span></label><input id="disembarkPort" class="form-control" type="text" value="巴塞罗那港"></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="ports">停靠港口及顺序 <span class="req">*</span></label><input id="ports" class="form-control" type="text" value="巴塞罗那 / 马赛 / 热那亚 / 那不勒斯 / 巴塞罗那"></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="shipFacility">船舶设施简介</label><textarea id="shipFacility" class="form-control" rows="3">船上配置主餐厅、自助餐厅、剧院、泳池、儿童俱乐部、健身中心与海景酒廊。</textarea></div>',
-        '<div class="form-group"><label class="form-label" for="cruisePackageName">售卖航线名称 <span class="req">*</span></label><input id="cruisePackageName" class="form-control" type="text" value="理想号地中海经典航线"></div>',
-        '<div class="form-group"><label class="form-label" for="cruiseCabinSale">舱型售卖组合 <span class="req">*</span></label><input id="cruiseCabinSale" class="form-control" type="text" value="阳台舱为主，开放内舱/海景/套房加价"></div>',
-        '</div>'
-      ].join(''),
+      extraHtml: renderProductTargetHtml({
+        departCity: '全国',
+        destinations: ['欧洲 / 地中海'],
+        tags: ['邮轮度假', '岸上游', '亲子友好'],
+        audience: '邮轮度假客群、亲子家庭、银发客群、蜜月客群'
+      }),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">舱房售卖</h2><button class="btn btn-secondary" type="button" data-add-row="#cabinMatrix">新增舱型</button></div>',
         '<div class="table-wrap"><table id="cabinMatrix" data-matrix-type="cabin"><thead><tr><th>舱型</th><th>窗/阳台</th><th>标准入住</th><th>最大入住</th><th>第三/第四人</th><th>儿童不占位</th><th>操作</th></tr></thead><tbody>',
@@ -720,7 +917,7 @@
       ownerOrg: ['专列产品中心', '国内产品中心', '研学产品中心'],
       routeType: '专列',
       travelType: '境内游',
-      chips: [['运营方', '中国铁路合作局'], ['出发站', '西安站'], ['终到站', '乌鲁木齐站']],
+      chips: [['供货方', '中国铁路合作局'], ['承接组织', '专列产品中心'], ['出发城市', '西安']],
       heroTags: ['专列', '软卧', '随车服务'],
       readiness: [['线路数', '2条'], ['参考起价', '¥18,800/人'], ['数据完整度', '100%']],
       plans: [
@@ -729,21 +926,13 @@
       ],
       planTitle: '专列线路',
       planSummary: '当前线路关联 3 类铺位，参考价 ¥18,800 - ¥26,800/人',
-      extraHtml: [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">线路与运营</h2></div>',
-        '<div class="route-field-grid three">',
-        '<div class="form-group"><label class="form-label" for="trainLineNo">专列/车次编号 <span class="req">*</span></label><input id="trainLineNo" class="form-control" type="text" value="TR-SILK-2026"></div>',
-        '<div class="form-group"><label class="form-label" for="startStation">始发站 <span class="req">*</span></label><input id="startStation" class="form-control" type="text" value="西安站"></div>',
-        '<div class="form-group"><label class="form-label" for="endStation">终到站 <span class="req">*</span></label><input id="endStation" class="form-control" type="text" value="乌鲁木齐站"></div>',
-        '<div class="form-group"><label class="form-label" for="operator">专列运营商 <span class="req">*</span></label><select id="operator" class="form-control" data-resource-ref><option selected>丝路专列运营中心</option><option>冰雪北国旅游专列公司</option><option>茶马古道铁路文旅</option></select></div>',
-        '<div class="form-group"><label class="form-label" for="trainRouteResource">专列模板 <span class="req">*</span></label><select id="trainRouteResource" class="form-control" data-resource-ref><option selected>丝绸之路基础线</option><option>东北冰雪基础线</option><option>茶马古道基础线</option><option>直接填写</option></select></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="mainCities">途经主要城市/地区 <span class="req">*</span></label><input id="mainCities" class="form-control" type="text" value="西安 / 兰州 / 张掖 / 敦煌 / 吐鲁番 / 乌鲁木齐"></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="facility">列车设施亮点</label><textarea id="facility" class="form-control" rows="3">配置随车餐吧、活动车厢、公共洗漱区、行李储物区，随车管家负责车上服务协调。</textarea></div>',
-        '<div class="form-group"><label class="form-label" for="trainPackageName">售卖线路名称 <span class="req">*</span></label><input id="trainPackageName" class="form-control" type="text" value="丝绸之路专列经典线"></div>',
-        '<div class="form-group"><label class="form-label" for="berthSale">铺位售卖组合 <span class="req">*</span></label><input id="berthSale" class="form-control" type="text" value="软卧为主，硬卧/包厢加价"></div>',
-        '<div class="form-group route-field-full"><label class="form-label" for="onTrainService">随车服务</label><textarea id="onTrainService" class="form-control" rows="3">随车领队、管家、餐饮协调和夜间巡查；重点站点安排行李协助。</textarea></div>',
-        '</div>'
-      ].join(''),
+      extraHtml: renderProductTargetHtml({
+        departCity: '西安',
+        departOptions: ['西安', '北京', '上海', '广州', '成都', '全国'],
+        destinations: ['国内 / 西北'],
+        tags: ['专列', '丝路文化', '舒适慢游'],
+        audience: '银发客群、文化深度游客群、摄影爱好者、亲子研学客群'
+      }),
       planStructureHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">车厢铺位</h2><button class="btn btn-secondary" type="button" data-add-row="#berthMatrix">新增结构</button></div>',
         '<div class="table-wrap"><table id="berthMatrix" data-matrix-type="berth"><thead><tr><th>席别</th><th>铺位</th><th>车厢位置</th><th>包厢</th><th>儿童不占位</th><th>设施配置</th><th>操作</th></tr></thead><tbody>',
@@ -790,10 +979,9 @@
       planSummary: '当前线路关联机票、酒店、接送机套餐',
       extraHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">目的地信息</h2></div>',
-        '<div class="route-field-grid three">',
+        '<div class="route-field-grid">',
         '<div class="form-group"><label class="form-label" for="departCity">出发城市 <span class="req">*</span></label><select id="departCity" class="form-control"><option selected>全国</option><option>北京</option><option>上海</option><option>广州</option><option>成都</option></select></div>',
-        '<div class="form-group"><label class="form-label" for="destinationCountry">目的地国家/地区 <span class="req">*</span></label><select id="destinationCountry" class="form-control"><option selected>欧洲 / 法国</option><option>东南亚 / 泰国</option><option>东南亚 / 新加坡</option><option>国内 / 海南</option></select></div>',
-        '<div class="form-group"><label class="form-label" for="destinationCity">目的地城市 <span class="req">*</span></label><select id="destinationCity" class="form-control"><option selected>巴黎</option><option>曼谷 / 清迈</option><option>新加坡</option><option>三亚</option></select></div>',
+        destinationTreeSelectHtml('destinationTree', ['欧洲 / 法国 / 巴黎']),
         '<div class="form-group route-field-full"><label class="form-label" for="resourcePool">资源组合</label><select id="resourcePool" class="form-control" data-resource-ref><option selected>国际航空CA协议 + 巴黎四星酒店池 + 接送机服务 + 卢浮宫门票</option><option>巴黎酒店直采 + 接送机服务</option><option>国际航空CA协议 + 巴黎酒店直采</option><option>直接填写</option></select></div>',
         '</div>'
       ].join(''),
@@ -928,6 +1116,7 @@
     if (modalItems[2]) modalItems[2].innerHTML = '<span>产品线路</span><strong>' + htmlEscape(String(preset.plans.length)) + '条</strong>';
     if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可包装销售</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在产品团期页查看团期') + '</strong>';
 
+    initDestinationTreeSelects();
     page.querySelectorAll('input, textarea').forEach(updateCounter);
   }
 
@@ -1127,6 +1316,29 @@
       return;
     }
 
+    var destinationTreeTrigger = target.closest('[data-destination-tree-trigger]');
+    if (destinationTreeTrigger) {
+      var destinationTree = destinationTreeTrigger.closest('[data-destination-tree]');
+      var willOpen = !destinationTree.classList.contains('open');
+      closeDestinationTreeSelects(destinationTree);
+      renderDestinationCascade(destinationTree);
+      destinationTree.classList.toggle('open', willOpen);
+      destinationTreeTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      return;
+    }
+
+    var destinationDrill = target.closest('[data-destination-drill]');
+    if (destinationDrill) {
+      var destinationOption = destinationDrill.closest('[data-destination-option]');
+      var destinationSelect = destinationDrill.closest('[data-destination-tree]');
+      if (destinationOption && destinationSelect) {
+        activateDestinationCascadeOption(destinationSelect, destinationOption.dataset.destinationValue, Number(destinationOption.dataset.destinationLevel || 0));
+      }
+      return;
+    }
+
+    if (!target.closest('[data-destination-tree]')) closeDestinationTreeSelects();
+
     var nextButton = target.closest('[data-route-next]');
     if (nextButton) {
       if (currentStep >= panels.length - 1) {
@@ -1216,6 +1428,18 @@
   });
 
   page.addEventListener('change', function (event) {
+    var destinationTree = event.target && event.target.closest('[data-destination-tree]');
+    if (destinationTree) {
+      if (event.target.matches('[data-destination-checkbox]')) {
+        var option = event.target.closest('[data-destination-option]');
+        if (option) activateDestinationCascadeOption(destinationTree, option.dataset.destinationValue, Number(option.dataset.destinationLevel || 0));
+        setDestinationSelectedValue(destinationTree, event.target.value, event.target.checked);
+        renderDestinationCascade(destinationTree);
+      }
+      syncDestinationTreeSelect(destinationTree);
+      setDirty();
+      return;
+    }
     if (event.target && event.target.id === 'lineType') {
       applyRoutePreset(routeTypeToKind(event.target.value));
       setDirty();

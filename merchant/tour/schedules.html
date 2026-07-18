@@ -1059,16 +1059,23 @@
               <div class="form-group">
                 <label id="batchCapacityLabel" class="form-label" for="batchCapacityLimit">计划收客</label>
                 <input id="batchCapacityLimit" class="form-control" type="number" min="1" value="30">
-                <div id="batchCapacityHint" class="form-hint">可售名额，单位：人。</div>
               </div>
               <div class="form-group">
-                <label id="batchMinGroupLabel" class="form-label" for="batchMinGroupSize">成人数</label>
+                <label id="batchMinGroupLabel" class="form-label" for="batchMinGroupSize">团人数</label>
                 <input id="batchMinGroupSize" class="form-control" type="number" min="1" value="18">
               </div>
               <div class="form-group">
-                <label class="form-label" for="batchCreateReserveHours">预留时长（小时）</label>
-                <input id="batchCreateReserveHours" class="form-control" type="number" min="0" value="24">
-                <div class="form-hint">用于订单预留未确认时自动释放。</div>
+                <label class="form-label" for="batchDepartureCity">出发地</label>
+                <select id="batchDepartureCity" class="form-control">
+                  <option>北京</option>
+                  <option>上海</option>
+                  <option>广州</option>
+                  <option>成都</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="batchMeetingPlace">集合地点</label>
+                <input id="batchMeetingPlace" class="form-control" type="text" value="北京首都国际机场T3航站楼F区">
               </div>
               <div class="form-group form-group-full">
                 <label class="form-label" for="batchPricingPolicy">绑定定价策略</label>
@@ -1166,25 +1173,6 @@
                   <option>代理渠道</option>
                   <option>暂不投放</option>
                 </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="batchDepartureCity">出发地</label>
-                <select id="batchDepartureCity" class="form-control">
-                  <option>北京</option>
-                  <option>上海</option>
-                  <option>广州</option>
-                  <option>成都</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="batchMeetingPlace">集合地点</label>
-                <input id="batchMeetingPlace" class="form-control" type="text" value="北京首都国际机场T3航站楼F区">
-              </div>
-              <div class="form-group form-group-full">
-                <label class="switch-row"><input id="batchInheritExecution" type="checkbox" checked> 继承线路默认执行资料</label>
-              </div>
-              <div class="form-group form-group-full">
-                <label class="switch-row"><input id="batchInheritChannels" type="checkbox" checked> 继承渠道授权</label>
               </div>
               <div class="form-group form-group-full">
                 <label class="form-label" for="batchRemark">备注</label>
@@ -1916,7 +1904,6 @@
       var batchTrafficResourceLabel = document.getElementById('batchTrafficResourceLabel');
       var batchTrafficQtyLabel = document.getElementById('batchTrafficQtyLabel');
       var batchTrafficField = document.querySelector('[data-batch-traffic-field]');
-      var batchCreateReserveHours = document.getElementById('batchCreateReserveHours');
       var batchQuotaTitle = document.getElementById('batchQuotaTitle');
       var batchAllocatedLabel = document.getElementById('batchAllocatedLabel');
       var batchCapacityTotalLabel = document.getElementById('batchCapacityTotalLabel');
@@ -2222,8 +2209,8 @@
         '邮轮航次': {
           title: '舱型价格与舱房',
           mode: ['按舱型售卖', 'tag tag-orange'],
-          capacityLabel: '计划客',
-          minLabel: '成人数',
+          capacityLabel: '计划收客',
+          minLabel: '团人数',
           priceLabel: '成人价',
           secondaryLabels: ['港务税/服务费', '岸上游参考价', '升舱差价'],
           trafficLabel: '选择邮轮舱房资源',
@@ -2281,14 +2268,6 @@
 
       function routeFieldLabel(batchType) {
         return '选择线路';
-      }
-
-      function capacityHintText(batchType, unit) {
-        var normalized = normalizeBatchType(batchType);
-        if (normalized === '邮轮航次') return '航次计划客数，单位：' + unit;
-        if (normalized === '专列班期') return '班期可售铺位，单位：' + unit;
-        if (normalized === '研学营期') return '营期可售学员名额，单位：' + unit;
-        return '可售名额，单位：' + unit;
       }
 
       function isFreeTravelProduct(product) {
@@ -5147,7 +5126,6 @@
         var columns = 'minmax(132px, 1.2fr) repeat(' + Math.max(heads.length - 1, 1) + ', minmax(96px, 1fr))';
         var style = ' style="--batch-matrix-columns:' + escapeHtml(columns) + '"';
         var html = '<section class="batch-type-matrix" aria-label="' + escapeHtml(config.matrixTitle || '售卖结构') + '">';
-        html += '<div class="batch-type-matrix-title"><strong>' + escapeHtml(config.matrixTitle || '售卖结构') + '</strong></div>';
         html += '<div class="batch-type-matrix-head"' + style + '>';
         heads.forEach(function (head) {
           html += '<span>' + escapeHtml(head) + '</span>';
@@ -5183,7 +5161,6 @@
         var columns = 'minmax(132px, 1.2fr) repeat(' + Math.max(heads.length - 1, 1) + ', minmax(96px, 1fr))';
         var style = ' style="--batch-matrix-columns:' + escapeHtml(columns) + '"';
         var html = '<section class="batch-type-matrix" aria-label="' + escapeHtml(config.matrixTitle || '售卖结构') + '">';
-        html += '<div class="batch-type-matrix-title"><strong>' + escapeHtml(config.matrixTitle || '售卖结构') + '</strong></div>';
         html += '<div class="batch-type-matrix-head"' + style + '>';
         heads.forEach(function (head) {
           html += '<span>' + escapeHtml(head) + '</span>';
@@ -5500,7 +5477,6 @@
         renderBatchTrafficOptions();
         syncBatchTrafficBinding();
         applyBatchDefaultQuota();
-        document.getElementById('batchCapacityHint').textContent = capacityHintText(card.dataset.batchType || '普通团期', card.dataset.unit || '人');
         if (card.dataset.batchType === '邮轮航次' || card.dataset.batchType === '专列班期') {
           document.querySelector('input[name="batchDateMode"][value="manual"]').checked = true;
         } else {
@@ -6151,14 +6127,13 @@
             peerPrice: document.getElementById('batchPeerPrice').value.trim(),
             currency: document.getElementById('batchCurrency').value || 'CNY',
             minGroupSize: document.getElementById('batchMinGroupSize').value || '',
-            reserveHours: batchCreateReserveHours ? batchCreateReserveHours.value || '24' : '24',
             planner: document.getElementById('batchPlannerSelect').value || batchSelectedProduct.dataset.planner,
             leader: rowLeader,
             storeScope: document.getElementById('batchStoreScope').value || '全部门店',
             channelScope: document.getElementById('batchChannelScope').value || '全部渠道',
             meetingPlace: document.getElementById('batchMeetingPlace').value.trim(),
-            inheritExecution: document.getElementById('batchInheritExecution').checked,
-            inheritChannelAuth: document.getElementById('batchInheritChannels').checked,
+            inheritExecution: true,
+            inheritChannelAuth: true,
             typeSpecific: batchTypeSpecificData(),
             saleStatus: '筹备中',
             executionStatus: '未出团',
