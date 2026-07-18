@@ -32,7 +32,7 @@
     <nav class="tab-bar list-surface-tabs" aria-label="团期结算流程">
       <button class="tab-item active" type="button" data-cost-tab="cost">团期成本</button>
       <button class="tab-item" type="button" data-cost-tab="payment">付款申请</button>
-      <button class="tab-item" type="button" data-cost-tab="records">付款记录</button>
+      <button class="tab-item" type="button" data-cost-tab="records">申请记录</button>
     </nav>
 
     <section id="scheduleCostPanel" data-cost-panel="cost">
@@ -95,8 +95,8 @@
         </div>
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="paymentKeyword">供应商/团期/项目团/成本项</label><input id="paymentKeyword" type="search" placeholder="供应商/团期/项目团/成本项"></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentGroupMode">归集维度</label><select id="paymentGroupMode"><option value="supplier">按供应商</option><option value="schedule">按团号</option><option value="subject">按科目</option></select></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentStatus">可申请状态</label><select id="paymentStatus"><option>全部状态</option><option>待申请</option><option>部分可申请</option><option>草稿</option><option>驳回待改</option><option>已发起申请</option></select></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentGroupMode">汇总方式</label><select id="paymentGroupMode"><option value="supplier">按供应商</option><option value="schedule">按团期</option><option value="subject">按科目</option></select></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentStatus">可申请状态</label><select id="paymentStatus"><option>全部状态</option><option>待申请</option><option>部分可申请</option><option>草稿</option></select></div>
           <div class="filter-actions"><button id="searchPayments" class="btn btn-secondary" type="button">搜索</button><button id="resetPayments" class="btn btn-secondary" type="button">重置</button></div>
         </div>
       </section>
@@ -140,7 +140,7 @@
     </section>
 
     <section id="paymentRecordPanel" data-cost-panel="records" hidden>
-      <section class="filter-card filter-card-compact fulfillment-cost-filter list-surface-filter" aria-label="付款记录筛选">
+      <section class="filter-card filter-card-compact fulfillment-cost-filter list-surface-filter" aria-label="申请记录筛选">
         <div class="list-surface-filter-actions list-filter-pinned-actions">
           <div class="btn-group">
             <a class="btn btn-secondary" href="../approval/approvals.html?view=mine">我发起的审批</a>
@@ -148,11 +148,11 @@
         </div>
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="recordKeyword">供应商/团期/项目团/申请单号</label><input id="recordKeyword" type="search" placeholder="供应商/团期/项目团/申请单号"></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="recordStatus">付款进度</label><select id="recordStatus"><option>全部进度</option><option>草稿</option><option>审批中</option><option>已驳回</option><option>待财务处理</option><option>财务处理中</option><option>部分付款</option><option>已付款</option><option>已撤回</option></select></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="recordStatus">申请状态</label><select id="recordStatus"><option>全部状态</option><option>审批中</option><option>驳回</option><option>通过</option><option>待确认</option><option>已撤销</option></select></div>
           <div class="filter-actions"><button id="searchRecords" class="btn btn-secondary" type="button">搜索</button><button id="resetRecords" class="btn btn-secondary" type="button">重置</button></div>
         </div>
       </section>
-      <section class="table-wrap fulfillment-cost-table payment-apply-business-table list-surface-table list-table-with-pagination" aria-label="付款记录列表">
+      <section class="table-wrap fulfillment-cost-table payment-apply-business-table list-surface-table list-table-with-pagination" aria-label="申请记录列表">
         <table>
           <thead>
             <tr>
@@ -161,7 +161,7 @@
               <th>关联团期/项目团</th>
               <th>付款节点</th>
               <th>申请金额</th>
-              <th>当前状态</th>
+              <th>申请状态</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -514,33 +514,41 @@
       </div>
       <div class="modal-body">
         <div id="paymentApplySummary" class="description-grid"></div>
-        <section class="payment-fee-select" id="eligibleCostItems">
-          <div class="payment-fee-select-head">
-            <strong>可申请成本</strong>
-            <span>同一付款对象、币种、收款账户和结算主体下的成本项</span>
+        <section class="drawer-section payment-detail-section" id="eligibleCostItems">
+          <div class="drawer-section-head payment-detail-section-head">
+            <h3 class="drawer-section-title">付款明细</h3>
+            <span id="paymentDetailScope">当前汇总口径下的可申请成本</span>
           </div>
-          <div class="table-wrap fulfillment-cost-inner-table drawer-table-scroll drawer-table-cols-8">
-            <table>
-              <thead>
-                <tr>
-                  <th>选择</th>
-                  <th>团期/项目团编号</th>
-                  <th>线路/项目</th>
-                  <th>费用项目</th>
-                  <th>成本金额</th>
-                  <th>已申请/已预付</th>
-                  <th>已付款</th>
-                  <th>本次可申请</th>
-                </tr>
-              </thead>
-              <tbody id="paymentApplyCostRows"></tbody>
-            </table>
+          <div class="payment-detail-table" role="table" aria-label="付款明细">
+            <div class="payment-detail-header" role="row">
+              <span role="columnheader">选择</span>
+              <span role="columnheader">供应商</span>
+              <span role="columnheader">团期/项目团</span>
+              <span role="columnheader">财务科目</span>
+              <span role="columnheader">可申请金额</span>
+              <span role="columnheader">本次申请金额</span>
+              <span role="columnheader">备注</span>
+            </div>
+            <div id="paymentApplyCostRows" class="payment-detail-list" role="rowgroup"></div>
+            <div class="payment-detail-total" aria-live="polite" role="row">
+              <span>申请合计</span>
+              <strong id="paymentApplyTotal">¥0</strong>
+            </div>
           </div>
         </section>
+        <div class="form-group" id="paymentAccountGroup">
+          <label class="form-label" for="applyReceiveAccount">收款账户 <span class="req">*</span></label>
+          <input id="applyReceiveAccount" class="form-control" type="text" placeholder="请输入银行名称或账户名称搜索">
+        </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="applyAmount">本次申请金额 <span class="req">*</span></label>
-            <input id="applyAmount" class="form-control" type="number" value="0" required>
+            <label class="form-label" for="applyPaymentMethod">付款方式 <span class="req">*</span></label>
+            <select id="applyPaymentMethod" class="form-control">
+              <option>请选择付款方式</option>
+              <option>银企直联</option>
+              <option>境外汇款</option>
+              <option>线下转账</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="expectedPayDate">期望付款日期</label>
@@ -548,13 +556,16 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="applyReason">付款原因 <span class="req">*</span></label>
-          <textarea id="applyReason" class="form-control" rows="4" required>成本项已完成业务确认，申请按合同节点付款。</textarea>
+          <label class="form-label">凭证上传 <span class="req">*</span></label>
+          <div class="payment-apply-upload-row">
+            <button class="btn btn-secondary" type="button" data-toast="付款申请附件已选择">选择文件（可多选）</button>
+            <span id="paymentAttachmentText">供应商账单、合同节点、成本确认单</span>
+          </div>
         </div>
-        <section class="payment-approval-preview">
-          <strong>审批路径预览</strong>
-          <span id="paymentApprovalPath">业务负责人 → 财务主管</span>
-        </section>
+        <div class="form-group">
+          <label class="form-label" for="applyReason">备注</label>
+          <textarea id="applyReason" class="form-control" rows="3" placeholder="请输入备注"></textarea>
+        </div>
         <section id="paymentCreateResult" class="finance-link-card receipt-result" hidden>
           <div class="finance-link-title">已生成付款申请 PAY-REQ-20260703-001，状态：审批中。</div>
           <div class="finance-link-items">
@@ -607,7 +618,6 @@
         <div id="paymentRecordTimeline" class="timeline schedule-timeline"></div>
       </div>
       <div class="modal-footer">
-        <button id="withdrawPaymentApply" class="btn btn-secondary" type="button" hidden>撤回审批</button>
         <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
       </div>
     </div>
@@ -648,6 +658,7 @@
       var settlementDocPanels = Array.from(document.querySelectorAll('[data-settlement-doc-panel]'));
       var activeSchedule = null;
       var activePaymentGroup = null;
+      var activePaymentContext = null;
       var activePaymentRequest = null;
       var payableGroupMode = 'supplier';
       var activeBatchCostIds = [];
@@ -1809,25 +1820,104 @@
         }, 0) || Number(request.amount || 0);
       }
 
+      function paymentModeLabel(mode) {
+        if (mode === 'schedule') return '按团期';
+        if (mode === 'subject') return '按科目';
+        return '按供应商';
+      }
+
+      function paymentSubject(item) {
+        var fee = String(item && item.fee || '');
+        if (/酒店|住宿/.test(fee)) return '酒店成本';
+        if (/机票|航|票损|车队|用车|交通/.test(fee)) return '大交通';
+        if (/船票|邮轮|舱|港务/.test(fee)) return '邮轮成本';
+        if (/专列|铺|包列/.test(fee)) return '专列成本';
+        if (/餐|宴/.test(fee)) return '餐饮';
+        if (/签证/.test(fee)) return '签证';
+        if (/课程|营地|研学/.test(fee)) return '研学成本';
+        return '团费';
+      }
+
+      function paymentContextRows(groups) {
+        return groups.reduce(function (items, group) {
+          return items.concat(group.items.map(function (item) {
+            return Object.assign({}, item, {
+              groupId: group.id,
+              supplier: group.supplier,
+              account: group.account,
+              currency: group.currency,
+              entity: group.entity,
+              node: group.node,
+              contract: group.contract,
+              billNo: group.billNo,
+              sourceType: group.sourceType || '',
+              subject: paymentSubject(item)
+            });
+          }));
+        }, []);
+      }
+
+      function paymentContextFromGroups(groupIds, sourceText) {
+        var ids = uniqueGroupIds(groupIds);
+        var groups = ids.map(findPaymentGroup).filter(Boolean);
+        var items = paymentContextRows(groups);
+        var suppliers = joinUnique(groups.map(function (group) { return group.supplier; }));
+        var currencies = joinUnique(groups.map(function (group) { return group.currency; }));
+        var entities = joinUnique(groups.map(function (group) { return group.entity; }));
+        var nodes = joinUnique(groups.map(function (group) { return group.node; }));
+        var schedules = joinUnique(items.map(function (item) { return item.scheduleNo; }));
+        var subjects = joinUnique(items.map(function (item) { return item.subject; }));
+        var label = suppliers || '付款申请';
+        if (payableGroupMode === 'schedule') label = schedules || label;
+        if (payableGroupMode === 'subject') label = subjects || label;
+        return {
+          id: ids.join(','),
+          groupIds: ids,
+          groups: groups,
+          items: items,
+          mode: payableGroupMode,
+          label: sourceText || label,
+          supplier: groups.length === 1 ? groups[0].supplier : suppliers,
+          account: groups.length === 1 ? groups[0].account : '按付款明细填写',
+          currency: currencies.indexOf('、') >= 0 ? '多币种' : (currencies || 'CNY'),
+          entity: entities.indexOf('、') >= 0 ? '多主体' : (entities || settlementEntity()),
+          node: nodes,
+          schedules: schedules,
+          subjects: subjects,
+          expectedDate: joinUnique(groups.map(function (group) { return group.expectedDate; })),
+          approvalPath: joinUnique(groups.map(function (group) { return group.approvalPath; })) || '业务负责人 → 财务主管',
+          projectMode: groups.some(function (group) { return group.sourceType === 'project'; }),
+          projectNo: joinUnique(groups.map(function (group) { return group.projectNo; })),
+          projectOrder: joinUnique(groups.map(function (group) { return group.projectOrder; })),
+          projectGroup: joinUnique(groups.map(function (group) { return group.projectGroup; })),
+          customer: joinUnique(groups.map(function (group) { return group.customer; }))
+        };
+      }
+
+      function existingRequestForContext(context) {
+        if (!context) return null;
+        return paymentRequestForAnyGroup(context.groupIds || [context.id]);
+      }
+
       function requestMainStatus(request) {
-        if (request.status === '已付款' || request.paymentStatus === '已付款') return '已付款';
-        if (request.status === '已撤回') return '已撤回';
+        if (request.status === '已撤销' || request.status === '已撤回' || request.approvalStatus === '已撤销') return '已撤销';
         if (request.status === '草稿' || request.approvalStatus === '草稿') return '草稿';
-        if (request.status === '已驳回' || request.approvalStatus === '已驳回') return '已驳回';
+        if (request.status === '已驳回' || request.approvalStatus === '已驳回') return '驳回';
         if (request.approvalStatus === '审批中') return '审批中';
-        if (/财务处理中|部分付款/.test(request.status || request.paymentStatus || '')) return request.status || request.paymentStatus;
-        if (request.approvalStatus === '已通过' && request.paymentStatus === '待付款') return '待付款';
-        return request.status || request.paymentStatus || request.approvalStatus || '待处理';
+        if (request.paymentStatus === '已付款' || request.status === '已付款') return '通过';
+        if (request.approvalStatus === '已通过' && /待付款|财务处理中|部分付款|待财务处理/.test([request.paymentStatus, request.status].join(' '))) return '待确认';
+        if (request.approvalStatus === '已通过') return '通过';
+        return '待确认';
       }
 
       function requestStatusHint(request) {
         var mainStatus = requestMainStatus(request);
         if (mainStatus === '草稿') return '未提交审批';
         if (mainStatus === '审批中') return '当前节点：' + (request.approvalNode || '-');
-        if (mainStatus === '已驳回') return '退回节点：' + (request.approvalNode || '-');
-        if (mainStatus === '待付款') return '审批已通过，待财务付款';
-        if (mainStatus === '已付款') return '财务已完成付款';
-        if (mainStatus === '已撤回') return '业务侧已撤回';
+        if (mainStatus === '驳回') return '退回节点：' + (request.approvalNode || '-');
+        if (mainStatus === '待确认') return '审批已通过，待财务确认';
+        if (mainStatus === '通过') return request.paymentStatus === '已付款' ? '财务已完成付款' : '审批已通过';
+        if (mainStatus === '已撤销') return '业务侧已撤销';
         return request.financeStatus || request.paymentStatus || '';
       }
 
@@ -1840,14 +1930,8 @@
 
       function paymentRecordActionHtml(request, index) {
         var status = requestMainStatus(request);
-        if (status === '草稿') {
-          return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">编辑</button>';
-        }
-        if (status === '已驳回') {
+        if (status === '驳回') {
           return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">重新提交</button>';
-        }
-        if (status === '审批中') {
-          return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">详情</button><button type="button" data-withdraw-payment-record="' + index + '">撤回</button>';
         }
         return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">详情</button>';
       }
@@ -1865,7 +1949,7 @@
       }
 
       function payableGroupIsSelectable(group) {
-        return group && ['待申请', '部分付款', '草稿', '已驳回'].indexOf(group.status) >= 0;
+        return group && ['待申请', '部分付款', '草稿'].indexOf(group.status) >= 0;
       }
 
       function groupItemAvailable(group, item) {
@@ -1882,10 +1966,9 @@
       function payableApplyState(group) {
         if (!group) return '待申请';
         if (group.status === '部分付款') return '部分可申请';
-        if (group.status === '已驳回') return '驳回待改';
         if (group.status === '草稿') return '草稿';
         if (group.status === '待申请') return '待申请';
-        return '已发起申请';
+        return '';
       }
 
       function payableApplyStatusText(groups) {
@@ -1899,8 +1982,9 @@
       }
 
       function payableViewGroups() {
+        var sourceGroups = payableCostGroups.filter(payableGroupIsSelectable);
         if (payableGroupMode === 'supplier') {
-          return payableCostGroups.map(function (group) {
+          return sourceGroups.map(function (group) {
             var totals = groupTotals(group);
             var request = paymentRequestForGroup(group.id);
             return {
@@ -1922,14 +2006,15 @@
           });
         }
         var map = {};
-        payableCostGroups.forEach(function (group) {
+        sourceGroups.forEach(function (group) {
           group.items.forEach(function (item) {
-            var key = payableGroupMode === 'schedule' ? item.scheduleNo : item.fee;
+            var subject = paymentSubject(item);
+            var key = payableGroupMode === 'schedule' ? item.scheduleNo : subject;
             if (!map[key]) {
               map[key] = {
                 key: key,
                 label: key,
-                subLabel: payableGroupMode === 'schedule' ? item.route : '费用科目',
+                subLabel: payableGroupMode === 'schedule' ? item.route : '财务科目',
                 groupIds: [],
                 groups: [],
                 nodes: [],
@@ -1978,9 +2063,6 @@
         if (group.status === '草稿') {
           return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">继续编辑</button>';
         }
-        if (group.status === '已驳回') {
-          return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">重新提交</button>';
-        }
         if (request) {
           return '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">查看申请</button>';
         }
@@ -1996,7 +2078,8 @@
           return payableGroupIsSelectable(findPaymentGroup(groupId));
         });
         if (eligibleIds.length) {
-          return '<button type="button" class="table-action-primary" data-open-payment-batch="' + escapeHtml(eligibleIds.join(',')) + '">批量申请</button>';
+          var actionText = view.groups.some(function (group) { return group.status === '草稿'; }) ? '继续编辑' : '申请付款';
+          return '<button type="button" class="table-action-primary" data-open-payment-create-groups="' + escapeHtml(eligibleIds.join(',')) + '" data-payment-context="' + escapeHtml(view.label) + '">' + actionText + '</button>';
         }
         var request = paymentRequestForAnyGroup(view.groupIds);
         return request
@@ -2044,7 +2127,7 @@
 
       function payableItemsForBatch(group) {
         var request = paymentRequestForGroup(group.id);
-        if (request && ['草稿', '已驳回'].indexOf(group.status) >= 0) {
+        if (request && group.status === '草稿') {
           return request.items.map(function (item) {
             return Object.assign({}, item, { groupId: group.id });
           });
@@ -2100,7 +2183,7 @@
         activeBatchGroupIds = uniqueGroupIds(groupIds);
         activeBatchSplits = buildBatchSplits(activeBatchGroupIds);
         if (!activeBatchSplits.length) {
-          openActionResult('无法批量申请', '当前选择的成本没有可申请余额，或已进入审批/财务流程。', '请重新选择待申请、草稿或已驳回的成本。');
+          openActionResult('无法批量申请', '当前选择的成本没有可申请余额，或已进入审批/财务流程。', '请重新选择待申请、部分可申请或草稿成本。');
           return;
         }
         var itemCount = activeBatchSplits.reduce(function (sum, split) { return sum + split.items.length; }, 0);
@@ -2146,19 +2229,26 @@
       }
 
       function renderPaymentRecords() {
-        paymentApplyRows.innerHTML = paymentRequests.map(function (request, index) {
+        var recordRequests = paymentRequests.map(function (request, index) {
+          return { request: request, index: index };
+        }).filter(function (entry) {
+          return requestMainStatus(entry.request) !== '草稿';
+        });
+        paymentApplyRows.innerHTML = recordRequests.map(function (entry) {
+          var request = entry.request;
+          var index = entry.index;
           var mainStatus = requestMainStatus(request);
-          return '<tr data-tab-status="' + escapeHtml([mainStatus, request.status, request.approvalStatus, request.financeStatus, request.paymentStatus].join(' ')) + '">' +
+          return '<tr data-tab-status="' + escapeHtml([mainStatus, request.status, request.approvalStatus].join(' ')) + '">' +
             '<td class="payment-record-id-cell"><strong>' + escapeHtml(request.id) + '</strong><span class="text-muted">' + escapeHtml(request.approvalNo || '未提交审批') + '</span></td>' +
             '<td class="payment-record-object-cell"><span class="schedule-product-name">' + escapeHtml(request.supplier) + '</span><span class="text-muted">' + escapeHtml(request.account || request.entity || '-') + '</span></td>' +
             '<td>' + escapeHtml(paymentRecordScheduleText(request)) + '</td>' +
             '<td>' + tag(request.node) + '</td>' +
             '<td class="amount-strong">' + money(requestAmount(request)) + '<br><span class="text-muted">' + escapeHtml(request.currency || 'CNY') + '</span></td>' +
-            '<td>' + tag(mainStatus) + '<br><span class="text-muted">' + escapeHtml(requestStatusHint(request)) + '</span></td>' +
+            '<td>' + tag(mainStatus) + '</td>' +
             '<td><div class="table-action">' + paymentRecordActionHtml(request, index) + '</div></td>' +
             '</tr>';
         }).join('');
-        document.getElementById('paymentPagination').textContent = '第1-' + paymentRequests.length + '条/共' + paymentRequests.length + '条';
+        document.getElementById('paymentPagination').textContent = recordRequests.length ? '第1-' + recordRequests.length + '条/共' + recordRequests.length + '条' : '共0条';
       }
 
       function openLayer(layer) {
@@ -3634,43 +3724,61 @@
         return paymentRequestForGroup(group.id);
       }
 
-      function applyItemAmount(group, item) {
-        var request = existingRequestForGroup(group);
-        if (request) {
-          var matched = request.items.find(function (recordItem) {
-            return recordItem.scheduleNo === item.scheduleNo && recordItem.fee === item.fee;
-          });
-          if (matched) return Number(matched.requestAmount || 0);
-        }
-        return Math.max(Number(item.amount || 0) - Number(item.applied || 0), 0);
+      function requestItemForLine(request, line) {
+        if (!request) return null;
+        return request.items.find(function (recordItem) {
+          var groupMatched = !recordItem.groupId || recordItem.groupId === line.groupId;
+          return groupMatched && recordItem.scheduleNo === line.scheduleNo && recordItem.fee === line.fee;
+        }) || null;
       }
 
-      function renderPaymentApplyRows(group) {
-        var request = existingRequestForGroup(group);
-        document.getElementById('paymentApplyCostRows').innerHTML = group.items.map(function (item, index) {
-          var available = applyItemAmount(group, item);
-          var checked = request || available > 0;
-          return '<tr>' +
-            '<td><input type="checkbox" data-apply-item-index="' + index + '" data-apply-amount="' + available + '"' + (checked ? ' checked' : '') + '></td>' +
-            '<td>' + escapeHtml(item.scheduleNo) + '</td>' +
-            '<td><strong>' + escapeHtml(item.route) + '</strong><br><span class="text-muted">' + escapeHtml(item.plan) + '</span></td>' +
-            '<td>' + escapeHtml(item.fee) + '</td>' +
-            '<td class="amount-strong">' + money(item.amount) + '</td>' +
-            '<td>' + money(item.applied) + '</td>' +
-            '<td>' + money(item.paid) + '</td>' +
-            '<td>' + money(available) + '</td>' +
-            '</tr>';
+      function applyItemAmount(context, line) {
+        var request = existingRequestForContext(context);
+        var matched = requestItemForLine(request, line);
+        if (matched) return Number(matched.requestAmount || 0);
+        return groupItemAvailable(findPaymentGroup(line.groupId), line);
+      }
+
+      function renderPaymentApplyRows(context) {
+        var request = existingRequestForContext(context);
+        document.getElementById('paymentApplyCostRows').innerHTML = context.items.map(function (item, index) {
+          var matched = requestItemForLine(request, item);
+          var available = applyItemAmount(context, item);
+          var amount = matched ? Number(matched.requestAmount || 0) : available;
+          var checked = matched || available > 0;
+          var remark = matched && matched.remark ? matched.remark : '';
+          return '<div class="payment-detail-entry" role="row">' +
+            '<label class="payment-line-cell payment-line-select" role="cell"><input type="checkbox" aria-label="选择付款明细" data-apply-line-index="' + index + '"' + (checked ? ' checked' : '') + '><span class="sr-only">选择</span></label>' +
+            '<div class="payment-line-cell payment-line-field payment-line-supplier" role="cell"><span class="payment-line-label">供应商</span><strong>' + escapeHtml(item.supplier) + '</strong><small>' + escapeHtml(item.entity || '-') + '</small></div>' +
+            '<div class="payment-line-cell payment-line-field payment-line-schedule" role="cell"><span class="payment-line-label">团期/项目团</span><strong>' + escapeHtml(item.scheduleNo) + '</strong><small>' + escapeHtml(item.route) + '</small></div>' +
+            '<div class="payment-line-cell payment-line-field payment-line-subject" role="cell"><span class="payment-line-label">财务科目</span><strong>' + escapeHtml(item.subject) + '</strong></div>' +
+            '<div class="payment-line-cell payment-line-field payment-line-available" role="cell"><span class="payment-line-label">可申请金额</span><strong>' + money(available) + '</strong></div>' +
+            '<label class="payment-line-cell payment-line-field payment-line-current" role="cell"><span class="payment-line-label">本次申请金额</span><input class="form-control payment-line-amount" type="number" min="0" max="' + available + '" value="' + amount + '" data-apply-amount-input data-max-amount="' + available + '"></label>' +
+            '<label class="payment-line-cell payment-line-field payment-line-remark" role="cell"><span class="payment-line-label">备注</span><input class="form-control" type="text" value="' + escapeHtml(remark) + '" placeholder="请输入备注" data-apply-remark-input></label>' +
+            '</div>';
         }).join('');
       }
 
       function activeSelectedItems() {
-        if (!activePaymentGroup) return [];
-        return Array.from(document.querySelectorAll('[data-apply-item-index]')).filter(function (checkbox) {
+        if (!activePaymentContext) return [];
+        var headerAccount = String(document.getElementById('applyReceiveAccount').value || '').trim();
+        return Array.from(document.querySelectorAll('[data-apply-line-index]')).filter(function (checkbox) {
           return checkbox.checked;
         }).map(function (checkbox) {
-          var source = activePaymentGroup.items[Number(checkbox.dataset.applyItemIndex)];
+          var row = checkbox.closest('.payment-detail-entry');
+          var amountInput = row.querySelector('[data-apply-amount-input]');
+          var remarkInput = row.querySelector('[data-apply-remark-input]');
+          var source = activePaymentContext.items[Number(checkbox.dataset.applyLineIndex)];
+          var maxAmount = Number(amountInput.dataset.maxAmount || 0);
+          var amount = Math.max(Number(amountInput.value || 0), 0);
+          if (amount > maxAmount) {
+            amount = maxAmount;
+            amountInput.value = amount;
+          }
           return Object.assign({}, source, {
-            requestAmount: Number(checkbox.dataset.applyAmount || 0)
+            requestAmount: amount,
+            account: headerAccount,
+            remark: String(remarkInput.value || '').trim()
           });
         }).filter(function (item) {
           return item.requestAmount > 0;
@@ -3678,33 +3786,47 @@
       }
 
       function openPaymentDrawer(groupIndex) {
-        activePaymentGroup = payableCostGroups[Number(groupIndex)] || payableCostGroups[0];
-        var totals = groupTotals(activePaymentGroup);
-        var available = Math.max(totals.amount - totals.applied, 0);
-        var request = existingRequestForGroup(activePaymentGroup);
-        var projectMode = activePaymentGroup.sourceType === 'project';
+        var group = payableCostGroups[Number(groupIndex)] || payableCostGroups[0];
+        openPaymentDrawerForGroups([group.id]);
+      }
+
+      function openPaymentDrawerForGroups(groupIds, sourceText) {
+        activePaymentContext = paymentContextFromGroups(groupIds, sourceText);
+        activePaymentGroup = activePaymentContext.groups[0] || null;
+        if (!activePaymentContext.groups.length) {
+          openActionResult('无法申请付款', '当前汇总对象没有可申请成本明细。', '请重新选择待申请、部分可申请或草稿成本。');
+          return;
+        }
+        var request = existingRequestForContext(activePaymentContext);
+        var projectMode = activePaymentContext.projectMode;
+        var available = activePaymentContext.items.reduce(function (sum, item) {
+          return sum + applyItemAmount(activePaymentContext, item);
+        }, 0);
         document.getElementById('paymentApplyDrawerTitle').textContent = projectMode ? '项目付款申请' : (request ? '付款申请' : '申请付款');
         document.getElementById('paymentApplySummary').innerHTML =
-          '<div class="description-item"><div class="description-label">付款对象</div><div class="description-value">' + escapeHtml(activePaymentGroup.supplier) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">收款账户</div><div class="description-value">' + escapeHtml(activePaymentGroup.account) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">币种</div><div class="description-value">' + escapeHtml(activePaymentGroup.currency) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">结算主体</div><div class="description-value">' + escapeHtml(settlementEntity()) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">业务归属</div><div class="description-value">' + escapeHtml(businessOwnerOrg([activePaymentGroup.id, activePaymentGroup.sourceType, activePaymentGroup.supplier, activePaymentGroup.billNo].join(' '))) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">关联合同</div><div class="description-value">' + escapeHtml(activePaymentGroup.contract) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">供应商账单</div><div class="description-value">' + escapeHtml(activePaymentGroup.billNo) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">汇总方式</div><div class="description-value">' + escapeHtml(paymentModeLabel(activePaymentContext.mode)) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">汇总对象</div><div class="description-value">' + escapeHtml(activePaymentContext.label) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">付款对象</div><div class="description-value">' + escapeHtml(activePaymentContext.supplier) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">币种</div><div class="description-value">' + escapeHtml(activePaymentContext.currency) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">结算主体</div><div class="description-value">' + escapeHtml(activePaymentContext.entity) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">业务归属</div><div class="description-value">' + escapeHtml(businessOwnerOrg([activePaymentContext.label, activePaymentContext.supplier, activePaymentContext.schedules].join(' '))) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">付款节点</div><div class="description-value">' + tag(activePaymentContext.node || '-') + '</div></div>' +
+          '<div class="description-item"><div class="description-label">可申请余额</div><div class="description-value amount-strong">' + money(available) + '</div></div>' +
           (projectMode
-            ? '<div class="description-item"><div class="description-label">客户</div><div class="description-value">' + escapeHtml(activePaymentGroup.customer || '-') + '</div></div>' +
-              '<div class="description-item"><div class="description-label">单团项目</div><div class="description-value"><a class="link-primary" href="product-custom-detail.html?source=cost&amp;projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '&amp;customer=' + encodeURIComponent(activePaymentGroup.customer || '') + '&amp;projectStatus=已成团">' + escapeHtml(activePaymentGroup.projectNo || '-') + '</a></div></div>' +
-              '<div class="description-item"><div class="description-label">项目订单</div><div class="description-value"><a class="link-primary" href="../sales/orders-detail.html?type=project&source=customProject&orderNo=' + encodeURIComponent(activePaymentGroup.projectOrder || '') + '&projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '&scheduleNo=' + encodeURIComponent(activePaymentGroup.projectGroup || '') + '">' + escapeHtml(activePaymentGroup.projectOrder || '-') + '</a></div></div>' +
-              '<div class="description-item"><div class="description-label">项目团</div><div class="description-value"><a class="link-primary" href="schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' + encodeURIComponent(activePaymentGroup.projectGroup || '') + '&projectNo=' + encodeURIComponent(activePaymentGroup.projectNo || '') + '">' + escapeHtml(activePaymentGroup.projectGroup || '-') + '</a></div></div>'
-            : '') +
-          '<div class="description-item"><div class="description-label">付款节点</div><div class="description-value">' + tag(activePaymentGroup.node) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">可申请余额</div><div class="description-value amount-strong">' + money(request ? requestAmount(request) : available) + '</div></div>';
-        document.getElementById('expectedPayDate').value = activePaymentGroup.expectedDate;
-        document.getElementById('paymentApprovalPath').textContent = activePaymentGroup.approvalPath;
-        document.getElementById('applyReason').value = projectMode ? '项目团成本已完成业务确认，按项目合同和供应商账单节点申请付款。' : '成本项已完成业务确认，申请按合同节点付款。';
+            ? '<div class="description-item"><div class="description-label">客户</div><div class="description-value">' + escapeHtml(activePaymentContext.customer || '-') + '</div></div>' +
+              '<div class="description-item"><div class="description-label">单团项目</div><div class="description-value"><a class="link-primary" href="product-custom-detail.html?source=cost&amp;projectNo=' + encodeURIComponent(activePaymentContext.projectNo || '') + '&amp;customer=' + encodeURIComponent(activePaymentContext.customer || '') + '&amp;projectStatus=已成团">' + escapeHtml(activePaymentContext.projectNo || '-') + '</a></div></div>' +
+              '<div class="description-item"><div class="description-label">项目订单</div><div class="description-value"><a class="link-primary" href="../sales/orders-detail.html?type=project&source=customProject&orderNo=' + encodeURIComponent(activePaymentContext.projectOrder || '') + '&projectNo=' + encodeURIComponent(activePaymentContext.projectNo || '') + '&scheduleNo=' + encodeURIComponent(activePaymentContext.projectGroup || '') + '">' + escapeHtml(activePaymentContext.projectOrder || '-') + '</a></div></div>' +
+              '<div class="description-item"><div class="description-label">项目团</div><div class="description-value"><a class="link-primary" href="schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' + encodeURIComponent(activePaymentContext.projectGroup || '') + '&projectNo=' + encodeURIComponent(activePaymentContext.projectNo || '') + '">' + escapeHtml(activePaymentContext.projectGroup || '-') + '</a></div></div>'
+            : '');
+        document.getElementById('applyReceiveAccount').value = request && request.account && request.account !== '按付款明细填写' ? request.account : (activePaymentContext.groups.length === 1 ? activePaymentContext.groups[0].account : '');
+        document.getElementById('applyReceiveAccount').placeholder = '请输入银行名称或账户名称搜索';
+        document.getElementById('applyPaymentMethod').value = '请选择付款方式';
+        document.getElementById('expectedPayDate').value = activePaymentContext.groups.map(function (group) { return group.expectedDate; }).filter(Boolean).sort()[0] || '';
+        document.getElementById('paymentAttachmentText').textContent = activePaymentContext.groups.length === 1 ? joinUnique([activePaymentContext.groups[0].billNo, activePaymentContext.groups[0].contract]) : '供应商账单、合同节点、成本确认单';
+        document.getElementById('paymentDetailScope').textContent = paymentModeLabel(activePaymentContext.mode) + ' / ' + activePaymentContext.label;
+        document.getElementById('applyReason').value = '';
         document.getElementById('paymentCreateResult').hidden = true;
-        renderPaymentApplyRows(activePaymentGroup);
+        renderPaymentApplyRows(activePaymentContext);
         updateApplyAmount();
         document.getElementById('paymentCreateResult').hidden = true;
         openLayer(paymentApplyDrawer);
@@ -3712,10 +3834,20 @@
 
       function updateApplyAmount() {
         var amount = 0;
-        document.querySelectorAll('[data-apply-amount]').forEach(function (checkbox) {
-          if (checkbox.checked) amount += Number(checkbox.dataset.applyAmount || 0);
+        document.querySelectorAll('[data-apply-line-index]').forEach(function (checkbox) {
+          var row = checkbox.closest('.payment-detail-entry');
+          var input = row.querySelector('[data-apply-amount-input]');
+          var maxAmount = Number(input.dataset.maxAmount || 0);
+          if (checkbox.checked) {
+            var inputAmount = Math.max(Number(input.value || 0), 0);
+            if (inputAmount > maxAmount) {
+              inputAmount = maxAmount;
+              input.value = inputAmount;
+            }
+            amount += inputAmount;
+          }
         });
-        document.getElementById('applyAmount').value = amount;
+        document.getElementById('paymentApplyTotal').textContent = money(amount);
       }
 
       function nextPaymentNo() {
@@ -3723,24 +3855,33 @@
       }
 
       function upsertPaymentRequest(status) {
-        if (!activePaymentGroup) return null;
+        if (!activePaymentContext) return null;
         var items = activeSelectedItems();
         if (!items.length) {
           openActionResult('请选择成本项', '当前没有可提交的成本明细，请先选择至少一条成本项。', '未生成付款申请。');
           return null;
         }
-        var request = existingRequestForGroup(activePaymentGroup);
+        if (document.getElementById('applyPaymentMethod').value === '请选择付款方式') {
+          openActionResult('请选择付款方式', '付款申请需要明确付款方式。', '未生成付款申请。');
+          return null;
+        }
+        if (items.some(function (item) { return !item.account; })) {
+          openActionResult('补充收款账户', '当前付款申请缺少收款账户，请先填写供应商银行账户。', '未生成付款申请。');
+          return null;
+        }
+        var request = existingRequestForContext(activePaymentContext);
         var isSubmit = status === '审批中';
         if (!request) {
           request = {
             id: nextPaymentNo(),
             approvalNo: '',
-            groupId: activePaymentGroup.id,
-            supplier: activePaymentGroup.supplier,
-            account: activePaymentGroup.account,
-            currency: activePaymentGroup.currency,
-            entity: activePaymentGroup.entity,
-            node: activePaymentGroup.node,
+            groupId: activePaymentContext.groupIds[0],
+            groupIds: activePaymentContext.groupIds.slice(),
+            supplier: activePaymentContext.supplier,
+            account: activePaymentContext.account,
+            currency: activePaymentContext.currency,
+            entity: activePaymentContext.entity,
+            node: activePaymentContext.node,
             amount: 0,
             approvalStatus: '草稿',
             approvalNode: '未提交',
@@ -3752,12 +3893,21 @@
           };
           paymentRequests.unshift(request);
         }
-        request.groupIds = [activePaymentGroup.id];
-        request.sourceType = activePaymentGroup.sourceType || '';
-        request.projectNo = activePaymentGroup.projectNo || '';
-        request.projectOrder = activePaymentGroup.projectOrder || '';
-        request.projectGroup = activePaymentGroup.projectGroup || '';
-        request.customer = activePaymentGroup.customer || '';
+        request.groupIds = activePaymentContext.groupIds.slice();
+        request.groupId = activePaymentContext.groupIds[0];
+        request.sourceType = activePaymentContext.projectMode ? 'project' : '';
+        request.projectNo = activePaymentContext.projectNo || '';
+        request.projectOrder = activePaymentContext.projectOrder || '';
+        request.projectGroup = activePaymentContext.projectGroup || '';
+        request.customer = activePaymentContext.customer || '';
+        request.supplier = activePaymentContext.supplier;
+        request.account = document.getElementById('applyReceiveAccount').value || activePaymentContext.account;
+        request.currency = activePaymentContext.currency;
+        request.entity = activePaymentContext.entity;
+        request.node = activePaymentContext.node;
+        request.paymentMethod = document.getElementById('applyPaymentMethod').value;
+        request.expectedDate = document.getElementById('expectedPayDate').value;
+        request.remark = document.getElementById('applyReason').value;
         request.items = items;
         request.amount = requestAmount(request);
         request.status = status;
@@ -3766,13 +3916,15 @@
         request.financeStatus = isSubmit ? '待审批通过' : '未提交';
         request.paymentStatus = '未进入';
         if (isSubmit && !request.approvalNo) request.approvalNo = 'APR-PAY-' + request.id.replace(/\D/g, '').slice(-8);
-        request.timeline = [(isSubmit ? '2026-07-03 10:20 提交付款申请。' : '2026-07-03 10:05 保存付款申请草稿。'), activePaymentGroup.sourceType === 'project' ? '2026-07-03 09:40 项目团成本已完成业务确认。' : '2026-07-03 09:40 团期成本已完成业务确认。'];
-        activePaymentGroup.status = status;
-        activePaymentGroup.items.forEach(function (item) {
-          var selected = items.find(function (selectedItem) {
-            return selectedItem.scheduleNo === item.scheduleNo && selectedItem.fee === item.fee;
+        request.timeline = [(isSubmit ? '2026-07-03 10:20 提交付款申请。' : '2026-07-03 10:05 保存付款申请草稿。'), paymentModeLabel(activePaymentContext.mode) + '汇总：' + activePaymentContext.label + '。'];
+        activePaymentContext.groups.forEach(function (group) {
+          group.status = status;
+          group.items.forEach(function (item) {
+            var selected = items.find(function (selectedItem) {
+              return selectedItem.groupId === group.id && selectedItem.scheduleNo === item.scheduleNo && selectedItem.fee === item.fee;
+            });
+            if (selected) item.applied = Math.max(Number(item.applied || 0), Number(selected.requestAmount || 0));
           });
-          if (selected) item.applied = Math.max(Number(item.applied || 0), Number(selected.requestAmount || 0));
         });
         return request;
       }
@@ -3846,7 +3998,7 @@
       function createBatchPaymentRequests(status) {
         if (!activeBatchSplits.length) activeBatchSplits = buildBatchSplits(activeBatchGroupIds);
         if (!activeBatchSplits.length) {
-          openActionResult('无法批量申请', '当前选择的成本没有可申请余额，或已进入审批/财务流程。', '请重新选择待申请、草稿或已驳回的成本。');
+          openActionResult('无法批量申请', '当前选择的成本没有可申请余额，或已进入审批/财务流程。', '请重新选择待申请、部分可申请或草稿成本。');
           return [];
         }
         var requests = activeBatchSplits.map(function (split) {
@@ -3921,6 +4073,7 @@
         var request = paymentRequests[Number(index)] || paymentRequests[0];
         activePaymentRequest = request;
         document.getElementById('paymentViewTitle').textContent = '付款申请详情';
+        var applyStatus = requestMainStatus(request);
         document.getElementById('paymentViewSummary').innerHTML =
           '<div class="description-item"><div class="description-label">申请单号</div><div class="description-value">' + escapeHtml(request.id) + '</div></div>' +
           '<div class="description-item"><div class="description-label">审批单号</div><div class="description-value">' + escapeHtml(request.approvalNo || '未提交审批') + '</div></div>' +
@@ -3934,41 +4087,12 @@
             : '') +
           '<div class="description-item"><div class="description-label">付款节点</div><div class="description-value">' + tag(request.node) + '</div></div>' +
           '<div class="description-item"><div class="description-label">申请金额</div><div class="description-value amount-strong">' + money(requestAmount(request)) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">审批状态</div><div class="description-value">' + tag(request.approvalStatus) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">当前节点</div><div class="description-value">' + escapeHtml(request.approvalNode) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">财务状态</div><div class="description-value">' + tag(request.financeStatus) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">付款状态</div><div class="description-value">' + tag(request.paymentStatus) + '</div></div>';
+          '<div class="description-item"><div class="description-label">申请状态</div><div class="description-value">' + tag(applyStatus) + '</div></div>' +
+          '<div class="description-item"><div class="description-label">当前节点</div><div class="description-value">' + escapeHtml(request.approvalNode) + '</div></div>';
         renderPaymentRecordItems(request);
         renderPaymentTimeline(request);
         document.getElementById('paymentApprovalLink').href = request.approvalNo ? '../approval/approvals.html?view=mine&approvalNo=' + encodeURIComponent(request.approvalNo) : '../approval/approvals.html?view=mine';
-        document.getElementById('withdrawPaymentApply').hidden = request.status !== '审批中';
         openLayer(paymentViewDrawer);
-      }
-
-      function withdrawPaymentRequest(request) {
-        if (!request) return;
-        activePaymentRequest = request;
-        request.status = '草稿';
-        request.approvalStatus = '草稿';
-        request.approvalNode = '未提交';
-        request.financeStatus = '未提交';
-        request.paymentStatus = '未进入';
-        request.timeline.unshift('2026-07-03 11:10 业务侧撤回审批。');
-        var group = findPaymentGroup(request.groupId);
-        if (group) group.status = '草稿';
-        if (request.approvalNo) {
-          var stored = readStored('caesarApprovalTasks');
-          if (stored.tasks) {
-            delete stored.tasks[request.approvalNo];
-            writeStored('caesarApprovalTasks', stored);
-          }
-        }
-        request.approvalNo = '';
-        renderPayableCosts();
-        renderPaymentRecords();
-        renderScheduleCosts();
-        closeLayer(paymentViewDrawer);
-        openActionResult('付款申请已撤回', request.id + ' 已撤回为草稿，可修改后重新提交。', '撤回后不会进入财务付款执行。');
       }
 
       function openActionResult(title, text, financeText) {
@@ -4059,7 +4183,7 @@
 
       function resetPaymentRecords() {
         document.getElementById('recordKeyword').value = '';
-        document.getElementById('recordStatus').value = '全部进度';
+        document.getElementById('recordStatus').value = '全部状态';
         panelRows('#paymentRecordPanel').forEach(function (row) { row.hidden = false; });
       }
 
@@ -4070,9 +4194,9 @@
         var openSettlementBasis = event.target.closest('[data-open-settlement-basis]');
         var viewSettlementButton = event.target.closest('[data-view-settlement]');
         var openPaymentCreateButton = event.target.closest('[data-open-payment-create]');
+        var openPaymentCreateGroupsButton = event.target.closest('[data-open-payment-create-groups]');
         var openPaymentBatchButton = event.target.closest('[data-open-payment-batch]');
         var openPaymentRecordButton = event.target.closest('[data-open-payment-record]');
-        var withdrawPaymentRecordButton = event.target.closest('[data-withdraw-payment-record]');
         var closeButton = event.target.closest('[data-close-modal]');
         var editItem = event.target.closest('[data-edit-cost-item]');
         var removeItem = event.target.closest('[data-remove-cost-item]');
@@ -4102,19 +4226,19 @@
           openPaymentDrawer(openPaymentCreateButton.dataset.openPaymentCreate);
           return;
         }
-        if (openPaymentBatchButton) {
-          renderBatchPaymentDrawer(parseGroupIds(openPaymentBatchButton.dataset.openPaymentBatch));
+        if (openPaymentCreateGroupsButton) {
+          openPaymentDrawerForGroups(parseGroupIds(openPaymentCreateGroupsButton.dataset.openPaymentCreateGroups), openPaymentCreateGroupsButton.dataset.paymentContext);
           return;
         }
-        if (withdrawPaymentRecordButton) {
-          withdrawPaymentRequest(paymentRequests[Number(withdrawPaymentRecordButton.dataset.withdrawPaymentRecord)]);
+        if (openPaymentBatchButton) {
+          openPaymentDrawerForGroups(parseGroupIds(openPaymentBatchButton.dataset.openPaymentBatch));
           return;
         }
         if (openPaymentRecordButton) {
           var request = paymentRequests[Number(openPaymentRecordButton.dataset.openPaymentRecord)];
           if (request && (request.status === '草稿' || request.status === '已驳回')) {
             if ((request.groupIds || []).length > 1) {
-              renderBatchPaymentDrawer(request.groupIds);
+              openPaymentDrawerForGroups(request.groupIds);
             } else {
               openPaymentDrawer(payableCostGroups.indexOf(findPaymentGroup(request.groupId)));
             }
@@ -4237,7 +4361,7 @@
           openActionResult('请选择成本', '请先勾选需要归集申请的待付款成本。', '未生成付款申请。');
           return;
         }
-        renderBatchPaymentDrawer(groupIds);
+        openPaymentDrawerForGroups(groupIds, '已选付款明细');
       });
       document.getElementById('saveBatchPaymentDraft').addEventListener('click', function () {
         var requests = createBatchPaymentRequests('草稿');
@@ -4245,7 +4369,7 @@
         var result = document.getElementById('batchPaymentResult');
         result.querySelector('.finance-link-title').textContent = '已保存 ' + requests.length + ' 张付款申请草稿。';
         result.querySelectorAll('.finance-link-item')[0].textContent = '系统已按付款对象、账户、币种、结算主体和付款节点自动拆单。';
-        result.querySelectorAll('.finance-link-item')[1].textContent = '草稿不会进入财务付款执行，可在付款记录继续编辑。';
+        result.querySelectorAll('.finance-link-item')[1].textContent = '草稿不会进入财务付款执行，可在付款申请继续编辑。';
         result.hidden = false;
       });
       document.getElementById('submitBatchPaymentApply').addEventListener('click', function () {
@@ -4256,9 +4380,6 @@
         result.querySelectorAll('.finance-link-item')[0].textContent = '系统已按付款对象、账户、币种、结算主体和付款节点自动拆单。';
         result.querySelectorAll('.finance-link-item')[1].textContent = '审批通过后进入财务付款执行。';
         result.hidden = false;
-      });
-      document.getElementById('withdrawPaymentApply').addEventListener('click', function () {
-        withdrawPaymentRequest(activePaymentRequest);
       });
       document.getElementById('searchPayments').addEventListener('click', filterPaymentWorkbench);
       document.getElementById('paymentKeyword').addEventListener('input', filterPaymentWorkbench);
@@ -4275,6 +4396,7 @@
       document.getElementById('recordStatus').addEventListener('change', filterPaymentRecords);
       document.getElementById('resetRecords').addEventListener('click', resetPaymentRecords);
       document.getElementById('eligibleCostItems').addEventListener('change', updateApplyAmount);
+      document.getElementById('eligibleCostItems').addEventListener('input', updateApplyAmount);
       costItemRows.addEventListener('click', function (event) {
         var saveEdited = event.target.closest('[data-save-edited-cost]');
         if (saveEdited) {
