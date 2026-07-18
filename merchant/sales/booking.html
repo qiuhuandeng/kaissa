@@ -122,6 +122,49 @@
                 <div id="objectSuggestionList" class="booking-product-suggestions" aria-label="产品线路候选" hidden></div>
               </div>
 
+              <div id="saleObjectResultSection" class="booking-sale-object-section" aria-label="产品选择结果" hidden>
+                <div id="bookingPresetPanel" class="booking-preset-panel booking-object-summary" hidden>
+                  <div class="booking-preset-main">
+                    <span>已选产品线路</span>
+                    <strong id="presetProductName">欧洲十国经典游·12天</strong>
+                    <em id="presetProductMeta">线路 / 团期已从产品预订带入</em>
+                  </div>
+                  <button id="changePresetSelection" class="table-link" type="button">更换</button>
+                </div>
+
+                <section id="bookingSourceContext" class="booking-object-summary" hidden>
+                  <div class="booking-preset-main">
+                    <span id="sourceContextType">单团来源</span>
+                    <strong id="sourceContextTitle">-</strong>
+                    <em id="sourceContextMeta">-</em>
+                  </div>
+                  <a id="sourceContextLink" class="table-link" href="../tour/product-custom-list.html">查看来源</a>
+                </section>
+
+                <div id="saleObjectPicker" class="booking-object-picker" hidden>
+                  <div id="planSelectBlock" class="booking-object-plan-block">
+                    <div id="planSelectTitle" class="booking-plan-title">产品线路</div>
+                    <div id="planCards" class="booking-plan-card-list"></div>
+                  </div>
+                  <div id="stockSelectSection" class="booking-object-stock-block" aria-labelledby="bookingStockTitle">
+                    <h3 id="bookingStockTitle" class="booking-plan-title">团期 / 航次 / 出行日期</h3>
+                    <div class="table-wrap booking-stock-table drawer-table-fit drawer-table-cols-4">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th id="stockDateHead">出发日期</th>
+                            <th id="stockObjectHead">团号</th>
+                            <th id="stockRemainHead">余位</th>
+                            <th>操作</th>
+                          </tr>
+                        </thead>
+                        <tbody id="stockRows"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div id="manualProductPanel" class="booking-manual-product-panel" hidden>
                 <div class="form-grid booking-manual-grid">
                   <div class="form-group form-group-full">
@@ -169,49 +212,6 @@
             <section id="manualTripBlock" class="booking-section booking-manual-block" aria-labelledby="manualTravelTitle" hidden>
               <h2 id="manualTravelTitle" class="booking-section-title">出行信息</h2>
               <div id="manualTripFields" class="form-grid booking-manual-grid"></div>
-            </section>
-
-            <section id="saleObjectResultSection" class="booking-section booking-sale-object-section" aria-label="产品选择结果" hidden>
-              <div id="bookingPresetPanel" class="booking-preset-panel booking-object-summary" hidden>
-                <div class="booking-preset-main">
-                  <span>已选产品线路</span>
-                  <strong id="presetProductName">欧洲十国经典游·12天</strong>
-                  <em id="presetProductMeta">线路 / 团期已从产品预订带入</em>
-                </div>
-                <button id="changePresetSelection" class="table-link" type="button">更换</button>
-              </div>
-
-              <section id="bookingSourceContext" class="booking-object-summary" hidden>
-                <div class="booking-preset-main">
-                  <span id="sourceContextType">单团来源</span>
-                  <strong id="sourceContextTitle">-</strong>
-                  <em id="sourceContextMeta">-</em>
-                </div>
-                <a id="sourceContextLink" class="table-link" href="../tour/product-custom-list.html">查看来源</a>
-              </section>
-
-              <div id="saleObjectPicker" class="booking-object-picker" hidden>
-                <div id="planSelectBlock" class="booking-object-plan-block">
-                  <div id="planSelectTitle" class="booking-plan-title">产品线路</div>
-                  <div id="planCards" class="booking-plan-card-list"></div>
-                </div>
-                <div id="stockSelectSection" class="booking-object-stock-block" aria-labelledby="bookingStockTitle">
-                  <h3 id="bookingStockTitle" class="booking-plan-title">团期 / 航次 / 出行日期</h3>
-                  <div class="table-wrap booking-stock-table drawer-table-fit drawer-table-cols-4">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th id="stockDateHead">出发日期</th>
-                          <th id="stockObjectHead">团号</th>
-                          <th id="stockRemainHead">余位</th>
-                          <th>操作</th>
-                        </tr>
-                      </thead>
-                      <tbody id="stockRows"></tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
             </section>
 
             <section class="booking-section" aria-labelledby="bookingPeopleTitle">
@@ -610,8 +610,10 @@
 
       const pageParams = new URLSearchParams(window.location.search);
       const sourceContext = buildSourceContext(pageParams);
+      const isIntentTransferEntry = pageParams.get('from') === 'intent';
       const bookingDrawer = document.getElementById('bookingDrawer');
       const bookingModeButtons = Array.from(document.querySelectorAll('[data-booking-mode]'));
+      const bookingModeSwitch = document.querySelector('.booking-mode-switch');
       const manualProductPanel = document.getElementById('manualProductPanel');
       const manualProductType = document.getElementById('manualProductType');
       const manualSupplier = document.getElementById('manualSupplier');
@@ -948,6 +950,7 @@
       }
 
       function setBookingMode(mode) {
+        if (isIntentTransferEntry && mode === 'manual') mode = 'standard';
         if (mode === bookingMode) return;
         bookingMode = mode;
         bookingModeButtons.forEach(function (button) {
@@ -1186,7 +1189,7 @@
         document.getElementById('stockRemainHead').textContent = currentProduct.stockHeads[2];
         const actionText = currentProduct.type === 'single' ? '选择服务' : '选择' + currentProduct.stockLabel;
         stockRows.innerHTML = currentProduct.stocks.map(function (row, index) {
-          const selected = index === selectedStockIndex ? ' class="selected"' : '';
+          const selected = hasSaleObject && index === selectedStockIndex ? ' class="selected"' : '';
           return '<tr' + selected + ' data-stock-index="' + index + '">' +
             '<td>' + escapeHtml(row[0]) + '</td>' +
             '<td>' + escapeHtml(row[1]) + '</td>' +
@@ -1321,10 +1324,14 @@
 
       function syncObjectSearchControl() {
         const hasKeyword = !!objectKeyword.value.trim();
-        const isProductSelected = objectStep === 'pick';
+        const isProductSelected = objectStep === 'pick' || objectStep === 'selected';
         clearProductSearch.hidden = !hasKeyword;
         objectKeyword.readOnly = isProductSelected;
         saleObjectSearchPanel.classList.toggle('has-selected-product', isProductSelected);
+        if (isProductSelected) {
+          objectSuggestionList.hidden = true;
+          objectSuggestionList.innerHTML = '';
+        }
       }
 
       function syncPresetPanel() {
@@ -1505,11 +1512,12 @@
         const item = record.product;
         currentProduct = cloneProduct(item);
         selectedPlanIndex = Number(record.planIndex || 0);
-        selectedStockIndex = 0;
+        selectedStockIndex = -1;
         clearPresetContext();
         hasSaleObject = false;
         objectStep = 'pick';
         objectSuggestionList.hidden = true;
+        objectSuggestionList.innerHTML = '';
         objectKeyword.value = record.routeName || planOptions()[selectedPlanIndex] || item.name;
         renderAll();
       }
@@ -1845,10 +1853,19 @@
       presetMode = isProductBookingEntry && (!!productFromUrl || sourceContext.isSingleGroup);
       hasSaleObject = presetMode;
       objectStep = presetMode ? 'selected' : 'search';
+      if (isIntentTransferEntry && bookingModeSwitch) {
+        bookingModeSwitch.hidden = true;
+        bookingMode = 'standard';
+        bookingModeButtons.forEach(function (button) {
+          const active = button.dataset.bookingMode === bookingMode;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        if (!presetMode) bookingDrawer.dataset.entry = 'intent-transfer';
+      }
       if (presetMode) {
         bookingDrawer.dataset.entry = 'product-booking';
-        var bookingModeSection = document.querySelector('.booking-mode-section');
-        if (bookingModeSection) bookingModeSection.hidden = true;
+        if (bookingModeSwitch) bookingModeSwitch.hidden = true;
         changePresetSelection.hidden = true;
         saleObjectSearchPanel.hidden = true;
         saleObjectPicker.hidden = true;
@@ -1889,7 +1906,7 @@
       }
       selectedPlanIndex = indexByText(planOptions(), presetPlanOverride || params.get('plan'));
       selectedStockIndex = stockIndexFromParams(params.get('date'), params.get('stock') || params.get('scheduleNo'));
-      if (!presetMode && params.get('mode') === 'manual') {
+      if (!presetMode && params.get('mode') === 'manual' && !isIntentTransferEntry) {
         bookingMode = 'manual';
         bookingModeButtons.forEach(function (button) {
           button.classList.toggle('active', button.dataset.bookingMode === bookingMode);
