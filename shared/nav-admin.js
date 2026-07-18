@@ -1353,6 +1353,7 @@
     layer.hidden = false;
     layer.classList.remove("closing");
     layer.setAttribute("aria-hidden", "false");
+    scheduleDrawerTitleSync(layer);
     requestAnimationFrame(() => layer.classList.add("show"));
     return layer;
   }
@@ -1370,6 +1371,138 @@
     }, delay);
     return layer;
   }
+
+  const drawerTitleCapture = { title: "", time: 0 };
+
+  function normalizeActionTitle(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .replace(/[×✕]/g, "")
+      .trim();
+  }
+
+  function triggerHasLayerIntent(trigger) {
+    if (!trigger || !trigger.attributes) return false;
+    return Array.from(trigger.attributes).some((attr) => {
+      return attr.name === "data-drawer-title" ||
+        attr.name === "data-modal-title" ||
+        attr.name.indexOf("data-open") === 0 ||
+        attr.name.indexOf("data-view") === 0 ||
+        attr.name.indexOf("data-edit") === 0 ||
+        attr.name.indexOf("data-show") === 0;
+    });
+  }
+
+  function drawerTitleFromTrigger(trigger) {
+    if (!trigger) return "";
+    return normalizeActionTitle(
+      trigger.getAttribute("data-drawer-title") ||
+      normalizeActionTitle(trigger.textContent) ||
+      trigger.getAttribute("data-modal-title") ||
+      trigger.getAttribute("aria-label") ||
+      ""
+    );
+  }
+
+  function rememberDrawerTitleTrigger(event) {
+    let trigger = event.target && event.target.closest ? event.target.closest("button, a, [role='button'], [data-drawer-title]") : null;
+    while (trigger && trigger !== document.documentElement && !triggerHasLayerIntent(trigger)) {
+      trigger = trigger.parentElement;
+    }
+    const title = drawerTitleFromTrigger(trigger);
+    if (!title) return;
+    drawerTitleCapture.title = title;
+    drawerTitleCapture.time = Date.now();
+  }
+
+  function drawerDialog(layer) {
+    if (!layer) return null;
+    return layer.classList && layer.classList.contains("drawer-modal") ? layer : layer.querySelector(".drawer-modal");
+  }
+
+  function drawerTitleNode(layer) {
+    const dialog = drawerDialog(layer);
+    const header = dialog ? dialog.querySelector(":scope > .modal-header") : null;
+    if (!header) return null;
+    const title = header.querySelector(".modal-title");
+    if (title) return title;
+    const fallback = Array.from(header.children).find((child) => {
+      return !child.matches(".modal-close, [data-close-modal], [data-close-drawer], [data-close-layer]");
+    });
+    if (!fallback) return null;
+    fallback.classList.add("modal-title");
+    return fallback;
+  }
+
+  function normalizeDrawerHeader(layer) {
+    const dialog = drawerDialog(layer);
+    if (!dialog) return;
+    const header = dialog.querySelector(":scope > .modal-header");
+    const title = drawerTitleNode(layer);
+    if (header && title && title.parentElement !== header && title.parentElement && title.parentElement.parentElement === header) {
+      title.parentElement.classList.add("drawer-title-stack");
+    }
+  }
+
+  function titleForDrawer(layer, options) {
+    const dialog = drawerDialog(layer);
+    const capturedFresh = drawerTitleCapture.title && Date.now() - drawerTitleCapture.time < 1400;
+    return normalizeActionTitle(
+      (options && options.title) ||
+      (dialog && dialog.getAttribute("data-drawer-title")) ||
+      (layer && layer.getAttribute && layer.getAttribute("data-drawer-title")) ||
+      (capturedFresh ? drawerTitleCapture.title : "")
+    );
+  }
+
+  function lockDrawerTitle(layer, title) {
+    if (!title) return;
+    const node = drawerTitleNode(layer);
+    if (!node) return;
+    node.dataset.drawerTitleLocked = title;
+    if (normalizeActionTitle(node.textContent) !== title) node.textContent = title;
+    if (node.dataset.drawerTitleObserverReady === "true") return;
+    node.dataset.drawerTitleObserverReady = "true";
+    new MutationObserver(() => {
+      const expected = node.dataset.drawerTitleLocked;
+      if (expected && normalizeActionTitle(node.textContent) !== expected) {
+        node.textContent = expected;
+      }
+    }).observe(node, { childList: true, characterData: true, subtree: true });
+  }
+
+  function syncDrawerTitle(layer, options) {
+    const dialog = drawerDialog(layer);
+    if (!dialog) return;
+    normalizeDrawerHeader(layer);
+    lockDrawerTitle(layer, titleForDrawer(layer, options));
+  }
+
+  function scheduleDrawerTitleSync(layer, options) {
+    syncDrawerTitle(layer, options);
+    window.setTimeout(() => syncDrawerTitle(layer, options), 0);
+    window.requestAnimationFrame(() => syncDrawerTitle(layer, options));
+  }
+
+  function initDrawerTitleSemantics(scope) {
+    if (document.documentElement.dataset.drawerTitleCaptureReady !== "true") {
+      document.documentElement.dataset.drawerTitleCaptureReady = "true";
+      document.addEventListener("click", rememberDrawerTitleTrigger, true);
+    }
+    scope.querySelectorAll(".modal-overlay, .drawer-modal").forEach((layer) => {
+      const targetLayer = layer.classList.contains("modal-overlay") ? layer : (layer.closest(".modal-overlay") || layer);
+      if (!drawerDialog(targetLayer)) return;
+      normalizeDrawerHeader(targetLayer);
+      if (targetLayer.dataset.drawerTitleReady === "true") return;
+      targetLayer.dataset.drawerTitleReady = "true";
+      new MutationObserver(() => {
+        if (targetLayer.classList.contains("show") || targetLayer.getAttribute("aria-hidden") === "false" || targetLayer.hidden === false) {
+          scheduleDrawerTitleSync(targetLayer);
+        }
+      }).observe(targetLayer, { attributes: true, attributeFilter: ["class", "hidden", "aria-hidden"] });
+    });
+  }
+
 
   function ensureListStateNode(surface, className, titleText, messageText) {
     let node = surface.querySelector(`:scope > .${className}`);
@@ -1446,6 +1579,7 @@
       closeDrawer: closeLayer,
       openModal: openLayer,
       closeModal: closeLayer,
+      syncDrawerTitle,
       toast: showToast,
       setListLoading,
       setListError,
@@ -2341,6 +2475,7 @@
   }
 
   function initLayerSemantics(scope) {
+    initDrawerTitleSemantics(scope);
     scope.querySelectorAll(".modal-overlay").forEach((layer) => {
       if (!layer.hasAttribute("aria-hidden")) {
         layer.setAttribute("aria-hidden", layer.classList.contains("show") ? "false" : "true");
