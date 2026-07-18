@@ -15,6 +15,7 @@
     })();
   </script>
   <script src="../../shared/nav-merchant.js"></script>
+  <script src="../../shared/schedule-route-catalog.js"></script>
 
   <section class="list-page-panel">
     <div class="list-page-head">
@@ -868,14 +869,14 @@
             <div class="batch-flow-head">
               <span class="batch-flow-index">1</span>
               <div>
-                <h2>选择目标产品与线路</h2>
+                <h2 id="batchRoutePickerTitle">选择产品线路</h2>
               </div>
             </div>
             <div id="batchSelectedRoutePanel" class="batch-selected-route-panel" hidden>
               <div class="batch-selected-route-main">
-                <span>已选产品与线路</span>
-                <strong id="batchSelectedRouteName">欧洲十国经典游</strong>
-                <em id="batchSelectedRouteMeta">线路A：A线 法德意12天</em>
+                <span>已选线路</span>
+                <strong id="batchSelectedRouteName">A线 法德意12天</strong>
+                <em id="batchSelectedRouteMeta">欧洲十国经典游 / 团期 / 12天</em>
               </div>
               <button id="changeBatchRouteSelection" class="table-link" type="button">更换</button>
             </div>
@@ -883,8 +884,8 @@
               <div class="batch-product-select-wrap">
                 <div class="batch-product-select">
                   <span aria-hidden="true">⌕</span>
-                  <input id="batchProductSearch" type="search" value="" autocomplete="off" placeholder="搜索产品名称、目的地、编号..." aria-label="选择产品">
-                  <button id="clearBatchProductSearch" class="batch-product-clear" type="button" aria-label="清除已选产品" hidden>×</button>
+                  <input id="batchProductSearch" type="search" value="" autocomplete="off" placeholder="搜索线路名称" aria-label="搜索线路名称">
+                  <button id="clearBatchProductSearch" class="batch-product-clear" type="button" aria-label="清除线路搜索" hidden>×</button>
                   <div id="batchProductInlinePanel" class="batch-picker-panel" hidden>
                     <div id="batchProductList" class="batch-product-list" aria-label="产品卡片列表">
                       <button class="batch-product-card active" type="button" data-product-code="EU" data-product-type="参团游" data-batch-type="普通团期" data-tag-class="tag-blue" data-name="欧洲十国经典游" data-route="A线 法德意12天" data-route-options="A线 法德意12天|B线 荷比德法12天|C线 瑞意深度10天" data-unit="人" data-default-capacity="30" data-default-price="¥12,800" data-destination="法国/德国/意大利" data-days="12" data-planner="周伟">
@@ -928,7 +929,7 @@
                         <div class="batch-product-meta"><span>研学</span><span>4天</span><span>暂无营期</span></div>
                       </button>
                     </div>
-                    <div id="batchProductEmpty" class="batch-product-empty" hidden>未找到匹配产品</div>
+                    <div id="batchProductEmpty" class="batch-product-empty" hidden>未找到匹配线路</div>
                   </div>
                 </div>
               </div>
@@ -936,6 +937,7 @@
                 <label id="batchRoutePlanLabel" class="form-label" for="batchRoutePlanCards">选择产品线路 <span class="req">*</span></label>
                 <select id="batchRoutePlan" class="batch-route-hidden" aria-hidden="true" tabindex="-1"></select>
                 <div id="batchRoutePlanCards" class="batch-plan-card-list" aria-label="产品线路"></div>
+                <div id="batchRoutePlanEmpty" class="batch-product-empty" hidden>未找到匹配线路</div>
               </div>
             </div>
           </section>
@@ -5352,7 +5354,125 @@
         };
       }
 
-      function updateBatchSelectedProduct(card) {
+      function batchDirectRouteSearchEnabled() {
+        return true;
+      }
+
+      function batchRouteTitleText(batchType) {
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '选择产品航线';
+        if (normalized === '专列班期') return '选择专列线路';
+        return '选择产品线路';
+      }
+
+      function batchRouteCardPrefix(batchType) {
+        var normalized = normalizeBatchType(batchType);
+        if (normalized === '邮轮航次') return '航线';
+        if (normalized === '专列班期') return '线路';
+        return '线路';
+      }
+
+      function batchCatalogRoutes() {
+        return window.caesarScheduleRouteCatalog || [];
+      }
+
+      function batchCatalogRoute(productName, routeName) {
+        return batchCatalogRoutes().find(function (route) {
+          var sameProduct = route.product === productName || route.productTitle === productName;
+          return sameProduct && (!routeName || route.route === routeName);
+        });
+      }
+
+      function normalizeBatchProductName(productName) {
+        if (!productName) return '';
+        var matchedRoute = batchCatalogRoute(productName, '');
+        return matchedRoute && matchedRoute.product || productName;
+      }
+
+      function findBatchProductCard(productName) {
+        var normalizedName = normalizeBatchProductName(productName);
+        return Array.from(document.querySelectorAll('#batchProductList .batch-product-card')).find(function (card) {
+          return card.dataset.name === productName || card.dataset.name === normalizedName;
+        });
+      }
+
+      function batchRouteSearchSourceCards() {
+        var cards = Array.from(document.querySelectorAll('#batchProductList .batch-product-card'));
+        if (!routeFilterProduct) return cards;
+        var normalizedName = normalizeBatchProductName(routeFilterProduct);
+        var matched = cards.filter(function (card) {
+          return card.dataset.name === routeFilterProduct || card.dataset.name === normalizedName;
+        });
+        return matched.length ? matched : cards;
+      }
+
+      function batchRouteDays(card, plan) {
+        if (!card) return '-';
+        var catalogRoute = batchCatalogRoute(card.dataset.name, plan);
+        if (catalogRoute && catalogRoute.days) return String(catalogRoute.days);
+        var matchedDays = String(plan || '').match(/(\d+)\s*天/);
+        return matchedDays ? matchedDays[1] : card.dataset.days || '-';
+      }
+
+      function batchSelectedRouteDuration() {
+        return Number(batchRouteDays(batchSelectedProduct, batchRoutePlan.value)) || Number(batchSelectedProduct && batchSelectedProduct.dataset.days || 1) || 1;
+      }
+
+      function batchRouteSearchRecords() {
+        var records = [];
+        batchRouteSearchSourceCards().forEach(function (card) {
+          var plans = (card.dataset.routeOptions || card.dataset.route || '').split('|').filter(Boolean);
+          plans.forEach(function (plan, index) {
+            records.push({
+              product: card.dataset.name,
+              productCard: card,
+              batchType: card.dataset.batchType || '普通团期',
+              days: batchRouteDays(card, plan),
+              route: plan,
+              index: index
+            });
+          });
+        });
+        return records;
+      }
+
+      function currentBatchRouteSearchTitle() {
+        var sourceCards = batchRouteSearchSourceCards();
+        if (sourceCards.length === 1) return batchRouteTitleText(sourceCards[0].dataset.batchType || '普通团期');
+        return '选择产品线路';
+      }
+
+      function renderBatchRouteSearchOptions(keyword) {
+        var value = String(keyword || '').trim().toLowerCase();
+        var records = batchRouteSearchRecords();
+        var matchedRecords = value ? records.filter(function (record) {
+          return record.route.toLowerCase().indexOf(value) >= 0;
+        }) : [];
+        var titleText = currentBatchRouteSearchTitle();
+        var routeTitle = document.getElementById('batchRoutePickerTitle');
+        if (routeTitle) routeTitle.textContent = titleText;
+        batchRoutePlanLabel.innerHTML = titleText + ' <span class="req">*</span>';
+        batchRoutePlan.innerHTML = records.map(function (record) {
+          return '<option value="' + escapeHtml(record.route) + '" data-product-name="' + escapeHtml(record.product) + '">' + escapeHtml(record.route) + '</option>';
+        }).join('');
+        batchRoutePlan.disabled = records.length === 0;
+        document.getElementById('batchPlanSelectWrap').hidden = !value;
+        document.getElementById('batchProductInlinePanel').hidden = true;
+        document.getElementById('batchProductEmpty').hidden = !value || matchedRecords.length > 0;
+        if (document.getElementById('batchRoutePlanEmpty')) {
+          document.getElementById('batchRoutePlanEmpty').hidden = !value || matchedRecords.length > 0;
+        }
+        document.getElementById('batchRoutePlanCards').innerHTML = matchedRecords.map(function (record) {
+          var sourceCount = batchRouteSearchSourceCards().length;
+          var prefix = batchRouteCardPrefix(record.batchType) + String.fromCharCode(65 + record.index);
+          var active = batchPlanPicked && batchSelectedProduct && batchSelectedProduct.dataset.name === record.product && record.route === batchRoutePlan.value;
+          var meta = sourceCount === 1 ? '行程时长：' + escapeHtml(record.days) + '天' : escapeHtml(record.product) + ' / 行程时长：' + escapeHtml(record.days) + '天';
+          return '<button class="batch-plan-card' + (active ? ' active' : '') + '" type="button" data-product-name="' + escapeHtml(record.product) + '" data-route-plan="' + escapeHtml(record.route) + '"><span class="batch-plan-radio"></span><span class="batch-plan-main"><strong>' + escapeHtml(prefix) + '：' + escapeHtml(record.route) + '</strong><em>' + meta + '</em></span><span class="batch-plan-days">天数: ' + escapeHtml(record.days) + 'D</span></button>';
+        }).join('');
+      }
+
+      function updateBatchSelectedProduct(card, options) {
+        options = options || {};
         batchSelectedProduct = card;
         batchProductPicked = true;
         batchPlanPicked = false;
@@ -5361,9 +5481,14 @@
           item.classList.toggle('active', item === card);
           item.hidden = false;
         });
-        document.getElementById('batchProductSearch').value = card.dataset.name;
         document.getElementById('batchProductInlinePanel').hidden = true;
-        renderBatchRouteOptions(card);
+        if (batchDirectRouteSearchEnabled()) {
+          if (!options.keepSearchValue) document.getElementById('batchProductSearch').value = '';
+          renderBatchRouteSearchOptions(document.getElementById('batchProductSearch').value);
+        } else {
+          document.getElementById('batchProductSearch').value = card.dataset.name;
+          renderBatchRouteOptions(card);
+        }
         syncBatchProductPickerState();
         document.getElementById('batchCapacityLimit').value = card.dataset.defaultCapacity || document.getElementById('batchCapacityLimit').value || 30;
         document.getElementById('batchMinGroupSize').value = Math.ceil(Number(document.getElementById('batchCapacityLimit').value || 0) * 0.6) || '';
@@ -5399,6 +5524,11 @@
       }
 
       function filterBatchProducts(keyword) {
+        if (batchDirectRouteSearchEnabled()) {
+          renderBatchRouteSearchOptions(keyword);
+          syncBatchProductPickerState();
+          return;
+        }
         var value = String(keyword || '').trim().toLowerCase();
         var matchedCount = 0;
         document.querySelectorAll('#batchProductList .batch-product-card').forEach(function (card) {
@@ -5414,6 +5544,25 @@
         var picked = !!batchSelectedProduct && batchProductPicked;
         var confirmed = picked && batchPlanPicked;
         var searchWrap = document.querySelector('#batchScheduleDrawer .batch-product-select');
+        if (batchDirectRouteSearchEnabled()) {
+          var searchInput = document.getElementById('batchProductSearch');
+          var hasKeyword = !!searchInput.value.trim();
+          searchInput.readOnly = false;
+          document.getElementById('clearBatchProductSearch').hidden = !hasKeyword;
+          document.getElementById('batchPlanSelectWrap').hidden = !hasKeyword;
+          document.getElementById('batchRoutePickerPanel').hidden = confirmed;
+          document.getElementById('batchSelectedRoutePanel').hidden = !confirmed;
+          searchWrap.classList.toggle('has-selected-product', confirmed);
+          if (confirmed) {
+            var selectedRouteDays = batchRouteDays(batchSelectedProduct, batchRoutePlan.value);
+            document.getElementById('batchSelectedRouteName').textContent = batchRoutePlan.value;
+            document.getElementById('batchSelectedRouteMeta').textContent = batchSelectedProduct.dataset.name + ' / ' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') + ' / ' + selectedRouteDays + '天';
+          }
+          if (batchCurrentStep === 1) {
+            document.getElementById('batchNextStep').disabled = batchCreated || !confirmed;
+          }
+          return;
+        }
         document.getElementById('batchProductSearch').readOnly = picked;
         document.getElementById('clearBatchProductSearch').hidden = !picked;
         document.getElementById('batchPlanSelectWrap').hidden = !picked;
@@ -5437,6 +5586,7 @@
         document.getElementById('batchProductSearch').readOnly = false;
         document.getElementById('batchProductInlinePanel').hidden = true;
         document.getElementById('batchProductEmpty').hidden = true;
+        if (document.getElementById('batchRoutePlanEmpty')) document.getElementById('batchRoutePlanEmpty').hidden = true;
         document.getElementById('batchRoutePlan').innerHTML = '';
         document.getElementById('batchRoutePlanCards').innerHTML = '';
         if (batchPricingPolicy) batchPricingPolicy.value = '';
@@ -5446,12 +5596,20 @@
           card.classList.remove('active');
           card.hidden = false;
         });
+        if (batchDirectRouteSearchEnabled()) {
+          renderBatchRouteSearchOptions('');
+        }
         syncBatchProductPickerState();
       }
 
       function reopenBatchRoutePicker() {
         batchPlanPicked = false;
-        syncBatchRoutePlanCards();
+        if (batchDirectRouteSearchEnabled()) {
+          document.getElementById('batchProductSearch').value = '';
+          renderBatchRouteSearchOptions('');
+        } else {
+          syncBatchRoutePlanCards();
+        }
         syncBatchProductPickerState();
       }
 
@@ -5476,8 +5634,26 @@
 
       function syncBatchRoutePlanCards() {
         document.querySelectorAll('#batchRoutePlanCards .batch-plan-card').forEach(function (item) {
-          item.classList.toggle('active', batchPlanPicked && item.dataset.routePlan === batchRoutePlan.value);
+          var sameProduct = !item.dataset.productName || batchSelectedProduct && item.dataset.productName === batchSelectedProduct.dataset.name;
+          item.classList.toggle('active', batchPlanPicked && sameProduct && item.dataset.routePlan === batchRoutePlan.value);
         });
+      }
+
+      function selectBatchRoutePlanCard(card) {
+        var routePlan = card.dataset.routePlan || '';
+        var productName = card.dataset.productName || batchSelectedProduct && batchSelectedProduct.dataset.name || '';
+        var productCard = findBatchProductCard(productName) || batchSelectedProduct;
+        if (!productCard || !routePlan) return;
+        if (batchDirectRouteSearchEnabled()) {
+          updateBatchSelectedProduct(productCard, { keepSearchValue: true });
+          document.getElementById('batchProductSearch').value = routePlan;
+        }
+        batchRoutePlan.value = routePlan;
+        batchPlanPicked = true;
+        if (batchDirectRouteSearchEnabled()) renderBatchRouteSearchOptions(routePlan);
+        syncBatchRoutePlanCards();
+        syncBatchProductPickerState();
+        if (batchCurrentStep === 2) renderBatchPreview();
       }
 
       function applyBatchDefaultQuota() {
@@ -5859,7 +6035,7 @@
 
       function updateBatchCreateCount() {
         var count = document.querySelectorAll('#batchPreviewRows tr').length;
-        document.getElementById('batchCreateCountText').textContent = batchSelectedProduct ? '将创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') : '请先选择产品与线路';
+        document.getElementById('batchCreateCountText').textContent = batchSelectedProduct ? '将创建 ' + count + ' 个' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') : '请先选择产品线路';
         document.getElementById('batchProgressCount').textContent = '0/' + count;
       }
 
@@ -5888,14 +6064,16 @@
         if (prefill && guardFreeTravelProduct(prefill.product, prefill.route)) return;
         resetBatchWizard();
         if (prefill && prefill.product) {
-          var productCard = Array.from(document.querySelectorAll('#batchProductList .batch-product-card')).find(function (card) {
-            return card.dataset.name === prefill.product;
-          });
+          var productCard = findBatchProductCard(prefill.product);
           if (productCard) {
-            updateBatchSelectedProduct(productCard);
+            updateBatchSelectedProduct(productCard, { keepSearchValue: batchDirectRouteSearchEnabled() });
             if (prefill.route) {
               batchRoutePlan.value = prefill.route;
               batchPlanPicked = true;
+              if (batchDirectRouteSearchEnabled()) {
+                document.getElementById('batchProductSearch').value = prefill.route;
+                renderBatchRouteSearchOptions(prefill.route);
+              }
               syncBatchRoutePlanCards();
               syncBatchProductPickerState();
             }
@@ -5938,6 +6116,7 @@
         selected.slice().reverse().forEach(function (row, reverseIndex) {
           var sourceIndex = selected.length - reverseIndex - 1;
           var departDateValue = row.dataset.batchPreviewDate;
+          var routeDuration = batchSelectedRouteDuration();
           var capacity = Number(row.dataset.capacity || document.getElementById('batchCapacityLimit').value || 0);
           var rowPrice = row.dataset.price || batchPrimaryPrice();
           var rowLeader = row.dataset.leader === '待分配' ? '' : row.dataset.leader || '';
@@ -5947,7 +6126,7 @@
             company: '福建凯撒',
             ownerOrg: productOwnerOrg(batchSelectedProduct.dataset.name),
             depart: departDateValue,
-            back: addDays(departDateValue, Number(batchSelectedProduct.dataset.days || 1) - 1),
+            back: addDays(departDateValue, routeDuration - 1),
             stock: String(capacity),
             sold: '0',
             left: String(capacity),
@@ -6029,6 +6208,7 @@
           var createdSchedules = Array.from(document.querySelectorAll('#batchPreviewRows tr')).map(function (row, index) {
             var depart = row.dataset.batchPreviewDate;
             var capacity = Number(row.dataset.capacity || document.getElementById('batchCapacityLimit').value || 0);
+            var routeDuration = batchSelectedRouteDuration();
             return {
               code: batchScheduleCode(depart, index),
               product: batchSelectedProduct.dataset.name,
@@ -6038,7 +6218,7 @@
               batchType: batchSelectedProduct.dataset.batchType || '普通团期',
               pricingPolicy: batchPricingPolicy && batchPricingPolicy.value || recommendedPricingPolicy(batchSelectedProduct.dataset.batchType || '普通团期', batchSelectedProduct.dataset.name),
               depart: depart,
-              back: addDays(depart, Number(batchSelectedProduct.dataset.days || 1) - 1),
+              back: addDays(depart, routeDuration - 1),
               deadline: addDays(depart, -5),
               stock: capacity,
               sold: 0,
@@ -6608,15 +6788,33 @@
       });
 
       document.getElementById('batchProductSearch').addEventListener('focus', function () {
+        if (batchDirectRouteSearchEnabled()) {
+          filterBatchProducts(this.value);
+          return;
+        }
         if (!batchProductPicked) filterBatchProducts(this.value);
       });
 
       document.getElementById('batchProductSearch').addEventListener('input', function (event) {
+        if (batchDirectRouteSearchEnabled()) {
+          batchPlanPicked = false;
+          filterBatchProducts(event.target.value);
+          return;
+        }
         if (batchProductPicked) return;
         filterBatchProducts(event.target.value);
       });
 
       document.getElementById('batchProductSearch').addEventListener('keydown', function (event) {
+        if (batchDirectRouteSearchEnabled()) {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          var firstRouteCard = Array.from(document.querySelectorAll('#batchRoutePlanCards .batch-plan-card')).find(function (card) {
+            return !card.hidden;
+          });
+          if (firstRouteCard) selectBatchRoutePlanCard(firstRouteCard);
+          return;
+        }
         if (event.key !== 'Enter' || batchProductPicked) return;
         event.preventDefault();
         var firstMatched = Array.from(document.querySelectorAll('#batchProductList .batch-product-card')).find(function (card) {
@@ -6634,13 +6832,7 @@
       document.getElementById('batchRoutePlanCards').addEventListener('click', function (event) {
         var card = event.target.closest('.batch-plan-card');
         if (!card) return;
-        batchRoutePlan.value = card.dataset.routePlan;
-        batchPlanPicked = true;
-        document.querySelectorAll('#batchRoutePlanCards .batch-plan-card').forEach(function (item) {
-          item.classList.toggle('active', item === card);
-        });
-        syncBatchProductPickerState();
-        if (batchCurrentStep === 2) renderBatchPreview();
+        selectBatchRoutePlanCard(card);
       });
 
       document.getElementById('batchDateCalendar').addEventListener('click', function (event) {
@@ -6764,7 +6956,7 @@
       document.getElementById('batchNextStep').addEventListener('click', function () {
         if (batchCurrentStep === 1) {
           if (!batchSelectedProduct || !batchPlanPicked) {
-            if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请先选择产品与线路', { type: 'warning' });
+            if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请先选择产品线路', { type: 'warning' });
             return;
           }
           setBatchStep(2);
