@@ -3510,7 +3510,7 @@
           var pending = row.roster !== '已齐' || index === 1 && rosterStatusText(item) !== '已齐';
           var status = pending ? (type === '专列班期' ? '实名待补' : type === '邮轮航次' ? '船票待出' : '证件待补') : '资料完整';
           var missing = pending ? (type === '邮轮航次' ? '船票号' : type === '专列班期' ? '身份证影像' : '护照/签证页') : '无';
-          return '<tr><td>' + escapeHtml(row.customer) + '<br><span class="text-muted">' + escapeHtml(row.no) + '</span></td><td>' + escapeHtml(title) + '</td><td>' + escapeHtml(pending ? '出发前3天' : '2029-12-31') + '</td><td><span class="' + documentsStatusClass(status) + '">' + escapeHtml(status) + '</span></td><td>' + escapeHtml(missing) + '</td><td>' + escapeHtml(pending ? '今日待跟进' : '已复核') + '</td><td><div class="table-action"><button class="table-action-primary" type="button">' + escapeHtml(pending ? '提醒' : '查看') + '</button></div></td></tr>';
+          return '<tr><td>' + escapeHtml(row.customer) + '<br><span class="text-muted">' + escapeHtml(row.no) + '</span></td><td>' + escapeHtml(title) + '</td><td>' + escapeHtml(pending ? '出发前3天' : '2029-12-31') + '</td><td><span class="' + documentsStatusClass(status) + '">' + escapeHtml(status) + '</span></td><td>' + escapeHtml(missing) + '</td><td>' + escapeHtml(pending ? '今日待跟进' : '已复核') + '</td><td><div class="table-action"><button class="table-action-primary" type="button">查看</button></div></td></tr>';
         }).join('');
       }
 
@@ -3922,7 +3922,7 @@
             noticeStatus: '已发送',
             leaderStatus: '已安排',
             tabStatus: '已截止 出团中 预估成本',
-            remark: '样例：出团中，用于查看执行记录按钮',
+            remark: '样例：出团中，用于查看出行中团期状态',
             deadline: '2026-06-24'
           },
           {
@@ -4457,20 +4457,16 @@
         } else if (mainStage === '销售中') {
           if (item.saleStatus === '开放报名') items.push(dropdownItem('关闭报名', 'data-toggle-sale'));
           items.push(dropdownItem('查看订单', 'data-open-schedule-orders'));
-          items.push(dropdownItem('执行准备', 'data-open-primary-action="preparation"'));
+          items.push(dropdownItem('名单', 'data-open-roster'));
           items.push(dropdownItem('复制' + objectName, 'data-copy-schedule'));
           items.push(dropdownItem('取消' + objectName, 'data-cancel-schedule', true));
         } else if (mainStage === '出行中') {
           if (execution === '出团中') {
-            items.push(dropdownItem('执行记录', 'data-open-primary-action="execution"'));
-            items.push(dropdownItem('出团通知', 'data-open-notice'));
-            items.push(dropdownItem('领队安排', 'data-open-leader'));
+            items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
             items.push(dropdownItem('标记已回团', 'data-mark-returned'));
           } else {
             items.push(dropdownItem('证件/签证', 'data-open-documents'));
             items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
-            items.push(dropdownItem('出团通知', 'data-open-notice'));
-            items.push(dropdownItem('领队安排', 'data-open-leader'));
             items.push(dropdownItem('标记已出发', 'data-mark-departed'));
           }
         } else if (mainStage === '已结束') {
@@ -4492,7 +4488,6 @@
           return '<div class="table-action"><button type="button" class="table-action-primary" disabled>审批中</button><a href="' + href + '">详情</a></div>';
         }
         var mainStage = scheduleMainStage(item);
-        var execution = executionStage(item);
         var primaryAction = '<a class="table-action-primary" href="' + href + '">查看详情</a>';
         var secondaryAction = '';
         if (mainStage === '待发布') {
@@ -4502,7 +4497,7 @@
           primaryAction = '<button class="table-action-primary" type="button" data-open-schedule-price>调价</button>';
           secondaryAction = '<button type="button" data-open-stock-adjust>调库存</button>';
         } else if (mainStage === '出行中') {
-          primaryAction = '<button class="table-action-primary" type="button" data-open-primary-action="' + (execution === '出团中' ? 'execution' : 'preparation') + '">执行</button>';
+          primaryAction = '<a class="table-action-primary" href="' + href + '">详情</a>';
           secondaryAction = '<button type="button" data-open-roster>名单</button>';
         } else if (mainStage === '已结束') {
           primaryAction = '<a class="table-action-primary" href="' + href + '">详情</a>';
@@ -6457,12 +6452,9 @@
         var quickBookingButton = event.target.closest('[data-open-quick-booking]');
         var priceButton = event.target.closest('[data-open-schedule-price]');
         var resourceActionButton = event.target.closest('[data-resource-action]');
-        var primaryActionButton = event.target.closest('[data-open-primary-action]');
         var rosterButton = event.target.closest('[data-open-roster]');
         var documentsButton = event.target.closest('[data-open-documents]');
         var executionResourceButton = event.target.closest('[data-open-execution-resource]');
-        var noticeButton = event.target.closest('[data-open-notice]');
-        var leaderButton = event.target.closest('[data-open-leader]');
         var markDepartedButton = event.target.closest('[data-mark-departed]');
         var markReturnedButton = event.target.closest('[data-mark-returned]');
 
@@ -6547,38 +6539,6 @@
           window.caesarUI.openLayer(stockLineageDrawer);
           return;
         }
-        if (primaryActionButton && item) {
-          event.preventDefault();
-          event.stopPropagation();
-          closeMenus();
-          var actionKey = primaryActionButton.dataset.openPrimaryAction;
-          if (actionKey === 'markDeparted') {
-            item.executionStatus = '出团中';
-            item.saleStatus = '已截止';
-            item.tabStatus = stateTokens(item);
-            renderRows();
-            showScheduleExecutionResult('已将 ' + item.code + ' 标记为出团中。');
-            return;
-          }
-          if (actionKey === 'markReturned') {
-            item.executionStatus = '已回团';
-            item.settlementStatus = item.settlementStatus === '已结算' ? '已结算' : '结算中';
-            item.tabStatus = stateTokens(item);
-            renderRows();
-            showScheduleExecutionResult('已将 ' + item.code + ' 标记为已回团，可进入成本结算复核。');
-            return;
-          }
-          if (actionKey === 'preparation') {
-            openExecutionDrawer(item, 'roster');
-            return;
-          }
-          if (actionKey === 'execution') {
-            openExecutionDrawer(item, 'resource');
-            return;
-          }
-          openExecutionDrawer(item, actionKey);
-          return;
-        }
         if (rosterButton && item) {
           event.preventDefault();
           event.stopPropagation();
@@ -6598,20 +6558,6 @@
           event.stopPropagation();
           closeMenus();
           openExecutionDrawer(item, 'resource');
-          return;
-        }
-        if (noticeButton && item) {
-          event.preventDefault();
-          event.stopPropagation();
-          closeMenus();
-          openExecutionDrawer(item, 'notice');
-          return;
-        }
-        if (leaderButton && item) {
-          event.preventDefault();
-          event.stopPropagation();
-          closeMenus();
-          openExecutionDrawer(item, 'leader');
           return;
         }
         if (markDepartedButton && item) {
