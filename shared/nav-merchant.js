@@ -195,7 +195,6 @@
       title: "财务",
       icon: "wallet",
       children: [
-        { title: "财务工作台", href: "finance/finance-workbench.html" },
         {
           title: "收入应收",
           children: [
