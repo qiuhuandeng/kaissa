@@ -50,8 +50,8 @@
       </div>
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="paymentManageKeyword">单据/付款对象/团期/项目</label><input id="paymentManageKeyword" type="search" placeholder="单据/付款对象/团期/项目"></div>
-        <div class="filter-item-sm" hidden><label class="sr-only" for="paymentManageCompany">付款主体</label><select id="paymentManageCompany"><option>全部主体</option><option>总部财务</option><option>福建凯撒</option><option>上海凯撒</option><option>北京凯撒</option></select></div>
-        <div class="filter-item-sm"><label class="sr-only" for="paymentManageType">付款类型</label><select id="paymentManageType"><option>全部类型</option><option>普通付款</option><option>预付款</option><option>保证金</option><option>备用金</option></select></div>
+
+
         <div class="filter-item-sm"><label class="sr-only" for="paymentManageRisk">处理状态</label><select id="paymentManageRisk"><option>全部状态</option><option>审批中</option><option>待执行</option><option>待补资料</option><option>待回单</option><option>已核销</option><option>退汇待处理</option></select></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search>查询</button><button class="btn btn-secondary" type="button" data-reset>重置</button></div>
       </div>
@@ -170,8 +170,6 @@
       }
       function applyFilters() {
         var keyword = document.getElementById('paymentManageKeyword').value.trim().toLowerCase();
-        var company = document.getElementById('paymentManageCompany').value;
-        var type = document.getElementById('paymentManageType').value;
         var risk = document.getElementById('paymentManageRisk').value;
         var visible = 0;
         rows.forEach(function (row) {
@@ -196,10 +194,12 @@
       });
       document.querySelector('[data-search]').addEventListener('click', applyFilters);
       document.getElementById('paymentManageKeyword').addEventListener('keydown', function (event) { if (event.key === 'Enter') applyFilters(); });
-      ['paymentManageCompany', 'paymentManageType', 'paymentManageRisk'].forEach(function (id) { document.getElementById(id).addEventListener('change', applyFilters); });
+      ['paymentManageRisk'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', applyFilters);
+      });
       document.querySelector('[data-reset]').addEventListener('click', function () {
         document.getElementById('paymentManageKeyword').value = '';
-        ['paymentManageCompany', 'paymentManageType', 'paymentManageRisk'].forEach(function (id) { document.getElementById(id).selectedIndex = 0; });
+        document.getElementById('paymentManageRisk').selectedIndex = 0;
         activeStage = '付款申请';
         document.querySelectorAll('[aria-label="付款管理业务域"] [data-stage]').forEach(function (item, index) { item.classList.toggle('active', index === 0); });
         applyFilters();

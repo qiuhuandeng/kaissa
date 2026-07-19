@@ -19,7 +19,7 @@
       </div>
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="keyword">调拨单/账户/主体/用途</label><input id="keyword" type="search" placeholder="调拨单/账户/主体/用途"></div>
-        <div class="filter-item-sm" hidden><label class="sr-only" for="entity">调拨主体</label><select id="entity"><option value="">全部主体</option><option>总部财务</option><option>福建凯撒</option><option>上海凯撒</option><option>北京王府井旗舰店</option></select></div>
+
         <div class="filter-item-sm"><label class="sr-only" for="status">调拨状态</label><select id="status"><option value="">全部状态</option><option>待提交</option><option>审批中</option><option>待到账</option><option>已到账</option><option>已退回</option></select></div>
         <div class="filter-item-wide filter-item-date-range"><label class="sr-only">申请日期</label><div class="date-range"><input id="dateStart" type="date" aria-label="开始日期"><span>至</span><input id="dateEnd" type="date" aria-label="结束日期"></div></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search>查询</button><button class="btn btn-secondary" type="button" data-reset>重置</button></div>
@@ -195,7 +195,6 @@
 
       function applyFilters() {
         var keyword = document.getElementById('keyword').value.trim().toLowerCase();
-        var entity = document.getElementById('entity').value;
         var status = document.getElementById('status').value || activeStatus;
         var start = document.getElementById('dateStart').value;
         var end = document.getElementById('dateEnd').value;
@@ -203,7 +202,6 @@
         rows.forEach(function (row) {
           var visible = true;
           if (status && row.dataset.status !== status) visible = false;
-          if (entity && row.dataset.entity !== entity) visible = false;
           if (start && row.dataset.applyDate < start) visible = false;
           if (end && row.dataset.applyDate > end) visible = false;
           if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
@@ -375,7 +373,6 @@
         }
         if (event.target.closest('[data-reset]')) {
           document.getElementById('keyword').value = '';
-          document.getElementById('entity').value = '';
           document.getElementById('status').value = '';
           document.getElementById('dateStart').value = '';
           document.getElementById('dateEnd').value = '';
@@ -404,7 +401,7 @@
         activeStatus = this.value;
         applyFilters();
       });
-      ['entity', 'dateStart', 'dateEnd'].forEach(function (id) {
+      ['dateStart', 'dateEnd'].forEach(function (id) {
         document.getElementById(id).addEventListener('change', applyFilters);
       });
 

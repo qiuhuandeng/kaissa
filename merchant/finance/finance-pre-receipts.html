@@ -51,8 +51,8 @@
       </div>
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="preReceiptKeyword">单据/客户/门店/订单</label><input id="preReceiptKeyword" type="search" placeholder="单据/客户/门店/订单"></div>
-        <div class="filter-item-sm"><label class="sr-only" for="preReceiptOwner">账户对象</label><select id="preReceiptOwner"><option>全部对象</option><option>散客</option><option>企业客户</option><option>门店</option><option>渠道</option></select></div>
-        <div class="filter-item-sm" hidden><label class="sr-only" for="preReceiptCompany">财务主体</label><select id="preReceiptCompany"><option>全部主体</option><option>总部财务</option><option>福建凯撒</option><option>上海凯撒</option><option>北京王府井旗舰店</option></select></div>
+
+
         <div class="filter-item-sm"><label class="sr-only" for="preReceiptStatus">状态</label><select id="preReceiptStatus"><option>全部状态</option><option>待确认</option><option>可使用</option><option>部分使用</option><option>已冻结</option><option>退款中</option><option>已完成</option></select></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search>查询</button><button class="btn btn-secondary" type="button" data-reset>重置</button></div>
       </div>
@@ -161,8 +161,6 @@
       }
       function applyFilters() {
         var keyword = document.getElementById('preReceiptKeyword').value.trim().toLowerCase();
-        var owner = document.getElementById('preReceiptOwner').value;
-        var company = document.getElementById('preReceiptCompany').value;
         var status = document.getElementById('preReceiptStatus').value;
         var visible = 0;
         rows.forEach(function (row) {
@@ -187,10 +185,12 @@
       });
       document.querySelector('[data-search]').addEventListener('click', applyFilters);
       document.getElementById('preReceiptKeyword').addEventListener('keydown', function (event) { if (event.key === 'Enter') applyFilters(); });
-      ['preReceiptOwner', 'preReceiptCompany', 'preReceiptStatus'].forEach(function (id) { document.getElementById(id).addEventListener('change', applyFilters); });
+      ['preReceiptStatus'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', applyFilters);
+      });
       document.querySelector('[data-reset]').addEventListener('click', function () {
         document.getElementById('preReceiptKeyword').value = '';
-        ['preReceiptOwner', 'preReceiptCompany', 'preReceiptStatus'].forEach(function (id) { document.getElementById(id).selectedIndex = 0; });
+        document.getElementById('preReceiptStatus').selectedIndex = 0;
         activeCategory = '预收管理';
         document.querySelectorAll('[aria-label="预收预存业务域"] [data-category]').forEach(function (item, index) { item.classList.toggle('active', index === 0); });
         applyFilters();
