@@ -781,41 +781,24 @@
   <div id="orderCollectionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal modal-lg drawer-modal order-collection-drawer settlement-basis-drawer" role="dialog" aria-modal="true" aria-labelledby="orderCollectionTitle">
       <div class="modal-header">
-        <div id="orderCollectionTitle" class="modal-title">登记阶段收款</div>
+        <div id="orderCollectionTitle" class="modal-title">收款</div>
         <button class="modal-close" type="button" aria-label="关闭订单收款" data-close-collection>×</button>
       </div>
       <div class="modal-body settlement-basis-body order-collection-body">
-        <section class="drawer-object-summary settlement-basis-summary collection-order-summary" aria-label="订单收款摘要">
-          <div class="drawer-object-main">
-            <div>
-              <strong id="collectionObjectTitle" class="drawer-object-title">-</strong>
-              <span id="collectionObjectMeta" class="drawer-object-subtitle">-</span>
-            </div>
-            <span id="collectionObjectStatus" class="tag tag-orange">待收款</span>
-          </div>
-          <div class="settlement-basis-summary-line collection-summary-line">
-            <span>结算对象 <strong id="collectionSettleUnitType">企业客户</strong></span>
-            <span>订单应收 <strong id="collectionOrderReceivableAmount">¥0</strong></span>
-            <span>当前阶段应收 <strong id="collectionReceivableAmount">¥0</strong></span>
-            <span>当前阶段已收 <strong id="collectionReceivedAmount">¥0</strong></span>
-            <span>当前阶段待收 <strong id="collectionPendingAmount" class="amount-red">¥0</strong></span>
-          </div>
-        </section>
-
         <section class="order-desc-card settlement-basis-section order-collection-section">
           <div class="drawer-section-head settlement-basis-section-head">
-            <h2 id="collectionReceivableTitle" class="detail-section-title">应收明细</h2>
+            <h2 id="collectionReceivableTitle" class="detail-section-title">选择应收</h2>
           </div>
           <section class="table-wrap order-collection-stage-table drawer-table-compact drawer-table-cols-6">
             <table>
               <thead>
                 <tr>
-                  <th>收款节点</th>
+                  <th>选择</th>
+                  <th>款项/应收状态</th>
                   <th>应收金额</th>
                   <th>已收金额</th>
                   <th>待收金额</th>
-                  <th>计划节点</th>
-                  <th>状态</th>
+                  <th>本次收款</th>
                 </tr>
               </thead>
               <tbody id="collectionReceivableRows"></tbody>
@@ -835,7 +818,7 @@
               <thead>
                 <tr>
                   <th>收款时间</th>
-                  <th>收款节点</th>
+                  <th>款项</th>
                   <th>支付方式</th>
                   <th>收款金额</th>
                   <th>流水/支付单号</th>
@@ -849,22 +832,15 @@
 
         <section class="order-desc-card settlement-basis-section collection-payment-card">
           <div class="drawer-section-head settlement-basis-section-head">
-            <h2 id="collectionPaymentTitle" class="detail-section-title">本次收款</h2>
+            <h2 id="collectionPaymentTitle" class="detail-section-title">支付方式</h2>
           </div>
           <section class="form-stack">
             <select id="collectionNode" hidden aria-hidden="true"></select>
             <input id="collectionPayMethod" type="hidden" value="">
-            <section class="collection-current-entry">
-              <div class="order-collection-money-input">
-                <label class="form-label" for="collectionAmountInput">本次收款金额</label>
-                <input id="collectionAmountInput" class="form-control" type="number" min="0" step="0.01" value="0">
-                <span id="collectionAmountHelp">不可超过本阶段待收 ¥0</span>
-              </div>
-              <span id="collectionCurrentStageName" hidden>-</span>
-              <span id="collectionCurrentPendingText" hidden>待收 ¥0</span>
-            </section>
+            <input id="collectionAmountInput" type="hidden" value="0">
+            <span id="collectionCurrentStageName" hidden>-</span>
+            <span id="collectionCurrentPendingText" hidden>待收 ¥0</span>
             <section class="collection-payment-methods">
-              <div class="collection-payment-label">支付方式</div>
               <div id="collectionPaymentMethods" class="collection-method-grid" role="group" aria-label="支付方式">
                 <button class="collection-method-option" type="button" data-collection-method="聚合扫码支付">
                   <span class="collection-method-icon collection-method-icon-scan" aria-hidden="true">扫</span>
@@ -906,7 +882,7 @@
                 <div><span>支付单号</span><strong id="collectionPaymentNo">-</strong></div>
                 <div><span>本次收款</span><strong id="collectionPaymentAmount">¥0</strong></div>
                 <div><span>付款方</span><strong id="collectionPaymentCustomer">-</strong></div>
-                <div><span>收款阶段</span><strong id="collectionPaymentStage">-</strong></div>
+                <div><span>款项</span><strong id="collectionPaymentStage">-</strong></div>
               </div>
               <div class="collection-qr-panel">
                 <div id="collectionPaymentQr" class="collection-qr-code" aria-label="客户付款二维码"></div>
@@ -991,8 +967,20 @@
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-collection>关闭</button>
-        <button id="submitOrderCollection" class="btn btn-primary" type="button" hidden>提交收款登记</button>
+        <div class="collection-footer-summary">
+          <div>
+            <span>本次收款合计</span>
+            <strong id="collectionFooterAmount">¥0</strong>
+          </div>
+          <div>
+            <span>收后待收</span>
+            <strong id="collectionAfterPendingAmount">¥0</strong>
+          </div>
+        </div>
+        <div class="collection-footer-actions">
+          <button class="btn btn-secondary" type="button" data-close-collection>关闭</button>
+          <button id="submitOrderCollection" class="btn btn-primary" type="button" hidden>提交收款登记</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3177,7 +3165,7 @@
       function collectionProfileFor(type, receivedAmount, pendingAmount) {
         if (type === '单团项目') {
           return {
-            titlePrefix: '登记阶段收款',
+            titlePrefix: '收款',
             receivableTitle: '阶段应收计划',
             paymentTitle: '阶段收款信息',
             nodeLabel: '收款阶段',
@@ -3362,6 +3350,27 @@
         setSelectValue(selectId, value || options[0]);
       }
 
+      function setCollectionText(id, value) {
+        var element = document.getElementById(id);
+        if (element) element.textContent = value;
+      }
+
+      function setCollectionClass(id, className) {
+        var element = document.getElementById(id);
+        if (element) element.className = className;
+      }
+
+      function collectionItemName(name) {
+        var text = String(name || '').trim();
+        text = text.replace(/\s*\/\s*锁定报价节点/g, '').trim();
+        return text || '本次收款';
+      }
+
+      function collectionReceivableStatus(stage) {
+        if (!stage || stage.receivable <= 0) return ['未生成', 'tag tag-gray'];
+        return ['已审批', 'tag tag-green'];
+      }
+
       function collectionStageRowsFor(data, receivableAmount, receivedAmount) {
         var remainingReceived = Math.max(receivedAmount, 0);
         var stages = receivableItemsFor(data, receivableAmount).map(function (item) {
@@ -3386,35 +3395,58 @@
       }
 
       function selectedCollectionStage() {
-        var select = document.getElementById('collectionNode');
-        var text = select ? select.value : '';
+        var selectedRow = collectionStageDomRows().find(function (row) {
+          var checkbox = row.querySelector('[data-collection-stage-check]');
+          var input = row.querySelector('[data-collection-stage-amount]');
+          return checkbox && checkbox.checked && input && moneyNumber(input.value) > 0;
+        });
+        if (selectedRow) return collectionStageFromDomRow(selectedRow);
         return currentCollectionStages.find(function (stage) {
-          return text.indexOf(stage.name) >= 0;
-        }) || currentCollectionStages.find(function (stage) {
           return stage.current;
         }) || currentCollectionStages[0] || { no: '1', name: '本次收款', receivable: 0, received: 0, pending: 0 };
-      }
-
-      function collectionStageStatus(stage) {
-        if (stage.pending <= 0 && stage.received > 0) return ['已收齐', 'tag tag-green'];
-        if (stage.received > 0) return ['部分收款', 'tag tag-orange'];
-        if (stage.current) return ['当前待收', 'tag tag-blue'];
-        return ['未到期', 'tag tag-gray'];
-      }
-
-      function collectionStageDueText(data, index, count) {
-        if (data.type === '单团项目') {
-          return ['合同确认后', '项目执行中', '出团/活动结束前'][index] || '项目确认节点';
-        }
-        if (count <= 1) return '下单确认后';
-        if (index === 0) return '下单确认后';
-        if (index === count - 1) return '出行/交付前';
-        return '服务确认中';
       }
 
       function collectionPaymentNo(data, stage, sequence) {
         var digits = (data.orderNo || '').replace(/\D/g, '').slice(-8) || '20260704';
         return 'PAY-MICE-' + digits + '-' + String(stage.no || '1').padStart(2, '0') + '-' + String(sequence || 1).padStart(2, '0');
+      }
+
+      function collectionStageDomRows() {
+        return Array.prototype.slice.call(document.querySelectorAll('#collectionReceivableRows [data-collection-stage-row]'));
+      }
+
+      function collectionStageFromDomRow(row) {
+        var index = Number(row && row.dataset ? row.dataset.stageIndex : 0);
+        return currentCollectionStages[index] || currentCollectionStages[0] || { no: '1', name: '本次收款', receivable: 0, received: 0, pending: 0 };
+      }
+
+      function collectionAllocationSummary() {
+        var selected = [];
+        var total = 0;
+        collectionStageDomRows().forEach(function (row) {
+          var stage = collectionStageFromDomRow(row);
+          var checkbox = row.querySelector('[data-collection-stage-check]');
+          var input = row.querySelector('[data-collection-stage-amount]');
+          var amount = moneyNumber(input ? input.value : 0);
+          if (amount < 0) amount = 0;
+          if (amount > stage.pending) amount = stage.pending;
+          if (input && moneyNumber(input.value) !== amount) input.value = amount;
+          var checked = !!(checkbox && checkbox.checked && amount > 0);
+          row.classList.toggle('is-active', checked);
+          if (checked) {
+            selected.push({ stage: stage, amount: amount });
+            total += amount;
+          }
+        });
+        var hiddenAmount = document.getElementById('collectionAmountInput');
+        if (hiddenAmount) hiddenAmount.value = total;
+        return { selected: selected, total: total };
+      }
+
+      function collectionSelectedStageText(summary) {
+        var allocation = summary || collectionAllocationSummary();
+        if (!allocation.selected.length) return '-';
+        return allocation.selected.map(function (item) { return collectionItemName(item.stage.name); }).join(' / ');
       }
 
       function collectionQrHtml(seed) {
@@ -3431,19 +3463,6 @@
         return cells.join('');
       }
 
-      function clampCollectionAmount(stage) {
-        var input = document.getElementById('collectionAmountInput');
-        if (!input) return 0;
-        var amount = moneyNumber(input.value);
-        if (input.dataset.stageName !== stage.name || amount <= 0 || amount > stage.pending) {
-          amount = stage.pending;
-        }
-        input.dataset.stageName = stage.name;
-        input.max = stage.pending;
-        input.value = amount;
-        return amount;
-      }
-
       function renderCollectionRecordRows(data, stage) {
         var body = document.getElementById('collectionRecordRows');
         var summary = document.getElementById('collectionRecordSummary');
@@ -3451,15 +3470,21 @@
         var methods = document.getElementById('collectionRecordMethods');
         if (!body) return;
         var receivedTotal = moneyNumber(data.received);
-        var receivableTotal = moneyNumber(data.receivable);
-        var mockTotal = receivedTotal > 0 ? receivedTotal : Math.min(Math.max(Math.round(receivableTotal * 0.18), 36000), 280000);
+        if (receivedTotal <= 0) {
+          body.innerHTML = '<tr><td colspan="6" class="table-empty-cell">暂无收款记录</td></tr>';
+          if (summary) summary.textContent = '暂无收款记录';
+          if (count) count.textContent = '0笔';
+          if (methods) methods.textContent = '-';
+          return;
+        }
+        var mockTotal = receivedTotal;
         var firstAmount = mockTotal > 180000 ? Math.round(mockTotal * 0.58) : mockTotal;
         var secondAmount = mockTotal > 180000 ? Math.round(mockTotal * 0.27) : 0;
         var thirdAmount = Math.max(mockTotal - firstAmount - secondAmount, 0);
         var records = [
           {
             time: '07-04 11:12',
-            node: currentCollectionStages[0] ? currentCollectionStages[0].name : stage.name,
+            itemName: collectionItemName(currentCollectionStages[0] ? currentCollectionStages[0].name : stage.name),
             method: '对公转账',
             amount: firstAmount,
             no: 'CMBC20260704088',
@@ -3469,7 +3494,7 @@
         if (secondAmount > 0) {
           records.push({
             time: '07-05 15:26',
-            node: currentCollectionStages[0] ? currentCollectionStages[0].name : stage.name,
+            itemName: collectionItemName(currentCollectionStages[0] ? currentCollectionStages[0].name : stage.name),
             method: '聚合扫码支付',
             amount: secondAmount,
             no: collectionPaymentNo(data, stage, 2),
@@ -3479,7 +3504,7 @@
         if (thirdAmount > 0) {
           records.push({
             time: '07-06 10:08',
-            node: currentCollectionStages[1] ? currentCollectionStages[1].name : stage.name,
+            itemName: collectionItemName(currentCollectionStages[1] ? currentCollectionStages[1].name : stage.name),
             method: '现金收款',
             amount: thirdAmount,
             no: 'CASH-' + ((data.orderNo || '').replace(/\D/g, '').slice(-8) || '20260704') + '-01',
@@ -3489,7 +3514,7 @@
         var methodList = records.map(function (record) { return record.method; });
         body.innerHTML = records.map(function (record) {
           var tagClass = record.status === '待复核' ? 'tag tag-orange' : 'tag tag-green';
-          return '<tr><td>' + escapeHtml(record.time) + '</td><td>' + escapeHtml(record.node) + '</td><td>' + escapeHtml(record.method) + '</td><td class="amount-strong">' + moneyText(record.amount) + '</td><td>' + escapeHtml(record.no) + '</td><td>' + tagHtml(record.status, tagClass) + '</td></tr>';
+          return '<tr><td>' + escapeHtml(record.time) + '</td><td>' + escapeHtml(record.itemName) + '</td><td>' + escapeHtml(record.method) + '</td><td class="amount-strong">' + moneyText(record.amount) + '</td><td>' + escapeHtml(record.no) + '</td><td>' + tagHtml(record.status, tagClass) + '</td></tr>';
         }).join('');
         if (summary) summary.textContent = records.length + '笔｜已收 ' + moneyText(mockTotal);
         if (count) count.textContent = records.length + '笔';
@@ -3501,36 +3526,49 @@
       }
 
       function syncCollectionMoney(data) {
+        var summary = collectionAllocationSummary();
         var stage = selectedCollectionStage();
-        var amount = clampCollectionAmount(stage);
-        var status = collectionStageStatus(stage);
+        var amount = summary.total;
         var orderTotal = currentCollectionStages.reduce(function (sum, item) { return sum + item.receivable; }, 0) || moneyNumber(data.receivable);
-        document.getElementById('collectionOrderReceivableAmount').textContent = moneyText(orderTotal);
-        document.getElementById('collectionReceivableAmount').textContent = moneyText(stage.receivable);
-        document.getElementById('collectionReceivedAmount').textContent = moneyText(stage.received);
-        document.getElementById('collectionPendingAmount').textContent = moneyText(stage.pending);
-        document.getElementById('collectionAmountHelp').textContent = '不可超过本阶段待收 ' + moneyText(stage.pending);
-        document.getElementById('collectionCurrentStageName').textContent = stage.name;
-        document.getElementById('collectionCurrentPendingText').textContent = '待收 ' + moneyText(stage.pending);
-        document.getElementById('collectionObjectStatus').textContent = status[0];
-        document.getElementById('collectionObjectStatus').className = status[1];
+        var orderReceived = currentCollectionStages.reduce(function (sum, item) { return sum + item.received; }, 0) || moneyNumber(data.received);
+        var orderPending = Math.max(orderTotal - orderReceived, 0);
+        var afterPending = Math.max(orderPending - amount, 0);
+        setCollectionText('collectionOrderReceivableAmount', moneyText(orderTotal));
+        setCollectionText('collectionReceivableAmount', moneyText(amount));
+        setCollectionText('collectionReceivedAmount', moneyText(orderReceived));
+        setCollectionText('collectionPendingAmount', moneyText(orderPending));
+        document.getElementById('collectionCurrentStageName').textContent = collectionSelectedStageText(summary);
+        document.getElementById('collectionCurrentPendingText').textContent = '收后待收 ' + moneyText(afterPending);
+        setCollectionText('collectionObjectStatus', afterPending <= 0 && amount > 0 ? '收后可结清' : '待收款');
+        setCollectionClass('collectionObjectStatus', afterPending <= 0 && amount > 0 ? 'tag tag-green' : 'tag tag-orange');
         document.getElementById('collectionOnlinePayer').textContent = data.customer;
         document.getElementById('collectionOnlineAmount').textContent = moneyText(amount);
         document.getElementById('collectionPaymentAmount').textContent = moneyText(amount);
         document.getElementById('collectionPaymentCustomer').textContent = data.customer;
-        document.getElementById('collectionPaymentStage').textContent = stage.name;
+        document.getElementById('collectionPaymentStage').textContent = collectionSelectedStageText(summary);
         document.getElementById('collectionPaymentNo').textContent = activeCollectionPaymentNo || '-';
         document.getElementById('collectionPaymentQr').innerHTML = activeCollectionPaymentNo ? collectionQrHtml(activeCollectionPaymentNo + amount) : '';
         renderCollectionRecordRows(data, stage);
         updatePredepositBalance(data, amount);
+        document.getElementById('collectionFooterAmount').textContent = moneyText(amount);
+        document.getElementById('collectionAfterPendingAmount').textContent = moneyText(afterPending);
       }
 
       function renderCollectionStages(data) {
-        var selected = selectedCollectionStage();
+        var selected = currentCollectionStages.find(function (stage) { return stage.current; }) || currentCollectionStages[0];
         document.getElementById('collectionReceivableRows').innerHTML = currentCollectionStages.map(function (stage, index) {
-          var status = collectionStageStatus(stage);
-          var activeClass = selected.name === stage.name ? ' class="is-active"' : '';
-          return '<tr' + activeClass + '><td>' + escapeHtml(stage.name) + '</td><td>' + moneyText(stage.receivable) + '</td><td>' + moneyText(stage.received) + '</td><td>' + moneyText(stage.pending) + '</td><td>' + escapeHtml(collectionStageDueText(data, index, currentCollectionStages.length)) + '</td><td>' + tagHtml(status[0], status[1]) + '</td></tr>';
+          var checked = selected && selected.name === stage.name && stage.pending > 0;
+          var disabled = stage.pending <= 0 ? ' disabled' : '';
+          var activeClass = checked ? ' class="is-active"' : '';
+          var receivableStatus = collectionReceivableStatus(stage);
+          return '<tr' + activeClass + ' data-collection-stage-row data-stage-index="' + index + '">' +
+            '<td><input type="checkbox" data-collection-stage-check' + (checked ? ' checked' : '') + disabled + '></td>' +
+            '<td><strong>' + escapeHtml(collectionItemName(stage.name)) + '</strong><span class="claim-cell-sub">' + tagHtml(receivableStatus[0], receivableStatus[1]) + '</span></td>' +
+            '<td class="amount-strong">' + moneyText(stage.receivable) + '</td>' +
+            '<td>' + moneyText(stage.received) + '</td>' +
+            '<td class="amount-strong">' + moneyText(stage.pending) + '</td>' +
+            '<td><input class="form-control collection-stage-amount-input" type="number" min="0" step="0.01" max="' + stage.pending + '" value="' + (checked ? stage.pending : 0) + '" data-collection-stage-amount' + disabled + '></td>' +
+            '</tr>';
         }).join('');
         syncCollectionMoney(data);
       }
@@ -3563,8 +3601,8 @@
           submit.disabled = currentAmount <= 0 || (method === '预存账户' && !predepositCanDeduct(data, currentAmount));
           var submitText = {
             '聚合扫码支付': '生成付款码',
-            '对公转账': '提交转账登记',
-            '现金': '提交现金收款登记',
+            '对公转账': '提交转账认款',
+            '现金': '提交现金登记',
             '预存账户': '确认余额抵扣'
           };
           submit.textContent = submitText[method] || '提交收款登记';
@@ -3606,21 +3644,21 @@
         var receivableAmount = moneyNumber(data.receivable);
         var receivedAmount = moneyNumber(data.received);
         var pendingAmount = Math.max(receivableAmount - receivedAmount, 0);
-        var profile = collectionProfileFor(data.type, receivedAmount, pendingAmount);
         currentCollectionStages = collectionStageRowsFor(data, receivableAmount, receivedAmount);
         var currentStage = currentCollectionStages.find(function (stage) { return stage.current; }) || currentCollectionStages[0];
-        var nodeOptions = currentStage ? [currentStage.name + ' / ' + moneyText(currentStage.receivable)] : ['本次收款'];
+        var nodeOptions = currentCollectionStages.length ? currentCollectionStages.map(function (stage) {
+          return stage.name + ' / ' + moneyText(stage.pending);
+        }) : ['本次收款'];
         currentCollectionPaymentSequence = 0;
         activeCollectionPaymentNo = '';
-        document.getElementById('orderCollectionTitle').textContent = '登记阶段收款';
-        document.getElementById('collectionReceivableTitle').textContent = '应收明细';
-        document.getElementById('collectionPaymentTitle').textContent = '本次收款';
-        document.getElementById('collectionObjectTitle').textContent = data.customer + ' / ' + data.product;
-        document.getElementById('collectionObjectMeta').textContent = data.orderNo + ' · ' + data.plan + ' · ' + data.type;
-        document.getElementById('collectionSettleUnitType').textContent = profile.settleUnit;
-        setSelectOptions('collectionNode', nodeOptions, currentStage ? currentStage.name + ' / ' + moneyText(currentStage.receivable) : nodeOptions[0]);
+        document.getElementById('orderCollectionTitle').textContent = '收款';
+        document.getElementById('collectionReceivableTitle').textContent = '选择应收';
+        document.getElementById('collectionPaymentTitle').textContent = '支付方式';
+        setCollectionText('collectionObjectTitle', data.customer + ' / ' + data.product);
+        setCollectionText('collectionObjectMeta', data.orderNo + ' · ' + data.plan + ' · ' + data.type);
+        setCollectionText('collectionSettleUnitType', collectionProfileFor(data.type, receivedAmount, pendingAmount).settleUnit);
+        setSelectOptions('collectionNode', nodeOptions, currentStage ? currentStage.name + ' / ' + moneyText(currentStage.pending) : nodeOptions[0]);
         document.getElementById('collectionPayMethod').value = '';
-        document.getElementById('collectionAmountInput').dataset.stageName = '';
         document.getElementById('collectionAmountInput').value = 0;
         document.getElementById('collectionPayerContact').value = '';
         document.getElementById('collectionPayerMobile').value = '';
@@ -4352,12 +4390,38 @@
         });
       });
 
-      document.getElementById('collectionAmountInput').addEventListener('input', function () {
+      document.getElementById('collectionReceivableRows').addEventListener('change', function (event) {
         if (!currentCollectionRow) return;
+        var row = event.target.closest('[data-collection-stage-row]');
+        if (!row || !event.target.matches('[data-collection-stage-check]')) return;
         var data = readOrder(currentCollectionRow);
-        var stage = selectedCollectionStage();
-        var amount = moneyNumber(this.value);
-        if (amount > stage.pending) this.value = stage.pending;
+        var stage = collectionStageFromDomRow(row);
+        var input = row.querySelector('[data-collection-stage-amount]');
+        if (event.target.checked && input && moneyNumber(input.value) <= 0) input.value = stage.pending;
+        if (!event.target.checked && input) input.value = 0;
+        activeCollectionPaymentNo = '';
+        document.getElementById('onlinePaymentBox').hidden = true;
+        syncCollectionMoney(data);
+        syncCollectionMethodPanels(data);
+      });
+
+      document.getElementById('collectionReceivableRows').addEventListener('input', function (event) {
+        if (!currentCollectionRow || !event.target.matches('[data-collection-stage-amount]')) return;
+        var row = event.target.closest('[data-collection-stage-row]');
+        if (!row) return;
+        var data = readOrder(currentCollectionRow);
+        var stage = collectionStageFromDomRow(row);
+        var amount = moneyNumber(event.target.value);
+        if (amount > stage.pending) {
+          amount = stage.pending;
+          event.target.value = amount;
+        }
+        if (amount < 0) {
+          amount = 0;
+          event.target.value = 0;
+        }
+        var checkbox = row.querySelector('[data-collection-stage-check]');
+        if (checkbox) checkbox.checked = amount > 0;
         activeCollectionPaymentNo = '';
         document.getElementById('onlinePaymentBox').hidden = true;
         syncCollectionMoney(data);
@@ -4389,8 +4453,15 @@
           showOnlineCollectionPayment();
           return;
         }
+        var actionName = method === '预存账户'
+          ? '预存余额抵扣'
+          : method === '对公转账'
+            ? '转账认款'
+            : method === '现金'
+              ? '现金收款登记'
+              : method + '收款登记';
         window.caesarUI.closeLayer(orderCollectionDrawer);
-        showOrderAction(method === '预存账户' ? '预存余额抵扣' : method + '收款登记', currentCollectionRow);
+        showOrderAction(actionName, currentCollectionRow);
       });
 
       document.getElementById('submitReceivableAdjust').addEventListener('click', function () {
