@@ -57,18 +57,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-period-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="期间关账状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待预检">待预检 <span class="tab-count" data-status-count="待预检">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="预检中">预检中 <span class="tab-count" data-status-count="预检中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="异常处理中">异常处理中 <span class="tab-count" data-status-count="异常处理中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待关账">待关账 <span class="tab-count" data-status-count="待关账">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关账">已关账 <span class="tab-count" data-status-count="已关账">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已反关">已反关 <span class="tab-count" data-status-count="已反关">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="期间关账筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -81,7 +69,8 @@
           <label class="sr-only" for="periodKeyword">关账单/会计期间/主体/异常项</label>
           <input id="periodKeyword" type="search" placeholder="关账单/会计期间/主体/异常项">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待预检</option><option>预检中</option><option>异常处理中</option><option>待关账</option><option>已关账</option><option>已反关</option></select></div>
+<div class="filter-item-sm" hidden>
           <label class="sr-only" for="companyFilter">主体公司</label>
           <select id="companyFilter">
             <option>全部主体</option>
@@ -91,7 +80,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="riskFilter">异常结果</label>
           <select id="riskFilter">
             <option>全部结果</option>
@@ -101,7 +90,7 @@
             <option>低风险</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="ncFilter">NC状态</label>
           <select id="ncFilter">
             <option>全部NC</option>
@@ -378,7 +367,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#periodRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('periodDetailDrawer');
@@ -488,7 +476,8 @@
 
       function switchStatus(status) {
         activeStatus = status;
-        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        var statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) statusFilter.value = status || '全部';
         applyFilters();
       }
 
@@ -665,6 +654,14 @@
           activeRow.dataset.result = '已反关';
         }
         closeLayer(workDrawer);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(result + '已记录');
@@ -681,11 +678,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var statusTab = event.target.closest('[data-status-tab]');
-        if (statusTab) {
-          switchStatus(statusTab.dataset.statusTab);
-          return;
-        }
 
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {

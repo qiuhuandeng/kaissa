@@ -22,7 +22,8 @@
           <label class="sr-only" for="refundKeyword">退款单/审批单/订单/客户/门店</label>
           <input id="refundKeyword" type="search" placeholder="退款单/审批单/订单/客户/门店">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待执行</option><option>执行中</option><option>已退款</option><option>已退预存</option><option>执行失败</option><option>已关闭</option></select></div>
+<div class="filter-item-sm">
           <label class="sr-only" for="refundMethod">退款方式</label>
           <select id="refundMethod">
             <option>全部方式</option>
@@ -31,7 +32,7 @@
             <option>退回预存</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="refundCompany">业务主体</label>
           <select id="refundCompany">
             <option>全部主体</option>
@@ -41,7 +42,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="refundCheck">执行校验</label>
           <select id="refundCheck">
             <option>全部校验</option>
@@ -76,17 +77,6 @@
         </div>
       </div>
     </section>
-
-    <nav class="tab-bar list-surface-tabs" aria-label="退款执行状态">
-      <button class="tab-item active" type="button" data-status-tab="全部">全部</button>
-      <button class="tab-item" type="button" data-status-tab="待执行">待执行</button>
-      <button class="tab-item" type="button" data-status-tab="执行中">执行中</button>
-      <button class="tab-item" type="button" data-status-tab="已退款">已退款</button>
-      <button class="tab-item" type="button" data-status-tab="已退预存">已退预存</button>
-      <button class="tab-item" type="button" data-status-tab="执行失败">执行失败</button>
-      <button class="tab-item" type="button" data-status-tab="已关闭">已关闭</button>
-    </nav>
-
     <section class="table-wrap finance-refund-pending-table list-surface-table list-table-with-pagination" aria-label="退款执行列表">
       <table>
         <thead>
@@ -410,7 +400,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#refundRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('refundDetailDrawer');
@@ -713,14 +702,6 @@
         closeLayer(executeDrawer);
       }
 
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
-
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
           switchDetailTab(button.dataset.detailTab);
@@ -768,7 +749,6 @@
         document.querySelectorAll('.finance-refund-filter input').forEach(function (input) { input.value = ''; });
         document.querySelectorAll('.finance-refund-filter select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
 
@@ -789,6 +769,14 @@
       });
 
       rows.forEach(updateRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
       applyFilters();
     })();
   </script>

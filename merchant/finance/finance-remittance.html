@@ -60,18 +60,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-remittance-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="回单核销主状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待回单">待回单 <span class="tab-count" data-status-count="待回单">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待匹配">待匹配 <span class="tab-count" data-status-count="待匹配">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待核销">待核销 <span class="tab-count" data-status-count="待核销">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="有差异">有差异 <span class="tab-count" data-status-count="有差异">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已核销">已核销 <span class="tab-count" data-status-count="已核销">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="回单核销筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -85,7 +73,8 @@
           <label class="sr-only" for="remittanceKeyword">回单号/付款单/退款单/供应商/客户/团组</label>
           <input id="remittanceKeyword" type="search" placeholder="回单号/付款单/退款单/供应商/客户/团组">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待回单</option><option>待匹配</option><option>待核销</option><option>有差异</option><option>已核销</option><option>已关闭</option></select></div>
+<div class="filter-item-sm">
           <label class="sr-only" for="remittanceType">回单类型</label>
           <select id="remittanceType">
             <option>全部类型</option>
@@ -95,7 +84,7 @@
             <option>调拨回单</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="sourceFilter">来源方式</label>
           <select id="sourceFilter">
             <option>全部来源</option>
@@ -107,7 +96,7 @@
             <option>银行退回</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="documentType">关联单据</label>
           <select id="documentType">
             <option>全部单据</option>
@@ -117,7 +106,7 @@
             <option>调拨单</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="companyFilter">付款主体</label>
           <select id="companyFilter">
             <option>全部主体</option>
@@ -127,7 +116,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="bankAccountFilter">银行账户</label>
           <select id="bankAccountFilter">
             <option>全部账户</option>
@@ -138,7 +127,7 @@
             <option>工商银行福州账户</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="currencyFilter">币种</label>
           <select id="currencyFilter">
             <option>全部币种</option>
@@ -148,7 +137,7 @@
             <option>HKD</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="accountCheck">账户核对</label>
           <select id="accountCheck">
             <option>全部账户</option>
@@ -159,7 +148,7 @@
             <option>主体异常</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="amountCheck">金额核对</label>
           <select id="amountCheck">
             <option>全部金额</option>
@@ -169,7 +158,7 @@
             <option>金额差异</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="ncStatusFilter">NC状态</label>
           <select id="ncStatusFilter">
             <option>全部NC</option>
@@ -532,7 +521,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#remittanceRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('remittanceDetailDrawer');
@@ -824,6 +812,7 @@
         var card = document.getElementById('workObjectCard');
         var title = row ? actionByStatus(row.dataset.status) : '上传回单';
         document.getElementById('remittanceWorkTitle').textContent = title;
+        document.querySelector('[data-confirm-work]').textContent = title;
         if (row) {
           card.hidden = false;
           renderObject(row, 'work');
@@ -918,19 +907,19 @@
           activeRow.dataset.nc = activeRow.dataset.nc === '未生成' ? '待推送' : activeRow.dataset.nc;
         }
         renderRowCells(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(activeRow.dataset.remittanceNo + '已进入' + activeRow.dataset.status);
         closeLayer(workDrawer);
       }
-
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
 
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -985,7 +974,6 @@
         });
         document.querySelectorAll('.finance-remittance-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
       document.querySelectorAll('[data-close-layer]').forEach(function (button) {

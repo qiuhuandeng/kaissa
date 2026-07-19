@@ -9,14 +9,19 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-    <section class="list-surface list-surface-tabbed finance-currency-list-surface" data-list-surface>
-      <div class="list-surface-tabbar-row">
-        <nav class="tab-bar currency-tabs list-function-tabs list-surface-tabs" aria-label="汇率币种标签">
-          <button class="tab-item active" type="button" data-currency-tab="rates">汇率维护</button>
-          <button class="tab-item" type="button" data-currency-tab="locks">外币订单汇率锁定记录</button>
-          <button class="tab-item" type="button" data-currency-tab="pnl">汇率差异损益</button>
-        </nav>
+    <section class="list-surface finance-currency-list-surface" data-list-surface>
+  <section class="filter-card filter-card-compact list-surface-filter" aria-label="财务基础设置范围">
+    <div class="filter-row">
+      <div class="filter-item-sm">
+        <label class="sr-only" for="currencySection">设置范围</label>
+        <select id="currencySection">
+          <option value="rates">汇率维护</option>
+          <option value="locks">外币订单汇率锁定记录</option>
+          <option value="pnl">汇率差异损益</option>
+        </select>
       </div>
+    </div>
+  </section>
 
   <section id="currency-rates" class="currency-panel active">
     <section class="filter-card filter-card-compact list-surface-filter currency-rate-filter" aria-label="汇率维护筛选">
@@ -221,7 +226,6 @@
 
   <script>
     (function () {
-      var tabButtons = Array.from(document.querySelectorAll('[data-currency-tab]'));
       var panels = Array.from(document.querySelectorAll('.currency-panel'));
       var rateEntryModal = document.getElementById('rateEntryModal');
       var rateHistoryModal = document.getElementById('rateHistoryModal');
@@ -229,12 +233,11 @@
       var params = new URLSearchParams(window.location.search);
 
       function setTab(id) {
-        tabButtons.forEach(function (button) {
-          button.classList.toggle('active', button.dataset.currencyTab === id);
-        });
         panels.forEach(function (panel) {
           panel.classList.toggle('active', panel.id === 'currency-' + id);
         });
+        var sectionSelect = document.getElementById('currencySection');
+        if (sectionSelect) sectionSelect.value = id;
       }
 
       function toast(message) {
@@ -412,10 +415,8 @@
         applyLockFilters();
       }
 
-      tabButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-          setTab(button.dataset.currencyTab);
-        });
+      document.getElementById('currencySection').addEventListener('change', function () {
+        setTab(this.value);
       });
 
       document.querySelectorAll('[data-open-rate-entry]').forEach(function (button) {

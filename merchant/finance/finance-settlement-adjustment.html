@@ -58,18 +58,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-adjustment-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="结算调整状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待核对">待核对 <span class="tab-count" data-status-count="待核对">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="差异处理中">差异处理中 <span class="tab-count" data-status-count="差异处理中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待审批">待审批 <span class="tab-count" data-status-count="待审批">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已生效">已生效 <span class="tab-count" data-status-count="已生效">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已驳回">已驳回 <span class="tab-count" data-status-count="已驳回">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="结算调整筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -82,7 +70,8 @@
           <label class="sr-only" for="adjustmentKeyword">调整单/结算单/团期/项目/供应商/订单</label>
           <input id="adjustmentKeyword" type="search" placeholder="调整单/结算单/团期/项目/供应商/订单">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待核对</option><option>差异处理中</option><option>待审批</option><option>已生效</option><option>已驳回</option><option>已关闭</option></select></div>
+<div class="filter-item-sm">
           <label class="sr-only" for="adjustmentTypeFilter">调整类型</label>
           <select id="adjustmentTypeFilter">
             <option>全部类型</option>
@@ -107,7 +96,7 @@
             <option>外采差额</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="companyFilter">核算主体</label>
           <select id="companyFilter">
             <option>全部主体</option>
@@ -117,7 +106,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="sourceFilter">调整来源</label>
           <select id="sourceFilter">
             <option>全部来源</option>
@@ -128,7 +117,7 @@
             <option>外采采购</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="ncFilter">NC状态</label>
           <select id="ncFilter">
             <option>全部NC</option>
@@ -399,7 +388,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#adjustmentRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('adjustmentDetailDrawer');
@@ -524,7 +512,8 @@
 
       function switchStatus(status) {
         activeStatus = status;
-        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        var statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) statusFilter.value = status || '全部';
         applyFilters();
       }
 
@@ -687,6 +676,14 @@
           activeRow.dataset.nc = '未生成';
         }
         closeLayer(workDrawer);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(result + '已记录');
@@ -703,11 +700,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var statusTab = event.target.closest('[data-status-tab]');
-        if (statusTab) {
-          switchStatus(statusTab.dataset.statusTab);
-          return;
-        }
 
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {

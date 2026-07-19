@@ -60,18 +60,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed supplier-bills-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="供应商账单主状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待识别">待识别 <span class="tab-count" data-status-count="待识别">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待挂接">待挂接 <span class="tab-count" data-status-count="待挂接">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待核对">待核对 <span class="tab-count" data-status-count="待核对">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="有差异">有差异 <span class="tab-count" data-status-count="有差异">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已确认">已确认 <span class="tab-count" data-status-count="已确认">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="供应商账单筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -85,7 +73,8 @@
           <label class="sr-only" for="billKeyword">账单号/供应商/团组/采购批次/合同</label>
           <input id="billKeyword" type="search" placeholder="账单号/供应商/团组/采购批次/合同">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待识别</option><option>待挂接</option><option>待核对</option><option>有差异</option><option>已确认</option><option>已关闭</option></select></div>
+<div class="filter-item-sm" hidden>
           <label class="sr-only" for="sourceFilter">来源方式</label>
           <select id="sourceFilter">
             <option>全部来源</option>
@@ -125,7 +114,7 @@
             <option>渠道结算</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="billCompany">付款主体</label>
           <select id="billCompany">
             <option>全部主体</option>
@@ -135,7 +124,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="currencyFilter">币种</label>
           <select id="currencyFilter">
             <option>全部币种</option>
@@ -146,7 +135,7 @@
             <option>MYR</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="checkFilter">核对状态</label>
           <select id="checkFilter">
             <option>全部核对</option>
@@ -158,7 +147,7 @@
             <option>重复账单</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="invoiceStatus">发票状态</label>
           <select id="invoiceStatus">
             <option>全部发票</option>
@@ -167,7 +156,7 @@
             <option>发票异常</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="payableStatus">应付状态</label>
           <select id="payableStatus">
             <option>全部应付</option>
@@ -581,7 +570,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#billRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('billDetailDrawer');
@@ -971,19 +959,19 @@
           activeRow.dataset.payableAmount = activeRow.dataset.localAmount;
         }
         renderBillCells(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(activeRow.dataset.no + '已进入' + activeRow.dataset.status);
         closeLayer(workDrawer);
       }
-
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
 
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -1037,7 +1025,6 @@
         });
         document.querySelectorAll('.supplier-bills-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
       document.querySelectorAll('[data-close-layer]').forEach(function (button) {

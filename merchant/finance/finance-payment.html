@@ -60,18 +60,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-payment-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="付款执行状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待执行">待执行 <span class="tab-count" data-status-count="待执行">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待补资料">待补资料 <span class="tab-count" data-status-count="待补资料">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="执行中">执行中 <span class="tab-count" data-status-count="执行中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待回单">待回单 <span class="tab-count" data-status-count="待回单">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已付款">已付款 <span class="tab-count" data-status-count="已付款">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact payment-filter list-surface-filter" aria-label="付款执行筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -84,7 +72,8 @@
           <label class="sr-only" for="paymentKeyword">付款单/申请单/供应商/团组</label>
           <input id="paymentKeyword" type="search" placeholder="付款单/申请单/供应商/团组">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待执行</option><option>待补资料</option><option>执行中</option><option>待回单</option><option>已付款</option><option>已关闭</option></select></div>
+<div class="filter-item-sm" hidden>
           <label class="sr-only" for="applyType">申请类型</label>
           <select id="applyType">
             <option>全部类型</option>
@@ -115,7 +104,7 @@
             <option>领队</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="businessType">业务类型</label>
           <select id="businessType">
             <option>全部业务</option>
@@ -127,7 +116,7 @@
             <option>单项服务</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="paymentCompany">付款主体</label>
           <select id="paymentCompany">
             <option>全部主体</option>
@@ -137,7 +126,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="currencyFilter">币种</label>
           <select id="currencyFilter">
             <option>全部币种</option>
@@ -148,7 +137,7 @@
             <option>SGD</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="checkStatus">执行校验</label>
           <select id="checkStatus">
             <option>全部校验</option>
@@ -159,7 +148,7 @@
             <option>币种异常</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="remitStatus">回单状态</label>
           <select id="remitStatus">
             <option>全部回单</option>
@@ -505,7 +494,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#paymentRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('paymentDetailDrawer');
@@ -594,8 +582,7 @@
         if (status === '待执行') return '执行付款';
         if (status === '待补资料') return '补充资料';
         if (status === '执行中') return '查看进度';
-        if (status === '待回单') return '查看回单';
-        if (status === '已付款') return '查看回单';
+        if (status === '待回单') return '回单核销';
         return '详情';
       }
 
@@ -603,6 +590,10 @@
         if (status === '待执行') return 'execute';
         if (status === '待补资料') return 'material';
         return 'detail';
+      }
+
+      function remittanceHref(row) {
+        return 'finance-remittance.html?paymentNo=' + encodeURIComponent(row.dataset.paymentNo);
       }
 
       function updateCounts() {
@@ -807,6 +798,10 @@
           var key = actionKeyByStatus(row.dataset.status);
           if (key === 'execute' || key === 'material') {
             actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="' + key + '">' + actionByStatus(row.dataset.status) + '</button><button type="button" data-open-detail>详情</button></div>';
+          } else if (row.dataset.status === '执行中') {
+            actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail="execute">查看进度</button><button type="button" data-open-detail>详情</button></div>';
+          } else if (row.dataset.status === '待回单') {
+            actionCell.innerHTML = '<div class="table-action"><a class="table-action-primary" href="' + escapeHtml(remittanceHref(row)) + '">回单核销</a><button type="button" data-open-detail>详情</button></div>';
           } else {
             actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
           }
@@ -846,18 +841,18 @@
           notify(activeRow.dataset.paymentNo + '已关闭');
         }
         updateRowVisual(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         closeLayer(workDrawer);
       }
-
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
 
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -889,8 +884,12 @@
           switchDetailTab('execute');
           return;
         }
-        if (activeRow.dataset.status === '待回单' || activeRow.dataset.status === '已付款') {
-          switchDetailTab('remittance');
+        if (activeRow.dataset.status === '待回单') {
+          window.location.href = remittanceHref(activeRow);
+          return;
+        }
+        if (activeRow.dataset.status === '已付款') {
+          switchDetailTab('overview');
           return;
         }
         switchDetailTab('overview');
@@ -911,7 +910,6 @@
         });
         document.querySelectorAll('.finance-payment-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
       document.querySelector('[data-refresh-check]').addEventListener('click', function () {
@@ -942,6 +940,7 @@
         if (target) openDetail(target);
       }
 
+      rows.forEach(updateRowVisual);
       updateCounts();
       applyFilters();
       openFromParams();

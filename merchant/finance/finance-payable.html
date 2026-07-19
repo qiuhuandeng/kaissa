@@ -59,18 +59,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-payable-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="应付主状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待核对">待核对 <span class="tab-count" data-status-count="待核对">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="有差异">有差异 <span class="tab-count" data-status-count="有差异">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已确认">已确认 <span class="tab-count" data-status-count="已确认">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="付款中">付款中 <span class="tab-count" data-status-count="付款中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已结清">已结清 <span class="tab-count" data-status-count="已结清">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact payable-filter list-surface-filter" aria-label="应付单筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -83,7 +71,8 @@
           <label class="sr-only" for="payableKeyword">应付单/供应商/账单/团组/采购批次</label>
           <input id="payableKeyword" type="search" placeholder="应付单/供应商/账单/团组/采购批次">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待核对</option><option>有差异</option><option>已确认</option><option>付款中</option><option>已结清</option><option>已关闭</option></select></div>
+<div class="filter-item-sm" hidden>
           <label class="sr-only" for="payableSource">来源类型</label>
           <select id="payableSource">
             <option>全部来源</option>
@@ -123,7 +112,7 @@
             <option>渠道结算</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="payableCompany">付款主体</label>
           <select id="payableCompany">
             <option>全部主体</option>
@@ -133,7 +122,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="currencyFilter">币种</label>
           <select id="currencyFilter">
             <option>全部币种</option>
@@ -144,7 +133,7 @@
             <option>MYR</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="billCheck">账单核对</label>
           <select id="billCheck">
             <option>全部核对</option>
@@ -153,7 +142,7 @@
             <option>有差异</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="invoiceStatus">票据情况</label>
           <select id="invoiceStatus">
             <option>全部票据</option>
@@ -162,7 +151,7 @@
             <option>发票异常</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="prepayStatus">预付状态</label>
           <select id="prepayStatus">
             <option>全部预付</option>
@@ -172,7 +161,7 @@
             <option>有退回</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="paymentCarry">付款承接</label>
           <select id="paymentCarry">
             <option>全部付款</option>
@@ -183,7 +172,7 @@
             <option>已结清</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="settlementStatus">结算状态</label>
           <select id="settlementStatus">
             <option>全部结算</option>
@@ -525,7 +514,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#payableRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('payableDetailDrawer');
@@ -879,18 +867,18 @@
           notify(activeRow.dataset.no + '已确认应付');
         }
         updateRowVisual(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         closeLayer(workDrawer);
       }
-
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
 
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -944,7 +932,6 @@
         });
         document.querySelectorAll('.finance-payable-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
       document.querySelector('[data-refresh-payable]').addEventListener('click', function () {

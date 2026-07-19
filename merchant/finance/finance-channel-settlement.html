@@ -23,7 +23,8 @@
           <label class="sr-only" for="channelKeyword">结算单/渠道/订单/账单</label>
           <input id="channelKeyword" type="search" placeholder="结算单/渠道/订单/平台账单">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待生成</option><option>待核对</option><option>差异处理中</option><option>待确认</option><option>已确认</option><option>已关闭</option></select></div>
+<div class="filter-item-sm" hidden>
           <label class="sr-only" for="channelType">渠道类型</label>
           <select id="channelType">
             <option>全部类型</option>
@@ -45,7 +46,7 @@
             <option>美团旅行</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="channelCompany">业务主体</label>
           <select id="channelCompany">
             <option>全部主体</option>
@@ -55,7 +56,7 @@
             <option>北京凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="channelDiff">差异类型</label>
           <select id="channelDiff">
             <option>全部差异</option>
@@ -66,7 +67,7 @@
             <option>到账差异</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="channelCarry">承接状态</label>
           <select id="channelCarry">
             <option>全部承接</option>
@@ -91,17 +92,6 @@
         </div>
       </div>
     </section>
-
-    <nav class="tab-bar list-surface-tabs" aria-label="渠道结算状态">
-      <button class="tab-item active" type="button" data-status-tab="全部">全部</button>
-      <button class="tab-item" type="button" data-status-tab="待生成">待生成</button>
-      <button class="tab-item" type="button" data-status-tab="待核对">待核对</button>
-      <button class="tab-item" type="button" data-status-tab="差异处理中">差异处理中</button>
-      <button class="tab-item" type="button" data-status-tab="待确认">待确认</button>
-      <button class="tab-item" type="button" data-status-tab="已确认">已确认</button>
-      <button class="tab-item" type="button" data-status-tab="已关闭">已关闭</button>
-    </nav>
-
     <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="渠道结算列表">
       <table>
         <thead>
@@ -359,7 +349,6 @@
 
   <script>
     (function () {
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var rows = Array.from(document.querySelectorAll('#channelRows tr'));
@@ -601,14 +590,6 @@
         openLayer(workDrawer);
       }
 
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
-
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () { switchDetailTab(button.dataset.detailTab); });
       });
@@ -622,7 +603,6 @@
         document.querySelectorAll('.list-surface-filter input').forEach(function (input) { input.value = ''; });
         document.querySelectorAll('.list-surface-filter select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
 
@@ -665,6 +645,14 @@
       });
 
       rows.forEach(updateRowAction);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
       applyFilters();
     })();
   </script>

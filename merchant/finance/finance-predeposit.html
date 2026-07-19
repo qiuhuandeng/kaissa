@@ -10,12 +10,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface predeposit-list-surface" data-list-surface>
-    <nav class="tab-bar list-surface-tabs" aria-label="账户类型">
-      <button class="tab-item active" type="button" data-type-tab="全部">全部账户</button>
-      <button class="tab-item" type="button" data-type-tab="客户预存">客户账户</button>
-      <button class="tab-item" type="button" data-type-tab="门店预存">门店账户</button>
-    </nav>
-
     <section class="filter-card filter-card-compact list-surface-filter predeposit-filter" aria-label="预存账户筛选">
       <div class="filter-row">
         <div class="filter-item">
@@ -23,6 +17,14 @@
           <input id="predepositKeyword" type="search" placeholder="账户对象/账户号/单据">
         </div>
         <div class="filter-item-sm">
+          <label class="sr-only" for="predepositType">账户类型</label>
+          <select id="predepositType">
+            <option>全部账户</option>
+            <option>客户预存</option>
+            <option>门店预存</option>
+          </select>
+        </div>
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="predepositCompany">财务主体</label>
           <select id="predepositCompany">
             <option>全部主体</option>
@@ -32,7 +34,7 @@
             <option>总部财务</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="predepositStore">归属门店</label>
           <select id="predepositStore">
             <option>全部门店</option>
@@ -467,11 +469,6 @@
         return value && value.indexOf('全部') !== 0;
       }
 
-      function activeValue(selector, fallback) {
-        var active = document.querySelector(selector + ' .tab-item.active');
-        return active ? (active.dataset.typeTab || active.dataset.statusTab || fallback) : fallback;
-      }
-
       function renderGrid(target, items) {
         target.innerHTML = items.map(function (item) {
           return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
@@ -634,14 +631,14 @@
         var store = document.getElementById('predepositStore').value;
         var process = document.getElementById('predepositProcess').value;
         var status = document.getElementById('predepositStatus').value;
-        var typeTab = activeValue('[aria-label="账户类型"]', '全部');
+        var type = document.getElementById('predepositType').value;
         var rows = Array.from(document.querySelectorAll('#predepositRows tr'));
         var visibleCount = 0;
         rows.forEach(function (row) {
           var visible = true;
           var text = rowText(row).toLowerCase();
           if (keyword && text.indexOf(keyword) < 0) visible = false;
-          if (typeTab !== '全部' && row.dataset.type !== typeTab) visible = false;
+          if (optionEnabled(type) && row.dataset.type !== type) visible = false;
           if (optionEnabled(status) && row.dataset.status !== status) visible = false;
           if (optionEnabled(company) && row.dataset.company !== company) visible = false;
           if (optionEnabled(store) && row.dataset.store !== store) visible = false;
@@ -686,12 +683,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var typeTab = event.target.closest('[data-type-tab]');
-        if (typeTab) {
-          document.querySelectorAll('[data-type-tab]').forEach(function (button) { button.classList.toggle('active', button === typeTab); });
-          applyFilters();
-          return;
-        }
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {
           switchDetailTab(detailTab.dataset.detailTab);

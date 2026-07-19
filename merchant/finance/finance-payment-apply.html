@@ -59,18 +59,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed payment-apply-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="付款申请主状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待复核">待复核 <span class="tab-count" data-status-count="待复核">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="审批中">审批中 <span class="tab-count" data-status-count="审批中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已审批">已审批 <span class="tab-count" data-status-count="已审批">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已退回">已退回 <span class="tab-count" data-status-count="已退回">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已转付款">已转付款 <span class="tab-count" data-status-count="已转付款">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="付款申请筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -83,7 +71,8 @@
           <label class="sr-only" for="applyKeyword">申请单/供应商/应付单/团组/合同节点</label>
           <input id="applyKeyword" type="search" placeholder="申请单/供应商/应付单/团组/合同节点">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待复核</option><option>审批中</option><option>已审批</option><option>已退回</option><option>已转付款</option><option>已关闭</option></select></div>
+<div class="filter-item-sm">
           <label class="sr-only" for="applyType">申请类型</label>
           <select id="applyType">
             <option>全部类型</option>
@@ -93,7 +82,7 @@
             <option>备用金</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="basisType">付款依据</label>
           <select id="basisType">
             <option>全部依据</option>
@@ -118,7 +107,7 @@
             <option>领队</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="businessType">业务类型</label>
           <select id="businessType">
             <option>全部业务</option>
@@ -130,7 +119,7 @@
             <option>渠道结算</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="applyCompany">付款主体</label>
           <select id="applyCompany">
             <option>全部主体</option>
@@ -140,7 +129,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="currencyFilter">币种</label>
           <select id="currencyFilter">
             <option>全部币种</option>
@@ -150,7 +139,7 @@
             <option>HKD</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="approvalStatus">审批状态</label>
           <select id="approvalStatus">
             <option>全部审批</option>
@@ -160,7 +149,7 @@
             <option>已退回</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="paymentCarry">付款承接</label>
           <select id="paymentCarry">
             <option>全部承接</option>
@@ -486,7 +475,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#applyRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('applyDetailDrawer');
@@ -578,6 +566,14 @@
         return escapeHtml(row.dataset.basisNo);
       }
 
+      function approvalHref(row) {
+        return '../approval/approvals.html?approvalNo=' + encodeURIComponent(row.dataset.approvalNo);
+      }
+
+      function paymentHref(row) {
+        return 'finance-payment.html?paymentNo=' + encodeURIComponent(row.dataset.paymentNo);
+      }
+
       function actionByStatus(status) {
         if (status === '待复核') return '复核申请';
         if (status === '审批中') return '查看审批';
@@ -590,6 +586,7 @@
       function actionKeyByStatus(status) {
         if (status === '待复核') return 'review';
         if (status === '已审批') return 'transfer';
+        if (status === '已退回') return 'resubmit';
         return 'detail';
       }
 
@@ -748,7 +745,7 @@
 
       function openWork(row, action) {
         activeRow = row;
-        var actionText = action === 'transfer' ? '转付款' : actionByStatus(row.dataset.status);
+        var actionText = action === 'transfer' ? '转付款' : (action === 'resubmit' ? '重新提交' : actionByStatus(row.dataset.status));
         document.getElementById('applyWorkTitle').textContent = actionText;
         renderObject(row, 'work');
         renderSummary(row, 'workSummaryGrid');
@@ -768,7 +765,7 @@
         document.getElementById('workPrepayAction').value = row.dataset.prepayAction;
         document.getElementById('workPaymentAccount').value = row.dataset.paymentAccount === '-' ? '待付款执行选择' : row.dataset.paymentAccount;
         document.getElementById('workResult').value = action === 'transfer' ? '转入付款执行' : '复核通过，提交审批';
-        document.getElementById('workRemark').value = row.dataset.note;
+        document.getElementById('workRemark').value = action === 'resubmit' ? '审批退回后重新提交，保留退回原因并补充依据。' : row.dataset.note;
         openLayer(workDrawer);
       }
 
@@ -782,6 +779,12 @@
           var key = actionKeyByStatus(row.dataset.status);
           if (key === 'review' || key === 'transfer') {
             actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="' + key + '">' + actionByStatus(row.dataset.status) + '</button><button type="button" data-open-detail>详情</button></div>';
+          } else if (row.dataset.status === '审批中') {
+            actionCell.innerHTML = '<div class="table-action"><a class="table-action-primary" href="' + escapeHtml(approvalHref(row)) + '">查看审批</a><button type="button" data-open-detail>详情</button></div>';
+          } else if (row.dataset.status === '已退回') {
+            actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail="approval">查看退回</button><button type="button" data-open-work="resubmit">重新提交</button></div>';
+          } else if (row.dataset.status === '已转付款') {
+            actionCell.innerHTML = '<div class="table-action"><a class="table-action-primary" href="' + escapeHtml(paymentHref(row)) + '">查看付款</a><button type="button" data-open-detail>详情</button></div>';
           } else {
             actionCell.innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
           }
@@ -819,18 +822,18 @@
           notify(activeRow.dataset.applyNo + '已关闭');
         }
         updateRowVisual(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         closeLayer(workDrawer);
       }
-
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
 
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -884,7 +887,6 @@
         });
         document.querySelectorAll('.payment-apply-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
       document.querySelector('[data-refresh-approval]').addEventListener('click', function () {
@@ -915,6 +917,7 @@
         if (target) openDetail(target);
       }
 
+      rows.forEach(updateRowVisual);
       updateCounts();
       applyFilters();
       openFromParams();

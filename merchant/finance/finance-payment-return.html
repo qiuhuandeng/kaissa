@@ -60,18 +60,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-payment-return-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="付款退回状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待匹配">待匹配 <span class="tab-count" data-status-count="待匹配">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待确认">待确认 <span class="tab-count" data-status-count="待确认">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="差异处理中">差异处理中 <span class="tab-count" data-status-count="差异处理中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已退回">已退回 <span class="tab-count" data-status-count="已退回">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已冲销">已冲销 <span class="tab-count" data-status-count="已冲销">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="付款退回筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -84,7 +72,8 @@
           <label class="sr-only" for="returnKeyword">退回单/付款单/供应商/流水/团组</label>
           <input id="returnKeyword" type="search" placeholder="退回单/付款单/供应商/流水/团组">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待匹配</option><option>待确认</option><option>差异处理中</option><option>已退回</option><option>已冲销</option><option>已关闭</option></select></div>
+<div class="filter-item-sm">
           <label class="sr-only" for="returnType">退回类型</label>
           <select id="returnType">
             <option>全部类型</option>
@@ -94,7 +83,7 @@
             <option>保证金退回</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="payeeType">付款对象类型</label>
           <select id="payeeType">
             <option>全部对象</option>
@@ -106,7 +95,7 @@
             <option>渠道</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="businessType">业务类型</label>
           <select id="businessType">
             <option>全部业务</option>
@@ -118,7 +107,7 @@
             <option>渠道结算</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="companyFilter">付款主体</label>
           <select id="companyFilter">
             <option>全部主体</option>
@@ -128,7 +117,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="currencyFilter">币种</label>
           <select id="currencyFilter">
             <option>全部币种</option>
@@ -138,7 +127,7 @@
             <option>HKD</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="ncFilter">NC状态</label>
           <select id="ncFilter">
             <option>全部NC</option>
@@ -451,7 +440,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#paymentReturnRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('paymentReturnDetailDrawer');
@@ -761,19 +749,19 @@
           activeRow.dataset.impact = '退回单已关闭';
         }
         updateRowVisual(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(activeRow.dataset.returnNo + '已更新');
         closeLayer(workDrawer);
       }
-
-      statusTabs.forEach(function (button) {
-        button.addEventListener('click', function () {
-          activeStatus = button.dataset.statusTab;
-          statusTabs.forEach(function (item) { item.classList.toggle('active', item === button); });
-          applyFilters();
-        });
-      });
 
       detailTabs.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -819,7 +807,6 @@
         });
         document.querySelectorAll('.finance-payment-return-list-surface select').forEach(function (select) { select.selectedIndex = 0; });
         activeStatus = '全部';
-        statusTabs.forEach(function (button, index) { button.classList.toggle('active', index === 0); });
         applyFilters();
       });
       document.querySelector('[data-refresh-return]').addEventListener('click', function () {

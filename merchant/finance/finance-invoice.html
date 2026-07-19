@@ -59,18 +59,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed finance-invoice-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="发票任务状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待开票">待开票 <span class="tab-count" data-status-count="待开票">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待收票">待收票 <span class="tab-count" data-status-count="待收票">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待验真">待验真 <span class="tab-count" data-status-count="待验真">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="异常处理中">异常处理中 <span class="tab-count" data-status-count="异常处理中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待红冲">待红冲 <span class="tab-count" data-status-count="待红冲">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已完成">已完成 <span class="tab-count" data-status-count="已完成">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="发票任务筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -83,7 +71,8 @@
           <label class="sr-only" for="invoiceKeyword">发票单/订单/应收/应付/客户/供应商</label>
           <input id="invoiceKeyword" type="search" placeholder="发票单/订单/应收/应付/客户/供应商">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待开票</option><option>待收票</option><option>待验真</option><option>异常处理中</option><option>待红冲</option><option>已完成</option></select></div>
+<div class="filter-item-sm">
           <label class="sr-only" for="directionFilter">发票方向</label>
           <select id="directionFilter">
             <option>全部方向</option>
@@ -92,7 +81,7 @@
             <option>红冲处理</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="sourceFilter">业务来源</label>
           <select id="sourceFilter">
             <option>全部来源</option>
@@ -103,7 +92,7 @@
             <option>结算单</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="companyFilter">主体公司</label>
           <select id="companyFilter">
             <option>全部主体</option>
@@ -113,7 +102,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="taxFilter">税控状态</label>
           <select id="taxFilter">
             <option>全部税控</option>
@@ -124,7 +113,7 @@
             <option>已同步</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="ncFilter">NC状态</label>
           <select id="ncFilter">
             <option>全部NC</option>
@@ -431,7 +420,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#invoiceRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('invoiceDetailDrawer');
@@ -558,7 +546,8 @@
 
       function switchStatus(status) {
         activeStatus = status;
-        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        var statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) statusFilter.value = status || '全部';
         applyFilters();
       }
 
@@ -746,6 +735,14 @@
           activeRow.dataset.redResult = activeAction === 'red' ? '红冲完成' : activeRow.dataset.redResult;
         }
         closeLayer(processDrawer);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(result + '已记录');
@@ -762,11 +759,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var statusTab = event.target.closest('[data-status-tab]');
-        if (statusTab) {
-          switchStatus(statusTab.dataset.statusTab);
-          return;
-        }
 
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {

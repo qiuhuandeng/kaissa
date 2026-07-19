@@ -13,23 +13,14 @@
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="应收管理筛选">
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="keyword">应收单、订单、客户或项目</label><input id="keyword" type="search" placeholder="应收单/订单/客户/项目"></div>
-        <div class="filter-item-sm"><label class="sr-only" for="companyFilter">财务主体</label><select id="companyFilter"><option value="">全部主体</option><option value="fj">福建凯撒</option><option value="sh">上海凯撒</option><option value="hq">总部财务</option></select></div>
-        <div class="filter-item-sm"><label class="sr-only" for="sourceFilter">业务来源</label><select id="sourceFilter"><option value="">全部来源</option><option>订单应收</option><option>项目阶段</option><option>金额调整</option><option>渠道结算</option></select></div>
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="">全部状态</option><option>待复核</option><option>待收款</option><option>部分收款</option><option>已收清</option><option>已关闭</option></select></div>
+<div class="filter-item-sm" hidden><label class="sr-only" for="companyFilter">财务主体</label><select id="companyFilter"><option value="">全部主体</option><option value="fj">福建凯撒</option><option value="sh">上海凯撒</option><option value="hq">总部财务</option></select></div>
+        <div class="filter-item-sm" hidden><label class="sr-only" for="sourceFilter">业务来源</label><select id="sourceFilter"><option value="">全部来源</option><option>订单应收</option><option>项目阶段</option><option>金额调整</option><option>渠道结算</option></select></div>
         <div class="filter-item-sm"><label class="sr-only" for="agingFilter">账龄</label><select id="agingFilter"><option value="">全部账龄</option><option>未到期</option><option>逾期1-30天</option><option>逾期31-60天</option><option>逾期60天以上</option></select></div>
         <div class="filter-item-wide filter-item-date-range"><label class="sr-only">到期日期</label><div class="date-range"><input id="dateStart" type="date" aria-label="开始日期"><span>至</span><input id="dateEnd" type="date" aria-label="结束日期"></div></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search>查询</button><button class="btn btn-secondary" type="button" data-reset>重置</button></div>
       </div>
     </section>
-
-    <nav class="tab-bar list-surface-tabs" aria-label="应收主状态">
-      <button class="tab-item active" type="button" data-status="">全部</button>
-      <button class="tab-item" type="button" data-status="待复核">待复核</button>
-      <button class="tab-item" type="button" data-status="待收款">待收款</button>
-      <button class="tab-item" type="button" data-status="部分收款">部分收款</button>
-      <button class="tab-item" type="button" data-status="已收清">已收清</button>
-      <button class="tab-item" type="button" data-status="已关闭">已关闭</button>
-    </nav>
-
     <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="应收单列表">
       <table>
         <thead><tr><th>应收单/来源</th><th>客户/渠道</th><th>关联业务</th><th>财务主体</th><th>应收金额</th><th>已认金额</th><th>待收金额</th><th>到期日/账龄</th><th>操作</th></tr></thead>
@@ -133,6 +124,11 @@
       function renderGrid(target, items) { target.innerHTML = items.map(function (item) { return '<div class="description-item' + (item[2] ? ' product-detail-description-full' : '') + '"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + item[1] + '</div></div>'; }).join(''); }
       function hasOverdue(data) { return data.aging !== '未到期'; }
       function updatePagination() { var visible = rows.filter(function (row) { return !row.hidden; }).length; document.getElementById('receivablePagination').textContent = visible ? '第1-' + visible + '条/共' + visible + '条' : '第0条/共0条'; }
+      function actionHtml(row) {
+        if (row.dataset.status === '待复核') return '<div class="table-action"><button class="table-action-primary" type="button" data-open-review>确认应收</button><button type="button" data-return-direct>退回复核</button></div>';
+        if (row.dataset.status === '待收款' || row.dataset.status === '部分收款') return '<div class="table-action"><a class="table-action-primary" href="finance-matching.html?receivableNo=' + encodeURIComponent(row.dataset.no) + '">查看认款</a><button type="button" data-open-detail>详情</button></div>';
+        return '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
+      }
       function applyFilters() {
         var keyword = document.getElementById('keyword').value.trim().toLowerCase();
         var company = document.getElementById('companyFilter').value;
@@ -150,7 +146,7 @@
         emptyRow.hidden = visible !== 0;
         updatePagination();
       }
-      function updateRow(row) { row.children[8].innerHTML = row.dataset.status === '待复核' ? '<div class="table-action"><button class="table-action-primary" type="button" data-open-review>复核</button></div>' : '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>'; }
+      function updateRow(row) { row.children[8].innerHTML = actionHtml(row); }
       function openReview(row) {
         activeRow = row;
         var data = rowData(row);
@@ -211,6 +207,8 @@
       document.addEventListener('click', function (event) {
         var reviewButton = event.target.closest('[data-open-review]');
         if (reviewButton) { openReview(reviewButton.closest('tr')); return; }
+        var returnDirectButton = event.target.closest('[data-return-direct]');
+        if (returnDirectButton) { activeRow = returnDirectButton.closest('tr'); openReturn(); return; }
         var detailButton = event.target.closest('[data-open-detail]');
         if (detailButton) { openDetail(detailButton.closest('tr')); return; }
         if (event.target.closest('[data-return-review]')) { openReturn(); return; }
@@ -219,13 +217,21 @@
         if (event.target.closest('[data-open-writeoff]')) { openWriteoff(); return; }
         if (event.target.closest('[data-submit-writeoff]')) { var writeoffReason = document.getElementById('writeoffReason').value.trim(); if (!writeoffReason) { notify('请填写核销原因', 'warning'); return; } closeLayer(writeoffDrawer); notify('核销申请已提交审批'); return; }
         if (event.target.closest('[data-search]')) { applyFilters(); return; }
-        if (event.target.closest('[data-reset]')) { document.querySelectorAll('.finance-receivable-list-surface input').forEach(function (input) { input.value = ''; }); document.querySelectorAll('.finance-receivable-list-surface select').forEach(function (select) { select.selectedIndex = 0; }); activeStatus = ''; document.querySelectorAll('[aria-label="应收主状态"] .tab-item').forEach(function (item, index) { item.classList.toggle('active', index === 0); }); applyFilters(); return; }
+        if (event.target.closest('[data-reset]')) { document.querySelectorAll('.finance-receivable-list-surface input').forEach(function (input) { input.value = ''; }); document.querySelectorAll('.finance-receivable-list-surface select').forEach(function (select) { select.selectedIndex = 0; }); activeStatus = ''; applyFilters(); return; }
         if (event.target.closest('[data-close]')) closeLayer(event.target.closest('.modal-overlay'));
       });
-      document.querySelector('[aria-label="应收主状态"]').addEventListener('click', function (event) { var button = event.target.closest('[data-status]'); if (!button) return; activeStatus = button.dataset.status; document.querySelectorAll('[aria-label="应收主状态"] .tab-item').forEach(function (item) { item.classList.toggle('active', item === button); }); applyFilters(); });
       document.querySelector('[aria-label="应收详情标签"]').addEventListener('click', function (event) { var button = event.target.closest('[data-detail-tab]'); if (button) switchDetailTab(button.dataset.detailTab); });
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) { overlay.addEventListener('click', function (event) { if (event.target === overlay) closeLayer(overlay); }); });
+      rows.forEach(updateRow);
       applyFilters();
+
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value;
+          applyFilters();
+        });
+      }
       openFromParams();
     })();
   </script>

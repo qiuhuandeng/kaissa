@@ -59,18 +59,6 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface list-surface-tabbed transfer-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar list-surface-tabs" aria-label="转款核销状态">
-        <button class="tab-item active" type="button" data-status-tab="全部">全部 <span class="tab-count" data-status-count="全部">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="待财务确认">待财务确认 <span class="tab-count" data-status-count="待财务确认">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="差异处理中">差异处理中 <span class="tab-count" data-status-count="差异处理中">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已确认">已确认 <span class="tab-count" data-status-count="已确认">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已冲正">已冲正 <span class="tab-count" data-status-count="已冲正">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已退回">已退回 <span class="tab-count" data-status-count="已退回">0</span></button>
-        <button class="tab-item" type="button" data-status-tab="已关闭">已关闭 <span class="tab-count" data-status-count="已关闭">0</span></button>
-      </nav>
-    </div>
-
     <section class="filter-card filter-card-compact list-surface-filter transfer-filter" aria-label="转款核销筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
@@ -82,7 +70,8 @@
           <label class="sr-only" for="transferKeyword">转款单/审批单/原订单/新订单/客户/流水</label>
           <input id="transferKeyword" type="search" placeholder="转款单/审批单/原订单/新订单/客户/流水">
         </div>
-        <div class="filter-item-sm">
+                <div class="filter-item-sm"><label class="sr-only" for="statusFilter">主状态</label><select id="statusFilter"><option value="全部">全部状态</option><option>待财务确认</option><option>差异处理中</option><option>已确认</option><option>已冲正</option><option>已退回</option><option>已关闭</option></select></div>
+<div class="filter-item-sm" hidden>
           <label class="sr-only" for="transferCompany">财务主体</label>
           <select id="transferCompany">
             <option>全部主体</option>
@@ -92,7 +81,7 @@
             <option>福建凯撒</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="transferStore">归属门店</label>
           <select id="transferStore">
             <option>全部门店</option>
@@ -114,7 +103,7 @@
             <option>取消留存</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="differenceFilter">差额去向</label>
           <select id="differenceFilter">
             <option>全部去向</option>
@@ -125,7 +114,7 @@
             <option>退回补资料</option>
           </select>
         </div>
-        <div class="filter-item-sm">
+        <div class="filter-item-sm" hidden>
           <label class="sr-only" for="ncFilter">NC状态</label>
           <select id="ncFilter">
             <option>全部NC</option>
@@ -447,7 +436,6 @@
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#transferRows tr'));
-      var statusTabs = Array.from(document.querySelectorAll('[data-status-tab]'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var detailDrawer = document.getElementById('transferDetailDrawer');
@@ -572,7 +560,8 @@
 
       function switchStatus(status) {
         activeStatus = status;
-        statusTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.statusTab === status); });
+        var statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) statusFilter.value = status || '全部';
         applyFilters();
       }
 
@@ -793,6 +782,14 @@
         }
         closeLayer(workDrawer);
         updateRowCells(activeRow);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
+
         updateCounts();
         applyFilters();
         notify(result + '已记录');
@@ -809,11 +806,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var statusTab = event.target.closest('[data-status-tab]');
-        if (statusTab) {
-          switchStatus(statusTab.dataset.statusTab);
-          return;
-        }
 
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {

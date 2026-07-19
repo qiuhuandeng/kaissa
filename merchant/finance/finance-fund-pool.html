@@ -19,19 +19,10 @@
         <div class="filter-item"><label class="sr-only" for="fundKeyword">账户/银行/门店/单据</label><input id="fundKeyword" type="search" placeholder="账户/银行/门店/单据"></div>
         <div class="filter-item-sm"><label class="sr-only" for="fundType">账户类型</label><select id="fundType"><option>全部类型</option><option>银行账户</option><option>线上清算</option><option>POS清算</option><option>待处理资金</option></select></div>
         <div class="filter-item-sm"><label class="sr-only" for="fundStatus">对账状态</label><select id="fundStatus"><option>全部状态</option><option>正常</option><option>待核对</option><option>待处理</option><option>占用中</option><option>异常</option></select></div>
-        <div class="filter-item-sm"><label class="sr-only" for="fundCompany">主体公司</label><select id="fundCompany"><option>全部主体</option><option>福建凯撒</option><option>福建凯撒</option><option>上海凯撒</option><option>集团汇总账户</option></select></div>
+        <div class="filter-item-sm" hidden><label class="sr-only" for="fundCompany">主体公司</label><select id="fundCompany"><option>全部主体</option><option>福建凯撒</option><option>福建凯撒</option><option>上海凯撒</option><option>集团汇总账户</option></select></div>
         <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-fund>查询</button><button class="btn btn-secondary" type="button" data-reset-fund>重置</button></div>
       </div>
     </section>
-
-    <nav class="tab-bar list-surface-tabs" aria-label="资金对象筛选" data-filter-tabs data-filter-target="#fundRows">
-      <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
-      <button class="tab-item" type="button" data-filter-value="银行账户">银行账户</button>
-      <button class="tab-item" type="button" data-filter-value="线上清算">线上清算</button>
-      <button class="tab-item" type="button" data-filter-value="POS清算">POS清算</button>
-      <button class="tab-item" type="button" data-filter-value="待处理资金">待处理资金</button>
-      <button class="tab-item" type="button" data-filter-value="异常">异常</button>
-    </nav>
 
     <section class="table-wrap list-surface-table list-table-with-pagination" aria-label="资金池列表">
       <table>
@@ -233,11 +224,6 @@
         return value && value.indexOf('全部') !== 0;
       }
 
-      function activeTab() {
-        var active = document.querySelector('.fund-pool-list-surface .tab-item.active');
-        return active ? active.dataset.filterValue : '全部';
-      }
-
       function renderGrid(target, items) {
         target.innerHTML = items.map(function (item) {
           return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
@@ -322,7 +308,6 @@
         var type = document.getElementById('fundType').value;
         var status = document.getElementById('fundStatus').value;
         var company = document.getElementById('fundCompany').value;
-        var tab = activeTab();
         var rows = Array.from(document.querySelectorAll('#fundRows tr'));
         var visibleCount = 0;
         rows.forEach(function (row) {
@@ -332,7 +317,6 @@
           if (optionEnabled(type) && row.dataset.type !== type) visible = false;
           if (optionEnabled(status) && row.dataset.status !== status) visible = false;
           if (optionEnabled(company) && row.dataset.company !== company) visible = false;
-          if (tab && tab !== '全部' && String(row.dataset.tabStatus || '').indexOf(tab) < 0) visible = false;
           row.hidden = !visible;
           if (visible) visibleCount += 1;
         });
@@ -346,14 +330,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var tab = event.target.closest('.fund-pool-list-surface .tab-item');
-        if (tab) {
-          document.querySelectorAll('.fund-pool-list-surface .tab-item').forEach(function (item) {
-            item.classList.toggle('active', item === tab);
-          });
-          applyFilters();
-          return;
-        }
         var detailButton = event.target.closest('[data-open-fund-detail]');
         if (detailButton) {
           openFundDetail(detailButton.closest('tr'));
@@ -393,6 +369,10 @@
         overlay.addEventListener('click', function (event) {
           if (event.target === overlay) window.caesarUI.closeLayer(overlay);
         });
+      });
+
+      document.querySelectorAll('.fund-pool-filter input, .fund-pool-filter select').forEach(function (control) {
+        control.addEventListener('change', applyFilters);
       });
 
       applyFilters();

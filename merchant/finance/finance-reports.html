@@ -10,11 +10,22 @@
   <script src="../../shared/nav-merchant.js"></script>
 
   <section class="list-surface finance-report-content" aria-label="财务报表" data-list-surface>
+    <div class="list-surface-tabbar-row">
+      <nav class="tab-bar list-surface-tabs list-function-tabs" aria-label="财务报表业务域">
+        <button class="tab-item" type="button" data-report-tab="profit">经营损益</button>
+        <button class="tab-item" type="button" data-report-tab="receipt">收款分析</button>
+        <button class="tab-item" type="button" data-report-tab="payment">付款分析</button>
+        <button class="tab-item" type="button" data-report-tab="ar-ap">往来分析</button>
+        <button class="tab-item" type="button" data-report-tab="prepay">预付分析</button>
+        <button class="tab-item" type="button" data-report-tab="fund">资金余额</button>
+      </nav>
+    </div>
+
     <section class="finance-report-panel active" id="report-profit">
       <section class="filter-card filter-card-compact finance-report-filter list-surface-filter">
           <div class="filter-row">
             <div class="filter-item-sm"><select class="form-control" aria-label="产品类型"><option>全部类型</option><option>参团游</option><option>代理产品</option><option>邮轮</option><option>专列</option><option>自由行</option><option>单项服务</option><option>研学</option></select></div>
-            <div class="filter-item-sm"><select class="form-control" aria-label="结算方式"><option>全部结算</option><option>团期结算</option><option>订单结算</option><option>项目结算</option></select></div>
+            <div class="filter-item-sm" hidden><select class="form-control" aria-label="结算方式"><option>全部结算</option><option>团期结算</option><option>订单结算</option><option>项目结算</option></select></div>
             <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
             <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出Excel</button></div>
           </div>
@@ -64,7 +75,7 @@
           <div class="filter-row">
             <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="收款开始日期"><span>至</span><input type="date" aria-label="收款结束日期"></div></div>
             <div class="filter-item-sm"><select class="form-control" aria-label="渠道"><option>全部渠道</option><option>门店</option><option>OTA</option><option>直客</option><option>代理商</option></select></div>
-            <div class="filter-item-sm"><select class="form-control" aria-label="NC状态"><option>全部NC</option><option>已推送</option><option>待推送</option><option>推送失败</option></select></div>
+            <div class="filter-item-sm" hidden><select class="form-control" aria-label="NC状态"><option>全部NC</option><option>已推送</option><option>待推送</option><option>推送失败</option></select></div>
             <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
           </div>
       </section>
@@ -133,7 +144,7 @@
       <section class="filter-card filter-card-compact finance-report-filter list-surface-filter">
         <div class="filter-row">
           <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
-          <div class="filter-item-sm"><select class="form-control" aria-label="产品类型"><option>全部类型</option><option>参团游</option><option>代理产品</option><option>邮轮</option><option>专列</option><option>自由行</option><option>单项服务</option><option>研学</option></select></div>
+          <div class="filter-item-sm" hidden><select class="form-control" aria-label="产品类型"><option>全部类型</option><option>参团游</option><option>代理产品</option><option>邮轮</option><option>专列</option><option>自由行</option><option>单项服务</option><option>研学</option></select></div>
           <div class="filter-item-sm"><select class="form-control" aria-label="状态"><option>全部状态</option><option>逾期</option><option>部分收款</option><option>已付款</option><option>审批中</option></select></div>
           <div class="filter-actions"><button class="btn btn-secondary" type="button" data-report-search>查询</button><button class="btn btn-secondary" type="button" data-report-export>导出</button></div>
         </div>
@@ -304,6 +315,7 @@
   <script>
     (function () {
       var panels = Array.from(document.querySelectorAll('.finance-report-panel'));
+      var reportTabs = Array.from(document.querySelectorAll('[data-report-tab]'));
       var modal = document.getElementById('profitDetailModal');
       var allowedReports = ['profit', 'receipt', 'payment', 'ar-ap', 'prepay', 'fund'];
       var reportTitleMap = {
@@ -330,10 +342,23 @@
         currentReport = 'profit';
       }
 
-      panels.forEach(function (panel) {
-        panel.classList.toggle('active', panel.id === 'report-' + currentReport);
-      });
-      document.title = reportTitleMap[currentReport] + ' - 凯撒旅游';
+      function activateReport(report, updateUrl) {
+        if (allowedReports.indexOf(report) === -1) report = 'profit';
+        currentReport = report;
+        panels.forEach(function (panel) {
+          panel.classList.toggle('active', panel.id === 'report-' + currentReport);
+        });
+        reportTabs.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.reportTab === currentReport);
+        });
+        document.title = reportTitleMap[currentReport] + ' - 凯撒旅游';
+        if (updateUrl && window.history && window.history.replaceState) {
+          var params = new URLSearchParams(window.location.search);
+          params.set('report', currentReport);
+          window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+        }
+        applyCurrentReportFilters();
+      }
 
       function $(id) {
         return document.getElementById(id);
@@ -924,6 +949,12 @@
         });
       });
 
+      reportTabs.forEach(function (button) {
+        button.addEventListener('click', function () {
+          activateReport(button.dataset.reportTab, true);
+        });
+      });
+
       function showModal() {
         if (!modal) return;
         window.caesarUI.openLayer(modal);
@@ -972,6 +1003,7 @@
       }
 
       renderReports();
+      activateReport(currentReport, false);
     })();
   </script>
 </body>

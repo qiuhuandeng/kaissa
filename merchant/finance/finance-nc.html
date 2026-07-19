@@ -9,17 +9,8 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <section class="list-surface list-surface-tabbed finance-nc-list-surface" data-list-surface>
-    <div class="list-surface-tabbar-row">
-      <nav class="tab-bar nc-main-tabs list-function-tabs list-surface-tabs" aria-label="NC推送标签">
-        <button class="tab-item active" type="button" data-nc-tab="queue">待推送</button>
-        <button class="tab-item" type="button" data-nc-tab="error">失败处理</button>
-        <button class="tab-item" type="button" data-nc-tab="log">推送日志</button>
-      </nav>
-    </div>
-
-    <section id="nc-queue" class="nc-panel active">
-      <section class="filter-card filter-card-compact nc-filter list-surface-filter" aria-label="NC推送筛选">
+  <section class="list-surface finance-nc-list-surface" data-list-surface>
+    <section class="filter-card filter-card-compact nc-filter list-surface-filter" aria-label="NC推送筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
           <button class="btn btn-secondary" type="button" data-refresh-nc>同步结果</button>
@@ -28,11 +19,13 @@
       </div>
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="ncKeyword">凭证号/业务单据/客户供应商</label><input id="ncKeyword" type="search" placeholder="凭证号/业务单据/客户供应商"></div>
+          <div class="filter-item-sm"><label class="sr-only" for="ncPanelFilter">处理范围</label><select id="ncPanelFilter"><option value="queue">待推送队列</option><option value="error">失败处理</option><option value="log">推送日志</option></select></div>
           <div class="filter-item-sm"><label class="sr-only" for="ncSource">来源类型</label><select id="ncSource"><option>全部来源</option><option>收款入账</option><option>预存充值</option><option>预存扣款</option><option>转款核销</option><option>付款执行</option><option>票损成本</option><option>舱损成本</option><option>铺损成本</option><option>预付分摊调整</option><option>BSP散票结算</option><option>分销佣金</option><option>OTA平台服务费</option><option>OTA平台结算</option><option>退款执行</option><option>发票</option><option>结算</option><option>项目结算</option></select></div>
           <div class="filter-item-sm"><label class="sr-only" for="ncStatus">推送状态</label><select id="ncStatus"><option>全部状态</option><option>待推送</option><option>推送中</option><option>成功</option><option>失败</option></select></div>
           <div class="filter-actions"><button class="btn btn-secondary" type="button" data-search-nc>查询</button><button class="btn btn-secondary" type="button" data-reset-nc>重置</button></div>
         </div>
       </section>
+    <section id="nc-queue" class="nc-panel active">
       <section class="table-wrap nc-queue-table list-surface-table list-table-with-pagination" aria-label="NC待推送队列">
         <table>
           <thead><tr><th><input type="checkbox" aria-label="全选"></th><th>NC凭证</th><th>来源类型</th><th>业务单据</th><th>对象</th><th>金额</th><th>会计分录</th><th>校验</th><th>状态</th><th>操作</th></tr></thead>
@@ -185,7 +178,6 @@
 
   <script>
     (function () {
-      var tabs = Array.from(document.querySelectorAll('[data-nc-tab]'));
       var panels = Array.from(document.querySelectorAll('.nc-panel'));
       var detailDrawer = document.getElementById('ncDetailDrawer');
       var fixDrawer = document.getElementById('ncFixDrawer');
@@ -237,15 +229,16 @@
       }
 
       function switchTab(tabName) {
-        tabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.ncTab === tabName); });
         panels.forEach(function (panel) { panel.classList.toggle('active', panel.id === 'nc-' + tabName); });
+        var panelFilter = document.getElementById('ncPanelFilter');
+        if (panelFilter) panelFilter.value = tabName;
       }
 
       function applyFilters() {
         var keyword = (document.getElementById('ncKeyword').value || '').trim().toLowerCase();
         var source = document.getElementById('ncSource').value;
         var status = document.getElementById('ncStatus').value;
-        document.querySelectorAll('#ncQueueRows tr').forEach(function (row) {
+        document.querySelectorAll('#ncQueueRows tr, #ncErrorRows tr, #ncLogRows tr').forEach(function (row) {
           var visible = true;
           if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
           if (source.indexOf('全部') !== 0 && row.dataset.source !== source) visible = false;
@@ -257,6 +250,7 @@
       function resetFilters() {
         document.querySelectorAll('.nc-filter input').forEach(function (input) { input.value = ''; });
         document.querySelectorAll('.nc-filter select').forEach(function (select) { select.selectedIndex = 0; });
+        switchTab('queue');
         applyFilters();
       }
 
@@ -453,11 +447,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        var tab = event.target.closest('[data-nc-tab]');
-        if (tab) {
-          switchTab(tab.dataset.ncTab);
-          return;
-        }
         var pushButton = event.target.closest('[data-push-row]');
         if (pushButton) {
           markPushed(pushButton.closest('tr'));
@@ -531,6 +520,14 @@
         }
         var closeButton = event.target.closest('[data-close-layer]');
         if (closeButton) closeLayer(closeButton.closest('.modal-overlay'));
+      });
+
+      document.getElementById('ncPanelFilter').addEventListener('change', function () {
+        switchTab(this.value);
+      });
+      document.querySelectorAll('.nc-filter input, .nc-filter select').forEach(function (control) {
+        if (control.id === 'ncPanelFilter') return;
+        control.addEventListener('change', applyFilters);
       });
 
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
