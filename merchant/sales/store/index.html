@@ -11,20 +11,25 @@
 
   <main class="store-org-page">
     <section class="org-admin-layout store-org-layout">
-      <aside class="org-admin-tree-panel store-org-tree-panel" aria-label="门店组织架构">
-        <div class="org-admin-panel-head">
-          <h2 class="org-admin-panel-title">组织架构</h2>
-          <span class="store-tree-total">6家门店</span>
-        </div>
-        <div class="org-admin-tree store-org-tree" data-store-org-tree></div>
-      </aside>
-
       <section class="org-admin-detail-panel store-org-main-panel">
         <section class="filter-card filter-card-compact store-filter store-org-filter list-surface-filter" aria-label="门店筛选">
           <div class="filter-row">
             <div class="filter-item">
               <label class="sr-only" for="storeKeyword">门店/联系人/账号</label>
               <input id="storeKeyword" type="search" placeholder="搜索门店/联系人/账号">
+            </div>
+            <div class="filter-item-wide">
+              <label class="sr-only" for="storeOrgFilter">所属组织</label>
+              <select id="storeOrgFilter">
+                <option value="all" data-org-path="全部门店">全部组织</option>
+                <option value="fujian" data-org-path="福建凯撒">福建凯撒</option>
+                <option value="xiamen-branch" data-org-path="福建凯撒 > 厦门分公司">厦门分公司</option>
+                <option value="xiamen-store-dept" data-org-path="福建凯撒 > 厦门分公司 > 厦门思明区门市部">厦门思明区门市部</option>
+                <option value="quanzhou-branch" data-org-path="福建凯撒 > 泉州分公司">泉州分公司</option>
+                <option value="quanzhou-store-dept" data-org-path="福建凯撒 > 泉州分公司 > 泉州丰泽门市部">泉州丰泽门市部</option>
+                <option value="fuzhou-branch" data-org-path="福建凯撒 > 福州分公司">福州分公司</option>
+                <option value="zhangzhou-branch" data-org-path="福建凯撒 > 漳州分公司">漳州分公司</option>
+              </select>
             </div>
             <div class="filter-item-sm">
               <label class="sr-only" for="storeStatus">门店状态</label>
@@ -52,7 +57,6 @@
                 <th>门店</th>
                 <th>结算/账户</th>
                 <th>销售政策</th>
-                <th>合同/收款</th>
                 <th>主状态</th>
                 <th>操作</th>
               </tr>
@@ -217,91 +221,158 @@
   </div>
 
   <div id="storePermissionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
-    <div class="modal drawer-modal drawer-xl store-sales-config-drawer" role="dialog" aria-modal="true" aria-labelledby="storePermissionTitle">
+    <div class="modal drawer-modal drawer-lg store-sales-config-drawer" role="dialog" aria-modal="true" aria-labelledby="storePermissionTitle">
       <div class="modal-header">
-        <div id="storePermissionTitle" class="modal-title">门店配置</div>
-        <button class="modal-close" type="button" aria-label="关闭门店配置" data-close-permission>×</button>
+        <div id="storePermissionTitle" class="modal-title">门店销售配置</div>
+        <button class="modal-close" type="button" aria-label="关闭门店销售配置" data-close-permission>×</button>
       </div>
       <div class="modal-body">
-        <section class="order-desc-card">
-          <div class="description-grid">
-            <div class="description-item"><div class="description-label">门店</div><div id="permissionStoreName" class="description-value">软件园门店</div></div>
-            <div class="description-item"><div class="description-label">门店类型</div><div id="permissionStoreType" class="description-value">自营门店</div></div>
-            <div class="description-item"><div class="description-label">经营状态</div><div id="permissionStoreStatus" class="description-value"><span class="tag tag-green">正常</span></div></div>
-            <div class="description-item"><div class="description-label">当前可售范围</div><div id="permissionCurrentScope" class="description-value">参团游/邮轮 · 欧洲/境内</div></div>
-            <div class="description-item"><div class="description-label">当前销售规则</div><div id="permissionCurrentRule" class="description-value">可发合同 / 先交团费 / 可占位</div></div>
-            <div class="description-item"><div class="description-label">生效状态</div><div class="description-value"><span class="tag tag-green">已生效</span></div></div>
-          </div>
-        </section>
-
-        <section class="order-desc-card">
-          <div class="drawer-section-head"><h2 class="detail-section-title">可售范围</h2></div>
-          <div class="form-grid">
-            <div class="form-group form-group-full">
-              <label class="form-label">产品类型</label>
-              <div class="store-product-scope-list" data-product-scope-list>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="参团游" checked> 参团游</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
+        <div data-config-scope-source hidden>
+          <div class="store-config-scope-picker" data-config-scope hidden>
+            <div class="store-config-product-column" aria-label="产品类型">
+              <label class="store-config-product-option" data-config-product-option data-product-name="参团游" data-default-destinations="国内,西北线,陕西">
+                <input type="checkbox" data-config-product-toggle checked>
+                <span>参团游</span>
+              </label>
+              <label class="store-config-product-option active" data-config-product-option data-product-name="邮轮" data-default-destinations="欧洲,地中海">
+                <input type="checkbox" data-config-product-toggle checked>
+                <span>邮轮</span>
+              </label>
+              <label class="store-config-product-option" data-config-product-option data-product-name="专列" data-default-destinations="国内,西北线,新疆">
+                <input type="checkbox" data-config-product-toggle>
+                <span>专列</span>
+              </label>
+              <label class="store-config-product-option" data-config-product-option data-product-name="研学" data-default-destinations="国内,陕西,上海">
+                <input type="checkbox" data-config-product-toggle>
+                <span>研学</span>
+              </label>
+              <label class="store-config-product-option" data-config-product-option data-product-name="自由行" data-default-destinations="亚洲,日本,泰国">
+                <input type="checkbox" data-config-product-toggle>
+                <span>自由行</span>
+              </label>
+              <label class="store-config-product-option" data-config-product-option data-product-name="单项服务" data-default-destinations="国内,上海">
+                <input type="checkbox" data-config-product-toggle>
+                <span>单项服务</span>
+              </label>
+              <label class="store-config-product-option" data-config-product-option data-product-name="单团项目" data-default-destinations="国内,华东线">
+                <input type="checkbox" data-config-product-toggle>
+                <span>单团项目</span>
+              </label>
+            </div>
+            <div class="store-config-range-board" data-config-range-board data-active-range-group="domestic">
+              <div class="store-config-range-title">目的地分类</div>
+              <div class="store-range-cascader store-config-range-cascader">
+                <div class="store-range-column">
+                  <label class="store-range-option active" data-range-category="domestic" data-range-keywords="国内 西北线 华东线 东北线 陕西 甘肃 青海 宁夏 新疆 上海 江苏 浙江 安徽 黑龙江 吉林 辽宁">
+                    <input type="checkbox" data-range-destination="国内" data-range-group="domestic">
+                    <span>国内</span>
+                    <span class="store-range-arrow">›</span>
+                  </label>
+                  <label class="store-range-option" data-range-category="europe" data-range-keywords="欧洲 法国 意大利 瑞士 德国 地中海">
+                    <input type="checkbox" data-range-destination="欧洲" data-range-group="europe">
+                    <span>欧洲</span>
+                    <span class="store-range-arrow">›</span>
+                  </label>
+                  <label class="store-range-option" data-range-category="asia" data-range-keywords="亚洲 日本 泰国 新加坡">
+                    <input type="checkbox" data-range-destination="亚洲" data-range-group="asia">
+                    <span>亚洲</span>
+                    <span class="store-range-arrow">›</span>
+                  </label>
                 </div>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="邮轮" checked> 邮轮</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
-                </div>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="专列"> 专列</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range hidden>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
-                </div>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="研学"> 研学</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range hidden>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
-                </div>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="自由行"> 自由行</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range hidden>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
-                </div>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="单项服务"> 单项服务</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range hidden>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
-                </div>
-                <div class="store-product-scope-item" data-product-scope-item>
-                  <label class="store-product-scope-check"><input type="checkbox" data-product-scope-toggle data-product-name="单团项目"> 单团项目</label>
-                  <button class="table-link store-product-range-trigger" type="button" data-toggle-product-range hidden>选择范围</button>
-                  <span class="store-product-scope-summary" data-product-scope-summary hidden></span>
+                <div class="store-range-column">
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="西北线 陕西 甘肃 青海 宁夏 新疆">
+                    <input type="checkbox" data-range-destination="西北线" data-range-group="domestic">
+                    <span>西北线</span>
+                    <span class="store-range-arrow">›</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="陕西 西安 西北线">
+                    <input type="checkbox" data-range-destination="陕西" data-range-group="domestic">
+                    <span>陕西</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="甘肃 西北线">
+                    <input type="checkbox" data-range-destination="甘肃" data-range-group="domestic">
+                    <span>甘肃</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="青海 西北线">
+                    <input type="checkbox" data-range-destination="青海" data-range-group="domestic">
+                    <span>青海</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="宁夏 西北线">
+                    <input type="checkbox" data-range-destination="宁夏" data-range-group="domestic">
+                    <span>宁夏</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="新疆 西北线">
+                    <input type="checkbox" data-range-destination="新疆" data-range-group="domestic">
+                    <span>新疆</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="华东线 上海 江苏 浙江 安徽">
+                    <input type="checkbox" data-range-destination="华东线" data-range-group="domestic">
+                    <span>华东线</span>
+                    <span class="store-range-arrow">›</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="上海 华东线">
+                    <input type="checkbox" data-range-destination="上海" data-range-group="domestic">
+                    <span>上海</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="江苏 华东线">
+                    <input type="checkbox" data-range-destination="江苏" data-range-group="domestic">
+                    <span>江苏</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="浙江 华东线">
+                    <input type="checkbox" data-range-destination="浙江" data-range-group="domestic">
+                    <span>浙江</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="domestic" data-range-keywords="安徽 华东线">
+                    <input type="checkbox" data-range-destination="安徽" data-range-group="domestic">
+                    <span>安徽</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="europe" data-range-keywords="法国 欧洲">
+                    <input type="checkbox" data-range-destination="法国" data-range-group="europe">
+                    <span>法国</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="europe" data-range-keywords="意大利 欧洲">
+                    <input type="checkbox" data-range-destination="意大利" data-range-group="europe">
+                    <span>意大利</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="europe" data-range-keywords="瑞士 欧洲">
+                    <input type="checkbox" data-range-destination="瑞士" data-range-group="europe">
+                    <span>瑞士</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="europe" data-range-keywords="德国 欧洲">
+                    <input type="checkbox" data-range-destination="德国" data-range-group="europe">
+                    <span>德国</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="europe" data-range-keywords="地中海 欧洲 邮轮 母港">
+                    <input type="checkbox" data-range-destination="地中海" data-range-group="europe">
+                    <span>地中海</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="asia" data-range-keywords="日本 亚洲">
+                    <input type="checkbox" data-range-destination="日本" data-range-group="asia">
+                    <span>日本</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="asia" data-range-keywords="泰国 亚洲">
+                    <input type="checkbox" data-range-destination="泰国" data-range-group="asia">
+                    <span>泰国</span>
+                  </label>
+                  <label class="store-range-option" data-range-child data-range-parent="asia" data-range-keywords="新加坡 亚洲">
+                    <input type="checkbox" data-range-destination="新加坡" data-range-group="asia">
+                    <span>新加坡</span>
+                  </label>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section class="order-desc-card">
-          <div class="drawer-section-head"><h2 class="detail-section-title">销售与合同</h2></div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label" for="configDefaultContractSubject">默认签约主体</label><select id="configDefaultContractSubject" class="form-control"><option selected>福建凯撒</option></select></div>
-            <div class="form-group"><label class="form-label" for="configContractTemplate">合同模板</label><select id="configContractTemplate" class="form-control"><option>标准国内/出境旅游合同</option><option>邮轮旅游合同</option><option>单项服务确认单</option><option>MICE项目合同</option></select></div>
-            <div class="form-group form-group-full">
-              <label class="form-label">订单与合同规则</label>
-              <div class="checkbox-row">
-                <label><input type="checkbox" checked> 允许提交订单</label>
-                <label><input type="checkbox" checked> 允许预留订单 <span class="store-sales-rule-hours">保留 <input id="permissionReserveHours" class="form-control" type="number" min="1" step="1" value="24"> 小时</span></label>
-                <label><input type="checkbox" checked> 允许手动占位 <span class="store-sales-rule-hours">有效 <input id="permissionOccupyHours" class="form-control" type="number" min="1" step="1" value="48"> 小时</span></label>
-                <label><input type="checkbox"> 允许未收款确认</label>
-                <label><input type="checkbox" checked> 允许生成合同</label>
-                <label><input type="checkbox" checked> 发合同前需先交团费</label>
-                <label><input type="checkbox" checked> 订单需主体复核</label>
+            <div class="store-range-selected-panel store-config-selected-panel">
+              <div class="store-range-selected-head">
+                <span data-config-selected-count>已选(0)</span>
+                <button class="table-link" type="button" data-clear-config-scope hidden>清除</button>
               </div>
+              <div class="store-range-selected-list" data-config-selected-list></div>
             </div>
           </div>
-        </section>
+        </div>
 
         <section class="order-desc-card">
-          <div class="drawer-section-head"><h2 class="detail-section-title">价格与库存</h2></div>
+          <div class="drawer-section-head"><h2 class="detail-section-title">销售政策</h2></div>
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label" for="authPricePolicy">价格口径</label>
@@ -320,22 +391,119 @@
                 <option>需主体确认</option>
               </select>
             </div>
+            <div class="form-group"><label class="form-label" for="configDefaultContractSubject">默认签约主体</label><select id="configDefaultContractSubject" class="form-control"><option selected>福建凯撒</option></select></div>
+            <div class="form-group"><label class="form-label" for="configContractTemplate">合同模板</label><select id="configContractTemplate" class="form-control"><option>标准国内/出境旅游合同</option><option>邮轮旅游合同</option><option>单项服务确认单</option><option>MICE项目合同</option></select></div>
           </div>
         </section>
 
         <section class="order-desc-card">
-          <div class="drawer-section-head"><h2 class="detail-section-title">收款与结算</h2></div>
-          <div class="description-grid">
-            <div class="description-item"><div class="description-label">当前结算</div><div id="financeCurrentSettle" class="description-value">预存 / 管理费 ¥2,000/月</div></div>
-            <div class="description-item"><div class="description-label">结算配置状态</div><div id="financeCurrentStatus" class="description-value"><span class="tag tag-green">已生效</span></div></div>
-            <div class="description-item"><div class="description-label">可用余额</div><div id="financeCurrentBalance" class="description-value amount-strong">¥86,000</div></div>
-            <div class="description-item"><div class="description-label">默认支付商户</div><div id="configPaymentMerchant" class="description-value">福建主体聚合支付商户</div></div>
+          <div class="drawer-section-head"><h2 class="detail-section-title">订单与合同控制</h2></div>
+          <div class="store-rule-group-list">
+            <div class="store-rule-group" data-store-rule-group="scope">
+              <div class="store-rule-group-main">
+                <div><strong>可售范围</strong><span data-rule-summary="scope">待开通</span></div>
+                <button class="table-link" type="button" data-toggle-store-rule>调整</button>
+              </div>
+              <div class="store-rule-group-detail" data-config-scope-target hidden></div>
+            </div>
+            <div class="store-rule-group" data-store-rule-group="order">
+              <div class="store-rule-group-main">
+                <div><strong>订单能力</strong><span data-rule-summary="order">可提交 / 可预留24小时 / 可占位48小时</span></div>
+                <button class="table-link" type="button" data-toggle-store-rule>调整</button>
+              </div>
+              <div class="store-rule-group-detail" hidden>
+                <div class="checkbox-row">
+                  <label><input type="checkbox" data-order-capability="submit" checked> 允许提交订单</label>
+                  <label><input type="checkbox" data-order-capability="reserve" checked> 允许预留订单 <span class="store-sales-rule-hours">保留 <input id="permissionReserveHours" class="form-control" type="number" min="1" step="1" value="24" data-order-hours="reserve"> 小时</span></label>
+                  <label><input type="checkbox" data-order-capability="occupy" checked> 允许手动占位 <span class="store-sales-rule-hours">有效 <input id="permissionOccupyHours" class="form-control" type="number" min="1" step="1" value="48" data-order-hours="occupy"> 小时</span></label>
+                </div>
+              </div>
+            </div>
+            <div class="store-rule-group" data-store-rule-group="contract">
+              <div class="store-rule-group-main">
+                <div><strong>合同控制</strong><span data-rule-summary="contract">可生成合同 / 发合同前需先交团费</span></div>
+                <button class="table-link" type="button" data-toggle-store-rule>调整</button>
+              </div>
+              <div class="store-rule-group-detail" hidden>
+                <div class="checkbox-row">
+                  <label><input type="checkbox" data-rule-summary-text="可生成合同" checked> 允许生成合同</label>
+                  <label><input type="checkbox" data-rule-summary-text="发合同前需先交团费" checked> 发合同前需先交团费</label>
+                  <label><input type="checkbox" data-rule-summary-text="允许未收款确认"> 允许未收款确认</label>
+                </div>
+              </div>
+            </div>
+            <div class="store-rule-group" data-store-rule-group="risk">
+              <div class="store-rule-group-main">
+                <div><strong>审核与风控</strong><span data-rule-summary="risk">订单需主体复核 / 超额度禁止下单 / 欠费禁止发合同</span></div>
+                <button class="table-link" type="button" data-toggle-store-rule>调整</button>
+              </div>
+              <div class="store-rule-group-detail" hidden>
+                <div class="checkbox-row">
+                  <label><input type="checkbox" data-rule-summary-text="订单需主体复核" checked> 订单需主体复核</label>
+                  <label><input type="checkbox" data-rule-summary-text="可用预存扣款" checked> 订单可使用预存扣款</label>
+                  <label><input type="checkbox" data-rule-summary-text="可退款转预存" checked> 可退款转预存</label>
+                  <label><input type="checkbox" data-rule-summary-text="超额度禁止下单" checked> 超额度禁止下单</label>
+                  <label><input type="checkbox" data-rule-summary-text="欠费禁止发合同" checked> 欠费禁止发合同</label>
+                </div>
+              </div>
+            </div>
           </div>
+        </section>
+
+        <section class="order-desc-card">
+          <div class="drawer-section-head"><h2 class="detail-section-title">生效信息</h2></div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="permissionEffectiveDate">生效日期</label><input id="permissionEffectiveDate" class="form-control" type="date" value="2026-07-04"></div>
+            <div class="form-group form-group-full"><label class="form-label" for="permissionReason">调整原因</label><textarea id="permissionReason" class="form-control" rows="3">门店合作规则调整，需要同步可售范围、下单和合同控制。</textarea></div>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-permission>取消</button>
+        <button class="btn btn-secondary" type="button" data-save-permission-draft>保存草稿</button>
+        <button class="btn btn-primary" type="button" data-submit-permission>提交审批</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="storeFinanceConfigDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg store-sales-config-drawer store-finance-config-drawer" role="dialog" aria-modal="true" aria-labelledby="storeFinanceConfigTitle">
+      <div class="modal-header">
+        <div id="storeFinanceConfigTitle" class="modal-title">门店财务配置</div>
+        <button class="modal-close" type="button" aria-label="关闭门店财务配置" data-close-finance-config>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="order-desc-card store-config-summary-card">
+          <div class="store-config-summary-grid">
+            <div class="store-config-summary-label">门店</div>
+            <div id="financeConfigStoreName" class="store-config-summary-value">软件园门店</div>
+            <div class="store-config-summary-label">结算配置状态</div>
+            <div id="financeConfigStatus" class="store-config-summary-value">已生效</div>
+            <div class="store-config-summary-label">当前结算</div>
+            <div id="financeConfigCurrentSettle" class="store-config-summary-value amount-strong">预存 ¥86,000冻结 ¥12,800 · 管理费 ¥2,000/月</div>
+            <div class="store-config-summary-label">默认支付商户</div>
+            <div id="financeConfigCurrentMerchant" class="store-config-summary-value">福建主体聚合支付商户 · 自动认款</div>
+          </div>
+        </section>
+
+        <section class="order-desc-card">
+          <div class="drawer-section-head"><h2 class="detail-section-title">结算规则</h2></div>
           <div class="form-grid">
             <div class="form-group"><label class="form-label" for="financeSettleMode">结算方式</label><select id="financeSettleMode" class="form-control"><option>预存</option><option>单单结</option><option>月结</option><option>授信</option></select></div>
+            <div class="form-group" data-payment-scope="finance-config" data-payment-field="predeposit"><label class="form-label" for="financePredepositStatus">预存账户</label><select id="financePredepositStatus" class="form-control"><option>启用预存账户</option><option>不启用预存账户</option><option>审核通过后开通</option></select></div>
+            <div class="form-group"><label class="form-label" for="financeCreditLimit">授信额度</label><input id="financeCreditLimit" class="form-control" type="text" value="¥500,000"></div>
+            <div class="form-group"><label class="form-label" for="financeAccountPeriod">月结账期</label><select id="financeAccountPeriod" class="form-control"><option>不启用月结</option><option>15天</option><option>30天</option><option>45天</option></select></div>
+            <div class="form-group"><label class="form-label" for="financeMonthlyFee">月管理费</label><input id="financeMonthlyFee" class="form-control" type="text" value="¥2,000/月"></div>
+            <div class="form-group"><label class="form-label" for="financeFeeCollect">管理费收取方式</label><select id="financeFeeCollect" class="form-control"><option>每月从预存账户扣款</option><option>随门店月度对账收取</option><option>免收管理费</option></select></div>
+          </div>
+        </section>
+
+        <section class="order-desc-card">
+          <div class="drawer-section-head"><h2 class="detail-section-title">收款方式</h2></div>
+          <div class="form-grid">
             <div class="form-group form-group-full">
               <label class="form-label">可用支付方式</label>
-              <div class="multi-select store-payment-multi" data-payment-multiselect data-payment-scope="config">
+              <div class="multi-select store-payment-multi" data-payment-multiselect data-payment-scope="finance-config">
                 <button class="multi-select-trigger" type="button" data-payment-trigger aria-expanded="false"><span data-payment-label>聚合扫码、对公转账、现金收款、预存账户抵扣</span></button>
                 <div class="multi-select-menu">
                   <label><input type="checkbox" data-payment-method="scan" checked> 聚合扫码</label>
@@ -345,44 +513,35 @@
                 </div>
               </div>
             </div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="scan"><label class="form-label" for="configDefaultPaymentMerchant">默认支付商户</label><select id="configDefaultPaymentMerchant" class="form-control"><option>福建主体聚合支付商户</option><option>上海主体聚合支付商户</option><option>门店独立商户</option></select></div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="predeposit"><label class="form-label" for="financePredepositEnabled">预存账户</label><select id="financePredepositEnabled" class="form-control"><option>启用预存账户</option><option>不启用预存账户</option><option>审核通过后开通</option></select></div>
-            <div class="form-group"><label class="form-label" for="financeCreditLimit">授信额度</label><input id="financeCreditLimit" class="form-control" type="text" value="¥500,000"></div>
-            <div class="form-group"><label class="form-label" for="financeAccountPeriod">月结账期</label><select id="financeAccountPeriod" class="form-control"><option>不启用月结</option><option>15天</option><option>30天</option><option>45天</option></select></div>
-            <div class="form-group"><label class="form-label" for="financeMonthlyFee">月管理费</label><input id="financeMonthlyFee" class="form-control" type="text" value="¥2,000/月"></div>
-            <div class="form-group"><label class="form-label" for="financeFeeCollect">管理费收取方式</label><select id="financeFeeCollect" class="form-control"><option>每月5日从预存账户扣款</option><option>随门店月度对账收取</option><option>免收管理费</option></select></div>
-            <div class="form-group"><label class="form-label" for="financeInvoiceTitle">开票抬头</label><input id="financeInvoiceTitle" class="form-control" type="text" value="厦门思明软件园旅行服务有限公司"></div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="bank"><label class="form-label" for="financeAccountName">户名</label><input id="financeAccountName" class="form-control" type="text" value="厦门思明软件园旅行服务有限公司"></div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="bank"><label class="form-label" for="financeBankAccount">银行账号</label><input id="financeBankAccount" class="form-control" type="text" value="6225****0038"></div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="bank"><label class="form-label" for="financeBankName">开户行</label><input id="financeBankName" class="form-control" type="text" value="民生银行厦门思明支行"></div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="bank"><label class="form-label" for="financeBankCode">联行号</label><input id="financeBankCode" class="form-control" type="text" value="305100000013"></div>
-            <div class="form-group" data-payment-scope="config" data-payment-field="bank"><label class="form-label" for="financeMatchName">流水识别名称</label><input id="financeMatchName" class="form-control" type="text" value="软件园旅行 / RUANJIANYUAN"></div>
-            <div class="form-group"><label class="form-label" for="financeNcCode">NC辅助核算</label><input id="financeNcCode" class="form-control" type="text" value="财务审核后确认" disabled></div>
+            <div class="form-group" data-payment-scope="finance-config" data-payment-field="scan"><label class="form-label" for="financePaymentMerchant">默认支付商户</label><select id="financePaymentMerchant" class="form-control"><option>福建主体聚合支付商户</option><option>上海主体聚合支付商户</option><option>门店独立商户</option><option>待财务审核</option></select></div>
           </div>
         </section>
 
         <section class="order-desc-card">
-          <div class="drawer-section-head"><h2 class="detail-section-title">风控规则</h2></div>
-          <div class="checkbox-row">
-            <label><input type="checkbox" checked> 订单可使用预存扣款</label>
-            <label><input type="checkbox" checked> 可退款转预存</label>
-            <label><input type="checkbox" checked> 超额度禁止下单</label>
-            <label><input type="checkbox" checked> 欠费禁止发合同</label>
+          <div class="drawer-section-head"><h2 class="detail-section-title">收款账户</h2></div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="financeInvoiceTitle">开票抬头</label><input id="financeInvoiceTitle" class="form-control" type="text" value="厦门思明软件园旅行服务有限公司"></div>
+            <div class="form-group" data-payment-scope="finance-config" data-payment-field="bank"><label class="form-label" for="financeAccountName">户名</label><input id="financeAccountName" class="form-control" type="text" value="厦门思明软件园旅行服务有限公司"></div>
+            <div class="form-group" data-payment-scope="finance-config" data-payment-field="bank"><label class="form-label" for="financeBankAccount">银行账号</label><input id="financeBankAccount" class="form-control" type="text" value="6225****0038"></div>
+            <div class="form-group" data-payment-scope="finance-config" data-payment-field="bank"><label class="form-label" for="financeBankName">开户行</label><input id="financeBankName" class="form-control" type="text" value="民生银行厦门思明支行"></div>
+            <div class="form-group" data-payment-scope="finance-config" data-payment-field="bank"><label class="form-label" for="financeBankCode">联行号</label><input id="financeBankCode" class="form-control" type="text" value="305100000013"></div>
+            <div class="form-group"><label class="form-label" for="financeMatchName">流水识别名称</label><input id="financeMatchName" class="form-control" type="text" value="软件园旅行 / RUANJIANYUAN"></div>
+            <div class="form-group"><label class="form-label" for="financeNcAccount">NC辅助核算</label><input id="financeNcAccount" class="form-control" type="text" value="福建凯撒-厦门思明软件园门店"></div>
           </div>
         </section>
 
         <section class="order-desc-card">
           <div class="drawer-section-head"><h2 class="detail-section-title">生效信息</h2></div>
           <div class="form-grid">
-            <div class="form-group"><label class="form-label" for="permissionEffectiveDate">生效日期</label><input id="permissionEffectiveDate" class="form-control" type="date" value="2026-07-04"></div>
-            <div class="form-group form-group-full"><label class="form-label" for="permissionReason">调整原因</label><textarea id="permissionReason" class="form-control" rows="3">门店合作规则调整，需要同步下单、合同和资金控制配置。</textarea></div>
+            <div class="form-group"><label class="form-label" for="financeEffectiveDate">生效日期</label><input id="financeEffectiveDate" class="form-control" type="date" value="2026-07-04"></div>
+            <div class="form-group form-group-full"><label class="form-label" for="financeConfigReason">调整原因</label><textarea id="financeConfigReason" class="form-control" rows="3">门店结算规则和收款账户调整。</textarea></div>
           </div>
         </section>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-permission>取消</button>
-        <button class="btn btn-secondary" type="button" data-save-permission-draft>保存草稿</button>
-        <button class="btn btn-primary" type="button" data-submit-permission>提交审批</button>
+        <button class="btn btn-secondary" type="button" data-close-finance-config>取消</button>
+        <button class="btn btn-secondary" type="button" data-save-finance-config-draft>保存草稿</button>
+        <button class="btn btn-primary" type="button" data-submit-finance-config>提交财务审核</button>
       </div>
     </div>
   </div>
@@ -603,12 +762,11 @@
             return '<span class="tag tag-blue">' + rule + '</span>';
           }).join('');
           return '<tr data-tab-status="' + item.status + '" data-type="' + item.type + '" data-settle="' + item.settle + '" data-subject="' + item.subject + '" data-center="' + item.org + '" data-org-keys="' + item.keys + '" data-finance="已生效" data-status="' + item.status + '" data-store-name="' + item.name + '" data-store-auth="' + item.scope + '" data-contract-subject="' + item.contract + '" data-payment-merchant="' + item.merchant + '" data-price-policy="' + item.price + '" data-keywords="' + item.name + ' ' + item.subject + ' ' + item.org + ' ' + item.manager + '">' +
-            '<td><div class="store-name-line"><a class="link-primary" href="detail.html">' + item.name + '</a><span class="' + item.tagClass + '">' + item.tag + '</span></div><span class="text-muted">负责人 ' + item.manager + ' ' + item.phone + '</span></td>' +
+            '<td><div class="store-name-line"><strong>' + item.name + '</strong><span class="' + item.tagClass + '">' + item.tag + '</span></div><span class="text-muted">负责人 ' + item.manager + ' ' + item.phone + '</span></td>' +
             '<td class="amount-strong"><strong>' + item.amount + '</strong><span class="text-muted">' + item.note + '</span></td>' +
             '<td><div class="tag-row">' + ruleHtml + '</div><span class="text-muted">' + item.scope + '</span></td>' +
-            '<td><strong>' + item.contract + '</strong><span class="text-muted">' + item.merchant + '</span></td>' +
             '<td><span class="tag tag-green">' + item.status + '</span></td>' +
-            '<td><div class="table-action"><a class="table-action-primary" href="detail.html">详情</a><a href="operation.html">经营</a><button class="table-link" type="button" data-open-store-config>配置</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item danger" data-open-pause>暂停</button></span></span></div></td>' +
+            '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-sales-config>销售配置</button><button type="button" data-open-finance-config>财务配置</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item" href="detail.html">详情</a><button type="button" class="dropdown-item danger" data-open-pause>暂停</button></span></span></div></td>' +
             '</tr>';
         }).join('');
       }
@@ -619,9 +777,9 @@
     (function () {
       var storeModal = document.getElementById('storeModal');
       var permissionModal = document.getElementById('storePermissionDrawer');
+      var financeConfigModal = document.getElementById('storeFinanceConfigDrawer');
       var pauseModal = document.getElementById('pauseModal');
       var activePermissionRow = null;
-      var activeFinanceRow = null;
       var activeStoreOrg = 'all';
 
       function notify(message, type) {
@@ -656,6 +814,11 @@
       function fieldValue(id) {
         var field = document.getElementById(id);
         return field ? field.value : '';
+      }
+
+      function setFieldValue(id, value) {
+        var field = document.getElementById(id);
+        if (field) field.value = value || '';
       }
 
       function orgKeysForStore(subject, center) {
@@ -701,7 +864,18 @@
       }
 
       function activeStoreOrgRow() {
-        return document.querySelector('[data-store-org-row].active') || document.querySelector('[data-store-org-row]');
+        var activeRow = document.querySelector('[data-store-org-row].active') || document.querySelector('[data-store-org-row]');
+        if (activeRow) return activeRow;
+        var orgSelect = document.getElementById('storeOrgFilter');
+        var selected = orgSelect && orgSelect.options[orgSelect.selectedIndex];
+        if (!selected) return null;
+        return {
+          dataset: {
+            orgId: orgSelect.value || 'all',
+            orgName: selected.textContent.trim(),
+            orgPath: selected.dataset.orgPath || selected.textContent.trim()
+          }
+        };
       }
 
       function storeOrgRowById(orgId) {
@@ -715,6 +889,12 @@
         if (!window.URLSearchParams) return;
         var params = new URLSearchParams(window.location.search);
         var orgId = params.get('org');
+        var orgSelect = document.getElementById('storeOrgFilter');
+        if (orgSelect && orgId && setSelectValue(orgSelect, orgId)) {
+          activeStoreOrg = orgId;
+          applyFilters();
+          return;
+        }
         var row = storeOrgRowById(orgId);
         if (row) {
           setActiveStoreOrg(row, false);
@@ -994,7 +1174,265 @@
         });
       }
 
+      function splitConfigScopeValues(value) {
+        return String(value || '').split(/[,、]/).map(function (item) {
+          return item.trim();
+        }).filter(Boolean);
+      }
+
+      function uniqueConfigScopeValues(values) {
+        var seen = {};
+        return values.filter(function (value) {
+          if (!value || seen[value]) return false;
+          seen[value] = true;
+          return true;
+        });
+      }
+
+      function configScopeRoot(root) {
+        return root ? root.querySelector('[data-config-scope]') : null;
+      }
+
+      function configScopeOptions(root) {
+        return Array.from((root || document).querySelectorAll('[data-config-product-option]'));
+      }
+
+      function configScopeDestinations(option) {
+        if (!option) return [];
+        if (typeof option.dataset.selectedDestinations === 'undefined') {
+          option.dataset.selectedDestinations = option.dataset.defaultDestinations || '';
+        }
+        return splitConfigScopeValues(option.dataset.selectedDestinations);
+      }
+
+      function setConfigScopeDestinations(option, values) {
+        if (!option) return;
+        option.dataset.selectedDestinations = uniqueConfigScopeValues(values).join(',');
+      }
+
+      function activeConfigScopeOption(root) {
+        return (root || document).querySelector('[data-config-product-option].active') || configScopeOptions(root)[0] || null;
+      }
+
+      function configRangeBoard(root) {
+        return root ? root.querySelector('[data-config-range-board]') : null;
+      }
+
+      function configDestinationGroup(root, destination) {
+        var input = root && Array.from(root.querySelectorAll('[data-range-destination]')).find(function (item) {
+          return item.dataset.rangeDestination === destination;
+        });
+        return input && input.dataset.rangeGroup ? input.dataset.rangeGroup : '';
+      }
+
+      function setActiveConfigRangeGroup(root, option) {
+        var board = configRangeBoard(root);
+        if (!board || !option) return;
+        board.dataset.activeRangeGroup = option.dataset.rangeCategory || option.dataset.rangeParent || board.dataset.activeRangeGroup || 'domestic';
+      }
+
+      function setActiveConfigProduct(option) {
+        if (!option) return;
+        var root = option.closest('[data-config-scope]');
+        configScopeOptions(root).forEach(function (item) {
+          item.classList.toggle('active', item === option);
+        });
+        var values = configScopeDestinations(option);
+        var firstGroup = values.length ? configDestinationGroup(root, values[0]) : '';
+        var board = configRangeBoard(root);
+        if (board) board.dataset.activeRangeGroup = firstGroup || board.dataset.activeRangeGroup || 'domestic';
+        syncConfigScopePicker(root);
+      }
+
+      function updateActiveConfigScopeDestinations(root) {
+        var active = activeConfigScopeOption(root);
+        if (!active) return;
+        var values = Array.from(root.querySelectorAll('[data-range-destination]:checked')).map(function (item) {
+          return item.dataset.rangeDestination || '';
+        }).filter(Boolean);
+        setConfigScopeDestinations(active, values);
+      }
+
+      function selectedConfigScopeEntries(root) {
+        var entries = [];
+        configScopeOptions(root).forEach(function (option) {
+          var toggle = option.querySelector('[data-config-product-toggle]');
+          if (!toggle || !toggle.checked) return;
+          var product = option.dataset.productName || '产品';
+          var destinations = configScopeDestinations(option);
+          if (!destinations.length) {
+            entries.push({ product: product, destination: '', text: product + ' / 全部目的地' });
+            return;
+          }
+          destinations.forEach(function (destination) {
+            entries.push({ product: product, destination: destination, text: product + ' / ' + destination });
+          });
+        });
+        return entries;
+      }
+
+      function updateConfigScopeTrigger(root, count) {
+        if (!root) return;
+        var section = root.closest('.order-desc-card');
+        var trigger = section && section.querySelector('[data-toggle-config-scope-picker]');
+        var label = section && section.querySelector('[data-config-scope-trigger-label]');
+        var value = typeof count === 'number' ? count : selectedConfigScopeEntries(root).length;
+        var ruleSummary = root.closest('[data-store-rule-group]') && root.closest('[data-store-rule-group]').querySelector('[data-rule-summary="scope"]');
+        if (ruleSummary) ruleSummary.textContent = value > 0 ? '已选' + value + '项' : '待开通';
+        if (label) label.textContent = value > 0 ? '已选' + value + '项' : '选择';
+        if (trigger) trigger.setAttribute('aria-expanded', root.hidden ? 'false' : 'true');
+      }
+
+      function mountConfigScopeRule() {
+        var target = permissionModal && permissionModal.querySelector('[data-config-scope-target]');
+        var root = configScopeRoot(permissionModal);
+        if (target && root && !target.contains(root)) {
+          root.hidden = false;
+          target.appendChild(root);
+        }
+      }
+
+      function setStoreRuleOpen(group, open) {
+        if (!group) return;
+        var detail = group.querySelector('.store-rule-group-detail');
+        var toggle = group.querySelector('[data-toggle-store-rule]');
+        if (detail) detail.hidden = !open;
+        if (toggle) toggle.textContent = open ? '收起' : '调整';
+        syncStoreRuleSummary(group);
+      }
+
+      function setConfigScopePickerOpen(root, open) {
+        if (!root) return;
+        var ruleGroup = root.closest('[data-store-rule-group="scope"]');
+        if (ruleGroup) {
+          setStoreRuleOpen(ruleGroup, open);
+          updateConfigScopeTrigger(root);
+          return;
+        }
+        root.hidden = !open;
+        updateConfigScopeTrigger(root);
+      }
+
+      function toggleConfigScopePicker(root) {
+        if (!root) return;
+        var ruleGroup = root.closest('[data-store-rule-group="scope"]');
+        var detail = ruleGroup && ruleGroup.querySelector('.store-rule-group-detail');
+        setConfigScopePickerOpen(root, detail ? detail.hidden : root.hidden);
+      }
+
+      function renderConfigSelectedList(root) {
+        var entries = selectedConfigScopeEntries(root);
+        var count = root.querySelector('[data-config-selected-count]');
+        var clear = root.querySelector('[data-clear-config-scope]');
+        var list = root.querySelector('[data-config-selected-list]');
+        if (count) count.textContent = '已选(' + entries.length + ')';
+        if (clear) clear.hidden = entries.length === 0;
+        updateConfigScopeTrigger(root, entries.length);
+        if (!list) return;
+        list.innerHTML = entries.map(function (entry) {
+          return '<div class="store-range-selected-item"><span>' + escapeHtml(entry.text) + '</span><button type="button" aria-label="移除' + escapeHtml(entry.text) + '" data-remove-config-scope-item data-product-name="' + escapeHtml(entry.product) + '" data-range-destination="' + escapeHtml(entry.destination) + '">×</button></div>';
+        }).join('');
+      }
+
+      function syncConfigScopePicker(root) {
+        if (!root) return;
+        var active = activeConfigScopeOption(root);
+        if (!active) return;
+        var activeValues = configScopeDestinations(active);
+        var activeMap = activeValues.reduce(function (map, value) {
+          map[value] = true;
+          return map;
+        }, {});
+        root.querySelectorAll('[data-range-destination]').forEach(function (item) {
+          item.checked = !!activeMap[item.dataset.rangeDestination];
+        });
+        var activeGroup = (configRangeBoard(root) && configRangeBoard(root).dataset.activeRangeGroup) || 'domestic';
+        root.querySelectorAll('[data-range-category]').forEach(function (option) {
+          option.classList.toggle('active', option.dataset.rangeCategory === activeGroup);
+        });
+        root.querySelectorAll('[data-range-child]').forEach(function (option) {
+          var visible = option.dataset.rangeParent === activeGroup;
+          option.hidden = !visible;
+          option.classList.toggle('active', visible && !!activeMap[option.querySelector('[data-range-destination]').dataset.rangeDestination]);
+        });
+        configScopeOptions(root).forEach(function (option) {
+          var toggle = option.querySelector('[data-config-product-toggle]');
+          option.classList.toggle('checked', !!(toggle && toggle.checked));
+        });
+        renderConfigSelectedList(root);
+      }
+
+      function selectedConfigScopeSummary(root) {
+        var values = configScopeOptions(root).map(function (option) {
+          var toggle = option.querySelector('[data-config-product-toggle]');
+          if (!toggle || !toggle.checked) return '';
+          var destinations = configScopeDestinations(option);
+          return (option.dataset.productName || '产品') + (destinations.length ? '（' + destinations.join('、') + '）' : '');
+        }).filter(Boolean);
+        return values.length ? values.join('、') : '待开通';
+      }
+
+      function destinationsFromScopeText(product, scopeText, defaults) {
+        var escaped = product.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var match = String(scopeText || '').match(new RegExp(escaped + '（([^）]+)）'));
+        return match ? splitConfigScopeValues(match[1]) : splitConfigScopeValues(defaults);
+      }
+
+      function syncConfigScopeFromRow(row) {
+        var root = configScopeRoot(permissionModal);
+        if (!root) return;
+        var scopeText = row && row.dataset.storeAuth ? row.dataset.storeAuth : '';
+        var hasScope = scopeText && scopeText !== '待开通';
+        var checkedOptions = [];
+        configScopeOptions(root).forEach(function (option) {
+          var product = option.dataset.productName || '';
+          var toggle = option.querySelector('[data-config-product-toggle]');
+          var checked = hasScope ? scopeText.indexOf(product) >= 0 : false;
+          if (toggle) toggle.checked = checked;
+          setConfigScopeDestinations(option, checked ? destinationsFromScopeText(product, scopeText, option.dataset.defaultDestinations || '') : []);
+          if (checked) checkedOptions.push(option);
+        });
+        var active = checkedOptions.find(function (option) {
+          return option.dataset.productName === '邮轮';
+        }) || checkedOptions[0] || configScopeOptions(root)[0] || null;
+        if (active) setActiveConfigProduct(active);
+        syncConfigScopePicker(root);
+      }
+
+      function removeConfigScopeItem(button) {
+        var root = button && button.closest('[data-config-scope]');
+        if (!root) return;
+        var product = button.dataset.productName || '';
+        var destination = button.dataset.rangeDestination || '';
+        var option = configScopeOptions(root).find(function (item) {
+          return item.dataset.productName === product;
+        });
+        if (!option) return;
+        if (destination) {
+          setConfigScopeDestinations(option, configScopeDestinations(option).filter(function (item) {
+            return item !== destination;
+          }));
+        } else {
+          var toggle = option.querySelector('[data-config-product-toggle]');
+          if (toggle) toggle.checked = false;
+        }
+        if (option.classList.contains('active')) syncConfigScopePicker(root);
+        renderConfigSelectedList(root);
+      }
+
+      function clearConfigScope(root) {
+        if (!root) return;
+        configScopeOptions(root).forEach(function (option) {
+          var toggle = option.querySelector('[data-config-product-toggle]');
+          if (toggle) toggle.checked = false;
+          setConfigScopeDestinations(option, []);
+        });
+        syncConfigScopePicker(root);
+      }
+
       function selectedProductScopeSummary(root) {
+        var configScope = configScopeRoot(root);
+        if (configScope) return selectedConfigScopeSummary(configScope);
         var values = Array.from((root || document).querySelectorAll('[data-product-scope-toggle]:checked')).map(function (item) {
           var scopeItem = item.closest('[data-product-scope-item]');
           var summary = scopeItem && scopeItem.querySelector('[data-product-scope-summary]');
@@ -1004,25 +1442,57 @@
         return values.length ? values.join('、') : '待开通';
       }
 
+      function resetStoreRuleGroups() {
+        document.querySelectorAll('#storePermissionDrawer .store-rule-group').forEach(function (group) {
+          setStoreRuleOpen(group, false);
+        });
+      }
+
+      function checked(input) {
+        return !!(input && input.checked);
+      }
+
+      function orderRuleHour(group, key, fallback) {
+        var input = group.querySelector('[data-order-hours="' + key + '"]');
+        return input && input.value ? input.value : fallback;
+      }
+
+      function syncStoreRuleSummary(group) {
+        if (!group) return;
+        var type = group.dataset.storeRuleGroup || '';
+        var summary = group.querySelector('[data-rule-summary]');
+        if (!summary) return;
+        if (type === 'scope') {
+          var scopeRoot = configScopeRoot(group);
+          var count = scopeRoot ? selectedConfigScopeEntries(scopeRoot).length : 0;
+          summary.textContent = count > 0 ? '已选' + count + '项' : '待开通';
+          return;
+        }
+        if (type === 'order') {
+          var parts = [];
+          if (checked(group.querySelector('[data-order-capability="submit"]'))) parts.push('可提交');
+          if (checked(group.querySelector('[data-order-capability="reserve"]'))) parts.push('可预留' + orderRuleHour(group, 'reserve', '24') + '小时');
+          if (checked(group.querySelector('[data-order-capability="occupy"]'))) parts.push('可占位' + orderRuleHour(group, 'occupy', '48') + '小时');
+          summary.textContent = parts.length ? parts.join(' / ') : '未开通订单能力';
+          return;
+        }
+        var values = Array.from(group.querySelectorAll('[data-rule-summary-text]:checked')).map(function (item) {
+          return item.dataset.ruleSummaryText || '';
+        }).filter(Boolean);
+        summary.textContent = values.length ? values.join(' / ') : '未启用';
+      }
+
+      function syncStoreRuleSummaries(root) {
+        (root || document).querySelectorAll('[data-store-rule-group]').forEach(syncStoreRuleSummary);
+      }
+
       function openPermissionDrawer(row) {
         activePermissionRow = row;
-        activeFinanceRow = row;
-        document.getElementById('permissionStoreName').textContent = storeNameFromRow(row);
-        document.getElementById('permissionStoreType').textContent = row && row.dataset.type ? row.dataset.type : '-';
-        document.getElementById('permissionStoreStatus').textContent = row && row.dataset.status ? row.dataset.status : '-';
-        document.getElementById('permissionCurrentScope').textContent = row && row.dataset.storeAuth ? row.dataset.storeAuth : '待开通';
-        document.getElementById('financeCurrentSettle').textContent = row && row.children[1] ? row.children[1].textContent.trim().replace(/\s+/g, ' ') : '-';
-        document.getElementById('financeCurrentStatus').textContent = row && row.dataset.finance ? row.dataset.finance : '-';
-        document.getElementById('financeCurrentBalance').textContent = row && row.children[1] ? row.children[1].textContent.trim().replace(/\s+/g, ' ') : '-';
-        document.getElementById('configPaymentMerchant').textContent = row && row.dataset.paymentMerchant ? row.dataset.paymentMerchant : '-';
-        var currentRule = '按门店合作规则';
-        if (row && row.children[2]) {
-          var tags = Array.from(row.children[2].querySelectorAll('.tag')).map(function (item) { return item.textContent.trim(); }).filter(function (text) {
-            return text.indexOf('可售') < 0;
-          });
-          currentRule = tags.length ? tags.join(' / ') : currentRule;
-        }
-        document.getElementById('permissionCurrentRule').textContent = currentRule;
+        mountConfigScopeRule();
+        syncConfigScopeFromRow(row);
+        setConfigScopePickerOpen(configScopeRoot(permissionModal), false);
+        resetStoreRuleGroups();
+        syncStoreRuleSummaries(permissionModal);
         syncProductScopeRanges(permissionModal);
         window.caesarUI.openLayer(permissionModal);
       }
@@ -1031,17 +1501,76 @@
         if (!activePermissionRow || !activePermissionRow.children[2]) return;
         var scopeText = selectedProductScopeSummary(permissionModal);
         activePermissionRow.dataset.storeAuth = scopeText;
-        activePermissionRow.children[2].innerHTML = '<strong>' + escapeHtml(scopeText) + '</strong><span class="text-muted">门店配置审批中</span>';
+        activePermissionRow.children[2].innerHTML = '<strong>' + escapeHtml(scopeText) + '</strong><span class="text-muted">销售配置审批中</span>';
       }
 
-      function markFinanceSubmitted() {
-        if (!activeFinanceRow) return;
-        activeFinanceRow.dataset.finance = '待财务审核';
-        activeFinanceRow.dataset.tabStatus = activeFinanceRow.dataset.status || '正常';
+      function rowFinanceText(row) {
+        return row && row.children[1] ? row.children[1].textContent.trim().replace(/\s+/g, ' ') : '-';
+      }
+
+      function merchantName(value) {
+        return String(value || '').split('·')[0].trim() || '福建主体聚合支付商户';
+      }
+
+      function monthlyFeeFromText(text) {
+        var matched = String(text || '').match(/管理费\s*([^·\s]+)/);
+        return matched ? matched[1] : '¥2,000/月';
+      }
+
+      function accountPeriodFromText(text) {
+        var matched = String(text || '').match(/账期\s*(\d+天)/);
+        return matched ? matched[1] : '不启用月结';
+      }
+
+      function moneyFromCurrentSettle(text) {
+        var matched = String(text || '').match(/¥[\d,]+/);
+        return matched ? matched[0] : '¥0';
+      }
+
+      function setSummaryText(id, value) {
+        var target = document.getElementById(id);
+        if (target) target.textContent = value || '-';
+      }
+
+      function openFinanceConfigDrawer(row) {
+        activePermissionRow = row;
+        var currentSettle = rowFinanceText(row);
+        var settleMode = row && row.dataset.settle ? row.dataset.settle : '预存';
+        setSummaryText('financeConfigStoreName', storeNameFromRow(row));
+        setSummaryText('financeConfigStatus', row && row.dataset.finance ? row.dataset.finance : '-');
+        setSummaryText('financeConfigCurrentSettle', currentSettle);
+        setSummaryText('financeConfigCurrentMerchant', row && row.dataset.paymentMerchant ? row.dataset.paymentMerchant : '-');
+        setSelectValue(document.getElementById('financeSettleMode'), settleMode);
+        setSelectValue(document.getElementById('financePaymentMerchant'), merchantName(row && row.dataset.paymentMerchant));
+        setFieldValue('financeMonthlyFee', monthlyFeeFromText(currentSettle));
+        setSelectValue(document.getElementById('financeAccountPeriod'), accountPeriodFromText(currentSettle));
+        setFieldValue('financeCreditLimit', currentSettle.indexOf('授信') >= 0 ? moneyFromCurrentSettle(currentSettle) : '¥500,000');
+        setFieldValue('financeInvoiceTitle', (row && row.dataset.subject ? row.dataset.subject : '福建凯撒') + '旅行服务有限公司');
+        setFieldValue('financeAccountName', (row && row.dataset.subject ? row.dataset.subject : '福建凯撒') + '旅行服务有限公司');
+        setFieldValue('financeNcAccount', (row && row.dataset.subject ? row.dataset.subject : '福建凯撒') + '-' + storeNameFromRow(row));
+        syncPaymentMultis();
+        window.caesarUI.openLayer(financeConfigModal);
+      }
+
+      function markFinanceConfigSubmitted() {
+        if (!activePermissionRow || !activePermissionRow.children[1]) return;
+        var settleMode = fieldValue('financeSettleMode') || activePermissionRow.dataset.settle || '预存';
+        var amount = moneyFromCurrentSettle(rowFinanceText(activePermissionRow));
+        var fee = fieldValue('financeMonthlyFee') || '¥2,000/月';
+        var accountPeriod = fieldValue('financeAccountPeriod') || '不启用月结';
+        var merchant = fieldValue('financePaymentMerchant') || '福建主体聚合支付商户';
+        var note = '待财务审核 · 管理费 ' + fee;
+        if (settleMode === '月结') note = '待财务审核 · 账期' + accountPeriod;
+        if (settleMode === '授信') note = '待财务审核 · 授信 ' + (fieldValue('financeCreditLimit') || amount);
+        activePermissionRow.dataset.settle = settleMode;
+        activePermissionRow.dataset.finance = '待财务审核';
+        activePermissionRow.dataset.paymentMerchant = merchant + ' · 财务审核';
+        activePermissionRow.children[1].innerHTML = '<strong>' + escapeHtml(settleMode + ' ' + amount) + '</strong><span class="text-muted">' + escapeHtml(note) + '</span>';
       }
 
       function applyFilters() {
         var keyword = fieldValue('storeKeyword').trim().toLowerCase();
+        activeStoreOrg = fieldValue('storeOrgFilter') || activeStoreOrg || 'all';
         var type = fieldValue('storeType');
         var settle = fieldValue('settleMode');
         var subject = fieldValue('subjectFilter');
@@ -1076,12 +1605,11 @@
         var settle = document.getElementById('storeSettle').value || '预存';
         var fee = document.getElementById('storeMonthlyFee').value || '待确认';
         var row = '<tr data-tab-status="待审核" data-type="' + escapeHtml(type) + '" data-settle="' + escapeHtml(settle) + '" data-subject="' + escapeHtml(subject) + '" data-center="' + escapeHtml(center) + '" data-org-keys="' + escapeHtml(orgKeysForStore(subject, center)) + '" data-finance="待财务审核" data-status="待审核" data-store-name="' + escapeHtml(name) + '" data-store-auth="待开通" data-contract-subject="' + escapeHtml(subject) + '" data-payment-merchant="待财务审核" data-price-policy="待配置" data-keywords="' + escapeHtml(name + ' ' + subject + ' ' + center + ' ' + manager) + '">' +
-          '<td><div class="store-name-line"><a class="link-primary" href="detail.html">' + escapeHtml(name) + '</a><span class="' + storeTypeTagClass(type) + '">' + escapeHtml(storeTypeLabel(type)) + '</span></div><span class="text-muted">负责人 ' + escapeHtml(manager) + ' ' + escapeHtml(phone) + '</span></td>' +
+          '<td><div class="store-name-line"><strong>' + escapeHtml(name) + '</strong><span class="' + storeTypeTagClass(type) + '">' + escapeHtml(storeTypeLabel(type)) + '</span></div><span class="text-muted">负责人 ' + escapeHtml(manager) + ' ' + escapeHtml(phone) + '</span></td>' +
           '<td class="amount-strong"><strong>' + escapeHtml(settle) + ' ¥0</strong><span class="text-muted">待开预存账户 · 管理费 ' + escapeHtml(fee) + '</span></td>' +
-          '<td><strong>待开通</strong><span class="text-muted">门店配置审批中</span></td>' +
-          '<td><strong>' + escapeHtml(subject) + '</strong><span class="text-muted">收款商户待财务审核 · 暂不自动认款</span></td>' +
+          '<td><strong>待开通</strong><span class="text-muted">销售配置审批中</span></td>' +
           '<td><span class="tag tag-blue">待审核</span></td>' +
-          '<td><div class="table-action"><a class="table-action-primary" href="detail.html">详情</a><a href="operation.html">经营</a><button class="table-link" type="button" data-open-store-config>配置</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><button type="button" class="dropdown-item">补充资料</button><button type="button" class="dropdown-item danger">撤回申请</button></span></span></div></td>' +
+          '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-sales-config>销售配置</button><button type="button" data-open-finance-config>财务配置</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item" href="detail.html">详情</a><button type="button" class="dropdown-item">补充资料</button><button type="button" class="dropdown-item danger">撤回申请</button></span></span></div></td>' +
           '</tr>';
         document.getElementById('storeRows').insertAdjacentHTML('afterbegin', row);
       }
@@ -1108,6 +1636,15 @@
         if (!event.target.closest('[data-payment-multiselect]')) {
           closePaymentMultis();
         }
+        var configScopePicker = configScopeRoot(permissionModal);
+        var configScopeTrigger = event.target.closest('[data-toggle-config-scope-picker]');
+        if (configScopeTrigger) {
+          toggleConfigScopePicker(configScopeRoot(configScopeTrigger.closest('.order-desc-card')));
+          return;
+        }
+        if (configScopePicker && !configScopePicker.hidden && !event.target.closest('[data-config-scope]') && !event.target.closest('[data-store-rule-group="scope"]')) {
+          setConfigScopePickerOpen(configScopePicker, false);
+        }
         if (event.target.closest('[data-toggle-store-org-picker]')) {
           toggleStoreOrgPicker();
           return;
@@ -1126,7 +1663,11 @@
           window.caesarUI.openLayer(storeModal);
           return;
         }
-        if (event.target.closest('[data-open-store-config], [data-open-permission], [data-open-auth]')) {
+        if (event.target.closest('[data-open-finance-config]')) {
+          openFinanceConfigDrawer(event.target.closest('tr'));
+          return;
+        }
+        if (event.target.closest('[data-open-sales-config], [data-open-store-config], [data-open-permission], [data-open-auth]')) {
           openPermissionDrawer(event.target.closest('tr'));
           return;
         }
@@ -1148,14 +1689,25 @@
         }
         if (event.target.closest('[data-save-permission-draft]')) {
           window.caesarUI.closeLayer(permissionModal);
-          notify('门店配置草稿已保存');
+          notify('销售配置草稿已保存');
           return;
         }
         if (event.target.closest('[data-submit-permission]')) {
           markPermissionSubmitted();
-          markFinanceSubmitted();
           window.caesarUI.closeLayer(permissionModal);
-          notify('门店配置已提交审批');
+          notify('销售配置已提交审批');
+          applyFilters();
+          return;
+        }
+        if (event.target.closest('[data-save-finance-config-draft]')) {
+          window.caesarUI.closeLayer(financeConfigModal);
+          notify('财务配置草稿已保存');
+          return;
+        }
+        if (event.target.closest('[data-submit-finance-config]')) {
+          markFinanceConfigSubmitted();
+          window.caesarUI.closeLayer(financeConfigModal);
+          notify('财务配置已提交审核');
           applyFilters();
           return;
         }
@@ -1169,6 +1721,30 @@
         }
         if (event.target.closest('[data-reset-store]')) {
           resetFilters();
+          return;
+        }
+        var ruleToggle = event.target.closest('[data-toggle-store-rule]');
+        if (ruleToggle) {
+          var ruleGroup = ruleToggle.closest('.store-rule-group');
+          var ruleDetail = ruleGroup && ruleGroup.querySelector('.store-rule-group-detail');
+          if (ruleDetail) setStoreRuleOpen(ruleGroup, ruleDetail.hidden);
+          return;
+        }
+        var configProductOption = event.target.closest('[data-config-product-option]');
+        if (configProductOption) {
+          setActiveConfigProduct(configProductOption);
+          return;
+        }
+        var removeConfigItem = event.target.closest('[data-remove-config-scope-item]');
+        if (removeConfigItem) {
+          removeConfigScopeItem(removeConfigItem);
+          setConfigScopePickerOpen(removeConfigItem.closest('[data-config-scope]'), false);
+          return;
+        }
+        var clearConfig = event.target.closest('[data-clear-config-scope]');
+        if (clearConfig) {
+          clearConfigScope(clearConfig.closest('[data-config-scope]'));
+          setConfigScopePickerOpen(clearConfig.closest('[data-config-scope]'), false);
           return;
         }
         var rangeTrigger = event.target.closest('[data-toggle-product-range]');
@@ -1191,6 +1767,14 @@
           return;
         }
         var rangeOption = event.target.closest('[data-range-category], [data-range-child]');
+        if (rangeOption && rangeOption.closest('[data-config-scope]')) {
+          var configScope = rangeOption.closest('[data-config-scope]');
+          setActiveConfigRangeGroup(configScope, rangeOption);
+          window.setTimeout(function () {
+            if (!configScope.hidden) syncConfigScopePicker(configScope);
+          }, 0);
+          return;
+        }
         if (rangeOption) {
           var rangePanel = rangeOption.closest('[data-product-range-panel]');
           setActiveRangeGroup(rangePanel, rangeOption);
@@ -1199,12 +1783,18 @@
         }
         if (event.target.closest('[data-close-store-modal]') || event.target === storeModal) window.caesarUI.closeLayer(storeModal);
         if (event.target.closest('[data-close-permission]') || event.target === permissionModal) window.caesarUI.closeLayer(permissionModal);
+        if (event.target.closest('[data-close-finance-config]') || event.target === financeConfigModal) window.caesarUI.closeLayer(financeConfigModal);
         if (event.target.closest('[data-close-pause]') || event.target === pauseModal) window.caesarUI.closeLayer(pauseModal);
       });
 
       document.addEventListener('change', function (event) {
         if (event.target.matches('[data-payment-method]')) {
           syncPaymentMulti(event.target.closest('[data-payment-multiselect]'));
+        }
+        if (event.target.matches('#storeOrgFilter')) {
+          activeStoreOrg = event.target.value || 'all';
+          applyFilters();
+          return;
         }
         if (event.target.matches('#storeFormSubject')) {
           syncOrgSelects();
@@ -1213,12 +1803,35 @@
         if (event.target.matches('#storeFormCenter')) {
           syncStoreOrgFieldsFromSelects();
         }
+        if (event.target.matches('[data-config-product-toggle]')) {
+          var configOption = event.target.closest('[data-config-product-option]');
+          if (event.target.checked && !configScopeDestinations(configOption).length) {
+            setConfigScopeDestinations(configOption, splitConfigScopeValues(configOption.dataset.defaultDestinations || ''));
+          }
+          setActiveConfigProduct(configOption);
+          setConfigScopePickerOpen(configOption.closest('[data-config-scope]'), false);
+          return;
+        }
+        if (event.target.matches('[data-range-destination]') && event.target.closest('[data-config-scope]')) {
+          var root = event.target.closest('[data-config-scope]');
+          var activeOption = activeConfigScopeOption(root);
+          var activeToggle = activeOption && activeOption.querySelector('[data-config-product-toggle]');
+          if (activeToggle) activeToggle.checked = true;
+          setActiveConfigRangeGroup(root, event.target.closest('[data-range-category], [data-range-child]'));
+          updateActiveConfigScopeDestinations(root);
+          syncConfigScopePicker(root);
+          setConfigScopePickerOpen(root, false);
+          return;
+        }
         if (event.target.matches('[data-product-scope-toggle]')) {
           syncProductScopeItem(event.target.closest('[data-product-scope-item]'));
         }
-        if (event.target.matches('[data-range-destination]')) {
+        if (event.target.matches('[data-range-destination]') && event.target.closest('[data-product-range-panel]')) {
           setActiveRangeGroup(event.target.closest('[data-product-range-panel]'), event.target.closest('[data-range-category], [data-range-child]'));
           syncProductRangePanel(event.target.closest('[data-product-range-panel]'));
+        }
+        if (event.target.closest('[data-store-rule-group]')) {
+          syncStoreRuleSummary(event.target.closest('[data-store-rule-group]'));
         }
       });
 
@@ -1226,10 +1839,15 @@
         if (event.target.matches('[data-range-search]')) {
           syncProductRangePanel(event.target.closest('[data-product-range-panel]'));
         }
+        if (event.target.matches('[data-order-hours]')) {
+          syncStoreRuleSummary(event.target.closest('[data-store-rule-group]'));
+        }
       });
 
+      mountConfigScopeRule();
       syncPaymentMultis();
       syncProductScopeRanges();
+      syncStoreRuleSummaries(permissionModal);
       initStoreOrgFromUrl();
     })();
   </script>
