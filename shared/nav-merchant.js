@@ -120,7 +120,6 @@
         {
           title: "门店管理",
           children: [
-            { title: "门店经营", href: "sales/store/operation.html" },
             { title: "门店管理", href: "sales/store/index.html" },
             { title: "门店成员", href: "sales/store/members.html" },
             { title: "预存余额", href: "sales/store/predeposit.html" },
@@ -145,7 +144,7 @@
           title: "分销合作",
           children: [
             { title: "分销渠道", href: "channel/distributors.html" },
-            { title: "分销台账", href: "channel/distribution-orders.html" },
+            { title: "分销记录", href: "channel/distribution-orders.html" },
             { title: "分销对账", href: "channel/distribution-reconciliation.html" },
           ],
         },
@@ -572,7 +571,6 @@
     "sales/orders-payment-transfer.html": { href: "sales/orders-after-sales.html", title: "转单申请" },
     "sales/orders-refund.html": { href: "sales/orders-after-sales.html", title: "退款申请" },
     "sales/store/detail.html": { href: "sales/store/index.html", title: "门店详情" },
-    "sales/store/operation.html": { href: "sales/store/operation.html", title: "门店经营" },
     "sales/store/index.html": { href: "sales/store/index.html", title: "门店管理" },
     "sales/store/members.html": { href: "sales/store/members.html", title: "门店成员" },
     "sales/store/predeposit.html": { href: "sales/store/predeposit.html", title: "预存余额" },
@@ -602,7 +600,7 @@
     "channel/distributors.html": { href: "channel/distributors.html", title: "分销渠道" },
     "channel/agents.html": { href: "channel/distributors.html", title: "分销渠道" },
     "channel/commission_rules.html": { href: "channel/commission_rules.html", title: "佣金政策" },
-    "channel/distribution-orders.html": { href: "channel/distribution-orders.html", title: "分销台账" },
+    "channel/distribution-orders.html": { href: "channel/distribution-orders.html", title: "分销记录" },
     "channel/distribution-reconciliation.html": { href: "channel/distribution-reconciliation.html", title: "分销对账" },
     "channel/sync_logs.html": { href: "channel/ota_exceptions.html", title: "异常日志" },
   };
