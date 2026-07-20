@@ -199,7 +199,7 @@
           title: "收款应收",
           children: [
             { title: "到账流水", href: "finance/receipts.html" },
-            { title: "收款认款", href: "finance/finance-matching.html" },
+            { title: "认款复核", href: "finance/finance-matching.html" },
             { title: "应收管理", href: "finance/finance-receivable.html" },
             { title: "预收预存", href: "finance/finance-pre-receipts.html" },
             { title: "退款转款", href: "finance/finance-refund-transfer.html" },
@@ -229,15 +229,10 @@
             { title: "资金池", href: "finance/finance-fund-pool.html" },
             { title: "资金调拨", href: "finance/finance-control.html?view=fund-transfer" },
             { title: "发票管理", href: "finance/finance-invoice.html" },
-            { title: "NC推送", href: "finance/finance-nc.html" },
           ],
         },
-        {
-          title: "报表分析",
-          children: [
-            { title: "财务报表", href: "finance/finance-reports.html?report=profit" },
-          ],
-        },
+        { title: "财务报表", href: "finance/finance-reports.html?report=profit" },
+        { title: "NC推送", href: "finance/finance-nc.html" },
       ],
     },
     {
@@ -268,7 +263,7 @@
         { title: "组织架构", href: "system/my-org.html" },
         { title: "员工任职", href: "system/staff-management.html" },
         { title: "基础参数", href: "system/business-params.html" },
-        { title: "财务基础设置", href: "finance/finance-currency.html" },
+        { title: "财务设置", href: "finance/finance-currency.html" },
         { title: "通知模板", href: "system/notice-templates.html" },
         { title: "合同模板", href: "sales/contract-templates.html" },
       ],

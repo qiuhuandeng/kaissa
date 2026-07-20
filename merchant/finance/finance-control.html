@@ -13,7 +13,7 @@
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="资金调拨筛选">
       <div class="list-surface-filter-actions list-filter-pinned-actions">
         <div class="btn-group">
-          <button class="btn btn-primary" type="button" data-open-create>发起调拨</button>
+          <button class="btn btn-primary" type="button" data-open-create>新增调拨申请</button>
           <button class="btn btn-secondary" type="button" data-export>导出</button>
         </div>
       </div>
@@ -61,7 +61,7 @@
             <td><div class="table-cell-main"><strong>2026-07-14</strong><span>未到账</span></div></td>
             <td><span class="tag tag-orange">审批中</span></td>
             <td><div class="table-cell-main"><span class="tag tag-gray">未到账</span><span>NC未生成</span></div></td>
-            <td><div class="table-action"><a class="table-action-primary" href="../approval/approvals.html?view=mine&approvalNo=APR-DB-20260702001">查看审批</a><button type="button" data-open-detail>详情</button></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-work="approval">查看审批</button><button type="button" data-open-detail>详情</button></div></td>
           </tr>
           <tr data-transfer-no="DB20260701003" data-entity="总部财务" data-from-entity="总部财务" data-to-entity="上海凯撒" data-from-account="集团汇总账户" data-from-account-no="GH-0001" data-from-balance="¥8,426,000" data-to-account="招商银行上海分行" data-to-account-no="6225****1188" data-to-balance="¥1,993,400" data-currency="CNY" data-amount="¥500,000" data-purpose="邮轮尾款支付" data-basis="理想号地中海邮轮尾款付款准备" data-apply-user="总部出纳刘洋" data-apply-date="2026-07-01" data-plan-date="2026-07-13" data-arrive-date="-" data-approval-no="APR-DB-20260701003" data-approval-status="已通过" data-flow-no="待匹配" data-nc="未生成" data-voucher="未生成" data-risk="到账待确认" data-status="待到账">
             <td><div class="table-cell-main"><strong>DB20260701003</strong><span>总部财务 -> 上海凯撒</span></div></td>
@@ -113,7 +113,7 @@
     <div class="pagination list-surface-pagination list-pagination-attached"><span id="pagination">第1-5条/共5条</span></div>
   </section>
 
-  <div id="detailDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+  <div id="detailDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true">
     <div class="modal drawer-modal drawer-modal-wide" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
       <div class="modal-header">
         <div id="drawerTitle" class="modal-title">资金调拨详情</div>
@@ -121,23 +121,27 @@
       </div>
       <div class="modal-body">
         <section class="enterprise-drawer-object"><strong id="drawerObject"></strong><span id="drawerStatus"></span></section>
-        <section class="drawer-section">
+        <section id="accountSection" class="drawer-section">
           <div class="drawer-section-head"><h3 class="drawer-section-title">调拨账户</h3></div>
           <div id="accountGrid" class="description-grid"></div>
         </section>
-        <section class="drawer-section">
+        <section id="basisSection" class="drawer-section">
           <div class="drawer-section-head"><h3 class="drawer-section-title">调拨依据</h3></div>
           <div id="basisGrid" class="description-grid"></div>
         </section>
-        <section class="drawer-section">
+        <section id="workSection" class="drawer-section" hidden>
+          <div class="drawer-section-head"><h3 id="workTitle" class="drawer-section-title">本次处理</h3></div>
+          <div id="workContent"></div>
+        </section>
+        <section id="approvalSection" class="drawer-section">
           <div class="drawer-section-head"><h3 class="drawer-section-title">审批与到账</h3></div>
           <div id="approvalGrid" class="description-grid"></div>
         </section>
-        <section class="drawer-section">
+        <section id="voucherSection" class="drawer-section">
           <div class="drawer-section-head"><h3 class="drawer-section-title">凭证NC</h3></div>
           <div id="voucherGrid" class="description-grid"></div>
         </section>
-        <section class="drawer-section">
+        <section id="recordSection" class="drawer-section">
           <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
           <section class="table-wrap drawer-table-wrap drawer-table-fit drawer-table-cols-4"><table><thead><tr><th>时间</th><th>处理环节</th><th>处理人</th><th>结果</th></tr></thead><tbody id="recordRows"></tbody></table></section>
         </section>
@@ -155,6 +159,15 @@
       var activeStatus = '';
       var activeRow = null;
       var drawer = document.getElementById('detailDrawer');
+      var drawerAction = document.getElementById('drawerAction');
+      var sections = {
+        account: document.getElementById('accountSection'),
+        basis: document.getElementById('basisSection'),
+        work: document.getElementById('workSection'),
+        approval: document.getElementById('approvalSection'),
+        voucher: document.getElementById('voucherSection'),
+        record: document.getElementById('recordSection')
+      };
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -163,9 +176,9 @@
       }
 
       function statusClass(value) {
-        if (/退回|驳回|失败/.test(value || '')) return 'tag-red';
-        if (/待|审批中|未提交/.test(value || '')) return 'tag-orange';
-        if (/已通过|已到账|已推送/.test(value || '')) return 'tag-green';
+        if (/退回|驳回|失败|差异/.test(value || '')) return 'tag-red';
+        if (/待|审批中|未提交|未到账/.test(value || '')) return 'tag-orange';
+        if (/已通过|已到账|已推送|无异常/.test(value || '')) return 'tag-green';
         return 'tag-gray';
       }
 
@@ -173,14 +186,119 @@
         return '<span class="tag ' + statusClass(value) + '">' + escapeHtml(value || '-') + '</span>';
       }
 
+      function linkHtml(href, text) {
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function formItem(label, control, full) {
+        return '<div class="description-item' + (full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(label) + '</div><div class="description-value">' + control + '</div></div>';
+      }
+
       function renderDescription(target, items) {
         target.innerHTML = items.map(function (item) {
-          return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+          return formItem(item.label, item.value, item.full);
         }).join('');
+      }
+
+      function setSectionVisible(section, visible) {
+        if (section) section.hidden = !visible;
+      }
+
+      function openLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
+          window.caesarUI.openLayer(layer);
+          return;
+        }
+        layer.hidden = false;
+        layer.classList.remove('closing');
+        layer.setAttribute('aria-hidden', 'false');
+        window.requestAnimationFrame(function () { layer.classList.add('show'); });
+      }
+
+      function closeLayer(layer) {
+        if (!layer) return;
+        if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
+          window.caesarUI.closeLayer(layer);
+          return;
+        }
+        layer.classList.remove('show');
+        layer.classList.add('closing');
+        window.setTimeout(function () {
+          layer.classList.remove('closing');
+          layer.hidden = true;
+          layer.setAttribute('aria-hidden', 'true');
+        }, 360);
+      }
+
+      function notify(message, type) {
+        if (window.caesarUI && typeof window.caesarUI.toast === 'function') {
+          window.caesarUI.toast(message, { type: type || 'success' });
+          return;
+        }
+        var container = document.querySelector('.caesar-toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'caesar-toast-container';
+          document.body.appendChild(container);
+        }
+        var toast = document.createElement('div');
+        toast.className = 'caesar-toast caesar-toast-' + (type || 'success');
+        toast.textContent = message;
+        container.appendChild(toast);
+        window.setTimeout(function () {
+          toast.classList.add('closing');
+          window.setTimeout(function () { toast.remove(); }, 180);
+        }, 2200);
       }
 
       function rowText(row) {
         return row ? (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function todayText() {
+        var now = new Date();
+        var month = String(now.getMonth() + 1).padStart(2, '0');
+        var day = String(now.getDate()).padStart(2, '0');
+        return now.getFullYear() + '-' + month + '-' + day;
+      }
+
+      function todaySlash() {
+        return todayText().replace(/-/g, '/');
+      }
+
+      function approvalHref(row) {
+        return '../approval/approvals.html?view=mine&approvalNo=' + encodeURIComponent(row.dataset.approvalNo || '');
+      }
+
+      function rowActionHtml(row) {
+        if (row.dataset.status === '审批中') {
+          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="approval">查看审批</button><button type="button" data-open-detail>详情</button></div>';
+        }
+        if (row.dataset.status === '待到账') {
+          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="arrival">确认到账</button><button type="button" data-open-work="match">匹配流水</button><button type="button" data-open-detail>详情</button></div>';
+        }
+        if (row.dataset.status === '待提交') {
+          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="submit">提交审批</button><button type="button" data-open-detail>详情</button></div>';
+        }
+        if (row.dataset.status === '已退回') {
+          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="resubmit">重新提交</button><button type="button" data-open-detail>详情</button></div>';
+        }
+        return '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
+      }
+
+      function updateRow(row) {
+        var arriveText = row.dataset.arriveDate && row.dataset.arriveDate !== '-' ? row.dataset.arriveDate : (row.dataset.status === '待到账' ? '到账待确认' : '未到账');
+        var arrivalStatus = row.dataset.status === '已到账' ? '已到账' : (row.dataset.status === '待到账' ? '待到账' : '未到账');
+        row.children[0].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.transferNo) + '</strong><span>' + escapeHtml(row.dataset.fromEntity + ' -> ' + row.dataset.toEntity) + '</span></div>';
+        row.children[1].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.fromAccount) + '</strong><span>' + escapeHtml(row.dataset.fromAccountNo + ' / 可用 ' + row.dataset.fromBalance) + '</span></div>';
+        row.children[2].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.toAccount) + '</strong><span>' + escapeHtml(row.dataset.toAccountNo + ' / ' + row.dataset.currency) + '</span></div>';
+        row.children[3].innerHTML = '<span class="amount-strong">' + escapeHtml(row.dataset.amount) + '</span>';
+        row.children[4].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.purpose) + '</strong><span>' + escapeHtml(row.dataset.basis) + '</span></div>';
+        row.children[5].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.planDate) + '</strong><span>' + escapeHtml(arriveText) + '</span></div>';
+        row.children[6].innerHTML = tagHtml(row.dataset.approvalStatus);
+        row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(arrivalStatus) + '<span>' + escapeHtml('NC' + row.dataset.nc) + '</span></div>';
+        row.children[8].innerHTML = rowActionHtml(row);
       }
 
       function updateCounts() {
@@ -211,84 +329,33 @@
         document.getElementById('pagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '无匹配数据';
       }
 
-      function todayText() {
-        var now = new Date();
-        var month = String(now.getMonth() + 1).padStart(2, '0');
-        var day = String(now.getDate()).padStart(2, '0');
-        return now.getFullYear() + '-' + month + '-' + day;
+      function resetDrawer(title, action) {
+        document.getElementById('drawerTitle').textContent = title;
+        document.getElementById('workContent').innerHTML = '';
+        setSectionVisible(sections.account, true);
+        setSectionVisible(sections.basis, true);
+        setSectionVisible(sections.work, false);
+        setSectionVisible(sections.approval, true);
+        setSectionVisible(sections.voucher, true);
+        setSectionVisible(sections.record, true);
+        drawerAction.dataset.action = action || 'detail';
+        drawerAction.hidden = action === 'detail';
+        drawerAction.textContent = title;
       }
 
-      function actionFor(row, requested) {
-        if (requested === 'submit') return '提交审批';
-        if (requested === 'arrival') return '确认到账';
-        if (requested === 'match') return '匹配流水';
-        if (requested === 'resubmit') return '重新提交';
-        if (row.dataset.status === '待提交') return '提交审批';
-        if (row.dataset.status === '待到账') return '确认到账';
-        if (row.dataset.status === '已退回') return '重新提交';
-        return '查看详情';
+      function renderRecords(row) {
+        var records = [
+          [row.dataset.applyDate + ' 10:20', '调拨申请生成', row.dataset.applyUser, row.dataset.status],
+          ['2026-07-01 11:05', '审批承接', '审批中心', row.dataset.approvalStatus],
+          ['2026-07-01 16:30', '资金处理', '出纳', row.dataset.flowNo === '-' ? '未到账' : row.dataset.flowNo]
+        ];
+        if (row.dataset.status === '已到账') records.push([row.dataset.arriveDate || todayText(), '到账确认', '出纳', '已到账']);
+        document.getElementById('recordRows').innerHTML = records.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
+        }).join('');
       }
 
-      function rowActionHtml(row) {
-        if (row.dataset.status === '审批中') {
-          return '<div class="table-action"><a class="table-action-primary" href="../approval/approvals.html?view=mine&approvalNo=' + encodeURIComponent(row.dataset.approvalNo) + '">查看审批</a><button type="button" data-open-detail>详情</button></div>';
-        }
-        if (row.dataset.status === '待到账') {
-          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="arrival">确认到账</button><button type="button" data-open-work="match">匹配流水</button><button type="button" data-open-detail>详情</button></div>';
-        }
-        if (row.dataset.status === '待提交') {
-          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="submit">提交审批</button><button type="button" data-open-detail>详情</button></div>';
-        }
-        if (row.dataset.status === '已退回') {
-          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="resubmit">重新提交</button><button type="button" data-open-detail>详情</button></div>';
-        }
-        return '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
-      }
-
-      function updateRow(row) {
-        var arriveText = row.dataset.arriveDate && row.dataset.arriveDate !== '-' ? row.dataset.arriveDate : (row.dataset.status === '待到账' ? '到账待确认' : '未到账');
-        var arrivalStatus = row.dataset.status === '已到账' ? '已到账' : (row.dataset.status === '待到账' ? '待到账' : '未到账');
-        row.children[0].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.transferNo) + '</strong><span>' + escapeHtml(row.dataset.fromEntity + ' -> ' + row.dataset.toEntity) + '</span></div>';
-        row.children[1].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.fromAccount) + '</strong><span>' + escapeHtml(row.dataset.fromAccountNo + ' / 可用 ' + row.dataset.fromBalance) + '</span></div>';
-        row.children[2].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.toAccount) + '</strong><span>' + escapeHtml(row.dataset.toAccountNo + ' / ' + row.dataset.currency) + '</span></div>';
-        row.children[3].innerHTML = escapeHtml(row.dataset.amount);
-        row.children[4].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.purpose) + '</strong><span>' + escapeHtml(row.dataset.basis) + '</span></div>';
-        row.children[5].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.planDate) + '</strong><span>' + escapeHtml(arriveText) + '</span></div>';
-        row.children[6].innerHTML = tagHtml(row.dataset.approvalStatus);
-        row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(arrivalStatus) + '<span>' + escapeHtml('NC' + row.dataset.nc) + '</span></div>';
-        row.children[8].innerHTML = rowActionHtml(row);
-      }
-
-      function confirmAction() {
-        if (!activeRow) return;
-        var action = document.getElementById('drawerAction').textContent;
-        if (/提交审批|重新提交/.test(action)) {
-          activeRow.dataset.status = '审批中';
-          activeRow.dataset.approvalStatus = '审批中';
-          activeRow.dataset.approvalNo = activeRow.dataset.approvalNo === '-' ? 'APR-' + activeRow.dataset.transferNo : activeRow.dataset.approvalNo;
-          activeRow.dataset.risk = '待审批';
-        } else if (/确认到账|匹配流水/.test(action)) {
-          activeRow.dataset.status = '已到账';
-          activeRow.dataset.approvalStatus = activeRow.dataset.approvalStatus === '未提交' ? '已通过' : activeRow.dataset.approvalStatus;
-          activeRow.dataset.flowNo = activeRow.dataset.flowNo === '-' || activeRow.dataset.flowNo === '待匹配' ? 'BANKFLOW-' + activeRow.dataset.transferNo.replace(/[^\d]/g, '') : activeRow.dataset.flowNo;
-          activeRow.dataset.arriveDate = todayText() + ' 10:30';
-          activeRow.dataset.voucher = activeRow.dataset.voucher === '未生成' ? 'NC-' + activeRow.dataset.transferNo : activeRow.dataset.voucher;
-          activeRow.dataset.nc = activeRow.dataset.nc === '未生成' ? '待推送' : activeRow.dataset.nc;
-          activeRow.dataset.risk = '无异常';
-        }
-        updateRow(activeRow);
-        updateCounts();
-        applyFilters();
-        notify(activeRow.dataset.transferNo + ' ' + action + '已记录');
-        drawer.classList.remove('is-open');
-        drawer.setAttribute('aria-hidden', 'true');
-      }
-
-      function openDrawer(row, requestedAction) {
-        if (!row) return;
-        activeRow = row;
-        var action = actionFor(row, requestedAction);
-        document.getElementById('drawerTitle').textContent = action === '查看详情' ? '资金调拨详情' : action;
+      function renderCommon(row) {
         document.getElementById('drawerObject').textContent = row.dataset.transferNo + ' / ' + row.dataset.fromEntity + ' -> ' + row.dataset.toEntity;
         document.getElementById('drawerStatus').innerHTML = tagHtml(row.dataset.status);
         renderDescription(document.getElementById('accountGrid'), [
@@ -306,48 +373,223 @@
           { label: '申请日期', value: escapeHtml(row.dataset.applyDate) }
         ]);
         renderDescription(document.getElementById('approvalGrid'), [
-          { label: '审批单', value: row.dataset.approvalNo === '-' ? '-' : '<a class="link-primary" href="../approval/approvals.html?view=mine&approvalNo=' + encodeURIComponent(row.dataset.approvalNo) + '">' + escapeHtml(row.dataset.approvalNo) + '</a>' },
+          { label: '审批单', value: row.dataset.approvalNo === '-' ? '-' : linkHtml(approvalHref(row), row.dataset.approvalNo) },
           { label: '审批状态', value: tagHtml(row.dataset.approvalStatus) },
           { label: '预计到账', value: escapeHtml(row.dataset.planDate) },
           { label: '实际到账', value: escapeHtml(row.dataset.arriveDate) },
-          { label: '到账流水', value: row.dataset.flowNo === '-' || row.dataset.flowNo === '待匹配' ? escapeHtml(row.dataset.flowNo) : '<a class="link-primary" href="receipts.html?flowNo=' + encodeURIComponent(row.dataset.flowNo) + '">' + escapeHtml(row.dataset.flowNo) + '</a>' },
+          { label: '到账流水', value: row.dataset.flowNo === '-' || row.dataset.flowNo === '待匹配' ? escapeHtml(row.dataset.flowNo) : linkHtml('receipts.html?flowNo=' + encodeURIComponent(row.dataset.flowNo), row.dataset.flowNo) },
           { label: '资金风险', value: tagHtml(row.dataset.risk) }
         ]);
         renderDescription(document.getElementById('voucherGrid'), [
           { label: '内部往来凭证', value: escapeHtml(row.dataset.voucher) },
           { label: 'NC状态', value: tagHtml(row.dataset.nc) },
-          { label: '资金池承接', value: '<a class="link-primary" href="finance-fund-pool.html">资金池</a>' },
-          { label: '付款/退款承接', value: /付款/.test(row.dataset.purpose) ? '<a class="link-primary" href="finance-payment.html">付款执行</a>' : (/退款/.test(row.dataset.purpose) ? '<a class="link-primary" href="finance-refund-execute.html">退款执行</a>' : '-') }
+          { label: '资金池承接', value: linkHtml('finance-fund-pool.html', '资金池') },
+          { label: '付款/退款承接', value: /付款/.test(row.dataset.purpose) ? linkHtml('finance-payment-management.html', '付款管理') : (/退款/.test(row.dataset.purpose) ? linkHtml('finance-refund-transfer.html', '退款转款') : '-') }
         ]);
-        document.getElementById('recordRows').innerHTML = [
-          ['2026-07-01 10:20', '调拨单生成', row.dataset.applyUser, row.dataset.status],
-          ['2026-07-01 11:05', '审批承接', '审批中心', row.dataset.approvalStatus],
-          ['2026-07-01 16:30', '资金处理', '出纳', row.dataset.flowNo === '-' ? '未到账' : row.dataset.flowNo]
-        ].map(function (item) {
-          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
-        }).join('');
-        var primary = document.getElementById('drawerAction');
-        primary.hidden = action === '查看详情';
-        primary.textContent = action;
-        drawer.classList.add('is-open');
-        drawer.setAttribute('aria-hidden', 'false');
+        renderRecords(row);
       }
 
-      function notify(message) {
-        var container = document.querySelector('.caesar-toast-container');
-        if (!container) {
-          container = document.createElement('div');
-          container.className = 'caesar-toast-container';
-          document.body.appendChild(container);
+      function renderCreateDrawer() {
+        activeRow = null;
+        resetDrawer('新增调拨申请', 'create');
+        document.getElementById('drawerObject').textContent = '调拨申请 / 草稿';
+        document.getElementById('drawerStatus').innerHTML = tagHtml('待提交');
+        renderDescription(document.getElementById('accountGrid'), [
+          { label: '调出主体', value: '<select id="createFromEntity" class="form-control"><option>总部财务</option><option>上海凯撒</option><option>福建凯撒</option></select>' },
+          { label: '调出账户', value: '<select id="createFromAccount" class="form-control"><option>集团汇总账户</option><option>招商银行上海分行</option><option>民生银行北京分行</option></select>' },
+          { label: '调入主体', value: '<select id="createToEntity" class="form-control"><option>上海凯撒</option><option>福建凯撒</option><option>北京王府井旗舰店</option></select>' },
+          { label: '调入账户', value: '<select id="createToAccount" class="form-control"><option>招商银行上海分行</option><option>民生银行北京分行</option><option>王府井门店退款户</option></select>' },
+          { label: '调拨金额', value: '<input id="createAmount" class="form-control" type="text" value="¥300,000">' },
+          { label: '预计到账', value: '<input id="createPlanDate" class="form-control" type="date" value="' + todayText() + '">' }
+        ]);
+        renderDescription(document.getElementById('basisGrid'), [
+          { label: '调拨用途', value: '<select id="createPurpose" class="form-control"><option>付款账户补足</option><option>退款账户补足</option><option>门店资金归集</option><option>清算账户归集</option></select>' },
+          { label: '业务依据', value: '<textarea id="createBasis" class="form-control" rows="3">对应团期付款账户余额不足，需要总部资金补足</textarea>', full: true },
+          { label: '申请人', value: '<input id="createApplyUser" class="form-control" type="text" value="总部出纳刘洋">' },
+          { label: '申请日期', value: escapeHtml(todayText()) }
+        ]);
+        setSectionVisible(sections.work, true);
+        document.getElementById('workTitle').textContent = '审批提交';
+        document.getElementById('workContent').innerHTML = '<div class="description-grid">' +
+          formItem('审批流', escapeHtml('资金经理 -> 财务负责人 -> 总经理')) +
+          formItem('下游影响', escapeHtml('审批通过后进入待到账，出纳在银行系统执行并回到本页确认到账')) +
+          formItem('本次备注', '<textarea id="createRemark" class="form-control" rows="3"></textarea>', true) +
+          '</div>';
+        setSectionVisible(sections.voucher, false);
+        setSectionVisible(sections.record, false);
+        renderDescription(document.getElementById('approvalGrid'), [
+          { label: '审批单', value: '提交后生成' },
+          { label: '审批状态', value: tagHtml('待提交') },
+          { label: '预计到账', value: escapeHtml(todayText()) },
+          { label: '实际到账', value: '-' }
+        ]);
+        drawerAction.textContent = '保存并提交审批';
+        openLayer(drawer);
+      }
+
+      function renderActionContent(row, action) {
+        setSectionVisible(sections.work, action !== 'detail');
+        if (action === 'approval') {
+          document.getElementById('workTitle').textContent = '审批进度';
+          document.getElementById('workContent').innerHTML = '<section class="table-wrap drawer-table-wrap drawer-table-fit drawer-table-cols-4"><table><thead><tr><th>审批环节</th><th>处理人</th><th>结果</th><th>时间</th></tr></thead><tbody>' +
+            '<tr><td>提交申请</td><td>' + escapeHtml(row.dataset.applyUser) + '</td><td>已提交</td><td>' + escapeHtml(row.dataset.applyDate + ' 10:20') + '</td></tr>' +
+            '<tr><td>资金经理</td><td>周婷</td><td>' + escapeHtml(row.dataset.approvalStatus) + '</td><td>处理中</td></tr>' +
+            '<tr><td>财务负责人</td><td>待处理</td><td>待审批</td><td>-</td></tr>' +
+            '</tbody></table></section>';
+          drawerAction.hidden = false;
+          drawerAction.dataset.action = 'approval';
+          drawerAction.textContent = '进入审批中心';
+          return;
         }
-        var toast = document.createElement('div');
-        toast.className = 'caesar-toast caesar-toast-success';
-        toast.textContent = message;
-        container.appendChild(toast);
-        window.setTimeout(function () {
-          toast.classList.add('closing');
-          window.setTimeout(function () { toast.remove(); }, 180);
-        }, 2200);
+        if (action === 'submit' || action === 'resubmit') {
+          document.getElementById('workTitle').textContent = action === 'resubmit' ? '重新提交' : '提交审批';
+          document.getElementById('workContent').innerHTML = '<div class="description-grid">' +
+            (action === 'resubmit' ? formItem('退回原因', tagHtml(row.dataset.risk), true) : '') +
+            formItem('本次提交金额', '<span class="amount-strong">' + escapeHtml(row.dataset.amount) + '</span>') +
+            formItem('审批流', escapeHtml('资金经理 -> 财务负责人 -> 总经理')) +
+            formItem('审批依据', escapeHtml(row.dataset.basis), true) +
+            formItem('提交备注', '<textarea id="submitRemark" class="form-control" rows="3"></textarea>', true) +
+            '</div>';
+          drawerAction.hidden = false;
+          drawerAction.dataset.action = action;
+          drawerAction.textContent = action === 'resubmit' ? '重新提交' : '提交审批';
+          return;
+        }
+        if (action === 'arrival') {
+          document.getElementById('workTitle').textContent = '到账确认';
+          document.getElementById('workContent').innerHTML = '<div class="description-grid">' +
+            formItem('到账账户', escapeHtml(row.dataset.toAccount + ' / ' + row.dataset.toAccountNo)) +
+            formItem('到账金额', '<input id="arrivalAmount" class="form-control" type="text" value="' + escapeHtml(row.dataset.amount) + '">') +
+            formItem('到账日期', '<input id="arrivalDate" class="form-control" type="date" value="' + todayText() + '">') +
+            formItem('银行流水号', '<input id="arrivalFlowNo" class="form-control" type="text" value="' + escapeHtml(row.dataset.flowNo === '待匹配' || row.dataset.flowNo === '-' ? 'BANKFLOW-' + row.dataset.transferNo.replace(/[^\d]/g, '') : row.dataset.flowNo) + '">') +
+            formItem('核对结论', tagHtml('金额一致') + ' ' + tagHtml('账户一致'), true) +
+            '</div>';
+          drawerAction.hidden = false;
+          drawerAction.dataset.action = 'arrival';
+          drawerAction.textContent = '确认到账';
+          return;
+        }
+        if (action === 'match') {
+          document.getElementById('workTitle').textContent = '流水匹配';
+          document.getElementById('workContent').innerHTML = '<section class="table-wrap drawer-table-wrap drawer-table-fit drawer-table-cols-5"><table><thead><tr><th>选择</th><th>银行流水</th><th>到账账户</th><th>到账金额</th><th>到账时间</th></tr></thead><tbody>' +
+            '<tr><td><input type="radio" name="matchFlow" value="BOC' + escapeHtml(row.dataset.transferNo.replace(/[^\d]/g, '')) + '" checked></td><td>BOC' + escapeHtml(row.dataset.transferNo.replace(/[^\d]/g, '')) + '</td><td>' + escapeHtml(row.dataset.toAccount) + '</td><td class="amount-strong">' + escapeHtml(row.dataset.amount) + '</td><td>' + todaySlash() + ' 10:30</td></tr>' +
+            '<tr><td><input type="radio" name="matchFlow" value="CMBC20260712088"></td><td>CMBC20260712088</td><td>' + escapeHtml(row.dataset.toAccount) + '</td><td>' + escapeHtml(row.dataset.amount) + '</td><td>' + todaySlash() + ' 09:42</td></tr>' +
+            '</tbody></table></section><div class="description-grid">' +
+            formItem('匹配结论', tagHtml('金额一致') + ' ' + tagHtml('账户一致') + ' ' + tagHtml('业务依据一致'), true) +
+            formItem('匹配备注', '<textarea id="matchRemark" class="form-control" rows="3"></textarea>', true) +
+            '</div>';
+          drawerAction.hidden = false;
+          drawerAction.dataset.action = 'match';
+          drawerAction.textContent = '确认匹配';
+        }
+      }
+
+      function openDrawer(row, requestedAction) {
+        if (!row) return;
+        activeRow = row;
+        var action = requestedAction || 'detail';
+        var titleMap = { detail: '资金调拨详情', approval: '查看审批', submit: '提交审批', arrival: '确认到账', match: '匹配流水', resubmit: '重新提交' };
+        resetDrawer(titleMap[action] || '资金调拨详情', action);
+        renderCommon(row);
+        renderActionContent(row, action);
+        openLayer(drawer);
+      }
+
+      function accountBalance(account) {
+        if (/集团/.test(account)) return '¥8,426,000';
+        if (/招商/.test(account)) return '¥1,993,400';
+        if (/民生/.test(account)) return '¥3,214,000';
+        if (/退款/.test(account)) return '¥42,800';
+        return '¥0';
+      }
+
+      function accountNo(account) {
+        if (/集团/.test(account)) return 'GH-0001';
+        if (/招商/.test(account)) return '6225****1188';
+        if (/民生/.test(account)) return '6214****0038';
+        if (/退款/.test(account)) return 'WFD-REFUND';
+        return '-';
+      }
+
+      function readField(id, fallback) {
+        var node = document.getElementById(id);
+        return node && node.value ? node.value : fallback;
+      }
+
+      function createTransferRow() {
+        var transferNo = 'DB' + todayText().replace(/-/g, '') + String(rows.length + 1).padStart(3, '0');
+        var fromAccount = readField('createFromAccount', '集团汇总账户');
+        var toAccount = readField('createToAccount', '招商银行上海分行');
+        var row = document.createElement('tr');
+        row.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+        Object.assign(row.dataset, {
+          transferNo: transferNo,
+          entity: readField('createFromEntity', '总部财务'),
+          fromEntity: readField('createFromEntity', '总部财务'),
+          toEntity: readField('createToEntity', '上海凯撒'),
+          fromAccount: fromAccount,
+          fromAccountNo: accountNo(fromAccount),
+          fromBalance: accountBalance(fromAccount),
+          toAccount: toAccount,
+          toAccountNo: accountNo(toAccount),
+          toBalance: accountBalance(toAccount),
+          currency: 'CNY',
+          amount: readField('createAmount', '¥300,000'),
+          purpose: readField('createPurpose', '付款账户补足'),
+          basis: readField('createBasis', '对应团期付款账户余额不足，需要总部资金补足'),
+          applyUser: readField('createApplyUser', '总部出纳刘洋'),
+          applyDate: todayText(),
+          planDate: readField('createPlanDate', todayText()),
+          arriveDate: '-',
+          approvalNo: 'APR-' + transferNo,
+          approvalStatus: '审批中',
+          flowNo: '-',
+          nc: '未生成',
+          voucher: '未生成',
+          risk: '待审批',
+          status: '审批中'
+        });
+        document.getElementById('transferRows').prepend(row);
+        rows.unshift(row);
+        updateRow(row);
+        return row;
+      }
+
+      function confirmAction() {
+        var action = drawerAction.dataset.action || 'detail';
+        if (action === 'create') {
+          activeRow = createTransferRow();
+          updateCounts();
+          applyFilters();
+          notify(activeRow.dataset.transferNo + ' 已提交审批');
+          closeLayer(drawer);
+          return;
+        }
+        if (!activeRow) return;
+        if (action === 'approval') {
+          window.location.href = approvalHref(activeRow);
+          return;
+        }
+        if (action === 'submit' || action === 'resubmit') {
+          activeRow.dataset.status = '审批中';
+          activeRow.dataset.approvalStatus = '审批中';
+          activeRow.dataset.approvalNo = activeRow.dataset.approvalNo === '-' ? 'APR-' + activeRow.dataset.transferNo : activeRow.dataset.approvalNo;
+          activeRow.dataset.risk = '待审批';
+        } else if (action === 'arrival' || action === 'match') {
+          var selectedFlow = document.querySelector('input[name="matchFlow"]:checked');
+          activeRow.dataset.status = '已到账';
+          activeRow.dataset.approvalStatus = activeRow.dataset.approvalStatus === '未提交' ? '已通过' : activeRow.dataset.approvalStatus;
+          activeRow.dataset.flowNo = action === 'match' && selectedFlow ? selectedFlow.value : readField('arrivalFlowNo', 'BANKFLOW-' + activeRow.dataset.transferNo.replace(/[^\d]/g, ''));
+          activeRow.dataset.arriveDate = readField('arrivalDate', todayText()) + ' 10:30';
+          activeRow.dataset.voucher = activeRow.dataset.voucher === '未生成' ? 'NC-' + activeRow.dataset.transferNo : activeRow.dataset.voucher;
+          activeRow.dataset.nc = activeRow.dataset.nc === '未生成' ? '待推送' : activeRow.dataset.nc;
+          activeRow.dataset.risk = '无异常';
+        }
+        updateRow(activeRow);
+        updateCounts();
+        applyFilters();
+        notify(activeRow.dataset.transferNo + ' ' + drawerAction.textContent + '已记录');
+        closeLayer(drawer);
       }
 
       document.addEventListener('click', function (event) {
@@ -358,13 +600,11 @@
         }
         var detailButton = event.target.closest('[data-open-detail]');
         if (detailButton) {
-          openDrawer(detailButton.closest('tr'));
+          openDrawer(detailButton.closest('tr'), 'detail');
           return;
         }
         if (event.target.closest('[data-open-create]')) {
-          var draftRow = rows.find(function (row) { return row.dataset.status === '待提交'; });
-          if (draftRow) openDrawer(draftRow, 'submit');
-          else notify('暂无待提交的调拨单');
+          renderCreateDrawer();
           return;
         }
         if (event.target.closest('[data-search]')) {
@@ -384,13 +624,12 @@
           notify('资金调拨列表已导出');
           return;
         }
-        if (event.target === drawer || event.target.closest('[data-close-layer]')) {
-          drawer.classList.remove('is-open');
-          drawer.setAttribute('aria-hidden', 'true');
-          return;
-        }
         if (event.target.closest('#drawerAction')) {
           confirmAction();
+          return;
+        }
+        if (event.target === drawer || event.target.closest('[data-close-layer]')) {
+          closeLayer(drawer);
         }
       });
 

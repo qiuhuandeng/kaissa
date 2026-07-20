@@ -52,20 +52,22 @@
               <option value="李明">李明</option>
             </select>
           </label>
+          <label class="filter-item filter-item-sm">
+            <span class="sr-only">合作状态</span>
+            <select class="form-control" data-enterprise-status>
+              <option value="">全部状态</option>
+              <option value="潜在">潜在</option>
+              <option value="合作中">合作中</option>
+              <option value="暂停">暂停</option>
+              <option value="终止">终止</option>
+            </select>
+          </label>
           <div class="filter-actions">
             <button class="btn btn-secondary" type="button" data-query-enterprises>查询</button>
             <button class="btn btn-secondary" type="button" data-reset-enterprises>重置</button>
           </div>
         </div>
       </section>
-
-      <nav class="tab-bar list-surface-tabs" aria-label="企业客户合作状态" data-enterprise-tabs>
-        <button class="tab-item active" type="button" data-status="全部">全部</button>
-        <button class="tab-item" type="button" data-status="潜在">潜在</button>
-        <button class="tab-item" type="button" data-status="合作中">合作中</button>
-        <button class="tab-item" type="button" data-status="暂停">暂停</button>
-        <button class="tab-item" type="button" data-status="终止">终止</button>
-      </nav>
 
       <section class="table-wrap list-surface-table list-table-with-pagination enterprise-account-table-wrap" aria-label="企业客户列表">
         <table>
@@ -188,7 +190,6 @@
       var statusDrawer = document.getElementById('enterpriseStatusDrawer');
       var endModal = document.getElementById('enterpriseEndModal');
       var rowsHost = document.querySelector('[data-enterprise-rows]');
-      var activeStatus = '全部';
       var activeRow = null;
 
       function toast(message) { if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message); }
@@ -204,9 +205,10 @@
         var type = document.querySelector('[data-enterprise-type]').value;
         var level = document.querySelector('[data-enterprise-level]').value;
         var owner = document.querySelector('[data-enterprise-owner]').value;
+        var status = document.querySelector('[data-enterprise-status]').value;
         rows().forEach(function (row) {
           var searchable = [row.dataset.name, row.dataset.contact, row.dataset.phone, row.dataset.owner].join(' ').toLowerCase();
-          var statusMatch = activeStatus === '全部' || row.dataset.status === activeStatus;
+          var statusMatch = !status || row.dataset.status === status;
           row.hidden = !(statusMatch && (!keyword || searchable.indexOf(keyword) >= 0) && (!type || row.dataset.type === type) && (!level || row.dataset.level === level) && (!owner || row.dataset.owner === owner));
         });
         updatePagination();
@@ -220,11 +222,9 @@
         document.querySelector('[data-enterprise-type]').value = '';
         document.querySelector('[data-enterprise-level]').value = '';
         document.querySelector('[data-enterprise-owner]').value = '';
-        activeStatus = '全部';
-        document.querySelectorAll('[data-enterprise-tabs] .tab-item').forEach(function (item) { item.classList.toggle('active', item.dataset.status === activeStatus); });
+        document.querySelector('[data-enterprise-status]').value = '';
         applyFilters();
       });
-      document.querySelectorAll('[data-enterprise-tabs] .tab-item').forEach(function (item) { item.addEventListener('click', function () { activeStatus = item.dataset.status; document.querySelectorAll('[data-enterprise-tabs] .tab-item').forEach(function (tab) { tab.classList.toggle('active', tab === item); }); applyFilters(); }); });
 
       document.querySelector('[data-save-enterprise]').addEventListener('click', function () {
         var name = document.getElementById('enterpriseName').value.trim();

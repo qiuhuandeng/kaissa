@@ -27,14 +27,6 @@
       </div>
     </section>
 
-    <nav class="tab-bar list-surface-tabs" aria-label="预存余额状态">
-      <button class="tab-item active" type="button" data-status-tab="全部">全部</button>
-      <button class="tab-item" type="button" data-status-tab="余额不足">余额不足</button>
-      <button class="tab-item" type="button" data-status-tab="充值中">充值中</button>
-      <button class="tab-item" type="button" data-status-tab="扣款复核中">扣款复核中</button>
-      <button class="tab-item" type="button" data-status-tab="冻结/异常">冻结/异常</button>
-    </nav>
-
     <section class="table-wrap list-surface-table list-table-with-pagination business-optimized-table business-optimized-table-predeposit" aria-label="预存余额列表">
       <table>
         <thead>
@@ -249,7 +241,6 @@
       var accountDeductRows = document.getElementById('accountDeductRows');
       var accountBalanceFlowRows = document.getElementById('accountBalanceFlowRows');
       var balanceDetailRows = document.getElementById('balanceDetailRows');
-      var activeStatus = '全部';
       var currentAccountRow = accountRows[0] || null;
 
       function notify(message, type) {
@@ -334,10 +325,6 @@
         if (data.account) applyAccount.value = data.account;
       }
 
-      function rowMatchesTab(row) {
-        return activeStatus === '全部' || row.dataset.status === activeStatus;
-      }
-
       function rowMatchesFilters(row) {
         var keyword = (keywordInput.value || '').trim().toLowerCase();
         var status = statusSelect.value;
@@ -346,7 +333,7 @@
         var keywordMatch = !keyword || text.indexOf(keyword) > -1;
         var statusMatch = status === '全部状态' || row.dataset.status === status;
         var settleMatch = settle === '全部结算方式' || row.dataset.settle === settle;
-        return keywordMatch && statusMatch && settleMatch && rowMatchesTab(row);
+        return keywordMatch && statusMatch && settleMatch;
       }
 
       function applyFilters() {
@@ -378,14 +365,6 @@
           window.caesarUI.openLayer(applyDrawer);
           return;
         }
-        var tabButton = event.target.closest('[data-status-tab]');
-        if (tabButton) {
-          document.querySelectorAll('[data-status-tab]').forEach(function (button) { button.classList.remove('active'); });
-          tabButton.classList.add('active');
-          activeStatus = tabButton.dataset.statusTab;
-          applyFilters();
-          return;
-        }
         if (event.target.closest('[data-filter-search]')) {
           applyFilters();
           return;
@@ -394,8 +373,6 @@
           keywordInput.value = '';
           statusSelect.value = '全部状态';
           settleSelect.value = '全部结算方式';
-          activeStatus = '全部';
-          document.querySelectorAll('[data-status-tab]').forEach(function (button) { button.classList.toggle('active', button.dataset.statusTab === '全部'); });
           applyFilters();
           return;
         }

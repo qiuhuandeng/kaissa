@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>经营损益 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .finance-arap-tab-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .finance-arap-tab-row .finance-report-subtabs {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .finance-arap-tab-row .finance-report-radio {
+      flex: 0 0 auto;
+      margin-left: auto;
+    }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -135,12 +153,6 @@
     </section>
 
     <section class="finance-report-panel" id="report-ar-ap">
-      <div class="finance-report-toolbar">
-        <div class="finance-report-radio" role="radiogroup" aria-label="视图切换">
-          <label><input type="radio" name="arApView" value="receivable" checked> 应收视角</label>
-          <label><input type="radio" name="arApView" value="payable"> 应付视角</label>
-        </div>
-      </div>
       <section class="filter-card filter-card-compact finance-report-filter list-surface-filter">
         <div class="filter-row">
           <div class="filter-item-wide"><div class="date-range"><input type="date" aria-label="开始日期"><span>至</span><input type="date" aria-label="结束日期"></div></div>
@@ -151,10 +163,16 @@
       </section>
 
       <section class="finance-arap-view active" id="arap-receivable">
-        <nav class="finance-report-subtabs" aria-label="应收维度">
-          <button class="active" type="button" data-subtab="receivable-summary">团期/订单汇总</button>
-          <button type="button" data-subtab="receivable-detail">应收单明细</button>
-        </nav>
+        <div class="finance-arap-tab-row">
+          <nav class="finance-report-subtabs" aria-label="应收维度">
+            <button class="active" type="button" data-subtab="receivable-summary">团期/订单汇总</button>
+            <button type="button" data-subtab="receivable-detail">应收单明细</button>
+          </nav>
+          <div class="finance-report-radio" role="radiogroup" aria-label="往来分析视角">
+            <label><input type="radio" name="arApView" value="receivable" checked> 应收视角</label>
+            <label><input type="radio" name="arApView" value="payable"> 应付视角</label>
+          </div>
+        </div>
         <div class="finance-subpanel active" id="receivable-summary">
           <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
             <table>
@@ -187,10 +205,16 @@
       </section>
 
       <section class="finance-arap-view" id="arap-payable">
-        <nav class="finance-report-subtabs" aria-label="应付维度">
-          <button class="active" type="button" data-subtab="payable-supplier">供应商汇总</button>
-          <button type="button" data-subtab="payable-detail">应付单明细</button>
-        </nav>
+        <div class="finance-arap-tab-row">
+          <nav class="finance-report-subtabs" aria-label="应付维度">
+            <button class="active" type="button" data-subtab="payable-supplier">供应商汇总</button>
+            <button type="button" data-subtab="payable-detail">应付单明细</button>
+          </nav>
+          <div class="finance-report-radio" role="radiogroup" aria-label="往来分析视角">
+            <label><input type="radio" name="arApView" value="receivable"> 应收视角</label>
+            <label><input type="radio" name="arApView" value="payable"> 应付视角</label>
+          </div>
+        </div>
         <div class="finance-subpanel active" id="payable-supplier">
           <div class="table-wrap finance-report-table list-surface-table list-table-with-pagination">
             <table>
@@ -930,6 +954,9 @@
 
       document.querySelectorAll('input[name="arApView"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
+          document.querySelectorAll('input[name="arApView"]').forEach(function (item) {
+            item.checked = item.value === radio.value;
+          });
           document.querySelectorAll('.finance-arap-view').forEach(function (view) {
             view.classList.toggle('active', view.id === 'arap-' + radio.value);
           });
@@ -943,7 +970,7 @@
           group.querySelectorAll('button').forEach(function (item) {
             item.classList.toggle('active', item === button);
           });
-          group.parentElement.querySelectorAll('.finance-subpanel').forEach(function (panel) {
+          group.closest('.finance-arap-view').querySelectorAll('.finance-subpanel').forEach(function (panel) {
             panel.classList.toggle('active', panel.id === target);
           });
         });
