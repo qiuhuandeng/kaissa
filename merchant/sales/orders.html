@@ -585,8 +585,11 @@
         <button class="modal-close" type="button" aria-label="关闭售后处理" data-close-order-aftersales>×</button>
       </div>
       <div class="modal-body">
-        <section id="orderAfterSalesSummary" class="readonly-summary"></section>
-        <section class="aftersales-type-panel" aria-label="售后类型">
+        <section id="orderAfterSalesSummary" class="order-after-sales-summary"></section>
+        <section class="drawer-section aftersales-type-panel" aria-label="售后类型">
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">售后类型</h3>
+          </div>
           <div id="orderAfterSalesTypeButtons" class="aftersales-type-buttons"></div>
         </section>
         <div id="orderAfterSalesFields" class="order-drawer-form aftersales-fields-stack"></div>
@@ -2502,7 +2505,7 @@
       }
 
       function sectionHtml(title, body) {
-        return '<div class="aftersales-form-block"><div class="aftersales-form-block-title">' + escapeHtml(title) + '</div>' + body + '</div>';
+        return '<section class="drawer-section aftersales-form-block"><div class="drawer-section-head"><h3 class="drawer-section-title">' + escapeHtml(title) + '</h3></div><div class="aftersales-section-body">' + body + '</div></section>';
       }
 
       function readonlyGrid(items) {
@@ -2636,42 +2639,35 @@
         var productType = data.type;
         if (productType === '邮轮') {
           return [
-            sectionHtml('当前信息', readonlyGrid([['当前航次', data.serviceNo], ['当前线路', data.plan], ['客户', data.customer], ['当前人数', data.passengers]])),
             sectionHtml('改航次/改舱', targetPicker('目标航次/舱型', '来源于当前产品可售航次和舱型库存', '', true) + selectField('目标舱型', ['阳台舱', '海景舱', '内舱', '套房'], true) + inputField('舱房要求', '如相邻舱、高楼层、自动分配', false) + checkboxGrid('变更乘客', ['刘洋 成人', '周丽 成人', '儿童占床'], true) + inputField('价差金额', '如 8400', true, 'type="number" min="0" value="0"') + textareaField('变更原因', '填写客户原因和船方确认要求', true))
           ];
         }
         if (productType === '专列') {
           return [
-            sectionHtml('当前信息', readonlyGrid([['当前班期', data.serviceNo], ['当前铺位', data.plan], ['客户', data.customer], ['当前人数', data.passengers]])),
             sectionHtml('改班期/改铺', targetPicker('目标班期/铺位', '来源于专列班期和铺位库存', '', true) + selectField('铺位偏好', ['下铺', '上铺', '同厢', '双人包厢', '高级包厢'], true) + checkboxGrid('变更乘客', ['王强 成人', '李梅 老人'], true) + inputField('铺位差价', '如 1360', true, 'type="number" min="0" value="0"') + textareaField('同厢/特殊要求', '如老人下铺、同行同厢、靠近车门', false))
           ];
         }
         if (productType === '自由行') {
           return [
-            sectionHtml('当前信息', readonlyGrid([['当前出行', data.serviceNo], ['当前套餐', data.plan], ['客户', data.customer], ['当前人数', data.passengers]])),
             sectionHtml('改期/换套餐', targetPicker('目标出行日期/套餐', '来源于可售出行日期和套餐库存', '', true) + checkboxGrid('变更服务项', ['机票', '酒店', '接送机', '当地玩乐'], true) + selectField('供应商确认', ['待确认', '酒店已确认', '机票待确认', '全部确认'], true) + inputField('差价/扣损', '如 800', true, 'type="number" min="0" value="0"') + textareaField('变更原因', '填写客户原因和供应商确认要求', true))
           ];
         }
         if (productType === '研学') {
           return [
-            sectionHtml('当前信息', readonlyGrid([['当前营期', data.serviceNo], ['产品线路', data.plan], ['客户', data.customer], ['当前学员', data.passengers]])),
             sectionHtml('转营/改期', targetPicker('目标营期', '来源于研学营期和营位库存', '', true) + checkboxGrid('转营学员', ['张同学 学员', '李同学 学员'], true) + selectField('安全材料是否重签', ['需要重签', '无需重签'], true) + inputField('差价金额', '如 1600', true, 'type="number" min="0" value="0"') + fileField('监护人确认附件', false) + textareaField('变更原因', '填写学校/家长原因和安全材料要求', true))
           ];
         }
         if (productType === '单项服务') {
           return [
-            sectionHtml('当前信息', readonlyGrid([['服务单号', data.serviceNo], ['服务项目', data.product], ['客户', data.customer], ['服务状态', data.resource]])),
             sectionHtml('服务变更', targetPicker('变更服务项', '来源于当前订单可变更服务项', '', true) + checkboxGrid('关联人员', ['赵明', '孙丽', '李梅'], true) + selectField('变更内容', ['改办理日期', '改姓名/证件', '补材料', '改办理方式', '取消部分服务'], true) + inputField('差价/扣损', '如 300', false, 'type="number" min="0" value="0"') + textareaField('变更说明', '填写办理人、供应商确认和材料要求', true))
           ];
         }
         if (productType === '单团项目') {
           return [
-            sectionHtml('当前项目', readonlyGrid([['项目编号', data.serviceNo], ['项目名称', data.product], ['客户', data.customer], ['项目安排', data.plan], ['当前名单', data.passengers], ['已收金额', data.received]])),
             sectionHtml('项目变更', targetPicker('目标项目团', '来源于当前项目可用的客户专属项目团或调整后的执行批次', data.serviceNo, true) + selectField('变更类型', ['日期/项目团调整', '人数变更', '酒店/会议/用车标准变更', '活动内容变更', '报价金额变更'], true) + inputField('变更后人数', '如 82', true, 'type="number" min="0" value="80"') + inputField('金额影响', '正数补收，负数退差', true, 'type="number" value="0"') + fileField('客户确认附件', false) + textareaField('变更说明', '记录客户确认、资源影响、报价版本和执行注意事项', true))
           ];
         }
         return [
-          sectionHtml('当前信息', readonlyGrid([['团号', data.serviceNo], ['产品名称', data.product], ['出发日期', data.plan], ['订单编号', data.orderNo], ['客户名称', data.customer], ['当前人数', data.passengers]])),
           sectionHtml('转入团期', targetPicker('转入团期', '来源于当前产品线路可售团期，不允许手工输入团期号', '', true)),
           sectionHtml('转团人数', '<div class="form-grid form-grid-3">' + countField('成人', 1, '当前成人数') + countField('儿童', 0, '当前儿童数') + countField('老人', 0, '当前老人数') + '</div>' + checkboxGrid('选择游客', ['张建国 成人', '李梅 成人', '儿童 王小明'], false)),
           sectionHtml('价差与原因', inputField('补差/退差金额', '系统计算后可调整', true, 'type="number" value="0"') + selectField('变更原因', ['客户假期调整', '原团取消', '改报其他线路', '价格/服务原因', '其他'], true) + textareaField('备注', '记录客户确认、资源要求和内部说明', false) + fileField('客户确认附件', false))
@@ -2680,24 +2676,24 @@
 
       function cancelFieldsFor(data) {
         if (data.type === '邮轮') {
-          return [sectionHtml('退舱/退乘客', readonlyGrid([['当前航次', data.serviceNo], ['当前舱型', data.plan], ['客户', data.customer], ['已收金额', data.received]]) + checkboxGrid('退订乘客', ['高梦婷 成人', '同行成人'], true) + selectField('退订舱房', ['阳台舱 BA-8021', '海景舱 OV-6022', '整间舱房'], true) + inputField('船方扣损', '如 3200', true, 'type="number" min="0" value="0"') + inputField('港务税/小费可退', '如 2400', false, 'type="number" min="0" value="0"') + textareaField('退订原因', '填写客户原因和船方扣损确认', true))];
+          return [sectionHtml('退舱/退乘客', checkboxGrid('退订乘客', ['高梦婷 成人', '同行成人'], true) + selectField('退订舱房', ['阳台舱 BA-8021', '海景舱 OV-6022', '整间舱房'], true) + inputField('船方扣损', '如 3200', true, 'type="number" min="0" value="0"') + inputField('港务税/小费可退', '如 2400', false, 'type="number" min="0" value="0"') + textareaField('退订原因', '填写客户原因和船方扣损确认', true))];
         }
         if (data.type === '专列') {
-          return [sectionHtml('退铺/退乘客', readonlyGrid([['当前班期', data.serviceNo], ['当前铺位', data.plan], ['客户', data.customer], ['已收金额', data.received]]) + checkboxGrid('退订乘客', ['孙丽 成人', '同行成人'], true) + selectField('退订铺位', ['高级双人包厢1席', '软卧下铺', '整间包厢'], true) + inputField('运营方扣损', '如 1800', true, 'type="number" min="0" value="0"') + fileField('证明附件', false) + textareaField('退订原因', '填写客户原因和运营方扣损确认', true))];
+          return [sectionHtml('退铺/退乘客', checkboxGrid('退订乘客', ['孙丽 成人', '同行成人'], true) + selectField('退订铺位', ['高级双人包厢1席', '软卧下铺', '整间包厢'], true) + inputField('运营方扣损', '如 1800', true, 'type="number" min="0" value="0"') + fileField('证明附件', false) + textareaField('退订原因', '填写客户原因和运营方扣损确认', true))];
         }
         if (data.type === '自由行') {
-          return [sectionHtml('退订服务', readonlyGrid([['当前出行', data.serviceNo], ['当前套餐', data.plan], ['客户', data.customer], ['已收金额', data.received]]) + checkboxGrid('退订服务项', ['酒店', '机票', '接送机', '当地玩乐'], true) + inputField('退订数量/晚数', '如 2晚 / 2人次', true) + inputField('供应商扣损', '如 600', true, 'type="number" min="0" value="0"') + textareaField('退订原因', '填写客户原因和供应商取消号', true))];
+          return [sectionHtml('退订服务', checkboxGrid('退订服务项', ['酒店', '机票', '接送机', '当地玩乐'], true) + inputField('退订数量/晚数', '如 2晚 / 2人次', true) + inputField('供应商扣损', '如 600', true, 'type="number" min="0" value="0"') + textareaField('退订原因', '填写客户原因和供应商取消号', true))];
         }
         if (data.type === '研学') {
-          return [sectionHtml('退营', readonlyGrid([['当前营期', data.serviceNo], ['产品线路', data.plan], ['客户', data.customer], ['当前学员', data.passengers]]) + checkboxGrid('退营学员', ['张同学', '李同学'], true) + inputField('基地扣损', '如 0', true, 'type="number" min="0" value="0"') + inputField('保险/材料费扣损', '如 200', false, 'type="number" min="0" value="0"') + fileField('监护人确认附件', false) + textareaField('退营原因', '填写家长确认和安全材料处理说明', true))];
+          return [sectionHtml('退营', checkboxGrid('退营学员', ['张同学', '李同学'], true) + inputField('基地扣损', '如 0', true, 'type="number" min="0" value="0"') + inputField('保险/材料费扣损', '如 200', false, 'type="number" min="0" value="0"') + fileField('监护人确认附件', false) + textareaField('退营原因', '填写家长确认和安全材料处理说明', true))];
         }
         if (data.type === '单项服务') {
-          return [sectionHtml('取消服务', readonlyGrid([['服务单号', data.serviceNo], ['服务项目', data.product], ['客户', data.customer], ['服务状态', data.resource]]) + checkboxGrid('取消服务项', ['服务费', '签证中心代垫', '快递费', '材料处理'], true) + checkboxGrid('取消人员', ['赵明', '孙丽', '李梅'], true) + selectField('是否已产生代垫', ['否', '是'], true) + inputField('扣损金额', '如 2100', true, 'type="number" min="0" value="0"') + textareaField('取消原因', '填写材料状态、送签状态和客户确认', true))];
+          return [sectionHtml('取消服务', checkboxGrid('取消服务项', ['服务费', '签证中心代垫', '快递费', '材料处理'], true) + checkboxGrid('取消人员', ['赵明', '孙丽', '李梅'], true) + selectField('是否已产生代垫', ['否', '是'], true) + inputField('扣损金额', '如 2100', true, 'type="number" min="0" value="0"') + textareaField('取消原因', '填写材料状态、送签状态和客户确认', true))];
         }
         if (data.type === '单团项目') {
-          return [sectionHtml('取消项目/名单', readonlyGrid([['项目编号', data.serviceNo], ['项目名称', data.product], ['客户', data.customer], ['项目安排', data.plan], ['已收金额', data.received]]) + selectField('取消范围', ['取消整个项目', '取消部分名单', '取消某一执行批次'], true) + inputField('取消人数', '如 80', true, 'type="number" min="0" value="80"') + inputField('资源扣损', '酒店/机票/会议/用车扣损合计', true, 'type="number" min="0" value="0"') + inputField('应退/应补金额', '正数退款，负数补收', true, 'type="number" value="0"') + fileField('客户取消确认', false) + textareaField('取消原因', '填写客户取消原因、供应商扣损依据和后续退款承接', true))];
+          return [sectionHtml('取消项目/名单', selectField('取消范围', ['取消整个项目', '取消部分名单', '取消某一执行批次'], true) + inputField('取消人数', '如 80', true, 'type="number" min="0" value="80"') + inputField('资源扣损', '酒店/机票/会议/用车扣损合计', true, 'type="number" min="0" value="0"') + inputField('应退/应补金额', '正数退款，负数补收', true, 'type="number" value="0"') + fileField('客户取消确认', false) + textareaField('取消原因', '填写客户取消原因、供应商扣损依据和后续退款承接', true))];
         }
-        return [sectionHtml('当前信息', readonlyGrid([['团号', data.serviceNo], ['产品名称', data.product], ['出发日期', data.plan], ['订单编号', data.orderNo], ['客户名称', data.customer], ['当前人数', data.passengers]])), sectionHtml('退团人数', '<div class="form-grid form-grid-3">' + countField('退团成人', 0, '当前成人数') + countField('退团儿童', 0, '当前儿童数') + countField('退团老人', 0, '当前老人数') + '</div>' + checkboxGrid('选择退团游客', ['张建国 成人', '李梅 成人', '儿童 王小明'], false)), sectionHtml('扣损与退款', inputField('扣损金额', '按供应商规则填写', true, 'type="number" min="0" value="0"') + inputField('应退金额', '系统计算后可调整', true, 'type="number" min="0" value="0"') + selectField('退团原因', ['客户个人原因', '签证材料不齐', '原团取消', '身体原因', '其他'], true) + textareaField('备注', '记录客户确认、证明材料和内部说明', false))];
+        return [sectionHtml('退团人数', '<div class="form-grid form-grid-3">' + countField('退团成人', 0, '当前成人数') + countField('退团儿童', 0, '当前儿童数') + countField('退团老人', 0, '当前老人数') + '</div>' + checkboxGrid('选择退团游客', ['张建国 成人', '李梅 成人', '儿童 王小明'], false)), sectionHtml('扣损与退款', inputField('扣损金额', '按供应商规则填写', true, 'type="number" min="0" value="0"') + inputField('应退金额', '系统计算后可调整', true, 'type="number" min="0" value="0"') + selectField('退团原因', ['客户个人原因', '签证材料不齐', '原团取消', '身体原因', '其他'], true) + textareaField('备注', '记录客户确认、证明材料和内部说明', false))];
       }
 
       function afterSalesPaymentRecordsFor(data) {
@@ -2755,11 +2751,6 @@
           return {
             availableLabel: '可退金额',
             inputLabel: '本次退款金额',
-            selectedLabel: '本次退款合计',
-            recordsTitle: '选择退款收款记录',
-            modeTitle: '退款方式',
-            recordMode: '按收款记录退款',
-            allMode: '整单可退余额退款',
             statusAvailable: '可退',
             emptyText: '当前订单暂无可退收款记录'
           };
@@ -2767,22 +2758,9 @@
         return {
           availableLabel: '可转金额',
           inputLabel: '本次转出金额',
-          selectedLabel: '本次转出合计',
-          recordsTitle: '选择转出收款记录',
-          modeTitle: '转款方式',
-          recordMode: '按收款记录转款',
-          allMode: '整单可转余额转款',
           statusAvailable: '可转',
           emptyText: '当前订单暂无可转收款记录'
         };
-      }
-
-      function afterSalesMoneyModeButtons(action) {
-        var meta = afterSalesMoneyActionMeta(action);
-        return '<div class="aftersales-money-mode" role="group" aria-label="' + escapeHtml(meta.modeTitle) + '">' +
-          '<button class="aftersales-money-mode-button is-active" type="button" data-aftersales-money-mode="record">' + escapeHtml(meta.recordMode) + '</button>' +
-          '<button class="aftersales-money-mode-button" type="button" data-aftersales-money-mode="all">' + escapeHtml(meta.allMode) + '</button>' +
-        '</div>';
       }
 
       function afterSalesPaymentRecordTable(data, action) {
@@ -2792,8 +2770,7 @@
           return '<div class="aftersales-empty-money">' + escapeHtml(meta.emptyText) + '</div>';
         }
         var firstChecked = false;
-        return '<div class="aftersales-money-toolbar"><button class="btn btn-secondary btn-sm" type="button" data-aftersales-select-money-records>全选可处理记录</button><span id="afterSalesMoneyToolbarText">已选0笔</span></div>' +
-          '<section class="table-wrap aftersales-payment-record-table"><table><thead><tr>' +
+        return '<section class="table-wrap aftersales-payment-record-table"><table><thead><tr>' +
           '<th>选择</th><th>收款单号/流水</th><th>收款时间</th><th>收款节点</th><th>支付方式</th><th>实收金额</th><th>已退/已转</th><th>' + escapeHtml(meta.availableLabel) + '</th><th>' + escapeHtml(meta.inputLabel) + '</th><th>状态</th>' +
           '</tr></thead><tbody>' + records.map(function (record, index) {
             var available = Number(record.available || 0);
@@ -2817,21 +2794,6 @@
           }).join('') + '</tbody></table></section>';
       }
 
-      function afterSalesMoneySummary(data, action) {
-        var records = afterSalesPaymentRecordsFor(data);
-        var received = moneyNumber(data.received);
-        var available = records.reduce(function (sum, record) { return sum + Number(record.available || 0); }, 0);
-        var used = Math.max(received - available, 0);
-        return readonlyGrid([
-          ['订单号', data.orderNo],
-          ['客户', data.customer],
-          ['订单应收', data.receivable],
-          ['已收金额', data.received || '¥0'],
-          ['已退/已转', moneyText(used)],
-          [action === 'refund' ? '当前可退' : '当前可转', moneyText(available)]
-        ]);
-      }
-
       function refundMethodOptionsFor(data) {
         var methods = afterSalesPaymentRecordsFor(data).filter(function (record) {
           return Number(record.available || 0) > 0;
@@ -2850,8 +2812,6 @@
       function refundFieldsFor(data) {
         var methodOptions = refundMethodOptionsFor(data);
         return [
-          sectionHtml('原订单资金', afterSalesMoneySummary(data, 'refund')),
-          sectionHtml('退款方式', afterSalesMoneyModeButtons('refund')),
           sectionHtml('选择退款收款记录', afterSalesPaymentRecordTable(data, 'refund') + '<div class="aftersales-money-summary"><span>已选收款记录 <strong data-after-sales-money-selected-count>0笔</strong></span><span>本次退款合计 <strong data-after-sales-money-selected-total>¥0</strong></span></div>'),
           sectionHtml('退款账户与方式',
             '<div class="form-row">' +
@@ -2875,8 +2835,6 @@
 
       function transferMoneyFieldsFor(data) {
         return [
-          sectionHtml('原订单资金', afterSalesMoneySummary(data, 'transfer')),
-          sectionHtml('转款方式', afterSalesMoneyModeButtons('transfer')),
           sectionHtml('选择转出收款记录', afterSalesPaymentRecordTable(data, 'transfer') + '<div class="aftersales-money-summary"><span>已选收款记录 <strong data-after-sales-money-selected-count>0笔</strong></span><span>本次转出合计 <strong data-after-sales-money-selected-total>¥0</strong></span></div>'),
           sectionHtml('转入订单', targetPicker('转入订单', '选择同客户或同门店未结清订单', '', true)),
           sectionHtml('转款信息',
@@ -2914,11 +2872,9 @@
         });
         var selectedCountNode = orderAfterSalesDrawer.querySelector('[data-after-sales-money-selected-count]');
         var selectedTotalNode = orderAfterSalesDrawer.querySelector('[data-after-sales-money-selected-total]');
-        var toolbarText = document.getElementById('afterSalesMoneyToolbarText');
         var totalInput = document.getElementById('afterSalesMoneyTotalInput');
         if (selectedCountNode) selectedCountNode.textContent = selectedCount + '笔';
         if (selectedTotalNode) selectedTotalNode.textContent = moneyText(total);
-        if (toolbarText) toolbarText.textContent = '已选' + selectedCount + '笔';
         if (totalInput) totalInput.value = moneyText(total);
         var warning = document.getElementById('afterSalesMoneyWarning');
         if (warning) {
@@ -2934,19 +2890,6 @@
           }
         }
         return total;
-      }
-
-      function setAfterSalesMoneyMode(mode) {
-        orderAfterSalesDrawer.querySelectorAll('[data-aftersales-money-mode]').forEach(function (button) {
-          button.classList.toggle('is-active', button.dataset.aftersalesMoneyMode === mode);
-        });
-        var records = Array.from(orderAfterSalesDrawer.querySelectorAll('[data-aftersales-payment-record]'));
-        if (mode === 'all') {
-          records.forEach(function (checkbox) {
-            if (!checkbox.disabled) checkbox.checked = true;
-          });
-        }
-        syncAfterSalesMoneySummary();
       }
 
       function validateAfterSalesMoneyAction(type) {
@@ -3011,10 +2954,14 @@
 
       function renderOrderAfterSalesContent(type, data) {
         currentAfterSalesType = type;
-        document.getElementById('orderAfterSalesTitle').textContent = '发起售后';
+        document.getElementById('orderAfterSalesTitle').textContent = scenarioTitle(type, data.type);
         document.getElementById('orderAfterSalesSummary').innerHTML =
-          '<strong>' + escapeHtml(data.product) + '</strong><span>' + escapeHtml(data.type + ' · ' + data.plan + ' · ' + data.customer) + '</span>' +
-          '<span>' + escapeHtml('订单状态：' + data.orderStatus + ' / 收款状态：' + data.paymentStatus + ' / 已收：' + data.received + ' / 当前人数：' + data.passengers) + '</span>';
+          '<div class="order-after-sales-summary-main"><strong>' + escapeHtml(data.product) + '</strong><span>' + tagHtml(data.orderStatus, statusTag(data.orderStatus)) + tagHtml(data.paymentStatus, statusTag(data.paymentStatus)) + '</span></div>' +
+          '<div class="order-after-sales-summary-meta">' +
+            '<span>' + escapeHtml(data.orderNo) + '</span>' +
+            '<span>' + escapeHtml(data.type + ' / ' + data.customer) + '</span>' +
+            '<span>' + escapeHtml('已收 ' + (data.received || '¥0') + ' / ' + data.passengers) + '</span>' +
+          '</div>';
         renderAfterSalesTypeButtons(afterSalesTypeOptionsFor(data), type);
         document.getElementById('orderAfterSalesFields').innerHTML = afterSalesFieldsFor(type, data);
         orderAfterSalesDrawer.dataset.afterSalesType = type;
@@ -4307,17 +4254,6 @@
         if (event.target.closest('[data-after-target-select]')) {
           event.preventDefault();
           openAfterSalesTargetSelector();
-          return;
-        }
-        var moneyModeButton = event.target.closest('[data-aftersales-money-mode]');
-        if (moneyModeButton) {
-          event.preventDefault();
-          setAfterSalesMoneyMode(moneyModeButton.dataset.aftersalesMoneyMode || 'record');
-          return;
-        }
-        if (event.target.closest('[data-aftersales-select-money-records]')) {
-          event.preventDefault();
-          setAfterSalesMoneyMode('all');
           return;
         }
         if (event.target === orderAfterSalesDrawer) window.caesarUI.closeLayer(orderAfterSalesDrawer);
