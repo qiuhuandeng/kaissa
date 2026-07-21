@@ -609,6 +609,14 @@
         combineFeeAndVisa: true
       };
     }
+    if (selfProductPage && document.getElementById('lineOptionalShoppingSection')) {
+      return {
+        kind: 'group',
+        labels: ['线路基础', '行程安排', '自费/购物', '大交通', '费用规则', '签证与证件'],
+        ids: ['lineBasicSection', 'lineItinerarySection', 'lineOptionalShoppingSection', 'lineTrafficSection', 'lineFeeSection', 'lineVisaSection'],
+        combineFeeAndVisa: false
+      };
+    }
     return {
       kind: 'group',
       labels: ['线路基础', '行程安排', '大交通', '费用规则', '签证与证件'],
@@ -1107,6 +1115,7 @@
     }
 
     configureInlineLineModules(currentKind);
+    if (window.syncSelfProductJoinMode) window.syncSelfProductJoinMode();
 
     var modalTitle = document.querySelector('.route-submit-modal .modal-title');
     var modalItems = document.querySelectorAll('.route-success-summary > div');

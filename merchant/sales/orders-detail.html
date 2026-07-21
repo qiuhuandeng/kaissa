@@ -62,7 +62,7 @@
           <div class="product-detail-price-block order-hero-amount">
             <span>订单应收</span>
             <strong id="orderHeroTotal">¥25,600</strong>
-            <em id="orderHeroCollection">已收 ¥0 / 待收 ¥25,600</em>
+            <em id="orderHeroCollection">客户已收 ¥0 / 客户待收 ¥25,600</em>
           </div>
         </div>
         <div class="product-detail-divider"></div>
@@ -150,6 +150,15 @@
           <section class="order-tab-section">
             <div class="detail-section-title">金额摘要</div>
             <div id="orderMoneyGrid" class="order-money-grid"></div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">优惠使用明细</div>
+            <div class="table-wrap order-detail-table">
+              <table>
+                <thead><tr><th>优惠来源</th><th>活动/券编号</th><th>优惠名称</th><th>优惠金额</th><th>承担方</th><th>后续状态</th><th>下游单据</th></tr></thead>
+                <tbody id="discountUsageRows"></tbody>
+              </table>
+            </div>
           </section>
           <section class="order-tab-section">
             <div class="detail-section-title">应收明细</div>
@@ -264,9 +273,9 @@
       <div class="modal-body">
         <section id="receiptDrawerSummary" class="readonly-summary"></section>
         <div class="description-grid order-description-grid">
-          <div class="description-item"><div class="description-label">本单应收</div><div id="receiptTotal" class="description-value amount-strong">-</div></div>
-          <div class="description-item"><div class="description-label">已收</div><div id="receiptPaid" class="description-value amount-strong amount-green">-</div></div>
-          <div class="description-item"><div class="description-label">待收</div><div id="receiptUnpaid" class="description-value amount-strong amount-red">-</div></div>
+          <div class="description-item"><div class="description-label">订单应收</div><div id="receiptTotal" class="description-value amount-strong">-</div></div>
+          <div class="description-item"><div class="description-label">客户已收</div><div id="receiptPaid" class="description-value amount-strong amount-green">-</div></div>
+          <div class="description-item"><div class="description-label">客户待收</div><div id="receiptUnpaid" class="description-value amount-strong amount-red">-</div></div>
           <div class="description-item"><div class="description-label">结算单位</div><div id="receiptSettleUnit" class="description-value">-</div></div>
         </div>
         <div id="receiptDrawerFields" class="order-drawer-form">
@@ -294,11 +303,11 @@
       <div class="modal-body">
         <section id="receivableDrawerSummary" class="readonly-summary"></section>
         <div id="receivableDrawerFields" class="order-drawer-form">
-          <label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>新增应收项</option><option>优惠减免</option><option>补收差价</option><option>人数变化调整</option></select></label>
-          <label class="form-group"><span class="form-label">财务科目</span><select class="form-control"><option>团费</option><option>保险</option><option>签证</option><option>房差</option><option>服务费</option></select></label>
-          <label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免填负数"></label>
+          <label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>新增应收项</option><option>补收差价</option><option>人数变化调整</option><option>售后减免</option><option>人工特批折扣</option><option>项目变更</option></select></label>
+          <label class="form-group"><span class="form-label">业务款项</span><select class="form-control"><option>团费</option><option>机票</option><option>签证</option><option>房差</option><option>保险</option><option>服务费</option></select></label>
+          <label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免或折扣填负数"></label>
           <label class="form-group"><span class="form-label">审批流</span><select class="form-control"><option>店长 → 财务应收</option><option>财务应收直接复核</option></select></label>
-          <label class="form-group form-group-full"><span class="form-label">调整原因</span><textarea class="form-control" rows="4" placeholder="填写客户确认、优惠依据、补差原因或服务加购说明"></textarea></label>
+          <label class="form-group form-group-full"><span class="form-label">调整说明</span><textarea class="form-control" rows="4" placeholder="填写客户确认、补差原因、售后依据或人工特批说明"></textarea></label>
         </div>
       </div>
       <div class="modal-footer">
@@ -449,7 +458,11 @@
           owner: '软件园门店 / 孙丽',
           orderStatus: ['预留', 'tag tag-orange'],
           paymentStatus: ['未收款', 'tag tag-gray'],
-          amount: ['¥25,600', '¥0', '¥25,600'],
+          amount: ['¥25,600', '¥0', '¥24,600'],
+          discountCarry: '¥1,000',
+          discountUsages: [
+            { source: '营销活动', code: 'ACT-EU-202607', name: '欧洲长线早鸟满减', amount: 1000, share: '总部营销 70% / 销售门店 30%', status: '待财务确认', downstream: '待生成优惠减免明细' }
+          ],
           todos: [
             ['待补出行人证件', '2位游客护照信息待完善，影响签证预检'],
             ['待收定金', '预留订单24小时未收款将释放库存'],
@@ -466,7 +479,7 @@
           money: [
             ['应收', '¥25,600', 'amount-red'],
             ['已收', '¥0', ''],
-            ['待收', '¥25,600', 'amount-red'],
+            ['待收', '¥24,600', 'amount-red'],
             ['退款中', '¥0', '']
           ],
           downstream: [
@@ -753,6 +766,42 @@
         config.money = [['应收', amountText, 'amount-red'], ['已收', '¥0', ''], ['待收', amountText, 'amount-red'], ['退款中', '¥0', '']];
         config.snapshot = [['订单来源', '单团项目'], ['询价单号', params.get('inquiryNo') || 'INQ-20260711-001'], ['单团项目', projectNo], ['下单店员', params.get('owner') || '刘洋'], ['项目团', scheduleNo], ['锁定报价', '方案' + quoteVersion + ' 豪华五星版'], ['出发/回团', params.get('travelDate') || '2025-09-15 / 2025-09-24']];
       }
+      if (type !== 'customProject' && params.get('amount')) {
+        const paramAmount = Number(params.get('amount') || 0);
+        if (paramAmount > 0) {
+          const amountText = '¥' + paramAmount.toLocaleString('zh-CN');
+          const receivedAmount = Number(String(config.amount[1] || '').replace(/[^\d.-]/g, '')) || 0;
+          if (!params.get('discount')) {
+            config.discountCarry = '¥0';
+            config.discountUsages = [];
+          }
+          const discountAmount = Number(String(config.discountCarry || '').replace(/[^\d.-]/g, '')) || 0;
+          const pendingText = '¥' + Math.max(paramAmount - receivedAmount - discountAmount, 0).toLocaleString('zh-CN');
+          config.amount = [amountText, config.amount[1], pendingText];
+          config.money = [['应收', amountText, 'amount-red'], ['已收', config.amount[1], receivedAmount > 0 ? 'amount-green' : ''], ['待收', pendingText, 'amount-red'], ['退款中', '¥0', '']];
+        }
+      }
+      if (params.get('discount')) {
+        const discountAmount = Number(params.get('discount') || 0);
+        if (discountAmount > 0) {
+          const discountText = '¥' + discountAmount.toLocaleString('zh-CN');
+          const receivableAmount = Number(String(config.amount[0] || '').replace(/[^\d.-]/g, '')) || 0;
+          const receivedAmount = Number(String(config.amount[1] || '').replace(/[^\d.-]/g, '')) || 0;
+          const pendingText = '¥' + Math.max(receivableAmount - receivedAmount - discountAmount, 0).toLocaleString('zh-CN');
+          config.discountCarry = discountText;
+          config.discountUsages = [{
+            source: '营销活动',
+            code: 'ORDER-DISCOUNT',
+            name: '订单优惠减免',
+            amount: discountAmount,
+            share: '按活动/券模板承担',
+            status: '待财务确认',
+            downstream: '待生成优惠减免明细'
+          }];
+          config.amount = [config.amount[0], config.amount[1], pendingText];
+          config.money = [['应收', config.amount[0], 'amount-red'], ['已收', config.amount[1], receivedAmount > 0 ? 'amount-green' : ''], ['待收', pendingText, 'amount-red'], ['退款中', '¥0', '']];
+        }
+      }
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -764,6 +813,48 @@
       }
       function moneyText(value) {
         return '¥' + Math.round(Number(value || 0)).toLocaleString('zh-CN');
+      }
+      function discountCarryAmount() {
+        return moneyNumber(config.discountCarry || '¥0');
+      }
+      function pendingCustomerAmount() {
+        return Math.max(moneyNumber(config.amount[0]) - moneyNumber(config.amount[1]) - discountCarryAmount(), 0);
+      }
+      function normalizedMoneyLabel(label) {
+        if (label === '应收') return '订单应收';
+        if (label === '已收') return '客户已收';
+        if (label === '待收') return '客户待收';
+        return label;
+      }
+      function orderMoneyCards() {
+        const cards = config.money.map(function (item) {
+          return [normalizedMoneyLabel(item[0]), item[1], item[2]];
+        });
+        const carry = discountCarryAmount();
+        cards.splice(Math.min(cards.length, 3), 0, ['优惠减免', moneyText(carry), carry > 0 ? 'amount-green' : '']);
+        const gap = moneyNumber(config.amount[0]) - moneyNumber(config.amount[1]) - pendingCustomerAmount() - carry;
+        cards.push(['应收平衡', Math.abs(gap) < 1 ? '已平' : ('差异 ' + moneyText(Math.abs(gap))), Math.abs(gap) < 1 ? 'amount-green' : 'amount-red']);
+        return cards;
+      }
+
+      function discountUsageItems() {
+        const items = config.discountUsages || [];
+        if (items.length) return items;
+        const carry = discountCarryAmount();
+        if (carry <= 0) return [];
+        return [{
+          source: '营销活动',
+          code: 'ORDER-DISCOUNT',
+          name: '订单优惠减免',
+          amount: carry,
+          share: '按活动/券模板承担',
+          status: '待财务确认',
+          downstream: '待生成优惠减免明细'
+        }];
+      }
+
+      function discountUsageRow(item) {
+        return '<tr><td>' + escapeHtml(item.source || '-') + '</td><td>' + escapeHtml(item.code || '-') + '</td><td>' + escapeHtml(item.name || '-') + '</td><td class="amount-strong">' + moneyText(moneyNumber(item.amount || 0)) + '</td><td>' + escapeHtml(item.share || '-') + '</td><td>' + tagHtml([item.status || '待财务确认', statusClass(item.status || '待财务确认')]) + '</td><td>' + escapeHtml(item.downstream || '-') + '</td></tr>';
       }
       function readStored(key) {
         try {
@@ -810,13 +901,16 @@
         if (!order) return;
         const amountText = order.amount || moneyText(order.amountValue || 0);
         const receivedText = order.received || '¥0';
-        const pendingText = order.pending || amountText;
+        const carryText = order.discountCarry || '¥0';
+        const pendingText = order.pending || moneyText(Math.max(moneyNumber(amountText) - moneyNumber(receivedText) - moneyNumber(carryText), 0));
         const orderType = order.orderType || (order.salesSnapshot && order.salesSnapshot.type) || config.productType;
         if (orderType) config.productType = orderType;
         if (order.productName) config.productName = order.productName;
         if (order.customer) config.contact = [order.customer, order.contactPhone].filter(Boolean).join(' ');
         if (order.store || order.advisor) config.owner = [order.store || '软件园门店', order.advisor || ''].filter(Boolean).join(' / ');
         config.amount = [amountText, receivedText, pendingText];
+        config.discountCarry = carryText;
+        config.discountUsages = order.discountUsages || (order.salesSnapshot && order.salesSnapshot.discountUsages) || config.discountUsages || [];
         config.money = [
           ['应收', amountText, 'amount-red'],
           ['已收', receivedText, moneyNumber(receivedText) > 0 ? 'amount-green' : ''],
@@ -1076,28 +1170,28 @@
         if (isProjectOrder()) {
           return {
             title: '项目应收调整申请',
-            typeOptions: ['项目变更新增应收', '人数变化调整', '服务范围调整', '客户优惠减免'],
-            subjectLabel: '关联变更',
-            subjectOptions: ['BG-MICE-20260704-001 人数调整', '无，先提交应收调整'],
-            stageOptions: ['首款', '进度款', '尾款', '单独补差'],
-            reason: '填写人数、日期、服务标准或会议活动变化，以及是否影响项目团成本'
+            typeOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '项目变更'],
+            subjectLabel: '业务款项',
+            subjectOptions: ['项目团费', '会务服务费', '交通差价', '住宿差价', '活动增项', '其他'],
+            changeLabel: '关联变更',
+            changeOptions: ['BG-MICE-20260704-001 人数调整', '无，先提交应收调整'],
+            reason: '填写人数、日期、服务标准、售后依据或人工特批说明，以及是否影响项目团成本'
           };
         }
         const profiles = {
-          邮轮: [['新增应收', '优惠减免', '升舱差价', '港务费调整'], ['船票款', '港务费', '升舱差价', '岸上项目']],
-          专列: [['新增应收', '优惠减免', '铺位差价', '包厢差价'], ['铺位款', '包厢差价', '保险/服务费', '补差']],
-          自由行: [['新增应收', '优惠减免', '服务项补差', '人数变化'], ['套餐款', '酒店', '机票', '接送机', '当地玩乐']],
-          单项服务: [['新增应收', '优惠减免', '代垫费调整', '材料费调整'], ['服务费', '代垫费', '材料费', '快递费']],
-          研学: [['新增应收', '优惠减免', '材料费调整', '人数变化'], ['营费', '材料费', '保险费', '补差']]
+          邮轮: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['船票款', '港务费', '升舱差价', '岸上项目', '保险']],
+          专列: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['铺位款', '包厢差价', '保险/服务费', '补差']],
+          自由行: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['套餐款', '酒店', '机票', '接送机', '当地玩乐']],
+          单项服务: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['服务费', '代垫费', '材料费', '快递费']],
+          研学: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['营费', '材料费', '保险费', '补差']]
         };
-        const profile = profiles[config.productType] || [['新增应收项', '优惠减免', '补收差价', '人数变化调整'], ['团费', '保险', '签证', '房差', '服务费']];
+        const profile = profiles[config.productType] || [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '项目变更'], ['团费', '机票', '签证', '房差', '保险', '服务费']];
         return {
           title: '应收调整申请',
           typeOptions: profile[0],
-          subjectLabel: config.productType === '参团游' ? '财务科目' : '款项类型',
+          subjectLabel: '业务款项',
           subjectOptions: profile[1],
-          stageOptions: [],
-          reason: '填写客户确认、优惠依据、补差原因或服务加购说明'
+          reason: '填写客户确认、补差原因、售后依据或人工特批说明'
         };
       }
       function receivableFieldsHtml() {
@@ -1105,10 +1199,11 @@
         return [
           selectControl('调整类型', profile.typeOptions),
           selectControl(profile.subjectLabel, profile.subjectOptions),
-          inputControl('调整金额', '', false, 'placeholder="增加填正数，减免填负数"'),
-          profile.stageOptions.length ? selectControl('影响收款阶段', profile.stageOptions) : selectControl('审批流', ['店长 → 财务应收', '财务应收直接复核']),
+          profile.changeOptions ? selectControl(profile.changeLabel, profile.changeOptions) : '',
+          inputControl('调整金额', '', false, 'placeholder="增加填正数，减免或折扣填负数"'),
+          selectControl('审批流', ['店长 → 财务应收', '财务应收直接复核']),
           uploadControl(isProjectOrder() ? '客户确认依据' : '关联附件/依据', isProjectOrder() ? '上传客户邮件、盖章确认单、变更报价或补充协议' : '上传客户确认、价格依据或补充服务说明'),
-          textareaControl('调整原因', '', profile.reason)
+          textareaControl('调整说明', '', profile.reason)
         ].join('');
       }
       function contractFieldsHtml() {
@@ -1382,12 +1477,12 @@
       }
       function projectReceivableFieldsHtml() {
         return [
-          '<label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>项目变更新增应收</option><option>人数变化调整</option><option>服务范围调整</option><option>客户优惠减免</option></select></label>',
+          '<label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>新增应收项</option><option>补收差价</option><option>人数变化调整</option><option>售后减免</option><option>人工特批折扣</option><option>项目变更</option></select></label>',
+          '<label class="form-group"><span class="form-label">业务款项</span><select class="form-control"><option>项目团费</option><option>会务服务费</option><option>交通差价</option><option>住宿差价</option><option>活动增项</option><option>其他</option></select></label>',
           '<label class="form-group"><span class="form-label">关联变更</span><select class="form-control"><option>BG-MICE-20260704-001 人数调整</option><option>无，先提交应收调整</option></select></label>',
-          '<label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免填负数"></label>',
-          '<label class="form-group"><span class="form-label">影响收款阶段</span><select class="form-control"><option>首款</option><option>进度款</option><option>尾款</option><option>单独补差</option></select></label>',
+          '<label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免或折扣填负数"></label>',
           '<label class="form-group form-group-full"><span class="form-label">客户确认依据</span><div class="upload-box">上传客户邮件、盖章确认单、变更报价或补充协议</div></label>',
-          '<label class="form-group form-group-full"><span class="form-label">调整原因</span><textarea class="form-control" rows="4" placeholder="填写人数、日期、服务标准或会议活动变化，以及是否影响项目团成本"></textarea></label>'
+          '<label class="form-group form-group-full"><span class="form-label">调整说明</span><textarea class="form-control" rows="4" placeholder="填写人数、日期、服务标准或会议活动变化，以及是否影响项目团成本"></textarea></label>'
         ].join('');
       }
       function projectChangeFieldsHtml() {
@@ -1395,7 +1490,7 @@
           '<label class="form-group"><span class="form-label">变更类型</span><select class="form-control"><option>人数变化</option><option>日期变化</option><option>服务范围变化</option><option>费用调整</option><option>取消项目</option></select></label>',
           '<label class="form-group"><span class="form-label">影响对象</span><select class="form-control"><option>合同 + 阶段应收 + 项目团</option><option>仅项目团执行</option><option>仅合同附件</option><option>仅应收补差</option></select></label>',
           '<label class="form-group"><span class="form-label">变更后人数</span><input class="form-control" type="text" value="80"></label>',
-          '<label class="form-group"><span class="form-label">金额影响</span><select class="form-control"><option>不影响总额</option><option>需补收</option><option>需减免</option><option>待重新报价</option></select></label>',
+          '<label class="form-group"><span class="form-label">金额影响</span><select class="form-control"><option>不影响总额</option><option>需补收</option><option>需优惠减免</option><option>待重新报价</option></select></label>',
           '<label class="form-group form-group-full"><span class="form-label">客户确认依据</span><div class="upload-box">上传客户邮件、确认单、补充协议或变更报价</div></label>',
           '<label class="form-group form-group-full"><span class="form-label">变更说明</span><textarea class="form-control" rows="4" placeholder="说明变更原因、执行影响、是否需要补充成本确认或客户确认附件"></textarea></label>'
         ].join('');
@@ -1406,7 +1501,7 @@
         setText('receiptDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。提交后进入销售中心收款认领和财务复核。');
         setHtml('receiptDrawerFields', projectReceiptFieldsHtml());
         setText('receivableDrawerTitle', '项目应收调整申请');
-        setText('receivableDrawerSummary', '当前合同应收 ' + config.amount[0] + '，调整必须关联客户确认或项目变更，审批通过后由财务应收承接。');
+        setText('receivableDrawerSummary', '项目订单应收 ' + config.amount[0] + '，调整必须关联客户确认或项目变更，审批通过后由财务应收承接。');
         setHtml('receivableDrawerFields', projectReceivableFieldsHtml());
         setText('projectContractDrawerTitle', '合同管理承接');
         setText('projectContractDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name);
@@ -1454,7 +1549,8 @@
         }
         setHtml('orderHeroTags', tagHtml([config.productType, config.productTag]) + tagHtml(config.orderStatus) + tagHtml(config.paymentStatus));
         setText('orderHeroTotal', config.amount[0]);
-        setText('orderHeroCollection', '已收 ' + config.amount[1] + ' / 待收 ' + config.amount[2]);
+        config.amount[2] = moneyText(pendingCustomerAmount());
+        setText('orderHeroCollection', '客户已收 ' + config.amount[1] + ' / 客户待收 ' + config.amount[2]);
         const owner = ownerParts();
         const contact = contactParts();
         const meta = productOverviewMeta();
@@ -1492,7 +1588,9 @@
         setHtml('overviewBookingGrid', renderBookingStructureHtml());
         const trafficRows = trafficOccupancyData();
         setHtml('trafficOccupancyRows', trafficRows.length ? trafficRows.map(trafficOccupancyRow).join('') : '<tr><td class="table-empty-cell" colspan="6">本订单暂无交通资源占用记录。</td></tr>');
-        setHtml('orderMoneyGrid', config.money.map(moneyCard).join(''));
+        setHtml('orderMoneyGrid', orderMoneyCards().map(moneyCard).join(''));
+        const discountItems = discountUsageItems();
+        setHtml('discountUsageRows', discountItems.length ? discountItems.map(discountUsageRow).join('') : '<tr><td class="table-empty-cell" colspan="7">本订单暂无优惠减免。</td></tr>');
         setText('aiDrawerText', config.travelers.ai.join(' '));
         setHtml('aiCheckItems', config.travelers.ai.map(function (text, index) { return taskItem(['预检项' + (index + 1), text]); }).join(''));
 
@@ -1509,7 +1607,7 @@
         const snapshotReceivableItems = salesSnapshotReceivableItems();
         const receivableItems = snapshotReceivableItems || (isProjectOrder() ? projectReceivableItems() : [
           ['团费/服务费', '初始应收', config.amount[0], '系统生成', '已生效', 'SK' + config.orderNo.slice(-8), config.productName],
-          ['应收调整', '补差/减免', '¥0', '无调整', '未生效', '-', '如需优惠、补差、人数变化或减免，从右上角“应收调整”发起']
+          ['应收调整', '补差/售后减免/人工特批', '¥0', '无调整', '未生效', '-', '如需补差、人数变化、售后减免或人工特批折扣，从右上角“应收调整”发起']
         ]);
         setHtml('receivableRows', receivableItems.map(function (row) {
           return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td class="amount-strong">' + escapeHtml(row[2]) + '</td><td>' + tagHtml([row[3], statusClass(row[3])]) + '</td><td>' + tagHtml([row[4], statusClass(row[4])]) + '</td><td>' + escapeHtml(row[5]) + '</td><td>' + escapeHtml(row[6]) + '</td></tr>';
@@ -1553,7 +1651,7 @@
         setText('receiptUnpaid', config.amount[2]);
         setText('receiptSettleUnit', isProjectOrder() ? contactParts().name : config.owner);
         setText('receivableDrawerTitle', receivableProfileFor().title);
-        setText('receivableDrawerSummary', '当前应收 ' + config.amount[0] + '，调整提交后进入审批和财务应收审核。');
+        setText('receivableDrawerSummary', '订单应收 ' + config.amount[0] + '，调整提交后进入审批和财务应收审核。');
         setHtml('receivableDrawerFields', receivableFieldsHtml());
         setText('projectContractDrawerTitle', '合同管理承接');
         setText('projectContractDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + contactParts().name);
@@ -1588,16 +1686,50 @@
         if (config.productType === '单团项目') return '目标项目团';
         return '目标团期';
       }
+      function refundDiscountRecalcGrid() {
+        const originalDiscount = discountCarryAmount();
+        return '<div class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">优惠减免重算</h3></div>' +
+          '<div class="description-grid order-description-grid" data-refund-discount-recalc>' +
+            descriptionItem(['原订单应收', config.amount[0]]) +
+            descriptionItem(['原优惠减免', moneyText(originalDiscount)]) +
+            descriptionItem(['本次退款', '<span id="detailRefundAmountImpact">¥0</span>', 'html']) +
+            descriptionItem(['退款后有效优惠', '<span id="detailRefundEffectiveDiscount">' + escapeHtml(moneyText(originalDiscount)) + '</span>', 'html']) +
+            descriptionItem(['需冲回优惠减免', '<span id="detailRefundDiscountReverse">¥0</span>', 'html']) +
+            descriptionItem(['影响承担方', '<span id="detailRefundAffectedBearer">' + escapeHtml(originalDiscount > 0 ? '按原优惠承担比例' : '无影响') + '</span>', 'html']) +
+            descriptionItem(['后续承接', '<span id="detailRefundDiscountDownstream">' + escapeHtml(originalDiscount > 0 ? '未结算随本次结算重算；已结算进入结算调整' : '无优惠减免') + '</span>', 'html']) +
+          '</div></div>';
+      }
+      function updateDetailRefundDiscountRecalc() {
+        const grid = document.querySelector('#aftersalesDrawer [data-refund-discount-recalc]');
+        const input = document.getElementById('aftersalesRefundAmount');
+        if (!grid || !input) return;
+        const refundAmount = moneyNumber(input.value);
+        const receivable = moneyNumber(config.amount[0]);
+        const received = moneyNumber(config.amount[1]);
+        const originalDiscount = discountCarryAmount();
+        const customerPaidTarget = Math.max(receivable - originalDiscount, 0);
+        const fullRefundBase = received > 0 ? received : customerPaidTarget;
+        let effectiveDiscount = originalDiscount;
+        if (originalDiscount > 0 && refundAmount > 0) {
+          effectiveDiscount = refundAmount >= fullRefundBase ? 0 : Math.max(originalDiscount - Math.round(refundAmount * originalDiscount / Math.max(receivable, 1)), 0);
+        }
+        const reverseAmount = Math.max(originalDiscount - effectiveDiscount, 0);
+        setText('detailRefundAmountImpact', moneyText(refundAmount));
+        setText('detailRefundEffectiveDiscount', moneyText(effectiveDiscount));
+        setText('detailRefundDiscountReverse', moneyText(reverseAmount));
+        setText('detailRefundAffectedBearer', originalDiscount > 0 ? (reverseAmount > 0 ? '按原优惠承担比例冲回' : '按原优惠承担比例') : '无影响');
+        setText('detailRefundDiscountDownstream', originalDiscount > 0 ? (reverseAmount > 0 ? '审批通过后生成优惠减免冲回；已结算进入结算调整' : '优惠减免保持不变') : '无优惠减免');
+      }
       function afterSalesFieldsHtml(kind) {
         const base = readonlyMiniGrid([
           ['订单号', config.orderNo],
           ['产品类型', config.productType],
           ['当前安排', scheduleValue()],
-          ['已收金额', config.amount[1]]
+          ['客户已收', config.amount[1]]
         ]);
         if (kind === '项目变更') return projectChangeFieldsHtml();
         if (kind === '退款') {
-          return base + selectControl('退款科目', refundSubjectsFor()) + inputControl('退款金额', '', false, 'placeholder="不得超过最大可退金额"') + selectControl('退款方式', ['原路退回', '银行转账', '退回预存账户']) + textareaControl('退款说明', '', '填写扣损依据、退款原因和财务备注');
+          return base + selectControl('退款科目', refundSubjectsFor()) + inputControl('退款金额', '', false, 'id="aftersalesRefundAmount" placeholder="不得超过最大可退金额"') + refundDiscountRecalcGrid() + selectControl('退款方式', ['原路退回', '银行转账', '退回预存账户']) + textareaControl('退款说明', '', '填写扣损依据、退款原因和财务备注');
         }
         if (kind === '退团/退订') {
           return base + selectControl('退订范围', config.productType === '邮轮' ? ['退舱房', '退乘客', '退岸上项目'] : config.productType === '专列' ? ['退铺位', '退乘客', '退包厢'] : config.productType === '自由行' ? ['退订服务项', '整单退订'] : config.productType === '单项服务' ? ['取消服务项', '整单取消'] : ['退团人员', '整单退订']) + inputControl('扣损金额', '0') + uploadControl('客户确认/扣损依据', '上传客户确认、供应商扣损或取消确认') + textareaControl('退订原因', '', '填写客户原因、资源释放和退款承接要求');
@@ -1630,6 +1762,7 @@
         setText('aftersalesDrawerTitle', actionTitle || title);
         setText('aftersalesDrawerSummary', isProjectOrder() && title === '项目变更' ? config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。项目变更会影响合同附件、阶段应收和项目团执行，审批通过后再交财务应收承接。' : config.orderNo + ' / ' + config.productName + ' / 当前收款 ' + config.paymentStatus[0]);
         setHtml('aftersalesDrawerFields', afterSalesFieldsHtml(title));
+        if (title === '退款') updateDetailRefundDiscountRecalc();
         const submit = document.querySelector('#aftersalesDrawer .modal-footer .btn-primary');
         if (submit) {
           submit.textContent = title === '项目变更' ? '提交项目变更' : '提交审批';
@@ -1715,6 +1848,9 @@
           return;
         }
         if (event.target.classList.contains('modal-overlay')) closeLayer(event.target);
+      });
+      document.addEventListener('input', function (event) {
+        if (event.target && event.target.id === 'aftersalesRefundAmount') updateDetailRefundDiscountRecalc();
       });
 
       render();

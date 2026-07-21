@@ -89,7 +89,7 @@
             </div>
             <div class="schedule-hero-metric-card">
               <span id="summaryCostLabel">成本状态</span>
-              <strong><span id="summarySideSettlementStatus" class="tag tag-blue">预估成本</span></strong>
+              <strong><span id="summarySideSettlementStatus" class="tag tag-gray">未结算</span></strong>
             </div>
           </div>
         </div>
@@ -174,7 +174,7 @@
               <div class="description-item"><div id="priceSecondLabel" class="description-label">儿童价</div><div id="infoChildPrice" class="description-value">¥10,800</div></div>
               <div class="description-item"><div id="priceThirdLabel" class="description-label">单房差</div><div id="infoSupplement" class="description-value">¥1,200</div></div>
               <div class="description-item"><div id="infoDeadlineLabel" class="description-label">截止报名</div><div id="infoDeadline" class="description-value">2024-07-10</div></div>
-              <div class="description-item"><div class="description-label">结算状态</div><div class="description-value"><span id="infoSettlementStatus" class="tag tag-blue">预估成本</span></div></div>
+              <div class="description-item"><div class="description-label">结算状态</div><div class="description-value"><span id="infoSettlementStatus" class="tag tag-gray">未结算</span></div></div>
             </div>
           </section>
 
@@ -386,7 +386,7 @@
                 <tr><td>国际机票</td><td>国际航空CA</td><td>27人</td><td>¥113,400</td><td><span class="tag tag-green">已付款</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-schedule-cost-drawer>查看</button></div></td></tr>
                 <tr><td>酒店住宿</td><td>欧洲酒店集团</td><td>11晚×14间</td><td>¥43,120</td><td><span class="tag tag-orange">已申请</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-schedule-cost-drawer>查看</button></div></td></tr>
                 <tr><td>地接服务费</td><td>欧洲地接ABC</td><td>27人</td><td>¥38,640</td><td><span class="tag tag-green">已付款</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-schedule-cost-drawer>查看</button></div></td></tr>
-                <tr><td>导游/领队</td><td>张建国 / 全职</td><td>12天</td><td>¥4,800</td><td><span class="tag tag-orange">待确认</span></td><td><div class="table-action"><a class="table-action-primary" href="fulfillment-cost.html?scheduleNo=EU20240715001&amp;costItem=leader">进入团期成本</a></div></td></tr>
+                <tr><td>导游/领队</td><td>张建国 / 全职</td><td>12天</td><td>¥4,800</td><td><span class="tag tag-orange">待确认</span></td><td><div class="table-action"><a class="table-action-primary" href="fulfillment-cost.html?scheduleNo=EU20240715001&amp;costItem=leader">进入团期结算</a></div></td></tr>
                 <tr class="schedule-cost-total-row"><td colspan="3">合计</td><td>¥285,560</td><td colspan="2"></td></tr>
               </tbody>
             </table>
@@ -2220,7 +2220,7 @@
           executionRows: [
             { node: '项目名单', owner: '项目经理', content: '客户员工、嘉宾和随团工作人员名单导入、证件资料、分房分车', status: '待导入', tag: 'tag tag-orange', links: [['名单', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=roster']] },
             { node: '资源确认', owner: '计调/资源', content: '国际机票、酒店会议室、当地用车、会务物料和地接确认', status: '待确认', tag: 'tag tag-orange', links: [['资源', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=resource']] },
-            { node: '项目成本', owner: '项目经理', content: '预算成本、供应商确认价和付款申请承接到团期成本', status: '预估成本', tag: 'tag tag-blue', links: [['成本', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=cost']] }
+            { node: '项目成本', owner: '项目经理', content: '预算成本、供应商确认价和付款申请承接到团期结算', status: '预估成本', tag: 'tag tag-blue', links: [['成本', 'schedules-detail.html?scheduleNo=MICE20250915001&groupMode=project&tab=cost']] }
           ],
           costGroups: [
             { title: '国际交通', subtotal: '¥688,000', items: [['国际机票', '中国国际航空', '80人', '¥8,600', '¥688,000', 'CNY', '待确认', 'tag tag-orange', '北京-巴黎 / 罗马-北京']] },
@@ -2391,10 +2391,10 @@
           paymentApplyNo: 'PAY-REQ-' + digits,
           settlementNo: 'JS' + digits,
           ncVoucher: 'NC-JS-' + digits,
-          costStatus: '预估成本',
+          costStatus: '成本待复核',
           payableStatus: '待财务审核',
           paymentStatus: '未申请',
-          settlementStatus: '结算中',
+          settlementStatus: '未结算',
           ncStatus: '待推送',
           updatedAt: '2026-06-29 16:30'
         }, existing, patch || {});
@@ -2540,13 +2540,8 @@
 
       function normalizeSettlementStatus(status) {
         var text = String(status || '');
-        if (['未维护成本', '预估成本', '实际成本确认', '结算中', '已结算'].indexOf(text) >= 0) return text;
-        if (text === '未维护' || text === '未维护成本') return '未维护成本';
-        if (text === '已维护' || text === '成本已维护') return '预估成本';
-        if (/实际|确认/.test(text)) return '实际成本确认';
         if (/已结/.test(text)) return '已结算';
-        if (/结算|采购批次/.test(text)) return '结算中';
-        return '未维护成本';
+        return '未结算';
       }
 
       function saleStatusClass(status) {
@@ -2570,20 +2565,17 @@
 
       function settlementStatusClass(status) {
         var text = normalizeSettlementStatus(status);
-        if (text === '未维护成本') return 'tag tag-gray';
-        if (text === '预估成本') return 'tag tag-blue';
-        if (text === '实际成本确认') return 'tag tag-orange';
-        if (text === '结算中') return 'tag tag-orange';
         if (text === '已结算') return 'tag tag-green';
-        return 'tag tag-blue';
+        return 'tag tag-gray';
       }
 
       function ensureScheduleStates(data) {
+        var rawCostStatus = data.costStatus || data.settlementStatus || '';
         data.saleStatus = normalizeSaleStatus(data.saleStatus || data.status);
         data.executionStatus = normalizeExecutionStatus(data.executionStatus);
         data.settlementStatus = normalizeSettlementStatus(data.settlementStatus || data.costStatus);
         data.status = data.saleStatus;
-        data.costStatus = data.settlementStatus;
+        data.costStatus = rawCostStatus || data.settlementStatus;
         return data;
       }
 
@@ -3273,8 +3265,8 @@
             scheduleObjectName(scheduleData.batchType) + '结算',
             '订单收入-退款-实际成本-应付付款',
             scheduleChain.profit || '¥0',
-            scheduleChain.settlementStatus || '结算中',
-            tagForFinance(scheduleChain.settlementStatus || '结算中'),
+            normalizeSettlementStatus(scheduleChain.settlementStatus || '未结算'),
+            tagForFinance(normalizeSettlementStatus(scheduleChain.settlementStatus || '未结算')),
             scheduleChain.paymentStatus && scheduleChain.paymentStatus !== '未申请' ? '付款执行/回单' : '付款申请'
           ]);
           ncRows.push([
@@ -3487,7 +3479,7 @@
         });
         if (!rows.some(function (row) { return row.indexOf('导游/领队') > -1 || row.indexOf('领队服务') > -1; })) {
           total += 4800;
-          rows.push('<tr><td>导游/领队</td><td>张建国 / 全职</td><td>12天 / ¥400</td><td>¥4,800</td><td>' + tagHtml('待确认', 'tag tag-orange') + '</td><td><div class="table-action"><a class="table-action-primary" href="fulfillment-cost.html?scheduleNo=' + encodeURIComponent(config.code || 'EU20240715001') + '&amp;costItem=leader">进入团期成本</a></div></td></tr>');
+          rows.push('<tr><td>导游/领队</td><td>张建国 / 全职</td><td>12天 / ¥400</td><td>¥4,800</td><td>' + tagHtml('待确认', 'tag tag-orange') + '</td><td><div class="table-action"><a class="table-action-primary" href="fulfillment-cost.html?scheduleNo=' + encodeURIComponent(config.code || 'EU20240715001') + '&amp;costItem=leader">进入团期结算</a></div></td></tr>');
         }
         rows.push('<tr class="schedule-cost-total-row"><td colspan="3">合计</td><td>' + moneyText(total) + '</td><td colspan="2"></td></tr>');
         costDetailRows.innerHTML = rows.join('');
@@ -4237,8 +4229,8 @@
         setText('costStatPaidLabel', isProject ? '已确认成本' : '已预付分摊');
         setText('costStatProfitLabel', '预计毛利');
         setText('costSummaryTitle', isProject ? '项目成本摘要' : '成本摘要');
-        setText('costSummaryHint', isProject ? '预算成本、供应商确认价和付款申请承接到团期成本' : '交通预付、地接、酒店、票损等成本来源');
-        setText('openScheduleCostPage', isProject ? '查看团期成本' : '查看成本结算');
+        setText('costSummaryHint', isProject ? '预算成本、供应商确认价和付款申请承接到团期结算' : '交通预付、地接、酒店、票损等成本来源');
+        setText('openScheduleCostPage', isProject ? '查看团期结算' : '查看成本结算');
         setText('openTrafficAllocation', isProject ? '追加资源' : '追加分配');
         setText('openTrafficTicket', '出票/确认');
         setText('openTrafficProcurement', isProject ? '查看采购' : '查看采购');
@@ -4412,8 +4404,8 @@
         scheduleData.saleStatus = ctx.privateSaleScope;
         scheduleData.status = ctx.privateSaleScope;
         scheduleData.executionStatus = '出发准备';
-        scheduleData.settlementStatus = '预估成本';
-        scheduleData.costStatus = '预估成本';
+        scheduleData.settlementStatus = '未结算';
+        scheduleData.costStatus = '成本待复核';
         scheduleData.income = ctx.estimateIncome || 0;
         scheduleData.paid = '待收款';
         scheduleData.groupMode = '项目团';
@@ -4455,7 +4447,7 @@
         activeDetailConfig.executionRows = [
           { node: '项目名单', owner: '销售/单团计调', content: '导入客户名单、证件资料、分房分车和特殊需求', status: '待导入', tag: 'tag tag-orange', links: [['名单', 'schedules-detail.html?' + scheduleQuery + '&tab=roster']] },
           { node: '资源确认', owner: '计调/资源', content: '按客户日期确认交通、酒店、地接、用车和领队资源', status: '待确认', tag: 'tag tag-orange', links: [['资源', 'schedules-detail.html?' + scheduleQuery + '&tab=resource']] },
-          { node: '项目成本', owner: '单团计调', content: '确认预算成本、供应商确认价和付款申请，后续承接到团期成本', status: '预估成本', tag: 'tag tag-blue', links: [['成本', 'schedules-detail.html?' + scheduleQuery + '&tab=cost']] }
+          { node: '项目成本', owner: '单团计调', content: '确认预算成本、供应商确认价和付款申请，后续承接到团期结算', status: '预估成本', tag: 'tag tag-blue', links: [['成本', 'schedules-detail.html?' + scheduleQuery + '&tab=cost']] }
         ];
         activeDetailConfig.costGroups = [
           { title: '交通资源', subtotal: moneyText(trafficCost), items: [['交通资源', '待确认供应商', total + '人', '按实际锁位', moneyText(trafficCost), 'CNY', '待确认', 'tag tag-orange', routeText]] },
@@ -4710,7 +4702,8 @@
         var normalizedBatchType = normalizeBatchType(scheduleData.batchType);
         document.getElementById('summaryPrice').textContent = (normalizedBatchType === '邮轮航次' ? '舱型价' : normalizedBatchType === '专列班期' ? '铺位价' : normalizedBatchType === '自由行出行日期' ? '套餐价' : normalizedBatchType === '研学营期' ? '学生价' : '成人价') + ' ' + scheduleData.price;
         document.getElementById('summaryDeadline').textContent = scheduleData.deadline;
-        setTag(document.getElementById('summarySideSettlementStatus'), scheduleData.settlementStatus, settlementStatusClass(scheduleData.settlementStatus));
+        var displaySettlementStatus = normalizeSettlementStatus(scheduleData.settlementStatus);
+        setTag(document.getElementById('summarySideSettlementStatus'), displaySettlementStatus, settlementStatusClass(displaySettlementStatus));
         document.getElementById('infoCode').textContent = scheduleData.code;
         document.getElementById('infoProduct').textContent = scheduleData.product + '·' + duration + '天' + nights + '晚';
         setText('infoSubjectCompany', scheduleData.company || pageParams.get('company') || '福建凯撒');
@@ -4739,7 +4732,7 @@
         setText('infoChildPrice', info.childPrice);
         setText('infoSupplement', info.supplement);
         document.getElementById('infoDeadline').textContent = scheduleData.deadline;
-        setTag(document.getElementById('infoSettlementStatus'), scheduleData.settlementStatus, settlementStatusClass(scheduleData.settlementStatus));
+        setTag(document.getElementById('infoSettlementStatus'), displaySettlementStatus, settlementStatusClass(displaySettlementStatus));
         setText('infoCreator', info.creator);
         setText('inventoryTotal', stockText(scheduleData.stock));
         document.getElementById('inventoryAvailable').textContent = stockText(scheduleData.available);
@@ -4858,8 +4851,8 @@
         if (stats[0]) stats[0].textContent = moneyText(total || 285560);
         if (stats[1]) stats[1].textContent = scheduleData.paid || '¥120,000';
         if (stats[2]) stats[2].textContent = moneyText((scheduleData.income || 386200) - (total || 285560));
-        scheduleData.settlementStatus = scheduleData.settlementStatus === '未维护成本' ? '预估成本' : scheduleData.settlementStatus || '预估成本';
-        scheduleData.costStatus = scheduleData.settlementStatus;
+        scheduleData.settlementStatus = normalizeSettlementStatus(scheduleData.settlementStatus || '未结算');
+        scheduleData.costStatus = scheduleData.costStatus || '成本待复核';
         refreshScheduleSummary();
       }
 
@@ -5001,7 +4994,7 @@
         if (!row) return;
         row.status = '损耗已确认';
         row.tag = 'tag tag-green';
-        scheduleData.settlementStatus = '待确认';
+        scheduleData.settlementStatus = '未结算';
         closeScheduleLayer(trafficLossDrawer);
         renderResources(activeDetailConfig);
         refreshScheduleSummary();
@@ -5248,11 +5241,11 @@
           costStatus: '实际成本确认',
           payableStatus: '待财务审核',
           paymentStatus: '未申请',
-          settlementStatus: '结算中',
+          settlementStatus: '未结算',
           ncStatus: '待推送',
           updatedAt: '2026-06-29 16:35'
         });
-        scheduleData.settlementStatus = '实际成本确认';
+        scheduleData.settlementStatus = '未结算';
         scheduleData.costStatus = '实际成本确认';
         refreshScheduleSummary();
         renderFinanceChain(activeDetailConfig);
@@ -5265,7 +5258,7 @@
       document.getElementById('saveNewScheduleCost').addEventListener('click', function () {
         if (!document.getElementById('newCostSupplier').value.trim()) return;
         closeScheduleLayer(addScheduleCostDrawer);
-        document.getElementById('successText').textContent = '成本项已保存，可继续在预估成本明细中维护付款申请。';
+        document.getElementById('successText').textContent = '成本项已保存，成本或应付确认后可到付款申请菜单处理付款。';
         window.caesarUI.openLayer(successModal);
       });
 

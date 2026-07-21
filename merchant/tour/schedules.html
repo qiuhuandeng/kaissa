@@ -2356,11 +2356,9 @@
       }
 
       function settlementStatusClass(status) {
-        if (status === '预估成本') return 'tag tag-blue';
-        if (status === '实际成本确认') return 'tag tag-green';
-        if (status === '结算中') return 'tag tag-orange';
         if (status === '已结算') return 'tag tag-green';
-        return 'tag tag-orange';
+        if (status === '未结算') return 'tag tag-gray';
+        return 'tag tag-gray';
       }
 
       function normalizeSaleStatus(status, tabStatus) {
@@ -2384,10 +2382,7 @@
       function normalizeSettlementStatus(costStatus, value) {
         var text = [costStatus, value].join(' ');
         if (text.indexOf('已结算') >= 0) return '已结算';
-        if (text.indexOf('结算中') >= 0) return '结算中';
-        if (text.indexOf('实际成本确认') >= 0 || text.indexOf('实际成本') >= 0) return '实际成本确认';
-        if (text.indexOf('已维护') >= 0 || text.indexOf('预估成本') >= 0) return '预估成本';
-        return '未维护成本';
+        return '未结算';
       }
 
       var businessToday = '2026-07-02';
@@ -2419,7 +2414,7 @@
         if (item.saleStatus === '筹备中') return '待确认';
         if (['已出发', '已回团', '已归档'].indexOf(item.executionStatus) > -1) return '已确认';
         if (item.saleStatus === '售罄') return '已确认';
-        if (item.settlementStatus === '未维护成本') return '待确认';
+        if (item.settlementStatus === '未结算' && !scheduleCostItems(item).length) return '待确认';
         if (item.saleStatus === '已截止' || stockNumber(item.left) <= 3) return '部分确认';
         return '部分确认';
       }
@@ -2658,11 +2653,12 @@
       }
 
       function enrichScheduleState(item) {
+        var rawCostStatus = item.costStatus || item.settlementStatus || '';
         item.saleStatus = item.saleStatus || normalizeSaleStatus(item.status, item.tabStatus);
         item.executionStatus = item.executionStatus || normalizeExecutionStatus(item.status, item.tabStatus);
-        item.settlementStatus = item.settlementStatus || normalizeSettlementStatus(item.costStatus);
+        item.settlementStatus = normalizeSettlementStatus(item.settlementStatus || item.costStatus);
         item.status = item.saleStatus;
-        item.costStatus = item.settlementStatus;
+        item.costStatus = rawCostStatus || item.settlementStatus;
         item.costClass = settlementStatusClass(item.settlementStatus);
         item.tabStatus = stateTokens(item);
         return item;
@@ -2837,7 +2833,7 @@
       }
 
       function costStatusValue(item) {
-        return item.settlementStatus || item.costStatus || '未维护成本';
+        return item.costStatus || item.settlementStatus || '未维护成本';
       }
 
       function scheduleCostItems(item) {
@@ -2944,8 +2940,8 @@
         var remark = editRow.querySelector('[data-cost-field="remark"]').value.trim() || '待确认';
         var rows = scheduleCostItems(currentSchedule);
         rows.push([itemName, supplier, quantity, unitPrice, costSubtotalText(quantity, unitPrice), remark]);
-        currentSchedule.settlementStatus = '预估成本';
-        currentSchedule.costStatus = currentSchedule.settlementStatus;
+        currentSchedule.settlementStatus = '未结算';
+        currentSchedule.costStatus = '成本待复核';
         currentSchedule.costClass = settlementStatusClass(currentSchedule.settlementStatus);
         currentSchedule.tabStatus = stateTokens(currentSchedule);
         closeCostItemEditor();
@@ -2955,7 +2951,7 @@
       }
 
       function fillCostModal(item) {
-        var status = item.settlementStatus || item.costStatus || '未维护成本';
+        var status = normalizeSettlementStatus(item.settlementStatus || item.costStatus || '未结算');
         document.getElementById('costModalTitle').textContent = '成本摘要';
         var summary = costModal.querySelector('.schedule-cost-summary');
         if (summary) {
@@ -3493,7 +3489,7 @@
         document.getElementById('resourceScheduleMeta').textContent = item.code + ' | ' + item.depart + ' | ' + (project ? item.privateCustomer || '-' : item.planner || '-');
         document.getElementById('resourceRosterText').textContent = project ? stockText(item.stock, item.unit) + '项目人数，名单待导入' : stockText(item.sold, item.unit) + '已报名，' + stockText(item.left, item.unit) + '可售';
         document.getElementById('resourceDeadlineText').textContent = project ? (item.deadline || addDays(item.depart, -15)) : addDays(item.depart, -7);
-        document.getElementById('resourceFinanceText').textContent = item.settlementStatus || '未维护成本';
+        document.getElementById('resourceFinanceText').textContent = normalizeSettlementStatus(item.settlementStatus || item.costStatus || '未结算');
         var rows = resourceRowsFor(item);
         var pending = rows.filter(function (row) { return row[4] !== '已确认'; }).length;
         document.getElementById('resourceProgressText').textContent = (rows.length - pending) + '项已确认，' + pending + '项待处理';
@@ -3866,11 +3862,11 @@
           planner: '周伟',
           saleStatus: '',
           executionStatus: '',
-          settlementStatus: '',
+          settlementStatus: '未结算',
           status: '筹备中',
           tabStatus: '筹备中',
           costStatus: '未维护成本',
-          costClass: 'tag tag-orange',
+          costClass: 'tag tag-gray',
           locked: false,
           groupMode: '散拼',
           privateCustomer: '',
@@ -3911,7 +3907,7 @@
             leader: '张建国 138****4521',
             saleStatus: '客户专属',
             executionStatus: '出发准备',
-            settlementStatus: '预估成本',
+            settlementStatus: '未结算',
             status: '客户专属',
             costStatus: '预估成本',
             rosterStatus: '待导入名单',
@@ -3926,7 +3922,7 @@
             contractNo: 'CTR-MICE-20260704-001',
             receivableNo: 'YS-MICE-20260704-001',
             privateSaleScope: '客户专属',
-            tabStatus: '项目团 出发准备 预估成本',
+            tabStatus: '项目团 出发准备 未结算',
             remark: '由单团项目确认成团生成，不进入公开渠道售卖',
             deadline: '2025-08-31'
           },
@@ -3947,7 +3943,7 @@
             leader: '待分配',
             saleStatus: '已截止',
             executionStatus: '出发准备',
-            settlementStatus: '预估成本',
+            settlementStatus: '未结算',
             status: '已截止',
             costStatus: '预估成本',
             rosterStatus: '待补资料',
@@ -3955,7 +3951,7 @@
             resourceStatus: '部分确认',
             noticeStatus: '未生成',
             leaderStatus: '未安排',
-            tabStatus: '已截止 出发准备 预估成本',
+            tabStatus: '已截止 出发准备 未结算',
             remark: '样例：出发准备，领队未安排，用于直接打开配领队抽屉',
             deadline: '2026-06-29'
           },
@@ -3976,7 +3972,7 @@
             leader: '张建国 138****4521',
             saleStatus: '已截止',
             executionStatus: '出团中',
-            settlementStatus: '预估成本',
+            settlementStatus: '未结算',
             status: '已截止',
             costStatus: '预估成本',
             rosterStatus: '已齐',
@@ -3984,7 +3980,7 @@
             resourceStatus: '已确认',
             noticeStatus: '已发送',
             leaderStatus: '已配领队',
-            tabStatus: '已截止 出团中 预估成本',
+            tabStatus: '已截止 出团中 未结算',
             remark: '样例：出团中，用于查看团期执行状态',
             deadline: '2026-06-24'
           },
@@ -4005,7 +4001,7 @@
             leader: '王强 136****0198',
             saleStatus: '已截止',
             executionStatus: '已回团',
-            settlementStatus: '结算中',
+            settlementStatus: '未结算',
             status: '已截止',
             costStatus: '结算中',
             rosterStatus: '已归档',
@@ -4013,7 +4009,7 @@
             resourceStatus: '已确认',
             noticeStatus: '已发送',
             leaderStatus: '已配领队',
-            tabStatus: '已截止 已回团 结算中',
+            tabStatus: '已截止 已回团 未结算',
             remark: '样例：已回团，用于查看成本结算按钮',
             deadline: '2026-06-01'
           },
@@ -4034,7 +4030,7 @@
             leader: '待分配',
             saleStatus: '开放报名',
             executionStatus: '未出团',
-            settlementStatus: '未维护成本',
+            settlementStatus: '未结算',
             status: '开放报名',
             costStatus: '未维护成本',
             rosterStatus: '待补资料',
@@ -4042,7 +4038,7 @@
             resourceStatus: '异常',
             noticeStatus: '未到节点',
             leaderStatus: '未安排',
-            tabStatus: '开放报名 未出团 异常 未维护成本',
+            tabStatus: '开放报名 未出团 异常 未结算',
             remark: '样例：销售中但有风险，用于验证风险状态筛选',
             deadline: '2026-07-28'
           }
@@ -4073,11 +4069,11 @@
           planner: '周伟',
           saleStatus: '开放报名',
           executionStatus: '未出团',
-          settlementStatus: '未维护成本',
-          status: '开放报名',
-          tabStatus: '开放报名 未出团 未维护成本',
-          costStatus: '未维护成本',
-          costClass: 'tag tag-orange',
+            settlementStatus: '未结算',
+            status: '开放报名',
+            tabStatus: '开放报名 未出团 未结算',
+            costStatus: '未维护成本',
+            costClass: 'tag tag-gray',
           remark: '开团审批通过，名额和渠道价格已确认',
           deadline: '2026-07-10'
         });
@@ -4097,11 +4093,11 @@
           planner: '赵明',
           saleStatus: '开放报名',
           executionStatus: '未出团',
-          settlementStatus: '未维护成本',
-          status: '开放报名',
-          tabStatus: '开放报名 未出团 未维护成本',
-          costStatus: '未维护成本',
-          costClass: 'tag tag-orange',
+            settlementStatus: '未结算',
+            status: '开放报名',
+            tabStatus: '开放报名 未出团 未结算',
+            costStatus: '未维护成本',
+            costClass: 'tag tag-gray',
           remark: '邮轮开航审批通过，舱型余位已确认',
           deadline: '2026-07-24'
         });
@@ -4121,11 +4117,11 @@
           planner: '李铭',
           saleStatus: '开放报名',
           executionStatus: '未出团',
-          settlementStatus: '未维护成本',
-          status: '开放报名',
-          tabStatus: '开放报名 未出团 未维护成本',
-          costStatus: '未维护成本',
-          costClass: 'tag tag-orange',
+            settlementStatus: '未结算',
+            status: '开放报名',
+            tabStatus: '开放报名 未出团 未结算',
+            costStatus: '未维护成本',
+            costClass: 'tag tag-gray',
           remark: '专列开班审批通过，铺位安排已确认',
           deadline: '2026-07-26'
         });
@@ -4147,9 +4143,9 @@
           item.approvalStatus = '待审批';
           item.saleStatus = '筹备中';
           item.executionStatus = '未出团';
-          item.settlementStatus = '未维护成本';
+          item.settlementStatus = '未结算';
           item.status = item.saleStatus;
-          item.costStatus = item.settlementStatus;
+          item.costStatus = item.costStatus || '未维护成本';
           item.costClass = settlementStatusClass(item.settlementStatus);
           item.tabStatus = stateTokens(item);
           item.remark = (item.remark ? item.remark + '；' : '') + '审批单号 ' + approvalNo;
@@ -4469,7 +4465,7 @@
       }
 
       function costStatusCell(item) {
-        var status = item.settlementStatus || item.costStatus || '未维护成本';
+        var status = normalizeSettlementStatus(item.settlementStatus || item.costStatus || '未结算');
         return '<span class="' + settlementStatusClass(status) + '">' + escapeHtml(status) + '</span>';
       }
 
@@ -5099,12 +5095,12 @@
           planner: plannerSelect.value || productPlanners[scheduleProduct.value] || '周伟',
           saleStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.saleStatus : '筹备中',
           executionStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.executionStatus : '未出团',
-          settlementStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.settlementStatus : '未维护成本',
+          settlementStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.settlementStatus : '未结算',
           status: currentMode === 'edit' && currentSchedule ? currentSchedule.saleStatus : '筹备中',
-          costStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.settlementStatus : '未维护成本',
-          costClass: currentMode === 'edit' && currentSchedule ? settlementStatusClass(currentSchedule.settlementStatus) : 'tag tag-orange',
+          costStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.costStatus || currentSchedule.settlementStatus : '未维护成本',
+          costClass: currentMode === 'edit' && currentSchedule ? settlementStatusClass(currentSchedule.settlementStatus) : 'tag tag-gray',
           locked: currentMode === 'edit' && currentSchedule ? currentSchedule.locked : false,
-          tabStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.tabStatus : '筹备中 未出团 未维护成本',
+          tabStatus: currentMode === 'edit' && currentSchedule ? currentSchedule.tabStatus : '筹备中 未出团 未结算',
           remark: scheduleRemark.value.trim(),
           deadline: deadlineDate.value || addDays(departDate.value, -5)
         };
@@ -6241,12 +6237,12 @@
             typeSpecific: batchTypeSpecificData(),
             saleStatus: '筹备中',
             executionStatus: '未出团',
-            settlementStatus: '未维护成本',
+            settlementStatus: '未结算',
             status: '筹备中',
             costStatus: '未维护成本',
-            costClass: 'tag tag-orange',
+            costClass: 'tag tag-gray',
             locked: false,
-            tabStatus: '筹备中 未出团 未维护成本',
+            tabStatus: '筹备中 未出团 未结算',
             remark: document.getElementById('batchRemark').value.trim() || '新建团期创建',
             deadline: addDays(departDateValue, -5)
           });
@@ -6700,7 +6696,7 @@
           event.stopPropagation();
           closeMenus();
           item.executionStatus = '已回团';
-          item.settlementStatus = item.settlementStatus === '已结算' ? '已结算' : '结算中';
+          item.settlementStatus = item.settlementStatus === '已结算' ? '已结算' : '未结算';
           item.tabStatus = stateTokens(item);
           renderRows();
           showScheduleExecutionResult('已将 ' + item.code + ' 标记为已回团，可进入成本结算复核。');
@@ -6979,10 +6975,11 @@
           code: currentSchedule.code + '-COPY',
           saleStatus: '筹备中',
           executionStatus: '未出团',
-          settlementStatus: '未维护成本',
+          settlementStatus: '未结算',
           status: '筹备中',
           costStatus: '未维护成本',
-          tabStatus: '筹备中 未出团 未维护成本',
+          costClass: 'tag tag-gray',
+          tabStatus: '筹备中 未出团 未结算',
           locked: false
         });
         schedules.unshift(clone);

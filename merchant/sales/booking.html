@@ -324,8 +324,14 @@
                 <button id="openAdjustFee" class="table-link" type="button">调整</button>
               </div>
               <div id="feeLines" class="booking-fee-lines"></div>
+              <div class="booking-money-summary" aria-label="订单金额摘要">
+                <div><span>订单应收</span><strong id="orderReceivableTotal">¥25,600</strong></div>
+                <div><span>本次优惠</span><strong id="orderDiscountTotal">¥0</strong></div>
+                <div><span>客户需收</span><strong id="customerPayableTotal">¥25,600</strong></div>
+              </div>
+              <div id="discountUsageLines" class="booking-discount-lines" hidden></div>
               <div class="booking-payable-total">
-                <span>合计应收</span>
+                <span>客户需收</span>
                 <strong id="payableTotal">¥25,600</strong>
               </div>
             </section>
@@ -348,15 +354,17 @@
           <div class="description-item"><div class="description-label">产品</div><div id="createdProduct" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">团期/服务</div><div id="createdStock" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">联系人</div><div id="createdContact" class="description-value">-</div></div>
-          <div class="description-item"><div class="description-label">应收金额</div><div id="createdAmount" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">订单应收</div><div id="createdAmount" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">优惠减免</div><div id="createdDiscount" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">客户需收</div><div id="createdCustomerPayable" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">订单状态</div><div id="createdOrderStatus" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">收款状态</div><div class="description-value"><span class="tag tag-gray">未收款</span></div></div>
           <div class="description-item"><div class="description-label">来源归属</div><div id="createdSource" class="description-value">-</div></div>
         </div>
         <div class="finance-link-card booking-created-finance">
-          <div class="finance-link-title">财务联动</div>
+          <div class="finance-link-title">生成信息</div>
           <div id="createdFinanceItems" class="finance-link-items">
-            <span class="finance-link-item">应收单：待生成</span>
+            <span class="finance-link-item">订单：待生成</span>
           </div>
         </div>
         <section class="booking-section">
@@ -367,8 +375,9 @@
 
       <div class="modal-footer booking-drawer-footer">
         <button id="footerTotalTrigger" class="booking-footer-total" type="button" aria-expanded="false">
-          <span>合计应收</span>
+          <span>客户需收</span>
           <strong id="footerTotal">¥25,600</strong>
+          <em id="footerDiscountSummary" hidden>优惠减免 ¥0</em>
         </button>
         <div id="footerPricePopover" class="booking-price-popover" hidden></div>
         <div id="formActions" class="booking-actions">
@@ -664,6 +673,7 @@
       const addCompositionRow = document.getElementById('addCompositionRow');
       const footerTotal = document.getElementById('footerTotal');
       const footerTotalTrigger = document.getElementById('footerTotalTrigger');
+      const footerDiscountSummary = document.getElementById('footerDiscountSummary');
       const footerPricePopover = document.getElementById('footerPricePopover');
       const channelSource = document.getElementById('channelSource');
       const distributorField = document.getElementById('distributorField');
@@ -1323,6 +1333,45 @@
         }, 0);
       }
 
+      function currentDiscountUsages() {
+        const total = calcTotal();
+        if (!hasSaleObject || total <= 0 || isManualMode() || sourceContext.isSingleGroup) return [];
+        const source = channelSource ? channelSource.value : '';
+        if (source === '分销') {
+          return [{ source: '优惠券', code: 'COUPON-DIST-202607', name: '分销商早订券', amount: Math.min(800, total), share: '合作分销商 100%', status: '待财务确认' }];
+        }
+        if (currentProduct.type === 'group' && total >= 20000) {
+          return [{ source: '营销活动', code: 'ACT-EU-202607', name: '欧洲长线早鸟满减', amount: 1000, share: '总部营销 70% / 销售门店 30%', status: '待财务确认' }];
+        }
+        if (currentProduct.type === 'cruise' && total >= 50000) {
+          return [{ source: '营销活动', code: 'ACT-CRUISE-202607', name: '理想号第二人同行优惠', amount: 1000, share: '总部营销 50% / 供应商 50%', status: '待财务确认' }];
+        }
+        if (currentProduct.type === 'study') {
+          const student = currentProduct.counts.find(function (item) { return item.id === 'student'; });
+          const amount = Math.min(Number(student ? student.value : 1) * 300, total);
+          return [{ source: '优惠券', code: 'COUPON-STUDY-202607', name: '研学报名按人优惠', amount: amount, share: '总部营销 80% / 销售门店 20%', status: '待财务确认' }];
+        }
+        return [];
+      }
+
+      function discountTotal(usages) {
+        return (usages || currentDiscountUsages()).reduce(function (sum, item) {
+          return sum + Number(item.amount || 0);
+        }, 0);
+      }
+
+      function customerPayableAmount() {
+        return Math.max(calcTotal() - discountTotal(), 0);
+      }
+
+      function discountUsageSummary(usages) {
+        const active = usages || currentDiscountUsages();
+        if (!active.length) return '无优惠减免';
+        return active.map(function (item) {
+          return item.name + ' ' + money(item.amount);
+        }).join(' / ');
+      }
+
       function planOptions() {
         return planOptionsFromProduct(currentProduct);
       }
@@ -1702,7 +1751,7 @@
         }, 0);
       }
 
-      function saveCreatedOrderSnapshot(orderNo, stock, totalText, process) {
+      function saveCreatedOrderSnapshot(orderNo, stock, totalText, customerPayableText, process, discountUsages) {
         const store = readStored('caesarOrderFinanceEvents');
         if (!store.orders) store.orders = {};
         const typeLabel = orderTypeLabel();
@@ -1711,6 +1760,7 @@
         const scheduleNo = stock && stock[1] ? stock[1] : '';
         const travelDate = stock && stock[0] ? stock[0] : '';
         const amountNumber = calcTotal();
+        const discountAmount = discountTotal(discountUsages);
         store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
           orderNo: orderNo,
           orderType: typeLabel,
@@ -1726,8 +1776,11 @@
           advisor: document.getElementById('salesName').value || '',
           amount: totalText,
           amountValue: amountNumber,
+          discountCarry: money(discountAmount),
+          discountUsages: discountUsages || [],
+          customerPayable: customerPayableText,
           received: '¥0',
-          pending: totalText,
+          pending: customerPayableText,
           orderStatus: process.status,
           paymentStatus: '未收款',
           resourceStatus: isManualMode() ? '不占用标准库存' : process.inventory,
@@ -1746,6 +1799,9 @@
             stockText: stock ? stock.join(' / ') : '',
             total: amountNumber,
             totalText: totalText,
+            discountTotal: discountAmount,
+            customerPayable: priceNumber(customerPayableText),
+            discountUsages: discountUsages || [],
             peopleCount: salesPeopleCountSnapshot(),
             compositionKind: usesCompositionRows() ? compositionKindLabel() : '',
             stockUnit: usesCompositionRows() ? compositionStockUnit() : '',
@@ -1771,6 +1827,22 @@
           footerPricePopover.innerHTML = '';
           return;
         }
+        const orderTotal = groups.reduce(function (sum, group) {
+          return sum + Number(group.total || 0);
+        }, 0);
+        const discounts = currentDiscountUsages();
+        const discountAmount = discountTotal(discounts);
+        const customerPayable = Math.max(orderTotal - discountAmount, 0);
+        const discountRows = discounts.length
+          ? '<div class="booking-price-popover-discounts">' + discounts.map(function (item) {
+            return '<div><span>' + escapeHtml(item.name) + '</span><strong>-' + money(item.amount) + '</strong><em>' + escapeHtml(item.source + ' / ' + item.code + ' / ' + item.share) + '</em></div>';
+          }).join('') + '</div>'
+          : '';
+        const totalRows = '<div class="booking-price-popover-total">' +
+          '<div><span>订单应收</span><strong>' + money(orderTotal) + '</strong></div>' +
+          (discountAmount > 0 ? '<div class="is-discount"><span>优惠减免</span><strong>-' + money(discountAmount) + '</strong></div>' : '') +
+          '<div class="is-payable"><span>客户需收</span><strong>' + money(customerPayable) + '</strong></div>' +
+        '</div>';
         footerPricePopover.hidden = true;
         footerPricePopover.innerHTML = '<div class="booking-price-popover-title">价格明细</div>' + groups.map(function (group) {
           return '<div class="booking-price-popover-group">' +
@@ -1780,15 +1852,43 @@
             }).join('') +
             '<div class="booking-price-popover-subtotal"><span>小计</span><strong>' + money(group.total) + '</strong></div>' +
           '</div>';
-        }).join('');
+        }).join('') + discountRows + totalRows;
+      }
+
+      function renderFeeTotals(total) {
+        const discounts = currentDiscountUsages();
+        const discountAmount = discountTotal(discounts);
+        const customerPayable = Math.max(total - discountAmount, 0);
+        document.getElementById('orderReceivableTotal').textContent = money(total);
+        document.getElementById('orderDiscountTotal').textContent = money(discountAmount);
+        document.getElementById('customerPayableTotal').textContent = money(customerPayable);
+        document.getElementById('payableTotal').textContent = money(customerPayable);
+        footerTotal.textContent = money(customerPayable);
+        if (footerDiscountSummary) {
+          footerDiscountSummary.hidden = discountAmount <= 0;
+          footerDiscountSummary.textContent = '优惠减免 ' + money(discountAmount);
+        }
+        const discountBox = document.getElementById('discountUsageLines');
+        if (discountBox) {
+          discountBox.hidden = !discounts.length;
+          discountBox.innerHTML = discounts.map(function (item) {
+            return '<div><span>' + escapeHtml(item.source + ' / ' + item.code) + '</span><strong>' + escapeHtml(item.name + ' ' + money(item.amount)) + '</strong><em>' + escapeHtml('承担方：' + item.share + ' / ' + item.status) + '</em></div>';
+          }).join('');
+        }
       }
 
       function renderFee() {
         if (!hasSaleObject) {
           document.getElementById('feeLines').innerHTML = '<div><span>暂无费用</span><strong>¥0</strong></div>';
+          document.getElementById('orderReceivableTotal').textContent = '¥0';
+          document.getElementById('orderDiscountTotal').textContent = '¥0';
+          document.getElementById('customerPayableTotal').textContent = '¥0';
           document.getElementById('payableTotal').textContent = '¥0';
+          document.getElementById('discountUsageLines').hidden = true;
+          document.getElementById('discountUsageLines').innerHTML = '';
           footerTotal.textContent = '待选团期';
           footerTotal.classList.add('is-placeholder');
+          if (footerDiscountSummary) footerDiscountSummary.hidden = true;
           renderFooterPriceDetail([]);
           return;
         }
@@ -1802,8 +1902,7 @@
           }, []);
           const total = calcTotal();
           document.getElementById('feeLines').innerHTML = rows.join('') || '<div><span>暂无费用</span><strong>¥0</strong></div>';
-          document.getElementById('payableTotal').textContent = money(total);
-          footerTotal.textContent = money(total);
+          renderFeeTotals(total);
           footerTotal.classList.remove('is-placeholder');
           renderFooterPriceDetail(groups);
           return;
@@ -1817,8 +1916,7 @@
         }, []);
         const total = calcTotal();
         document.getElementById('feeLines').innerHTML = rows.join('') || '<div><span>暂无费用</span><strong>¥0</strong></div>';
-        document.getElementById('payableTotal').textContent = money(total);
-        footerTotal.textContent = money(total);
+        renderFeeTotals(total);
         footerTotal.classList.remove('is-placeholder');
         renderFooterPriceDetail(groups);
       }
@@ -2147,13 +2245,19 @@
         const orderNo = generatedOrderNo();
         const process = processProfile();
         const stock = selectedStock();
+        const discounts = currentDiscountUsages();
+        const discountAmount = discountTotal(discounts);
+        const customerPayable = customerPayableAmount();
         const total = money(calcTotal());
+        const discountText = money(discountAmount);
+        const customerPayableText = money(customerPayable);
         const detailParams = new URLSearchParams();
         detailParams.set('type', detailType());
         detailParams.set('orderNo', orderNo);
         detailParams.set('product', currentProduct.name);
         detailParams.set('customer', document.getElementById('contactName').value.trim());
         detailParams.set('amount', String(calcTotal()));
+        if (discountAmount > 0) detailParams.set('discount', String(discountAmount));
         if (isManualMode()) {
           detailParams.set('source', 'manualProduct');
           detailParams.set('productSource', 'manual');
@@ -2174,12 +2278,12 @@
           if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
           if (sourceContext.people) detailParams.set('people', sourceContext.people);
         }
-        saveCreatedOrderSnapshot(orderNo, stock, total, process);
+        saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
         document.getElementById('createdText').textContent = isManualMode()
           ? process.status + '订单已生成，产品与出行信息以订单内快照承接，不占用标准团期库存。'
-          : (sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，库存状态为“' + process.inventory + '”。');
+          : (sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，客户需收与优惠使用明细已记录。');
         document.getElementById('createdOrderNo').textContent = orderNo;
         document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag + (isManualMode() ? ' / 手工产品' : '');
         document.getElementById('createdStock').textContent = isManualMode()
@@ -2187,21 +2291,24 @@
           : currentProduct.stockLabel + ' ' + stock[1];
         document.getElementById('createdContact').textContent = document.getElementById('contactName').value.trim() + ' / ' + document.getElementById('contactPhone').value.trim();
         document.getElementById('createdAmount').textContent = total;
+        document.getElementById('createdDiscount').textContent = discountText;
+        document.getElementById('createdCustomerPayable').textContent = customerPayableText;
         document.getElementById('createdOrderStatus').innerHTML = '<span class="' + process.tag + '">' + process.status + '</span>';
         document.getElementById('createdSource').textContent = sourceText();
         const financeItems = isManualMode() ? [
-          '应收单：按订单金额待审核',
-          '收款状态：未收款',
+          '订单：产品与出行信息按订单快照保存',
+          '客户需收：' + customerPayableText + ' 待收',
           '产品来源：订单内产品快照',
           '业务信息：' + (currentProduct.manualDisplay || currentProduct.manualDestination || '-')
         ] : sourceContext.isSingleGroup ? [
-          '阶段应收计划：按锁定报价付款节点待财务承接',
-          '收款状态：未收款',
+          '订单：客户专属项目订单已生成',
+          '客户需收：按锁定报价付款节点生成阶段收款计划',
           '项目团：' + stock[1] + ' 客户专属',
           sourceContext.isCustomProject ? '项目合同：锁定报价方案' + (sourceContext.quoteVersion || 'A') : '合同/确认单：客户专属项目团确认后生成'
         ] : [
-          '应收单 YS' + orderNo.slice(-8) + '：' + total + ' 待审核',
-          '收款状态：未收款',
+          '订单：' + orderNo + ' 已生成',
+          '客户需收：' + customerPayableText + ' 待收',
+          '优惠使用明细：' + (discountAmount > 0 ? discountUsageSummary(discounts) : '无优惠减免'),
           currentProduct.type === 'single' ? '服务单：待受理' : '库存占用：' + process.inventory,
           '合同/确认单：订单确认后生成'
         ];

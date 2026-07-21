@@ -49,8 +49,8 @@
           <tr>
             <th>结算单/渠道</th>
             <th>结算周期</th>
-            <th>订单成交额</th>
-            <th>渠道扣项</th>
+            <th>订单/优惠</th>
+            <th>渠道扣项/优惠</th>
             <th>应回款</th>
             <th>已到账</th>
             <th>差异金额</th>
@@ -70,14 +70,14 @@
             <td><div class="table-cell-main"><strong>AR-QD20260703001</strong><span>部分认款</span></div></td>
             <td><div class="table-action"><button class="table-action-primary" type="button" data-open-row>核对</button></div></td>
           </tr>
-          <tr data-no="QD20260625002" data-channel="环球同业" data-channel-type="分销商" data-status="差异处理中" data-company="福建凯撒" data-period="2026-06" data-date="2026-06-25" data-order-count="8" data-order-amount="¥64,800" data-refund="¥0" data-deduction="佣金 ¥0 / 服务费 ¥0 / 补贴 ¥0" data-commission="¥0" data-service="¥0" data-subsidy="¥0" data-other="¥0" data-receivable="¥64,800" data-arrived="¥40,000" data-pending="¥24,800" data-diff="¥24,800" data-diff-type="到账差异" data-carry="部分认款" data-ar="SK20240618009" data-match="RK20260625008 / ¥40,000" data-flow="CMB20260625018" data-settlement="未结算" data-bill="GTD-BILL-202606">
+          <tr data-no="QD20260625002" data-channel="环球同业" data-channel-type="分销商" data-status="差异处理中" data-company="福建凯撒" data-period="2026-06" data-date="2026-06-25" data-order-count="8" data-order-amount="¥64,800" data-refund="¥0" data-channel-discount="¥800" data-deduction="渠道承担优惠 ¥800 / 佣金 ¥0 / 服务费 ¥0 / 补贴 ¥0" data-commission="¥0" data-service="¥0" data-subsidy="¥0" data-other="¥0" data-receivable="¥64,000" data-arrived="¥40,000" data-pending="¥24,000" data-diff="¥24,000" data-diff-type="到账差异" data-carry="部分认款" data-ar="SK20240618009" data-match="RK20260625008 / ¥40,000" data-flow="CMB20260625018" data-discount-carry-no="ADJ-YHJM-20260718003" data-settlement="未结算" data-bill="GTD-BILL-202606">
             <td><div class="table-cell-main"><strong>QD20260625002</strong><span>环球同业 / 分销商</span><span>平台账单 GTD-BILL-202606</span></div></td>
             <td><div class="table-cell-main"><strong>2026-06</strong><span>账单日 2026-06-25</span></div></td>
-            <td><div class="table-cell-main"><strong>¥64,800</strong><span>8单 / 退款折减 ¥0</span></div></td>
-            <td><div class="table-cell-main"><strong>佣金 ¥0</strong><span>服务费 ¥0 / 补贴 ¥0</span></div></td>
-            <td class="amount-strong">¥64,800</td>
-            <td><div class="table-cell-main"><strong>¥40,000</strong><span>待到账 ¥24,800</span></div></td>
-            <td><div class="table-cell-main"><strong class="amount-red">¥24,800</strong><span>到账差异</span></div></td>
+            <td><div class="table-cell-main"><strong>¥64,800</strong><span>8单 / 渠道承担优惠 ¥800</span></div></td>
+            <td><div class="table-cell-main"><strong>渠道承担优惠 ¥800</strong><span>佣金 ¥0 / 服务费 ¥0</span></div></td>
+            <td class="amount-strong">¥64,000</td>
+            <td><div class="table-cell-main"><strong>¥40,000</strong><span>待到账 ¥24,000</span></div></td>
+            <td><div class="table-cell-main"><strong class="amount-red">¥24,000</strong><span>到账差异</span></div></td>
             <td><div class="table-cell-main"><strong>SK20240618009</strong><span>部分认款</span></div></td>
             <td><div class="table-action"><button class="table-action-primary" type="button" data-open-row>处理差异</button></div></td>
           </tr>
@@ -167,7 +167,7 @@
                   <th>系统订单</th>
                   <th>业务内容</th>
                   <th>订单金额</th>
-                  <th>退款折减</th>
+                  <th>优惠/退款</th>
                   <th>客户</th>
                 </tr>
               </thead>
@@ -219,9 +219,9 @@
               <thead>
                 <tr>
                   <th>应收单</th>
-                  <th>应收金额</th>
+                  <th>应回款</th>
                   <th>已认款</th>
-                  <th>待收金额</th>
+                  <th>待到账</th>
                   <th>承接状态</th>
                 </tr>
               </thead>
@@ -437,13 +437,15 @@
 
       function renderOrders(row) {
         document.getElementById('orderRows').innerHTML = orderRows(row).map(function (item) {
-          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td><div class="table-cell-main"><strong>' + escapeHtml(item[2].split(' / ')[0]) + '</strong><span>' + escapeHtml(item[2].split(' / ').slice(1).join(' / ') || item[2]) + '</span></div></td><td class="amount-strong">' + escapeHtml(item[3]) + '</td><td>' + escapeHtml(item[4]) + '</td><td>' + escapeHtml(item[5]) + '</td></tr>';
+          var discountText = row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '优惠 ' + row.dataset.channelDiscount + ' / 退款 ' + item[4] : '退款 ' + item[4];
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td><div class="table-cell-main"><strong>' + escapeHtml(item[2].split(' / ')[0]) + '</strong><span>' + escapeHtml(item[2].split(' / ').slice(1).join(' / ') || item[2]) + '</span></div></td><td class="amount-strong">' + escapeHtml(item[3]) + '</td><td>' + escapeHtml(discountText) + '</td><td>' + escapeHtml(item[5]) + '</td></tr>';
         }).join('');
       }
 
       function renderDeductions(row) {
         var diffType = row.dataset.diffType;
         var deductionData = [
+          ['渠道承担优惠', row.dataset.channelDiscount || '¥0', row.dataset.channelDiscount || '¥0', '¥0', row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '按优惠减免承接单抵扣应回款' : '无渠道承担优惠'],
           ['平台佣金', row.dataset.commission, row.dataset.commission, '¥0', '按渠道政策扣减'],
           ['平台服务费', row.dataset.service, row.dataset.service, '¥0', '按平台账单扣减'],
           ['活动补贴', row.dataset.subsidy, row.dataset.subsidy, '¥0', '补贴计入应回款'],
@@ -469,7 +471,9 @@
       function renderReceivable(row) {
         var ar = row.dataset.ar;
         var arCell = ar && ar !== '未生成' ? linkHtml('finance-receivable.html?receivableNo=' + encodeURIComponent(ar), ar) : escapeHtml(ar);
+        var discountCarryCell = row.dataset.discountCarryNo ? linkHtml('finance-settlement-adjustment.html?adjustmentNo=' + encodeURIComponent(row.dataset.discountCarryNo), row.dataset.discountCarryNo) : '无优惠减免';
         document.getElementById('receivableRows').innerHTML = '<tr><td>' + arCell + '</td><td class="amount-strong">' + escapeHtml(row.dataset.receivable) + '</td><td>' + escapeHtml(row.dataset.arrived) + '</td><td>' + escapeHtml(row.dataset.pending) + '</td><td>' + tagHtml(row.dataset.carry) + '</td></tr>' +
+          '<tr><td>' + discountCarryCell + '</td><td>' + escapeHtml(row.dataset.channelDiscount || '¥0') + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '待承接' : '无需承接') + '</td></tr>' +
           '<tr><td>' + linkHtml('finance-settlement.html?source=' + encodeURIComponent(row.dataset.no), row.dataset.settlement) + '</td><td>' + escapeHtml(row.dataset.receivable) + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.settlement === '未结算' ? '未结算' : '已结算') + '</td></tr>';
       }
 
@@ -508,6 +512,7 @@
           ['业务主体', row.dataset.company],
           ['订单成交额', row.dataset.orderAmount + ' / ' + row.dataset.orderCount + '单'],
           ['退款折减', row.dataset.refund],
+          ['渠道承担优惠', row.dataset.channelDiscount || '¥0'],
           ['渠道扣项', row.dataset.deduction],
           ['应回款', row.dataset.receivable],
           ['已到账', row.dataset.arrived],

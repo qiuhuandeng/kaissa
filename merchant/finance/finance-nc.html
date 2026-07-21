@@ -30,6 +30,9 @@
         <table>
           <thead><tr><th><input type="checkbox" aria-label="全选"></th><th>NC凭证</th><th>来源类型</th><th>业务单据</th><th>对象</th><th>金额</th><th>会计分录</th><th>校验</th><th>状态</th><th>操作</th></tr></thead>
           <tbody id="ncQueueRows">
+            <tr data-no="NC-YHJM-20260718001" data-source="优惠减免承接" data-business="ADJ-YHJM-20260718001" data-object="KS2024061802 / 理想号地中海邮轮" data-amount="¥1,000" data-entry="营销费用/供应商应付抵扣 / 订单应收平衡" data-check="优惠使用明细、承担比例、应收平衡和下游承接方向一致" data-status="待推送" data-source-order="KS2024061802" data-source-campaign="ACT-CRUISE-202607" data-bearer="总部营销 ¥500 / 供应商 ¥500" data-carry-target="总部营销费用承接；供应商账单抵扣" data-settlement-no="ADJ-YHJM-20260718001">
+              <td><input type="checkbox" aria-label="选择NC-YHJM-20260718001"></td><td>NC-YHJM-20260718001</td><td>优惠减免承接</td><td>ADJ-YHJM-20260718001</td><td>KS2024061802<br><span class="text-muted">理想号地中海邮轮</span></td><td class="amount-strong">¥1,000</td><td>营销费用/应付抵扣</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
+            </tr>
             <tr data-no="NC-PAY-TRF-20260818001" data-source="付款执行" data-business="PAY-TRF-20260818001" data-object="中国国际航空 / EU20260818001" data-amount="¥122,268" data-entry="借：应付账款-航空公司 ¥122,268 / 贷：银行存款 ¥122,268" data-check="付款单、应付单、团期成本、预付分摊和回单状态一致" data-status="待推送" data-contract-no="AIR-BLK-20260618-001 / AIR-RET-20260618-002" data-schedule-no="EU20260818001" data-resource-type="机票" data-payment-node="二压/三压待付" data-cost-source="交通资源付款执行 / 预付分摊抵扣" data-original-qty="30" data-effective-qty="20" data-change-no="CHG-AIR-20260710-001 / CHG-AIR-20260710-002" data-prepaid="¥6,666" data-adjustment="¥666" data-deduction="¥25,800">
               <td><input type="checkbox" aria-label="选择NC-PAY-TRF-20260818001"></td><td>NC-PAY-TRF-20260818001</td><td>付款执行</td><td>PAY-TRF-20260818001</td><td>中国国际航空<br><span class="text-muted">EU20260818001</span></td><td class="amount-strong">¥122,268</td><td>应付账款 / 银行存款</td><td><span class="tag tag-green">校验通过</span></td><td><span class="tag tag-orange">待推送</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-push-row>推送</button><button type="button" data-open-detail>详情</button></div></td>
             </tr>
@@ -90,7 +93,7 @@
           </tbody>
         </table>
       </section>
-      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-19条/共19条</span></div>
+      <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-20条/共20条</span></div>
     </section>
 
     <section id="nc-error" class="nc-panel">
@@ -258,7 +261,8 @@
         var projectNo = params.get('projectNo');
         var scheduleNo = params.get('scheduleNo');
         var orderNo = params.get('orderNo');
-        var matchValues = [businessNo, projectNo, scheduleNo, orderNo].filter(Boolean);
+        var sourceNo = params.get('sourceNo');
+        var matchValues = [businessNo, projectNo, scheduleNo, orderNo, sourceNo].filter(Boolean);
         if (matchValues.length) {
           document.getElementById('ncKeyword').value = matchValues[0];
           applyFilters();
@@ -278,6 +282,15 @@
       }
 
       function trafficTraceItems(data) {
+        if (data.source === '优惠减免承接' || data.sourceOrder || data.sourceCampaign || data.bearer) {
+          return [
+            ['来源订单', data.sourceOrder ? '<a class="link-primary" href="../sales/orders-detail.html?orderNo=' + encodeURIComponent(data.sourceOrder) + '&tab=finance">' + escapeHtml(data.sourceOrder) + '</a>' : escapeHtml(data.object || '-')],
+            ['来源活动/券', escapeHtml(data.sourceCampaign || '-')],
+            ['承担方', escapeHtml(data.bearer || '-'), true],
+            ['承接去向', escapeHtml(data.carryTarget || '-'), true],
+            ['承接单据', data.settlementNo ? '<a class="link-primary" href="finance-settlement-adjustment.html?adjustmentNo=' + encodeURIComponent(data.settlementNo) + '">' + escapeHtml(data.settlementNo) + '</a>' : escapeHtml(data.business || '-')]
+          ];
+        }
         if (data.source === '项目结算' || data.projectNo || data.projectGroup || data.projectOrder) {
           var settlementHref = buildHref('finance-settlement.html', {
             source: 'customProject',
@@ -386,7 +399,7 @@
       }
 
       function trafficTraceAttrs(data) {
-        return ' data-contract-no="' + escapeHtml(data.contractNo || '') + '" data-schedule-no="' + escapeHtml(data.scheduleNo || '') + '" data-settlement-no="' + escapeHtml(data.settlementNo || '') + '" data-bsp-source="' + escapeHtml(data.bspSource || '') + '" data-payment-no="' + escapeHtml(data.paymentNo || '') + '" data-adjustment-no="' + escapeHtml(data.adjustmentNo || '') + '" data-from-schedule="' + escapeHtml(data.fromSchedule || '') + '" data-to-schedule="' + escapeHtml(data.toSchedule || '') + '" data-order-no="' + escapeHtml(data.orderNo || '') + '" data-resource-type="' + escapeHtml(data.resourceType || '') + '" data-payment-node="' + escapeHtml(data.paymentNode || '') + '" data-cost-source="' + escapeHtml(data.costSource || '') + '" data-original-qty="' + escapeHtml(data.originalQty || '') + '" data-effective-qty="' + escapeHtml(data.effectiveQty || '') + '" data-change-no="' + escapeHtml(data.changeNo || '') + '" data-prepaid="' + escapeHtml(data.prepaid || '') + '" data-adjustment="' + escapeHtml(data.adjustment || '') + '" data-deduction="' + escapeHtml(data.deduction || '') + '" data-project-no="' + escapeHtml(data.projectNo || '') + '" data-project-group="' + escapeHtml(data.projectGroup || '') + '" data-project-order="' + escapeHtml(data.projectOrder || '') + '" data-customer="' + escapeHtml(data.customer || '') + '" data-acceptance-no="' + escapeHtml(data.acceptanceNo || '') + '" data-receivable="' + escapeHtml(data.receivable || '') + '" data-received="' + escapeHtml(data.received || '') + '" data-refund="' + escapeHtml(data.refund || '') + '" data-cost="' + escapeHtml(data.cost || '') + '" data-profit="' + escapeHtml(data.profit || '') + '"';
+        return ' data-contract-no="' + escapeHtml(data.contractNo || '') + '" data-schedule-no="' + escapeHtml(data.scheduleNo || '') + '" data-settlement-no="' + escapeHtml(data.settlementNo || '') + '" data-bsp-source="' + escapeHtml(data.bspSource || '') + '" data-payment-no="' + escapeHtml(data.paymentNo || '') + '" data-adjustment-no="' + escapeHtml(data.adjustmentNo || '') + '" data-from-schedule="' + escapeHtml(data.fromSchedule || '') + '" data-to-schedule="' + escapeHtml(data.toSchedule || '') + '" data-order-no="' + escapeHtml(data.orderNo || '') + '" data-source-order="' + escapeHtml(data.sourceOrder || '') + '" data-source-campaign="' + escapeHtml(data.sourceCampaign || '') + '" data-bearer="' + escapeHtml(data.bearer || '') + '" data-carry-target="' + escapeHtml(data.carryTarget || '') + '" data-resource-type="' + escapeHtml(data.resourceType || '') + '" data-payment-node="' + escapeHtml(data.paymentNode || '') + '" data-cost-source="' + escapeHtml(data.costSource || '') + '" data-original-qty="' + escapeHtml(data.originalQty || '') + '" data-effective-qty="' + escapeHtml(data.effectiveQty || '') + '" data-change-no="' + escapeHtml(data.changeNo || '') + '" data-prepaid="' + escapeHtml(data.prepaid || '') + '" data-adjustment="' + escapeHtml(data.adjustment || '') + '" data-deduction="' + escapeHtml(data.deduction || '') + '" data-project-no="' + escapeHtml(data.projectNo || '') + '" data-project-group="' + escapeHtml(data.projectGroup || '') + '" data-project-order="' + escapeHtml(data.projectOrder || '') + '" data-customer="' + escapeHtml(data.customer || '') + '" data-acceptance-no="' + escapeHtml(data.acceptanceNo || '') + '" data-receivable="' + escapeHtml(data.receivable || '') + '" data-received="' + escapeHtml(data.received || '') + '" data-refund="' + escapeHtml(data.refund || '') + '" data-cost="' + escapeHtml(data.cost || '') + '" data-profit="' + escapeHtml(data.profit || '') + '"';
       }
 
       function renderGrid(target, row) {

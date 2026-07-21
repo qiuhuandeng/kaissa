@@ -90,6 +90,7 @@
       children: [
         { title: "团期管控", href: "tour/schedules.html" },
         { title: "团期结算", href: "tour/fulfillment-cost.html" },
+        { title: "付款申请", href: "tour/fulfillment-payment-apply.html" },
         { title: "签证办理", href: "tour/visa-processing.html" },
         {
           title: "交通采购",
@@ -446,6 +447,10 @@
       const kind = url.searchParams.get("kind") || inferredKind;
       return "tour/resource-procurement-inventory.html?kind=" + (trafficProcurementKeys.has(kind) ? kind : "air");
     }
+    if (file === "tour/fulfillment-cost.html") {
+      const view = url.searchParams.get("view") || url.searchParams.get("tab") || "";
+      if (view === "payment" || view === "records") return "tour/fulfillment-payment-apply.html";
+    }
     return file;
   }
 
@@ -529,7 +534,7 @@
     "tour/visa-processing.html": { href: "tour/visa-processing.html", title: "签证办理" },
     "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
-    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
+    "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-payment-apply.html", title: "付款申请" },
     "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管控" },
     "tour/fulfillment-notice.html": { href: "tour/schedules.html", title: "团期管控" },
     "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
