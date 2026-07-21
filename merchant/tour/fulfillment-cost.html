@@ -45,7 +45,7 @@
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="costKeyword">团期/项目团/线路/客户/供应商</label><input id="costKeyword" type="search" placeholder="团期/项目团/线路/客户/供应商"></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="costType">成团类型</label><select id="costType"><option>全部类型</option><option>普通团期</option><option>邮轮团期</option><option>专列团期</option><option>研学团期</option><option>项目团</option></select></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="costStatus">结算状态</label><select id="costStatus"><option>全部状态</option><option>未提交</option><option>待审批</option><option>审批通过</option><option>待修改</option></select></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="costStatus">结算状态</label><select id="costStatus"><option>全部状态</option><option>领队费用待确认</option><option>未提交</option><option>待审批</option><option>审批通过</option><option>待修改</option></select></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="costOwner">负责人</label><select id="costOwner"><option>全部负责人</option><option>王芳</option><option>赵明</option><option>李铭</option><option>王强</option><option>郑华</option><option>陈刚</option><option>高明</option></select></div>
           <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">出发或回团日期范围</label><div class="date-range"><input type="date" aria-label="出发或回团开始日期"><span>至</span><input type="date" aria-label="出发或回团结束日期"></div></div>
           <div class="filter-actions"><button id="searchCosts" class="btn btn-secondary" type="button">搜索</button><button id="resetCosts" class="btn btn-secondary" type="button">重置</button></div>
@@ -682,6 +682,9 @@
           income: 386200,
           payment: '可申请付款',
           owner: '王芳',
+          leader: '张建国',
+          leaderType: '全职',
+          leaderFeeRule: '¥400/天',
           settlement: {
             status: '成本复核中',
             todo: '损耗待确认',
@@ -949,6 +952,9 @@
           income: 1906000,
           payment: '部分可申请',
           owner: '高明',
+          leader: '张建国',
+          leaderType: '全职',
+          leaderFeeRule: '¥400/天',
           projectNo: 'MICE-20250623-001',
           projectOrder: 'KSMICE20260704001',
           customer: '北京某科技有限公司',
@@ -1727,6 +1733,11 @@
         function button(label, attr, primary) {
           buttons.push('<button type="button"' + (primary ? ' class="table-action-primary"' : '') + ' ' + attr + '>' + label + '</button>');
         }
+        if (leaderCostNeedsConfirm(item)) {
+          button('确认领队费用', 'data-confirm-leader-cost-schedule="' + id + '"', true);
+          button('结算依据', 'data-open-settlement-basis="' + id + '"');
+          return '<div class="table-action">' + buttons.join('') + '</div>';
+        }
         if (status === '待审批' || status === '审批通过') {
           button('查看结算', 'data-view-settlement="' + id + '"', true);
         } else if (status === '待修改') {
@@ -1737,6 +1748,29 @@
           button('结算依据', 'data-open-settlement-basis="' + id + '"');
         }
         return '<div class="table-action">' + buttons.join('') + '</div>';
+      }
+
+      function isLeaderCostItem(item) {
+        return /导游|领队/.test(String(item && item[0] || ''));
+      }
+
+      function leaderCostIndex(schedule) {
+        return (schedule.items || []).findIndex(isLeaderCostItem);
+      }
+
+      function ensureLeaderCostItem(schedule) {
+        var info = settlementInfo(schedule);
+        if (!schedule || leaderCostIndex(schedule) >= 0 || info.returnStatus !== '已回团') return;
+        var days = isProjectSchedule(schedule) ? '10天' : '12天';
+        var price = isProjectSchedule(schedule) ? 9800 : 400;
+        var qty = isProjectSchedule(schedule) ? '2人' : days;
+        var amount = isProjectSchedule(schedule) ? 19600 : 4800;
+        schedule.items.push(['导游/领队', (schedule.leader || '待确认领队') + ' / ' + (schedule.leaderType || '全职'), qty, price, amount, '待确认', (schedule.leaderFeeRule || '按团期带团天数') + '，回团后确认']);
+      }
+
+      function leaderCostNeedsConfirm(schedule) {
+        var index = leaderCostIndex(schedule);
+        return index >= 0 && /待|部分|差异/.test(String(schedule.items[index][5] || ''));
       }
 
       function paymentStatusForSchedule(schedule) {
@@ -1782,14 +1816,16 @@
 
       function renderScheduleCosts() {
         schedules.forEach(function (item) {
+          ensureLeaderCostItem(item);
           item.payment = paymentStatusForSchedule(item);
         });
         scheduleCostRows.innerHTML = schedules.map(function (item) {
           var selectable = scheduleBatchSelectable(item);
           var flowStatus = settlementStatus(item);
           var approvalStatus = settlementApprovalStatus(item);
+          var leaderPendingStatus = leaderCostNeedsConfirm(item) ? '领队费用待确认' : '';
           var checkbox = '<input type="checkbox" data-cost-select="' + escapeHtml(item.id) + '"' + (selectable ? '' : ' disabled') + (activeBatchCostIds.indexOf(item.id) >= 0 && selectable ? ' checked' : '') + '>';
-          return '<tr data-tab-status="' + escapeHtml([approvalStatus, flowStatus, item.status].join(' ')) + '">' +
+          return '<tr data-tab-status="' + escapeHtml([approvalStatus, flowStatus, item.status, leaderPendingStatus].join(' ')) + '">' +
             '<td class="settlement-cost-select-cell">' + checkbox + '</td>' +
             '<td class="settlement-cost-object-cell">' + scheduleRouteCell(item) + '</td>' +
             '<td class="settlement-cost-date-cell">' + datePeopleCell(item) + '</td>' +
@@ -2389,6 +2425,10 @@
           return;
         }
         costItemRows.innerHTML = schedule.items.map(function (item, index) {
+          var leaderCost = isLeaderCostItem(item);
+          var action = leaderCost
+            ? '<button type="button" class="table-action-primary" data-confirm-leader-cost="' + index + '">' + (item[5] === '已确认' ? '查看费用' : '确认费用') + '</button><button type="button" data-edit-cost-item="' + index + '">编辑</button>'
+            : '<button type="button" data-edit-cost-item="' + index + '">编辑</button><button type="button" class="danger" data-remove-cost-item="' + index + '">删除</button>';
           return '<tr>' +
             '<td>' + escapeHtml(item[0]) + '</td>' +
             '<td>' + escapeHtml(item[1]) + '</td>' +
@@ -2397,9 +2437,22 @@
             '<td class="amount-strong">' + money(item[4]) + '</td>' +
             '<td>' + tag(item[5]) + '</td>' +
             '<td>' + escapeHtml(item[6]) + '</td>' +
-            '<td><div class="table-action"><button type="button" data-edit-cost-item="' + index + '">编辑</button><button type="button" class="danger" data-remove-cost-item="' + index + '">删除</button></div></td>' +
+            '<td><div class="table-action">' + action + '</div></td>' +
             '</tr>';
         }).join('');
+      }
+
+      function confirmLeaderCost(schedule, index) {
+        var item = schedule && schedule.items && schedule.items[index];
+        if (!item) return;
+        item[5] = '已确认';
+        item[6] = (schedule.leaderType === '外聘' ? '外聘领队费用已确认，生成应付草稿' : '全职领队费用已确认，工资补贴承接');
+        schedule.actual = schedule.items.reduce(function (sum, row) { return sum + Number(row[4] || 0); }, 0);
+        schedule.status = '实际成本确认';
+        schedule.statusClass = 'tag tag-green';
+        renderCostItems(schedule);
+        renderScheduleCosts();
+        openActionResult('领队费用已确认', schedule.id + ' 的导游/领队成本项已确认，金额 ' + money(item[4]) + '。', schedule.leaderType === '外聘' ? '外聘领队进入财务应付草稿，后续由财务付款。' : '全职领队标记为工资补贴承接，原型阶段不展开工资单。');
       }
 
       function editCostItem(index) {
@@ -4198,6 +4251,8 @@
         var openPaymentBatchButton = event.target.closest('[data-open-payment-batch]');
         var openPaymentRecordButton = event.target.closest('[data-open-payment-record]');
         var closeButton = event.target.closest('[data-close-modal]');
+        var confirmLeaderCostSchedule = event.target.closest('[data-confirm-leader-cost-schedule]');
+        var confirmLeaderCostItem = event.target.closest('[data-confirm-leader-cost]');
         var editItem = event.target.closest('[data-edit-cost-item]');
         var removeItem = event.target.closest('[data-remove-cost-item]');
         var toastButton = event.target.closest('[data-toast]');
@@ -4253,6 +4308,16 @@
         }
         if (toastButton) {
           openActionResult('操作已打开', toastButton.dataset.toast || '已打开相关资料。', '原型中用于表达附件查看和维护入口。');
+          return;
+        }
+        if (confirmLeaderCostSchedule) {
+          var schedule = findSchedule(confirmLeaderCostSchedule.dataset.confirmLeaderCostSchedule);
+          ensureLeaderCostItem(schedule);
+          confirmLeaderCost(schedule, leaderCostIndex(schedule));
+          return;
+        }
+        if (confirmLeaderCostItem && activeSchedule) {
+          confirmLeaderCost(activeSchedule, Number(confirmLeaderCostItem.dataset.confirmLeaderCost));
           return;
         }
         if (editItem) {

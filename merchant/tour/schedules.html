@@ -57,6 +57,17 @@
             <option value="研学营期">营期</option>
           </select>
         </div>
+        <div class="filter-item filter-item-sm filter-item-status">
+          <label class="sr-only" for="scheduleGapFilter">关键缺口</label>
+          <select id="scheduleGapFilter">
+            <option value="全部缺口">全部缺口</option>
+            <option value="领队待处理">领队待处理</option>
+            <option value="领队未安排">领队未安排</option>
+            <option value="证件资料缺失">证件资料缺失</option>
+            <option value="交通确认缺失">交通确认缺失</option>
+            <option value="成本未确认">成本未确认</option>
+          </select>
+        </div>
         <div class="filter-actions">
           <button id="searchSchedules" class="btn btn-secondary" type="button">搜索</button>
           <button id="resetSchedules" class="btn btn-secondary" type="button">重置</button>
@@ -83,7 +94,9 @@
       <button class="tab-item active" type="button" data-filter-value="全部">全部</button>
       <button class="tab-item" type="button" data-filter-value="待发布">待发布</button>
       <button class="tab-item" type="button" data-filter-value="销售中">销售中</button>
-      <button class="tab-item" type="button" data-filter-value="出行中">出行中</button>
+      <button class="tab-item" type="button" data-filter-value="出发准备">出发准备</button>
+      <button class="tab-item" type="button" data-filter-value="出团中">出团中</button>
+      <button class="tab-item" type="button" data-filter-value="已回团">已回团</button>
       <button class="tab-item" type="button" data-filter-value="已结束">已结束</button>
     </nav>
     <div class="list-surface-tabbar-actions schedule-tabbar-actions">
@@ -1673,7 +1686,7 @@
   <div id="executionLeaderDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal outbound-leader-drawer" role="dialog" aria-modal="true" aria-labelledby="executionLeaderTitle">
       <div class="modal-header">
-        <div id="executionLeaderTitle" class="modal-title">安排领队</div>
+        <div id="executionLeaderTitle" class="modal-title">配领队</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-execution-layer>×</button>
       </div>
       <div class="modal-body">
@@ -1682,7 +1695,7 @@
           <strong>匹配规则</strong>
           <span id="executionLeaderRule"></span>
         </section>
-        <div id="executionLeaderOptions" class="outbound-leader-list" role="radiogroup" aria-label="可安排领队"></div>
+        <div id="executionLeaderOptions" class="outbound-leader-list" role="radiogroup" aria-label="可配领队"></div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="executionLeaderMeetTime">集合时间</label>
@@ -1699,7 +1712,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="saveScheduleLeader" class="btn btn-primary" type="button">确认安排</button>
+        <button id="markScheduleLeaderUnavailable" class="btn btn-secondary" type="button">登记无法出团</button>
+        <button id="saveScheduleLeader" class="btn btn-primary" type="button">确认派团</button>
         <button class="btn btn-secondary" type="button" data-close-execution-layer>取消</button>
       </div>
     </div>
@@ -1913,6 +1927,7 @@
       var departStartDate = document.getElementById('departStartDate');
       var departEndDate = document.getElementById('departEndDate');
       var batchTypeFilter = document.getElementById('batchTypeFilter');
+      var scheduleGapFilter = document.getElementById('scheduleGapFilter');
       var copyScheduleText = document.getElementById('copyScheduleText');
       var cancelScheduleText = document.getElementById('cancelScheduleText');
       var cancelReason = document.getElementById('cancelReason');
@@ -1965,6 +1980,8 @@
       var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
       var routeFilterType = pageParams.get('type') || '';
       var routeFilterScheduleNos = (pageParams.get('scheduleNos') || '').split(/[,，\s]+/).map(function (item) { return item.trim(); }).filter(Boolean);
+      var routeFilterLeaderStatus = pageParams.get('leaderStatus') || '';
+      if (['待线下确认', '已确认', '已安排'].indexOf(routeFilterLeaderStatus) >= 0) routeFilterLeaderStatus = '已配领队';
       var currentMode = 'create';
       var currentSchedule = null;
       var sequence = 9001;
@@ -2514,8 +2531,10 @@
       function scheduleMainStage(item) {
         var stage = executionStage(item);
         var saleStatus = item.saleStatus || '';
-        if (saleStatus === '已取消' || saleStatus === '已关闭' || item.approvalStatus === '已驳回' || stage === '已回团') return '已结束';
-        if (stage === '出发准备' || stage === '出团中') return '出行中';
+        if (saleStatus === '已取消' || saleStatus === '已关闭' || item.approvalStatus === '已驳回' || item.executionStatus === '已归档') return '已结束';
+        if (stage === '已回团') return '已回团';
+        if (stage === '出团中') return '出团中';
+        if (stage === '出发准备') return '出发准备';
         if (saleStatus === '开放报名' || saleStatus === '售罄' || saleStatus === '已截止') return '销售中';
         return '待发布';
       }
@@ -2550,15 +2569,17 @@
       }
 
       function leaderStatusText(item) {
+        if (['已安排', '已确认', '待线下确认'].indexOf(item.leaderStatus) >= 0) return '已配领队';
         if (item.leaderStatus) return item.leaderStatus;
-        if (item.leader && item.leader !== '待分配') return '已安排';
-        if (executionStage(item) === '出发准备' || executionStage(item) === '出团中') return '待安排';
+        if (item.leader && item.leader !== '待分配') return '已配领队';
+        if (executionStage(item) === '出发准备' || executionStage(item) === '出团中') return '未安排';
         return '未到节点';
       }
 
       function leaderStatusClass(status) {
-        if (/已/.test(status)) return 'tag tag-green';
+        if (/已配/.test(status)) return 'tag tag-green';
         if (/未到/.test(status)) return 'tag tag-gray';
+        if (/无法/.test(status)) return 'tag tag-red';
         return 'tag tag-orange';
       }
 
@@ -2574,7 +2595,7 @@
         if (/待|异常|缺|补|船票/.test(docStatus) && !/未到/.test(docStatus)) todos.push({ key: 'documents', label: '证件签证异常', className: documentsStatusClass(docStatus), action: '处理证件' });
         if (['待确认', '部分确认', '处理中', '异常'].indexOf(resourceStatus) > -1) todos.push({ key: 'resource', label: '资源票务待确认', className: resourceStatusClass(resourceStatus), action: '确认资源' });
         if (noticeStatus === '待发送' || noticeStatus === '部分确认') todos.push({ key: 'notice', label: '通知待发', className: noticeStatusClass(noticeStatus), action: '发通知' });
-        if (leaderStatus === '待安排') todos.push({ key: 'leader', label: '领队待安排', className: leaderStatusClass(leaderStatus), action: '安排领队' });
+        if (leaderStatus === '未安排' || leaderStatus === '无法出团') todos.push({ key: 'leader', label: '领队未安排', className: leaderStatusClass(leaderStatus), action: '配领队' });
         if (stage === '已回团' && item.settlementStatus !== '已结算') todos.push({ key: 'settlement', label: '成本待复核', className: 'tag tag-orange', action: '去成本结算' });
         return todos;
       }
@@ -3429,7 +3450,7 @@
             ['酒店住宿', '欧洲酒店集团', '8晚×42间，VIP单间待确认', '出发前20天', '待确认', '成本待确认', '确认'],
             ['会务活动', '巴黎会议中心', '欢迎会、茶歇、颁奖晚宴3项', '出发前18天', '待确认', '成本待确认', '追加'],
             ['地接与用车', '欧洲地接ABC', '9天×2台大巴，中文导游待确认', '出发前15天', '部分确认', '成本待确认', '确认'],
-            ['领队服务', '凯撒领队中心', '双语领队1名，随团工作人员2名', '出发前10天', '待安排', '应付待生成', '安排']
+            ['领队服务', '凯撒领队中心', '双语领队1名，随团工作人员2名', '出发前10天', '未安排', '应付待生成', '配领队']
           ];
         }
         if (normalizeBatchType(item.batchType) === '邮轮航次') {
@@ -3537,32 +3558,39 @@
         var type = normalizeBatchType(item.batchType);
         if (type === '邮轮航次') {
           return [
-            ['王导 139****2200', '邮轮经验28航次 | 港口协调 | 满意度98%', '推荐', 'tag tag-green', true, false],
-            ['赵导 138****6633', '欧洲港口经验16航次', '可用', 'tag tag-blue', false, false]
+            ['王强 136****0198', '全职 | 邮轮/东南亚 | 英语/日语 | 导游证2028-03-20 | 评分4.9', '在途', 'tag tag-gray', false, true],
+            ['张建国 138****4521', '全职 | 欧洲/邮轮 | 英语/法语 | 导游证2027-05-31 | 评分4.8', '推荐', 'tag tag-green', true, false],
+            ['赵明 137****5612', '外聘 | 专列/国内 | 英语 | 协议2026-12-31 | 评分4.7', '目的地不匹配', 'tag tag-gray', false, true]
           ];
         }
         if (type === '专列班期') {
           return [
-            ['郑导 139****9900', '专列经验18列 | 西北线 | 满意度98%', '推荐', 'tag tag-green', true, false],
-            ['黄导 138****6688', '西北线经验24团', '可用', 'tag tag-blue', false, false],
-            ['张导 137****7700', '同日其他团占用', '冲突', 'tag tag-gray', false, true]
+            ['赵明 137****5612', '外聘 | 专列/国内 | 英语 | ¥500/天 | 评分4.7', '推荐', 'tag tag-green', true, false],
+            ['张建国 138****4521', '全职 | 欧洲/邮轮 | 英语/法语 | 评分4.8', '目的地不匹配', 'tag tag-gray', false, true],
+            ['李梅 139****8027', '外聘 | 欧洲/研学 | 导游证2026-07-15', '证件预警', 'tag tag-gray', false, true]
           ];
         }
         return [
-          ['李导 138****8800', '欧洲线经验42团 | 英语/法语 | 满意度98%', '推荐', 'tag tag-green', true, false],
-          ['林导 136****7711', '欧洲线经验26团 | 英语 | 满意度96%', '可用', 'tag tag-blue', false, false]
+          ['张建国 138****4521', '全职 | 欧洲/邮轮 | 英语/法语 | 导游证2027-05-31 | 评分4.8', '推荐', 'tag tag-green', true, false],
+          ['李梅 139****8027', '外聘 | 欧洲/研学 | 英语/德语 | ¥400/天 | 评分4.6', '证件预警', 'tag tag-gray', false, true],
+          ['王强 136****0198', '全职 | 邮轮/东南亚 | 同期团占用', '档期冲突', 'tag tag-gray', false, true]
         ];
       }
 
       function fillExecutionLeaderDrawer(item, actionTitle) {
         currentExecutionSchedule = item;
         var type = normalizeBatchType(item.batchType);
-        document.getElementById('executionLeaderTitle').textContent = actionTitle || (type === '邮轮航次' ? '安排邮轮管家' : type === '专列班期' ? '安排随车领队' : '安排领队');
+        var status = leaderStatusText(item);
+        document.getElementById('executionLeaderTitle').textContent = actionTitle || (type === '邮轮航次' ? '配邮轮管家' : type === '专列班期' ? '配随车领队' : '配领队');
         document.getElementById('executionLeaderSummary').textContent = scheduleExecutionSummary(item);
-        document.getElementById('executionLeaderRule').textContent = type === '邮轮航次' ? '优先匹配邮轮登船经验、港口协调能力和岸上观光供应商熟悉度。' : type === '专列班期' ? '优先匹配专列带团经验、铁路站点协调能力和沿途地接熟悉度。' : '优先匹配线路经验、语言能力、出发日期无冲突和满意度。';
+        document.getElementById('executionLeaderRule').textContent = type === '邮轮航次' ? '按邮轮经验、档期、证照和港口协调能力排序' : type === '专列班期' ? '按专列经验、档期、证照和站点协调能力排序' : '按目的地、语言、档期、证照和评分排序';
         document.getElementById('executionLeaderMeetTime').value = (item.depart || businessToday) + 'T07:30';
         document.getElementById('executionLeaderMeetPlace').value = type === '专列班期' ? '始发站团队集合区' : type === '邮轮航次' ? '邮轮码头团队集合区' : '北京首都机场T3航站楼F区';
-        document.getElementById('executionLeaderRemark').value = '请提前核对名单、证件资料、交通资源和出团通知。';
+        document.getElementById('executionLeaderRemark').value = /无法出团/.test(actionTitle || '') ? '' : (status === '已配领队' ? '已配领队，如需调整请重新选择领队并保存。' : '选择领队后保存，团期状态直接更新为已配领队。');
+        document.getElementById('executionLeaderRemark').placeholder = /无法出团/.test(actionTitle || '') ? '请填写无法出团原因' : '给领队的补充说明';
+        document.getElementById('saveScheduleLeader').textContent = status === '已配领队' ? '保存更换' : '保存配领队';
+        document.getElementById('saveScheduleLeader').hidden = /无法出团/.test(actionTitle || '');
+        document.getElementById('markScheduleLeaderUnavailable').hidden = !/无法出团/.test(actionTitle || '');
         document.getElementById('executionLeaderOptions').innerHTML = leaderOptionsFor(item).map(function (option) {
           return '<label class="outbound-leader-card' + (option[4] ? ' selected' : '') + (option[5] ? ' disabled' : '') + '"><input type="radio" name="scheduleLeaderOption" value="' + escapeHtml(option[0]) + '"' + (option[4] ? ' checked' : '') + (option[5] ? ' disabled' : '') + '><span><strong>' + escapeHtml(option[0]) + '</strong><em>' + escapeHtml(option[1]) + '</em></span><b class="' + escapeHtml(option[3]) + '">' + escapeHtml(option[2]) + '</b></label>';
         }).join('');
@@ -3599,7 +3627,7 @@
       function renderScheduleAiRisk() {
         var risks = batchActionItems().reduce(function (items, item) {
           executionTodoItems(item).forEach(function (todo) {
-            items.push([item.code, todo.label, todo.action, todo.key === 'resource' ? '优先核对供应商确认与交通票务' : '按当前待办处理']);
+            items.push([item.code, todo.label, todo.action, todo.key === 'resource' ? '优先核对供应商确认与交通票务' : '按关键缺口处理']);
           });
           return items;
         }, []);
@@ -3880,7 +3908,7 @@
             channelSeats: {},
             price: '¥1,906,000',
             planner: '陈刚',
-            leader: '待确认',
+            leader: '张建国 138****4521',
             saleStatus: '客户专属',
             executionStatus: '出发准备',
             settlementStatus: '预估成本',
@@ -3890,7 +3918,7 @@
             documentsStatus: '资料未收',
             resourceStatus: '交通酒店待确认',
             noticeStatus: '未生成',
-            leaderStatus: '待安排',
+            leaderStatus: '已配领队',
             groupMode: '项目团',
             privateCustomer: '北京某科技有限公司',
             customProjectNo: 'MICE-20250623-001',
@@ -3901,6 +3929,35 @@
             tabStatus: '项目团 出发准备 预估成本',
             remark: '由单团项目确认成团生成，不进入公开渠道售卖',
             deadline: '2025-08-31'
+          },
+          {
+            code: 'EU20260705002',
+            product: '西欧四国经典游',
+            route: 'B线 德法瑞11天',
+            batchType: '普通团期',
+            depart: '2026-07-06',
+            back: '2026-07-16',
+            stock: 28,
+            sold: 24,
+            left: 4,
+            unit: '人',
+            channelSeats: { 门: 8, 携: 8, 猪: 4, 同: 2, 直: 4, 协: 2 },
+            price: '¥16,800',
+            planner: '王芳',
+            leader: '待分配',
+            saleStatus: '已截止',
+            executionStatus: '出发准备',
+            settlementStatus: '预估成本',
+            status: '已截止',
+            costStatus: '预估成本',
+            rosterStatus: '待补资料',
+            documentsStatus: '资料待补',
+            resourceStatus: '部分确认',
+            noticeStatus: '未生成',
+            leaderStatus: '未安排',
+            tabStatus: '已截止 出发准备 预估成本',
+            remark: '样例：出发准备，领队未安排，用于直接打开配领队抽屉',
+            deadline: '2026-06-29'
           },
           {
             code: 'EU20260701001',
@@ -3916,7 +3973,7 @@
             channelSeats: { 门: 8, 携: 10, 猪: 4, 同: 3, 直: 4, 协: 3 },
             price: '¥12,800',
             planner: '周伟',
-            leader: '张敏',
+            leader: '张建国 138****4521',
             saleStatus: '已截止',
             executionStatus: '出团中',
             settlementStatus: '预估成本',
@@ -3926,9 +3983,9 @@
             documentsStatus: '资料完整',
             resourceStatus: '已确认',
             noticeStatus: '已发送',
-            leaderStatus: '已安排',
+            leaderStatus: '已配领队',
             tabStatus: '已截止 出团中 预估成本',
-            remark: '样例：出团中，用于查看出行中团期状态',
+            remark: '样例：出团中，用于查看团期执行状态',
             deadline: '2026-06-24'
           },
           {
@@ -3945,7 +4002,7 @@
             channelSeats: { 门: 20, 携: 24, 猪: 10, 同: 8, 直: 10, 协: 8 },
             price: '¥13,600',
             planner: '赵明',
-            leader: '李娜',
+            leader: '王强 136****0198',
             saleStatus: '已截止',
             executionStatus: '已回团',
             settlementStatus: '结算中',
@@ -3955,7 +4012,7 @@
             documentsStatus: '资料完整',
             resourceStatus: '已确认',
             noticeStatus: '已发送',
-            leaderStatus: '已安排',
+            leaderStatus: '已配领队',
             tabStatus: '已截止 已回团 结算中',
             remark: '样例：已回团，用于查看成本结算按钮',
             deadline: '2026-06-01'
@@ -3984,7 +4041,7 @@
             documentsStatus: '实名异常',
             resourceStatus: '异常',
             noticeStatus: '未到节点',
-            leaderStatus: '待安排',
+            leaderStatus: '未安排',
             tabStatus: '开放报名 未出团 异常 未维护成本',
             remark: '样例：销售中但有风险，用于验证风险状态筛选',
             deadline: '2026-07-28'
@@ -4145,6 +4202,17 @@
         return 'fulfillment-cost.html?' + query.toString();
       }
 
+      function costSettlementHref(item) {
+        if (isProjectGroup(item)) return projectCostHref(item);
+        var query = new URLSearchParams();
+        if (item.code) query.set('scheduleNo', item.code);
+        query.set('type', scheduleTypeKey(item));
+        query.set('queue', 'settlement');
+        query.set('company', item.company || '福建凯撒');
+        query.set('ownerOrg', item.ownerOrg || productOwnerOrg(item.product));
+        return 'fulfillment-cost.html?' + query.toString();
+      }
+
       function mutedLine(text) {
         return '<span class="text-muted schedule-route-name">' + escapeHtml(text) + '</span>';
       }
@@ -4278,12 +4346,16 @@
         var trafficSummary = trafficConfirmSummary(item);
         var mainStage = scheduleMainStage(item);
         var settlementStatus = item.settlementStatus || item.costStatus || '';
+        var leaderStatus = leaderStatusText(item);
         if (stock && sold > stock) gaps.push({ category: '名额超售', text: '名额超售' + (sold - stock) + (item.unit || '人') });
         if (orderSummary.pendingPay > 0) gaps.push({ category: '尾款未收', text: '尾款未收' + orderSummary.pendingPay + '单' });
         if (orderSummary.rosterPending > 0) gaps.push({ category: '证件资料缺失', text: '证件资料缺' + orderSummary.rosterPending + '单' });
         if (trafficSummary.missing > 0) gaps.push({ category: '交通确认缺失', text: trafficSummary.label.name + '缺' + trafficSummary.missing + trafficSummary.label.unit });
-        if ((mainStage === '出行中' || mainStage === '已结束') && settlementStatus && settlementStatus !== '已结算' && settlementStatus !== '成本已确认') {
-          gaps.push({ category: '成本未确认', text: mainStage === '已结束' ? '成本结算未完成' : '成本未确认' });
+        if ((mainStage === '出发准备' || mainStage === '出团中') && (leaderStatus === '未安排' || leaderStatus === '无法出团')) {
+          gaps.push({ category: '领队未安排', text: '领队未安排' });
+        }
+        if ((mainStage === '出发准备' || mainStage === '出团中' || mainStage === '已回团') && settlementStatus && settlementStatus !== '已结算' && settlementStatus !== '成本已确认') {
+          gaps.push({ category: '成本未确认', text: mainStage === '已回团' ? '成本结算未完成' : '成本未确认' });
         }
         if (!gaps.length) gaps.push({ category: '无缺口', text: '无关键缺口' });
         return gaps;
@@ -4411,14 +4483,16 @@
       }
 
       function ownerCell(item) {
-        var leader = item.leader || leaderStatusText(item) || '-';
+        var status = leaderStatusText(item);
+        var leader = item.leader && item.leader !== '待分配' ? item.leader : '未安排';
         return '<span class="schedule-product-name">' + escapeHtml(item.planner || '-') + '</span>' +
-          mutedLine('领队 ' + leader);
+          mutedLine('领队 ' + leader + ' / ' + status);
       }
 
       function mainStageClass(stage) {
         if (stage === '销售中') return 'tag tag-blue';
-        if (stage === '出行中') return 'tag tag-orange';
+        if (stage === '出发准备' || stage === '出团中') return 'tag tag-orange';
+        if (stage === '已回团') return 'tag tag-purple';
         if (stage === '已结束') return 'tag tag-green';
         return 'tag tag-gray';
       }
@@ -4430,10 +4504,11 @@
         if (isProjectGroup(item)) return item.customProjectNo ? '来源 ' + item.customProjectNo : '单团项目';
         if (stage === '待发布') return priceStatusText(item) + ' · 资源' + resourceStatusText(item);
         if (stage === '销售中') return saleText + ' · 余 ' + stockNumber(item.left) + (item.unit || '人');
-        if (stage === '出行中') return execution + ' · ' + resourceStatusText(item);
+        if (stage === '出发准备') return '准备中 · ' + resourceStatusText(item);
+        if (stage === '出团中') return '已出发 · ' + resourceStatusText(item);
+        if (stage === '已回团') return item.settlementStatus || '待成本结算';
         if (item.saleStatus === '已取消') return '已取消';
         if (item.saleStatus === '已关闭') return '已关闭';
-        if (execution === '已回团') return '已回团';
         return saleText;
       }
 
@@ -4447,11 +4522,18 @@
         return '<button class="dropdown-item' + (danger ? ' danger' : '') + '" type="button" ' + attr + '>' + escapeHtml(label) + '</button>';
       }
 
+      function leaderQuickAction(item) {
+        var status = leaderStatusText(item);
+        if (status === '未安排' || status === '无法出团') return { label: '配领队', attr: 'data-open-execution-leader' };
+        return null;
+      }
+
       function moreActionsHtml(item) {
         var mainStage = scheduleMainStage(item);
         var objectName = scheduleObjectName(item.batchType);
         var execution = executionStage(item);
         var items = [];
+        var leaderAction = leaderQuickAction(item);
         if (mainStage === '待发布') {
           items.push(dropdownItem('编辑' + objectName, 'data-edit-schedule'));
           items.push(dropdownItem('确认价格', 'data-open-schedule-price'));
@@ -4466,17 +4548,26 @@
           items.push(dropdownItem('名单', 'data-open-roster'));
           items.push(dropdownItem('复制' + objectName, 'data-copy-schedule'));
           items.push(dropdownItem('取消' + objectName, 'data-cancel-schedule', true));
-        } else if (mainStage === '出行中') {
-          if (execution === '出团中') {
-            items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
-            items.push(dropdownItem('标记已回团', 'data-mark-returned'));
-          } else {
-            items.push(dropdownItem('证件/签证', 'data-open-documents'));
-            items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
-            items.push(dropdownItem('标记已出发', 'data-mark-departed'));
+        } else if (mainStage === '出发准备') {
+          items.push(dropdownItem('证件/签证', 'data-open-documents'));
+          items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
+          if (leaderAction) items.push(dropdownItem(leaderAction.label, leaderAction.attr));
+          if (leaderStatusText(item) === '已配领队') {
+            items.push(dropdownItem('更换领队', 'data-open-execution-leader'));
+            items.push(dropdownItem('登记无法出团', 'data-open-execution-leader', true));
           }
+          items.push(dropdownItem('标记已出发', 'data-mark-departed'));
+        } else if (mainStage === '出团中') {
+          items.push(dropdownItem('名单', 'data-open-roster'));
+          items.push(dropdownItem('资源/票务确认', 'data-open-execution-resource'));
+          items.push(dropdownItem('更换领队', 'data-open-execution-leader'));
+        } else if (mainStage === '已回团') {
+          items.push(dropdownItem('结算依据', 'data-open-cost-settlement'));
+          items.push(dropdownItem('出团资料', 'data-open-roster'));
+          items.push(dropdownItem('复制团期', 'data-copy-schedule'));
         } else if (mainStage === '已结束') {
           if (item.saleStatus !== '已取消') items.push(dropdownItem('价格记录', 'data-open-schedule-price'));
+          items.push(dropdownItem('结算记录', 'data-open-cost-settlement'));
           items.push(dropdownItem('复制团期', 'data-copy-schedule'));
         } else {
           items.push(dropdownItem('编辑团期', 'data-edit-schedule'));
@@ -4500,11 +4591,20 @@
           primaryAction = '<button class="table-action-primary" type="button" data-edit-schedule>编辑</button>';
           secondaryAction = '<button type="button" data-open-schedule-price>确认价格</button>';
         } else if (mainStage === '销售中') {
-          primaryAction = '<button class="table-action-primary" type="button" data-open-schedule-price>调价</button>';
+          primaryAction = '<button class="table-action-primary" type="button" data-open-schedule-orders>查看订单</button>';
           secondaryAction = '<button type="button" data-open-stock-adjust>调库存</button>';
-        } else if (mainStage === '出行中') {
-          primaryAction = '<a class="table-action-primary" href="' + href + '">详情</a>';
-          secondaryAction = '<button type="button" data-open-roster>名单</button>';
+        } else if (mainStage === '出发准备') {
+          primaryAction = '<a class="table-action-primary" href="' + href + '">出团准备</a>';
+          var leaderAction = leaderQuickAction(item);
+          secondaryAction = leaderAction
+            ? '<button type="button" ' + leaderAction.attr + '>' + leaderAction.label + '</button>'
+            : '<button type="button" data-open-roster>名单</button>';
+        } else if (mainStage === '出团中') {
+          primaryAction = '<a class="table-action-primary" href="' + href + '">执行详情</a>';
+          secondaryAction = '<button type="button" data-mark-returned>标记已回团</button>';
+        } else if (mainStage === '已回团') {
+          primaryAction = '<a class="table-action-primary" href="' + costSettlementHref(item) + '">进入团期成本</a>';
+          secondaryAction = '<a href="' + href + '">详情</a>';
         } else if (mainStage === '已结束') {
           primaryAction = '<a class="table-action-primary" href="' + href + '">详情</a>';
           secondaryAction = '';
@@ -4538,12 +4638,21 @@
         var productQuery = productNameFilter.value.trim();
         var codeQueries = scheduleCodeFilter.value.trim().toUpperCase().split(/[,，\s]+/).filter(Boolean);
         var batchType = batchTypeFilter.value;
+        var gap = scheduleGapFilter.value;
         if (productQuery && (item.product + ' ' + (item.route || '')).indexOf(productQuery) === -1) return false;
         if (codeQueries.length && !codeQueries.some(function (query) { return item.code.toUpperCase().indexOf(query) >= 0; })) return false;
         if (batchType && batchType !== '全部' && item.batchType !== batchType) return false;
         if (departStartDate.value && item.depart < departStartDate.value) return false;
         if (departEndDate.value && item.depart > departEndDate.value) return false;
         if (activeTabValue && activeTabValue !== '全部' && scheduleMainStage(item) !== activeTabValue) return false;
+        if (gap === '领队待处理') {
+          var leaderStatus = leaderStatusText(item);
+          var inLeaderStage = ['出发准备', '出团中'].indexOf(scheduleMainStage(item)) >= 0;
+          if (!inLeaderStage || ['未安排', '无法出团'].indexOf(leaderStatus) < 0) return false;
+        } else if (gap && gap !== '全部缺口') {
+          if (keyGapLabels(item).indexOf(gap) < 0) return false;
+        }
+        if (routeFilterLeaderStatus && leaderStatusText(item) !== routeFilterLeaderStatus) return false;
         return true;
       }
 
@@ -6461,8 +6570,10 @@
         var rosterButton = event.target.closest('[data-open-roster]');
         var documentsButton = event.target.closest('[data-open-documents]');
         var executionResourceButton = event.target.closest('[data-open-execution-resource]');
+        var executionLeaderButton = event.target.closest('[data-open-execution-leader]');
         var markDepartedButton = event.target.closest('[data-mark-departed]');
         var markReturnedButton = event.target.closest('[data-mark-returned]');
+        var costSettlementButton = event.target.closest('[data-open-cost-settlement]');
 
         if (moreButton) {
           event.preventDefault();
@@ -6566,6 +6677,13 @@
           openExecutionDrawer(item, 'resource', actionTitleFromControl(executionResourceButton, '资源/票务确认'));
           return;
         }
+        if (executionLeaderButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          openExecutionDrawer(item, 'leader', actionTitleFromControl(executionLeaderButton, '配领队'));
+          return;
+        }
         if (markDepartedButton && item) {
           event.preventDefault();
           event.stopPropagation();
@@ -6586,6 +6704,13 @@
           item.tabStatus = stateTokens(item);
           renderRows();
           showScheduleExecutionResult('已将 ' + item.code + ' 标记为已回团，可进入成本结算复核。');
+          return;
+        }
+        if (costSettlementButton && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          navigateTo(costSettlementHref(item));
           return;
         }
         if (resourceActionButton) {
@@ -6941,11 +7066,27 @@
         if (!currentExecutionSchedule) return;
         var selected = document.querySelector('input[name="scheduleLeaderOption"]:checked');
         if (selected) currentExecutionSchedule.leader = selected.value;
-        currentExecutionSchedule.leaderStatus = '已安排';
+        currentExecutionSchedule.leaderStatus = '已配领队';
         currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
         window.caesarUI.closeLayer(executionLeaderDrawer);
         renderRows();
-        showScheduleExecutionResult('领队安排已保存。');
+        showScheduleExecutionResult('领队已配置，团期出发准备状态已更新。');
+      });
+
+      document.getElementById('markScheduleLeaderUnavailable').addEventListener('click', function () {
+        if (!currentExecutionSchedule) return;
+        var reason = document.getElementById('executionLeaderRemark').value.trim();
+        if (!reason) {
+          document.getElementById('executionLeaderRemark').focus();
+          if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请先填写无法出团原因', { type: 'warning' });
+          return;
+        }
+        currentExecutionSchedule.leaderStatus = '无法出团';
+        currentExecutionSchedule.leader = '待分配';
+        currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
+        window.caesarUI.closeLayer(executionLeaderDrawer);
+        renderRows();
+        showScheduleExecutionResult('已登记领队无法出团，请重新配领队。');
       });
 
       document.getElementById('executionLeaderOptions').addEventListener('change', function (event) {
@@ -6960,7 +7101,7 @@
 
       document.getElementById('createScheduleRiskTasks').addEventListener('click', function () {
         window.caesarUI.closeLayer(scheduleAiRiskModal);
-        showScheduleExecutionResult('AI风险已生成团期待办，可通过“当前待办”筛选继续处理。');
+        showScheduleExecutionResult('AI风险已生成团期待办，可通过“关键缺口”筛选继续处理。');
       });
 
       document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (button) {
@@ -6975,15 +7116,18 @@
       });
 
       document.getElementById('searchSchedules').addEventListener('click', applyFilters);
+      scheduleGapFilter.addEventListener('change', applyFilters);
       document.getElementById('resetSchedules').addEventListener('click', function () {
         routeFilterProduct = '';
         routeFilterType = '';
         routeFilterScheduleNos = [];
+        routeFilterLeaderStatus = '';
         productNameFilter.value = '';
         scheduleCodeFilter.value = '';
         departStartDate.value = '';
         departEndDate.value = '';
         batchTypeFilter.selectedIndex = 0;
+        scheduleGapFilter.value = '全部缺口';
         activeTabValue = '全部';
         document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
           item.classList.toggle('active', item.dataset.filterValue === '全部');
@@ -7084,9 +7228,20 @@
         scheduleCodeFilter.value = routeFilterScheduleNos.join(' ');
         applyFilters();
       }
-      if (pageParams.get('stage')) {
+      if (routeFilterLeaderStatus) {
+        scheduleGapFilter.value = ['未安排', '无法出团'].indexOf(routeFilterLeaderStatus) >= 0 ? '领队待处理' : '全部缺口';
+        var leaderStageParam = pageParams.get('stage') || '全部';
+        if (leaderStageParam === '出行中') leaderStageParam = '出团中';
+        if (['全部', '待发布', '销售中', '出发准备', '出团中', '已回团', '已结束'].indexOf(leaderStageParam) < 0) leaderStageParam = '全部';
+        activeTabValue = leaderStageParam;
+        document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
+          item.classList.toggle('active', item.dataset.filterValue === activeTabValue);
+        });
+        applyFilters();
+      } else if (pageParams.get('stage')) {
         var stageParam = pageParams.get('stage');
-        if (['待发布', '销售中', '出行中', '已结束'].indexOf(stageParam) >= 0) {
+        if (stageParam === '出行中') stageParam = '出团中';
+        if (['待发布', '销售中', '出发准备', '出团中', '已回团', '已结束'].indexOf(stageParam) >= 0) {
           activeTabValue = stageParam;
           document.querySelectorAll('.tab-bar[data-filter-tabs] .tab-item').forEach(function (item) {
             item.classList.toggle('active', item.dataset.filterValue === activeTabValue);
