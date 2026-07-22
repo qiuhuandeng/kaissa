@@ -91,14 +91,15 @@
     }
 
     var visaHost = linePanel.querySelector('[data-product-visa-panel]');
+    var visaStepId = spec.combineFeeAndVisa ? 'lineVisaSection' : stepIds[stepIds.length - 1];
     if (!visaHost) {
       visaHost = document.createElement('section');
-      visaHost.id = spec.combineFeeAndVisa ? 'lineVisaSection' : stepIds[4];
+      visaHost.id = visaStepId;
       visaHost.className = spec.combineFeeAndVisa ? 'route-form-subsection route-line-config-section' : 'route-form-section route-line-anchor-section';
       visaHost.setAttribute('data-product-visa-panel', '');
       (spec.combineFeeAndVisa && feeSection ? feeSection : linePanel).appendChild(visaHost);
     } else {
-      visaHost.id = spec.combineFeeAndVisa ? 'lineVisaSection' : stepIds[4];
+      visaHost.id = visaStepId;
       visaHost.hidden = false;
       if (spec.combineFeeAndVisa) {
         visaHost.classList.add('route-form-subsection', 'route-line-config-section');
@@ -612,14 +613,14 @@
     if (selfProductPage && document.getElementById('lineOptionalShoppingSection')) {
       return {
         kind: 'group',
-        labels: ['线路基础', '行程安排', '自费/购物', '大交通', '费用规则', '签证与证件'],
-        ids: ['lineBasicSection', 'lineItinerarySection', 'lineOptionalShoppingSection', 'lineTrafficSection', 'lineFeeSection', 'lineVisaSection'],
+        labels: ['线路基础', '行程内容', '大交通', '费用规则', '自费购物', '签证与证件'],
+        ids: ['lineBasicSection', 'lineItinerarySection', 'lineTrafficSection', 'lineFeeSection', 'lineOptionalShoppingSection', 'lineVisaSection'],
         combineFeeAndVisa: false
       };
     }
     return {
       kind: 'group',
-      labels: ['线路基础', '行程安排', '大交通', '费用规则', '签证与证件'],
+      labels: ['线路基础', '行程内容', '大交通', '费用规则', '签证与证件'],
       ids: ['lineBasicSection', 'lineItinerarySection', 'lineTrafficSection', 'lineFeeSection', 'lineVisaSection'],
       combineFeeAndVisa: false
     };
@@ -630,7 +631,8 @@
     if (!nav || !labels || !ids) return;
     nav.style.setProperty('--route-line-module-count', labels.length);
     nav.innerHTML = labels.map(function (label, index) {
-      return '<a class="route-line-module-step' + (index === 0 ? ' active' : '') + '" href="#' + htmlEscape(ids[index]) + '" data-line-module-anchor><span class="route-line-step-index">' + (index + 1) + '</span><strong>' + htmlEscape(label) + '</strong></a>';
+      var warningClass = label === '自费购物' ? ' route-line-module-step-warning' : '';
+      return '<a class="route-line-module-step' + warningClass + (index === 0 ? ' active' : '') + '" href="#' + htmlEscape(ids[index]) + '" data-line-module-anchor><span class="route-line-step-index">' + (index + 1) + '</span><strong>' + htmlEscape(label) + '</strong></a>';
     }).join('');
   }
 
