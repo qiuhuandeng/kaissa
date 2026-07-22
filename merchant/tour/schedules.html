@@ -3888,6 +3888,53 @@
         schedules.unshift(item);
       }
 
+      function applyInboundCustomProjectSchedule() {
+        if (pageParams.get('source') !== 'customProject' || pageParams.get('groupMode') !== 'project') return;
+        var projectNo = pageParams.get('projectNo') || '';
+        if (!projectNo) return;
+        var scheduleNo = pageParams.get('scheduleNo') || routeFilterScheduleNos[0] || ('PRJ' + (pageParams.get('travelStart') || '2026-09-15').replace(/-/g, '') + '001');
+        var travelStart = pageParams.get('travelStart') || pageParams.get('depart') || '';
+        var travelEnd = pageParams.get('travelEnd') || pageParams.get('back') || travelStart;
+        var people = Number(pageParams.get('people') || pageParams.get('stock') || 0) || 0;
+        var amount = moneyNumber(pageParams.get('amount') || pageParams.get('price') || 0);
+        addScheduleIfUnique({
+          code: scheduleNo,
+          product: pageParams.get('product') || pageParams.get('projectName') || '单团项目',
+          route: pageParams.get('route') || '客户专属项目团',
+          batchType: '项目团',
+          depart: travelStart,
+          back: travelEnd,
+          stock: people,
+          sold: 0,
+          left: 0,
+          unit: '人',
+          channelSeats: {},
+          price: moneyText(amount),
+          planner: pageParams.get('planner') || pageParams.get('owner') || '单团计调',
+          saleStatus: '客户专属',
+          executionStatus: pageParams.get('stage') === '出团中' ? '出团中' : '出发准备',
+          settlementStatus: '未结算',
+          status: '客户专属',
+          costStatus: '预估成本',
+          rosterStatus: '待导入名单',
+          documentsStatus: '资料未收',
+          resourceStatus: '交通酒店待确认',
+          noticeStatus: '未生成',
+          leaderStatus: '待安排',
+          groupMode: '项目团',
+          privateCustomer: pageParams.get('customer') || '项目客户',
+          customProjectNo: projectNo,
+          projectOrderNo: pageParams.get('orderNo') || '',
+          contractNo: pageParams.get('contractNo') || '',
+          receivableNo: pageParams.get('receivableNo') || '',
+          privateSaleScope: '客户专属',
+          tabStatus: '项目团 出发准备 未结算',
+          remark: '由单团项目录入后生成，不进入公开渠道售卖',
+          deadline: addDays(travelStart, -5)
+        });
+        if (!routeFilterScheduleNos.length) routeFilterScheduleNos = [scheduleNo];
+      }
+
       function applyLifecycleSampleSchedules() {
         [
           {
@@ -7215,6 +7262,7 @@
       applyPendingScheduleResults();
       applyStoredBatchScheduleResults();
       applyLifecycleSampleSchedules();
+      applyInboundCustomProjectSchedule();
       renderRows();
 
       if (routeFilterProduct) {

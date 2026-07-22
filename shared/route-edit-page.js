@@ -686,7 +686,7 @@
       if (basicGrid) {
         basicGrid.innerHTML = [
           '<div class="form-group"><label class="form-label" for="planName">售卖航线名称 <span class="req">*</span></label><input id="planName" class="form-control" type="text" value="地中海经典航线"></div>',
-          '<div class="form-group"><label class="form-label" for="supplierLineName">供应商航线名称</label><input id="supplierLineName" class="form-control" type="text" value="西地中海经典航线"></div>',
+          '<div class="form-group"><label class="form-label" for="supplierLineName">船方航线名称</label><input id="supplierLineName" class="form-control" type="text" value="西地中海经典航线"></div>',
           '<div class="form-group"><label class="form-label" for="sailingDays">航行天数 <span class="req">*</span></label><input id="sailingDays" class="form-control" type="number" value="8"></div>',
           '<div class="form-group"><label class="form-label" for="lineCruiseLineCode">航线编号</label><input id="lineCruiseLineCode" class="form-control" type="text" value="CR-WMED-BCN-8D"></div>',
           '<div class="form-group"><label class="form-label" for="lineShipName">船只/船号档案 <span class="req">*</span></label><select id="lineShipName" class="form-control" data-resource-ref><option selected>地中海荣耀号 MSC-GLORY</option><option>海洋绿洲号 OASIS</option><option>歌诗达威尼斯号 COSTA-VENICE</option></select></div>',
@@ -700,7 +700,7 @@
     }
     if (itinerarySection) {
       itinerarySection.innerHTML = [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">航程与登离船</h2><button class="btn route-ai-button" type="button" data-ai-fill="#itineraryDraft">智能生成航程</button></div>',
+        '<div class="route-section-titlebar"><h2 class="route-section-title">航程与登离船</h2><button class="btn route-ai-button" type="button" data-ai-fill="#itineraryDraft">识别并填充</button></div>',
         '<div class="form-group route-itinerary-draft"><label class="form-label" for="itineraryDraft">航程辅助大纲 / 设计初稿</label><textarea id="itineraryDraft" class="form-control" rows="4">D1 巴塞罗那登船，办理登船手续并熟悉船上设施。\nD2 马赛靠港，安排普罗旺斯岸上观光。\nD3 热那亚靠港，安排老城与港区游览。</textarea></div>',
         '<div class="route-field-grid three">',
         '<div class="form-group"><label class="form-label" for="shoreIncluded">岸上游口径 <span class="req">*</span></label><select id="shoreIncluded" class="form-control"><option selected>包含精选岸上游</option><option>部分港口包含</option><option>岸上游自费</option></select></div>',
@@ -735,7 +735,7 @@
       if (basicGrid) {
         basicGrid.innerHTML = [
           '<div class="form-group"><label class="form-label" for="planName">售卖线路名称 <span class="req">*</span></label><input id="planName" class="form-control" type="text" value="丝路经典线"></div>',
-          '<div class="form-group"><label class="form-label" for="supplierLineName">供应商线路名称</label><input id="supplierLineName" class="form-control" type="text" value="丝路专列经典线"></div>',
+          '<div class="form-group"><label class="form-label" for="supplierLineName">运营线路名称</label><input id="supplierLineName" class="form-control" type="text" value="丝路专列经典线"></div>',
           '<div class="form-group"><label class="form-label" for="durationDays">行程天数 <span class="req">*</span></label><input id="durationDays" class="form-control" type="number" value="12"></div>',
           '<div class="form-group"><label class="form-label" for="lineTrainLineNo">专列/车次编号 <span class="req">*</span></label><input id="lineTrainLineNo" class="form-control" type="text" value="TR-SILK-2026"></div>',
           '<div class="form-group"><label class="form-label" for="lineOperator">专列运营商 <span class="req">*</span></label><select id="lineOperator" class="form-control" data-resource-ref><option selected>丝路专列运营中心</option><option>冰雪北国旅游专列公司</option><option>茶马古道铁路文旅</option></select></div>',
@@ -749,7 +749,7 @@
     }
     if (itinerarySection) {
       itinerarySection.innerHTML = [
-        '<div class="route-section-titlebar"><h2 class="route-section-title">行程与接驳</h2><button class="btn route-ai-button" type="button" data-ai-fill="#itineraryDraft">智能生成行程</button></div>',
+        '<div class="route-section-titlebar"><h2 class="route-section-title">行程与接驳</h2><button class="btn route-ai-button" type="button" data-ai-fill="#itineraryDraft">识别并填充</button></div>',
         '<div class="form-group route-itinerary-draft"><label class="form-label" for="itineraryDraft">行程辅助大纲 / 设计初稿</label><textarea id="itineraryDraft" class="form-control" rows="4">D1 西安集合登车，办理铺位分配与行前说明。\nD2 兰州停靠，安排黄河风情线游览后返车。\nD3 张掖停靠，游览丹霞景区，晚间车上活动。</textarea></div>',
         '<div class="route-field-grid three">',
         '<div class="form-group"><label class="form-label" for="assemblyPlace">集合散团口径 <span class="req">*</span></label><select id="assemblyPlace" class="form-control"><option selected>始发站集合/终到站散团</option><option>含出发地至始发站接驳</option><option>含终到站返程接驳</option></select></div>',
@@ -783,7 +783,7 @@
       if (basicGrid) {
         basicGrid.innerHTML = [
           '<div class="form-group"><label class="form-label" for="planName">套餐名称 <span class="req">*</span></label><input id="planName" class="form-control" type="text" value="机票+酒店套餐"></div>',
-          '<div class="form-group"><label class="form-label" for="supplierLineName">供应商套餐名称</label><input id="supplierLineName" class="form-control" type="text" value="巴黎机酒自由行5晚"></div>',
+          '<div class="form-group"><label class="form-label" for="supplierLineName">资源套餐名称</label><input id="supplierLineName" class="form-control" type="text" value="巴黎机酒自由行5晚"></div>',
           '<div class="form-group"><label class="form-label" for="packageType">套餐类型 <span class="req">*</span></label><select id="packageType" class="form-control"><option selected>机票+酒店</option><option>纯酒店</option><option>酒店+接送机</option><option>机票+酒店+当地玩乐</option></select></div>',
           '<div class="form-group"><label class="form-label" for="packageDays">适用天数 <span class="req">*</span></label><input id="packageDays" class="form-control" type="text" value="5-7日"></div>',
           '<div class="form-group"><label class="form-label" for="departCity">出发城市 <span class="req">*</span></label><select id="departCity" class="form-control"><option selected>全国</option><option>北京</option><option>上海</option><option>广州</option></select></div>',
@@ -838,14 +838,14 @@
       scheduleType: 'group',
       tagText: '参团游产品',
       tagClass: 'tag tag-blue',
-      title: '欧洲十国经典游 12日11晚',
+      title: '欧洲十国经典游·12日11晚【纯玩*甄选】',
       desc: '北京出发，覆盖法国、德国、瑞士、意大利等核心目的地。',
       subtitle: '纯玩无购物，法德瑞意核心城市连线，含中文领队与签证协助',
-      supplier: ['欧洲地接ABC', '国际航空CA', '法国地接联盟'],
-      ownerOrg: ['欧洲线路中心', '亚洲线路中心', '国内线路中心'],
+      supplier: ['福建凯撒'],
+      ownerOrg: ['长线中心 / 欧洲部', '长线中心 / 亚洲部', '短线中心 / 国内部'],
       routeType: '参团游',
       travelType: '出境游',
-      chips: [['供货方', '欧洲地接ABC'], ['承接组织', '欧洲线路中心'], ['出发城市', '北京']],
+      chips: [['供货方', '福建凯撒'], ['归属中心/部门', '长线中心 / 欧洲部'], ['出发城市', '北京']],
       heroTags: ['纯玩', '含签证', '中文领队'],
       readiness: [['线路数', '2条'], ['参考起价', '¥29,800/人'], ['数据完整度', '100%']],
       plans: [
@@ -871,11 +871,11 @@
       title: '理想号地中海邮轮 8天7晚',
       desc: '巴塞罗那母港往返，停靠马赛、热那亚、那不勒斯等经典港口。',
       subtitle: '地中海邮轮度假产品，含岸上游、接送机与航前航后服务可选',
-      supplier: ['凯撒邮轮资源部', '皇家加勒比', '地中海邮轮'],
+      supplier: ['福建凯撒'],
       ownerOrg: ['邮轮产品中心', '欧洲产品中心', '渠道运营组'],
       routeType: '邮轮',
       travelType: '出境游',
-      chips: [['供货方', '凯撒邮轮资源部'], ['承接组织', '邮轮产品中心'], ['出发城市', '全国']],
+      chips: [['供货方', '福建凯撒'], ['归属中心/部门', '邮轮产品中心'], ['出发城市', '全国']],
       heroTags: ['阳台舱', '岸上游', '接送机'],
       readiness: [['线路数', '2条'], ['参考起价', '¥12,800/人'], ['数据完整度', '100%']],
       plans: [
@@ -921,11 +921,11 @@
       title: '丝绸之路专列 12日11晚',
       desc: '西安始发，串联兰州、张掖、敦煌、吐鲁番、乌鲁木齐等核心节点。',
       subtitle: '专列串联西北经典目的地，软卧铺位，随车服务团队全程保障',
-      supplier: ['中国铁路合作局', '西北地接联盟', '敦煌文旅资源公司'],
+      supplier: ['福建凯撒'],
       ownerOrg: ['专列产品中心', '国内产品中心', '研学产品中心'],
       routeType: '专列',
       travelType: '境内游',
-      chips: [['供货方', '中国铁路合作局'], ['承接组织', '专列产品中心'], ['出发城市', '西安']],
+      chips: [['供货方', '福建凯撒'], ['归属中心/部门', '专列产品中心'], ['出发城市', '西安']],
       heroTags: ['专列', '软卧', '随车服务'],
       readiness: [['线路数', '2条'], ['参考起价', '¥18,800/人'], ['数据完整度', '100%']],
       plans: [
@@ -972,11 +972,11 @@
       title: '巴黎自由行 5-7日',
       desc: '巴黎目的地自由行，组合机票、酒店、接送机与当地玩乐。',
       subtitle: '机票+酒店+接送机可选组合，按出行日期销售',
-      supplier: ['欧洲地接ABC', '国际航空CA', '巴黎酒店直采'],
+      supplier: ['福建凯撒'],
       ownerOrg: ['自由行线路中心', '欧洲线路中心', '渠道运营组'],
       routeType: '自由行',
       travelType: '出境游',
-      chips: [['目的地', '法国巴黎'], ['套餐组合', '3类'], ['服务项目', '酒店/航班/接送']],
+      chips: [['供货方', '福建凯撒'], ['目的地', '法国巴黎'], ['套餐组合', '3类']],
       heroTags: ['机酒组合', '出行日期', '接送机'],
       readiness: [['线路数', '3条'], ['参考起价', '¥4,800/人'], ['数据完整度', '100%']],
       plans: [
@@ -1029,11 +1029,11 @@
       title: '三亚亲子5日游',
       desc: '广州/深圳出发，覆盖三亚、亚龙湾、海棠湾等核心度假目的地。',
       subtitle: '亲子度假，含海岛酒店、接送和精选景区，适合暑期家庭客群',
-      supplier: ['三亚亚特兰蒂斯酒店', '海南地接联盟', '广州客运资源中心'],
-      ownerOrg: ['国内线路中心', '华南产品中心', '门店运营中心'],
+      supplier: ['福建凯撒'],
+      ownerOrg: ['短线中心 / 国内部', '华南产品中心', '门店运营中心'],
       routeType: '参团游',
       travelType: '境内游',
-      chips: [['供货方', '三亚亚特兰蒂斯酒店'], ['承接组织', '国内线路中心'], ['出发城市', '广州/深圳']],
+      chips: [['供货方', '福建凯撒'], ['归属中心/部门', '短线中心 / 国内部'], ['出发城市', '广州/深圳']],
       heroTags: ['亲子', '海岛', '暑期'],
       plans: [
         { name: '亲子标准款', meta: '5天4晚 · 分日酒店标准 · 含接送' },
@@ -1077,7 +1077,8 @@
     var supplier = document.getElementById('supplier');
     if (supplier) {
       var supplierOptions = isSupplierRoute ? ['欧洲联合地接社'] : preset.supplier;
-      supplier.innerHTML = selectedOptionHtml(supplierOptions, supplierOptions[0]);
+      if (supplier.tagName === 'SELECT') supplier.innerHTML = selectedOptionHtml(supplierOptions, supplierOptions[0]);
+      else supplier.value = supplierOptions[0] || '';
     }
     var ownerOrg = document.getElementById('ownerOrg');
     if (ownerOrg) {
@@ -1202,7 +1203,7 @@
     target.value = textMap[kind] || textMap.group;
     target.dispatchEvent(new Event('input', { bubbles: true }));
     setDirty();
-    showToast('已生成线路草稿');
+    showToast('已识别并填充行程草稿');
   }
 
   function routeScheduleContext() {
