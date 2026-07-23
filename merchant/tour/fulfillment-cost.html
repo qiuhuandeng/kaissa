@@ -367,7 +367,7 @@
                 <button id="supplementProjectBasis" class="btn btn-secondary" type="button">补结算依据</button>
                 <button id="viewProjectActualCost" class="btn btn-secondary" type="button">查看实际成本</button>
                 <button id="viewProjectSettlementApply" class="btn btn-secondary" type="button">查看结算申请</button>
-                <button id="resubmitProjectSettlement" class="btn btn-secondary" type="button">重新提交</button>
+                <button id="resubmitProjectSettlement" class="btn btn-secondary" type="button">再提交</button>
               </div>
             </section>
           </section>
@@ -493,7 +493,7 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
         <button id="saveSettlementBasis" class="btn btn-secondary" type="button">保存依据</button>
-        <button id="submitSettlementApply" class="btn btn-primary" type="button">提交结算申请</button>
+        <button id="submitSettlementApply" class="btn btn-primary" type="button">提交结算</button>
       </div>
     </div>
   </div>
@@ -1908,9 +1908,9 @@
         if (mainStatus === '已结算') {
           if (hasPendingPostSettlement(item) || (second && second.status === '草稿')) {
             button('二次结算', 'data-start-second-settlement="' + id + '"', true);
-            button('查看详情', 'data-view-settlement="' + id + '"');
+            button('详情', 'data-view-settlement="' + id + '"');
           } else {
-            button('查看详情', 'data-view-settlement="' + id + '"', true);
+            button('详情', 'data-view-settlement="' + id + '"', true);
           }
         } else {
           button('结算', 'data-open-settlement-basis="' + id + '"', true);
@@ -2138,7 +2138,7 @@
       function paymentRecordActionHtml(request, index) {
         var status = requestMainStatus(request);
         if (status === '驳回') {
-          return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">重新提交</button>';
+          return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">再提交</button>';
         }
         return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">详情</button>';
       }
@@ -2268,20 +2268,20 @@
       function paymentGroupAction(group, index) {
         var request = paymentRequestForGroup(group.id);
         if (group.status === '待申请' || group.status === '部分付款') {
-          return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">申请付款</button>';
+          return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">请款</button>';
         }
         if (group.status === '草稿') {
-          return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">继续编辑</button>';
+          return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">编辑</button>';
         }
         if (group.status === '已驳回') {
           return request
-            ? '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">重新提交</button>'
-            : '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">申请付款</button>';
+            ? '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">再提交</button>'
+            : '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">请款</button>';
         }
         if (request) {
-          return '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">查看申请</button>';
+          return '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">请款单</button>';
         }
-        return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">申请付款</button>';
+        return '<button type="button" class="table-action-primary" data-open-payment-create="' + index + '">请款</button>';
       }
 
       function paymentViewAction(view) {
@@ -2293,13 +2293,13 @@
           return payableGroupIsSelectable(findPaymentGroup(groupId));
         });
         if (eligibleIds.length) {
-          var actionText = view.groups.some(function (group) { return group.status === '草稿'; }) ? '继续编辑' : '申请付款';
+          var actionText = view.groups.some(function (group) { return group.status === '草稿'; }) ? '编辑' : '请款';
           return '<button type="button" class="table-action-primary" data-open-payment-create-groups="' + escapeHtml(eligibleIds.join(',')) + '" data-payment-context="' + escapeHtml(view.label) + '">' + actionText + '</button>';
         }
         var request = paymentRequestForAnyGroup(view.groupIds);
         return request
-          ? '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">查看申请</button>'
-          : '<button type="button" class="table-action-primary" disabled>不可申请</button>';
+          ? '<button type="button" class="table-action-primary" data-open-payment-record="' + paymentRequests.indexOf(request) + '">请款单</button>'
+          : '<button type="button" class="table-action-primary" disabled>不可请款</button>';
       }
 
       function parseGroupIds(value) {
@@ -2608,7 +2608,7 @@
         costItemRows.innerHTML = schedule.items.map(function (item, index) {
           var leaderCost = isLeaderCostItem(item);
           var action = leaderCost
-            ? '<button type="button" class="table-action-primary" data-confirm-leader-cost="' + index + '">' + (item[5] === '已确认' ? '查看费用' : '确认费用') + '</button><button type="button" data-edit-cost-item="' + index + '">编辑</button>'
+            ? '<button type="button" class="table-action-primary" data-confirm-leader-cost="' + index + '">' + (item[5] === '已确认' ? '费用' : '确认费用') + '</button><button type="button" data-edit-cost-item="' + index + '">编辑</button>'
             : '<button type="button" data-edit-cost-item="' + index + '">编辑</button><button type="button" class="danger" data-remove-cost-item="' + index + '">删除</button>';
           return '<tr>' +
             '<td>' + escapeHtml(item[0]) + '</td>' +
@@ -3705,7 +3705,7 @@
         document.getElementById('saveSettlementBasis').textContent = second && second.status === '草稿' ? '保存二次结算' : '保存依据';
         document.getElementById('submitSettlementApply').textContent = status === '已结算'
           ? (second && second.status === '草稿' ? '提交二次结算' : '关闭')
-          : (isProjectSchedule(schedule) ? (status === '已驳回' ? '重新提交' : '提交项目结算') : '提交结算申请');
+          : (isProjectSchedule(schedule) ? (status === '已驳回' ? '再提交' : '提交结算') : '提交结算');
       }
 
       function openSettlementBasisDrawer(id) {
