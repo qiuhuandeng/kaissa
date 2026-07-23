@@ -20,13 +20,13 @@
 
 
         <div class="filter-item-sm">
-          <label class="sr-only" for="predepositProcess">待处理项</label>
+          <label class="sr-only" for="predepositProcess">待确认项</label>
           <select id="predepositProcess">
             <option>全部事项</option>
             <option>充值待确认</option>
             <option>转留存待确认</option>
             <option>扣款待确认</option>
-            <option>退款待处理</option>
+            <option>退款待发起</option>
             <option>调整待审批</option>
           </select>
         </div>
@@ -47,7 +47,7 @@
             <th>财务主体</th>
             <th>可用余额</th>
             <th>冻结金额</th>
-            <th>待处理项</th>
+            <th>待确认项</th>
             <th>最近变动</th>
             <th>余额风险</th>
             <th>操作</th>
@@ -82,18 +82,18 @@
             <td>福建凯撒</td>
             <td class="amount-strong">¥3,200</td>
             <td>¥0</td>
-            <td>无待处理</td>
+            <td>无待确认</td>
             <td><div class="table-cell-main"><strong>RFD20260622003</strong><span>退款转预存 ¥3,200</span></div></td>
             <td><span class="tag tag-green">无风险</span></td>
             <td><div class="table-action"><button class="table-action-primary" type="button" data-open-account>详情</button></div></td>
           </tr>
-          <tr data-account-id="acct-store-sh-xh" data-account-no="MD-SH-XH-2026-0002" data-type="门店预存" data-status="正常" data-company="上海凯撒" data-store="上海徐汇门市" data-process="退款待处理" data-refund-no="RFD-20260622-0032">
+          <tr data-account-id="acct-store-sh-xh" data-account-no="MD-SH-XH-2026-0002" data-type="门店预存" data-status="正常" data-company="上海凯撒" data-store="上海徐汇门市" data-process="退款待发起" data-refund-no="RFD-20260622-0032">
             <td><div class="table-cell-main"><strong>上海徐汇门市</strong><span>账户 MD-SH-XH-2026-0002</span><span>上海分公司 / 徐汇门市</span></div></td>
             <td>门店预存</td>
             <td>上海凯撒</td>
             <td class="amount-strong">¥72,400</td>
             <td>¥0</td>
-            <td><div class="table-cell-main"><strong>1笔 / ¥3,200</strong><span>余额退款待处理</span></div></td>
+            <td><div class="table-cell-main"><strong>1笔 / ¥3,200</strong><span>余额退款待发起</span></div></td>
             <td><div class="table-cell-main"><strong>RFD-20260622-0032</strong><span>退款转预存 ¥3,200</span></div></td>
             <td><span class="tag tag-blue">退款中</span></td>
             <td><div class="table-action"><button class="table-action-primary" type="button" data-open-account>详情</button></div></td>
@@ -139,7 +139,7 @@
 
         <nav class="tab-bar drawer-tab-bar" aria-label="预存账户详情标签">
           <button class="tab-item active" type="button" data-detail-tab="overview">账户总览</button>
-          <button class="tab-item" type="button" data-detail-tab="pending">待处理项</button>
+          <button class="tab-item" type="button" data-detail-tab="pending">待确认项</button>
           <button class="tab-item" type="button" data-detail-tab="deduction">订单扣款</button>
           <button class="tab-item" type="button" data-detail-tab="ledger">流水明细</button>
           <button class="tab-item" type="button" data-detail-tab="adjust">冻结调整</button>
@@ -157,7 +157,7 @@
         </section>
 
         <section class="drawer-section drawer-tab-panel" data-detail-panel="pending" hidden>
-          <div class="drawer-section-head"><h3 class="drawer-section-title">待处理项</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">待确认项</h3></div>
           <section class="table-wrap drawer-table-wrap drawer-table-compact drawer-table-cols-6">
             <table>
               <thead>
@@ -353,7 +353,7 @@
           threshold: '¥20,000',
           lastChange: 'RFD-20260622-0032 / 退款转预存 ¥3,200',
           pending: [
-            { no: 'RFD-20260622-0032', type: '余额退款', source: 'KS2024061818 / 门店余额', amount: '¥3,200', status: '待处理', actionType: 'refund', actionText: '发起退款', order: 'KS2024061818', receivable: 'SK20240618180' }
+            { no: 'RFD-20260622-0032', type: '余额退款', source: 'KS2024061818 / 门店余额', amount: '¥3,200', status: '待发起退款', actionType: 'refund', actionText: '发起退款', order: 'KS2024061818', receivable: 'SK20240618180' }
           ],
           deductions: [
             { no: 'DK20260621009', order: 'KS2024061818', receivable: 'SK20240618180', amount: '¥6,400', remain: '¥0', status: '已扣款' }
@@ -447,7 +447,7 @@
 
       function statusTag(status) {
         if (status === '已扣款' || status === '已确认' || status === '已生效') return '<span class="tag tag-green">' + escapeHtml(status) + '</span>';
-        if (status === '审批中' || status === '待处理') return '<span class="tag tag-blue">' + escapeHtml(status) + '</span>';
+        if (status === '审批中' || status === '待发起退款') return '<span class="tag tag-blue">' + escapeHtml(status) + '</span>';
         if (status === '已关闭') return '<span class="tag tag-gray">' + escapeHtml(status) + '</span>';
         return '<span class="tag tag-orange">' + escapeHtml(status || '待确认') + '</span>';
       }
@@ -459,7 +459,7 @@
       function renderPendingRows(account) {
         var target = document.getElementById('pendingRows');
         if (!account.pending.length) {
-          target.innerHTML = emptyRow(6, '无待处理项');
+          target.innerHTML = emptyRow(6, '无待确认项');
           return;
         }
         target.innerHTML = account.pending.map(function (item) {

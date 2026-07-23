@@ -54,7 +54,7 @@
             <th>应回款</th>
             <th>已到账</th>
             <th>差异金额</th>
-            <th>财务承接</th>
+            <th>应收/认款</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -90,7 +90,7 @@
             <td><div class="table-cell-main"><strong>¥107,244</strong><span>待到账 ¥0</span></div></td>
             <td><div class="table-cell-main"><strong>¥0</strong><span>无差异</span></div></td>
             <td><div class="table-cell-main"><strong>JS-QD20260630003</strong><span>已结算</span></div></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-row>查看承接</button></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-row>查看结算</button></div></td>
           </tr>
           <tr data-no="QD20260708004" data-channel="抖音生活服务" data-channel-type="OTA" data-status="待生成" data-company="北京凯撒" data-period="2026-07上旬" data-date="2026-07-08" data-order-count="6" data-order-amount="¥38,400" data-refund="¥0" data-deduction="待生成" data-commission="待生成" data-service="待生成" data-subsidy="待生成" data-other="待生成" data-receivable="待生成" data-arrived="¥0" data-pending="待生成" data-diff="待生成" data-diff-type="订单差异" data-carry="未生成应收" data-ar="未生成" data-match="未认款" data-flow="-" data-settlement="未结算" data-bill="DOUYIN-BILL-20260701">
             <td><div class="table-cell-main"><strong>QD20260708004</strong><span>抖音生活服务 / OTA</span><span>平台账单 DOUYIN-BILL-20260701</span></div></td>
@@ -147,7 +147,7 @@
           <button class="tab-item" type="button" data-detail-tab="orders">订单明细</button>
           <button class="tab-item" type="button" data-detail-tab="deductions">扣项差异</button>
           <button class="tab-item" type="button" data-detail-tab="receipts">到账认款</button>
-          <button class="tab-item" type="button" data-detail-tab="receivable">应收承接</button>
+          <button class="tab-item" type="button" data-detail-tab="receivable">应收认款</button>
           <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
         </nav>
 
@@ -213,7 +213,7 @@
         </section>
 
         <section class="drawer-section drawer-tab-panel" data-detail-panel="receivable" hidden>
-          <div class="drawer-section-head"><h3 class="drawer-section-title">应收承接</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">应收认款</h3></div>
           <section class="table-wrap drawer-table-wrap drawer-table-fit drawer-table-cols-5">
             <table>
               <thead>
@@ -222,7 +222,7 @@
                   <th>应回款</th>
                   <th>已认款</th>
                   <th>待到账</th>
-                  <th>承接状态</th>
+                  <th>当前状态</th>
                 </tr>
               </thead>
               <tbody id="receivableRows"></tbody>
@@ -362,7 +362,7 @@
         if (status === '待核对') return '核对';
         if (status === '差异处理中') return '处理差异';
         if (status === '待确认') return '确认结算';
-        if (status === '已确认') return '查看承接';
+        if (status === '已确认') return '查看结算';
         return '详情';
       }
 
@@ -445,7 +445,7 @@
       function renderDeductions(row) {
         var diffType = row.dataset.diffType;
         var deductionData = [
-          ['渠道承担优惠', row.dataset.channelDiscount || '¥0', row.dataset.channelDiscount || '¥0', '¥0', row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '按优惠减免承接单抵扣应回款' : '无渠道承担优惠'],
+          ['渠道承担优惠', row.dataset.channelDiscount || '¥0', row.dataset.channelDiscount || '¥0', '¥0', row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '按优惠承担确认单抵扣应回款' : '无渠道承担优惠'],
           ['平台佣金', row.dataset.commission, row.dataset.commission, '¥0', '按渠道政策扣减'],
           ['平台服务费', row.dataset.service, row.dataset.service, '¥0', '按平台账单扣减'],
           ['活动补贴', row.dataset.subsidy, row.dataset.subsidy, '¥0', '补贴计入应回款'],
@@ -473,7 +473,7 @@
         var arCell = ar && ar !== '未生成' ? linkHtml('finance-receivable.html?receivableNo=' + encodeURIComponent(ar), ar) : escapeHtml(ar);
         var discountCarryCell = row.dataset.discountCarryNo ? linkHtml('finance-settlement-adjustment.html?adjustmentNo=' + encodeURIComponent(row.dataset.discountCarryNo), row.dataset.discountCarryNo) : '无优惠减免';
         document.getElementById('receivableRows').innerHTML = '<tr><td>' + arCell + '</td><td class="amount-strong">' + escapeHtml(row.dataset.receivable) + '</td><td>' + escapeHtml(row.dataset.arrived) + '</td><td>' + escapeHtml(row.dataset.pending) + '</td><td>' + tagHtml(row.dataset.carry) + '</td></tr>' +
-          '<tr><td>' + discountCarryCell + '</td><td>' + escapeHtml(row.dataset.channelDiscount || '¥0') + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '待承接' : '无需承接') + '</td></tr>' +
+          '<tr><td>' + discountCarryCell + '</td><td>' + escapeHtml(row.dataset.channelDiscount || '¥0') + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '待确认' : '无需确认') + '</td></tr>' +
           '<tr><td>' + linkHtml('finance-settlement.html?source=' + encodeURIComponent(row.dataset.no), row.dataset.settlement) + '</td><td>' + escapeHtml(row.dataset.receivable) + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.settlement === '未结算' ? '未结算' : '已结算') + '</td></tr>';
       }
 
@@ -503,7 +503,7 @@
           ['应回款', row.dataset.receivable],
           ['已到账', row.dataset.arrived],
           ['差异金额', row.dataset.diff],
-          ['财务承接', row.dataset.carry]
+          ['应收/认款', row.dataset.carry]
         ]);
         document.getElementById('overviewGrid').innerHTML = gridHtml([
           ['结算单号', row.dataset.no],
@@ -518,7 +518,7 @@
           ['已到账', row.dataset.arrived],
           ['待到账', row.dataset.pending],
           ['差异类型', row.dataset.diffType],
-          ['承接状态', row.dataset.carry]
+          ['认款状态', row.dataset.carry]
         ]);
         renderOrders(row);
         renderDeductions(row);
@@ -568,7 +568,7 @@
           closeLayer(drawer);
           return;
         }
-        notify(activeRow.dataset.no + '承接信息已打开');
+        notify(activeRow.dataset.no + '结算信息已打开');
       });
 
       document.querySelector('[data-open-import]').addEventListener('click', function () { openWorkDrawer('导入账单'); });

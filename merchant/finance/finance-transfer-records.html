@@ -270,7 +270,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">收款凭证</h3></div>
             <section class="table-wrap drawer-table-fit drawer-table-cols-5">
               <table>
-                <thead><tr><th>凭证类型</th><th>单据号</th><th>金额</th><th>状态</th><th>处理入口</th></tr></thead>
+                <thead><tr><th>凭证类型</th><th>单据号</th><th>金额</th><th>状态</th><th>凭证入口</th></tr></thead>
                 <tbody id="receiptRows"></tbody>
               </table>
             </section>
@@ -279,7 +279,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">审批记录</h3></div>
             <section class="table-wrap drawer-table-fit drawer-table-cols-4">
               <table>
-                <thead><tr><th>审批单</th><th>发起来源</th><th>审批结果</th><th>财务承接</th></tr></thead>
+                <thead><tr><th>审批单</th><th>发起来源</th><th>审批结果</th><th>财务结果</th></tr></thead>
                 <tbody id="approvalRows"></tbody>
               </table>
             </section>
@@ -288,7 +288,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">凭证NC</h3></div>
             <section class="table-wrap drawer-table-fit drawer-table-cols-5">
               <table>
-                <thead><tr><th>凭证环节</th><th>单据号</th><th>金额</th><th>状态</th><th>处理入口</th></tr></thead>
+                <thead><tr><th>凭证环节</th><th>单据号</th><th>金额</th><th>状态</th><th>凭证入口</th></tr></thead>
                 <tbody id="ncRows"></tbody>
               </table>
             </section>
@@ -301,7 +301,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
-        <button class="btn btn-primary" type="button" data-detail-primary>进入处理</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>进入转款核销</button>
       </div>
     </div>
   </div>
@@ -529,7 +529,7 @@
       function amountRows(data) {
         return [
           ['原订单可转', data.sourceAvailable, '-', data.transferAmount, data.status === '已退回' ? '未核销' : '通过'],
-          ['新订单待收', '-', data.targetReceivable, data.targetPendingAfter, data.targetPendingAfter === '¥0' ? '通过' : '待处理'],
+          ['新订单待收', '-', data.targetReceivable, data.targetPendingAfter, data.targetPendingAfter === '¥0' ? '通过' : '待补收'],
           ['差额金额', data.difference, data.differenceTarget, data.difference, data.differenceTarget === '无差额' ? '通过' : data.differenceTarget],
           ['客户一致性', data.customer + ' / ' + data.customerPhone, data.customer + ' / ' + data.store, data.checkResult, /不一致|缺失/.test(data.checkResult) ? '不通过' : '通过']
         ].map(function (item) {
@@ -560,8 +560,8 @@
         var voucherNo = data.voucher === '未生成' ? '核销后生成' : data.voucher;
         return [
           ['转款核销凭证', voucherNo, data.transferAmount, data.nc, data.nc === '未生成' ? '-' : linkHtml('finance-nc.html?sourceNo=' + encodeURIComponent(data.transferNo), 'NC推送')],
-          ['原订单冲减', data.sourceOrder, data.transferAmount, data.status === '已退回' ? '未发生' : '已承接', orderLink(data.sourceOrder, '原订单')],
-          ['新订单核销', data.targetOrder, data.transferAmount, data.status === '已退回' ? '未发生' : '已承接', orderLink(data.targetOrder, '新订单')]
+          ['原订单冲减', data.sourceOrder, data.transferAmount, data.status === '已退回' ? '未发生' : '已冲减', orderLink(data.sourceOrder, '原订单')],
+          ['新订单核销', data.targetOrder, data.transferAmount, data.status === '已退回' ? '未发生' : '已核销', orderLink(data.targetOrder, '新订单')]
         ].map(function (item) {
           return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td class="amount-strong">' + escapeHtml(item[2]) + '</td><td>' + tagHtml(item[3]) + '</td><td>' + item[4] + '</td></tr>';
         }).join('');

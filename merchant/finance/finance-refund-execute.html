@@ -143,7 +143,7 @@
             <td><div class="table-cell-main"><strong class="amount-strong">¥5,600</strong><span>扣损 ¥0</span></div></td>
             <td><div class="table-cell-main"><strong>银行转账</strong><span>建设银行尾号1309</span></div></td>
             <td><div class="table-cell-main"><span class="tag tag-red">账户异常</span><span>账户名不一致</span></div></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-primary-action>处理异常</button><button type="button" data-open-detail>详情</button></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-primary-action>确认异常</button><button type="button" data-open-detail>详情</button></div></td>
           </tr>
           <tr data-refund-no="RFD-20260531-0009" data-approval="APR-20260531-009" data-order="KS2024052806" data-customer="王晨" data-product="北京故宫定制游" data-schedule="CN-BJG-20250701-001" data-source="改期退差" data-company="北京凯撒" data-method="原路退回" data-check="已校验" data-status="已关闭" data-approved-date="2026-05-31" data-execute-date="2026-06-01" data-approved-amount="¥1,200" data-received="¥8,600" data-refunded="¥1,200" data-amount="¥1,200" data-loss="¥0" data-destination="支付宝原路退回" data-receiver="王晨" data-bank="支付宝" data-account-no="ALI-ORIGINAL-20260528006" data-account-status="已退款" data-predeposit="-" data-receivable="SK20240528060" data-receivable-amount="¥8,600" data-writeoff="¥1,200" data-remainder="¥7,400" data-receipt-no="ALI20260528006" data-match-no="RK20260528006" data-original-method="支付宝" data-original-account="支付宝商户号 208***006" data-pay-account="线上支付清算户" data-remittance-no="ALIRF20260601009" data-bank-flow="ALIRF20260601009" data-voucher="RFD-VCH-20260601009" data-nc="已推送" data-risk-note="已归档" data-business-basis="改期差价已退">
             <td><div class="table-cell-main"><strong>RFD-20260531-0009</strong><span>审批 APR-20260531-009</span></div></td>
@@ -178,9 +178,9 @@
           <button class="tab-item" type="button" data-detail-tab="receipt">原收款</button>
           <button class="tab-item" type="button" data-detail-tab="check">可退校验</button>
           <button class="tab-item" type="button" data-detail-tab="destination">退款去向</button>
-          <button class="tab-item" type="button" data-detail-tab="receivable">应收处理</button>
+          <button class="tab-item" type="button" data-detail-tab="receivable">应收冲销</button>
           <button class="tab-item" type="button" data-detail-tab="voucher">回单凭证</button>
-          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+          <button class="tab-item" type="button" data-detail-tab="logs">退款记录</button>
         </nav>
 
         <section class="drawer-tab-panels">
@@ -230,7 +230,7 @@
         </section>
 
         <section class="drawer-section drawer-tab-panel" data-detail-panel="receivable" hidden>
-          <div class="drawer-section-head"><h3 class="drawer-section-title">应收处理</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">应收冲销</h3></div>
           <section class="table-wrap drawer-table-wrap drawer-table-compact drawer-table-cols-6">
             <table>
               <thead>
@@ -267,7 +267,7 @@
         </section>
 
         <section class="drawer-section drawer-tab-panel" data-detail-panel="logs" hidden>
-          <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">退款记录</h3></div>
           <section class="table-wrap drawer-table-wrap drawer-table-fit drawer-table-cols-4">
             <table>
               <thead>
@@ -437,7 +437,7 @@
         if (status === '执行中') return '补回单';
         if (status === '已退款') return '查看凭证';
         if (status === '已退预存') return '查看余额';
-        if (status === '执行失败') return '处理异常';
+        if (status === '执行失败') return '确认异常';
         return '详情';
       }
 
@@ -549,7 +549,7 @@
       }
 
       function renderReceivable(row) {
-        document.getElementById('receivableRows').innerHTML = '<tr><td>' + linkHtml('finance-receivable.html?receivableNo=' + encodeURIComponent(row.dataset.receivable), row.dataset.receivable) + '</td><td class="amount-strong">' + escapeHtml(row.dataset.receivableAmount) + '</td><td>' + escapeHtml(row.dataset.writeoff) + '</td><td>' + escapeHtml(row.dataset.loss) + '</td><td>' + escapeHtml(row.dataset.remainder) + '</td><td>' + tagHtml(row.dataset.status === '待执行' || row.dataset.status === '执行失败' ? '待处理' : '已处理') + '</td></tr>';
+        document.getElementById('receivableRows').innerHTML = '<tr><td>' + linkHtml('finance-receivable.html?receivableNo=' + encodeURIComponent(row.dataset.receivable), row.dataset.receivable) + '</td><td class="amount-strong">' + escapeHtml(row.dataset.receivableAmount) + '</td><td>' + escapeHtml(row.dataset.writeoff) + '</td><td>' + escapeHtml(row.dataset.loss) + '</td><td>' + escapeHtml(row.dataset.remainder) + '</td><td>' + tagHtml(row.dataset.status === '待执行' || row.dataset.status === '执行失败' ? '待冲销' : '已冲销') + '</td></tr>';
       }
 
       function renderVoucher(row) {
@@ -590,7 +590,7 @@
         activeWorkMode = mode || actionModeByStatus(row.dataset.status);
         var title = actionByStatus(row.dataset.status);
         if (activeWorkMode === 'receipt') title = '补回单';
-        if (activeWorkMode === 'exception') title = '处理异常';
+        if (activeWorkMode === 'exception') title = '确认异常';
         document.getElementById('refundExecuteTitle').textContent = title;
         document.getElementById('executeSummaryGrid').innerHTML = gridHtml([
           ['退款单', escapeHtml(row.dataset.refundNo)],
@@ -605,7 +605,7 @@
           ['可退金额', row.dataset.check === '金额异常' ? '金额异常' : '通过', row.dataset.approvedAmount],
           ['原收款', '已核对', row.dataset.receiptNo + ' / ' + row.dataset.matchNo],
           ['退款账户', row.dataset.check === '账户异常' ? '账户异常' : '通过', row.dataset.accountStatus],
-          ['应收处理', '已核对', row.dataset.receivable + ' / 冲销 ' + row.dataset.writeoff]
+          ['应收冲销', '已核对', row.dataset.receivable + ' / 冲销 ' + row.dataset.writeoff]
         ].map(function (item) {
           return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + tagHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td></tr>';
         }).join('');
@@ -642,8 +642,8 @@
           activeRow.dataset.status = '待执行';
           activeRow.dataset.check = '已校验';
           activeRow.dataset.accountStatus = '白名单已校验';
-          activeRow.dataset.riskNote = '账户异常已处理';
-          notify(activeRow.dataset.refundNo + '异常已处理');
+          activeRow.dataset.riskNote = '账户异常已确认';
+          notify(activeRow.dataset.refundNo + '异常已确认');
         } else {
           activeRow.dataset.status = method === '退回预存' ? '已退预存' : '执行中';
           activeRow.dataset.method = method;

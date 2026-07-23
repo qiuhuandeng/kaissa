@@ -62,6 +62,9 @@
     .bill-tab-panels .drawer-section[hidden] {
       display: none;
     }
+    .work-section[hidden] {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -134,7 +137,7 @@
             <th>系统成本</th>
             <th>优惠/差异</th>
             <th>发票状态</th>
-            <th>应付承接</th>
+            <th>应付单</th>
             <th class="sticky-action">操作</th>
           </tr>
         </thead>
@@ -271,15 +274,11 @@
 
         <nav class="tab-bar drawer-tab-bar" aria-label="供应商账单详情标签">
           <button class="tab-item active" type="button" data-detail-tab="overview">账单总览</button>
-          <button class="tab-item" type="button" data-detail-tab="attachment">原始附件</button>
-          <button class="tab-item" type="button" data-detail-tab="mapping">挂接对象</button>
-          <button class="tab-item" type="button" data-detail-tab="currency">原币汇率</button>
+          <button class="tab-item" type="button" data-detail-tab="mapping">挂接明细</button>
           <button class="tab-item" type="button" data-detail-tab="cost">成本核对</button>
           <button class="tab-item" type="button" data-detail-tab="diff">差异处理</button>
-          <button class="tab-item" type="button" data-detail-tab="invoice">发票匹配</button>
-          <button class="tab-item" type="button" data-detail-tab="payable">应付承接</button>
-          <button class="tab-item" type="button" data-detail-tab="settlement">结算影响</button>
-          <button class="tab-item" type="button" data-detail-tab="logs">处理记录</button>
+          <button class="tab-item" type="button" data-detail-tab="payable">应付结果</button>
+          <button class="tab-item" type="button" data-detail-tab="attachment">附件与记录</button>
         </nav>
 
         <section class="bill-tab-panels drawer-tab-panels">
@@ -293,6 +292,13 @@
               <table>
                 <thead><tr><th>附件名称</th><th>来源方式</th><th>识别结果</th><th>账单日期</th><th>对方账单</th></tr></thead>
                 <tbody id="attachmentRows"></tbody>
+              </table>
+            </section>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
+            <section class="table-wrap drawer-table-fit drawer-table-cols-4">
+              <table>
+                <thead><tr><th>时间</th><th>处理环节</th><th>处理人</th><th>结果</th></tr></thead>
+                <tbody id="logRows"></tbody>
               </table>
             </section>
           </section>
@@ -326,38 +332,30 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">发票匹配</h3></div>
             <section class="table-wrap drawer-table-fit drawer-table-cols-5">
               <table>
-                <thead><tr><th>发票状态</th><th>税务结果</th><th>匹配金额</th><th>缺票风险</th><th>承接入口</th></tr></thead>
+                <thead><tr><th>发票状态</th><th>税务结果</th><th>匹配金额</th><th>缺票风险</th><th>发票入口</th></tr></thead>
                 <tbody id="invoiceRows"></tbody>
               </table>
             </section>
           </section>
           <section class="drawer-section drawer-tab-panel" data-detail-panel="payable" hidden>
-            <div class="drawer-section-head"><h3 class="drawer-section-title">应付承接</h3></div>
+            <div class="drawer-section-head"><h3 class="drawer-section-title">应付结果</h3></div>
             <section class="table-wrap drawer-table-fit drawer-table-cols-5">
               <table>
-                <thead><tr><th>应付单</th><th>应付状态</th><th>应付金额</th><th>账单核对</th><th>承接入口</th></tr></thead>
+                <thead><tr><th>应付单</th><th>应付状态</th><th>应付金额</th><th>账单核对</th><th>应付入口</th></tr></thead>
                 <tbody id="payableRows"></tbody>
               </table>
             </section>
+            <section class="description-grid" id="payableDownstreamGrid"></section>
           </section>
           <section class="drawer-section drawer-tab-panel" data-detail-panel="settlement" hidden>
             <div class="drawer-section-head"><h3 class="drawer-section-title">结算影响</h3></div>
             <section class="description-grid" id="settlementGrid"></section>
           </section>
-          <section class="drawer-section drawer-tab-panel" data-detail-panel="logs" hidden>
-            <div class="drawer-section-head"><h3 class="drawer-section-title">处理记录</h3></div>
-            <section class="table-wrap drawer-table-fit drawer-table-cols-4">
-              <table>
-                <thead><tr><th>时间</th><th>处理环节</th><th>处理人</th><th>结果</th></tr></thead>
-                <tbody id="logRows"></tbody>
-              </table>
-            </section>
-          </section>
         </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>关闭</button>
-        <button class="btn btn-primary" type="button" data-detail-primary>确认处理</button>
+        <button class="btn btn-primary" type="button" data-detail-primary>确认账单</button>
       </div>
     </div>
   </div>
@@ -365,8 +363,8 @@
   <div id="billWorkDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="billWorkTitle">
       <div class="modal-header">
-        <div id="billWorkTitle" class="modal-title">账单处理</div>
-        <button class="modal-close" type="button" aria-label="关闭账单处理" data-close-layer>×</button>
+        <div id="billWorkTitle" class="modal-title">账单核对</div>
+        <button class="modal-close" type="button" aria-label="关闭账单核对" data-close-layer>×</button>
       </div>
       <div class="modal-body">
         <section class="drawer-object-card" id="workObjectCard">
@@ -379,7 +377,7 @@
           </div>
           <div class="bill-summary-grid" id="workSummaryGrid"></div>
         </section>
-        <section class="drawer-section">
+        <section class="drawer-section work-section" data-work-section="bill">
           <div class="drawer-section-head"><h3 class="drawer-section-title">账单信息</h3></div>
           <div class="form-row">
             <div class="form-group">
@@ -397,7 +395,7 @@
               <select id="workSource" class="form-control">
                 <option>邮箱导入</option>
                 <option>供应商回传</option>
-                <option>上传账单</option>
+                <option>账单导入</option>
                 <option>接口同步</option>
                 <option>人工录入</option>
                 <option>OTA账单</option>
@@ -449,7 +447,55 @@
             <div id="workFile" class="upload-box">选择账单附件</div>
           </div>
         </section>
-        <section class="drawer-section">
+
+        <section class="drawer-section work-section" data-work-section="recognition" hidden>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">识别结果</h3></div>
+          <section class="table-wrap drawer-table-fit drawer-table-cols-4">
+            <table>
+              <thead><tr><th>识别内容</th><th>系统结果</th><th>需确认项</th><th>确认结果</th></tr></thead>
+              <tbody id="workRecognitionRows"></tbody>
+            </table>
+          </section>
+        </section>
+
+        <section class="drawer-section work-section" data-work-section="mapping" hidden>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">挂接对象</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workBusinessType">业务对象</label>
+              <select id="workBusinessType" class="form-control">
+                <option>标准团期</option>
+                <option>邮轮航次</option>
+                <option>专列班期</option>
+                <option>自由行批次</option>
+                <option>MICE项目</option>
+                <option>订单/服务单</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workContract">合同/采购协议</label>
+              <input id="workContract" class="form-control" type="text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workMappingAmount">本次挂接金额</label>
+              <input id="workMappingAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workUnmappedAmount">未挂接金额</label>
+              <input id="workUnmappedAmount" class="form-control" type="text">
+            </div>
+          </div>
+          <section class="table-wrap drawer-table-fit drawer-table-cols-4">
+            <table>
+              <thead><tr><th>账单明细</th><th>挂接团期/项目</th><th>费用项目</th><th>挂接金额</th></tr></thead>
+              <tbody id="workMappingRows"></tbody>
+            </table>
+          </section>
+        </section>
+
+        <section class="drawer-section work-section" data-work-section="check" hidden>
           <div class="drawer-section-head"><h3 class="drawer-section-title">核对依据</h3></div>
           <section class="table-wrap drawer-table-fit drawer-table-cols-4">
             <table>
@@ -457,22 +503,71 @@
               <tbody id="workCheckRows"></tbody>
             </table>
           </section>
-        </section>
-        <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">本次处理</h3></div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="workResult">处理结果</label>
-              <select id="workResult" class="form-control">
-                <option>识别完成，待挂接</option>
-                <option>已挂接对象，待核对</option>
-                <option>核对一致，确认账单</option>
-                <option>存在差异，转差异处理</option>
-                <option>差异确认，生成应付</option>
-                <option>关闭账单</option>
+              <label class="form-label" for="workAcceptedAmount">本次认可金额</label>
+              <input id="workAcceptedAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workPayableAmount">进入应付确认金额</label>
+              <input id="workPayableAmount" class="form-control" type="text">
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section work-section" data-work-section="diff" hidden>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">差异处理</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workDiffType">差异类型</label>
+              <select id="workDiffType" class="form-control">
+                <option>人数/房晚差异</option>
+                <option>舱位/铺位差异</option>
+                <option>汇率差异</option>
+                <option>优惠扣减差异</option>
+                <option>供应商多收</option>
+                <option>系统漏成本</option>
+                <option>重复账单</option>
               </select>
             </div>
             <div class="form-group">
+              <label class="form-label" for="workDiffOwner">承担方</label>
+              <select id="workDiffOwner" class="form-control">
+                <option>待业务确认</option>
+                <option>供应商承担</option>
+                <option>我方承担</option>
+                <option>客户承担</option>
+                <option>按合同分摊</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workRejectedAmount">不认可金额</label>
+              <input id="workRejectedAmount" class="form-control" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workDiffDecision">处理方式</label>
+              <select id="workDiffDecision" class="form-control">
+                <option>退回业务确认</option>
+                <option>按系统成本确认</option>
+                <option>按供应商账单补差</option>
+                <option>部分认可</option>
+                <option>关闭重复账单</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section work-section" data-work-section="conclusion">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">本次结论</h3></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workResult" id="workResultLabel">确认结果</label>
+              <select id="workResult" class="form-control">
+              </select>
+            </div>
+            <div class="form-group" id="workInvoiceGroup">
               <label class="form-label" for="workInvoice">发票状态</label>
               <select id="workInvoice" class="form-control">
                 <option>待收票</option>
@@ -482,14 +577,14 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="workRemark">处理备注</label>
+            <label class="form-label" for="workRemark" id="workRemarkLabel">处理备注</label>
             <textarea id="workRemark" class="form-control" rows="4"></textarea>
           </div>
         </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-layer>取消</button>
-        <button class="btn btn-primary" type="button" data-confirm-work>确认处理</button>
+        <button class="btn btn-primary" type="button" data-confirm-work>确认账单</button>
       </div>
     </div>
   </div>
@@ -503,6 +598,7 @@
       var workDrawer = document.getElementById('billWorkDrawer');
       var activeStatus = '全部';
       var activeRow = null;
+      var activeWorkAction = '';
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -599,6 +695,118 @@
         return 'detail';
       }
 
+      function setSelectOptions(select, options, selectedValue) {
+        select.innerHTML = options.map(function (option) {
+          return '<option>' + escapeHtml(option) + '</option>';
+        }).join('');
+        select.value = selectedValue || options[0] || '';
+      }
+
+      function ensureSelectValue(select, value) {
+        if (!value) return;
+        var exists = Array.from(select.options).some(function (option) { return option.value === value; });
+        if (!exists) {
+          var option = document.createElement('option');
+          option.textContent = value;
+          select.appendChild(option);
+        }
+        select.value = value;
+      }
+
+      function actionTitle(action, row) {
+        if (row) return actionByStatus(row.dataset.status);
+        return action === 'manual' ? '补录账单' : '导入账单';
+      }
+
+      function resultOptionsByAction(action) {
+        if (action === 'recognize') return ['确认识别，待挂接', '关闭账单'];
+        if (action === 'attach') return ['确认挂接，待核对', '退回业务补资料', '关闭账单'];
+        if (action === 'check') return ['核对一致，进入应付确认', '转差异处理', '退回业务补成本'];
+        if (action === 'diff') return ['差异已确认，进入应付确认', '按系统成本确认', '退回业务补成本', '关闭账单'];
+        return ['保存账单，待识别'];
+      }
+
+      function confirmButtonText(action) {
+        if (action === 'recognize') return '确认识别';
+        if (action === 'attach') return '确认挂接';
+        if (action === 'check') return '确认核对';
+        if (action === 'diff') return '提交差异结果';
+        return '保存账单';
+      }
+
+      function setWorkSections(action) {
+        var visibleMap = {
+          bill: true,
+          recognition: action === 'upload' || action === 'manual' || action === 'recognize',
+          mapping: action === 'attach' || action === 'check' || action === 'diff',
+          check: action === 'check' || action === 'diff',
+          diff: action === 'diff',
+          conclusion: true
+        };
+        document.querySelectorAll('[data-work-section]').forEach(function (section) {
+          section.hidden = !visibleMap[section.dataset.workSection];
+        });
+        var baseReadonly = action === 'check' || action === 'diff';
+        ['workSupplier', 'workCounterNo', 'workSource', 'workBillType', 'workBusiness', 'workCostItem', 'workCurrency', 'workOriginalAmount', 'workRate', 'workLocalAmount'].forEach(function (id) {
+          var field = document.getElementById(id);
+          if (field) field.disabled = baseReadonly;
+        });
+        var mappingReadonly = action === 'check' || action === 'diff';
+        ['workBusinessType', 'workContract', 'workMappingAmount', 'workUnmappedAmount'].forEach(function (id) {
+          var field = document.getElementById(id);
+          if (field) field.disabled = mappingReadonly;
+        });
+        document.getElementById('workInvoiceGroup').hidden = action === 'upload' || action === 'manual' || action === 'recognize' || action === 'attach';
+        document.querySelector('[data-confirm-work]').textContent = confirmButtonText(action);
+      }
+
+      function renderWorkRecognition(row, action) {
+        var source = row ? row.dataset.source : (action === 'manual' ? '人工录入' : '账单导入');
+        var supplier = row ? row.dataset.supplier : document.getElementById('workSupplier').value;
+        var counterNo = row ? row.dataset.counterNo : document.getElementById('workCounterNo').value;
+        var amount = row ? row.dataset.originalAmount + ' / ' + row.dataset.localAmount : '待录入 / 待计算';
+        var recognition = row ? row.dataset.recognition : '账单保存后进入识别。';
+        document.getElementById('workRecognitionRows').innerHTML = [
+          ['供应商', supplier, '供应商档案', supplier ? '可确认' : '待补充'],
+          ['对方账单', counterNo, source, counterNo ? '可确认' : '待补充'],
+          ['账单金额', amount, '金额/币种/汇率', amount.indexOf('待') >= 0 ? '待补充' : '可确认'],
+          ['识别说明', recognition, '明细行', row ? row.dataset.costItem : '待识别']
+        ].map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
+        }).join('');
+      }
+
+      function renderWorkMapping(row) {
+        var business = row ? row.dataset.business + ' / ' + row.dataset.businessNo : '待挂接';
+        var costItem = row ? row.dataset.costItem : document.getElementById('workCostItem').value;
+        var amount = row ? row.dataset.localAmount : document.getElementById('workLocalAmount').value;
+        document.getElementById('workMappingRows').innerHTML = '<tr><td>' + escapeHtml(row ? row.dataset.billType : '账单明细') + '</td><td>' + escapeHtml(business) + '</td><td>' + escapeHtml(costItem) + '</td><td>' + escapeHtml(amount || '¥0') + '</td></tr>';
+      }
+
+      function renderWorkCheck(row) {
+        var items = row ? [
+          ['账单金额', row.dataset.originalAmount + ' / ' + row.dataset.localAmount, row.dataset.systemOriginal + ' / ' + row.dataset.systemCost, row.dataset.diffOriginal + ' / ' + row.dataset.diffLocal],
+          ['成本依据', row.dataset.billType, row.dataset.costBasis, row.dataset.check],
+          ['发票状态', row.dataset.invoice, row.dataset.tax, row.dataset.payable]
+        ] : [
+          ['账单附件', '待上传', '待匹配', '待识别']
+        ];
+        document.getElementById('workCheckRows').innerHTML = items.map(function (item) {
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
+        }).join('');
+      }
+
+      function fillWorkAmounts(row) {
+        var localAmount = row ? row.dataset.localAmount : '¥0';
+        var systemCost = row && row.dataset.systemCost && row.dataset.systemCost.indexOf('待') < 0 ? row.dataset.systemCost : localAmount;
+        var diffLocal = row ? row.dataset.diffLocal : '¥0';
+        document.getElementById('workMappingAmount').value = row && row.dataset.businessNo !== '-' ? localAmount : '¥0';
+        document.getElementById('workUnmappedAmount').value = row && row.dataset.businessNo !== '-' ? '¥0' : localAmount;
+        document.getElementById('workAcceptedAmount').value = row && row.dataset.check === '有差异' ? systemCost : localAmount;
+        document.getElementById('workPayableAmount').value = row && row.dataset.payableAmount && row.dataset.payableAmount.indexOf('待') < 0 ? row.dataset.payableAmount : (row && row.dataset.check === '有差异' ? systemCost : localAmount);
+        document.getElementById('workRejectedAmount').value = diffLocal && diffLocal !== '¥0' && diffLocal.indexOf('待') < 0 ? diffLocal : '¥0';
+      }
+
       function updateCounts() {
         var counts = { '全部': rows.length };
         rows.forEach(function (row) {
@@ -647,7 +855,7 @@
           { label: '汇率/本币', value: escapeHtml(row.dataset.rate + ' / ' + row.dataset.localAmount) },
           { label: '供应商承担优惠', value: escapeHtml(row.dataset.supplierDiscount || '¥0') },
           { label: '差异金额', value: row.dataset.diffLocal === '¥0' || row.dataset.diffLocal === '待识别' || row.dataset.diffLocal === '待挂接' ? escapeHtml(row.dataset.diffLocal) : '<span class="amount-red">' + escapeHtml(row.dataset.diffLocal) + '</span>' },
-          { label: '应付承接', value: tagHtml(row.dataset.payable) }
+          { label: '应付单状态', value: tagHtml(row.dataset.payable) }
         ]);
       }
 
@@ -664,7 +872,7 @@
           { label: '账单类型', value: escapeHtml(row.dataset.billType) },
           { label: '供应商承担优惠', value: escapeHtml(row.dataset.supplierDiscount || '¥0') },
           { label: '优惠来源', value: escapeHtml(row.dataset.discountSource || '无优惠减免'), full: true },
-          { label: '处理备注', value: escapeHtml(row.dataset.remark), full: true }
+          { label: '账单备注', value: escapeHtml(row.dataset.remark), full: true }
         ]);
       }
 
@@ -689,19 +897,19 @@
       }
 
       function renderCost(row) {
-        var conclusion = row.dataset.check === '无差异' ? '核对一致' : (row.dataset.check === '有差异' ? '差异待处理' : row.dataset.check);
+        var conclusion = row.dataset.check === '无差异' ? '核对一致' : (row.dataset.check === '有差异' ? '差异待确认' : row.dataset.check);
         document.getElementById('costRows').innerHTML = '<tr><td>账单金额</td><td>' + escapeHtml(row.dataset.originalAmount + ' / ' + row.dataset.localAmount) + '</td><td>' + escapeHtml(row.dataset.systemOriginal + ' / ' + row.dataset.systemCost) + '</td><td>' + escapeHtml(row.dataset.diffOriginal + ' / ' + row.dataset.diffLocal) + '</td><td>' + tagHtml(conclusion) + '</td></tr>' +
           '<tr><td>供应商承担优惠</td><td>' + escapeHtml(row.dataset.supplierDiscount || '¥0') + '</td><td>' + escapeHtml(row.dataset.discountSource || '无优惠减免') + '</td><td>' + escapeHtml(row.dataset.supplierDiscount || '¥0') + '</td><td>' + tagHtml(row.dataset.supplierDiscount && row.dataset.supplierDiscount !== '¥0' ? '抵扣应付' : '无抵扣') + '</td></tr>' +
           '<tr><td>成本依据</td><td>' + escapeHtml(row.dataset.billType) + '</td><td>' + escapeHtml(row.dataset.costBasis) + '</td><td>' + escapeHtml(row.dataset.check) + '</td><td>' + escapeHtml(row.dataset.recognition) + '</td></tr>';
       }
 
       function renderDiff(row) {
-        var result = row.dataset.check === '有差异' ? '差异待处理' : (row.dataset.check === '重复账单' ? '重复关闭' : '无差异');
+        var result = row.dataset.check === '有差异' ? '差异待确认' : (row.dataset.check === '重复账单' ? '重复关闭' : '无差异');
         document.getElementById('diffGrid').innerHTML = gridHtml([
           { label: '差异类型', value: tagHtml(row.dataset.check) },
           { label: '原币差异', value: escapeHtml(row.dataset.diffOriginal) },
           { label: '本币差异', value: row.dataset.diffLocal === '¥0' ? escapeHtml(row.dataset.diffLocal) : '<span class="amount-red">' + escapeHtml(row.dataset.diffLocal) + '</span>' },
-          { label: '处理结果', value: tagHtml(result) },
+          { label: '差异结论', value: tagHtml(result) },
           { label: '差异依据', value: escapeHtml(row.dataset.remark), full: true }
         ]);
       }
@@ -716,7 +924,13 @@
         var payable = linkHtml('finance-payable.html?payableNo=' + encodeURIComponent(row.dataset.payableNo), row.dataset.payableNo);
         var entryText = row.dataset.payable === '已生成' || row.dataset.payable === '待生成' ? '应付管理' : row.dataset.payable;
         document.getElementById('payableRows').innerHTML = '<tr><td>' + payable + '</td><td>' + tagHtml(row.dataset.payable) + '</td><td>' + escapeHtml(row.dataset.payableAmount) + '</td><td>' + tagHtml(row.dataset.check) + '</td><td>' + linkHtml('finance-payable.html?billNo=' + encodeURIComponent(row.dataset.no), entryText) + '</td></tr>' +
-          '<tr><td>供应商承担优惠</td><td>' + tagHtml(row.dataset.supplierDiscount && row.dataset.supplierDiscount !== '¥0' ? '待确认' : '无抵扣') + '</td><td>' + escapeHtml(row.dataset.supplierDiscount || '¥0') + '</td><td>' + escapeHtml(row.dataset.discountSource || '-') + '</td><td>' + (row.dataset.discountSource ? linkHtml('finance-settlement-adjustment.html?adjustmentNo=' + encodeURIComponent(row.dataset.discountSource.split(' / ')[0]), '优惠减免承接') : '-') + '</td></tr>';
+          '<tr><td>供应商承担优惠</td><td>' + tagHtml(row.dataset.supplierDiscount && row.dataset.supplierDiscount !== '¥0' ? '待确认' : '无抵扣') + '</td><td>' + escapeHtml(row.dataset.supplierDiscount || '¥0') + '</td><td>' + escapeHtml(row.dataset.discountSource || '-') + '</td><td>' + (row.dataset.discountSource ? linkHtml('finance-settlement-adjustment.html?adjustmentNo=' + encodeURIComponent(row.dataset.discountSource.split(' / ')[0]), '优惠承担确认') : '-') + '</td></tr>';
+        document.getElementById('payableDownstreamGrid').innerHTML = gridHtml([
+          { label: '付款申请', value: row.dataset.payable === '已生成' || row.dataset.payable === '待生成' ? linkHtml('finance-payment-apply.html?billNo=' + encodeURIComponent(row.dataset.no), '付款申请') : escapeHtml('应付确认后发起') },
+          { label: '发票状态', value: tagHtml(row.dataset.invoice) },
+          { label: '结算状态', value: tagHtml(row.dataset.settlement) },
+          { label: 'NC状态', value: tagHtml(row.dataset.nc) }
+        ]);
       }
 
       function renderSettlement(row) {
@@ -733,7 +947,7 @@
           [row.dataset.uploadDate + ' 09:20', row.dataset.source, '应付会计', row.dataset.no],
           [row.dataset.uploadDate + ' 10:05', '账单识别', '系统', row.dataset.recognition],
           [row.dataset.uploadDate + ' 14:10', '成本核对', '采购财务', row.dataset.check],
-          [row.dataset.uploadDate + ' 16:30', '应付承接', '应付会计', row.dataset.payable]
+          [row.dataset.uploadDate + ' 16:30', '进入应付确认', '应付会计', row.dataset.payable]
         ];
         document.getElementById('logRows').innerHTML = items.map(function (item) {
           return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
@@ -762,8 +976,12 @@
 
       function openWork(row, action) {
         activeRow = row || null;
-        var title = row ? actionByStatus(row.dataset.status) : (action === 'manual' ? '录入账单' : '上传账单');
-        document.getElementById('billWorkTitle').textContent = title;
+        activeWorkAction = action || (row ? actionKeyByStatus(row.dataset.status) : 'upload');
+        document.getElementById('billWorkTitle').textContent = actionTitle(activeWorkAction, row);
+        setWorkSections(activeWorkAction);
+        setSelectOptions(document.getElementById('workResult'), resultOptionsByAction(activeWorkAction));
+        document.getElementById('workResultLabel').textContent = activeWorkAction === 'diff' ? '差异结论' : '确认结果';
+        document.getElementById('workRemarkLabel').textContent = activeWorkAction === 'diff' ? '差异说明' : '处理备注';
         var card = document.getElementById('workObjectCard');
         if (row) {
           card.hidden = false;
@@ -771,40 +989,42 @@
           renderSummary(row, 'workSummaryGrid');
           document.getElementById('workSupplier').value = row.dataset.supplier;
           document.getElementById('workCounterNo').value = row.dataset.counterNo;
-          document.getElementById('workSource').value = row.dataset.source;
+          ensureSelectValue(document.getElementById('workSource'), row.dataset.source);
           document.getElementById('workBillType').value = row.dataset.billType;
           document.getElementById('workBusiness').value = row.dataset.business;
           document.getElementById('workCostItem').value = row.dataset.costItem;
+          ensureSelectValue(document.getElementById('workBusinessType'), row.dataset.businessType);
+          document.getElementById('workContract').value = row.dataset.contract;
           document.getElementById('workCurrency').value = row.dataset.currency;
           document.getElementById('workOriginalAmount').value = row.dataset.originalAmount;
           document.getElementById('workRate').value = row.dataset.rate;
           document.getElementById('workLocalAmount').value = row.dataset.localAmount;
           document.getElementById('workInvoice').value = row.dataset.invoice;
           document.getElementById('workRemark').value = row.dataset.remark;
-          document.getElementById('workCheckRows').innerHTML = [
-            ['账单金额', row.dataset.originalAmount + ' / ' + row.dataset.localAmount, row.dataset.systemOriginal + ' / ' + row.dataset.systemCost, row.dataset.diffOriginal + ' / ' + row.dataset.diffLocal],
-            ['成本依据', row.dataset.billType, row.dataset.costBasis, row.dataset.check],
-            ['发票状态', row.dataset.invoice, row.dataset.tax, row.dataset.payable]
-          ].map(function (item) {
-            return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
-          }).join('');
-          document.getElementById('workResult').value = action === 'recognize' ? '识别完成，待挂接' : (action === 'attach' ? '已挂接对象，待核对' : (action === 'diff' ? '差异确认，生成应付' : '核对一致，确认账单'));
+          renderWorkRecognition(row, activeWorkAction);
+          renderWorkMapping(row);
+          renderWorkCheck(row);
+          fillWorkAmounts(row);
         } else {
           card.hidden = true;
           document.getElementById('workSupplier').value = action === 'manual' ? '丝路专列运营商' : '欧洲联合地接社';
           document.getElementById('workCounterNo').value = action === 'manual' ? 'SUP-BILL-202607' : 'EMAIL-BILL-202607';
-          document.getElementById('workSource').value = action === 'manual' ? '人工录入' : '上传账单';
+          document.getElementById('workSource').value = action === 'manual' ? '人工录入' : '账单导入';
           document.getElementById('workBillType').value = '地接月结账单';
           document.getElementById('workBusiness').value = '待挂接';
           document.getElementById('workCostItem').value = '地接费';
+          ensureSelectValue(document.getElementById('workBusinessType'), '标准团期');
+          document.getElementById('workContract').value = '待匹配';
           document.getElementById('workCurrency').value = 'CNY';
           document.getElementById('workOriginalAmount').value = '¥0';
           document.getElementById('workRate').value = '1.0000';
           document.getElementById('workLocalAmount').value = '¥0';
           document.getElementById('workInvoice').value = '待收票';
           document.getElementById('workRemark').value = '';
-          document.getElementById('workCheckRows').innerHTML = '<tr><td>账单附件</td><td>待上传</td><td>待匹配</td><td>待识别</td></tr>';
-          document.getElementById('workResult').value = '识别完成，待挂接';
+          renderWorkRecognition(null, activeWorkAction);
+          renderWorkMapping(null);
+          renderWorkCheck(null);
+          fillWorkAmounts(null);
         }
         openLayer(workDrawer);
       }
@@ -828,7 +1048,7 @@
 
       function confirmWork() {
         if (!activeRow) {
-          notify(document.getElementById('billWorkTitle').textContent + '已提交');
+          notify(document.getElementById('billWorkTitle').textContent + '已保存');
           closeLayer(workDrawer);
           return;
         }
@@ -838,7 +1058,9 @@
         activeRow.dataset.source = document.getElementById('workSource').value;
         activeRow.dataset.billType = document.getElementById('workBillType').value;
         activeRow.dataset.business = document.getElementById('workBusiness').value;
+        activeRow.dataset.businessType = document.getElementById('workBusinessType').value;
         activeRow.dataset.costItem = document.getElementById('workCostItem').value;
+        activeRow.dataset.contract = document.getElementById('workContract').value;
         activeRow.dataset.currency = document.getElementById('workCurrency').value;
         activeRow.dataset.originalAmount = document.getElementById('workOriginalAmount').value;
         activeRow.dataset.rate = document.getElementById('workRate').value;
@@ -849,40 +1071,51 @@
           activeRow.dataset.status = '已关闭';
           activeRow.dataset.payable = '已关闭';
           activeRow.dataset.check = '重复账单';
-        } else if (result === '识别完成，待挂接') {
+          activeRow.dataset.payableAmount = '¥0';
+        } else if (result === '确认识别，待挂接') {
           activeRow.dataset.status = '待挂接';
           activeRow.dataset.check = '未挂接';
-        } else if (result === '已挂接对象，待核对') {
+          activeRow.dataset.payable = '未生成';
+          activeRow.dataset.payableAmount = '待挂接';
+        } else if (result === '确认挂接，待核对') {
           activeRow.dataset.status = '待核对';
           activeRow.dataset.check = '未核对';
           activeRow.dataset.systemOriginal = activeRow.dataset.originalAmount;
           activeRow.dataset.systemCost = activeRow.dataset.localAmount;
           activeRow.dataset.diffOriginal = activeRow.dataset.currency + ' 0';
           activeRow.dataset.diffLocal = '¥0';
-          activeRow.dataset.payable = '待生成';
-        } else if (result === '存在差异，转差异处理') {
+          activeRow.dataset.payable = '未生成';
+          activeRow.dataset.payableAmount = '待核对';
+        } else if (result === '转差异处理') {
           activeRow.dataset.status = '有差异';
           activeRow.dataset.check = '有差异';
-        } else {
+          activeRow.dataset.payable = '未生成';
+          activeRow.dataset.payableAmount = '待差异确认';
+        } else if (result === '退回业务补资料' || result === '退回业务补成本') {
+          activeRow.dataset.status = '有差异';
+          activeRow.dataset.check = '待业务确认';
+          activeRow.dataset.payable = '未生成';
+          activeRow.dataset.payableAmount = '待业务确认';
+        } else if (result === '核对一致，进入应付确认') {
           activeRow.dataset.status = '已确认';
           activeRow.dataset.check = '无差异';
           activeRow.dataset.diffOriginal = activeRow.dataset.currency + ' 0';
           activeRow.dataset.diffLocal = '¥0';
-          activeRow.dataset.payable = '已生成';
+          activeRow.dataset.payable = '待生成';
           if (activeRow.dataset.payableNo === '未生成') {
             activeRow.dataset.payableNo = 'AP-' + activeRow.dataset.no.replace(/^BN-/, '');
           }
-          activeRow.dataset.payableAmount = activeRow.dataset.localAmount;
+          activeRow.dataset.payableAmount = document.getElementById('workPayableAmount').value || activeRow.dataset.localAmount;
+        } else {
+          activeRow.dataset.status = '已确认';
+          activeRow.dataset.check = result === '按系统成本确认' ? '按系统成本确认' : '差异已确认';
+          activeRow.dataset.payable = '待生成';
+          if (activeRow.dataset.payableNo === '未生成') {
+            activeRow.dataset.payableNo = 'AP-' + activeRow.dataset.no.replace(/^BN-/, '');
+          }
+          activeRow.dataset.payableAmount = document.getElementById('workPayableAmount').value || document.getElementById('workAcceptedAmount').value || activeRow.dataset.localAmount;
         }
         renderBillCells(activeRow);
-      var statusFilter = document.getElementById('statusFilter');
-      if (statusFilter) {
-        statusFilter.addEventListener('change', function () {
-          activeStatus = this.value || '全部';
-          applyFilters();
-        });
-      }
-
         updateCounts();
         applyFilters();
         notify(activeRow.dataset.no + '已进入' + activeRow.dataset.status);
@@ -924,6 +1157,13 @@
         });
       });
       document.querySelector('[data-confirm-work]').addEventListener('click', confirmWork);
+      var statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          activeStatus = this.value || '全部';
+          applyFilters();
+        });
+      }
       document.querySelector('[data-export-bills]').addEventListener('click', function () {
         notify('供应商账单列表已导出');
       });
