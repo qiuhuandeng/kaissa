@@ -104,6 +104,28 @@
       .trim();
   }
 
+  function compactText(value) {
+    return String(value || "").replace(/\s+/g, "").trim();
+  }
+
+  function normalizeFilterSearchAction(control) {
+    const text = compactText(control && control.textContent);
+    if (!/^(搜索|查询)$/.test(text)) return;
+    control.classList.add("btn-filter-search");
+    if (text !== "查询") return;
+    const textNodes = Array.from(control.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    if (textNodes.length === 1) {
+      textNodes[0].textContent = textNodes[0].textContent.replace("查询", "搜索");
+    } else {
+      control.textContent = "搜索";
+    }
+  }
+
+  function normalizeFilterSearchButtons(scope) {
+    const root = scope || document;
+    root.querySelectorAll(".filter-actions .btn, .filter-card .btn, .list-surface-filter .btn, .list-surface-filter-actions .btn").forEach(normalizeFilterSearchAction);
+  }
+
   function triggerHasLayerIntent(trigger) {
     if (!trigger || !trigger.attributes) return false;
     return Array.from(trigger.attributes).some((attr) => {
@@ -326,6 +348,7 @@
 
   function startSupplierShell() {
     bootSupplierShell();
+    normalizeFilterSearchButtons(document);
     initDrawerTitleSemantics(document);
   }
 
