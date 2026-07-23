@@ -128,7 +128,7 @@
             <td><div class="table-cell-main"><span class="tag tag-orange">待核对</span><span>到账差异 / 部分认款</span></div></td>
             <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="review">核对</button><button type="button" data-open-detail>详情</button></div></td>
           </tr>
-          <tr data-no="QD20260625002" data-channel="环球同业" data-channel-type="分销商" data-status="差异待处理" data-company="福建凯撒" data-period="2026-06" data-date="2026-06-25" data-order-count="8" data-order-amount="¥64,800" data-refund="¥0" data-channel-discount="¥800" data-deduction="渠道承担优惠 ¥800 / 佣金 ¥0 / 服务费 ¥0 / 补贴 ¥0" data-commission="¥0" data-service="¥0" data-subsidy="¥0" data-other="¥0" data-receivable="¥64,000" data-arrived="¥40,000" data-pending="¥24,000" data-diff="¥24,000" data-diff-type="到账差异" data-carry="部分认款" data-ar="SK20240618009" data-match="RK20260625008 / ¥40,000" data-flow="CMB20260625018" data-discount-carry-no="ADJ-YHJM-20260718003" data-settlement="未结算" data-bill="GTD-BILL-202606">
+          <tr data-no="QD20260625002" data-channel="环球同业" data-channel-type="分销商" data-status="差异待处理" data-company="福建凯撒" data-period="2026-06" data-date="2026-06-25" data-order-count="8" data-order-amount="¥64,800" data-refund="¥0" data-channel-discount="¥800" data-deduction="渠道承担优惠 ¥800 / 佣金 ¥0 / 服务费 ¥0 / 补贴 ¥0" data-commission="¥0" data-service="¥0" data-subsidy="¥0" data-other="¥0" data-receivable="¥64,000" data-arrived="¥40,000" data-pending="¥24,000" data-diff="¥24,000" data-diff-type="到账差异" data-carry="部分认款" data-ar="AR-QD20260625002" data-match="RK20260625008 / ¥40,000" data-flow="CMB20260625018" data-discount-carry-no="ADJ-YHJM-20260718003" data-settlement="未结算" data-bill="GTD-BILL-202606">
             <td><div class="table-cell-main"><strong>QD20260625002</strong><span>环球同业 / 分销商</span><span>平台账单 GTD-BILL-202606</span></div></td>
             <td><div class="table-cell-main"><strong>2026-06</strong><span>账单日 2026-06-25</span></div></td>
             <td><div class="table-cell-main"><strong>¥64,800</strong><span>8单 / 渠道承担优惠 ¥800</span></div></td>
@@ -625,10 +625,12 @@
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
       var rows = Array.from(document.querySelectorAll('#channelRows tr'));
-      var drawer = document.getElementById('channelDrawer');
+      var detailDrawer = document.getElementById('channelDrawer');
       var workDrawer = document.getElementById('channelWorkDrawer');
+      var statusFilter = document.getElementById('statusFilter');
       var activeStatus = '全部';
       var activeRow = null;
+      var activeAction = 'import';
 
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -658,6 +660,7 @@
       }
 
       function openLayer(layer) {
+        if (!layer) return;
         if (window.caesarUI && typeof window.caesarUI.openLayer === 'function') {
           window.caesarUI.openLayer(layer);
           return;
@@ -667,6 +670,7 @@
       }
 
       function closeLayer(layer) {
+        if (!layer) return;
         if (window.caesarUI && typeof window.caesarUI.closeLayer === 'function') {
           window.caesarUI.closeLayer(layer);
           return;
@@ -679,74 +683,141 @@
         return (row.textContent + ' ' + Object.keys(row.dataset).map(function (key) { return row.dataset[key]; }).join(' ')).trim().replace(/\s+/g, ' ');
       }
 
-      function actionByStatus(status) {
-        if (status === '待生成') return '生成结算';
-        if (status === '待核对') return '核对账单';
-        if (status === '差异中') return '处理差异';
-        if (status === '待确认') return '确认结算';
-        if (status === '已确认') return '查看结算';
-        return '详情';
+      function setValue(id, value) {
+        var node = document.getElementById(id);
+        if (node) node.value = value || '';
       }
 
-      function actionButtonByStatus(status) {
-        if (status === '待生成') return '生成';
-        if (status === '待核对') return '核对';
-        if (status === '差异中') return '差异';
-        if (status === '待确认') return '确认';
-        if (status === '已确认') return '详情';
-        return '详情';
+      function setOptions(id, options, preferred) {
+        var node = document.getElementById(id);
+        if (!node) return;
+        node.innerHTML = options.map(function (item) {
+          return '<option>' + escapeHtml(item) + '</option>';
+        }).join('');
+        if (preferred && options.indexOf(preferred) >= 0) node.value = preferred;
+      }
+
+      function amountHasValue(value) {
+        var text = String(value || '');
+        if (!/\d/.test(text)) return false;
+        return Math.abs(Number(text.replace(/[^\d.-]/g, '')) || 0) > 0;
       }
 
       function statusClass(value) {
-        if (/差异|关闭/.test(value)) return 'tag-red';
-        if (/待|部分|未生成/.test(value)) return 'tag-orange';
-        if (/已|无差异|结算/.test(value)) return 'tag-green';
+        value = value || '';
+        if (/已关闭|已归档/.test(value)) return 'tag-gray';
+        if (/退回|差异|缺失|短款|长款/.test(value) && !/无差异/.test(value)) return 'tag-red';
+        if (/待|部分|未|取数|复核|处理中/.test(value)) return 'tag-orange';
+        if (/已|无差异|确认|齐全|结算|无需/.test(value)) return 'tag-green';
         return 'tag-blue';
       }
 
-      function nextStatus(status) {
-        if (status === '待生成') return '待核对';
-        if (status === '待核对') return '待确认';
-        if (status === '差异中') return '待确认';
-        if (status === '待确认') return '已确认';
-        return status;
+      function tagHtml(value) {
+        return '<span class="tag ' + statusClass(value) + '">' + escapeHtml(value || '-') + '</span>';
       }
 
-      function updateRowAction(row) {
-        var button = row.querySelector('[data-open-row]');
-        if (row.children[7]) {
-          row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.status) + '<span>' + escapeHtml(row.dataset.carry) + '</span></div>';
+      function linkHtml(href, text) {
+        if (!text || text === '-' || text === '未结算' || /待确认/.test(text)) return escapeHtml(text || '-');
+        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
+      }
+
+      function renderDescription(target, items) {
+        target.innerHTML = items.map(function (item) {
+          return '<div class="description-item' + (item.full ? ' full' : '') + '"><div class="description-label">' + escapeHtml(item.label) + '</div><div class="description-value">' + item.value + '</div></div>';
+        }).join('');
+      }
+
+      function renderSummary(target, row) {
+        var data = row.dataset;
+        var items = [
+          ['应回款', data.receivable],
+          ['已到账', data.arrived],
+          ['待到账', data.pending],
+          ['差异金额', data.diff],
+          ['认款状态', data.carry]
+        ];
+        target.innerHTML = items.map(function (item) {
+          return '<div class="channel-summary-item"><div class="channel-summary-label">' + escapeHtml(item[0]) + '</div><div class="channel-summary-value">' + escapeHtml(item[1]) + '</div></div>';
+        }).join('');
+      }
+
+      function actionForStatus(status) {
+        if (status === '待核对') return 'review';
+        if (status === '差异待处理') return 'diff';
+        if (status === '待确认') return 'confirm';
+        return 'detail';
+      }
+
+      function actionText(action) {
+        if (action === 'review') return '核对';
+        if (action === 'diff') return '处理';
+        if (action === 'confirm') return '确认';
+        return '详情';
+      }
+
+      function actionTitle(action) {
+        if (action === 'import') return '导入账单';
+        if (action === 'create') return '新建对账';
+        if (action === 'review') return '核对账单';
+        if (action === 'diff') return '处理差异';
+        if (action === 'confirm') return '确认结算';
+        return '渠道结算详情';
+      }
+
+      function statusHint(row) {
+        var data = row.dataset;
+        if (data.status === '差异待处理') return data.diffType + ' / 差异 ' + data.diff;
+        if (data.status === '待确认') return data.diffType + ' / ' + data.carry;
+        if (data.status === '已结算' || data.status === '已关闭') return data.settlement;
+        if (/退回/.test(data.carry || '')) return data.carry + ' / ' + data.diffType;
+        if (/待取数|待核对/.test((data.deduction || '') + (data.diff || ''))) return '扣项待取数 / ' + data.carry;
+        return data.diffType + ' / ' + data.carry;
+      }
+
+      function actionHtml(row) {
+        var action = actionForStatus(row.dataset.status);
+        if (action === 'detail') {
+          return '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
         }
-        if (button) button.textContent = actionButtonByStatus(row.dataset.status);
+        return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="' + action + '">' + actionText(action) + '</button><button type="button" data-open-detail>详情</button></div>';
+      }
+
+      function updateRowCells(row) {
+        row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.status) + '<span>' + escapeHtml(statusHint(row)) + '</span></div>';
+        row.children[8].innerHTML = actionHtml(row);
       }
 
       function applyFilters() {
         var keyword = (document.getElementById('channelKeyword').value || '').trim().toLowerCase();
+        var start = document.getElementById('channelDateStart').value;
+        var end = document.getElementById('channelDateEnd').value;
         var visibleCount = 0;
 
         rows.forEach(function (row) {
           var visible = true;
           if (activeStatus !== '全部' && row.dataset.status !== activeStatus) visible = false;
           if (keyword && rowText(row).toLowerCase().indexOf(keyword) < 0) visible = false;
+          if (start && row.dataset.date < start) visible = false;
+          if (end && row.dataset.date > end) visible = false;
           row.hidden = !visible;
           if (visible) visibleCount += 1;
         });
         document.getElementById('channelPagination').textContent = visibleCount ? '第1-' + visibleCount + '条/共' + visibleCount + '条' : '第0条/共0条';
       }
 
+      function resetFilters() {
+        activeStatus = '全部';
+        document.getElementById('channelKeyword').value = '';
+        document.getElementById('channelDateStart').value = '';
+        document.getElementById('channelDateEnd').value = '';
+        setValue('statusFilter', '全部');
+        applyFilters();
+      }
+
       function gridHtml(items) {
         return items.map(function (item) {
           return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + escapeHtml(item[1]) + '</div></div>';
         }).join('');
-      }
-
-      function tagHtml(value) {
-        return '<span class="tag ' + statusClass(value) + '">' + escapeHtml(value) + '</span>';
-      }
-
-      function linkHtml(href, text) {
-        if (!text || text === '-' || text === '未生成') return escapeHtml(text || '-');
-        return '<a class="link-primary" href="' + escapeHtml(href) + '">' + escapeHtml(text) + '</a>';
       }
 
       function orderRows(row) {
@@ -785,7 +856,9 @@
           ['活动补贴', row.dataset.subsidy, row.dataset.subsidy, '¥0', '补贴计入应回款'],
           ['退款折减', row.dataset.refund, row.dataset.refund, diffType === '退款差异' ? row.dataset.diff : '¥0', diffType === '退款差异' ? '待售后退款单补齐' : '按已审批退款扣减']
         ];
-        if (diffType === '佣金差异') deductionData[0][3] = row.dataset.diff;
+        if (diffType === '佣金服务费差异') deductionData[1][3] = row.dataset.diff;
+        if (diffType === '渠道承担优惠差异') deductionData[0][3] = row.dataset.diff;
+        if (diffType === '补贴差异') deductionData[3][3] = row.dataset.diff;
         document.getElementById('deductionRows').innerHTML = deductionData.map(function (item) {
           var diff = item[3] === '¥0' ? item[3] : '<span class="amount-red">' + escapeHtml(item[3]) + '</span>';
           return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + diff + '</td><td>' + escapeHtml(item[4]) + '</td></tr>';
@@ -808,14 +881,14 @@
         var discountCarryCell = row.dataset.discountCarryNo ? linkHtml('finance-settlement-adjustment.html?adjustmentNo=' + encodeURIComponent(row.dataset.discountCarryNo), row.dataset.discountCarryNo) : '无优惠减免';
         document.getElementById('receivableRows').innerHTML = '<tr><td>' + arCell + '</td><td class="amount-strong">' + escapeHtml(row.dataset.receivable) + '</td><td>' + escapeHtml(row.dataset.arrived) + '</td><td>' + escapeHtml(row.dataset.pending) + '</td><td>' + tagHtml(row.dataset.carry) + '</td></tr>' +
           '<tr><td>' + discountCarryCell + '</td><td>' + escapeHtml(row.dataset.channelDiscount || '¥0') + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.channelDiscount && row.dataset.channelDiscount !== '¥0' ? '待确认' : '无需确认') + '</td></tr>' +
-          '<tr><td>' + linkHtml('finance-settlement.html?source=' + encodeURIComponent(row.dataset.no), row.dataset.settlement) + '</td><td>' + escapeHtml(row.dataset.receivable) + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.settlement === '未结算' ? '未结算' : '已结算') + '</td></tr>';
+          '<tr><td>' + escapeHtml(row.dataset.settlement) + '</td><td>' + escapeHtml(row.dataset.receivable) + '</td><td>-</td><td>-</td><td>' + tagHtml(row.dataset.settlement === '未结算' ? '未结算' : '已结算') + '</td></tr>';
       }
 
       function renderLogs(row) {
         var items = [
           [row.dataset.date + ' 09:20', '平台账单导入', '渠道结算会计', row.dataset.bill],
           [row.dataset.date + ' 10:40', '订单扣项核对', '系统', row.dataset.diffType],
-          [row.dataset.date + ' 14:10', actionByStatus(row.dataset.status), '财务专员', row.dataset.status]
+          [row.dataset.date + ' 14:10', actionTitle(actionForStatus(row.dataset.status)), '财务专员', row.dataset.status]
         ];
         document.getElementById('logRows').innerHTML = items.map(function (item) {
           return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + escapeHtml(item[3]) + '</td></tr>';
@@ -828,19 +901,23 @@
       }
 
       function openDetail(row) {
+        if (!row) return;
         activeRow = row;
-        var action = actionByStatus(row.dataset.status);
-        document.getElementById('channelDrawerTitle').textContent = action;
-        document.getElementById('channelSummary').innerHTML = gridHtml([
-          ['渠道', row.dataset.channel + ' / ' + row.dataset.channelType],
-          ['主状态', row.dataset.status],
-          ['应回款', row.dataset.receivable],
-          ['已到账', row.dataset.arrived],
-          ['差异金额', row.dataset.diff],
-          ['应收/认款', row.dataset.carry]
+        document.getElementById('channelDrawerTitle').textContent = '渠道结算详情';
+        document.getElementById('detailObjectTitle').textContent = row.dataset.no + ' / ' + row.dataset.channel;
+        document.getElementById('detailObjectSubtitle').textContent = row.dataset.channelType + ' / ' + row.dataset.bill + ' / ' + row.dataset.period;
+        document.getElementById('detailObjectStatus').innerHTML = tagHtml(row.dataset.status);
+        renderSummary(document.getElementById('detailSummaryGrid'), row);
+        renderDescription(document.getElementById('detailSourceGrid'), [
+          { label: '渠道类型', value: escapeHtml(row.dataset.channelType) },
+          { label: '平台账单', value: escapeHtml(row.dataset.bill) },
+          { label: '账单日期', value: escapeHtml(row.dataset.date) },
+          { label: '结算主体', value: escapeHtml(row.dataset.company) },
+          { label: '应收单', value: linkHtml('finance-receivable.html?receivableNo=' + encodeURIComponent(row.dataset.ar || ''), row.dataset.ar) },
+          { label: '认款单', value: /^RK/.test(row.dataset.match || '') ? linkHtml('finance-matching.html?matchNo=' + encodeURIComponent(row.dataset.match.split(' / ')[0]), row.dataset.match) : escapeHtml(row.dataset.match || '-') }
         ]);
         document.getElementById('overviewGrid').innerHTML = gridHtml([
-          ['结算单号', row.dataset.no],
+          ['对账单号', row.dataset.no],
           ['平台账单号', row.dataset.bill],
           ['结算周期', row.dataset.period],
           ['业务主体', row.dataset.company],
@@ -860,60 +937,253 @@
         renderReceivable(row);
         renderLogs(row);
         switchDetailTab('overview');
-        document.getElementById('channelPrimaryAction').textContent = action;
-        openLayer(drawer);
+        openLayer(detailDrawer);
       }
 
-      function openWorkDrawer(title) {
-        document.getElementById('channelWorkTitle').textContent = title;
-        workDrawer.querySelector('[data-confirm-work]').textContent = title === '生成结算' ? '确认生成' : '确认导入';
+      function renderWorkBasis(row) {
+        renderDescription(document.getElementById('workBasisGrid'), [
+          { label: '订单金额', value: escapeHtml(row.dataset.orderAmount + ' / ' + row.dataset.orderCount + '单') },
+          { label: '平台扣项', value: escapeHtml(row.dataset.deduction) },
+          { label: '应回款', value: escapeHtml(row.dataset.receivable) },
+          { label: '已到账', value: escapeHtml(row.dataset.arrived) },
+          { label: '待到账', value: escapeHtml(row.dataset.pending) },
+          { label: '差异金额', value: escapeHtml(row.dataset.diff) },
+          { label: '差异类型', value: tagHtml(row.dataset.diffType) },
+          { label: '应收/认款', value: escapeHtml(row.dataset.ar + ' / ' + row.dataset.match), full: true }
+        ]);
+      }
+
+      function showWorkSections(action) {
+        var visible = action === 'import' ? ['import'] : (action === 'create' ? ['create'] : ['basis', action, 'common']);
+        document.querySelectorAll('[data-work-section]').forEach(function (section) {
+          section.hidden = visible.indexOf(section.dataset.workSection) < 0;
+        });
+        document.getElementById('workObjectCard').hidden = action === 'import' || action === 'create';
+      }
+
+      function diffMethods(type) {
+        return {
+          '到账差异': ['等待后续到账', '关联多笔流水', '退回认款复核', '确认短款', '确认长款'],
+          '订单差异': ['按系统订单调整', '退回订单核对', '剔除无效订单'],
+          '退款差异': ['按退款单调整', '退回退款核对', '确认不影响结算'],
+          '佣金服务费差异': ['按平台账单确认', '按渠道政策调整', '退回渠道账单'],
+          '渠道承担优惠差异': ['确认渠道承担', '转门店承担', '转总部承担', '退回优惠确认'],
+          '补贴差异': ['确认渠道补贴', '退回补贴核对', '调整应回款']
+        }[type] || ['确认不影响结算'];
+      }
+
+      function updateReviewConditional() {
+        var result = document.getElementById('workReviewResult').value;
+        document.querySelectorAll('[data-review-field]').forEach(function (field) { field.hidden = true; });
+        if (result === '退回补充') {
+          document.querySelectorAll('[data-review-field="return"]').forEach(function (field) { field.hidden = false; });
+        }
+        if (result === '转差异处理') {
+          document.querySelectorAll('[data-review-field="diff"]').forEach(function (field) { field.hidden = false; });
+        }
+        if (activeAction === 'review') {
+          document.getElementById('channelWorkSubmit').textContent = result === '确认无差异' ? '确认核对' : (result === '转差异处理' ? '确认差异' : result);
+        }
+      }
+
+      function updateDiffConditional() {
+        var method = document.getElementById('workDiffMethod').value;
+        var impact = '差异处理后确认';
+        var buttonText = '确认处理';
+        if (/等待|关联/.test(method || '')) {
+          impact = '等待后续到账';
+          buttonText = '记录处理';
+        }
+        if (/退回/.test(method || '')) {
+          impact = '退回补充后再核对';
+          buttonText = '退回补充';
+        }
+        if (/不影响/.test(method || '')) impact = '不影响本期结算';
+        setValue('workDiffImpact', impact);
+        if (activeAction === 'diff') document.getElementById('channelWorkSubmit').textContent = buttonText;
+      }
+
+      function updateDiffMethod() {
+        setOptions('workDiffMethod', diffMethods(document.getElementById('workDiffType').value));
+        updateDiffConditional();
+      }
+
+      function updateConfirmConditional() {
+        var result = document.getElementById('workConfirmResult').value;
+        document.querySelectorAll('[data-confirm-field]').forEach(function (field) { field.hidden = true; });
+        if (result === '退回核对') document.querySelector('[data-confirm-field="return"]').hidden = false;
+        if (result === '转差异处理') document.querySelector('[data-confirm-field="diff"]').hidden = false;
+        if (activeAction === 'confirm') {
+          document.getElementById('channelWorkSubmit').textContent = result;
+        }
+      }
+
+      function defaultReviewResult(row) {
+        if (/待取数|待核对/.test((row.dataset.deduction || '') + (row.dataset.receivable || ''))) return '退回补充';
+        if (amountHasValue(row.dataset.diff)) return '转差异处理';
+        return '确认无差异';
+      }
+
+      function openWork(action, row) {
+        activeRow = row || null;
+        activeAction = action;
+        document.getElementById('channelWorkTitle').textContent = actionTitle(action);
+        showWorkSections(action);
+        if (row) {
+          document.getElementById('workObjectTitle').textContent = row.dataset.no + ' / ' + row.dataset.channel;
+          document.getElementById('workObjectSubtitle').textContent = row.dataset.channelType + ' / ' + row.dataset.bill + ' / ' + row.dataset.period;
+          document.getElementById('workObjectStatus').innerHTML = tagHtml(row.dataset.status);
+          renderSummary(document.getElementById('workSummaryGrid'), row);
+          renderWorkBasis(row);
+          setValue('workReviewResult', defaultReviewResult(row));
+          setValue('workReturnReason', /待取数|待核对/.test((row.dataset.deduction || '') + (row.dataset.receivable || '')) ? '扣项政策缺失' : '订单匹配缺失');
+          setValue('workReturnItems', row.dataset.deduction + ' / ' + row.dataset.diffType);
+          setValue('workReviewDiffType', row.dataset.diffType === '无差异' ? '到账差异' : row.dataset.diffType);
+          setValue('workReviewDiffAmount', row.dataset.diff);
+          setValue('workDiffType', row.dataset.diffType === '无差异' ? '到账差异' : row.dataset.diffType);
+          setValue('workDiffAmount', row.dataset.diff);
+          setValue('workDiffRemark', row.dataset.channel + ' / ' + row.dataset.bill + ' / ' + row.dataset.diffType);
+          setValue('workConfirmReceivable', row.dataset.receivable);
+          setValue('workConfirmArrived', row.dataset.arrived);
+          setValue('workConfirmResult', '确认结算');
+          setValue('workOwner', '渠道结算会计');
+          setValue('workRemark', row.dataset.no + ' / ' + row.dataset.diffType + ' / ' + row.dataset.carry);
+          updateDiffMethod();
+          updateReviewConditional();
+          updateConfirmConditional();
+        } else if (action === 'import') {
+          document.getElementById('channelWorkSubmit').textContent = '确认导入';
+        } else {
+          document.getElementById('channelWorkSubmit').textContent = '创建对账';
+        }
         openLayer(workDrawer);
       }
 
-      detailTabs.forEach(function (button) {
-        button.addEventListener('click', function () { switchDetailTab(button.dataset.detailTab); });
-      });
-
-      document.querySelector('[data-search-channel]').addEventListener('click', applyFilters);
-      document.getElementById('channelKeyword').addEventListener('keydown', function (event) { if (event.key === 'Enter') applyFilters(); });
-
-      document.querySelector('[data-reset-channel]').addEventListener('click', function () {
-        document.querySelectorAll('.list-surface-filter input').forEach(function (input) { input.value = ''; });
-        document.querySelectorAll('.list-surface-filter select').forEach(function (select) { select.selectedIndex = 0; });
-        activeStatus = '全部';
-        applyFilters();
-      });
-
-      document.getElementById('channelRows').addEventListener('click', function (event) {
-        var button = event.target.closest('[data-open-row]');
-        if (!button) return;
-        openDetail(button.closest('tr'));
-      });
-
-      document.getElementById('channelPrimaryAction').addEventListener('click', function () {
-        if (!activeRow) return;
-        var current = activeRow.dataset.status;
-        var next = nextStatus(current);
-        if (next !== current) {
-          activeRow.dataset.status = next;
-          updateRowAction(activeRow);
-          notify(activeRow.dataset.no + '已进入' + next);
-          applyFilters();
-          closeLayer(drawer);
+      function confirmWork() {
+        var result = actionTitle(activeAction);
+        if (activeAction === 'import') {
+          notify('平台账单已导入');
+          closeLayer(workDrawer);
           return;
         }
-        notify(activeRow.dataset.no + '结算信息已打开');
-      });
-
-      document.querySelector('[data-open-import]').addEventListener('click', function () { openWorkDrawer('导入账单'); });
-      document.querySelector('[data-create-settlement]').addEventListener('click', function () { openWorkDrawer('生成结算'); });
-      document.querySelector('[data-export]').addEventListener('click', function () { notify('渠道结算列表已导出'); });
-      document.querySelector('[data-confirm-work]').addEventListener('click', function () {
-        notify(document.getElementById('channelWorkTitle').textContent + '已提交');
+        if (activeAction === 'create') {
+          notify('渠道对账已创建');
+          closeLayer(workDrawer);
+          return;
+        }
+        if (!activeRow) return;
+        if (activeAction === 'review') {
+          var reviewResult = document.getElementById('workReviewResult').value;
+          result = reviewResult === '确认无差异' ? '确认核对' : reviewResult;
+          if (reviewResult === '确认无差异') {
+            activeRow.dataset.status = '待确认';
+            activeRow.dataset.diff = '¥0';
+            activeRow.dataset.diffType = '无差异';
+            activeRow.dataset.carry = activeRow.dataset.pending === '¥0' ? '待确认' : activeRow.dataset.carry;
+          } else if (reviewResult === '退回补充') {
+            activeRow.dataset.status = '待核对';
+            activeRow.dataset.diffType = document.getElementById('workReturnReason').value;
+            activeRow.dataset.carry = '退回补充';
+          } else {
+            activeRow.dataset.status = '差异待处理';
+            activeRow.dataset.diffType = document.getElementById('workReviewDiffType').value;
+            activeRow.dataset.diff = document.getElementById('workReviewDiffAmount').value || activeRow.dataset.diff || '待确认';
+            activeRow.dataset.carry = '差异待处理';
+          }
+        } else if (activeAction === 'diff') {
+          var method = document.getElementById('workDiffMethod').value;
+          result = method;
+          activeRow.dataset.diffType = document.getElementById('workDiffType').value;
+          activeRow.dataset.diff = document.getElementById('workDiffAmount').value || activeRow.dataset.diff || '待确认';
+          if (/退回/.test(method || '')) {
+            activeRow.dataset.status = '待核对';
+            activeRow.dataset.carry = '退回补充';
+          } else if (/等待|关联/.test(method || '')) {
+            activeRow.dataset.status = '差异待处理';
+            activeRow.dataset.carry = method;
+          } else {
+            activeRow.dataset.status = '待确认';
+            activeRow.dataset.carry = '差异已处理';
+            if (!/短款|长款/.test(method || '')) {
+              activeRow.dataset.diff = '¥0';
+              activeRow.dataset.diffType = '无差异';
+            }
+          }
+        } else if (activeAction === 'confirm') {
+          var confirmResult = document.getElementById('workConfirmResult').value;
+          result = confirmResult;
+          if (confirmResult === '确认结算') {
+            activeRow.dataset.status = '已结算';
+            activeRow.dataset.carry = '已结算';
+            if (!activeRow.dataset.settlement || activeRow.dataset.settlement === '未结算') {
+              activeRow.dataset.settlement = 'JS-' + activeRow.dataset.no;
+            }
+          } else if (confirmResult === '退回核对') {
+            activeRow.dataset.status = '待核对';
+            activeRow.dataset.diffType = document.getElementById('workConfirmReturnReason').value;
+            activeRow.dataset.carry = '退回核对';
+          } else {
+            activeRow.dataset.status = '差异待处理';
+            activeRow.dataset.diffType = document.getElementById('workConfirmDiffType').value;
+            activeRow.dataset.diff = amountHasValue(activeRow.dataset.diff) ? activeRow.dataset.diff : '待确认';
+            activeRow.dataset.carry = '差异待处理';
+          }
+        }
+        updateRowCells(activeRow);
+        applyFilters();
         closeLayer(workDrawer);
-      });
+        notify(result + '已记录');
+      }
 
       document.addEventListener('click', function (event) {
+        var detailTab = event.target.closest('[data-detail-tab]');
+        if (detailTab) {
+          switchDetailTab(detailTab.dataset.detailTab);
+          return;
+        }
+
+        var workButton = event.target.closest('[data-open-work]');
+        if (workButton) {
+          openWork(workButton.dataset.openWork, workButton.closest('tr'));
+          return;
+        }
+
+        var detailButton = event.target.closest('[data-open-detail]');
+        if (detailButton) {
+          openDetail(detailButton.closest('tr'));
+          return;
+        }
+
+        if (event.target.closest('[data-open-import]')) {
+          openWork('import');
+          return;
+        }
+
+        if (event.target.closest('[data-create-reconcile]')) {
+          openWork('create');
+          return;
+        }
+
+        if (event.target.closest('[data-export]')) {
+          notify('渠道结算列表已导出');
+          return;
+        }
+
+        if (event.target.closest('[data-search-channel]')) {
+          applyFilters();
+          return;
+        }
+
+        if (event.target.closest('[data-reset-channel]')) {
+          resetFilters();
+          return;
+        }
+
+        if (event.target.closest('[data-confirm-work]')) {
+          confirmWork();
+          return;
+        }
+
         var closeButton = event.target.closest('[data-close-layer]');
         if (closeButton) {
           closeLayer(closeButton.closest('.modal-overlay'));
@@ -922,8 +1192,10 @@
         if (event.target.classList.contains('modal-overlay')) closeLayer(event.target);
       });
 
-      rows.forEach(updateRowAction);
-      var statusFilter = document.getElementById('statusFilter');
+      document.getElementById('channelKeyword').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') applyFilters();
+      });
+
       if (statusFilter) {
         statusFilter.addEventListener('change', function () {
           activeStatus = this.value || '全部';
@@ -931,6 +1203,12 @@
         });
       }
 
+      document.getElementById('workReviewResult').addEventListener('change', updateReviewConditional);
+      document.getElementById('workDiffType').addEventListener('change', updateDiffMethod);
+      document.getElementById('workDiffMethod').addEventListener('change', updateDiffConditional);
+      document.getElementById('workConfirmResult').addEventListener('change', updateConfirmConditional);
+
+      rows.forEach(updateRowCells);
       applyFilters();
     })();
   </script>
