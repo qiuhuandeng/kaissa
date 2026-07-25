@@ -7,6 +7,18 @@
       href: "dashboard.html",
     },
     {
+      title: "数据中心",
+      icon: "trend",
+      children: [
+        {
+          title: "经营分析",
+          children: [
+            { title: "产品分析", href: "data/product-analysis.html" },
+          ],
+        },
+      ],
+    },
+    {
       title: "资源",
       icon: "file",
       children: [
@@ -301,6 +313,7 @@
 
   const primaryLabels = {
     工作: "工作",
+    数据中心: "数据",
     资源: "资源",
     产品中心: "产品",
     营销中心: "营销",
@@ -316,6 +329,7 @@
 
   const primaryFullLabels = {
     工作: "工作台",
+    数据中心: "数据中心",
     资源: "资源管理",
     产品中心: "产品中心",
     营销中心: "营销中心",
