@@ -49,7 +49,7 @@
       matrixTitle: '人群价格与名额',
       matrixColumns: ['价格结构', '成人价', '儿童价', '单房差', '服务费', '补差'],
       matrix: [
-        { label: '标准团费', total: 30, reserve: 0, cells: [{ kind: 'primaryPrice', value: 29800 }, { type: 'number', value: 26800 }, { type: 'number', value: 4800 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] },
+        { label: '对客价', total: 30, reserve: 0, cells: [{ kind: 'primaryPrice', value: 29800 }, { type: 'number', value: 26800 }, { type: 'number', value: 4800 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] },
         { label: '优惠团费', total: 0, reserve: 0, cells: [{ type: 'number', value: 27800 }, { type: 'number', value: 24800 }, { type: 'number', value: 4800 }, { type: 'number', value: 0 }, { type: 'number', value: 0 }] }
       ],
       nodes: [

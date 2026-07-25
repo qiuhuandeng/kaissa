@@ -587,11 +587,11 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="marketPrice">市场价</label>
+              <label class="form-label" for="marketPrice">对客价</label>
               <input id="marketPrice" class="form-control" type="text" placeholder="如 ¥13,800">
             </div>
             <div class="form-group">
-              <label class="form-label" for="peerPrice">同行价</label>
+              <label class="form-label" for="peerPrice">结算价</label>
               <input id="peerPrice" class="form-control" type="text" placeholder="如 ¥12,300">
             </div>
             <div class="form-group">
@@ -1212,7 +1212,7 @@
               <strong id="batchPreviewCapacityText">-</strong>
             </div>
             <div>
-              <span id="batchPreviewPriceLabel">销售价</span>
+              <span id="batchPreviewPriceLabel">对客价</span>
               <strong id="batchPreviewPriceText">-</strong>
             </div>
             <div>
@@ -1230,7 +1230,7 @@
                 <tr>
                   <th>出发日期</th>
                   <th id="batchPreviewCapacityHead">计划收客</th>
-                  <th id="batchPreviewPriceHead">销售价</th>
+                  <th id="batchPreviewPriceHead">对客价</th>
                   <th>领队</th>
                   <th>操作</th>
                 </tr>
@@ -1290,9 +1290,9 @@
             <div class="form-group">
               <label class="form-label" for="batchPriceField">调整价格</label>
               <select id="batchPriceField" class="form-control">
-                <option value="adultPrice">销售价</option>
-                <option value="marketPrice">市场价</option>
-                <option value="peerPrice">同行价</option>
+                <option value="adultPrice">对客价</option>
+                <option value="marketPrice">对客价</option>
+                <option value="peerPrice">结算价</option>
               </select>
             </div>
             <div class="form-group">
@@ -1469,7 +1469,7 @@
             <span id="schedulePriceStatus" class="tag tag-green drawer-status">已定价</span>
           </div>
           <div class="drawer-summary-grid schedule-price-summary-grid">
-            <div class="drawer-summary-item"><span class="drawer-summary-label">当前销售价</span><span id="schedulePriceCurrentText" class="drawer-summary-value">-</span></div>
+            <div class="drawer-summary-item"><span class="drawer-summary-label">当前对客价</span><span id="schedulePriceCurrentText" class="drawer-summary-value">-</span></div>
             <div class="drawer-summary-item"><span class="drawer-summary-label">已售订单</span><span id="schedulePriceSoldText" class="drawer-summary-value">-</span></div>
             <div class="drawer-summary-item"><span class="drawer-summary-label">最低限价</span><span id="schedulePriceFloorText" class="drawer-summary-value">-</span></div>
             <div class="drawer-summary-item"><span class="drawer-summary-label">销售状态</span><span id="schedulePriceSaleText" class="drawer-summary-value">-</span></div>
@@ -1506,8 +1506,8 @@
                 <tr>
                   <th>价格项</th>
                   <th>供应商结算价</th>
-                  <th>销售价</th>
-                  <th>同行价</th>
+                  <th>对客价</th>
+                  <th>结算价</th>
                   <th>OTA价</th>
                 </tr>
               </thead>
@@ -1695,6 +1695,12 @@
           <strong>匹配规则</strong>
           <span id="executionLeaderRule"></span>
         </section>
+        <div class="form-row">
+          <div class="form-group form-group-full">
+            <label class="sr-only" for="executionLeaderSearch">按姓名、产品或目的地搜索领队</label>
+            <input id="executionLeaderSearch" class="form-control" type="search" placeholder="搜索领队姓名、产品或目的地，如英国、邮轮、张建国">
+          </div>
+        </div>
         <div id="executionLeaderOptions" class="outbound-leader-list" role="radiogroup" aria-label="可配领队"></div>
         <div class="form-row">
           <div class="form-group">
@@ -2210,8 +2216,8 @@
           matrixTitle: '人群价格',
           matrixHeads: ['价格结构', '成人价', '儿童价', '单房差', '服务费', '补差'],
           matrixRows: [
-            ['标准团费', '¥12,800', '¥9,800', '¥3,800', '¥0', '¥0'],
-            ['同行结算价', '¥12,300', '¥9,300', '¥3,800', '¥0', '¥0']
+            ['对客价', '¥12,800', '¥9,800', '¥3,800', '¥0', '¥0'],
+            ['结算价', '¥12,300', '¥9,300', '¥3,800', '¥0', '¥0']
           ]
         },
         '邮轮航次': {
@@ -2237,7 +2243,7 @@
           mode: ['按车厢/铺位售卖', 'tag tag-orange'],
           capacityLabel: '计划铺位',
           minLabel: '成班铺位',
-          priceLabel: '铺位销售价',
+          priceLabel: '铺位对客价',
           secondaryLabels: ['陪同/儿童价', '接驳席别价', '包厢差价'],
           trafficLabel: '选择专列铺位资源',
           trafficHint: '选择已采购专列包铺资源后，保存班期时占用可分配库存。',
@@ -3305,8 +3311,8 @@
           return '<tr data-schedule-price-row="' + escapeHtml(field.key) + '" data-suggest-ratio="' + escapeHtml(String(field.ratio)) + '"' + (field.primary ? ' data-primary-row="true"' : '') + '>' +
             '<td><strong data-price-row-label>' + escapeHtml(field.label) + '</strong></td>' +
             '<td class="schedule-price-settlement">' + escapeHtml(field.settlement) + '</td>' +
-            '<td><input class="form-control" type="text" value="' + escapeHtml(field.value || '') + '" data-schedule-price-field="' + escapeHtml(field.key) + '"' + (field.primary ? ' data-price-primary="true"' : '') + ' aria-label="' + escapeHtml(field.label + '销售价') + '"></td>' +
-            '<td><input class="form-control" type="text" value="' + escapeHtml(field.peer || '') + '" data-schedule-price-field="' + escapeHtml(channelPriceKey(field.key, 'peer')) + '" data-price-related-input aria-label="' + escapeHtml(field.label + '同行价') + '"></td>' +
+            '<td><input class="form-control" type="text" value="' + escapeHtml(field.value || '') + '" data-schedule-price-field="' + escapeHtml(field.key) + '"' + (field.primary ? ' data-price-primary="true"' : '') + ' aria-label="' + escapeHtml(field.label + '对客价') + '"></td>' +
+            '<td><input class="form-control" type="text" value="' + escapeHtml(field.peer || '') + '" data-schedule-price-field="' + escapeHtml(channelPriceKey(field.key, 'peer')) + '" data-price-related-input aria-label="' + escapeHtml(field.label + '结算价') + '"></td>' +
             '<td><input class="form-control" type="text" value="' + escapeHtml(field.ota || '') + '" data-schedule-price-field="' + escapeHtml(channelPriceKey(field.key, 'ota')) + '" data-price-related-input aria-label="' + escapeHtml(field.label + 'OTA价') + '"></td>' +
           '</tr>';
         }).join('');
@@ -3397,7 +3403,7 @@
           var value = moneyNumber(input.value);
           if (value && floor && value < floor) channelLow = true;
         });
-        if (channelLow) messages.push(['存在同行价或OTA价低于最低限价', 'error']);
+        if (channelLow) messages.push(['存在结算价或OTA价低于最低限价', 'error']);
         if (!messages.length) messages.push(['价格校验通过，可以提交调价审核', 'ok']);
         return messages;
       }
@@ -3554,23 +3560,34 @@
         var type = normalizeBatchType(item.batchType);
         if (type === '邮轮航次') {
           return [
-            ['王强 136****0198', '全职 | 邮轮/东南亚 | 英语/日语 | 导游证2028-03-20 | 评分4.9', '在途', 'tag tag-gray', false, true],
-            ['张建国 138****4521', '全职 | 欧洲/邮轮 | 英语/法语 | 导游证2027-05-31 | 评分4.8', '推荐', 'tag tag-green', true, false],
-            ['赵明 137****5612', '外聘 | 专列/国内 | 英语 | 协议2026-12-31 | 评分4.7', '目的地不匹配', 'tag tag-gray', false, true]
+            ['王强 136****0198', '全职 | 邮轮/东南亚 | 英语/日语 | 导游证2028-03-20 | 工行尾号0198 已校验 | 邮轮12团 | 评分4.9', '在途', 'tag tag-gray', false, true, '王强 邮轮 地中海 东南亚 CR-MED'],
+            ['张建国 138****4521', '全职 | 欧洲/英国/邮轮 | 英语/法语 | 导游证2027-05-31 | 招商尾号4521 已校验 | 邮轮4团 | 评分4.8', '推荐', 'tag tag-green', true, false, '张建国 英国 欧洲 邮轮 地中海 EU-UKI CR-MED'],
+            ['赵明 137****5612', '外聘 | 专列/国内 | 英语 | 协议2026-12-31 | 招商尾号5612 已校验 | 专列6团 | 评分4.7', '目的地不匹配', 'tag tag-gray', false, true, '赵明 专列 丝路 国内 英国']
           ];
         }
         if (type === '专列班期') {
           return [
-            ['赵明 137****5612', '外聘 | 专列/国内 | 英语 | ¥500/天 | 评分4.7', '推荐', 'tag tag-green', true, false],
-            ['张建国 138****4521', '全职 | 欧洲/邮轮 | 英语/法语 | 评分4.8', '目的地不匹配', 'tag tag-gray', false, true],
-            ['李梅 139****8027', '外聘 | 欧洲/研学 | 导游证2026-07-15', '证件预警', 'tag tag-gray', false, true]
+            ['赵明 137****5612', '外聘 | 专列/国内 | 英语 | 导游证2028-01-12 | 招商尾号5612 已校验 | 专列6团 | 评分4.7', '推荐', 'tag tag-green', true, false, '赵明 专列 丝路 国内 英国 TR-SILK'],
+            ['张建国 138****4521', '全职 | 欧洲/英国/邮轮 | 英语/法语 | 招商尾号4521 已校验 | 英国线3团 | 评分4.8', '目的地不匹配', 'tag tag-gray', false, true, '张建国 英国 欧洲 邮轮'],
+            ['李梅 139****8027', '外聘 | 欧洲/英国/研学 | 导游证2026-07-15 | 财务待校验 | 英国线2团', '证件预警', 'tag tag-gray', false, true, '李梅 英国 欧洲 研学']
           ];
         }
         return [
-          ['张建国 138****4521', '全职 | 欧洲/邮轮 | 英语/法语 | 导游证2027-05-31 | 评分4.8', '推荐', 'tag tag-green', true, false],
-          ['李梅 139****8027', '外聘 | 欧洲/研学 | 英语/德语 | ¥400/天 | 评分4.6', '证件预警', 'tag tag-gray', false, true],
-          ['王强 136****0198', '全职 | 邮轮/东南亚 | 同期团占用', '档期冲突', 'tag tag-gray', false, true]
+          ['张建国 138****4521', '全职 | 欧洲/英国/邮轮 | 英语/法语 | 导游证2027-05-31 | 招商尾号4521 已校验 | 英国线3团 | 评分4.8', '推荐', 'tag tag-green', true, false, '张建国 英国 欧洲 法国 意大利 邮轮 欧洲十国 EU-UKI EU-FRA'],
+          ['李梅 139****8027', '外聘 | 欧洲/英国/研学 | 英语/德语 | 导游证2026-07-15 | 财务待校验 | 英国线2团 | 评分4.6', '证件预警', 'tag tag-gray', false, true, '李梅 英国 欧洲 研学 新加坡'],
+          ['王强 136****0198', '全职 | 邮轮/东南亚 | 同期团占用 | 工行尾号0198 已校验 | 邮轮12团', '档期冲突', 'tag tag-gray', false, true, '王强 邮轮 东南亚 日本']
         ];
+      }
+
+      function renderExecutionLeaderOptions(item) {
+        var keyword = String(document.getElementById('executionLeaderSearch').value || '').trim().toLowerCase();
+        var options = leaderOptionsFor(item).filter(function (option) {
+          var text = (option[0] + ' ' + option[1] + ' ' + (option[6] || '')).toLowerCase();
+          return !keyword || text.indexOf(keyword) >= 0;
+        });
+        document.getElementById('executionLeaderOptions').innerHTML = options.length ? options.map(function (option) {
+          return '<label class="outbound-leader-card' + (option[4] ? ' selected' : '') + (option[5] ? ' disabled' : '') + '"><input type="radio" name="scheduleLeaderOption" value="' + escapeHtml(option[0]) + '"' + (option[4] ? ' checked' : '') + (option[5] ? ' disabled' : '') + '><span><strong>' + escapeHtml(option[0]) + '</strong><em>' + escapeHtml(option[1]) + '</em></span><b class="' + escapeHtml(option[3]) + '">' + escapeHtml(option[2]) + '</b></label>';
+        }).join('') : '<div class="table-empty-cell">暂无匹配领队</div>';
       }
 
       function fillExecutionLeaderDrawer(item, actionTitle) {
@@ -3587,9 +3604,8 @@
         document.getElementById('saveScheduleLeader').textContent = status === '已配领队' ? '保存更换' : '保存配领队';
         document.getElementById('saveScheduleLeader').hidden = /无法出团/.test(actionTitle || '');
         document.getElementById('markScheduleLeaderUnavailable').hidden = !/无法出团/.test(actionTitle || '');
-        document.getElementById('executionLeaderOptions').innerHTML = leaderOptionsFor(item).map(function (option) {
-          return '<label class="outbound-leader-card' + (option[4] ? ' selected' : '') + (option[5] ? ' disabled' : '') + '"><input type="radio" name="scheduleLeaderOption" value="' + escapeHtml(option[0]) + '"' + (option[4] ? ' checked' : '') + (option[5] ? ' disabled' : '') + '><span><strong>' + escapeHtml(option[0]) + '</strong><em>' + escapeHtml(option[1]) + '</em></span><b class="' + escapeHtml(option[3]) + '">' + escapeHtml(option[2]) + '</b></label>';
-        }).join('');
+        document.getElementById('executionLeaderSearch').value = '';
+        renderExecutionLeaderOptions(item);
       }
 
       function openExecutionDrawer(item, key, actionTitle) {
@@ -5186,7 +5202,7 @@
         var normalizedBatchType = normalizeBatchType(batchType);
         totalStockLabel.innerHTML = (normalizedBatchType === '邮轮航次' ? '计划舱房' : normalizedBatchType === '专列班期' ? '计划铺位' : normalizedBatchType === '研学营期' ? '计划学员' : '计划收客') + ' <span class="req">*</span>';
         totalStock.placeholder = '请输入计划' + unit + '数';
-        adultPriceLabel.innerHTML = (normalizedBatchType === '邮轮航次' ? '舱型销售价' : normalizedBatchType === '专列班期' ? '铺位销售价' : normalizedBatchType === '研学营期' ? '学生价' : '成人价') + ' <span class="req">*</span>';
+        adultPriceLabel.innerHTML = (normalizedBatchType === '邮轮航次' ? '舱型对客价' : normalizedBatchType === '专列班期' ? '铺位对客价' : normalizedBatchType === '研学营期' ? '学生价' : '成人价') + ' <span class="req">*</span>';
         routePlanHint.hidden = true;
         routePlanHint.textContent = '';
         updateCreateAllocation();
@@ -5320,7 +5336,7 @@
           html += '<strong>' + escapeHtml(rowName) + '</strong>';
           heads.slice(1).forEach(function (head, index) {
             var defaultValue = savedRow[head] || row[index + 1] || '';
-            if (!savedRows[rowName] && rowIndex === 0 && /成人价|学生价|铺位销售价/.test(head) && item && item.price) {
+            if (!savedRows[rowName] && rowIndex === 0 && /成人价|学生价|铺位对客价/.test(head) && item && item.price) {
               defaultValue = item.price;
             }
             html += '<input class="form-control" type="text" value="' + escapeHtml(defaultValue) + '" data-create-matrix-field="' + escapeHtml(head) + '" aria-label="' + escapeHtml(rowName + head) + '">';
@@ -5354,7 +5370,7 @@
 
       function syncCreatePrimaryPrice() {
         var primaryInput = Array.from(createTypeSpecificGrid.querySelectorAll('[data-create-matrix-field]')).find(function (input) {
-          return /成人价|学生价|铺位销售价/.test(input.dataset.createMatrixField || '');
+          return /成人价|学生价|铺位对客价/.test(input.dataset.createMatrixField || '');
         });
         if (primaryInput && primaryInput.value.trim()) adultPrice.value = primaryInput.value.trim();
         var childInput = Array.from(createTypeSpecificGrid.querySelectorAll('[data-create-matrix-field]')).find(function (input) {
@@ -5401,7 +5417,7 @@
 
       function batchPrimaryPrice() {
         var priceInput = Array.from(document.querySelectorAll('#batchTypeSpecificGrid [data-batch-matrix-field]')).find(function (input) {
-          return /成人价|学生价|铺位销售价/.test(input.dataset.batchMatrixField || '');
+          return /成人价|学生价|铺位对客价/.test(input.dataset.batchMatrixField || '');
         });
         return priceInput && priceInput.value.trim() || document.getElementById('batchPriceGroup').value.trim() || '¥0';
       }
@@ -7109,7 +7125,11 @@
       document.getElementById('saveScheduleLeader').addEventListener('click', function () {
         if (!currentExecutionSchedule) return;
         var selected = document.querySelector('input[name="scheduleLeaderOption"]:checked');
-        if (selected) currentExecutionSchedule.leader = selected.value;
+        if (!selected) {
+          if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请选择领队', { type: 'warning' });
+          return;
+        }
+        currentExecutionSchedule.leader = selected.value;
         currentExecutionSchedule.leaderStatus = '已配领队';
         currentExecutionSchedule.tabStatus = stateTokens(currentExecutionSchedule);
         window.caesarUI.closeLayer(executionLeaderDrawer);
@@ -7139,6 +7159,9 @@
         document.querySelectorAll('#executionLeaderOptions .outbound-leader-card').forEach(function (card) {
           card.classList.toggle('selected', card.contains(radio) && radio.checked);
         });
+      });
+      document.getElementById('executionLeaderSearch').addEventListener('input', function () {
+        if (currentExecutionSchedule) renderExecutionLeaderOptions(currentExecutionSchedule);
       });
 
       executionCheckAllGuests.addEventListener('change', syncExecutionGuestChecks);

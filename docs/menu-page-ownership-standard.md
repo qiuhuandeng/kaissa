@@ -43,7 +43,7 @@
 | 团期与执行 | 产品中心 / 自营产品下混放 | 履约中心 / 团期管控、团期结算、签证办理、交通采购 | 团期、成本、签证、动态交通供给属于高频履约场景 |
 | 售后处理 | 旧销售订单模块口径 | 销售中心 / 售后处理 | 售后申请属于客户交易后续，不是财务退款执行 |
 | 财务资金 | 资金池混在报表口径 | 财务 / 资金管理 / 资金池、资金调拨、汇率币种 | 资金池和调拨是资金对象，不只是报表 |
-| 营销中心 | 营销页散落 | 营销中心 / 营销工具、小程序运营、营销分析 | 活动、券、小程序装修和素材属于营销运营 |
+| 营销中心 | 营销页散落 | 营销中心 / 营销工具、小程序运营、素材中心、营销分析 | 活动、券、小程序装修和素材属于营销运营 |
 | 客户菜单 | 会员口径 | 客户 / 散客会员、企业客户、会员规则 | 菜单名统一为客户，会员是其中一种客户经营对象 |
 
 现有商户端 HTML 页面覆盖检查结果：
@@ -163,7 +163,8 @@
 | channel/distributors.html、channel/agents.html | 渠道中心 / 分销合作 / 分销渠道 | 分销商、代理商 | 分销和代理对象不是供应商 |
 | channel/commission_rules.html | 产品中心 / 销售政策 / 佣金政策 | 佣金政策 | 渠道费用规则 |
 | marketing/campaigns.html、marketing/coupons.html、marketing/issue-center.html | 营销中心 / 营销工具 | 活动、优惠券、发券任务 | 营销工具不替代订单优惠确认 |
-| marketing/miniapp-pages.html、marketing/miniapp-templates.html、marketing/miniapp-assets.html | 营销中心 / 小程序运营 | 页面、专题、素材 | 小程序运营不替代产品管理 |
+| marketing/miniapp-pages.html、marketing/miniapp-templates.html | 营销中心 / 小程序运营 | 页面、专题 | 小程序运营不替代产品管理 |
+| marketing/miniapp-assets.html | 营销中心 / 素材中心 | 页面装修、专题和营销投放素材 | 素材中心独立于小程序运营 |
 | customer/list.html、customer/detail.html、customer/customers-detail.html | 客户 / 散客会员 | 会员、会员详情 | 会员经营对象 |
 | customer/enterprise-list.html、customer/enterprise-detail.html | 客户 / 企业客户 | 企业客户、联系人 | 企业客户不等同供应商或分销商 |
 | customer/member-rules.html、customer/member-rule-config.html | 客户 / 会员规则 | 会员规则、权益配置 | 规则不直接生成财务单据 |

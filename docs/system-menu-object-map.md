@@ -114,7 +114,8 @@
 | 渠道中心 > 分销合作 | `merchant/channel/distributors.html` 等 | 分销商、佣金、分销台账、分销对账 | 渠道配置、渠道订单 | 订单、佣金结算 | 分销商不是供应商。 |
 | 渠道中心 > OTA平台 | `merchant/channel/ota_shops.html` 等 | OTA店铺、商品映射、平台对账、异常日志 | OTA平台 | 订单、售后、渠道结算 | OTA订单/退款作为销售和售后反查，不做渠道主处理。 |
 | 营销中心 > 营销工具 | `merchant/marketing/campaigns.html` 等 | 活动、优惠券、发券任务 | 产品、客户、渠道 | 订单优惠、营销分析 | 营销发放不替代订单优惠确认和财务结算。 |
-| 营销中心 > 小程序运营 | `merchant/marketing/miniapp-pages.html` 等 | 小程序页面、专题、素材 | 产品素材、活动素材 | C端展示、专题投放 | 页面运营不替代产品管理。 |
+| 营销中心 > 小程序运营 | `merchant/marketing/miniapp-pages.html`、`merchant/marketing/miniapp-templates.html` | 小程序页面、专题 | 产品、活动 | C端展示、专题投放 | 页面运营不替代产品管理。 |
+| 营销中心 > 素材中心 | `merchant/marketing/miniapp-assets.html` | 营销素材 | 产品素材、活动素材 | 页面装修、专题投放 | 素材管理独立于小程序页面运营。 |
 | 客户 > 散客会员 | `merchant/customer/list.html` | 散客会员/客户档案 | 销售、注册、导入 | 意向、订单、复购 | 会员经营不替代订单。 |
 | 客户 > 企业客户 | `merchant/customer/enterprise-list.html` | 企业客户档案 | 销售、导入 | 单团项目、合同、订单 | 企业客户不等同供应商或分销商。 |
 | 客户 > 会员规则 | `merchant/customer/member-rules.html` | 会员规则 | 会员运营配置 | 等级、权益、优惠资格 | 规则不直接生成财务单据。 |

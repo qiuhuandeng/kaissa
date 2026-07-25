@@ -277,6 +277,7 @@
           <div class="description-item"><div class="description-label">客户已收</div><div id="receiptPaid" class="description-value amount-strong amount-green">-</div></div>
           <div class="description-item"><div class="description-label">客户待收</div><div id="receiptUnpaid" class="description-value amount-strong amount-red">-</div></div>
           <div class="description-item"><div class="description-label">结算单位</div><div id="receiptSettleUnit" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">应收币种</div><div id="receiptCurrency" class="description-value">CNY 人民币</div></div>
         </div>
         <div id="receiptDrawerFields" class="order-drawer-form">
           <label class="form-group"><span class="form-label">收款节点</span><select class="form-control"><option>定金</option><option>尾款</option><option>补差</option><option>全款</option></select></label>
@@ -908,6 +909,7 @@
         if (order.productName) config.productName = order.productName;
         if (order.customer) config.contact = [order.customer, order.contactPhone].filter(Boolean).join(' ');
         if (order.store || order.advisor) config.owner = [order.store || '软件园门店', order.advisor || ''].filter(Boolean).join(' / ');
+        config.receivableCurrency = order.receivableCurrency || config.receivableCurrency || params.get('currency') || 'CNY';
         config.amount = [amountText, receivedText, pendingText];
         config.discountCarry = carryText;
         config.discountUsages = order.discountUsages || (order.salesSnapshot && order.salesSnapshot.discountUsages) || config.discountUsages || [];
@@ -937,6 +939,7 @@
         ];
       }
       applyStoredOrder(storedOrder);
+      config.receivableCurrency = config.receivableCurrency || params.get('currency') || 'CNY';
       function isProjectOrder() {
         return config.productType === '单团项目';
       }
@@ -1107,6 +1110,19 @@
       function selectControl(label, options, full) {
         return '<label class="form-group' + (full ? ' form-group-full' : '') + '"><span class="form-label">' + escapeHtml(label) + '</span><select class="form-control">' + optionList(options) + '</select></label>';
       }
+      function currencyLabel(code) {
+        const labels = { CNY: 'CNY 人民币', USD: 'USD 美元', EUR: 'EUR 欧元', JPY: 'JPY 日元', HKD: 'HKD 港币' };
+        return labels[code] || code || 'CNY 人民币';
+      }
+      function receivableCurrencyCode() {
+        return String(config.receivableCurrency || params.get('currency') || 'CNY').toUpperCase();
+      }
+      function currencySelectControl(label, selectedCode) {
+        const codes = ['CNY', 'USD', 'EUR', 'JPY', 'HKD'];
+        return '<label class="form-group"><span class="form-label">' + escapeHtml(label) + '</span><select class="form-control">' + codes.map(function (code) {
+          return '<option value="' + code + '"' + (code === selectedCode ? ' selected' : '') + '>' + escapeHtml(currencyLabel(code)) + '</option>';
+        }).join('') + '</select></label>';
+      }
       function inputControl(label, value, full, attrs) {
         return '<label class="form-group' + (full ? ' form-group-full' : '') + '"><span class="form-label">' + escapeHtml(label) + '</span><input class="form-control" type="text" ' + (attrs || '') + ' value="' + escapeHtml(value || '') + '"></label>';
       }
@@ -1157,10 +1173,16 @@
       }
       function receiptFieldsHtml() {
         const profile = receiptProfileFor();
+        const currencyCode = receivableCurrencyCode();
         return [
           selectControl(profile.nodeLabel, profile.nodeOptions),
           selectControl(profile.sourceLabel, profile.sourceOptions),
+          currencySelectControl('收款币种', currencyCode),
+          inputControl('原币金额', currencyCode === 'CNY' ? profile.amount : '', false, 'placeholder="客户实际到账金额"'),
+          inputControl('成交汇率', currencyCode === 'CNY' ? '1.0000' : '', false, 'placeholder="按银行到账或财务确认汇率"'),
           inputControl('本次收款金额', profile.amount),
+          inputControl('银行手续费', '¥0'),
+          inputControl('汇兑差额', '¥0'),
           selectControl(profile.projectLabel, profile.projectOptions),
           uploadControl('凭证/流水', profile.voucherText),
           textareaControl('收款说明', '', profile.remark)
@@ -1466,10 +1488,16 @@
         return rows.length ? rows : null;
       }
       function projectReceiptFieldsHtml() {
+        const currencyCode = receivableCurrencyCode();
         return [
           '<label class="form-group"><span class="form-label">收款阶段</span><select class="form-control"><option>项目首款 / 锁定报价节点</option><option>项目进度款 / 锁定报价节点</option><option>项目尾款 / 锁定报价节点</option><option>项目补差</option></select></label>',
           '<label class="form-group"><span class="form-label">收款来源</span><select class="form-control"><option>客户对公转账</option><option>门店预存账户</option><option>银行流水认领</option><option>线下收款待认领</option></select></label>',
+          currencySelectControl('收款币种', currencyCode),
+          '<label class="form-group"><span class="form-label">原币金额</span><input class="form-control" type="text" placeholder="客户实际到账金额" value="' + (currencyCode === 'CNY' ? '按银行流水' : '') + '"></label>',
+          '<label class="form-group"><span class="form-label">成交汇率</span><input class="form-control" type="text" placeholder="按银行到账或财务确认汇率" value="' + (currencyCode === 'CNY' ? '1.0000' : '') + '"></label>',
           '<label class="form-group"><span class="form-label">本次收款金额</span><input class="form-control" type="text" value="按银行流水"></label>',
+          '<label class="form-group"><span class="form-label">银行手续费</span><input class="form-control" type="text" value="¥0"></label>',
+          '<label class="form-group"><span class="form-label">汇兑差额</span><input class="form-control" type="text" value="¥0"></label>',
           '<label class="form-group"><span class="form-label">对应应收</span><select class="form-control"><option>YS-MICE-20260704-001 项目首款</option><option>YS-MICE-20260704-002 项目进度款</option><option>YS-MICE-20260704-003 项目尾款</option></select></label>',
           '<label class="form-group form-group-full"><span class="form-label">凭证/流水</span><div class="upload-box">上传银行回单或选择收款流水，提交后进入销售中心收款认领/财务复核</div></label>',
           '<label class="form-group form-group-full"><span class="form-label">收款说明</span><textarea class="form-control" rows="3" placeholder="填写付款公司名称、流水号、差额说明或客户付款备注"></textarea></label>'
@@ -1650,6 +1678,7 @@
         setText('receiptPaid', config.amount[1]);
         setText('receiptUnpaid', config.amount[2]);
         setText('receiptSettleUnit', isProjectOrder() ? contactParts().name : config.owner);
+        setText('receiptCurrency', currencyLabel(receivableCurrencyCode()));
         setText('receivableDrawerTitle', receivableProfileFor().title);
         setText('receivableDrawerSummary', '订单应收 ' + config.amount[0] + '，调整提交后进入审批和财务应收审核。');
         setHtml('receivableDrawerFields', receivableFieldsHtml());
