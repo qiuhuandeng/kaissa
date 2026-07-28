@@ -111,7 +111,7 @@
               <th>出发/回团</th>
               <th>报名截止</th>
               <th>名额/已售</th>
-              <th>结算价</th>
+              <th>团期报价</th>
               <th>状态</th>
               <th>操作</th>
             </tr>
@@ -167,6 +167,17 @@
           "ST-DH-001": "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80"
         };
         return coverMap[product.productCode] || "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=900&q=80";
+      }
+      function numericPrice(price) {
+        return String(price || "0").replace(/[¥,\s]/g, "") || "0";
+      }
+      function formattedPrice(value) {
+        return "¥" + Number(value || 0).toLocaleString("zh-CN");
+      }
+      function publicPriceBySettlement(price) {
+        var base = Number(numericPrice(price));
+        if (!base) return "¥0";
+        return formattedPrice(Math.ceil(base * 1.1 / 10) * 10);
       }
       function ownerOrgFor(route) {
         route = route || {};
@@ -316,7 +327,10 @@
             deadline: item[3],
             stock: Number(item[4] || 0),
             sold: Number(item[5] || 0),
-            price: item[6],
+            publicPrice: item[9] || publicPriceBySettlement(item[6]),
+            settlementPrice: item[10] || item[6],
+            price: item[10] || item[6],
+            confirmMode: item[11] || "二次确认后开售",
             status: item[7],
             execution: item[8],
             company: route.company || "凯撒外采",
@@ -432,7 +446,7 @@
             '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.depart) + '</strong><span>回团 ' + escapeHtml(item.back) + '</span></div></td>',
             '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.deadline) + '</strong><span>截止报名</span></div></td>',
             '  <td><div class="table-cell-main"><strong>' + escapeHtml(String(left)) + '/' + escapeHtml(String(item.stock)) + escapeHtml(item.unit) + '</strong><span>已售 ' + escapeHtml(String(item.sold)) + escapeHtml(item.unit) + '</span></div></td>',
-            '  <td><strong>' + escapeHtml(item.price) + '</strong></td>',
+            '  <td><div class="table-cell-main"><strong>公开 ' + escapeHtml(item.publicPrice || publicPriceBySettlement(item.settlementPrice || item.price)) + '</strong><span>结算 ' + escapeHtml(item.settlementPrice || item.price) + '</span></div></td>',
             '  <td><div class="tag-row"><span class="' + statusClass(displayStatus(item.status)) + '">' + escapeHtml(displayStatus(item.status)) + '</span><span class="tag tag-gray">' + escapeHtml(displayExecution(item.execution)) + '</span></div></td>',
             '  <td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(detailHref(item)) + '">详情</a><button type="button" data-adjust-schedule>调价名额</button><button type="button" data-toggle-schedule>' + stopText + '</button></div></td>',
             '</tr>'
