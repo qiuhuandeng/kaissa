@@ -1,7 +1,7 @@
 (function () {
   const NAV_ITEMS = [
-    { title: "我的产品", shortTitle: "产品", href: "products.html", icon: "box" },
-    { title: "我的团期", shortTitle: "团期", href: "schedules.html", icon: "calendar" },
+    { title: "产品管理", shortTitle: "产品", href: "products.html", icon: "box" },
+    { title: "团期管理", shortTitle: "团期", href: "schedules.html", icon: "calendar" },
     { title: "订单确认", shortTitle: "订单", href: "orders.html", icon: "clipboard" },
     { title: "对账结算", shortTitle: "对账", href: "settlements.html", icon: "wallet" }
   ];
@@ -9,6 +9,7 @@
   const PAGE_ACTIVE_MAP = {
     "product-detail.html": "products.html",
     "product-edit.html": "products.html",
+    "product-schedules.html": "products.html",
     "schedule-detail.html": "schedules.html",
     "schedule-create.html": "schedules.html",
     "schedule-batch.html": "schedules.html"

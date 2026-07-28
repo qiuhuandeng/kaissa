@@ -5,8 +5,17 @@
   var mode = page.getAttribute('data-schedule-builder');
   var isSupplierSchedule = page.hasAttribute('data-supplier-schedule-builder');
   var params = new URLSearchParams(window.location.search);
+  var embeddedDrawerMode = params.get('embed') === 'batchDrawer';
   var currentStep = 0;
   var dirty = false;
+
+  function postDrawerMessage(action, detail) {
+    if (!embeddedDrawerMode || window.parent === window) return;
+    window.parent.postMessage({
+      type: 'caesar:batch-drawer:' + action,
+      detail: detail || {}
+    }, '*');
+  }
 
   var data = {
     group: {
@@ -83,7 +92,7 @@
           name: '兰卡威机票酒店套餐',
           meta: '全国出发，按出行日期维护机票、酒店房晚与接送机余量。',
           plans: [
-            { name: '机票+酒店5天4晚', days: 5, basis: '含往返机票、四星海边酒店、接送机，成人供应商价 ¥3,680' },
+            { name: '机票+酒店5天4晚', days: 5, basis: '含往返机票、四星海边酒店、接送机，成人结算价 ¥3,680' },
             { name: '酒店+接送机4晚', days: 5, basis: '四星酒店房晚+接送机，房态按每日回传' }
           ]
         },
@@ -91,7 +100,7 @@
           name: '巴黎自由行套餐',
           meta: '巴黎市区酒店、国际机票和当地玩乐可选组合。',
           plans: [
-            { name: '机票+酒店5晚', days: 6, basis: '国际机票+巴黎四星酒店，成人供应商价 ¥6,980' },
+            { name: '机票+酒店5晚', days: 6, basis: '国际机票+巴黎四星酒店，成人结算价 ¥6,980' },
             { name: '纯酒店5晚', days: 6, basis: '巴黎四星酒店5晚，可加购接送机' }
           ]
         }
@@ -409,9 +418,23 @@
     return (value || '0000-00-00').replace(/-/g, '').slice(2);
   }
 
+  function scheduleDataKey(typeKey) {
+    if (typeKey === 'outbound' || typeKey === 'domestic') return 'group';
+    return typeKey || 'group';
+  }
+
+  function scheduleActiveKey(typeKey) {
+    var dataKey = scheduleDataKey(typeKey);
+    var requestedKey = typeKey || 'group';
+    if (requestedKey === 'group') return 'outbound';
+    if ($('[data-schedule-type="' + requestedKey + '"]')) return requestedKey;
+    if ($('[data-schedule-type="' + dataKey + '"]')) return dataKey;
+    return dataKey === 'group' ? 'outbound' : dataKey;
+  }
+
   function selectedTypeKey() {
     var active = $('[data-schedule-type].active');
-    return active ? active.getAttribute('data-schedule-type') : 'group';
+    return scheduleDataKey(active ? active.getAttribute('data-schedule-type') : 'group');
   }
 
   function isPeopleScheduleType(typeKey) {
@@ -423,7 +446,7 @@
   }
 
   function selectedType() {
-    return data[selectedTypeKey()];
+    return data[selectedTypeKey()] || data.group;
   }
 
   function inferTypeFromProductName(productName) {
@@ -555,6 +578,39 @@
     return 0;
   }
 
+  function supplierMatrixTitle(title) {
+    if (!isSupplierSchedule) return title;
+    return String(title || '价格结构')
+      .replace('价格与名额', '结算价与名额')
+      .replace('价格与余量', '结算价与余量')
+      .replace('价格与舱房', '结算价与舱房')
+      .replace('价格与铺位', '结算价与铺位')
+      .replace('价格结构', '结算价结构');
+  }
+
+  function supplierMatrixColumn(column) {
+    if (!isSupplierSchedule) return column;
+    return String(column || '')
+      .replace('价格结构', '价格类型')
+      .replace('套餐结构', '套餐类型')
+      .replace('舱房售卖', '舱型')
+      .replace('成人价', '成人结算价')
+      .replace('儿童价', '儿童结算价')
+      .replace('学生价', '学生结算价')
+      .replace('陪同价', '陪同结算价')
+      .replace('单房差', '单房差结算价')
+      .replace('单铺差', '单铺差结算价')
+      .replace('服务费', '服务费结算价')
+      .replace('补差', '补差结算价');
+  }
+
+  function supplierMatrixRowLabel(label) {
+    if (!isSupplierSchedule) return label;
+    if (label === '对客价') return '结算价';
+    if (label === '优惠团费') return '特价结算价';
+    return label;
+  }
+
   function quotaDisplayUnit() {
     if (selectedTypeKey() === 'cruise') return '人';
     return selectedType().unit;
@@ -622,7 +678,7 @@
     if (qtyLabel) qtyLabel.textContent = selectedTypeKey() === 'cruise' ? '占用舱房' : selectedTypeKey() === 'train' ? '占用铺位' : '占用座位';
     if (quotaLabel) quotaLabel.textContent = selectedTypeKey() === 'train' ? '计划铺位' : selectedTypeKey() === 'study' ? '学生名额' : '计划客';
     if (adultLabel) adultLabel.textContent = selectedTypeKey() === 'study' ? '陪同人数' : '成人数';
-    if (matrixTitle) matrixTitle.textContent = selectedType().matrixTitle || '价格结构';
+    if (matrixTitle) matrixTitle.textContent = supplierMatrixTitle(selectedType().matrixTitle || '价格结构');
     if (check) check.textContent = needsResource ? resourceBorrowCheckText() : '按当前名额与价格生成';
   }
 
@@ -634,10 +690,11 @@
   }
 
   function setType(typeKey) {
-    if (typeKey === 'group') typeKey = 'outbound';
-    if (!data[typeKey]) typeKey = 'group';
+    var dataKey = scheduleDataKey(typeKey);
+    if (!data[dataKey]) dataKey = 'group';
+    var activeKey = scheduleActiveKey(typeKey || dataKey);
     $all('[data-schedule-type]').forEach(function (button) {
-      button.classList.toggle('active', button.getAttribute('data-schedule-type') === typeKey);
+      button.classList.toggle('active', button.getAttribute('data-schedule-type') === activeKey);
     });
     renderSelectors();
     renderContext();
@@ -707,14 +764,15 @@
     var product = selectedProduct();
     var plan = selectedPlan();
     if (mode !== 'batch') {
-      var pageTitleText = '新建' + type.objectName;
+      var editMode = params.get('mode') === 'edit';
+      var pageTitleText = editMode ? type.objectName + '维护' : '新建' + type.objectName;
       var pageTitle = document.querySelector('.page-title');
       var submitButton = $('[data-submit-builder]');
       var successButton = $('[data-builder-success]');
       document.title = pageTitleText + ' - 凯撒旅游';
       if (pageTitle) pageTitle.textContent = pageTitleText;
-      if (submitButton) submitButton.textContent = '生成' + type.objectName;
-      if (successButton) successButton.textContent = '进入' + type.objectName + '列表';
+      if (submitButton) submitButton.textContent = isSupplierSchedule ? '提交凯撒确认' : '生成' + type.objectName;
+      if (successButton) successButton.textContent = isSupplierSchedule ? '进入团期列表' : '进入' + type.objectName + '列表';
     }
     $('#heroType').textContent = type.label;
     $('#heroType').className = type.tagClass;
@@ -761,7 +819,7 @@
 
   function matrixHeader() {
     return selectedType().matrixColumns.map(function (column) {
-      return '<th>' + column + '</th>';
+      return '<th>' + supplierMatrixColumn(column) + '</th>';
     }).join('');
   }
 
@@ -790,14 +848,14 @@
   function matrixRow(row) {
     if (!Array.isArray(row)) {
       return '<tr data-matrix-row data-row-total="' + Number(row.total || 0) + '" data-row-reserve="' + Number(row.reserve || 0) + '">' +
-        '<td><strong>' + row.label + '</strong></td>' +
+        '<td><strong>' + supplierMatrixRowLabel(row.label) + '</strong></td>' +
         row.cells.map(function (cell) { return matrixObjectCell(cell, row); }).join('') +
         '</tr>';
     }
     var lastType = typeof row[5] === 'number' ? 'number' : 'text';
     var lastMin = lastType === 'number' ? ' min="0"' : '';
     return '<tr data-matrix-row>' +
-      '<td><strong>' + row[0] + '</strong></td>' +
+      '<td><strong>' + supplierMatrixRowLabel(row[0]) + '</strong></td>' +
       '<td><input class="table-input" type="number" min="0" value="' + row[1] + '" data-total></td>' +
       '<td><input class="table-input" type="number" min="0" value="' + row[2] + '" data-reserve></td>' +
       '<td><span data-saleable>' + Math.max(row[1] - row[2], 0) + '</span></td>' +
@@ -945,6 +1003,11 @@
       executionStatus = '未出团';
       settlementStatus = '未维护成本';
     }
+    if (isSupplierSchedule) {
+      saleStatus = saleStatus && saleStatus !== '筹备中' ? saleStatus : '可售';
+      executionStatus = '待凯撒确认';
+      settlementStatus = settlementStatus || '下单后二次确认';
+    }
     return {
       code: scheduleCode(index || 1, depart),
       product: selectedProduct().name,
@@ -988,7 +1051,7 @@
       customProjectNo: customProjectNo,
       privateSaleScope: privateSaleScope,
       privateGroupNote: privateGroupNote,
-      remark: (privateGroupNote || type.label + '按' + type.planLabel + '生成，团期日期、价格与余量已确认') + (groupMode === '项目团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
+      remark: (privateGroupNote || (isSupplierSchedule ? type.label + '已提交，结算价与余量等待凯撒确认采用' : type.label + '按' + type.planLabel + '生成，团期日期、价格与余量已确认')) + (groupMode === '项目团' && privateCustomer ? '；指定客户：' + privateCustomer : ''),
       deadline: $('#deadlineDate').value || addDays(depart, -10)
     };
   }
@@ -1001,8 +1064,8 @@
       '<div class="schedule-summary-card"><span>产品类型</span><strong>' + type.label + '</strong></div>',
       '<div class="schedule-summary-card"><span>产品/线路</span><strong>' + selectedProduct().name + ' / ' + selectedPlan().name + '</strong></div>',
       '<div class="schedule-summary-card"><span>日期</span><strong>' + $('#departDate').value + ' 至 ' + $('#returnDate').value + '</strong></div>',
-      '<div class="schedule-summary-card"><span>名额价格</span><strong>' + totals.saleable + quotaDisplayUnit() + '，成人' + adultCount() + '，起价' + primaryPrice() + '</strong></div>',
-      '<div class="schedule-summary-card"><span>预留时长</span><strong>' + reserveHours() + '小时</strong></div>'
+      '<div class="schedule-summary-card"><span>' + (isSupplierSchedule ? '结算价库存' : '名额价格') + '</span><strong>' + totals.saleable + quotaDisplayUnit() + '，成人' + adultCount() + '，' + (isSupplierSchedule ? '结算价' : '起价') + primaryPrice() + '</strong></div>',
+      '<div class="schedule-summary-card"><span>保留时效</span><strong>' + reserveHours() + '小时</strong></div>'
     ];
     if ($('#groupModeSelect')) {
       summary.push('<div class="schedule-summary-card"><span>团队来源</span><strong>' + $('#groupModeSelect').value + '</strong></div>');
@@ -1010,7 +1073,7 @@
         summary.push('<div class="schedule-summary-card"><span>客户专属</span><strong>' + (($('#privateCustomerInput') && $('#privateCustomerInput').value.trim()) || '待选择客户') + '</strong></div>');
       }
     }
-    summary.push('<div class="schedule-summary-card"><span>资源占用</span><strong>' + (demand && demand.bound ? (demand.borrowQty + (demand.sourceUnit || type.unit) + '，' + resourceBorrowCheckText()) : '按当前名额生成') + '</strong></div>');
+    summary.push('<div class="schedule-summary-card"><span>' + (isSupplierSchedule ? '确认规则' : '资源占用') + '</span><strong>' + (isSupplierSchedule ? (($('#confirmRule') && $('#confirmRule').value) || '下单后二次确认') : (demand && demand.bound ? (demand.borrowQty + (demand.sourceUnit || type.unit) + '，' + resourceBorrowCheckText()) : '按当前名额生成')) + '</strong></div>');
     $('#summaryContent').innerHTML = summary.join('');
   }
 
@@ -1104,7 +1167,7 @@
     var pieces = ['来源产品：' + routeContext.product];
     if (routeContext.route) pieces.push('承接产品线路：' + routeContext.route);
     pieces.push(inheritedConfigText(selectedType()));
-    if (routeContext.ownerOrg) pieces.push('承接组织：' + routeContext.ownerOrg);
+    if (routeContext.ownerOrg) pieces.push((isSupplierSchedule ? '凯撒对接：' : '承接组织：') + routeContext.ownerOrg);
     if (routeContext.supplier) pieces.push('供货方：' + routeContext.supplier);
     if (routeContext.flightRouteResource) pieces.push('航线资源：' + routeContext.flightRouteResource);
     if (routeContext.flightUsePolicy) pieces.push('用位方式：' + routeContext.flightUsePolicy);
@@ -1146,9 +1209,16 @@
     if (!validateResourceBorrow()) return;
     if (!validatePrivateGroup()) return;
     var type = selectedType();
-    writePending(schedulePayload(null, 1));
+    var item = schedulePayload(null, 1);
+    writePending(item);
+    if (embeddedDrawerMode) {
+      dirty = false;
+      postDrawerMessage('created', { schedules: [item] });
+      postDrawerMessage('close');
+      return;
+    }
     $('#successTitle').textContent = isSupplierSchedule ? type.objectName + '已提交凯撒确认' : type.objectName + '已提交';
-    $('#successText').textContent = isSupplierSchedule ? type.label + '已提交凯撒确认，凯撒采用后生成代理销售' + type.objectName + '。' : type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
+    $('#successText').textContent = isSupplierSchedule ? type.label + '已提交凯撒确认，等待凯撒采用。' : type.label + '已提交审批，审批通过后生成' + type.objectName + '并确认价格与余量。';
     $('#approvalNo').textContent = isSupplierSchedule ? 'SUP-' + scheduleCode(1, $('#departDate').value) : type.approvalNo;
     $('#approvalNode').textContent = isSupplierSchedule ? '凯撒代理运营' : type.approvalNode;
     $('#approvalLink').href = scheduleListHref();
@@ -1193,7 +1263,8 @@
     $('#previewCount').textContent = dates.length + '个' + type.objectName;
     $('#previewRows').innerHTML = dates.map(function (date, index) {
       var item = schedulePayload(date, index + 1);
-      return '<tr data-preview-row><td><input type="checkbox" checked></td><td>' + item.code + '</td><td>' + item.depart + '</td><td>' + item.back + '</td><td>' + selectedProduct().name + '<br><span class="text-muted">' + plan.name + '</span></td><td>' + item.left + type.unit + '</td><td>' + item.price + '</td><td>' + Object.keys(item.channelSeats).map(function (key) { return key + ':' + item.channelSeats[key]; }).join(' ') + '</td></tr>';
+      var lastCell = isSupplierSchedule ? '待凯撒确认' : Object.keys(item.channelSeats).map(function (key) { return key + ':' + item.channelSeats[key]; }).join(' ');
+      return '<tr data-preview-row><td><input type="checkbox" checked></td><td>' + item.code + '</td><td>' + item.depart + '</td><td>' + item.back + '</td><td>' + selectedProduct().name + '<br><span class="text-muted">' + plan.name + '</span></td><td>' + item.left + type.unit + '</td><td>' + item.price + '</td><td>' + lastCell + '</td></tr>';
     }).join('');
   }
 
@@ -1210,8 +1281,14 @@
       return schedulePayload(row.children[2].textContent.trim(), index + 1);
     });
     writeBatch(items);
+    if (embeddedDrawerMode) {
+      dirty = false;
+      postDrawerMessage('created', { schedules: items });
+      postDrawerMessage('close');
+      return;
+    }
     $('#successTitle').textContent = isSupplierSchedule ? '批量团期已提交凯撒确认' : '批量开排完成';
-    $('#successText').textContent = isSupplierSchedule ? '已生成' + items.length + '个供应商' + selectedType().objectName + '草稿并提交凯撒确认。' : '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
+    $('#successText').textContent = isSupplierSchedule ? '已生成' + items.length + '个' + selectedType().objectName + '草稿并提交凯撒确认。' : '已生成' + items.length + '个' + selectedType().label + selectedType().objectName + '，价格与余量已确认。';
     $('#approvalNo').textContent = isSupplierSchedule ? '待凯撒确认' : '无需审批';
     $('#approvalNode').textContent = isSupplierSchedule ? '凯撒代理运营' : '已进入' + selectedType().objectName + '列表';
     $('#approvalLink').style.display = 'none';
@@ -1337,6 +1414,12 @@
 
     $all('[data-confirm-back]').forEach(function (link) {
       link.addEventListener('click', function (event) {
+        if (embeddedDrawerMode) {
+          event.preventDefault();
+          if (dirty && !window.confirm('当前内容未保存，确认离开吗？')) return;
+          postDrawerMessage('close');
+          return;
+        }
         if (dirty && !window.confirm('当前内容未保存，确认离开吗？')) event.preventDefault();
       });
     });
@@ -1374,7 +1457,7 @@
       else window.location.replace(url);
       return;
     }
-    setType(data[type] ? type : 'group');
+    setType(data[scheduleDataKey(type)] ? type : 'group');
     renderSelectors(requestedProduct, requestedRoute);
     renderContext();
     renderMatrix();
@@ -1388,6 +1471,9 @@
     bindEvents();
     setStep(0);
     renderPreviewIfNeeded();
+    requestAnimationFrame(function () {
+      postDrawerMessage('ready');
+    });
   }
 
   init();

@@ -5,6 +5,7 @@
   var currentKind = page.getAttribute('data-route-kind') || 'group';
   var currentVariant = 'outbound';
   var isSupplierRoute = page.hasAttribute('data-supplier-route-edit');
+  var selfProductPage = page.classList.contains('product-self-edit-page');
   var initialParams = new URLSearchParams(window.location.search);
   var isEditEntry = initialParams.get('mode') === 'edit' || page.hasAttribute('data-edit-entry') || initialParams.has('productId') || initialParams.has('routeCode');
   var formDirty = false;
@@ -17,6 +18,13 @@
     });
     var hero = page.querySelector('.route-edit-hero');
     if (hero) hero.hidden = !isEditEntry;
+    if (isSupplierRoute) {
+      var supplierTitle = isEditEntry ? '产品维护' : '新建产品';
+      var supplierPageTitle = page.querySelector('.page-title');
+      if (supplierPageTitle) supplierPageTitle.textContent = supplierTitle;
+      document.title = supplierTitle + ' - 凯撒旅游';
+      return;
+    }
     if (!isEditEntry) {
       var title = page.querySelector('.page-title');
       if (title && title.textContent.indexOf('编辑') >= 0) title.textContent = title.textContent.replace('编辑', '新建');
@@ -128,7 +136,7 @@
         '<div class="route-tab-actions">',
         '<button class="btn btn-secondary" type="button" data-route-prev>上一步</button>',
         '<button class="btn btn-primary" type="button" data-route-next>',
-        isSupplierRoute ? '提交凯撒处理' : '提交审核',
+        isSupplierRoute ? '提交凯撒确认' : '提交审核',
         '</button>',
         '</div>'
       ].join(''));
@@ -186,7 +194,7 @@
       prevButton.disabled = currentStep === 0;
     });
     page.querySelectorAll('[data-route-next]').forEach(function (nextButton) {
-      nextButton.textContent = currentStep === panels.length - 1 ? (isSupplierRoute ? '提交凯撒处理' : '提交审核') : '下一步';
+      nextButton.textContent = currentStep === panels.length - 1 ? (isSupplierRoute ? '提交凯撒确认' : '提交审核') : '下一步';
     });
   }
 
@@ -540,6 +548,7 @@
     if (/邮轮/.test(value)) return 'cruise';
     if (/专列/.test(value)) return 'train';
     if (/自由行/.test(value)) return 'free';
+    if (/研学/.test(value)) return 'study';
     return 'group';
   }
 
@@ -547,6 +556,7 @@
     if (/cruise|邮轮/i.test(value || '')) return 'cruise';
     if (/train|专列/i.test(value || '')) return 'train';
     if (/free|自由行/i.test(value || '')) return 'free';
+    if (/study|研学/i.test(value || '')) return 'study';
     return 'group';
   }
 
@@ -567,6 +577,36 @@
     }).join('');
   }
 
+  function supplierReadiness(items) {
+    return (items || []).map(function (item) {
+      if (item[0] === '参考起价') return ['结算参考价', '¥5,750/人'];
+      return item;
+    });
+  }
+
+  function supplierPlanSummary(kind, summary) {
+    var map = {
+      group: '当前线路结算参考价 ¥5,750 - ¥6,280/人',
+      cruise: '当前航线关联 4 类舱型，结算参考价 ¥7,200 - ¥10,900/间',
+      train: '当前线路关联 3 类铺位，结算参考价 ¥18,800 - ¥22,800/铺',
+      free: '当前套餐结算参考价 ¥3,680 - ¥4,980/套',
+      domestic: '当前线路结算参考价 ¥4,800 - ¥7,800/人'
+    };
+    return map[kind] || String(summary || '').replace(/参考起价|参考价/g, '结算参考价');
+  }
+
+  function supplierizeHtml(html) {
+    return String(html || '')
+      .replace(/供应商每日回传/g, '每日回传')
+      .replace(/按供应商二次确认/g, '按二次确认')
+      .replace(/待选择供应商/g, '待选择合作方')
+      .replace(/供应商/g, '合作方')
+      .replace(/参考起价/g, '结算参考价')
+      .replace(/参考价/g, '结算参考价')
+      .replace(/对客价/g, '结算价')
+      .replace(/产品展示起价/g, '产品参考价');
+  }
+
   function renderHeroTags(items) {
     return items.map(function (item) {
       return '<span># ' + htmlEscape(item) + '</span>';
@@ -578,7 +618,7 @@
       '<div class="route-tab-actions">',
       '<button class="btn btn-secondary" type="button" data-route-prev>上一步</button>',
       '<button class="btn btn-primary" type="button" data-route-next>',
-      isLastStep ? (isSupplierRoute ? '提交凯撒处理' : '提交审核') : '下一步',
+      isLastStep ? (isSupplierRoute ? '提交凯撒确认' : '提交审核') : '下一步',
       '</button>',
       '</div>'
     ].join('');
@@ -606,6 +646,14 @@
       return {
         kind: 'free',
         labels: ['套餐基础', '资源组合', '可售规则', '费用与证件'],
+        ids: ['lineBasicSection', 'lineItinerarySection', 'lineTrafficSection', 'lineFeeSection'],
+        combineFeeAndVisa: true
+      };
+    }
+    if (normalizedKind === 'study') {
+      return {
+        kind: 'study',
+        labels: ['课程基础', '行程课程', '营地资源', '费用与证件'],
         ids: ['lineBasicSection', 'lineItinerarySection', 'lineTrafficSection', 'lineFeeSection'],
         combineFeeAndVisa: true
       };
@@ -866,6 +914,57 @@
       scheduleHref: 'product-schedules.html?type=outbound',
       modalNext: '通过后在产品团期页查看团期'
     },
+    study: {
+      scheduleType: 'study',
+      tagText: '研学产品',
+      tagClass: 'tag tag-green',
+      title: '敦煌历史文化研学7日',
+      desc: '敦煌始发，围绕莫高窟、鸣沙山、玉门关等文化主题组织课程与实践。',
+      subtitle: '导师带队，课程化行程，按营期维护名额、师资和安全保障',
+      supplier: ['福建凯撒'],
+      ownerOrg: ['研学产品中心', '国内产品中心', '外采计调部'],
+      routeType: '研学',
+      travelType: '境内游',
+      chips: [['供货方', '福建凯撒'], ['归属中心/部门', '研学产品中心'], ['营地城市', '敦煌']],
+      heroTags: ['营期', '导师', '文化课程'],
+      readiness: [['线路数', '2条'], ['参考起价', '¥8,800/人'], ['数据完整度', '100%']],
+      plans: [
+        { name: '敦煌艺术与历史课堂', meta: '7天6晚 · 莫高窟/鸣沙山 · 按营期售卖' },
+        { name: '河西走廊研学线', meta: '8天7晚 · 张掖/敦煌/嘉峪关 · 按营期售卖' }
+      ],
+      planTitle: '研学线路',
+      planSummary: '当前线路关联导师、营地、课程和安全保障，参考价 ¥8,800 - ¥12,800/人',
+      extraHtml: renderProductTargetHtml({
+        departCity: '敦煌',
+        departOptions: ['敦煌', '兰州', '西安', '北京', '上海'],
+        destinations: ['国内 / 西北'],
+        tags: ['研学', '文化课程', '导师带队'],
+        audience: '中小学生、亲子研学客群、学校团队'
+      }),
+      planStructureHtml: [
+        '<div class="route-section-titlebar"><h2 class="route-section-title">营地资源</h2><button class="btn btn-secondary" type="button" data-add-row="#studyResourceMatrix">新增资源</button></div>',
+        '<div class="table-wrap"><table id="studyResourceMatrix" data-matrix-type="resource"><thead><tr><th>资源项</th><th>资源说明</th><th>供应方</th><th>使用规则</th><th>操作</th></tr></thead><tbody>',
+        '<tr><td><input class="form-control" type="text" value="研学导师"></td><td><input class="form-control" type="text" value="历史文化导师+安全员"></td><td><input class="form-control" type="text" value="敦煌研学中心"></td><td><input class="form-control" type="text" value="每团至少1名主导师"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<tr><td><input class="form-control" type="text" value="营地住宿"></td><td><input class="form-control" type="text" value="研学营地/同等级酒店"></td><td><input class="form-control" type="text" value="敦煌营地运营方"></td><td><input class="form-control" type="text" value="按营期确认房间"></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '</tbody></table></div>'
+      ].join(''),
+      costHtml: [
+        '<div class="route-section-titlebar"><h2 class="route-section-title">费用规则</h2></div>',
+        '<div class="route-field-grid">',
+        '<div class="form-group"><label class="form-label" for="studentRef">学生参考价</label><input id="studentRef" class="form-control" type="text" value="¥8,800/人"></div>',
+        '<div class="form-group"><label class="form-label" for="teacherRatio">师生配比 <span class="req">*</span></label><input id="teacherRatio" class="form-control" type="text" value="1:15"></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="includeFee">费用包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">行程内课程、导师服务、营地住宿、餐食、当地交通、首道门票和基础保险。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">费用不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">出发地往返交通、个人消费、证件办理费用和临时增加课程项目。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">开营前按营地、导师和交通已发生费用核损；名单提交后以实际损失为准。</textarea></div>',
+        '</div>'
+      ].join(''),
+      publishTiles: [['课程基础', '主题与客群已维护'], ['行程课程', '课程日程已维护'], ['营地资源', '导师/住宿/安全已维护'], ['后续动作', '审核通过后在产品营期页查看营期']],
+      modalTitle: '已提交研学产品审核',
+      modalFocus: '课程内容与营地资源',
+      navigateText: '查看营期',
+      scheduleHref: 'product-schedules.html?type=study',
+      modalNext: '通过后在产品营期页查看营期'
+    },
     cruise: {
       scheduleType: 'cruise',
       tagText: '邮轮产品',
@@ -1050,7 +1149,7 @@
     currentVariant = currentKind === 'group' ? normalizeVariant(kind) : currentKind;
     var preset = routePresetFor(kind);
     page.setAttribute('data-route-kind', currentKind);
-    page.setAttribute('data-schedule-href', isSupplierRoute ? 'schedule-create.html' : (preset.scheduleHref || 'products.html'));
+    page.setAttribute('data-schedule-href', isSupplierRoute ? 'product-schedules.html' : (preset.scheduleHref || 'products.html'));
 
     var title = page.querySelector('.route-hero-title');
     var desc = page.querySelector('.route-hero-desc');
@@ -1066,10 +1165,10 @@
       typeTag.className = preset.tagClass;
       typeTag.textContent = preset.tagText;
     }
-    var heroChips = isSupplierRoute ? [['供应商', '欧洲联合地接社'], ['凯撒对接', '欧洲线路中心'], ['出发城市', '北京']] : preset.chips;
+    var heroChips = isSupplierRoute ? [['公司名称', '欧洲联合地接社'], ['凯撒对接', '外采计调部 / 欧洲组'], ['出发城市', '北京']] : preset.chips;
     if (chips) chips.innerHTML = renderKeyValueList(heroChips, 'route-chip');
     if (heroTags) heroTags.innerHTML = renderHeroTags(preset.heroTags || []);
-    if (readiness) readiness.innerHTML = renderReadiness(preset.readiness);
+    if (readiness) readiness.innerHTML = renderReadiness(isSupplierRoute ? supplierReadiness(preset.readiness) : preset.readiness);
     var navigateButton = page.querySelector('[data-route-navigate]');
     if (navigateButton) navigateButton.textContent = isSupplierRoute ? '维护团期' : (preset.navigateText || '查看团期');
 
@@ -1084,7 +1183,7 @@
     }
     var ownerOrg = document.getElementById('ownerOrg');
     if (ownerOrg) {
-      var ownerOptions = isSupplierRoute ? ['凯撒欧洲产品中心', '凯撒代理运营'] : preset.ownerOrg;
+      var ownerOptions = isSupplierRoute ? ['外采计调部 / 欧洲组', '外采计调部 / 亚洲组', '邮轮外采组', '专列外采组'] : preset.ownerOrg;
       ownerOrg.innerHTML = selectedOptionHtml(ownerOptions, ownerOptions[0]);
     }
 
@@ -1099,19 +1198,19 @@
     var planList = page.querySelector('.route-plan-list');
     if (planList) planList.innerHTML = renderPlanList(preset.plans);
     var planHeadSummary = page.querySelector('.route-plan-head span');
-    if (planHeadSummary) planHeadSummary.textContent = preset.planSummary;
+    if (planHeadSummary) planHeadSummary.textContent = isSupplierRoute ? supplierPlanSummary(currentKind, preset.planSummary) : preset.planSummary;
 
     var planStructureSection = panels[1] && panels[1].querySelector('[data-plan-structure-section]');
     if (planStructureSection) {
       planStructureSection.classList.toggle('route-matrix-table', currentKind !== 'group');
-      planStructureSection.innerHTML = preset.planStructureHtml;
+      planStructureSection.innerHTML = isSupplierRoute ? supplierizeHtml(preset.planStructureHtml) : preset.planStructureHtml;
       if (window.initRouteTrafficSections) window.initRouteTrafficSections(planStructureSection);
     }
 
     var costPanel = panels[2] && !panels[2].hasAttribute('data-route-media-panel') ? panels[2] : null;
     var costSection = costPanel && costPanel.querySelector('.route-form-section');
     if (costSection) {
-      costSection.innerHTML = preset.costHtml;
+      costSection.innerHTML = isSupplierRoute ? supplierizeHtml(preset.costHtml) : preset.costHtml;
       if (!costSection.querySelector('[data-route-next]')) {
         costSection.insertAdjacentHTML('beforeend', renderTabActions(true));
       }
@@ -1122,11 +1221,11 @@
 
     var modalTitle = document.querySelector('.route-submit-modal .modal-title');
     var modalItems = document.querySelectorAll('.route-success-summary > div');
-    if (modalTitle) modalTitle.textContent = isSupplierRoute ? '已提交凯撒处理' : preset.modalTitle;
+    if (modalTitle) modalTitle.textContent = isSupplierRoute ? '已提交凯撒确认' : preset.modalTitle;
     if (modalItems[0]) modalItems[0].innerHTML = '<span>产品类型</span><strong>' + htmlEscape(preset.tagText) + '</strong>';
-    if (modalItems[1]) modalItems[1].innerHTML = isSupplierRoute ? '<span>处理方式</span><strong>凯撒代理采用确认</strong>' : '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
+    if (modalItems[1]) modalItems[1].innerHTML = isSupplierRoute ? '<span>确认方式</span><strong>凯撒外采计调采用确认</strong>' : '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
     if (modalItems[2]) modalItems[2].innerHTML = '<span>产品线路</span><strong>' + htmlEscape(String(preset.plans.length)) + '条</strong>';
-    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可包装销售</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在产品团期页查看团期') + '</strong>';
+    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可维护团期</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在产品团期页查看团期') + '</strong>';
 
     initDestinationTreeSelects();
     page.querySelectorAll('input, textarea').forEach(updateCounter);
@@ -1173,6 +1272,18 @@
       ].join('');
     }
 
+    if (type === 'resource') {
+      return [
+        '<tr>',
+        '<td><input class="form-control" type="text" value="新增资源"></td>',
+        '<td><input class="form-control" type="text" value="待维护资源说明"></td>',
+        '<td><input class="form-control" type="text" value="待选择供应方"></td>',
+        '<td><input class="form-control" type="text" value="待维护使用规则"></td>',
+        '<td><button class="table-link danger" type="button" data-remove-row>删除</button></td>',
+        '</tr>'
+      ].join('');
+    }
+
     return [
       '<tr>',
       '<td><input class="form-control" type="text" value="新增服务项"></td>',
@@ -1200,7 +1311,8 @@
       group: 'D1 北京集合，搭乘国际航班前往巴黎。\nD2 巴黎市区游览，安排卢浮宫、凯旋门、塞纳河外观。\nD3 前往第戎及瑞士边境小镇，晚间入住湖区酒店。',
       cruise: 'D1 巴塞罗那码头登船，含登船日接送机和码头协助。\nD2 马赛靠港，安排普罗旺斯岸上观光。\nD3 热那亚靠港，安排老城与港区游览，离船日可选送机。',
       train: 'D1 西安站集合登车，办理实名核验、铺位分配与行前说明。\nD2 兰州停靠，下车游览后由地接接驳返车。\nD3 张掖停靠，游览丹霞景区，晚间车上活动。',
-      free: 'D1 抵达巴黎，接机后入住酒店。\nD2 巴黎市区自由活动，可加订卢浮宫门票。\nD3 凡尔赛或塞纳河游船可选，晚间自由安排。'
+      free: 'D1 抵达巴黎，接机后入住酒店。\nD2 巴黎市区自由活动，可加订卢浮宫门票。\nD3 凡尔赛或塞纳河游船可选，晚间自由安排。',
+      study: 'D1 抵达敦煌，开营仪式与安全说明。\nD2 莫高窟主题课程，完成壁画艺术观察记录。\nD3 鸣沙山自然地理实践，晚间进行课题复盘。'
     };
     target.value = textMap[kind] || textMap.group;
     target.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1272,6 +1384,16 @@
       freeQuery.set('product', context.product);
       freeQuery.set('route', context.route);
       return freeParts[0] + '?' + freeQuery.toString();
+    }
+    if (href && href.indexOf('product-schedules.html') > -1) {
+      var productScheduleParts = href.split('?');
+      var productScheduleQuery = new URLSearchParams(productScheduleParts[1] || '');
+      productScheduleQuery.set('source', 'product');
+      productScheduleQuery.set('type', context.type);
+      productScheduleQuery.set('product', context.product);
+      productScheduleQuery.set('productName', context.product);
+      productScheduleQuery.set('route', context.route);
+      return productScheduleParts[0] + '?' + productScheduleQuery.toString();
     }
     if (href && href.indexOf('schedules.html') > -1) {
       var scheduleParts = href.split('?');
