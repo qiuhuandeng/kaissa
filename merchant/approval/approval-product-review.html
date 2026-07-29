@@ -17,6 +17,8 @@
           <h1 class="page-title">审批详情</h1>
         </div>
         <div class="list-page-actions">
+          <a id="approvalProductLink" class="btn btn-secondary" href="#" hidden>查看产品</a>
+          <a id="approvalPricingLink" class="btn btn-secondary" href="#" hidden>查看定价</a>
           <button class="btn btn-secondary" type="button" data-open-related>关联单据</button>
           <button class="btn btn-primary" type="button" data-focus-opinion>填写意见</button>
         </div>
@@ -60,6 +62,20 @@
               <strong>后续单据</strong>
               <span>审批通过后进入付款执行，上传银行回单后由财务模块承接 NC 付款推送。</span>
             </div>
+          </div>
+          <div id="approvalPriceMatrixWrap" class="table-wrap review-record-table approval-price-matrix" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th>价格结构</th>
+                  <th>供应商结算价</th>
+                  <th>供应商公开价</th>
+                  <th>我方对客价</th>
+                  <th>审核判断</th>
+                </tr>
+              </thead>
+              <tbody id="approvalPriceMatrixRows"></tbody>
+            </table>
           </div>
         </section>
 
@@ -125,11 +141,9 @@
           <div class="review-decision-row">
             <label><input type="radio" name="decision" value="通过" checked> 通过</label>
             <label><input type="radio" name="decision" value="驳回"> 驳回</label>
-            <label><input type="radio" name="decision" value="退回补充"> 退回补充</label>
           </div>
-          <textarea id="approvalOpinion" class="approval-opinion-textarea" placeholder="填写审批意见，驳回或退回补充时必填"></textarea>
+          <textarea id="approvalOpinion" class="approval-opinion-textarea" placeholder="填写审批意见，驳回时必填"></textarea>
           <button class="btn btn-primary" type="button" data-submit-approval>提交审批意见</button>
-          <button class="btn btn-secondary" type="button" data-save-draft>暂存意见</button>
         </section>
 
         <section class="review-side-card">
@@ -185,7 +199,7 @@
               <div><span>应付单</span><strong>AP20260624001</strong></div>
               <div><span>付款申请</span><strong>PAY-20260624-001</strong></div>
               <div><span>结算单</span><strong>JS20260624002</strong></div>
-              <div><span>NC任务</span><strong>审批通过后生成</strong></div>
+              <div><span>后续任务</span><strong>审批通过后承接</strong></div>
             </div>
           </section>
           <section class="approval-business-section">
@@ -226,6 +240,10 @@
       const nextList = sideCards[2] && sideCards[2].querySelector(".compliance-list");
       const relatedGrid = relatedModal.querySelector(".approval-mini-grid");
       const relatedChecks = relatedModal.querySelector(".approval-check-list");
+      const productLink = document.getElementById("approvalProductLink");
+      const pricingLink = document.getElementById("approvalPricingLink");
+      const priceMatrixWrap = document.getElementById("approvalPriceMatrixWrap");
+      const priceMatrixRows = document.getElementById("approvalPriceMatrixRows");
       let currentApproval;
 
       if (backLink) backLink.href = "approvals.html?view=" + encodeURIComponent(currentView);
@@ -282,6 +300,10 @@
         return items.map((item) => "<tr><td>" + escapeHtml(item[0]) + "</td><td>" + escapeHtml(item[1]) + "</td><td>" + escapeHtml(item[2]) + "</td><td><span class=\"" + escapeHtml(item[3]) + "\">" + escapeHtml(item[4]) + "</span></td><td>" + escapeHtml(item[5]) + "</td></tr>").join("");
       }
 
+      function priceRows(items) {
+        return (items || []).map((item) => "<tr><td>" + escapeHtml(item[0]) + "</td><td>" + escapeHtml(item[1]) + "</td><td>" + escapeHtml(item[2]) + "</td><td>" + escapeHtml(item[3]) + "</td><td>" + escapeHtml(item[4]) + "</td></tr>").join("");
+      }
+
       const approvalNoMap = {
         "APR-20260624-018": "product_publish",
         "APR-20260624-031": "product_publish_cruise",
@@ -308,7 +330,14 @@
         "APR-20260627-008": "org_staff",
         "APR-20260704-061": "supplier_onboarding",
         "APR-20260706-071": "outsource_inbound",
-        "APR-20260706-072": "outsource_online"
+        "APR-20260706-072": "outsource_online",
+        "APR-20260714-081": "outsource_price"
+      };
+
+      const defaultApprovalNoByKind = {
+        outsource_inbound: "APR-20260706-071",
+        outsource_online: "APR-20260706-072",
+        outsource_price: "APR-20260714-081"
       };
 
       const templates = {
@@ -350,21 +379,49 @@
         },
         outsource_online: {
           title: "代理商品上线审批",
-          approvalType: "代理上线",
+          approvalType: "代理开售审核",
           source: "产品中心",
           businessNo: "ON-OUT-CR-0006",
           productText: "理想号地中海邮轮舱房包销",
-          amount: "提交上线",
+          amount: "舱房对客价待审核",
           supplier: "地中海旅游集团",
           scheduleNo: "CR20260803 / 阳台舱18间",
           contentTitle: "上线内容",
-          content: [["入库状态", "代理入库已通过，舱型、名额和对客价已维护"], ["销售渠道", "门店、官网、小程序"], ["可售范围", "直营门店和指定邮轮销售组"], ["上线影响", "通过后进入产品预订页，可由销售顾问创建订单"]],
+          content: [["入库状态", "代理入库已通过，舱型、名额和对客价已维护。"], ["销售渠道", "门店、官网、小程序。"], ["可售范围", "直营门店和指定邮轮销售组。"], ["上线影响", "通过后该代理航次价格生效，进入产品预订页，可由销售顾问创建订单。"], ["提交信息", "邮轮产品周婷提交开售审核，原因：供应商公开价已确认，按舱型加服务费后开售。"]],
+          priceRows: [["内舱", "¥9,800", "¥14,800", "¥15,600", "高于公开价，可通过"], ["海景舱", "¥10,600", "¥15,800", "¥16,600", "高于公开价，可通过"], ["阳台舱", "¥12,800", "¥18,800", "¥19,800", "高于公开价，可通过"], ["套房", "¥18,000", "¥26,800", "¥28,600", "高于公开价，可通过"]],
           related: [["代理商品", "OUT-CR-0006", "理想号地中海邮轮舱房包销", "tag tag-green", "已入库", "邮轮产品周婷"], ["上线单", "ON-OUT-CR-0006", "上线审核", "tag tag-orange", "待审批", "产品负责人"], ["供应商团期", "CR20260803", "阳台舱18间", "tag tag-blue", "已确认", "地中海旅游集团"]],
           risk: [["舱房余位", "阳台舱余位较集中，上线后需监控销售占用。"], ["取消规则", "邮轮取消损失较高，销售前需明确退改政策。"]],
           next: [["产品预订", "上线通过后销售顾问可检索并预订。"], ["销售中心", "下单后按代理商品占用可售名额。"], ["回团结算", "销售完成后按供应商结算价进入成本结算。"]],
           advice: [["建议通过", "入库资料完整，销售渠道和可售范围明确。"], ["需关注", "上线后监控舱房余位和退改提示。"]],
           flow: ["代理入库审批已通过", "产品运营提交代理上线", "当前等待产品负责人审批", "通过后进入销售预订页"],
-          opinion: "同意上线。请销售前确认邮轮取消规则和舱房余位。"
+          relatedChecks: ["当前角色可查看代理商品、供应商航次和舱型价格。", "审核页只判断开售价格是否可生效，不在此页编辑价格。", "通过后回写代理商品开售状态，舱房余位仍按供应商确认结果承接。"],
+          opinion: "同意上线。请销售前确认邮轮取消规则和舱房余位。",
+          applyNo: "代理商品开售",
+          productHref: "../product/product-outsource-detail.html?type=cruise&source=OUT-CR-0006",
+          pricingHref: "../product/product-outsource-schedules.html?source=OUT-CR-0006"
+        },
+        outsource_price: {
+          title: "代理团期开售审核",
+          approvalType: "代理开售审核",
+          source: "产品中心",
+          businessNo: "AGY-EU-20260918-002",
+          productText: "西欧精选8日散拼 / A线 法德瑞8天",
+          amount: "我方对客价待审核",
+          supplier: "欧洲联合地接社",
+          scheduleNo: "2026-09-18 / 2026-09-25",
+          contentTitle: "本次开售内容",
+          content: [["来源产品", "供应商原产品：西欧精选8日散拼，代理产品已完成包装。"], ["本次团期", "A线 法德瑞8天，2026-09-18出发，2026-09-25返回。"], ["定价口径", "供应商结算价和供应商公开价只读；本次只审核我方对客销售价。"], ["开售影响", "通过后该代理团期价格生效，可进入门店、分销和华东直营销售范围。"], ["提交信息", "代理运营陈琳于2026-07-14 10:32提交，定价原因：跟随供应商公开价上浮，预留渠道服务费。"]],
+          priceRows: [["成人", "¥5,750", "¥9,980", "¥10,280", "高于公开价，可通过"], ["儿童占床", "¥4,750", "¥8,180", "¥8,600", "高于公开价，可通过"], ["儿童不占床", "¥4,150", "¥7,200", "¥7,600", "高于公开价，可通过"], ["单房差", "¥1,438", "¥1,670", "¥1,800", "高于公开价，可通过"]],
+          related: [["代理产品", "OUT-EU-0001", "西欧精选8日散拼", "tag tag-green", "已包装", "代理运营陈琳"], ["代理团期", "AGY-EU-20260918-002", "2026-09-18出发", "tag tag-orange", "审核中", "产品中心"], ["供应商团期", "SUP-EU-20260918-A", "供应商余位待确认", "tag tag-blue", "待确认", "欧洲联合地接社"], ["价格草稿", "PRICE-AGY-20260714-002", "我方对客价", "tag tag-orange", "待审核", "代理运营陈琳"]],
+          risk: [["公开价校验", "我方对客价均不低于供应商公开价，不触发低价销售风险。"], ["结算价权限", "供应商结算价仅供外采、审核和财务角色查看，不向普通销售展示。"], ["资源确认", "供应商余位仍为待确认，客户下单前需按供应商端确认结果控制合同和开售。"], ["渠道范围", "销售范围为门店+分销 / 华东直营，审核通过后不得自动扩到全渠道。"]],
+          next: [["通过", "代理团期价格变为已生效，团期进入可开售状态，销售端按我方对客价展示。"], ["驳回", "团期回到待提交，代理运营在定价页修改价格或补充原因后重新提交。"], ["订单承接", "销售下单后仍按供应商确认资源，未确认前不可发起合同。"]],
+          advice: [["建议通过", "本次我方对客价高于供应商公开价，价格结构完整。"], ["需关注", "审核通过只是价格生效，实际可签约仍依赖供应商余位确认。"]],
+          flow: ["代理运营完成团期价格维护", "系统校验供应商结算价、公开价和我方对客价", "当前等待产品负责人审核开售", "通过后回写代理团期价格状态为已生效"],
+          relatedChecks: ["当前角色可查看代理产品、代理团期和供应商价格口径。", "审核页只判断开售价格是否可生效，不在此页编辑价格。", "通过后回写定价状态；供应商余位确认仍由供应商端承接。"],
+          opinion: "同意本次代理团期开售。请销售前按供应商确认结果控制签约。",
+          applyNo: "价格状态回写",
+          productHref: "../product/product-outsource-detail.html?type=group&source=OUT-EU-0001",
+          pricingHref: "../product/product-outsource-schedules.html?source=OUT-EU-0001"
         },
         product_publish: {
           title: "产品发布审批",
@@ -778,10 +835,11 @@
       }
 
       function resolveApproval() {
-        const approvalNo = params.get("approvalNo") || "APR-20260624-028";
+        const kindParam = params.get("kind");
+        const approvalNo = params.get("approvalNo") || (kindParam && defaultApprovalNoByKind[kindParam]) || "APR-20260624-028";
         const tasks = readStored("caesarApprovalTasks").tasks || {};
         const task = tasks[approvalNo];
-        const kind = params.get("kind") || (task && task.kind) || approvalNoMap[approvalNo] || "payment";
+        const kind = kindParam || (task && task.kind) || approvalNoMap[approvalNo] || "payment";
         const template = task ? templateFromTask(task, approvalNo) : (templates[kind] || templates.payment);
         const result = readStored("caesarApprovalResults")[approvalNo];
         const status = result ? (result.status === "approved" ? "已通过" : result.status === "rejected" ? "已拒绝" : "审批中") : (task && task.status) || "待审批";
@@ -789,7 +847,7 @@
           approvalNo: approvalNo,
           kind: kind,
           status: status,
-          applyNo: (task && task.applyNo) || applyNoFrom(template.businessNo)
+          applyNo: (task && task.applyNo) || template.applyNo || applyNoFrom(template.businessNo)
         });
       }
 
@@ -816,6 +874,11 @@
         ]);
         if (contentTitle) contentTitle.textContent = data.contentTitle || data.approvalType + "内容";
         if (contentList) contentList.innerHTML = blockRows(data.content || []);
+        if (priceMatrixWrap && priceMatrixRows) {
+          const hasPriceRows = Array.isArray(data.priceRows) && data.priceRows.length;
+          priceMatrixRows.innerHTML = hasPriceRows ? priceRows(data.priceRows) : "";
+          priceMatrixWrap.hidden = !hasPriceRows;
+        }
         if (relatedBody) relatedBody.innerHTML = tableRows(data.related || []);
         if (riskList) riskList.innerHTML = blockRows(data.risk || []);
         if (flowList) flowList.innerHTML = (data.flow || []).map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
@@ -828,15 +891,23 @@
             ["团期/项目", data.scheduleNo || "-"],
             ["审批单", data.approvalNo],
             ["后续单据", data.applyNo],
-            ["NC任务", data.status === "已通过" ? "待生成" : "审批通过后生成"]
+            ["后续任务", data.status === "已通过" ? "待承接" : "审批通过后承接"]
           ]);
         }
         if (relatedChecks) {
-          relatedChecks.innerHTML = [
+          relatedChecks.innerHTML = (data.relatedChecks || [
             "当前角色可查看该审批事项的来源单据。",
             "金额、状态、应收应付和下游任务按审批结果继续流转。",
             "敏感信息按角色权限脱敏展示。"
-          ].map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
+          ]).map((item) => "<li>" + escapeHtml(item) + "</li>").join("");
+        }
+        if (productLink) {
+          productLink.hidden = !data.productHref;
+          if (data.productHref) productLink.href = data.productHref;
+        }
+        if (pricingLink) {
+          pricingLink.hidden = !data.pricingHref;
+          if (data.pricingHref) pricingLink.href = data.pricingHref;
         }
         const submitButton = document.querySelector("[data-submit-approval]");
         const canSubmit = currentView === "todo" && data.status === "待审批";
@@ -903,10 +974,6 @@
         }
         writeApprovalResult(decision);
         showToast(decision === "通过" ? "审批已通过，后续单据进入下一节点" : "审批已提交，来源单据已停止流转");
-      });
-
-      document.querySelector("[data-save-draft]").addEventListener("click", () => {
-        showToast("审批意见已暂存");
       });
 
       document.querySelector("[data-open-related]").addEventListener("click", openRelatedModal);
