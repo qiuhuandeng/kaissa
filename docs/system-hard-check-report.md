@@ -109,7 +109,7 @@ node scripts/system-hard-check.mjs --summary
 | 单团详情归属 | `product-custom-detail.html` 归属单团项目 | 通过 |
 | 项目团承接 | `schedules.html`、`schedules-detail.html` 支持项目团、来源单团项目、项目订单 | 通过，下一步需点击验收内容 |
 | 项目订单承接 | `orders.html`、`orders-detail.html` 支持 `type=project/source=customProject` | 通过，下一步需点击验收抽屉同源 |
-| 项目合同承接 | `contracts.html` 有单团项目合同、项目订单、项目团、锁定报价、阶段应收 | 通过 |
+| 项目合同承接 | `contracts.html` 有单团项目合同、项目订单、项目团、客户确认金额、阶段应收 | 通过 |
 | 阶段应收承接 | `finance-receivable.html`、`payment-claim.html`、`finance-matching.html` 有项目订单/单团项目反查 | 通过 |
 | 项目结算承接 | `finance-settlement.html` 有项目结算、项目团、项目订单、客户验收单、项目反查 | 通过 |
 | NC承接 | `finance-nc.html` 有项目结算来源、项目订单、项目团、失败重试和人工处理 | 通过 |

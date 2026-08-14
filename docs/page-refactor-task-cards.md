@@ -39,7 +39,7 @@
 | 批次 | 范围 | 目标 | 验收 |
 |---|---|---|---|
 | P0 标准线路闭环 | 资源、旅游线路、团期、订单、收款、成本、结算、NC | 先打通跟团/邮轮/专列/研学主链路 | 从团期详情能看到方案、库存、订单、收款、执行、成本、结算、应付、付款、NC |
-| P1 三条旁路 | 自由行、单项服务、MICE | 不强行套团期，但进入统一财务链路 | 自由行能到采购批次，单项服务能拆服务费和代垫，MICE 能按锁定报价结算 |
+| P1 三条旁路 | 自由行、单项服务、MICE | 不强行套团期，但进入统一财务链路 | 自由行能到采购批次，单项服务能拆服务费和代垫，MICE 能按客户确认金额进入团期结算 |
 | P2 外采和渠道 | 产品市场、代理产品、OTA、分销商、代理商、佣金 | 外采作为供给来源叠加，不替代产品类型 | 全额收款、采购价付款、差额收入结转可追踪 |
 | P3 财务深化 | 应收、认款、收款、应付、付款、退款、结算、发票、NC、报表 | 财务单据都能回到业务事件 | 每笔财务单据可追溯来源对象和事件编号 |
 | P4 支撑模块 | 工作台、客户、审批、AI、系统 | 补齐支撑和配置能力 | 不破坏业务主链路，审批和 AI 回写原业务对象 |
@@ -109,19 +109,19 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | product/product-free-travel-list.html | 产品中心 / 自营产品 / 产品管理 | 自由行套餐 | 酒店、航班、车型、POI、供应商 | 出行日期价格库存、订单、采购批次 | 套餐、日期库存、房量、价格、采购规则 | 草稿/在售/停售 | BF-SALE-002 | 订单收款和批次成本进入 NC | booking.html、finance-settlement.html | 自由行不出现在团期列表 |
 | product/product-single-orders.html | 产品中心 / 自营产品 / 产品管理 | 服务项目和服务单入口 | 服务项目规则、客户 | 服务单、服务费、代垫、结算 | 服务项目、材料、服务费、代垫、办理节点 | 启用/停用/待处理/执行中 | BF-SALE-003、BF-COST-007、BF-SETTLE-005 | 服务费和代垫科目分离 | sales/booking.html、finance-settlement.html | 单项服务不进入新建线路 |
-| tour/product-custom-list.html | 产品中心 / 自营产品 / 单团项目 | MICE/定制需求列表 | 客户需求、销售线索 | 报价版本、锁定报价、项目 | 客户、人数、预算、日期、需求、负责人 | 需求确认/报价中/已确认/取消 | BF-SALE-004 | 阶段应收后进入 NC | product-custom-detail.html、projects.html | MICE 不进入标准线路库 |
-| tour/product-custom-detail.html | 产品中心 / 自营产品 / 单团项目 | 单团需求/报价详情 | 需求单 | 报价版本、合同、项目执行 | 报价版本、行程、费用、资源、客户反馈 | 草稿/已发送/已确认/已作废 | BF-SALE-004 | 锁定报价后阶段收款进入 NC | projects-detail.html、contracts.html | 锁定报价不得覆盖 |
-| tour/projects.html | 产品中心 / 自营产品 / 单团项目 | 项目执行列表 | 锁定报价、合同 | 项目成本、阶段应收、项目结算 | 项目、客户、阶段、应收、成本、负责人 | 筹备中/操作中/执行中/已完成 | BF-SALE-005、BF-COST-008 | 阶段收款、项目成本进 NC | projects-detail.html | 项目按锁定报价核算 |
-| tour/projects-detail.html | 产品中心 / 自营产品 / 单团项目 | 项目执行详情 | 项目执行单 | 成本确认、项目结算、NC | 锁定报价、变更单、阶段收款、实际成本 | 项目执行状态、项目结算状态 | BF-COST-008、BF-SETTLE-006 | 项目结算生成 NC 结转 | finance-settlement-detail.html、finance-nc.html | 项目变更生成变更单 |
+| tour/product-custom-list.html | 产品中心 / 自营产品 / 单团项目 | MICE/定制项目列表 | 客户确认材料、销售线索 | 项目审核、项目团、项目订单 | 客户、人数、确认金额、日期、服务范围、负责人 | 待提交审核/审核中/已成团/取消 | BF-SALE-004 | 阶段应收后进入 NC | product-custom-detail.html、projects.html | MICE 不进入标准线路库 |
+| tour/product-custom-detail.html | 产品中心 / 自营产品 / 单团项目 | 单团项目详情 | 单团项目 | 项目审核、合同、项目执行 | 客户确认方案、确认金额、服务范围、资源、客户确认材料 | 待提交审核/审核中/已成团/已取消 | BF-SALE-004 | 审核确认后阶段收款进入 NC | projects-detail.html、contracts.html | 确认金额不得直接覆盖 |
+| tour/projects.html | 产品中心 / 自营产品 / 单团项目 | 项目执行列表 | 客户确认金额、合同 | 项目成本、阶段应收、项目结算 | 项目、客户、阶段、应收、成本、负责人 | 筹备中/操作中/执行中/已完成 | BF-SALE-005、BF-COST-008 | 阶段收款、项目成本进 NC | projects-detail.html | 项目按客户确认金额核算 |
+| tour/projects-detail.html | 产品中心 / 自营产品 / 单团项目 | 项目执行详情 | 项目执行单 | 成本确认、项目结算、NC | 客户确认金额、变更单、阶段收款、实际成本 | 项目执行状态、项目结算状态 | BF-COST-008、BF-SETTLE-006 | 项目结算生成 NC 结转 | finance-settlement-detail.html、finance-nc.html | 项目变更生成变更单 |
 
 ## 5. P2 外采和渠道任务卡
 
 | 页面 | 所属菜单 | 维护对象 | 上游对象 | 下游对象 | 核心字段 | 状态字段 | 触发财务事件 | NC/发票影响 | 跳转页面 | 验收标准 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| product/product-market.html | 产品中心 / 外采产品 / 产品市场 | 可外采线路产品 | 供应商供给 | 代理入库、包装、渠道销售 | 商品来源、产品类型、供给模式、可售状态 | 待引入/已引入/已放弃 | 无 | 订单后影响 NC | product-outsource-list.html | 产品市场只放可外采产品，不放自营产品 |
-| product/product-outsource-list.html | 产品中心 / 外采产品 / 代理产品 | 代理产品 | 产品市场、供应商报价 | 采购价、配额、按原类型销售 | 来源、原类型、采购价、包装价、供应商 | 待引入/已引入/销售中/下架 | 无，订单后 BF-SALE | 差额结算后进 NC | product-outsource-package.html、product-outsource-quota.html | 外采跟随原产品类型 |
-| product/product-outsource-package.html | 产品中心 / 外采产品 / 代理产品 | 代理产品包装 | 代理产品 | 包装产品、渠道价、上架 | 名称、亮点、费用规则、渠道价、采购价 | 待包装/待上架/销售中 | 无 | 订单后按差额进入 NC | product-outsource-list.html | 包装不改变原产品结构 |
-| product/product-outsource-quota.html | 产品中心 / 外采产品 / 代理产品 | 可代理团期/配额 | 代理产品、供应商确认 | 销售占用、配额预警 | 配额对象、数量、有效期、供应商确认 | 待申请/已确认/告急/售罄 | BF-SALE-001/002 | 订单成交后影响 NC | product-outsource-list.html、orders.html | 配额不是独立左侧菜单 |
+| product/product-market.html | 产品中心 / 外采产品 / 产品市场 | 可外采线路产品 | 集团内部共享产品、体系外供应商供给 | 代理入库、包装、渠道销售 | 来源类型、产品类型、供给模式、可售状态、产品归属主体 | 待引入/已引入/已放弃 | 无 | 订单后影响 NC | product-outsource-list.html | 产品市场只放可外采来源，不改变原产品归属 |
+| product/product-outsource-list.html | 产品中心 / 外采产品 / 代理产品 | 代理产品 | 产品市场、内部共享规则、供应商报价 | 采购价/内部结算价、配额、按原类型销售 | 来源类型、原类型、采购价/内部结算价、包装价、结算对象 | 待引入/已引入/销售中/下架 | 无，订单后 BF-SALE | 内部往来或差额结算后进 NC | product-outsource-package.html、product-outsource-quota.html | 外采跟随原产品类型，内部互采和外部供应商 分开结算 |
+| product/product-outsource-package.html | 产品中心 / 外采产品 / 代理产品 | 代理产品包装 | 代理产品 | 包装产品、渠道价、上架 | 名称、亮点、费用规则、渠道价、采购价/内部结算价 | 待包装/待上架/销售中 | 无 | 订单后按来源类型进入内部结算或供应商结算 | product-outsource-list.html | 包装不改变原产品结构 |
+| product/product-outsource-quota.html | 产品中心 / 外采产品 / 代理产品 | 可代理团期/配额 | 代理产品、供给确认 | 销售占用、配额预警 | 配额对象、数量、有效期、供给确认 | 待申请/已确认/告急/售罄 | BF-SALE-001/002 | 订单成交后影响 NC | product-outsource-list.html、orders.html | 配额不是独立左侧菜单 |
 | product/product-channel-auth.html | 产品中心 / 渠道授权 | 渠道授权 | 线路、团期、定价策略 | 渠道可售、佣金计算 | 授权对象、渠道、价格、库存、有效期 | 待生效/生效中/停用 | BF-SALE-008 | 佣金结算影响 NC | channel/commission_rules.html | 授权按产品对象生效 |
 | product/product-pricing.html | 产品中心 / 定价策略 | 定价策略 | 产品、渠道、节假日、库存 | 团期价格、订单价格、补退差 | 策略、适用范围、价格模型、触发条件 | 启用/停用 | BF-SALE-006、BF-SALE-007 | 调整收款后进 NC | product-competitor-price.html、orders-transfer.html | 改价不直接覆盖已生效订单 |
 | product/product-competitor-price.html | 产品中心 / 定价策略 | 竞品价格监控 | OTA 公开价、AI 竞品分析 | 定价建议、价格调整审批 | 平台、竞品线路、我方线路、价差、趋势 | 已读/未读/已处理 | BF-SALE-006/007 | 仅调价生效后影响 NC | product-pricing.html | 竞品价格服务定价策略 |

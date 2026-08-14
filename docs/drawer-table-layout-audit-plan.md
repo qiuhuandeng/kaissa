@@ -164,11 +164,11 @@
 
 ## 动态注入抽屉表格
 
-- `merchant/tour/product-custom-list.html:listQuickActionModal` 报价工作台 `quote-workbench`：P1，A。报价版本表 5 列，操作列固定，报价/成本列可主辅。
-- `demand-confirm` 生成需求确认单：P2，A。2 列确认项表，左列 120px，右列吸收。
-- `sales-confirm` 确认报价：P2，A。2 列确认项表，套同一 `quote-cost-table-compact`。
-- `lock-quote` 锁定报价：P2，A/B。2 列确认表 + 表单，表格铺满，表单不与表格挤压。
-- `quote-approval` 发起报价审批：P2，A。2 列审批项表。
+- `merchant/tour/product-custom-list.html:listQuickActionModal` 确认材料工作台 `confirm-workbench`：P1，A。确认材料表 5 列，操作列固定，确认金额/成本参考列可主辅。
+- `demand-confirm` 生成客户确认材料：P2，A。2 列确认项表，左列 120px，右列吸收。
+- `sales-confirm` 确认客户材料：P2，A。2 列确认项表，套同一 `quote-cost-table-compact`。
+- `project-approve` 项目审核确认：P2，A/B。2 列确认表 + 表单，表格铺满，表单不与表格挤压。
+- `project-approval` 发起项目审批：P2，A。2 列审批项表。
 - `download-quote` 下载报价单：P2，A。2 列文件表。
 - `order-contract` 订单合同：P1，A。4 列对象表，入口列固定 96px，编号列固定 150px。
 - `execution-workbench` 执行处理：P1，A。3 列执行域表，入口列固定 110px。

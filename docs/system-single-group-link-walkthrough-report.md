@@ -32,9 +32,9 @@
 
 | 节点 | 页面 | 结果 | 判断 |
 |---|---|---|---|
-| 创建单团需求 | `merchant/tour/product-custom-list.html` | 支持新建定制需求、引用线路创建独立成团、复制单团项目 | 通过 |
-| 报价与锁定 | `merchant/tour/product-custom-list.html`、`merchant/tour/product-custom-detail.html` | 新建报价、处理报价、发送报价、锁定报价均有业务抽屉，报价明细已拆成客户报价、预算成本、毛利 | 通过 |
-| 确认成团 | `merchant/tour/product-custom-detail.html` | 弹窗展示项目名称、客户、锁定报价、金额、预算成本、毛利、出行日期、人数、收款节点和生成对象 | 通过 |
+| 录入单团项目 | `merchant/tour/product-custom-list.html` | 支持录入单团项目、引用线路创建独立成团、复制单团项目 | 通过 |
+| 项目审核确认 | `merchant/tour/product-custom-list.html`、`merchant/tour/product-custom-detail.html` | 应围绕客户确认方案、确认金额、服务范围和付款节点审核；不再作为系统内询价报价流程 | 需按新口径复核 |
+| 确认成团 | `merchant/tour/product-custom-detail.html` | 弹窗应展示项目名称、客户、确认金额、出行日期、人数、收款节点和生成对象 | 需按新口径复核 |
 | 成团结果承接 | `merchant/tour/product-custom-detail.html` | 确认后项目团、项目订单、项目合同、阶段应收编号变为可点击链接 | 通过 |
 | 项目订单 | `merchant/sales/orders.html`、`merchant/sales/orders-detail.html` | `type=project`、`type=customProject`、`source=customProject` 均进入项目订单视图 | 通过 |
 | 项目订单收款 | `merchant/sales/orders.html`、`merchant/sales/orders-detail.html` | 列表“收款”和详情“收款/登记阶段收款”均进入项目阶段收款口径 | 通过 |
@@ -51,7 +51,7 @@
 |---|---|---|---|
 | 收款 | 订单列表 `data-order-quick-action="收款"` | 项目订单详情 `receiptDrawer` | 同为项目阶段收款，不是散拼团费收款 |
 | 应收调整 | 订单更多/详情顶部 | 项目订单详情 `receivableDrawer` | 项目应收调整需关联客户确认或项目变更 |
-| 合同 | 订单列表合同入口/合同管理 | 项目订单详情项目合同抽屉 | 均围绕项目合同、锁定报价、阶段收款计划 |
+| 合同 | 订单列表合同入口/合同管理 | 项目订单详情项目合同抽屉 | 均围绕项目合同、客户确认金额、阶段收款计划 |
 | 资料/名单 | 详情项目名单 Tab | 项目团详情项目名单 Tab | 订单侧维护入口存在，复杂名单执行回到项目团 |
 | 执行 | 订单详情项目团入口 | 项目团详情 | 没有做列表简化执行表单，回到项目团承接 |
 | 售后 | 订单列表/详情售后 | 项目订单详情售后抽屉 | 单团项目归纳为项目变更、取消项目、退款 |
