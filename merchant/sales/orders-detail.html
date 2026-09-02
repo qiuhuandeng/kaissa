@@ -69,7 +69,7 @@
         <div class="product-detail-field-grid order-detail-field-grid">
           <div><span id="orderContactLabel">联系人</span><strong id="orderContact">张建国 138****8001</strong></div>
           <div><span id="orderOwnerLabel">归属</span><strong id="orderOwner">软件园门店 / 孙丽</strong></div>
-          <div><span>合同主体</span><strong>福建凯撒</strong></div>
+          <div><span>合同主体</span><strong id="contractEntityText">福建凯撒</strong></div>
           <div><span id="orderStatusLabel">订单状态</span><strong id="orderStatusText">预留</strong></div>
           <div id="projectContractHeroField" class="hidden"><span>合同状态</span><strong id="projectContractHeroStatus">待签署</strong></div>
           <div><span id="paymentStatusLabel">收款状态</span><strong id="paymentStatusText">未收款</strong></div>
@@ -81,6 +81,7 @@
       <nav class="tab-bar" aria-label="订单详情标签页">
         <button class="tab-item active" type="button" data-tab="overview">订单概览</button>
         <button class="tab-item" type="button" data-tab="receivable">应收收款</button>
+        <button class="tab-item" type="button" data-tab="financeHandoff">财务承接</button>
         <button class="tab-item" type="button" data-tab="travelers">游客信息</button>
         <button class="tab-item" type="button" data-tab="contract">合同资料</button>
         <button class="tab-item" type="button" data-tab="aftersales">售后变更</button>
@@ -97,6 +98,8 @@
           <div id="overviewCustomerGrid" class="description-grid order-overview-grid"></div>
           <div id="bookingSectionTitle" class="detail-section-title">报名信息</div>
           <div id="overviewBookingGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">财务承接摘要</div>
+          <div id="overviewFinanceGrid" class="description-grid order-overview-grid"></div>
           <div id="trafficSectionTitle" class="detail-section-title">交通资源占用</div>
           <div class="table-wrap order-detail-table">
             <table>
@@ -175,6 +178,60 @@
               <table>
                 <thead><tr><th>单号</th><th>收款节点</th><th>金额</th><th>方式</th><th>流水/账户</th><th>财务状态</th><th>时间</th></tr></thead>
                 <tbody id="receiptRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-financeHandoff" class="detail-tab-panel">
+        <div class="product-detail-tab-inner order-finance-handoff-tab">
+          <section class="order-tab-section">
+            <div class="detail-section-title">财务承接摘要</div>
+            <div id="financeHandoffSummaryCards" class="order-money-grid order-finance-summary-grid"></div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">责任和资金口径</div>
+            <div class="table-wrap order-detail-table order-finance-table">
+              <table>
+                <thead><tr><th>核对事项</th><th>当前口径</th><th>业务依据</th><th>后续承接</th></tr></thead>
+                <tbody id="financeResponsibilityRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">金额和收款承接</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>核对项目</th><th>金额</th><th>结算方</th><th>当前状态</th><th>后续去向</th></tr></thead>
+                <tbody id="financeAmountRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">履约成本承接</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>承接对象</th><th>来源依据</th><th>责任单位</th><th>当前结果</th><th>后续去向</th></tr></thead>
+                <tbody id="financeCostRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">优惠和渠道承接</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>承接事项</th><th>计算依据</th><th>承担或结算方</th><th>当前金额</th><th>后续去向</th></tr></thead>
+                <tbody id="financeCommissionRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">内部或特殊结算</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>销售或接收方</th><th>产品或服务提供方</th><th>业务范围</th><th>当前结果</th><th>后续处理</th></tr></thead>
+                <tbody id="financeInternalRows"></tbody>
               </table>
             </div>
           </section>
@@ -857,6 +914,221 @@
       function discountUsageRow(item) {
         return '<tr><td>' + escapeHtml(item.source || '-') + '</td><td>' + escapeHtml(item.code || '-') + '</td><td>' + escapeHtml(item.name || '-') + '</td><td class="amount-strong">' + moneyText(moneyNumber(item.amount || 0)) + '</td><td>' + escapeHtml(item.share || '-') + '</td><td>' + tagHtml([item.status || '待财务确认', statusClass(item.status || '待财务确认')]) + '</td><td>' + escapeHtml(item.downstream || '-') + '</td></tr>';
       }
+      function financeProfileFor() {
+        const base = {
+          contractEntity: '福建凯撒旅游有限公司',
+          fulfillmentEntity: '福建凯撒旅游有限公司',
+          revenueEntity: '福建凯撒旅游有限公司',
+          purchaseEntity: '福建凯撒旅游有限公司',
+          collectionUnit: '福建凯撒收款账户',
+          invoiceEntity: '福建凯撒旅游有限公司',
+          refundEntity: '福建凯撒旅游有限公司',
+          channelSettleParty: ownerParts().store,
+          channelMode: '公司直收 / 门店协助认款',
+          revenueMode: '主要责任方，按公司有权取得的订单金额测算',
+          priceBasis: '团期价格和订单确认金额',
+          collectPath: '客户付款进入合同主体收款账户，财务认款后核销应收',
+          internalMode: '无跨法人内部结算',
+          costProfiles: [
+            ['交通资源', '航司/票务供应商', 0.28, 'CNY', 1, '按团期锁位规则测算', '出票或资源确认后进入实际成本确认'],
+            ['酒店和地接', '境内外地接/酒店供应商', 0.34, 'EUR', 7.8, '预算价，待供应商确认', '服务确认和供应商账单核对后形成应付'],
+            ['签证、保险及其他', '签证/保险服务商', 0.08, 'CNY', 1, '按服务规则测算', '材料提交或保单出具后确认实际成本']
+          ]
+        };
+        const profiles = {
+          邮轮: {
+            fulfillmentEntity: '邮轮事业部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒邮轮采购主体',
+            collectionUnit: '福建凯撒邮轮收款账户',
+            priceBasis: '航次舱房价格、港务费和岸上项目规则',
+            collectPath: '客户定金和尾款进入邮轮收款账户，船方扣损随售后确认',
+            costProfiles: [
+              ['邮轮舱房', '船司', 0.58, 'USD', 7.2, '舱房合同价', '舱房确认、退舱扣损和船方账单核对后确认'],
+              ['港务税费', '船司/港口服务方', 0.09, 'USD', 7.2, '按船方规则测算', '船票确认后按账单确认'],
+              ['岸上项目', '岸上观光供应商', 0.12, 'CNY', 1, '预算价，待服务确认', '岸上项目完成后确认实际成本']
+            ]
+          },
+          专列: {
+            fulfillmentEntity: '专列事业部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒专列采购主体',
+            priceBasis: '班期铺位价格、包厢差价和服务费规则',
+            collectPath: '客户定金和尾款进入合同主体账户，铺位确认后承接成本',
+            costProfiles: [
+              ['专列铺位', '专列运营方', 0.46, 'CNY', 1, '包列合同价', '铺位确认、退铺扣损和运营方账单核对后确认'],
+              ['沿途酒店餐饮', '酒店/餐饮供应商', 0.22, 'CNY', 1, '团期预算价', '服务完成后按实际人数确认'],
+              ['地接和门票', '地接/景区供应商', 0.12, 'CNY', 1, '按规则测算', '回团后按实际发生确认']
+            ]
+          },
+          自由行: {
+            fulfillmentEntity: '自由行业务部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒自由行采购主体',
+            priceBasis: '订单服务项价格和供应商确认价',
+            collectPath: '客户分期或全款进入合同主体账户，各服务项分别确认履约',
+            costProfiles: [
+              ['机票', '航司/B2B 票务平台', 0.30, 'CNY', 1, '待出票确认价', '出票后确认实际成本，退改签单独调整'],
+              ['酒店', '酒店供应商/平台', 0.34, 'EUR', 7.8, '待供应商确认价', '入住确认或供应商账单核对后确认'],
+              ['接送机和当地服务', '当地服务商', 0.10, 'CNY', 1, '预算价', '服务完成后确认']
+            ]
+          },
+          单项服务: {
+            fulfillmentEntity: '签证服务部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒旅游有限公司',
+            revenueMode: '按服务费或代理服务收入测算，代垫款单独列示',
+            priceBasis: '服务费、代垫费和材料费确认规则',
+            collectPath: '客户款进入合同主体账户，代垫款与服务费分开核对',
+            passThroughRatio: 0.28,
+            costProfiles: [
+              ['签证服务人工', '签证服务部', 0.18, 'CNY', 1, '内部服务测算', '送签或服务完成后确认'],
+              ['代垫和快递', '使馆/快递/第三方服务商', 0.24, 'CNY', 1, '按代垫规则测算', '实际代垫发生后确认'],
+              ['材料处理', '外部材料服务商', 0.08, 'CNY', 1, '预算价', '服务结果确认后入账']
+            ]
+          },
+          研学: {
+            fulfillmentEntity: '研学事业部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒研学采购主体',
+            priceBasis: '营期价格、课程资源和安全材料规则',
+            collectPath: '学校或家长付款进入合同主体账户，按营期和学员名单核对',
+            costProfiles: [
+              ['课程和基地', '研学基地/课程供应商', 0.32, 'CNY', 1, '营期预算价', '课程确认和验收后确认'],
+              ['交通住宿餐饮', '交通/酒店/餐饮供应商', 0.36, 'CNY', 1, '按人数测算', '实际出行和服务完成后确认'],
+              ['保险和安全材料', '保险公司/材料服务商', 0.06, 'CNY', 1, '按学员数测算', '保单出具或材料完成后确认']
+            ]
+          },
+          单团项目: {
+            fulfillmentEntity: 'MICE/定制中心 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒项目采购主体',
+            channelSettleParty: contactParts().name,
+            channelMode: '企业客户账期 / 阶段收款',
+            priceBasis: '锁定报价、项目合同和阶段收款计划',
+            collectPath: '企业客户对公付款进入合同主体账户，按阶段应收认款',
+            costProfiles: [
+              ['国际交通', '航司/票务供应商', 0.34, 'CNY', 1, '按锁位和出票规则测算', '出票或名单确认后进入项目团成本'],
+              ['酒店和地接', '酒店/地接供应商', 0.28, 'EUR', 7.8, '预算价，待供应商确认', '服务确认和供应商账单核对后确认'],
+              ['会务活动', '会务/摄影/活动供应商', 0.12, 'CNY', 1, '按锁定报价明细测算', '项目验收后确认实际成本']
+            ]
+          }
+        };
+        return Object.assign({}, base, profiles[config.productType] || {});
+      }
+      function financeBasisValues() {
+        const orderAmount = moneyNumber(config.amount[0]);
+        const received = moneyNumber(config.amount[1]);
+        const discount = discountCarryAmount();
+        const profile = financeProfileFor();
+        const passThrough = Math.round(orderAmount * (profile.passThroughRatio || 0));
+        const customerCash = Math.max(orderAmount - discount, 0);
+        const expectedOrderAmount = Math.max(orderAmount - discount - passThrough, 0);
+        return {
+          orderAmount: orderAmount,
+          received: received,
+          discount: discount,
+          passThrough: passThrough,
+          customerCash: customerCash,
+          pending: Math.max(customerCash - received, 0),
+          expectedOrderAmount: expectedOrderAmount
+        };
+      }
+      function originalCurrencyText(localAmount, currency, rate) {
+        if (!currency || currency === 'CNY') return 'CNY ' + moneyText(localAmount);
+        const marks = { USD: '$', EUR: '€', JPY: '¥', HKD: 'HK$' };
+        const original = rate ? Math.round(localAmount / rate) : localAmount;
+        return currency + ' ' + (marks[currency] || '') + original.toLocaleString('zh-CN') + ' / 汇率 ' + rate;
+      }
+      function financeCostItems() {
+        const profile = financeProfileFor();
+        const basis = financeBasisValues();
+        return profile.costProfiles.map(function (item) {
+          const localAmount = Math.round(basis.orderAmount * item[2]);
+          return {
+            item: item[0],
+            provider: item[1],
+            purchaseEntity: profile.purchaseEntity,
+            currency: originalCurrencyText(localAmount, item[3], item[4]),
+            amount: localAmount,
+            certainty: item[5],
+            condition: item[6] || '履约事实和账单核对后确认'
+          };
+        });
+      }
+      function financeResponsibilityItems() {
+        const profile = financeProfileFor();
+        return [
+          ['对客签约法人', profile.contractEntity, '客户合同、订单所属公司', '合同资料和客户应收'],
+          ['主要履约责任法人', profile.fulfillmentEntity, '产品模式、合同条款和责任方判断', '履约中心和团期/项目执行'],
+          ['收入确认承接主体', profile.revenueEntity, profile.revenueMode, '财务按履约事实判断收入确认'],
+          ['客户款收取单位', profile.collectionUnit, profile.channelMode, '到账流水、认款单、收款单和核销记录'],
+          ['对客开票法人', profile.invoiceEntity, '合同、税务和开票规则', '销项发票台账，不能替代收款和收入确认'],
+          ['客户退款责任法人', profile.refundEntity, '对客合同和售后条款', '售后单、客户退款单和退款执行'],
+          ['渠道结算方', profile.channelSettleParty, '门店、渠道或企业客户结算协议', '渠道/门店/客户结算单']
+        ];
+      }
+      function financeOverviewItems() {
+        const profile = financeProfileFor();
+        const basis = financeBasisValues();
+        return [
+          ['对客签约法人', profile.contractEntity],
+          ['主要履约责任', profile.fulfillmentEntity],
+          ['收款路径', profile.channelMode],
+          ['收入确认承接', profile.revenueMode],
+          ['成本承接方向', profile.purchaseEntity + ' / 履约成本确认'],
+          ['优惠承担', basis.discount > 0 ? moneyText(basis.discount) : '无优惠减免'],
+          ['客户待收', moneyText(basis.pending)],
+          ['后续处理', '收款、应收、成本、结算和发票分别由对应模块确认']
+        ];
+      }
+      function financeAmountItems() {
+        const profile = financeProfileFor();
+        const basis = financeBasisValues();
+        const standardAmount = basis.orderAmount + basis.discount;
+        const rows = [
+          ['标准报价合计', moneyText(standardAmount), profile.priceBasis, '已锁定', '用于解释成交来源，不等同客户实付和收入'],
+          ['客户约定成交金额', moneyText(basis.orderAmount), contactParts().name, '订单已记录', '合同资料和应收计划承接'],
+          ['客户现金应付', moneyText(basis.customerCash), contactParts().name, '待收款', '客户付款后进入收款认领和财务复核'],
+          ['客户已收/已认款', moneyText(basis.received), profile.collectionUnit, basis.received > 0 ? config.paymentStatus[0] : '暂无收款', '到账、认款、收款和核销分别记录'],
+          ['客户待收', moneyText(basis.pending), profile.collectionUnit, basis.pending > 0 ? '待收' : '已收齐', '由订单金额、优惠和收款核销明细计算']
+        ];
+        if (basis.discount > 0) {
+          rows.splice(2, 0, ['优惠减免', moneyText(basis.discount), discountUsageItems().map(function (item) { return item.share || item.source; }).join('；') || '按优惠规则承担', '待财务确认', '审批或结算确认后进入优惠承担或渠道结算']);
+        }
+        if (basis.passThrough > 0) {
+          rows.push(['代收代付金额', moneyText(basis.passThrough), '第三方服务提供方', '待结算', '只做往来和转付，不进入本公司服务收入']);
+        }
+        rows.push(['公司预计可取得订单金额', moneyText(basis.expectedOrderAmount), profile.revenueEntity, '用于财务判断', '实际收入按履约事实和财务政策确认']);
+        return rows;
+      }
+      function financeCommissionItems() {
+        const basis = financeBasisValues();
+        const profile = financeProfileFor();
+        const channelFee = Math.round(basis.orderAmount * (isProjectOrder() ? 0 : 0.015));
+        return [
+          ['本公司承担优惠', '客户成交金额和优惠规则', profile.revenueEntity, moneyText(basis.discount), '优惠审批或结算确认后进入财务承接，不减少供应商真实应付'],
+          ['渠道佣金或服务费', '有效客户款、渠道合同和结算方式', profile.channelSettleParty, moneyText(channelFee), '渠道结算条件满足后确认，全额上缴和扣佣上缴分开记录'],
+          ['员工提成', '成交、收款、出团或回团条件', ownerParts().sales, '按绩效规则', '这里只展示承接方向，实际提成在绩效/薪酬流程确认'],
+          ['部门经营贡献', '订单归属门店和业务部门', ownerParts().store, '按经营规则', '只作经营评价，不形成法人间应收应付']
+        ];
+      }
+      function financeInternalItems() {
+        const profile = financeProfileFor();
+        if (profile.internalMode === '无跨法人内部结算') {
+          return [[profile.contractEntity, '-', '本订单销售、履约和采购责任当前均在同一法人或同一核算链路内', '无内部结算', '如后续改为集团内采购，需生成双方可核对的内部结算关系']];
+        }
+        return [[profile.contractEntity, profile.fulfillmentEntity, config.productName + ' / ' + scheduleValue(), '待集团内部协议确认', '占位、出团、回团、验收或对账节点达到后正式成立']];
+      }
+      function financeTableRows(rows, tagColumns) {
+        const tagIndex = tagColumns || [];
+        return rows.map(function (row) {
+          return '<tr>' + row.map(function (cell, index) {
+            const text = cell == null ? '-' : String(cell);
+            const html = tagIndex.indexOf(index) >= 0 ? tagHtml([text, statusClass(text)]) : escapeHtml(text);
+            return '<td>' + html + '</td>';
+          }).join('') + '</tr>';
+        }).join('');
+      }
+      function financeCostRowsHtml() {
+        return financeCostItems().map(function (item) {
+          return '<tr><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(item.provider + ' / ' + item.currency) + '</td><td>' + escapeHtml(item.purchaseEntity) + '</td><td>' + tagHtml([item.certainty, statusClass(item.certainty)]) + '</td><td>' + escapeHtml(item.condition) + '</td></tr>';
+        }).join('');
+      }
       function readStored(key) {
         try {
           return JSON.parse(window.localStorage.getItem(key) || '{}');
@@ -1034,6 +1306,7 @@
         setText('paymentStatusLabel', '收款状态');
         setHidden(document.getElementById('projectContractHeroField'), false);
         setTabLabel('receivable', '应收收款');
+        setTabLabel('financeHandoff', '项目财务承接');
         setTabLabel('travelers', '项目名单');
         setTabLabel('contract', '项目合同');
         setTabLabel('aftersales', '项目变更/售后');
@@ -1569,6 +1842,7 @@
         setText('orderOwner', config.owner);
         setText('orderStatusText', config.orderStatus[0]);
         setText('paymentStatusText', config.paymentStatus[0]);
+        setText('contractEntityText', financeProfileFor().contractEntity);
         if (isProjectOrder()) {
           setText('orderContact', contactParts().name);
           setText('orderOwner', snapshotValue('单团项目'));
@@ -1614,11 +1888,23 @@
           ['部门', meta.department]
         ]));
         setHtml('overviewBookingGrid', renderBookingStructureHtml());
+        setHtml('overviewFinanceGrid', descriptionGrid(financeOverviewItems()));
         const trafficRows = trafficOccupancyData();
         setHtml('trafficOccupancyRows', trafficRows.length ? trafficRows.map(trafficOccupancyRow).join('') : '<tr><td class="table-empty-cell" colspan="6">本订单暂无交通资源占用记录。</td></tr>');
         setHtml('orderMoneyGrid', orderMoneyCards().map(moneyCard).join(''));
         const discountItems = discountUsageItems();
         setHtml('discountUsageRows', discountItems.length ? discountItems.map(discountUsageRow).join('') : '<tr><td class="table-empty-cell" colspan="7">本订单暂无优惠减免。</td></tr>');
+        setHtml('financeHandoffSummaryCards', [
+          ['客户现金应付', moneyText(financeBasisValues().customerCash), 'amount-red'],
+          ['客户待收', moneyText(financeBasisValues().pending), financeBasisValues().pending > 0 ? 'amount-red' : 'amount-green'],
+          ['优惠承接', financeBasisValues().discount > 0 ? moneyText(financeBasisValues().discount) : '无', financeBasisValues().discount > 0 ? 'amount-green' : ''],
+          ['成本承接', '履约确认后处理', '']
+        ].map(moneyCard).join(''));
+        setHtml('financeResponsibilityRows', financeTableRows(financeResponsibilityItems()));
+        setHtml('financeAmountRows', financeTableRows(financeAmountItems(), [3]));
+        setHtml('financeCostRows', financeCostRowsHtml());
+        setHtml('financeCommissionRows', financeTableRows(financeCommissionItems()));
+        setHtml('financeInternalRows', financeTableRows(financeInternalItems()));
         setText('aiDrawerText', config.travelers.ai.join(' '));
         setHtml('aiCheckItems', config.travelers.ai.map(function (text, index) { return taskItem(['预检项' + (index + 1), text]); }).join(''));
 
