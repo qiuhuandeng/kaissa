@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新建团期订单 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <section class="list-page-panel booking-host-page">
+    <div class="list-page-head">
+      <div>
+        <h1 class="page-title">团期订单</h1>
+      </div>
+      <div class="btn-group">
+        <a class="btn btn-secondary" href="schedule-orders.html">返回团期订单</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="list-surface booking-host-surface" aria-label="订单列表">
+    <section class="filter-card filter-card-compact list-surface-filter" aria-label="订单筛选">
+      <div class="filter-row">
+        <div class="filter-item orders-quick-search">
+          <input type="search" placeholder="订单号/客人/产品/线路/团期，模糊搜索">
+        </div>
+        <div class="filter-item filter-item-status">
+          <select>
+            <option>全部产品类型</option>
+            <option>参团游</option>
+            <option>邮轮</option>
+            <option>专列</option>
+            <option>自由行</option>
+            <option>研学</option>
+            <option>单项服务</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-status">
+          <select>
+            <option>全部产品来源</option>
+            <option>标准产品</option>
+            <option>单项服务下单</option>
+            <option>单团项目承接</option>
+          </select>
+        </div>
+        <div class="filter-item filter-item-status">
+          <select>
+            <option>全部订单状态</option>
+            <option>预留</option>
+            <option>占位</option>
+            <option>待确认</option>
+            <option>已确认</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary btn-filter-search" type="button">搜索</button>
+          <button class="btn btn-secondary" type="button">重置</button>
+        </div>
+      </div>
+    </section>
+    <section class="table-wrap list-surface-table">
+      <table>
+        <thead>
+          <tr>
+            <th>订单编号</th>
+            <th>产品类型/线路</th>
+            <th>联系人/人数</th>
+            <th>应收/收款</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a class="link-primary table-main-link" href="schedule-orders-detail.html?type=single&amp;source=singleService">KSSV20260711001</a></td>
+            <td>日本签证代办<br><span class="tag tag-gray">单项服务</span> <span class="tag tag-blue">签证</span></td>
+            <td>李娜<br><span class="text-muted">2成人</span></td>
+            <td><strong>应收 ¥1,960</strong><br><span class="text-muted">未收款 ¥1,960</span></td>
+            <td><span class="tag tag-blue">待受理</span><br><span class="tag tag-orange">材料待收</span></td>
+            <td><div class="table-action"><a class="table-action-primary" href="schedule-orders-detail.html?type=single&amp;source=singleService">详情</a></div></td>
+          </tr>
+          <tr>
+            <td><a class="link-primary table-main-link" href="schedule-orders-detail.html?type=group">KS2024061802</a></td>
+            <td>日本关西深度游<br><span class="tag tag-blue">参团游</span></td>
+            <td>李梅<br><span class="text-muted">2成人 1儿童</span></td>
+            <td><strong>应收 ¥49,900</strong><br><span class="text-muted">已收 ¥24,950 · 待收 ¥24,950</span></td>
+            <td><span class="tag tag-blue">占位</span><br><span class="tag tag-orange">部分收款</span></td>
+            <td><div class="table-action"><a class="table-action-primary" href="schedule-orders-detail.html?type=group">详情</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+  <div id="bookingDrawer" class="modal-overlay drawer-overlay show" aria-hidden="false" data-static="true">
+    <div class="modal drawer-modal drawer-lg booking-create-drawer" role="dialog" aria-modal="true" aria-labelledby="bookingDrawerTitle">
+      <div class="modal-header">
+        <div id="bookingDrawerTitle" class="modal-title">新建订单</div>
+        <button class="modal-close" type="button" aria-label="关闭新建订单" data-close-booking>×</button>
+      </div>
+
+      <div id="bookingFormView" class="modal-body booking-drawer-body">
+        <section class="booking-drawer-layout">
+          <div class="booking-drawer-main">
+            <section class="booking-section booking-mode-section" aria-labelledby="bookingModeTitle">
+              <div class="booking-section-head booking-method-head">
+                <h2 id="bookingModeTitle" class="booking-section-title">下单方式</h2>
+                <div class="booking-mode-switch" role="tablist" aria-label="下单方式">
+                  <button class="booking-mode-option active" type="button" role="tab" aria-selected="true" data-booking-mode="standard">指定产品</button>
+                  <button class="booking-mode-option" type="button" role="tab" aria-selected="false" data-booking-mode="manual">单项服务</button>
+                </div>
+              </div>
+
+              <div id="saleObjectSearchPanel" class="booking-product-search-panel" aria-label="选择产品线路" hidden>
+                <div class="booking-product-search-control">
+                  <span aria-hidden="true">⌕</span>
+                  <input id="objectKeyword" type="search" autocomplete="off" placeholder="搜索线路名称" aria-label="搜索线路名称">
+                  <button id="clearProductSearch" class="booking-product-clear" type="button" aria-label="清除已选产品线路" hidden>×</button>
+                </div>
+                <div id="objectSuggestionList" class="booking-product-suggestions" aria-label="产品线路候选" hidden></div>
+              </div>
+
+              <div id="saleObjectResultSection" class="booking-sale-object-section" aria-label="产品选择结果" hidden>
+                <div id="bookingPresetPanel" class="booking-preset-panel booking-object-summary" hidden>
+                  <div class="booking-preset-main">
+                    <span>已选产品线路</span>
+                    <strong id="presetProductName">欧洲十国经典游·12天</strong>
+                    <em id="presetProductMeta">线路 / 团期已从产品预订带入</em>
+                  </div>
+                  <button id="changePresetSelection" class="table-link" type="button">更换</button>
+                </div>
+
+                <section id="bookingSourceContext" class="booking-object-summary" hidden>
+                  <div class="booking-preset-main">
+                    <span id="sourceContextType">单团来源</span>
+                    <strong id="sourceContextTitle">-</strong>
+                    <em id="sourceContextMeta">-</em>
+                  </div>
+                  <a id="sourceContextLink" class="table-link" href="../tour/product-custom-list.html">查看来源</a>
+                </section>
+
+                <div id="saleObjectPicker" class="booking-object-picker" hidden>
+                  <div id="planSelectBlock" class="booking-object-plan-block">
+                    <div id="planSelectTitle" class="booking-plan-title">产品线路</div>
+                    <div id="planCards" class="booking-plan-card-list"></div>
+                  </div>
+                  <div id="stockSelectSection" class="booking-object-stock-block" aria-labelledby="bookingStockTitle">
+                    <h3 id="bookingStockTitle" class="booking-plan-title">团期 / 航次 / 出行日期</h3>
+                    <div class="table-wrap booking-stock-table drawer-table-fit drawer-table-cols-4">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th id="stockDateHead">出发日期</th>
+                            <th id="stockObjectHead">团号</th>
+                            <th id="stockRemainHead">余位</th>
+                            <th>操作</th>
+                          </tr>
+                        </thead>
+                        <tbody id="stockRows"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="manualProductPanel" class="booking-manual-product-panel" hidden>
+                <div class="form-grid booking-manual-grid">
+                  <div class="form-group form-group-full">
+                    <label class="form-label" for="manualRouteName">服务项目 <span class="req">*</span></label>
+                    <input id="manualRouteName" class="form-control" type="text" value="日本签证代办" placeholder="请输入服务项目" data-manual-required="服务项目">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="manualServiceType">服务类型 <span class="req">*</span></label>
+                    <select id="manualServiceType" class="form-control" data-manual-required="服务类型">
+                      <option>签证</option>
+                      <option>票务</option>
+                      <option>酒店</option>
+                      <option>用车</option>
+                      <option>保险</option>
+                      <option>其他</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="manualTypeFields" class="form-grid booking-manual-grid booking-manual-type-fields"></div>
+              </div>
+            </section>
+
+            <section id="manualTripBlock" class="booking-section booking-manual-block" aria-labelledby="manualTravelTitle" hidden>
+              <h2 id="manualTravelTitle" class="booking-section-title">出行信息</h2>
+              <div id="manualTripFields" class="form-grid booking-manual-grid"></div>
+            </section>
+
+            <section class="booking-section" aria-labelledby="bookingPeopleTitle">
+              <div class="booking-section-head">
+                <h2 id="bookingPeopleTitle" class="booking-section-title">人数/数量与价格</h2>
+                <button id="addCompositionRow" class="table-link booking-composition-add" type="button" hidden>新增舱型</button>
+                <span id="inventoryHint" class="tag tag-green" hidden>可售</span>
+              </div>
+              <div id="coreFields" class="form-grid booking-core-grid"></div>
+              <div id="countRows" class="booking-count-grid booking-compact-counts"></div>
+              <div id="occupancySummary" class="booking-occupancy-summary"></div>
+            </section>
+
+            <section class="booking-section" aria-labelledby="bookingContactTitle">
+              <h2 id="bookingContactTitle" class="booking-section-title">客户与来源</h2>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="contactName">联系人 <span class="req">*</span></label>
+                  <input id="contactName" class="form-control" type="text" value="张建国" placeholder="联系人姓名">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="contactPhone">手机号 <span class="req">*</span></label>
+                  <input id="contactPhone" class="form-control" type="tel" value="13800138001" placeholder="联系人手机">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="channelSource">来源渠道</label>
+                  <select id="channelSource" class="form-control">
+                    <option>门店</option>
+                    <option>直客</option>
+                    <option>分销</option>
+                    <option>OTA</option>
+                    <option>企业客户</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="storeName">归属门店</label>
+                  <select id="storeName" class="form-control">
+                    <option>软件园门店</option>
+                    <option>文灶门店</option>
+                    <option>观音山门店</option>
+                    <option>泉州丰泽门店</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="salesName">下单销售</label>
+                  <select id="salesName" class="form-control">
+                    <option>王芳</option>
+                    <option>李导</option>
+                    <option>陈刚</option>
+                    <option>张三</option>
+                  </select>
+                </div>
+                <div id="distributorField" class="form-group" hidden>
+                  <label class="form-label" for="distributorName">分销商</label>
+                  <select id="distributorName" class="form-control">
+                    <option>北京远行国际代理中心</option>
+                    <option>广州邮轮联盟分销中心</option>
+                    <option>上海签证代理服务中心</option>
+                  </select>
+                </div>
+                <div id="distributorMemberField" class="form-group" hidden>
+                  <label class="form-label" for="distributorMember">分销员</label>
+                  <select id="distributorMember" class="form-control">
+                    <option>王娜</option>
+                    <option>陈晨</option>
+                    <option>赵明</option>
+                  </select>
+                </div>
+                <div id="otaField" class="form-group" hidden>
+                  <label class="form-label" for="otaPlatform">OTA平台</label>
+                  <select id="otaPlatform" class="form-control">
+                    <option>携程</option>
+                    <option>飞猪</option>
+                    <option>美团</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section id="orderProcessSection" class="booking-section" aria-labelledby="bookingProcessTitle">
+              <h2 id="bookingProcessTitle" class="booking-section-title">订单处理</h2>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="orderProcessMode">处理方式</label>
+                  <select id="orderProcessMode" class="form-control">
+                    <option value="reserve">预留：24小时未收款释放库存</option>
+                    <option value="hold">占位：人工占位，不自动释放</option>
+                    <option value="confirm">直接确认：立即扣库存</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="paymentPlan">收款计划</label>
+                  <select id="paymentPlan" class="form-control">
+                    <option>先收定金，尾款到期前认款</option>
+                    <option>一次性收全款</option>
+                    <option>门店预存账户扣款</option>
+                    <option>大客户月结认款</option>
+                  </select>
+                </div>
+                <div class="form-group form-group-full">
+                  <label class="form-label" for="orderRemark">下单备注</label>
+                  <textarea id="orderRemark" class="form-control" rows="2" placeholder="只记录与本次成单相关的要求，详细资料生成订单后补充"></textarea>
+                </div>
+              </div>
+            </section>
+
+            <section class="booking-section booking-fee-summary-section" hidden>
+              <div class="booking-section-head">
+                <h2 class="booking-section-title">费用摘要</h2>
+                <button id="openAdjustFee" class="table-link" type="button">调整</button>
+              </div>
+              <div id="feeLines" class="booking-fee-lines"></div>
+              <div class="booking-money-summary" aria-label="订单金额摘要">
+                <div><span>订单应收</span><strong id="orderReceivableTotal">¥25,600</strong></div>
+                <div><span>本次优惠</span><strong id="orderDiscountTotal">¥0</strong></div>
+                <div><span>客户需收</span><strong id="customerPayableTotal">¥25,600</strong></div>
+              </div>
+              <div id="discountUsageLines" class="booking-discount-lines" hidden></div>
+              <div class="booking-payable-total">
+                <span>客户需收</span>
+                <strong id="payableTotal">¥25,600</strong>
+              </div>
+            </section>
+
+            <section class="booking-section" hidden>
+              <h2 class="booking-section-title">生成后处理</h2>
+              <div id="afterCreateList" class="booking-next-list"></div>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <div id="bookingResultView" class="modal-body booking-result-body" hidden>
+        <div class="alert alert-green">
+          <strong id="createdTitle">已生成销售订单</strong>
+          <p id="createdText">订单已生成，应收单已进入待审核。</p>
+        </div>
+        <div class="description-grid">
+          <div class="description-item"><div class="description-label">订单号</div><div id="createdOrderNo" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">产品</div><div id="createdProduct" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">团期/服务</div><div id="createdStock" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">联系人</div><div id="createdContact" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">订单应收</div><div id="createdAmount" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">优惠减免</div><div id="createdDiscount" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">客户需收</div><div id="createdCustomerPayable" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">订单状态</div><div id="createdOrderStatus" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">收款状态</div><div class="description-value"><span class="tag tag-gray">未收款</span></div></div>
+          <div class="description-item"><div class="description-label">来源归属</div><div id="createdSource" class="description-value">-</div></div>
+        </div>
+        <div class="finance-link-card booking-created-finance">
+          <div class="finance-link-title">生成信息</div>
+          <div id="createdFinanceItems" class="finance-link-items">
+            <span class="finance-link-item">订单：待生成</span>
+          </div>
+        </div>
+        <section class="booking-section">
+          <h2 class="booking-section-title">下一步</h2>
+          <div id="createdNextSteps" class="booking-next-action-grid"></div>
+        </section>
+      </div>
+
+      <div class="modal-footer booking-drawer-footer">
+        <div class="booking-footer-receivable">
+          <button id="footerTotalTrigger" class="booking-footer-total" type="button" aria-expanded="false">
+            <span>客户需收</span>
+            <strong id="footerTotal">¥25,600</strong>
+          </button>
+          <label id="footerCurrencyControl" class="booking-footer-currency" for="footerReceivableCurrency">
+            <span>币种</span>
+            <select id="footerReceivableCurrency" aria-label="应收币种">
+              <option value="CNY">CNY</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="JPY">JPY</option>
+              <option value="HKD">HKD</option>
+            </select>
+          </label>
+        </div>
+        <div id="footerPricePopover" class="booking-price-popover" hidden></div>
+        <div id="formActions" class="booking-actions">
+          <button class="btn btn-secondary" type="button" data-close-booking>取消</button>
+          <button id="createOrder" class="btn btn-primary" type="button">生成预留订单</button>
+        </div>
+        <div id="resultActions" class="booking-actions" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const products = [
+        {
+          id: 'EU2024',
+          type: 'group',
+          tag: '参团游',
+          tagClass: 'tag tag-blue',
+          name: '欧洲十国经典游·12天',
+          meta: '北京出发 / 法德意瑞 / 12天',
+          planLabel: '线路',
+          stockLabel: '团期',
+          stockHeads: ['出发日期', '团号', '余位'],
+          core: [
+            { id: 'plan', label: '线路', type: 'select', options: ['线路A：A线 法德意12天', '线路B：B线 荷比德法12天', '线路C：C线 瑞意深度10天'] },
+            { id: 'schedule', label: '团期', type: 'select', options: ['EU20240715001 / 2024-07-15', 'EU20240728001 / 2024-07-28', 'EU20240810001 / 2024-08-10'] }
+          ],
+          stocks: [
+            ['2024-07-15', 'EU20240715001', '余3位', 12800, '紧张', 'tag tag-orange'],
+            ['2024-07-28', 'EU20240728001', '余18位', 12800, '可售', 'tag tag-green'],
+            ['2024-08-10', 'EU20240810001', '余30位', 12800, '可售', 'tag tag-green']
+          ],
+          counts: [
+            { id: 'adult', label: '成人', price: 12800, value: 2, min: 1 },
+            { id: 'childBed', label: '儿童占床', price: 12800, value: 0, min: 0 },
+            { id: 'childNoBed', label: '儿童不占床', price: 9800, value: 0, min: 0 }
+          ],
+          after: ['补充出行人资料', '收款或认款', '生成合同', '进入团队执行']
+        },
+        {
+          id: 'CR2025',
+          type: 'cruise',
+          tag: '邮轮',
+          tagClass: 'tag tag-purple',
+          name: '理想号地中海邮轮',
+          meta: '巴塞罗那登船 / 地中海 / 14天',
+          planLabel: '线路',
+          stockLabel: '航次',
+          stockHeads: ['开航日期', '航次/团号', '舱位余量'],
+          core: [
+            { id: 'plan', label: '线路', type: 'select', options: ['阳台舱岸上全含线路', '家庭亲子舱线路'] },
+            { id: 'schedule', label: '航次', type: 'select', options: ['CR-MED-20250720-001 / 2025-07-20', 'CR-MED-20250803-001 / 2025-08-03'] },
+            { id: 'cabin', label: '舱型', type: 'select', options: ['阳台舱 BA', '海景 OV', '内舱 IC', '套房 SU'], required: true },
+            { id: 'cabinCount', label: '舱房数', type: 'number', value: 1, min: 1 }
+          ],
+          stocks: [
+            ['2025-07-20', 'CR-MED-20250720-001', '阳台舱余8间', 28800, '可锁舱', 'tag tag-green'],
+            ['2025-08-03', 'CR-MED-20250803-001', '海景舱余12间', 27500, '可售', 'tag tag-green'],
+            ['2025-09-01', 'CR-MED-20250901-001', '套房余2间', 42800, '紧张', 'tag tag-orange']
+          ],
+          counts: [
+            { id: 'adultOccupancy', label: '成人占位', price: 28800, value: 2, min: 1, hint: '占用舱位容量' },
+            { id: 'childOccupancy', label: '儿童占位', price: 23800, value: 0, min: 0, hint: '占用舱位容量' },
+            { id: 'childNoBerth', label: '儿童不占位', price: 10800, value: 0, min: 0, hint: '不扣舱房库存' },
+            { id: 'thirdFourth', label: '第三/第四人', price: 20800, value: 0, min: 0, hint: '同舱加人' },
+            { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+          ],
+          priceMatrix: {
+            field: 'cabin',
+            rows: {
+              '阳台舱 BA': [
+                { id: 'adultOccupancy', label: '成人占位', price: 28800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 23800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 10800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三/第四人', price: 20800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ],
+              '海景 OV': [
+                { id: 'adultOccupancy', label: '成人占位', price: 26800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 21800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 9800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三/第四人', price: 18800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ],
+              '内舱 IC': [
+                { id: 'adultOccupancy', label: '成人占位', price: 23800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 18800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 8800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三/第四人', price: 16800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ],
+              '套房 SU': [
+                { id: 'adultOccupancy', label: '成人占位', price: 42800, value: 2, min: 1, hint: '占用舱位容量' },
+                { id: 'childOccupancy', label: '儿童占位', price: 35800, value: 0, min: 0, hint: '占用舱位容量' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 12800, value: 0, min: 0, hint: '不扣舱房库存' },
+                { id: 'thirdFourth', label: '第三人', price: 32800, value: 0, min: 0, hint: '同舱加人' },
+                { id: 'portTax', label: '港务税', price: 1850, value: 2, min: 0, hint: '按乘客计费' }
+              ]
+            }
+          },
+          after: ['补充护照英文名', '确认舱房/船票', '收款或认款', '生成邮轮合同']
+        },
+        {
+          id: 'TR2025',
+          type: 'train',
+          tag: '专列',
+          tagClass: 'tag tag-orange',
+          name: '东方丝路专列9日',
+          meta: '西安上车 / 敦煌吐鲁番 / 9天',
+          planLabel: '线路',
+          stockLabel: '班期',
+          stockHeads: ['发车日期', '班期号', '铺位余量'],
+          core: [
+            { id: 'plan', label: '线路', type: 'select', options: ['软卧标准线路', '包厢品质线路'] },
+            { id: 'schedule', label: '班期', type: 'select', options: ['TR-SILK-20250805-001 / 2025-08-05', 'TR-SILK-20250822-001 / 2025-08-22'] },
+            { id: 'berth', label: '席别/铺位', type: 'select', options: ['软卧下铺', '软卧上铺', '硬卧中铺', '软卧包厢'], required: true },
+            { id: 'board', label: '上车站', type: 'select', options: ['西安', '兰州', '乌鲁木齐'] },
+            { id: 'off', label: '下车站', type: 'select', options: ['乌鲁木齐', '敦煌', '西安'] }
+          ],
+          stocks: [
+            ['2025-08-05', 'TR-SILK-20250805-001', '软卧余12铺', 19800, '可售', 'tag tag-green'],
+            ['2025-08-22', 'TR-SILK-20250822-001', '下铺余4铺', 20800, '紧张', 'tag tag-orange'],
+            ['2025-09-10', 'TR-SILK-20250910-001', '包厢余6间', 22600, '可售', 'tag tag-green']
+          ],
+          counts: [
+            { id: 'adultOccupancy', label: '成人占位', price: 21800, value: 2, min: 1, hint: '占用铺位库存' },
+            { id: 'childOccupancy', label: '儿童占位', price: 18800, value: 0, min: 0, hint: '占用铺位库存' },
+            { id: 'childNoBerth', label: '儿童不占位', price: 7800, value: 0, min: 0, hint: '不扣铺位库存' }
+          ],
+          priceMatrix: {
+            field: 'berth',
+            rows: {
+              '软卧下铺': [
+                { id: 'adultOccupancy', label: '成人占位', price: 21800, value: 2, min: 1, hint: '占用铺位库存' },
+                { id: 'childOccupancy', label: '儿童占位', price: 18800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 7800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ],
+              '软卧上铺': [
+                { id: 'adultOccupancy', label: '成人占位', price: 19800, value: 2, min: 1, hint: '占用铺位库存' },
+                { id: 'childOccupancy', label: '儿童占位', price: 16800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 7800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ],
+              '硬卧中铺': [
+                { id: 'adultOccupancy', label: '成人占位', price: 16800, value: 2, min: 1, hint: '占用铺位库存' },
+                { id: 'childOccupancy', label: '儿童占位', price: 13800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 6800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ],
+              '软卧包厢': [
+                { id: 'adultOccupancy', label: '成人占位', price: 36800, value: 2, min: 1, hint: '整厢计价' },
+                { id: 'childOccupancy', label: '儿童占位', price: 32800, value: 0, min: 0, hint: '占用铺位库存' },
+                { id: 'childNoBerth', label: '儿童不占位', price: 8800, value: 0, min: 0, hint: '不扣铺位库存' }
+              ]
+            }
+          },
+          after: ['补充实名资料', '确认铺位分配', '收款或认款', '进入团队执行']
+        },
+        {
+          id: 'FREE2026',
+          type: 'free',
+          tag: '自由行',
+          tagClass: 'tag tag-green',
+          name: '三亚亲子5日游',
+          meta: '酒店+接送机 / 5天',
+          planLabel: '套餐',
+          stockLabel: '出行日期',
+          stockHeads: ['出行日期', '资源包', '房态/余量'],
+          core: [
+            { id: 'package', label: '资源套餐', type: 'select', options: ['亚特兰蒂斯亲子套餐', '海棠湾亲子套餐', '仅酒店套餐'] },
+            { id: 'travelDate', label: '出行日期', type: 'date', value: '2026-07-18' },
+            { id: 'room', label: '房型', type: 'select', options: ['海景房', '家庭房', '高级双床房'] },
+            { id: 'confirmMode', label: '确认方式', type: 'select', options: ['下单二次确认', '实时确认', '人工询位'] }
+          ],
+          stocks: [
+            ['2026-07-18', '亚特兰蒂斯海景房+接送机', '余4间', 6800, '需二次确认', 'tag tag-orange'],
+            ['2026-07-22', '海棠湾亲子酒店+门票', '余10间', 6200, '可售', 'tag tag-green'],
+            ['2026-08-08', '亲子套房+接送机', '余6间', 8600, '可售', 'tag tag-green']
+          ],
+          counts: [
+            { id: 'adult', label: '成人', price: 6800, value: 2, min: 1 },
+            { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 },
+            { id: 'roomCount', label: '房间数', price: 0, value: 1, min: 1 }
+          ],
+          priceMatrix: {
+            field: 'room',
+            rows: {
+              '海景房': [
+                { id: 'adult', label: '成人', price: 6800, value: 2, min: 1 },
+                { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 }
+              ],
+              '家庭房': [
+                { id: 'adult', label: '成人', price: 4000, value: 2, min: 1 },
+                { id: 'child', label: '儿童', price: 4200, value: 0, min: 0 }
+              ],
+              '高级双床房': [
+                { id: 'adult', label: '成人', price: 6200, value: 2, min: 1 },
+                { id: 'child', label: '儿童', price: 3800, value: 0, min: 0 }
+              ]
+            }
+          },
+          after: ['供应商二次确认', '补充出行资料', '收款或认款', '生成确认单']
+        },
+        {
+          id: 'ST2025',
+          type: 'study',
+          tag: '研学',
+          tagClass: 'tag tag-blue',
+          name: '北京故宫研学营·5天',
+          meta: '北京出发 / 历史文化 / 5天',
+          planLabel: '线路',
+          stockLabel: '团期',
+          stockHeads: ['开营日期', '团号', '名额'],
+          core: [
+            { id: 'line', label: '产品线路', type: 'select', options: ['北京故宫研学线5天', '新加坡科技研学线6天'] },
+            { id: 'schedule', label: '团期', type: 'select', options: ['ST-BJ-20250820-001 / 2025-08-20', 'ST-SG-20250812-001 / 2025-08-12'] },
+            { id: 'school', label: '学校/机构', type: 'text', value: '北京实验小学' }
+          ],
+          stocks: [
+            ['2025-08-20', 'ST-BJ-20250820-001', '余6名', 6200, '紧张', 'tag tag-orange'],
+            ['2025-09-06', 'ST-BJ-20250906-001', '余22名', 6200, '可售', 'tag tag-green'],
+            ['2025-10-01', 'ST-BJ-20251001-001', '余30名', 6800, '可售', 'tag tag-green']
+          ],
+          counts: [
+            { id: 'student', label: '学生', price: 6200, value: 1, min: 1 },
+            { id: 'parent', label: '随行家长', price: 4200, value: 0, min: 0 },
+            { id: 'singleRoom', label: '单房差', price: 1800, value: 0, min: 0 }
+          ],
+          after: ['补充学员资料', '上传监护授权', '收款或认款', '生成研学合同']
+        },
+        {
+          id: 'SV2026',
+          type: 'single',
+          tag: '单项服务',
+          tagClass: 'tag tag-gray',
+          name: '日本签证代办',
+          meta: '材料审核 / 送签代办 / 8-10个工作日',
+          planLabel: '服务项',
+          stockLabel: '服务项目',
+          stockHeads: ['服务项目', '服务费', '材料/时效'],
+          core: [
+            { id: 'service', label: '服务项目', type: 'select', options: ['日本签证代办', '日本签证加急', '护照翻译认证'] },
+            { id: 'material', label: '材料状态', type: 'select', options: ['材料待收', '材料已齐', '需补照片'] },
+            { id: 'requirement', label: '办理要求', type: 'text', value: '普通办理' }
+          ],
+          stocks: [
+            ['日本签证代办', '¥980/人', '8-10个工作日', 980, '可受理', 'tag tag-green'],
+            ['日本签证加急', '¥1,280/人', '5个工作日', 1280, '可受理', 'tag tag-green'],
+            ['护照翻译认证', '¥360/份', '3个工作日', 360, '可受理', 'tag tag-green']
+          ],
+          counts: [
+            { id: 'copies', label: '办理份数', price: 980, value: 2, min: 1 },
+            { id: 'urgent', label: '加急份数', price: 300, value: 0, min: 0 },
+            { id: 'returnMail', label: '回寄服务', price: 80, value: 0, min: 0 }
+          ],
+          after: ['补充办理材料', '生成服务单', '收款或认款', '服务办理交付']
+        }
+      ];
+
+      const pageParams = new URLSearchParams(window.location.search);
+      const sourceContext = buildSourceContext(pageParams);
+      const isIntentTransferEntry = pageParams.get('from') === 'intent';
+      const bookingDrawer = document.getElementById('bookingDrawer');
+      const bookingModeButtons = Array.from(document.querySelectorAll('[data-booking-mode]'));
+      const bookingModeSwitch = document.querySelector('.booking-mode-switch');
+      const manualProductPanel = document.getElementById('manualProductPanel');
+      const manualProductType = document.getElementById('manualProductType');
+      const manualServiceType = document.getElementById('manualServiceType');
+      const manualSupplier = document.getElementById('manualSupplier');
+      const manualPriceStatus = document.getElementById('manualPriceStatus');
+      const manualTypeFields = document.getElementById('manualTypeFields');
+      const manualTripBlock = document.getElementById('manualTripBlock');
+      const manualTravelTitle = document.getElementById('manualTravelTitle');
+      const manualTripFields = document.getElementById('manualTripFields');
+      const saleObjectResultSection = document.getElementById('saleObjectResultSection');
+      const bookingPresetPanel = document.getElementById('bookingPresetPanel');
+      const bookingSourceContext = document.getElementById('bookingSourceContext');
+      const presetProductName = document.getElementById('presetProductName');
+      const presetProductMeta = document.getElementById('presetProductMeta');
+      const sourceContextType = document.getElementById('sourceContextType');
+      const sourceContextTitle = document.getElementById('sourceContextTitle');
+      const sourceContextMeta = document.getElementById('sourceContextMeta');
+      const sourceContextLink = document.getElementById('sourceContextLink');
+      const changePresetSelection = document.getElementById('changePresetSelection');
+      const saleObjectSearchPanel = document.getElementById('saleObjectSearchPanel');
+      const saleObjectPicker = document.getElementById('saleObjectPicker');
+      const objectKeyword = document.getElementById('objectKeyword');
+      const clearProductSearch = document.getElementById('clearProductSearch');
+      const objectSuggestionList = document.getElementById('objectSuggestionList');
+      const planSelectBlock = document.getElementById('planSelectBlock');
+      const planSelectTitle = document.getElementById('planSelectTitle');
+      const planCards = document.getElementById('planCards');
+      const coreFields = document.getElementById('coreFields');
+      const stockRows = document.getElementById('stockRows');
+      const countRows = document.getElementById('countRows');
+      const addCompositionRow = document.getElementById('addCompositionRow');
+      const footerTotal = document.getElementById('footerTotal');
+      const footerTotalTrigger = document.getElementById('footerTotalTrigger');
+      const footerPricePopover = document.getElementById('footerPricePopover');
+      const footerCurrencyControl = document.getElementById('footerCurrencyControl');
+      const footerReceivableCurrency = document.getElementById('footerReceivableCurrency');
+      const channelSource = document.getElementById('channelSource');
+      const distributorField = document.getElementById('distributorField');
+      const distributorMemberField = document.getElementById('distributorMemberField');
+      const otaField = document.getElementById('otaField');
+      const orderProcessSection = document.getElementById('orderProcessSection');
+      const orderProcessMode = document.getElementById('orderProcessMode');
+      const bookingFormView = document.getElementById('bookingFormView');
+      const bookingResultView = document.getElementById('bookingResultView');
+      const formActions = document.getElementById('formActions');
+      const resultActions = document.getElementById('resultActions');
+      const requiresSaleObject = Array.from(document.querySelectorAll('[data-requires-sale-object]'));
+      let currentProduct = cloneProduct(products[0]);
+      let selectedPlanIndex = 0;
+      let selectedStockIndex = 0;
+      let hasSaleObject = false;
+      let objectStep = 'search';
+      let bookingMode = 'standard';
+      let selectedManualProductType = '单项服务';
+      let presetMode = false;
+      let presetPlanOverride = '';
+      let presetStockOverride = null;
+      let saleCompositionRows = [];
+      let createdDetailHref = 'schedule-orders-detail.html?type=group';
+      const manualTypeFieldMap = {
+        '单项服务': []
+      };
+      const serviceTypeDefaults = {
+        '签证': { name: '日本签证代办', supplier: '樱花旅游地接' },
+        '票务': { name: '景区门票代订', supplier: '凯撒票务中心' },
+        '酒店': { name: '酒店加住服务', supplier: '凯撒酒店资源中心' },
+        '用车': { name: '目的地用车服务', supplier: '当地车队供应商' },
+        '保险': { name: '旅游保险', supplier: '保险服务中心' },
+        '其他': { name: '其他单项服务', supplier: '福建凯撒国际旅行社有限公司' }
+      };
+      const serviceTripFieldMap = {
+        '签证': {
+          title: '签证信息',
+          fields: [
+            { id: 'manualServiceCountry', label: '目的国家/地区', type: 'text', value: '日本', required: true },
+            { id: 'manualVisaType', label: '签证类型', type: 'select', options: ['个人旅游签证', '商务签证', '探亲访友签证', '加急旅游签证'], value: '个人旅游签证', required: true },
+            { id: 'manualMaterialDue', label: '材料截止日', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualFinishDate', label: '预计出签日', type: 'date', value: '2026-09-08', required: false },
+            { id: 'manualUrgentFlag', label: '是否加急', type: 'select', options: ['否', '是'], value: '否' }
+          ]
+        },
+        '票务': {
+          title: '票务信息',
+          fields: [
+            { id: 'manualTicketType', label: '票务类型', type: 'select', options: ['景区门票', '演出票', '交通票', '活动票'], value: '景区门票', required: true },
+            { id: 'manualUseDate', label: '使用日期', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualSession', label: '场次/班次', type: 'text', value: '日场', required: false },
+            { id: 'manualTicketSpec', label: '票种', type: 'text', value: '成人票', required: true },
+            { id: 'manualRealName', label: '是否实名', type: 'select', options: ['是', '否'], value: '是' }
+          ]
+        },
+        '酒店': {
+          title: '酒店信息',
+          fields: [
+            { id: 'manualHotelCity', label: '入住城市', type: 'text', value: '东京', required: true },
+            { id: 'manualHotelName', label: '酒店名称', type: 'text', value: '待确认酒店', required: true },
+            { id: 'manualCheckInDate', label: '入住日期', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualCheckOutDate', label: '离店日期', type: 'date', value: '2026-09-02', required: true },
+            { id: 'manualRoomType', label: '房型', type: 'text', value: '标准双床房', required: true },
+            { id: 'manualRoomCount', label: '间数', type: 'number', value: '1', min: 1, required: true },
+            { id: 'manualBreakfast', label: '早餐', type: 'select', options: ['含早', '不含早', '待确认'], value: '含早' },
+            { id: 'manualConfirmStatus', label: '确认状态', type: 'select', options: ['待供应商确认', '已确认', '无法确认'], value: '待供应商确认' }
+          ]
+        },
+        '用车': {
+          title: '用车信息',
+          fields: [
+            { id: 'manualCarCity', label: '用车城市', type: 'text', value: '大阪', required: true },
+            { id: 'manualUseDate', label: '用车日期', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualUseTime', label: '用车时间', type: 'time', value: '09:00', required: true },
+            { id: 'manualRoute', label: '行程路线', type: 'text', value: '机场-酒店', required: true },
+            { id: 'manualVehicleType', label: '车型', type: 'select', options: ['5座轿车', '7座商务车', '14座中巴', '33座巴士'], value: '7座商务车', required: true },
+            { id: 'manualVehicleCount', label: '车辆数', type: 'number', value: '1', min: 1, required: true },
+            { id: 'manualDriverGuide', label: '司机/导服', type: 'select', options: ['司机', '司机+导服', '仅导服'], value: '司机' }
+          ]
+        },
+        '保险': {
+          title: '保险信息',
+          fields: [
+            { id: 'manualInsurancePlan', label: '保险方案', type: 'text', value: '境外旅游基础险', required: true },
+            { id: 'manualInsuranceStart', label: '保障开始', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualInsuranceEnd', label: '保障结束', type: 'date', value: '2026-09-08', required: true },
+            { id: 'manualInsuredCount', label: '被保人数', type: 'number', value: '2', min: 1, required: true },
+            { id: 'manualPolicyStatus', label: '出单状态', type: 'select', options: ['待出单', '已出单', '出单失败'], value: '待出单' }
+          ]
+        },
+        '其他': {
+          title: '服务信息',
+          fields: [
+            { id: 'manualServiceRemark', label: '服务说明', type: 'text', value: '客户临时增订服务', required: true },
+            { id: 'manualUseDate', label: '使用日期', type: 'date', value: '2026-09-01', required: true },
+            { id: 'manualServiceUnit', label: '计价单位', type: 'select', options: ['人', '份', '单', '车次', '间夜'], value: '份', required: true },
+            { id: 'manualConfirmRequirement', label: '确认要求', type: 'select', options: ['下单即确认', '待产品确认', '待供应商确认'], value: '待产品确认' }
+          ]
+        }
+      };
+      const serviceCountTemplateMap = {
+        '签证': [
+          { id: 'mainQty', label: '办理人数', price: 980, value: 2, min: 1 },
+          { id: 'urgentQty', label: '加急人数', price: 300, value: 0, min: 0 },
+          { id: 'extraFee', label: '快递/材料费', price: 80, value: 0, min: 0 }
+        ],
+        '票务': [
+          { id: 'mainQty', label: '票数', price: 260, value: 2, min: 1 },
+          { id: 'serviceFee', label: '服务费', price: 50, value: 0, min: 0 },
+          { id: 'extraFee', label: '补差/手续费', price: 0, value: 0, min: 0 }
+        ],
+        '酒店': [
+          { id: 'mainQty', label: '间夜', price: 680, value: 1, min: 1 },
+          { id: 'breakfastQty', label: '早餐份数', price: 80, value: 0, min: 0 },
+          { id: 'extraFee', label: '升级差价', price: 0, value: 0, min: 0 }
+        ],
+        '用车': [
+          { id: 'mainQty', label: '车次', price: 600, value: 1, min: 1 },
+          { id: 'hourQty', label: '加时/超公里', price: 0, value: 0, min: 0 },
+          { id: 'extraFee', label: '司导服务', price: 0, value: 0, min: 0 }
+        ],
+        '保险': [
+          { id: 'mainQty', label: '保险份数', price: 80, value: 2, min: 1 },
+          { id: 'upgradeQty', label: '升级份数', price: 120, value: 0, min: 0 },
+          { id: 'extraFee', label: '其他费用', price: 0, value: 0, min: 0 }
+        ],
+        '其他': [
+          { id: 'mainQty', label: '服务数量', price: 300, value: 1, min: 1 },
+          { id: 'extraFee', label: '补差/附加费', price: 0, value: 0, min: 0 }
+        ]
+      };
+
+      function money(value) {
+        return '¥' + Number(value || 0).toLocaleString('zh-CN');
+      }
+
+      function priceNumber(value) {
+        return Number(String(value || '').replace(/[^\d.]/g, '')) || 0;
+      }
+
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function writeStored(key, value) {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          // localStorage may be unavailable in some preview contexts; the order can still open by URL.
+        }
+      }
+
+      function cloneProduct(item) {
+        return Object.assign({}, item, {
+          core: item.core.map(function (field) { return Object.assign({}, field, { options: field.options ? field.options.slice() : field.options }); }),
+          stocks: item.stocks.map(function (row) { return row.slice(); }),
+          counts: item.counts.map(function (count) { return Object.assign({}, count); }),
+          after: item.after.slice()
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+        });
+      }
+
+      function isManualMode() {
+        return bookingMode === 'manual';
+      }
+
+      function receivableCurrencyValue() {
+        return footerReceivableCurrency ? footerReceivableCurrency.value : 'CNY';
+      }
+
+      function manualFieldValue(id) {
+        const node = document.getElementById(id);
+        return node ? String(node.value || '').trim() : '';
+      }
+
+      function manualTravelType() {
+        return manualFieldValue('manualTravelType') || '全部游客';
+      }
+
+      function manualTypeLabel() {
+        return manualProductType ? manualProductType.value : selectedManualProductType || '单项服务';
+      }
+
+      function manualServiceTypeLabel() {
+        return manualServiceType ? manualServiceType.value : '签证';
+      }
+
+      function renderManualTypeFields() {
+        if (!manualTypeFields) return;
+        const fields = manualTypeFieldMap[manualTypeLabel()] || [];
+        manualTypeFields.hidden = fields.length === 0;
+        manualTypeFields.innerHTML = fields.map(function (field) {
+          const required = field.required ? ' <span class="req">*</span>' : '';
+          const requiredAttr = field.required ? ' data-manual-required="' + escapeHtml(field.label) + '"' : '';
+          return '<div class="form-group">' +
+            '<label class="form-label" for="manual_extra_' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label>' +
+            '<input id="manual_extra_' + escapeHtml(field.id) + '" class="form-control" type="' + escapeHtml(field.type || 'text') + '" value="' + escapeHtml(field.value || '') + '" data-manual-extra="' + escapeHtml(field.label) + '" data-manual-extra-id="' + escapeHtml(field.id) + '"' + requiredAttr + ' placeholder="请输入' + escapeHtml(field.label) + '">' +
+          '</div>';
+        }).join('');
+      }
+
+      function manualPrimaryName() {
+        return manualFieldValue('manualRouteName');
+      }
+
+      function manualExtraText() {
+        return Array.from(manualTypeFields.querySelectorAll('[data-manual-extra]')).map(function (field) {
+          return field.dataset.manualExtra + '：' + field.value;
+        }).filter(function (item) {
+          return !/：$/.test(item);
+        }).join(' / ');
+      }
+
+      function renderManualField(field) {
+        const required = field.required ? ' <span class="req">*</span>' : '';
+        const requiredAttr = field.required ? ' data-manual-required="' + escapeHtml(field.label) + '"' : '';
+        if (field.type === 'dayNight') {
+          return '<div class="form-group">' +
+            '<label class="form-label">' + escapeHtml(field.label) + required + '</label>' +
+            '<div class="booking-day-night-fields">' +
+              '<input id="' + escapeHtml(field.id) + '" class="form-control" type="number" min="1" value="' + escapeHtml(field.value || '') + '" aria-label="天数"' + requiredAttr + '>' +
+              '<span>天</span>' +
+              '<input id="manualNights" class="form-control" type="number" min="0" value="' + escapeHtml(field.nights || '') + '" aria-label="晚数">' +
+              '<span>晚</span>' +
+            '</div>' +
+          '</div>';
+        }
+        if (field.type === 'select') {
+          return '<div class="form-group' + (field.full ? ' form-group-full' : '') + '">' +
+            '<label class="form-label" for="' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label>' +
+            '<select id="' + escapeHtml(field.id) + '" class="form-control"' + requiredAttr + '>' +
+              (field.options || []).map(function (option) {
+                const selected = option === field.value ? ' selected' : '';
+                return '<option' + selected + '>' + escapeHtml(option) + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>';
+        }
+        const minAttr = field.min !== undefined ? ' min="' + escapeHtml(field.min) + '"' : '';
+        return '<div class="form-group' + (field.full ? ' form-group-full' : '') + '">' +
+          '<label class="form-label" for="' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label>' +
+          '<input id="' + escapeHtml(field.id) + '" class="form-control" type="' + escapeHtml(field.type || 'text') + '"' + minAttr + ' value="' + escapeHtml(field.value || '') + '"' + requiredAttr + ' placeholder="请输入' + escapeHtml(field.label) + '">' +
+        '</div>';
+      }
+
+      function renderManualTripFields() {
+        if (!manualTripFields || !manualTravelTitle) return;
+        const config = serviceTripFieldMap[manualServiceTypeLabel()];
+        if (!config) {
+          manualTripBlock.hidden = true;
+          manualTripFields.innerHTML = '';
+          return;
+        }
+        manualTripBlock.hidden = false;
+        manualTravelTitle.textContent = config.title || '出行信息';
+        manualTripFields.innerHTML = (config.fields || []).map(renderManualField).join('');
+      }
+
+      function manualCountsFor(type) {
+        const rows = type === '单项服务'
+          ? (serviceCountTemplateMap[manualServiceTypeLabel()] || serviceCountTemplateMap['其他'])
+          : (serviceCountTemplateMap['其他'] || []);
+        return rows.map(function (item) {
+          return Object.assign({}, item);
+        });
+      }
+
+      function daysBetween(start, end) {
+        if (!start || !end) return 0;
+        const startDate = new Date(start + 'T00:00:00');
+        const endDate = new Date(end + 'T00:00:00');
+        const diff = Math.round((endDate - startDate) / 86400000) + 1;
+        return diff > 0 ? diff : 0;
+      }
+
+      function syncManualTravelDays() {
+        const daysNode = document.getElementById('manualDays');
+        const nightsNode = document.getElementById('manualNights');
+        const days = daysBetween(manualFieldValue('manualStartDate'), manualFieldValue('manualEndDate'));
+        if (!days || !daysNode || !nightsNode) return;
+        daysNode.value = days;
+        nightsNode.value = Math.max(days - 1, 0);
+      }
+
+      function manualPriceStatusText() {
+        return manualPriceStatus ? manualPriceStatus.value : '已沟通确认';
+      }
+
+      function manualServiceContext() {
+        const serviceType = manualServiceTypeLabel();
+        if (serviceType === '签证') return manualFieldValue('manualServiceCountry') || '目的国家待确认';
+        if (serviceType === '票务') return [manualFieldValue('manualTicketType'), manualFieldValue('manualTicketSpec')].filter(Boolean).join(' / ') || '票务信息待确认';
+        if (serviceType === '酒店') return [manualFieldValue('manualHotelCity'), manualFieldValue('manualHotelName'), manualFieldValue('manualRoomType')].filter(Boolean).join(' / ') || '酒店信息待确认';
+        if (serviceType === '用车') return [manualFieldValue('manualCarCity'), manualFieldValue('manualRoute'), manualFieldValue('manualVehicleType')].filter(Boolean).join(' / ') || '用车信息待确认';
+        if (serviceType === '保险') return manualFieldValue('manualInsurancePlan') || '保险方案待确认';
+        return manualFieldValue('manualServiceRemark') || '服务内容待确认';
+      }
+
+      function manualServiceDate() {
+        return manualFieldValue('manualMaterialDue') ||
+          manualFieldValue('manualUseDate') ||
+          manualFieldValue('manualCheckInDate') ||
+          manualFieldValue('manualInsuranceStart') ||
+          '待确认';
+      }
+
+      function manualServiceAfterSteps() {
+        const serviceType = manualServiceTypeLabel();
+        if (serviceType === '签证') return ['补充办理材料', '生成签证服务单', '收款或认款', '办理进度回传'];
+        if (serviceType === '票务') return ['核对实名信息', '生成票务服务单', '收款或认款', '出票/取票记录'];
+        if (serviceType === '酒店') return ['确认入住人', '生成酒店服务单', '收款或认款', '供应商确认号回传'];
+        if (serviceType === '用车') return ['确认用车路线', '生成用车服务单', '收款或认款', '司机车辆信息回传'];
+        if (serviceType === '保险') return ['补充被保人资料', '生成保险服务单', '收款或认款', '保单号回传'];
+        return ['补充服务资料', '生成服务单', '收款或认款', '服务交付记录'];
+      }
+
+      function applyServiceTypeDefaults(force) {
+        const defaults = serviceTypeDefaults[manualServiceTypeLabel()] || serviceTypeDefaults['其他'];
+        const nameNode = document.getElementById('manualRouteName');
+        if (nameNode && (force || !nameNode.value.trim())) nameNode.value = defaults.name;
+        if (manualSupplier && (force || !manualSupplier.value.trim())) manualSupplier.value = defaults.supplier;
+      }
+
+      function manualProductSnapshot() {
+        const type = manualTypeLabel();
+        const serviceType = manualServiceTypeLabel();
+        const name = manualPrimaryName() || (serviceTypeDefaults[serviceType] || serviceTypeDefaults['其他']).name;
+        const supplier = '-';
+        const destination = manualServiceContext();
+        const startDate = manualServiceDate();
+        const displayText = [serviceType, startDate, name].filter(Boolean).join(' / ');
+        const metaParts = [serviceType, destination];
+        return {
+          id: 'SINGLE-SERVICE-ORDER',
+          type: 'manual',
+          tag: type,
+          tagClass: productTagForManual(type),
+          name: name,
+          meta: metaParts.filter(Boolean).join(' / '),
+          planLabel: '服务项目',
+          stockLabel: '服务单',
+          stockHeads: ['服务日期', '服务项目', '确认状态'],
+          core: [],
+          stocks: [[startDate, name, '服务待受理', calcManualBasePrice(), '服务待受理', 'tag tag-blue']],
+          counts: currentProduct && currentProduct.type === 'manual' && currentProduct.manualProductType === type && currentProduct.manualServiceType === serviceType ? currentProduct.counts : manualCountsFor(type),
+          after: manualServiceAfterSteps(),
+          manualProductType: type,
+          manualServiceType: serviceType,
+          manualPriceStatus: '服务待受理',
+          manualSupplier: supplier,
+          manualDestination: destination,
+          manualDeparture: '单项服务',
+          manualDisplay: displayText,
+          manualExtra: manualExtraText()
+        };
+      }
+
+      function calcManualBasePrice() {
+        return currentProduct && currentProduct.type === 'manual' ? calcTotal() : 0;
+      }
+
+      function productTagForManual(type) {
+        if (type === '邮轮') return 'tag tag-purple';
+        if (type === '专列') return 'tag tag-orange';
+        if (type === '自由行') return 'tag tag-green';
+        if (type === '单项服务') return 'tag tag-gray';
+        if (type === '单团项目') return 'tag tag-purple';
+        return 'tag tag-blue';
+      }
+
+      function refreshManualProduct() {
+        if (!isManualMode()) return;
+        currentProduct = manualProductSnapshot();
+      }
+
+      function setBookingMode(mode) {
+        if (isIntentTransferEntry && mode === 'manual') mode = 'standard';
+        if (mode === bookingMode) return;
+        bookingMode = mode;
+        bookingModeButtons.forEach(function (button) {
+          const active = button.dataset.bookingMode === bookingMode;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        if (bookingDrawer) bookingDrawer.dataset.bookingMode = bookingMode;
+        if (isManualMode()) {
+          clearPresetContext();
+          presetMode = false;
+          objectStep = 'manual';
+          hasSaleObject = true;
+          renderManualTypeFields();
+          renderManualTripFields();
+          refreshManualProduct();
+          renderAll();
+          return;
+        }
+        resetSaleObjectSearch();
+      }
+
+      function paramValue(searchParams, key, fallback) {
+        const value = searchParams.get(key);
+        return value === null || value === '' ? fallback : value;
+      }
+
+      function buildSourceContext(searchParams) {
+        const source = searchParams.get('source') || '';
+        const groupMode = searchParams.get('groupMode') || '';
+        const isCustomProject = source === 'customProject';
+        const isIndependentGroup = source === 'independentGroup' || ['project', 'independent'].indexOf(groupMode) >= 0;
+        const productName = paramValue(searchParams, 'product', isCustomProject ? '某科技公司2025年会欧洲行' : '欧洲十国经典游·12天');
+        const customer = paramValue(searchParams, 'customer', isCustomProject ? '北京某科技有限公司' : '待选择客户');
+        const projectNo = paramValue(searchParams, 'projectNo', isCustomProject ? 'MICE-20250623-001' : '');
+        const scheduleNo = paramValue(searchParams, 'scheduleNo', isCustomProject ? 'MICE20250915001' : paramValue(searchParams, 'stock', 'EU20260715001'));
+        return {
+          source: source,
+          groupMode: groupMode,
+          isCustomProject: isCustomProject,
+          isIndependentGroup: isIndependentGroup,
+          isSingleGroup: isCustomProject || isIndependentGroup,
+          productName: productName,
+          customer: customer,
+          projectNo: projectNo,
+          scheduleNo: scheduleNo,
+          quoteVersion: paramValue(searchParams, 'quoteVersion', isCustomProject ? 'A' : ''),
+          amount: paramValue(searchParams, 'amount', isCustomProject ? '1906000' : searchParams.get('price')),
+          people: paramValue(searchParams, 'people', isCustomProject ? '80' : '1'),
+          travelDate: paramValue(searchParams, 'date', isCustomProject ? '2025-09-15' : '已选日期')
+        };
+      }
+
+      function customProjectProduct() {
+        const amount = priceNumber(sourceContext.amount || 1906000) || 1906000;
+        const people = Number(sourceContext.people || 80) || 80;
+        const planName = '方案' + (sourceContext.quoteVersion || 'A') + '：豪华五星版 / 锁定报价 ' + money(amount);
+        return {
+          id: 'CUSTOM-' + (sourceContext.projectNo || 'PROJECT'),
+          type: 'customProject',
+          tag: '单团项目',
+          tagClass: 'tag tag-purple',
+          name: sourceContext.productName,
+          meta: sourceContext.customer + ' / ' + people + '人 / 锁定报价方案' + (sourceContext.quoteVersion || 'A'),
+          planLabel: '锁定报价',
+          stockLabel: '项目团',
+          stockHeads: ['出发日期', '项目团', '客户范围'],
+          core: [
+            { id: 'plan', label: '锁定报价', type: 'select', options: [planName] },
+            { id: 'schedule', label: '项目团', type: 'select', options: [sourceContext.scheduleNo + ' / ' + sourceContext.travelDate] }
+          ],
+          stocks: [
+            [sourceContext.travelDate, sourceContext.scheduleNo, sourceContext.customer + ' / ' + people + '人专属', amount, '客户专属', 'tag tag-purple']
+          ],
+          counts: [
+            { id: 'groupOrder', label: '团体订单', price: amount, value: 1, min: 1, hint: people + '人总价' }
+          ],
+          after: ['生成项目合同', '补充项目名单', '按阶段应收进入财务承接', '进入项目团执行']
+        };
+      }
+
+      function sourceContextHref(kind) {
+        const params = new URLSearchParams();
+        if (sourceContext.isCustomProject) {
+          params.set('source', 'customProject');
+          if (sourceContext.projectNo) params.set('projectNo', sourceContext.projectNo);
+          params.set('customer', sourceContext.customer);
+          params.set('product', sourceContext.productName);
+          params.set('amount', sourceContext.amount || '');
+          params.set('quoteVersion', sourceContext.quoteVersion || '');
+          if (kind === 'source') return '../tour/product-custom-detail.html?' + params.toString();
+          if (kind === 'contract') return '../sales/contracts.html?' + params.toString();
+        }
+        if (sourceContext.isSingleGroup) {
+          params.set('groupMode', 'project');
+          params.set('customer', sourceContext.customer);
+          if (sourceContext.projectNo) params.set('projectNo', sourceContext.projectNo);
+          if (sourceContext.scheduleNo) params.set('scheduleNo', sourceContext.scheduleNo);
+          return '../tour/schedules-detail.html?' + params.toString();
+        }
+        return kind === 'contract' ? '../sales/contracts.html' : '../tour/product-custom-list.html';
+      }
+
+      function renderSourceContext() {
+        if (!bookingSourceContext) return;
+        bookingSourceContext.hidden = !sourceContext.isSingleGroup;
+        bookingSourceContext.setAttribute('aria-hidden', sourceContext.isSingleGroup ? 'false' : 'true');
+        if (!sourceContext.isSingleGroup) {
+          sourceContextType.textContent = '';
+          sourceContextTitle.textContent = '';
+          sourceContextMeta.textContent = '';
+          sourceContextLink.href = '../tour/product-custom-list.html';
+          return;
+        }
+        sourceContextType.textContent = sourceContext.isCustomProject ? '单团项目来源' : '客户专属项目团来源';
+        sourceContextTitle.textContent = sourceContext.isCustomProject ? sourceContext.projectNo + ' / ' + sourceContext.customer : sourceContext.customer + ' / 客户专属项目团';
+        sourceContextMeta.textContent = [sourceContext.productName, sourceContext.scheduleNo, sourceContext.quoteVersion ? '报价方案' + sourceContext.quoteVersion : ''].filter(Boolean).join(' / ');
+        sourceContextLink.href = sourceContextHref('source');
+      }
+
+      function detailType() {
+        if (currentProduct.type === 'manual') return manualTypeLabel() === '单项服务' ? 'single' : 'group';
+        if (sourceContext.isCustomProject || currentProduct.type === 'customProject') return 'customProject';
+        if (currentProduct.type === 'cruise') return 'cruise';
+        if (currentProduct.type === 'train') return 'train';
+        if (currentProduct.type === 'free') return 'free';
+        if (currentProduct.type === 'single') return 'single';
+        if (currentProduct.type === 'study') return 'study';
+        return 'group';
+      }
+
+      function processProfile() {
+        const mode = orderProcessMode.value;
+        if (currentProduct.type === 'manual') {
+          return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
+        }
+        if (currentProduct.type === 'single') {
+          return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
+        }
+        if (mode === 'confirm') return { status: '已确认', inventory: '立即扣库存', button: '确认并扣库存', tag: 'tag tag-green' };
+        if (mode === 'hold') return { status: '占位', inventory: '人工占位', button: '生成占位订单', tag: 'tag tag-blue' };
+        return { status: '预留', inventory: '24小时预留', button: '生成预留订单', tag: 'tag tag-orange' };
+      }
+
+      function selectedStock() {
+        if (isManualMode()) {
+          refreshManualProduct();
+          return currentProduct.stocks[0];
+        }
+        if (presetStockOverride) return presetStockOverride;
+        return currentProduct.stocks[selectedStockIndex] || currentProduct.stocks[0];
+      }
+
+      function selectedPlanName() {
+        if (isManualMode()) return currentProduct.name;
+        if (presetPlanOverride) return presetPlanOverride;
+        return planOptions()[selectedPlanIndex] || planOptions()[0] || currentProduct.name;
+      }
+
+      function usesCompositionRows() {
+        return !isManualMode() && currentProduct && ['cruise', 'train', 'free'].indexOf(currentProduct.type) >= 0 && currentProduct.priceMatrix && currentProduct.priceMatrix.rows;
+      }
+
+      function compositionKindLabel() {
+        if (currentProduct.type === 'free') return '房型';
+        return currentProduct.type === 'cruise' ? '舱型' : '铺位';
+      }
+
+      function compositionStockUnit() {
+        if (currentProduct.type === 'free') return '房间';
+        return currentProduct.type === 'cruise' ? '舱房' : '铺位';
+      }
+
+      function compositionOptions() {
+        if (!usesCompositionRows()) return [];
+        return Object.keys(currentProduct.priceMatrix.rows || {});
+      }
+
+      function compositionDefaultSpec(exceptId) {
+        const used = saleCompositionRows.filter(function (row) {
+          return row.id !== exceptId;
+        }).map(function (row) {
+          return row.spec;
+        });
+        return compositionOptions().find(function (option) {
+          return used.indexOf(option) < 0;
+        }) || compositionOptions()[0] || '';
+      }
+
+      function compositionRowId() {
+        return 'composition_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+      }
+
+      function priceRowsForSpec(spec) {
+        if (!usesCompositionRows()) return [];
+        const rows = currentProduct.priceMatrix.rows || {};
+        const sourceRows = rows[spec] || rows[compositionOptions()[0]] || [];
+        return sourceRows.map(function (item) {
+          return Object.assign({}, item);
+        });
+      }
+
+      function priceItemForSpec(spec, id) {
+        return priceRowsForSpec(spec).find(function (item) {
+          return item.id === id;
+        });
+      }
+
+      function defaultCompositionValue(spec, id, fallback) {
+        const item = priceItemForSpec(spec, id);
+        if (item && item.value !== undefined) return Number(item.value || 0);
+        return Number(fallback || 0);
+      }
+
+      function makeCompositionRow(spec, useDefaultPeople) {
+        const valueFromPrice = useDefaultPeople ? defaultCompositionValue : function () { return 0; };
+        const row = {
+          id: compositionRowId(),
+          spec: spec || compositionDefaultSpec()
+        };
+        if (currentProduct.type === 'cruise') {
+          row.cabinCount = 1;
+          row.adultOccupancy = valueFromPrice(row.spec, 'adultOccupancy', 0);
+          row.childOccupancy = valueFromPrice(row.spec, 'childOccupancy', 0);
+          row.childNoBerth = valueFromPrice(row.spec, 'childNoBerth', 0);
+          row.thirdFourth = valueFromPrice(row.spec, 'thirdFourth', 0);
+          row.portTax = valueFromPrice(row.spec, 'portTax', row.adultOccupancy + row.childOccupancy + row.childNoBerth + row.thirdFourth);
+        } else if (currentProduct.type === 'free') {
+          row.roomCount = valueFromPrice(row.spec, 'roomCount', 1);
+          row.adult = valueFromPrice(row.spec, 'adult', 0);
+          row.child = valueFromPrice(row.spec, 'child', 0);
+        } else {
+          row.adultOccupancy = valueFromPrice(row.spec, 'adultOccupancy', 0);
+          row.childOccupancy = valueFromPrice(row.spec, 'childOccupancy', 0);
+          row.childNoBerth = valueFromPrice(row.spec, 'childNoBerth', 0);
+        }
+        return row;
+      }
+
+      function ensureCompositionRows() {
+        if (!usesCompositionRows()) {
+          saleCompositionRows = [];
+          return;
+        }
+        const options = compositionOptions();
+        saleCompositionRows = saleCompositionRows.filter(function (row) {
+          return options.indexOf(row.spec) >= 0;
+        });
+        if (!saleCompositionRows.length) {
+          saleCompositionRows = [makeCompositionRow(options[0], true)];
+        }
+      }
+
+      function compositionPassengerCount(row) {
+        if (currentProduct.type === 'free') {
+          return Number(row.adult || 0) + Number(row.child || 0);
+        }
+        return Number(row.adultOccupancy || 0) + Number(row.childOccupancy || 0) + Number(row.childNoBerth || 0) + Number(row.thirdFourth || 0);
+      }
+
+      function compositionRequiredPeopleCount(row) {
+        if (currentProduct.type === 'free') {
+          return Number(row.adult || 0) + Number(row.child || 0);
+        }
+        return Number(row.adultOccupancy || 0) + Number(row.childOccupancy || 0) + Number(row.thirdFourth || 0);
+      }
+
+      function syncCompositionRow(row, changedField) {
+        if (!row || currentProduct.type !== 'cruise') return;
+        if (['adultOccupancy', 'childOccupancy', 'childNoBerth', 'thirdFourth'].indexOf(changedField) >= 0) {
+          row.portTax = compositionPassengerCount(row);
+        }
+      }
+
+      function compositionRowTotal(row) {
+        return priceRowsForSpec(row.spec).reduce(function (sum, item) {
+          return sum + Number(row[item.id] || 0) * Number(item.price || 0);
+        }, 0);
+      }
+
+      function compositionTotal() {
+        if (!usesCompositionRows()) return 0;
+        ensureCompositionRows();
+        return saleCompositionRows.reduce(function (sum, row) {
+          return sum + compositionRowTotal(row);
+        }, 0);
+      }
+
+      function compositionCountValue(id) {
+        if (!usesCompositionRows()) return 0;
+        ensureCompositionRows();
+        return saleCompositionRows.reduce(function (sum, row) {
+          return sum + Number(row[id] || 0);
+        }, 0);
+      }
+
+      function compositionPriceGroups() {
+        if (!usesCompositionRows()) return [];
+        ensureCompositionRows();
+        return saleCompositionRows.map(function (row) {
+          const lines = priceRowsForSpec(row.spec).map(function (item) {
+            const quantity = Number(row[item.id] || 0);
+            if (!quantity) return null;
+            return {
+              label: item.label,
+              quantity: quantity,
+              price: Number(item.price || 0),
+              amount: quantity * Number(item.price || 0)
+            };
+          }).filter(Boolean);
+          return {
+            title: row.spec,
+            meta: currentProduct.type === 'cruise'
+              ? '舱房数 ' + Number(row.cabinCount || 0)
+              : (currentProduct.type === 'free' ? '房间数 ' + Number(row.roomCount || 0) : ''),
+            total: compositionRowTotal(row),
+            lines: lines
+          };
+        }).filter(function (group) {
+          return group.lines.length > 0;
+        });
+      }
+
+      function calcTotal() {
+        if (usesCompositionRows()) return compositionTotal();
+        return Array.from(countRows.querySelectorAll('[data-count-input]')).reduce(function (sum, input) {
+          return sum + Number(input.value || 0) * Number(input.dataset.price || 0);
+        }, 0);
+      }
+
+      function currentDiscountUsages() {
+        const total = calcTotal();
+        if (!hasSaleObject || total <= 0 || isManualMode() || sourceContext.isSingleGroup) return [];
+        const source = channelSource ? channelSource.value : '';
+        if (source === '分销') {
+          return [{ source: '优惠券', code: 'COUPON-DIST-202607', name: '分销商早订券', amount: Math.min(800, total), share: '合作分销商 100%', status: '待财务确认' }];
+        }
+        if (currentProduct.type === 'group' && total >= 20000) {
+          return [{ source: '营销活动', code: 'ACT-EU-202607', name: '欧洲长线早鸟满减', amount: 1000, share: '总部营销 70% / 销售门店 30%', status: '待财务确认' }];
+        }
+        if (currentProduct.type === 'cruise' && total >= 50000) {
+          return [{ source: '营销活动', code: 'ACT-CRUISE-202607', name: '理想号第二人同行优惠', amount: 1000, share: '总部营销 50% / 供应商 50%', status: '待财务确认' }];
+        }
+        if (currentProduct.type === 'study') {
+          const student = currentProduct.counts.find(function (item) { return item.id === 'student'; });
+          const amount = Math.min(Number(student ? student.value : 1) * 300, total);
+          return [{ source: '优惠券', code: 'COUPON-STUDY-202607', name: '研学报名按人优惠', amount: amount, share: '总部营销 80% / 销售门店 20%', status: '待财务确认' }];
+        }
+        return [];
+      }
+
+      function discountTotal(usages) {
+        return (usages || currentDiscountUsages()).reduce(function (sum, item) {
+          return sum + Number(item.amount || 0);
+        }, 0);
+      }
+
+      function customerPayableAmount() {
+        return Math.max(calcTotal() - discountTotal(), 0);
+      }
+
+      function discountUsageSummary(usages) {
+        const active = usages || currentDiscountUsages();
+        if (!active.length) return '无优惠减免';
+        return active.map(function (item) {
+          return item.name + ' ' + money(item.amount);
+        }).join(' / ');
+      }
+
+      function planOptions() {
+        return planOptionsFromProduct(currentProduct);
+      }
+
+      function planMetaForProduct(product, planName) {
+        if (product.type === 'single') {
+          if (/加急/.test(planName)) return { meta: '办理时效：5个工作日', badge: '时效：5D' };
+          if (/翻译/.test(planName)) return { meta: '办理时效：3个工作日', badge: '时效：3D' };
+          return { meta: '办理时效：8-10个工作日', badge: '时效：8D' };
+        }
+        const match = String(planName + product.meta).match(/(\d+)\s*天/);
+        const days = match ? match[1] : '12';
+        return { meta: '行程时长：' + days + '天', badge: '天数：' + days + 'D' };
+      }
+
+      function planMeta(planName) {
+        return planMetaForProduct(currentProduct, planName);
+      }
+
+      function renderPlanCards() {
+        if (planSelectTitle) planSelectTitle.textContent = routeObjectLabel(currentProduct);
+        planCards.innerHTML = planOptions().map(function (name, index) {
+          const selected = index === selectedPlanIndex ? ' selected' : '';
+          const meta = planMeta(name);
+          return '<button class="booking-plan-card' + selected + '" type="button" data-plan-index="' + index + '">' +
+            '<span class="booking-plan-radio" aria-hidden="true"></span>' +
+            '<span class="booking-plan-main"><strong>' + escapeHtml(name) + '</strong><em>' + escapeHtml(meta.meta) + '</em></span>' +
+            '<span class="booking-plan-badge">' + escapeHtml(meta.badge) + '</span>' +
+          '</button>';
+        }).join('');
+      }
+
+      function renderCoreFields() {
+        if (usesCompositionRows()) {
+          coreFields.hidden = true;
+          coreFields.innerHTML = '';
+          return;
+        }
+        const hiddenIds = ['plan', 'package', 'line', 'service', 'schedule'];
+        if (currentProduct.type === 'cruise') hiddenIds.push('cabin', 'cabinCount');
+        if (currentProduct.type === 'train') hiddenIds.push('berth');
+        if (currentProduct.type === 'free') hiddenIds.push('room');
+        const fields = currentProduct.core.filter(function (field) {
+          return hiddenIds.indexOf(field.id) < 0;
+        });
+        coreFields.hidden = !fields.length;
+        coreFields.innerHTML = fields.map(function (field) {
+          const required = field.required ? ' <span class="req">*</span>' : '';
+          if (field.type === 'select') {
+            const blank = field.required ? '<option value="">请选择' + escapeHtml(field.label) + '</option>' : '';
+            return '<div class="form-group"><label class="form-label" for="core_' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label><select id="core_' + escapeHtml(field.id) + '" class="form-control" data-core-field="' + escapeHtml(field.id) + '" data-core-label="' + escapeHtml(field.label) + '" data-core-required="' + (field.required ? 'true' : 'false') + '">' + blank + (field.options || []).map(function (option) { return '<option>' + escapeHtml(option) + '</option>'; }).join('') + '</select></div>';
+          }
+          return '<div class="form-group"><label class="form-label" for="core_' + escapeHtml(field.id) + '">' + escapeHtml(field.label) + required + '</label><input id="core_' + escapeHtml(field.id) + '" class="form-control" type="' + escapeHtml(field.type || 'text') + '" min="' + escapeHtml(field.min || 0) + '" value="' + escapeHtml(field.value || '') + '" data-core-field="' + escapeHtml(field.id) + '" data-core-label="' + escapeHtml(field.label) + '" data-core-required="' + (field.required ? 'true' : 'false') + '"></div>';
+        }).join('');
+      }
+
+      function coreFieldValue(id) {
+        const field = coreFields.querySelector('[data-core-field="' + id + '"]');
+        return field ? field.value : '';
+      }
+
+      function applySelectedPriceMatrix() {
+        if (usesCompositionRows()) return;
+        const matrix = currentProduct.priceMatrix;
+        if (!matrix || !matrix.rows) return;
+        const selected = coreFieldValue(matrix.field);
+        const counts = matrix.rows[selected] || matrix.rows[Object.keys(matrix.rows)[0]];
+        if (!counts) return;
+        currentProduct.counts = counts.map(function (count) {
+          return Object.assign({}, count);
+        });
+      }
+
+      function renderStocks() {
+        document.getElementById('bookingStockTitle').textContent = currentProduct.type === 'single' ? '选择服务项目' : '选择' + currentProduct.stockLabel;
+        document.getElementById('stockDateHead').textContent = currentProduct.stockHeads[0];
+        document.getElementById('stockObjectHead').textContent = currentProduct.stockHeads[1];
+        document.getElementById('stockRemainHead').textContent = currentProduct.stockHeads[2];
+        const actionText = currentProduct.type === 'single' ? '选择服务' : '选择' + currentProduct.stockLabel;
+        stockRows.innerHTML = currentProduct.stocks.map(function (row, index) {
+          const selected = hasSaleObject && index === selectedStockIndex ? ' class="selected"' : '';
+          return '<tr' + selected + ' data-stock-index="' + index + '">' +
+            '<td>' + escapeHtml(row[0]) + '</td>' +
+            '<td>' + escapeHtml(row[1]) + '</td>' +
+            '<td>' + escapeHtml(row[2]) + '</td>' +
+            '<td><button class="booking-stock-select-btn" type="button" data-select-stock="' + index + '">' + escapeHtml(actionText) + '</button></td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function compositionColumns() {
+        if (currentProduct.type === 'cruise') {
+          return [
+            { id: 'cabinCount', label: '舱房数', min: 1 },
+            { id: 'adultOccupancy', label: '成人占位', min: 0 },
+            { id: 'childOccupancy', label: '儿童占位', min: 0 },
+            { id: 'childNoBerth', label: '儿童不占位', min: 0 },
+            { id: 'thirdFourth', label: '第三/第四人', min: 0 }
+          ];
+        }
+        if (currentProduct.type === 'free') {
+          return [
+            { id: 'roomCount', label: '房间数', min: 1 },
+            { id: 'adult', label: '成人', min: 0 },
+            { id: 'child', label: '儿童', min: 0 }
+          ];
+        }
+        return [
+          { id: 'adultOccupancy', label: '成人占铺', min: 0 },
+          { id: 'childOccupancy', label: '儿童占铺', min: 0 },
+          { id: 'childNoBerth', label: '儿童不占铺', min: 0 }
+        ];
+      }
+
+      function compositionStepper(row, column) {
+        const value = Number(row[column.id] || 0);
+        return '<span class="booking-stepper booking-composition-stepper" data-composition-stepper>' +
+          '<button type="button" data-composition-step="-1" data-composition-row="' + escapeHtml(row.id) + '" data-composition-field="' + escapeHtml(column.id) + '" aria-label="减少' + escapeHtml(column.label) + '">-</button>' +
+          '<input type="text" value="' + value + '" readonly data-composition-input data-composition-row="' + escapeHtml(row.id) + '" data-composition-field="' + escapeHtml(column.id) + '" data-min="' + Number(column.min || 0) + '">' +
+          '<button type="button" data-composition-step="1" data-composition-row="' + escapeHtml(row.id) + '" data-composition-field="' + escapeHtml(column.id) + '" aria-label="增加' + escapeHtml(column.label) + '">+</button>' +
+        '</span>';
+      }
+
+      function compositionSpecSelect(row) {
+        const used = saleCompositionRows.filter(function (item) {
+          return item.id !== row.id;
+        }).map(function (item) {
+          return item.spec;
+        });
+        return '<select class="form-control booking-composition-select" data-composition-select data-composition-row="' + escapeHtml(row.id) + '" aria-label="选择' + escapeHtml(compositionKindLabel()) + '">' +
+          compositionOptions().map(function (option) {
+            const selected = option === row.spec ? ' selected' : '';
+            const disabled = used.indexOf(option) >= 0 ? ' disabled' : '';
+            return '<option value="' + escapeHtml(option) + '"' + selected + disabled + '>' + escapeHtml(option) + '</option>';
+          }).join('') +
+        '</select>';
+      }
+
+      function compositionColgroup(columns) {
+        return '<colgroup><col class="booking-composition-col-spec" style="width:150px">' +
+          columns.map(function () { return '<col class="booking-composition-col-count">'; }).join('') +
+          '<col class="booking-composition-col-action" style="width:58px"></colgroup>';
+      }
+
+      function syncCompositionAddButton() {
+        if (!addCompositionRow) return;
+        if (!usesCompositionRows() || !hasSaleObject) {
+          addCompositionRow.hidden = true;
+          addCompositionRow.disabled = true;
+          return;
+        }
+        ensureCompositionRows();
+        addCompositionRow.hidden = false;
+        addCompositionRow.disabled = saleCompositionRows.length >= compositionOptions().length;
+        addCompositionRow.textContent = '新增' + compositionKindLabel();
+      }
+
+      function addCompositionLine() {
+        if (!usesCompositionRows()) return;
+        const spec = compositionDefaultSpec();
+        if (spec) saleCompositionRows.push(makeCompositionRow(spec, false));
+        renderCounts();
+        renderFee();
+      }
+
+      function renderCompositionCounts() {
+        ensureCompositionRows();
+        const columns = compositionColumns();
+        syncCompositionAddButton();
+        countRows.classList.remove('booking-manual-price-table');
+        countRows.classList.add('booking-composition-grid');
+        const specCellStyle = ' style="width:150px;min-width:150px;max-width:150px"';
+        const actionCellStyle = ' style="width:58px;min-width:58px;max-width:58px"';
+        countRows.innerHTML = '<div class="booking-composition-panel">' +
+          '<div class="booking-composition-table-wrap">' +
+            '<table class="booking-composition-table">' +
+              compositionColgroup(columns) +
+              '<thead><tr><th' + specCellStyle + '>' + escapeHtml(compositionKindLabel()) + '</th>' + columns.map(function (column) {
+                return '<th>' + escapeHtml(column.label) + '</th>';
+              }).join('') + '<th' + actionCellStyle + '>操作</th></tr></thead>' +
+              '<tbody>' + saleCompositionRows.map(function (row) {
+                const removeDisabled = saleCompositionRows.length <= 1 ? ' disabled' : '';
+                return '<tr data-composition-row-item="' + escapeHtml(row.id) + '">' +
+                  '<td' + specCellStyle + '>' + compositionSpecSelect(row) + '</td>' +
+                  columns.map(function (column) {
+                    return '<td>' + compositionStepper(row, column) + '</td>';
+                  }).join('') +
+                  '<td' + actionCellStyle + '><button class="table-link table-link-danger" type="button" data-remove-composition-row="' + escapeHtml(row.id) + '"' + removeDisabled + '>删除</button></td>' +
+                '</tr>';
+              }).join('') + '</tbody>' +
+            '</table>' +
+          '</div>' +
+        '</div>';
+        renderOccupancySummary();
+      }
+
+      function renderCounts() {
+        const peopleSection = countRows.closest('.booking-section');
+        if (peopleSection) peopleSection.classList.toggle('booking-composition-section', usesCompositionRows());
+        if (isManualMode()) {
+          syncCompositionAddButton();
+          countRows.classList.remove('booking-composition-grid');
+          countRows.classList.add('booking-manual-price-table');
+          countRows.innerHTML = '<div class="table-wrap booking-price-table-wrap"><table class="booking-price-table">' +
+            '<thead><tr><th>费用项</th><th>数量</th><th>单价</th><th>小计</th></tr></thead>' +
+            '<tbody>' + currentProduct.counts.map(function (item) {
+              const subtotal = Number(item.value || 0) * Number(item.price || 0);
+              return '<tr>' +
+                '<td><span class="booking-count-label">' + escapeHtml(item.label) + '</span></td>' +
+                '<td><span class="booking-stepper" data-stepper>' +
+                  '<button type="button" data-step="-1" aria-label="减少' + escapeHtml(item.label) + '">-</button>' +
+                  '<input type="text" value="' + item.value + '" readonly data-count-input data-count-id="' + escapeHtml(item.id) + '" data-count-label="' + escapeHtml(item.label) + '" data-price="' + item.price + '" data-min="' + item.min + '">' +
+                  '<button type="button" data-step="1" aria-label="增加' + escapeHtml(item.label) + '">+</button>' +
+                '</span></td>' +
+                '<td><input class="form-control booking-price-input" type="number" min="0" value="' + Number(item.price || 0) + '" data-manual-price="' + escapeHtml(item.id) + '"></td>' +
+                '<td><strong>' + money(subtotal) + '</strong></td>' +
+              '</tr>';
+            }).join('') + '</tbody></table></div>';
+          renderOccupancySummary();
+          return;
+        }
+        if (usesCompositionRows()) {
+          renderCompositionCounts();
+          return;
+        }
+        syncCompositionAddButton();
+        countRows.classList.remove('booking-composition-grid');
+        countRows.classList.remove('booking-manual-price-table');
+        countRows.innerHTML = currentProduct.counts.map(function (item) {
+          const hint = item.hint ? '<em>' + escapeHtml(item.hint) + '</em>' : '';
+          return '<div class="booking-count-item">' +
+            '<span class="booking-count-label">' + escapeHtml(item.label) + '</span>' +
+            '<span class="booking-stepper" data-stepper>' +
+              '<button type="button" data-step="-1" aria-label="减少' + escapeHtml(item.label) + '">-</button>' +
+              '<input type="text" value="' + item.value + '" readonly data-count-input data-count-id="' + escapeHtml(item.id) + '" data-price="' + item.price + '" data-min="' + item.min + '">' +
+              '<button type="button" data-step="1" aria-label="增加' + escapeHtml(item.label) + '">+</button>' +
+            '</span>' +
+            '<span class="booking-count-hint">' + money(item.price) + hint + '</span>' +
+          '</div>';
+        }).join('');
+        renderOccupancySummary();
+      }
+
+      function countValue(id) {
+        if (usesCompositionRows()) return compositionCountValue(id);
+        const row = currentProduct.counts.find(function (item) { return item.id === id; });
+        return row ? Number(row.value || 0) : 0;
+      }
+
+      function selectedSaleStructureText() {
+        if (currentProduct.type === 'cruise') return coreFieldValue('cabin') || '未选择舱型';
+        if (currentProduct.type === 'train') return coreFieldValue('berth') || '未选择席别/铺位';
+        return '';
+      }
+
+      function renderOccupancySummary() {
+        const box = document.getElementById('occupancySummary');
+        if (!box) return;
+        if (usesCompositionRows()) {
+          box.innerHTML = '';
+          return;
+        }
+        if (currentProduct.type !== 'cruise' && currentProduct.type !== 'train') {
+          box.innerHTML = '';
+          return;
+        }
+        const occupied = countValue('adultOccupancy') + countValue('childOccupancy') + countValue('thirdFourth');
+        const noBerth = countValue('childNoBerth');
+        const unit = currentProduct.type === 'cruise' ? '舱房' : '铺位';
+        box.innerHTML = '<span>销售结构：' + escapeHtml(selectedSaleStructureText()) + '</span>' +
+          '<span>占位人数 ' + occupied + ' 人，扣' + unit + '库存</span>' +
+          '<span>儿童不占位 ' + noBerth + ' 人，只计费不扣库存</span>';
+      }
+
+      function renderAfterCreate() {
+        if (!hasSaleObject) {
+          document.getElementById('afterCreateList').innerHTML = '';
+          return;
+        }
+        document.getElementById('afterCreateList').innerHTML = currentProduct.after.map(function (item) {
+          return '<span>' + escapeHtml(item) + '</span>';
+        }).join('');
+      }
+
+      function countInputPriceGroups() {
+        const lines = Array.from(countRows.querySelectorAll('[data-count-input]')).map(function (input) {
+          const labelNode = input.closest('.booking-count-item, tr').querySelector('.booking-count-label');
+          const label = input.dataset.countLabel || (labelNode ? labelNode.textContent : '');
+          const quantity = Number(input.value || 0);
+          const price = Number(input.dataset.price || 0);
+          if (!quantity) return null;
+          return {
+            label: label,
+            quantity: quantity,
+            price: price,
+            amount: quantity * price
+          };
+        }).filter(Boolean);
+        return lines.length ? [{ title: currentProduct.name, meta: isManualMode() ? manualServiceTypeLabel() : selectedPlanName(), total: calcTotal(), lines: lines }] : [];
+      }
+
+      function orderTypeLabel() {
+        if (isManualMode()) return manualTypeLabel();
+        return currentProduct.tag || '参团游';
+      }
+
+      function salesPriceGroupsSnapshot() {
+        const groups = usesCompositionRows() ? compositionPriceGroups() : countInputPriceGroups();
+        return groups.map(function (group) {
+          return {
+            title: group.title,
+            meta: group.meta || '',
+            total: Number(group.total || 0),
+            lines: (group.lines || []).map(function (line) {
+              return {
+                label: line.label,
+                quantity: Number(line.quantity || 0),
+                price: Number(line.price || 0),
+                amount: Number(line.amount || 0)
+              };
+            })
+          };
+        });
+      }
+
+      function salesCompositionRowsSnapshot() {
+        if (!usesCompositionRows()) return [];
+        ensureCompositionRows();
+        return saleCompositionRows.map(function (row) {
+          const copy = {
+            spec: row.spec,
+            total: compositionRowTotal(row),
+            priceLines: priceRowsForSpec(row.spec).map(function (item) {
+              const quantity = Number(row[item.id] || 0);
+              return {
+                id: item.id,
+                label: item.label,
+                quantity: quantity,
+                price: Number(item.price || 0),
+                amount: quantity * Number(item.price || 0),
+                hint: item.hint || ''
+              };
+            }).filter(function (item) {
+              return item.quantity > 0;
+            })
+          };
+          if (currentProduct.type === 'cruise') {
+            copy.cabinCount = Number(row.cabinCount || 0);
+            copy.adultOccupancy = Number(row.adultOccupancy || 0);
+            copy.childOccupancy = Number(row.childOccupancy || 0);
+            copy.childNoBerth = Number(row.childNoBerth || 0);
+            copy.thirdFourth = Number(row.thirdFourth || 0);
+            copy.portTax = Number(row.portTax || 0);
+          } else if (currentProduct.type === 'train') {
+            copy.adultOccupancy = Number(row.adultOccupancy || 0);
+            copy.childOccupancy = Number(row.childOccupancy || 0);
+            copy.childNoBerth = Number(row.childNoBerth || 0);
+          } else if (currentProduct.type === 'free') {
+            copy.roomCount = Number(row.roomCount || 0);
+            copy.adult = Number(row.adult || 0);
+            copy.child = Number(row.child || 0);
+          }
+          return copy;
+        });
+      }
+
+      function salesPeopleCountSnapshot() {
+        if (usesCompositionRows()) {
+          ensureCompositionRows();
+          return saleCompositionRows.reduce(function (sum, row) {
+            return sum + compositionPassengerCount(row);
+          }, 0);
+        }
+        return currentProduct.counts.reduce(function (sum, item) {
+          if (!/成人|儿童|学员|委托|办理|人数|票数|间夜|车次|保险份数|服务数量|团体/.test(item.label)) return sum;
+          return sum + Number(item.value || 0);
+        }, 0);
+      }
+
+      function saveCreatedOrderSnapshot(orderNo, stock, totalText, customerPayableText, process, discountUsages) {
+        const store = readStored('caesarOrderFinanceEvents');
+        if (!store.orders) store.orders = {};
+        const typeLabel = orderTypeLabel();
+        const customer = document.getElementById('contactName').value.trim();
+        const phone = document.getElementById('contactPhone').value.trim();
+        const scheduleNo = stock && stock[1] ? stock[1] : '';
+        const travelDate = stock && stock[0] ? stock[0] : '';
+        const amountNumber = calcTotal();
+        const discountAmount = discountTotal(discountUsages);
+        store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
+          orderNo: orderNo,
+          orderType: typeLabel,
+          productName: currentProduct.name,
+          productSource: isManualMode() ? '单项服务下单' : '指定产品',
+          routeText: isManualMode() ? (currentProduct.manualDisplay || currentProduct.meta || currentProduct.name) : selectedPlanName(),
+          sourceLabel: currentProduct.stockLabel || '团期',
+          sourceNo: scheduleNo,
+          sourceDate: travelDate,
+          customer: customer,
+          contactPhone: phone,
+          store: document.getElementById('storeName').value || '软件园门店',
+          advisor: document.getElementById('salesName').value || '',
+          amount: totalText,
+          amountValue: amountNumber,
+          receivableCurrency: receivableCurrencyValue(),
+          discountCarry: money(discountAmount),
+          discountUsages: discountUsages || [],
+          customerPayable: customerPayableText,
+          received: '¥0',
+          pending: customerPayableText,
+          orderStatus: process.status,
+          paymentStatus: '未收款',
+          resourceStatus: isManualMode() ? '服务待受理' : process.inventory,
+          resourceMeta: isManualMode() ? (currentProduct.manualServiceType + ' / 服务待受理') : ((salesPeopleCountSnapshot() || 0) + '人'),
+          docStatus: '待补资料',
+          productMeta: currentProduct.meta || '',
+          manualSupplier: currentProduct.manualSupplier || '',
+          manualDestination: currentProduct.manualDestination || '',
+          salesSnapshot: {
+            type: typeLabel,
+            productName: currentProduct.name,
+            planName: isManualMode() ? currentProduct.manualServiceType + ' / ' + currentProduct.name : selectedPlanName(),
+            sourceLabel: currentProduct.stockLabel || '团期',
+            scheduleNo: scheduleNo,
+            travelDate: travelDate,
+            stockText: stock ? stock.join(' / ') : '',
+            total: amountNumber,
+            totalText: totalText,
+            discountTotal: discountAmount,
+            customerPayable: priceNumber(customerPayableText),
+            discountUsages: discountUsages || [],
+            peopleCount: salesPeopleCountSnapshot(),
+            compositionKind: usesCompositionRows() ? compositionKindLabel() : '',
+            stockUnit: usesCompositionRows() ? compositionStockUnit() : '',
+            compositionRows: salesCompositionRowsSnapshot(),
+            priceGroups: salesPriceGroupsSnapshot()
+          },
+          createdAt: new Date().toLocaleString('zh-CN', { hour12: false })
+        });
+        writeStored('caesarOrderFinanceEvents', store);
+        return store.orders[orderNo];
+      }
+
+      function renderFooterPriceDetail(groups) {
+        if (!footerPricePopover || !footerTotalTrigger) return;
+        const hasLines = groups && groups.some(function (group) {
+          return group.lines && group.lines.length;
+        });
+        footerTotalTrigger.disabled = !hasLines;
+        footerTotalTrigger.classList.toggle('is-disabled', !hasLines);
+        footerTotalTrigger.setAttribute('aria-expanded', 'false');
+        if (!hasLines) {
+          footerPricePopover.hidden = true;
+          footerPricePopover.innerHTML = '';
+          return;
+        }
+        const orderTotal = groups.reduce(function (sum, group) {
+          return sum + Number(group.total || 0);
+        }, 0);
+        const discounts = currentDiscountUsages();
+        const discountAmount = discountTotal(discounts);
+        const customerPayable = Math.max(orderTotal - discountAmount, 0);
+        const discountRows = discounts.length
+          ? '<div class="booking-price-popover-discounts">' + discounts.map(function (item) {
+            return '<div><span>' + escapeHtml(item.name) + '</span><strong>-' + money(item.amount) + '</strong><em>' + escapeHtml(item.source + ' / ' + item.code + ' / ' + item.share) + '</em></div>';
+          }).join('') + '</div>'
+          : '';
+        const totalRows = '<div class="booking-price-popover-total">' +
+          '<div><span>订单应收</span><strong>' + money(orderTotal) + '</strong></div>' +
+          (discountAmount > 0 ? '<div class="is-discount"><span>优惠减免</span><strong>-' + money(discountAmount) + '</strong></div>' : '') +
+          '<div class="is-payable"><span>客户需收</span><strong>' + money(customerPayable) + '</strong></div>' +
+        '</div>';
+        footerPricePopover.hidden = true;
+        footerPricePopover.innerHTML = '<div class="booking-price-popover-title">价格明细</div>' + groups.map(function (group) {
+          return '<div class="booking-price-popover-group">' +
+            '<div class="booking-price-popover-group-head"><strong>' + escapeHtml(group.title) + '</strong>' + (group.meta ? '<span>' + escapeHtml(group.meta) + '</span>' : '') + '</div>' +
+            group.lines.map(function (line) {
+              return '<div class="booking-price-popover-row"><span>' + escapeHtml(line.label) + ' ' + line.quantity + ' × ' + money(line.price) + '</span><strong>' + money(line.amount) + '</strong></div>';
+            }).join('') +
+            '<div class="booking-price-popover-subtotal"><span>小计</span><strong>' + money(group.total) + '</strong></div>' +
+          '</div>';
+        }).join('') + discountRows + totalRows;
+      }
+
+      function renderFeeTotals(total) {
+        const discounts = currentDiscountUsages();
+        const discountAmount = discountTotal(discounts);
+        const customerPayable = Math.max(total - discountAmount, 0);
+        document.getElementById('orderReceivableTotal').textContent = money(total);
+        document.getElementById('orderDiscountTotal').textContent = money(discountAmount);
+        document.getElementById('customerPayableTotal').textContent = money(customerPayable);
+        document.getElementById('payableTotal').textContent = money(customerPayable);
+        footerTotal.textContent = money(customerPayable);
+        const discountBox = document.getElementById('discountUsageLines');
+        if (discountBox) {
+          discountBox.hidden = !discounts.length;
+          discountBox.innerHTML = discounts.map(function (item) {
+            return '<div><span>' + escapeHtml(item.source + ' / ' + item.code) + '</span><strong>' + escapeHtml(item.name + ' ' + money(item.amount)) + '</strong><em>' + escapeHtml('承担方：' + item.share + ' / ' + item.status) + '</em></div>';
+          }).join('');
+        }
+      }
+
+      function renderFee() {
+        if (!hasSaleObject) {
+          document.getElementById('feeLines').innerHTML = '<div><span>暂无费用</span><strong>¥0</strong></div>';
+          document.getElementById('orderReceivableTotal').textContent = '¥0';
+          document.getElementById('orderDiscountTotal').textContent = '¥0';
+          document.getElementById('customerPayableTotal').textContent = '¥0';
+          document.getElementById('payableTotal').textContent = '¥0';
+          document.getElementById('discountUsageLines').hidden = true;
+          document.getElementById('discountUsageLines').innerHTML = '';
+          footerTotal.textContent = '待选团期';
+          footerTotal.classList.add('is-placeholder');
+          renderFooterPriceDetail([]);
+          return;
+        }
+        if (usesCompositionRows()) {
+          const groups = compositionPriceGroups();
+          const rows = groups.reduce(function (items, group) {
+            group.lines.forEach(function (line) {
+              items.push('<div><span>' + escapeHtml(group.title + ' / ' + line.label) + ' × ' + line.quantity + '</span><strong>' + money(line.amount) + '</strong></div>');
+            });
+            return items;
+          }, []);
+          const total = calcTotal();
+          document.getElementById('feeLines').innerHTML = rows.join('') || '<div><span>暂无费用</span><strong>¥0</strong></div>';
+          renderFeeTotals(total);
+          footerTotal.classList.remove('is-placeholder');
+          renderFooterPriceDetail(groups);
+          return;
+        }
+        const groups = countInputPriceGroups();
+        const rows = groups.reduce(function (items, group) {
+          group.lines.forEach(function (line) {
+            items.push('<div><span>' + escapeHtml(line.label) + ' × ' + line.quantity + '</span><strong>' + money(line.amount) + '</strong></div>');
+          });
+          return items;
+        }, []);
+        const total = calcTotal();
+        document.getElementById('feeLines').innerHTML = rows.join('') || '<div><span>暂无费用</span><strong>¥0</strong></div>';
+        renderFeeTotals(total);
+        footerTotal.classList.remove('is-placeholder');
+        renderFooterPriceDetail(groups);
+      }
+
+      function syncSummary() {
+        if (isManualMode()) {
+          refreshManualProduct();
+          const process = processProfile();
+          document.getElementById('inventoryHint').className = 'tag tag-blue';
+          document.getElementById('inventoryHint').textContent = '单项服务';
+          document.getElementById('createOrder').disabled = false;
+          document.getElementById('createOrder').textContent = process.button;
+          return;
+        }
+        if (!hasSaleObject) {
+          document.getElementById('inventoryHint').className = 'tag tag-gray';
+          document.getElementById('inventoryHint').textContent = '待选团期';
+          document.getElementById('createOrder').disabled = true;
+          document.getElementById('createOrder').textContent = '请选择' + currentProduct.stockLabel;
+          return;
+        }
+        const stock = selectedStock();
+        const process = processProfile();
+        document.getElementById('inventoryHint').className = stock[5] || 'tag tag-green';
+        document.getElementById('inventoryHint').textContent = stock[4] || '可售';
+        document.getElementById('createOrder').disabled = false;
+        document.getElementById('createOrder').textContent = process.button;
+      }
+
+      function syncObjectSearchControl() {
+        const hasKeyword = !!objectKeyword.value.trim();
+        const isProductSelected = objectStep === 'pick' || objectStep === 'selected';
+        clearProductSearch.hidden = !hasKeyword;
+        objectKeyword.readOnly = isProductSelected;
+        saleObjectSearchPanel.classList.toggle('has-selected-product', isProductSelected);
+        if (isProductSelected) {
+          objectSuggestionList.hidden = true;
+          objectSuggestionList.innerHTML = '';
+        }
+      }
+
+      function syncPresetPanel() {
+        const standardMode = !isManualMode();
+        const showSearch = standardMode && (objectStep === 'search' || objectStep === 'pick');
+        const showPicker = standardMode && objectStep === 'pick';
+        const showSummary = standardMode && objectStep === 'selected';
+        if (manualProductPanel) manualProductPanel.hidden = !isManualMode();
+        if (manualTripBlock && standardMode) manualTripBlock.hidden = true;
+        if (orderProcessSection) orderProcessSection.hidden = isManualMode();
+        saleObjectSearchPanel.hidden = !showSearch;
+        saleObjectPicker.hidden = !showPicker;
+        bookingPresetPanel.hidden = !showSummary;
+        if (saleObjectResultSection) saleObjectResultSection.hidden = !showPicker && !showSummary && !(standardMode && sourceContext.isSingleGroup);
+        if (planSelectBlock) planSelectBlock.hidden = true;
+        syncObjectSearchControl();
+        requiresSaleObject.forEach(function (section) {
+          section.hidden = !hasSaleObject;
+        });
+        if (!showSummary) return;
+        const stock = selectedStock();
+        presetProductName.textContent = selectedPlanName();
+        presetProductMeta.textContent = currentProduct.name + ' / ' + currentProduct.stockLabel + ' ' + stock[1] + ' / ' + stock[0] + ' / ' + stock[2] + ' / ' + money(stock[3]);
+      }
+
+      function renderAll() {
+        if (isManualMode()) refreshManualProduct();
+        renderPlanCards();
+        renderCoreFields();
+        applySelectedPriceMatrix();
+        renderStocks();
+        renderCounts();
+        renderAfterCreate();
+        renderFee();
+        syncSummary();
+        syncPresetPanel();
+        renderSourceContext();
+      }
+
+      function indexByText(list, value) {
+        if (!value) return 0;
+        const keyword = String(value).trim();
+        const exactIndex = list.findIndex(function (item) {
+          return String(item).trim() === keyword;
+        });
+        if (exactIndex >= 0) return exactIndex;
+        const fuzzyIndex = list.findIndex(function (item) {
+          const text = String(item);
+          return text.indexOf(keyword) >= 0 || keyword.indexOf(text) >= 0;
+        });
+        return fuzzyIndex >= 0 ? fuzzyIndex : 0;
+      }
+
+      function stockIndexFromParams(dateValue, stockValue) {
+        const terms = [dateValue, stockValue].filter(Boolean).map(function (item) { return String(item).trim(); });
+        if (!terms.length) return 0;
+        const matchedIndex = currentProduct.stocks.findIndex(function (row) {
+          const text = row.join(' ');
+          return terms.some(function (term) { return text.indexOf(term) >= 0 || term.indexOf(text) >= 0; });
+        });
+        return matchedIndex >= 0 ? matchedIndex : 0;
+      }
+
+      function clearPresetContext() {
+        presetMode = false;
+        presetPlanOverride = '';
+        presetStockOverride = null;
+      }
+
+      function routeObjectLabel(product) {
+        if (product.type === 'cruise') return '产品航线';
+        if (product.type === 'train') return '专列线路';
+        if (product.type === 'free') return '资源套餐';
+        if (product.type === 'single') return '服务项目';
+        if (product.type === 'customProject') return '锁定报价';
+        return '产品线路';
+      }
+
+      function planOptionsFromProduct(product) {
+        const planField = product.core.find(function (field) {
+          return field.id === 'plan' || field.id === 'package' || field.id === 'line' || field.id === 'service';
+        });
+        return planField && planField.options ? planField.options : [product.name];
+      }
+
+      function routeSearchRecords() {
+        return products.reduce(function (records, item) {
+          planOptionsFromProduct(item).forEach(function (routeName, planIndex) {
+            const meta = planMetaForProduct(item, routeName);
+            const stock = item.stocks[0] || [];
+            records.push({
+              product: item,
+              planIndex: planIndex,
+              routeName: routeName,
+              routeType: routeObjectLabel(item),
+              meta: meta,
+              stock: stock
+            });
+          });
+          return records;
+        }, []);
+      }
+
+      function routeCardPrefix(product) {
+        if (product.type === 'cruise') return '航线';
+        if (product.type === 'free') return '套餐';
+        if (product.type === 'single') return '服务';
+        return '线路';
+      }
+
+      function routeDisplayName(record) {
+        const prefix = routeCardPrefix(record.product);
+        const name = String(record.routeName || '');
+        const prefixed = new RegExp('^' + prefix + '[A-ZＡ-Ｚ]?[：:]').test(name);
+        if (prefixed) return name.replace(new RegExp('^(' + prefix + '[A-ZＡ-Ｚ]?)[：:]\\s*'), '$1： ');
+        return prefix + String.fromCharCode(65 + Number(record.planIndex || 0)) + '： ' + name;
+      }
+
+      function routeDays(record) {
+        const match = [record.routeName, record.meta.meta, record.product.meta].join(' ').match(/(\d+)\s*天/);
+        return match ? match[1] : '';
+      }
+
+      function routeProductName(record) {
+        return String(record.product.name || '').replace(/[·・]\s*\d+\s*天$/, '');
+      }
+
+      function routeSubtitle(record) {
+        const days = routeDays(record);
+        if (days) return routeProductName(record) + ' / 行程时长：' + days + '天';
+        return routeProductName(record) + ' / ' + record.routeType;
+      }
+
+      function routeBadge(record) {
+        const days = routeDays(record);
+        if (days) return '天数: ' + days + 'D';
+        return String(record.meta.badge || '').replace('：', ': ');
+      }
+
+      function routeSearchText(record) {
+        return String(record.routeName || '').toLowerCase();
+      }
+
+      function searchRoutes(keyword) {
+        const value = String(keyword || '').trim().toLowerCase();
+        if (!value) return [];
+        return routeSearchRecords().filter(function (record) {
+          return routeSearchText(record).indexOf(value) >= 0;
+        }).slice(0, 8);
+      }
+
+      function renderSuggestions() {
+        if (objectStep !== 'search') {
+          objectSuggestionList.hidden = true;
+          objectSuggestionList.innerHTML = '';
+          return;
+        }
+        const matches = searchRoutes(objectKeyword.value);
+        objectSuggestionList.hidden = !objectKeyword.value.trim();
+        if (!objectKeyword.value.trim()) {
+          objectSuggestionList.innerHTML = '';
+          return;
+        }
+        if (!matches.length) {
+          objectSuggestionList.innerHTML = '<div class="booking-route-result-label">选择产品线路 <span class="req">*</span></div><div class="booking-product-no-result">未找到匹配线路</div>';
+          return;
+        }
+        objectSuggestionList.innerHTML = '<div class="booking-route-result-label">选择产品线路 <span class="req">*</span></div><div class="booking-route-result-grid">' + matches.map(function (record) {
+          return '<button class="booking-product-suggestion" type="button" data-route-product-id="' + escapeHtml(record.product.id) + '" data-route-plan-index="' + record.planIndex + '">' +
+            '<span class="booking-plan-main"><strong>' + escapeHtml(routeDisplayName(record)) + '</strong><em>' + escapeHtml(routeSubtitle(record)) + '</em></span>' +
+            '<span class="booking-plan-badge">' + escapeHtml(routeBadge(record)) + '</span>' +
+          '</button>';
+        }).join('') + '</div>';
+      }
+
+      function selectRoute(record) {
+        if (!record || !record.product) return;
+        const item = record.product;
+        currentProduct = cloneProduct(item);
+        selectedPlanIndex = Number(record.planIndex || 0);
+        selectedStockIndex = -1;
+        saleCompositionRows = [];
+        clearPresetContext();
+        hasSaleObject = false;
+        objectStep = 'pick';
+        objectSuggestionList.hidden = true;
+        objectSuggestionList.innerHTML = '';
+        objectKeyword.value = record.routeName || planOptions()[selectedPlanIndex] || item.name;
+        renderAll();
+      }
+
+      function resetSaleObjectSearch() {
+        currentProduct = cloneProduct(products[0]);
+        selectedPlanIndex = 0;
+        selectedStockIndex = 0;
+        saleCompositionRows = [];
+        hasSaleObject = false;
+        objectStep = 'search';
+        objectKeyword.value = '';
+        objectSuggestionList.hidden = true;
+        objectSuggestionList.innerHTML = '';
+        clearPresetContext();
+        renderAll();
+      }
+
+      function selectCurrentStock(index) {
+        selectedStockIndex = Number(index || 0);
+        const stock = currentProduct.stocks[selectedStockIndex] || currentProduct.stocks[0];
+        if (stock) applyPresetPrice(stock[3]);
+        hasSaleObject = true;
+        objectStep = 'selected';
+        clearPresetContext();
+        renderAll();
+      }
+
+      function applyPresetPrice(priceText) {
+        if (usesCompositionRows()) return;
+        const price = priceNumber(priceText);
+        if (!price) return;
+        const primaryCount = currentProduct.counts.find(function (item) { return Number(item.min || 0) > 0; }) || currentProduct.counts[0];
+        if (primaryCount) primaryCount.price = price;
+      }
+
+      function updateChannelFields() {
+        const source = channelSource.value;
+        distributorField.hidden = source !== '分销';
+        distributorMemberField.hidden = source !== '分销';
+        otaField.hidden = source !== 'OTA';
+      }
+
+      function validate() {
+        const missing = [];
+        if (isManualMode()) {
+          refreshManualProduct();
+          Array.from(document.querySelectorAll('[data-manual-required]')).forEach(function (field) {
+            if (!field.value) missing.push(field.dataset.manualRequired || '必填项');
+          });
+          const startDate = manualFieldValue('manualStartDate');
+          const endDate = manualFieldValue('manualEndDate');
+          const serviceDate = manualFieldValue('manualServiceDate');
+          const finishDate = manualFieldValue('manualFinishDate');
+          const checkInDate = manualFieldValue('manualCheckInDate');
+          const checkOutDate = manualFieldValue('manualCheckOutDate');
+          const insuranceStart = manualFieldValue('manualInsuranceStart');
+          const insuranceEnd = manualFieldValue('manualInsuranceEnd');
+          if (startDate && endDate && endDate < startDate) missing.push('回团日期不能早于出团日期');
+          if (serviceDate && finishDate && finishDate < serviceDate) missing.push('预计完成日期不能早于服务日期');
+          if (checkInDate && checkOutDate && checkOutDate <= checkInDate) missing.push('离店日期必须晚于入住日期');
+          if (insuranceStart && insuranceEnd && insuranceEnd < insuranceStart) missing.push('保障结束不能早于保障开始');
+        } else if (!hasSaleObject) {
+          missing.push(routeObjectLabel(currentProduct) + '/' + currentProduct.stockLabel);
+        }
+        Array.from(coreFields.querySelectorAll('[data-core-required="true"]')).forEach(function (field) {
+          if (!field.value) missing.push(field.dataset.coreLabel || '必填项');
+        });
+        if (usesCompositionRows()) {
+          ensureCompositionRows();
+          const hasEmptyLine = saleCompositionRows.some(function (row) {
+            return !row.spec || compositionRequiredPeopleCount(row) <= 0;
+          });
+          if (hasEmptyLine) missing.push(compositionKindLabel() + '人数');
+        }
+        if (!document.getElementById('contactName').value.trim()) missing.push('联系人');
+        if (!document.getElementById('contactPhone').value.trim()) missing.push('手机号');
+        if (calcTotal() <= 0) missing.push('人数/份数');
+        if ((currentProduct.type === 'cruise' || currentProduct.type === 'train') && countValue('adultOccupancy') + countValue('childOccupancy') + countValue('thirdFourth') <= 0) {
+          missing.push(currentProduct.type === 'cruise' ? '占位乘客' : '占位乘客');
+        }
+        return missing;
+      }
+
+      function generatedOrderNo() {
+        const prefix = currentProduct.type === 'manual'
+          ? 'KSSV'
+          : ({ group: 'KS', customProject: 'KSMICE', cruise: 'KSCZ', train: 'KSTR', free: 'KSFT', study: 'KSST', single: 'KSSV' }[currentProduct.type] || 'KS');
+        const seed = String(Date.now()).slice(-8);
+        return prefix + '20260704' + seed;
+      }
+
+      function sourceText() {
+        if (sourceContext.isCustomProject) return '单团项目 / ' + sourceContext.projectNo + ' / ' + sourceContext.customer;
+        if (sourceContext.isIndependentGroup) return '客户专属项目团 / ' + sourceContext.customer + ' / ' + (sourceContext.scheduleNo || '客户专属项目团');
+        const source = channelSource.value;
+        if (source === '分销') return source + ' / ' + document.getElementById('distributorName').value + ' / ' + document.getElementById('distributorMember').value;
+        if (source === 'OTA') return source + ' / ' + document.getElementById('otaPlatform').value;
+        return source + ' / ' + document.getElementById('storeName').value + ' / ' + document.getElementById('salesName').value;
+      }
+
+      function showResult() {
+        const missing = validate();
+        if (missing.length) {
+          window.alert('请先补充：' + missing.join('、'));
+          return;
+        }
+        const orderNo = generatedOrderNo();
+        const process = processProfile();
+        const stock = selectedStock();
+        const discounts = currentDiscountUsages();
+        const discountAmount = discountTotal(discounts);
+        const customerPayable = customerPayableAmount();
+        const total = money(calcTotal());
+        const discountText = money(discountAmount);
+        const customerPayableText = money(customerPayable);
+        const detailParams = new URLSearchParams();
+        detailParams.set('type', detailType());
+        detailParams.set('orderNo', orderNo);
+        detailParams.set('product', currentProduct.name);
+        detailParams.set('customer', document.getElementById('contactName').value.trim());
+        detailParams.set('amount', String(calcTotal()));
+        detailParams.set('currency', receivableCurrencyValue());
+        if (discountAmount > 0) detailParams.set('discount', String(discountAmount));
+        if (isManualMode()) {
+          detailParams.set('source', 'singleService');
+          detailParams.set('productSource', 'singleService');
+          detailParams.set('productType', manualTypeLabel());
+          detailParams.set('serviceType', manualServiceTypeLabel());
+          detailParams.set('supplier', currentProduct.manualSupplier || '');
+          detailParams.set('destination', currentProduct.manualDestination || '');
+        }
+        if (stock) {
+          detailParams.set('scheduleNo', stock[1]);
+          detailParams.set('travelDate', stock[0]);
+        }
+        if (sourceContext.isSingleGroup) {
+          detailParams.set('groupMode', 'project');
+          detailParams.set('source', sourceContext.isCustomProject ? 'customProject' : 'independentGroup');
+          detailParams.set('customer', sourceContext.customer);
+          if (sourceContext.projectNo) detailParams.set('projectNo', sourceContext.projectNo);
+          if (sourceContext.quoteVersion) detailParams.set('quoteVersion', sourceContext.quoteVersion);
+          if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
+          if (sourceContext.people) detailParams.set('people', sourceContext.people);
+        }
+        saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
+        createdDetailHref = 'schedule-orders-detail.html?' + detailParams.toString();
+        document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
+        document.getElementById('createdText').textContent = isManualMode()
+          ? process.status + '订单已生成，单项服务已进入服务单受理。'
+          : (sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，客户需收与优惠使用明细已记录。');
+        document.getElementById('createdOrderNo').textContent = orderNo;
+        document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag + (isManualMode() ? ' / ' + manualServiceTypeLabel() : '');
+        document.getElementById('createdStock').textContent = isManualMode()
+          ? (currentProduct.manualDisplay || stock[0])
+          : currentProduct.stockLabel + ' ' + stock[1];
+        document.getElementById('createdContact').textContent = document.getElementById('contactName').value.trim() + ' / ' + document.getElementById('contactPhone').value.trim();
+        document.getElementById('createdAmount').textContent = total;
+        document.getElementById('createdDiscount').textContent = discountText;
+        document.getElementById('createdCustomerPayable').textContent = customerPayableText;
+        document.getElementById('createdOrderStatus').innerHTML = '<span class="' + process.tag + '">' + process.status + '</span>';
+        document.getElementById('createdSource').textContent = sourceText();
+        const financeItems = isManualMode() ? [
+          '订单：单项服务订单已生成',
+          '客户需收：' + customerPayableText + ' 待收',
+          '应收币种：' + receivableCurrencyValue(),
+          '服务类型：' + manualServiceTypeLabel(),
+          '服务信息：' + (currentProduct.manualDisplay || currentProduct.manualDestination || '-')
+        ] : sourceContext.isSingleGroup ? [
+          '订单：客户专属项目订单已生成',
+          '客户需收：按锁定报价付款节点生成阶段收款计划',
+          '应收币种：' + receivableCurrencyValue(),
+          '项目团：' + stock[1] + ' 客户专属',
+          sourceContext.isCustomProject ? '项目合同：锁定报价方案' + (sourceContext.quoteVersion || 'A') : '合同/确认单：客户专属项目团确认后生成'
+        ] : [
+          '订单：' + orderNo + ' 已生成',
+          '客户需收：' + customerPayableText + ' 待收',
+          '应收币种：' + receivableCurrencyValue(),
+          '优惠使用明细：' + (discountAmount > 0 ? discountUsageSummary(discounts) : '无优惠减免'),
+          currentProduct.type === 'single' ? '服务单：待受理' : '库存占用：' + process.inventory,
+          '合同/确认单：订单确认后生成'
+        ];
+        document.getElementById('createdFinanceItems').innerHTML = financeItems.map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
+        const nextSteps = isManualMode() ? [
+          ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
+          ['补充资料', '进入订单详情补充游客、证件、材料和服务要求'],
+          ['查看详情', '查看订单完整信息和后续处理记录']
+        ] : sourceContext.isSingleGroup ? [
+          ['查看详情', '进入订单详情补充名单、收款计划和售后入口'],
+          ['合同签署', '进入合同管理确认项目合同和签署状态'],
+          ['项目团', '进入客户专属项目团承接执行资料和资源确认']
+        ] : [
+          ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
+          ['补充资料', '进入订单详情补充游客、证件、材料和服务要求'],
+          ['查看详情', '查看订单完整信息和后续处理记录']
+        ];
+        document.getElementById('createdNextSteps').innerHTML = nextSteps.map(function (item) {
+          return '<button class="booking-next-action" type="button" data-next-action="' + item[0] + '"><strong>' + item[0] + '</strong><span>' + item[1] + '</span></button>';
+        }).join('');
+        bookingFormView.hidden = true;
+        formActions.hidden = true;
+        if (footerCurrencyControl) footerCurrencyControl.hidden = true;
+        bookingResultView.hidden = false;
+        resultActions.hidden = true;
+      }
+
+      planCards.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-plan-index]');
+        if (!button) return;
+        selectedPlanIndex = Number(button.dataset.planIndex || 0);
+        renderAll();
+      });
+
+      stockRows.addEventListener('click', function (event) {
+        const target = event.target.closest('[data-stock-index], [data-select-stock]');
+        if (!target) return;
+        selectCurrentStock(target.dataset.stockIndex || target.dataset.selectStock);
+      });
+
+      bookingModeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setBookingMode(button.dataset.bookingMode);
+        });
+      });
+
+      countRows.addEventListener('click', function (event) {
+        const addComposition = event.target.closest('[data-add-composition-row]');
+        if (addComposition) {
+          addCompositionLine();
+          return;
+        }
+        const removeComposition = event.target.closest('[data-remove-composition-row]');
+        if (removeComposition) {
+          if (saleCompositionRows.length > 1) {
+            saleCompositionRows = saleCompositionRows.filter(function (row) {
+              return row.id !== removeComposition.dataset.removeCompositionRow;
+            });
+          }
+          renderCounts();
+          renderFee();
+          return;
+        }
+        const compositionStep = event.target.closest('[data-composition-step]');
+        if (compositionStep) {
+          const row = saleCompositionRows.find(function (item) {
+            return item.id === compositionStep.dataset.compositionRow;
+          });
+          if (!row) return;
+          const field = compositionStep.dataset.compositionField;
+          const input = compositionStep.closest('[data-composition-stepper]').querySelector('[data-composition-input]');
+          const min = Number(input.dataset.min || 0);
+          row[field] = Math.max(min, Number(row[field] || 0) + Number(compositionStep.dataset.compositionStep || 0));
+          syncCompositionRow(row, field);
+          renderCounts();
+          renderFee();
+          return;
+        }
+        const button = event.target.closest('[data-step]');
+        if (!button) return;
+        const input = button.closest('[data-stepper]').querySelector('[data-count-input]');
+        input.value = Math.max(Number(input.dataset.min || 0), Number(input.value || 0) + Number(button.dataset.step));
+        const labelNode = input.closest('.booking-count-item, tr').querySelector('.booking-count-label');
+        const label = input.dataset.countLabel || (labelNode ? labelNode.textContent : '');
+        const count = currentProduct.counts.find(function (item) { return item.id === input.dataset.countId || item.label === label; });
+        if (count) count.value = Number(input.value || 0);
+        if (isManualMode()) renderCounts();
+        renderFee();
+        renderOccupancySummary();
+      });
+
+      countRows.addEventListener('change', function (event) {
+        const select = event.target.closest('[data-composition-select]');
+        if (!select) return;
+        const row = saleCompositionRows.find(function (item) {
+          return item.id === select.dataset.compositionRow;
+        });
+        if (!row) return;
+        row.spec = select.value;
+        syncCompositionRow(row, 'spec');
+        renderCounts();
+        renderFee();
+      });
+      if (addCompositionRow) {
+        addCompositionRow.addEventListener('click', addCompositionLine);
+      }
+
+      countRows.addEventListener('input', function (event) {
+        const priceInput = event.target.closest('[data-manual-price]');
+        if (!priceInput) return;
+        const id = priceInput.dataset.manualPrice;
+        const count = currentProduct.counts.find(function (item) { return item.id === id; });
+        if (count) count.price = Number(priceInput.value || 0);
+        const quantityInput = countRows.querySelector('[data-count-input][data-count-id="' + id + '"]');
+        if (quantityInput) quantityInput.dataset.price = Number(priceInput.value || 0);
+        const subtotal = count ? Number(count.value || 0) * Number(count.price || 0) : 0;
+        const subtotalNode = priceInput.closest('tr') ? priceInput.closest('tr').querySelector('td:last-child strong') : null;
+        if (subtotalNode) subtotalNode.textContent = money(subtotal);
+        renderFee();
+      });
+
+      coreFields.addEventListener('change', function () {
+        applySelectedPriceMatrix();
+        renderCounts();
+        renderFee();
+        syncSummary();
+        syncPresetPanel();
+      });
+
+      if (manualProductPanel) {
+        manualProductPanel.addEventListener('input', function (event) {
+          if (event.target && (event.target.id === 'manualStartDate' || event.target.id === 'manualEndDate')) syncManualTravelDays();
+          refreshManualProduct();
+          renderFee();
+          syncSummary();
+        });
+        manualProductPanel.addEventListener('change', function (event) {
+          if (event.target === manualProductType) {
+            selectedManualProductType = manualTypeLabel();
+            renderManualTypeFields();
+            renderManualTripFields();
+            refreshManualProduct();
+            renderCounts();
+            renderFee();
+            syncSummary();
+            return;
+          }
+          if (event.target === manualServiceType) {
+            applyServiceTypeDefaults(true);
+            renderManualTripFields();
+            refreshManualProduct();
+            renderCounts();
+            renderFee();
+            syncSummary();
+            return;
+          }
+          if (event.target && (event.target.id === 'manualStartDate' || event.target.id === 'manualEndDate')) syncManualTravelDays();
+          refreshManualProduct();
+          renderFee();
+          syncSummary();
+        });
+      }
+      if (manualTripBlock) {
+        manualTripBlock.addEventListener('input', function () {
+          refreshManualProduct();
+          renderFee();
+          syncSummary();
+        });
+        manualTripBlock.addEventListener('change', function () {
+          refreshManualProduct();
+          renderFee();
+          syncSummary();
+        });
+      }
+
+      channelSource.addEventListener('change', updateChannelFields);
+      orderProcessMode.addEventListener('change', syncSummary);
+      changePresetSelection.addEventListener('click', function () {
+        resetSaleObjectSearch();
+      });
+      clearProductSearch.addEventListener('click', function () {
+        resetSaleObjectSearch();
+        objectKeyword.focus();
+      });
+      objectSuggestionList.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-route-product-id]');
+        if (!button) return;
+        const product = products.find(function (item) { return item.id === button.dataset.routeProductId; });
+        if (product) selectRoute({ product: product, planIndex: button.dataset.routePlanIndex });
+      });
+      objectKeyword.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        const route = searchRoutes(objectKeyword.value)[0];
+        if (route) selectRoute(route);
+      });
+      objectKeyword.addEventListener('input', function () {
+        if (objectStep !== 'search') {
+          selectedPlanIndex = 0;
+          selectedStockIndex = 0;
+          clearPresetContext();
+          hasSaleObject = false;
+          objectStep = 'search';
+          renderAll();
+        }
+        renderSuggestions();
+      });
+      objectKeyword.addEventListener('focus', renderSuggestions);
+      if (footerTotalTrigger && footerPricePopover) {
+        footerTotalTrigger.addEventListener('click', function (event) {
+          event.stopPropagation();
+          if (footerTotalTrigger.disabled) return;
+          const nextOpen = footerPricePopover.hidden;
+          footerPricePopover.hidden = !nextOpen;
+          footerTotalTrigger.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+        });
+        footerPricePopover.addEventListener('click', function (event) {
+          event.stopPropagation();
+        });
+        document.addEventListener('click', function () {
+          footerPricePopover.hidden = true;
+          footerTotalTrigger.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      document.getElementById('createOrder').addEventListener('click', showResult);
+      document.getElementById('createdNextSteps').addEventListener('click', function (event) {
+        const button = event.target.closest('[data-next-action]');
+        if (!button) return;
+        if (sourceContext.isSingleGroup && button.dataset.nextAction === '合同签署') {
+          if (window.caesarNavigateTo) window.caesarNavigateTo(sourceContextHref('contract'));
+          else window.location.href = sourceContextHref('contract');
+          return;
+        }
+        if (sourceContext.isSingleGroup && button.dataset.nextAction === '项目团') {
+          const target = sourceContextHref('schedule');
+          if (window.caesarNavigateTo) window.caesarNavigateTo(target);
+          else window.location.href = target;
+          return;
+        }
+        if (button.dataset.nextAction === '查看详情' || button.dataset.nextAction === '补充资料') {
+          if (window.caesarNavigateTo) window.caesarNavigateTo(createdDetailHref);
+          else window.location.href = createdDetailHref;
+        } else {
+          if (window.caesarNavigateTo) window.caesarNavigateTo('schedule-orders.html?open=receipt');
+          else window.location.href = 'schedule-orders.html?open=receipt';
+        }
+      });
+      document.querySelectorAll('[data-close-booking]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          if (window.caesarNavigateTo) window.caesarNavigateTo('schedule-orders.html');
+          else window.location.href = 'schedule-orders.html';
+        });
+      });
+
+      function setSelectValue(select, value) {
+        if (!select || !value) return;
+        const matched = Array.from(select.options).find(function (option) {
+          return option.value === value || option.textContent === value;
+        });
+        if (matched) select.value = matched.value;
+      }
+
+      function inferServiceType(searchParams) {
+        const direct = searchParams.get('serviceType');
+        const serviceOptions = manualServiceType ? Array.from(manualServiceType.options).map(function (option) { return option.value; }) : [];
+        if (direct && serviceOptions.indexOf(direct) >= 0) return direct;
+        const text = [searchParams.get('product'), searchParams.get('plan'), searchParams.get('stock'), searchParams.get('serviceItem')].join(' ');
+        if (/签证|送签|护照|材料/.test(text)) return '签证';
+        if (/酒店|入住|离店|房型|加住|房晚/.test(text)) return '酒店';
+        if (/用车|接送|包车|车辆|车/.test(text)) return '用车';
+        if (/保险|保单|被保/.test(text)) return '保险';
+        if (/票|门票|演出|景区|出票/.test(text)) return '票务';
+        return '其他';
+      }
+
+      function hydrateManualServiceFromParams(searchParams) {
+        if (manualProductType) manualProductType.value = '单项服务';
+        selectedManualProductType = '单项服务';
+        setSelectValue(manualServiceType, inferServiceType(searchParams));
+        renderManualTypeFields();
+        renderManualTripFields();
+        applyServiceTypeDefaults(true);
+        const nameNode = document.getElementById('manualRouteName');
+        if (nameNode && searchParams.get('product')) nameNode.value = searchParams.get('product');
+        if (manualSupplier && searchParams.get('supplier')) manualSupplier.value = searchParams.get('supplier');
+        const statusText = searchParams.get('status') || '';
+        if (manualPriceStatus) manualPriceStatus.value = /确认|询位/.test(statusText) ? '待供应商确认' : '已沟通确认';
+        const planText = [searchParams.get('plan'), searchParams.get('serviceItem'), searchParams.get('date')].join(' ');
+        const urgentNode = document.getElementById('manualUrgentFlag');
+        if (urgentNode && /加急/.test(planText)) urgentNode.value = '是';
+        const visaTypeNode = document.getElementById('manualVisaType');
+        if (visaTypeNode && /加急/.test(planText)) visaTypeNode.value = '加急旅游签证';
+        const serviceRemarkNode = document.getElementById('manualServiceRemark');
+        if (serviceRemarkNode && (searchParams.get('plan') || searchParams.get('serviceItem'))) serviceRemarkNode.value = searchParams.get('plan') || searchParams.get('serviceItem');
+      }
+
+      const params = pageParams;
+      if (sourceContext.isCustomProject && !products.some(function (item) { return item.id === 'CUSTOM-' + (sourceContext.projectNo || 'PROJECT'); })) {
+        products.unshift(customProjectProduct());
+      }
+      const typeFromUrl = params.get('type');
+      const productFromUrl = params.get('product');
+      const typeMap = { standard: 'group', group: 'group', customProject: 'customProject', cruise: 'cruise', train: 'train', free: 'free', study: 'study', single: 'single' };
+      const isProductBookingEntry = sourceContext.isSingleGroup ||
+        params.get('from') === 'quote' ||
+        params.get('entry') === 'product-booking' ||
+        (!!productFromUrl && (params.has('plan') || params.has('date') || params.has('stock') || params.has('scheduleNo') || params.has('price') || params.has('amount')));
+      const isSingleServiceBookingEntry = typeMap[typeFromUrl] === 'single' && isProductBookingEntry;
+      const productByName = products.find(function (item) {
+        if (!productFromUrl) return false;
+        return item.name === productFromUrl || item.name.indexOf(productFromUrl) >= 0 || productFromUrl.indexOf(item.name) >= 0;
+      });
+      currentProduct = cloneProduct((sourceContext.isCustomProject ? products[0] : productByName) || products.find(function (item) { return item.type === typeMap[typeFromUrl]; }) || products[0]);
+      presetMode = isProductBookingEntry && (!!productFromUrl || sourceContext.isSingleGroup);
+      hasSaleObject = presetMode;
+      objectStep = isSingleServiceBookingEntry ? 'manual' : (presetMode ? 'selected' : 'search');
+      if (isSingleServiceBookingEntry) bookingMode = 'manual';
+      if (isIntentTransferEntry && bookingModeSwitch) {
+        bookingModeSwitch.hidden = true;
+        bookingMode = 'standard';
+        bookingModeButtons.forEach(function (button) {
+          const active = button.dataset.bookingMode === bookingMode;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        if (!presetMode) bookingDrawer.dataset.entry = 'intent-transfer';
+      }
+      if (presetMode) {
+        bookingDrawer.dataset.entry = 'product-booking';
+        if (bookingModeSwitch) bookingModeSwitch.hidden = true;
+        changePresetSelection.hidden = true;
+        saleObjectSearchPanel.hidden = true;
+        saleObjectPicker.hidden = true;
+      }
+      if (sourceContext.isSingleGroup) {
+        document.getElementById('contactName').value = sourceContext.customer;
+        document.getElementById('contactPhone').value = params.get('phone') || '13800138001';
+        channelSource.value = '企业客户';
+        orderProcessMode.value = 'confirm';
+        const paymentPlan = document.getElementById('paymentPlan');
+        if (paymentPlan) paymentPlan.value = '大客户月结认款';
+        const remark = document.getElementById('orderRemark');
+        if (remark) remark.value = sourceContext.isCustomProject ? '单团项目 ' + sourceContext.projectNo + ' 锁定报价方案' + (sourceContext.quoteVersion || 'A') + ' 转项目订单。' : '客户专属项目团承接。';
+      } else if (params.get('from') === 'enterpriseCustomer' && params.get('customer')) {
+        document.getElementById('contactName').value = params.get('customer');
+        document.getElementById('contactPhone').value = params.get('phone') || '';
+        channelSource.value = '企业客户';
+        const remark = document.getElementById('orderRemark');
+        if (remark) remark.value = '企业客户 ' + params.get('customer') + ' 发起标准产品采购，实际出行人另行维护。';
+      }
+      presetPlanOverride = presetMode && !isSingleServiceBookingEntry ? (sourceContext.isCustomProject ? currentProduct.core[0].options[0] : params.get('plan') || '') : '';
+      if (presetMode && !isSingleServiceBookingEntry) {
+        applyPresetPrice(sourceContext.amount || params.get('price'));
+        const presetDate = params.get('date');
+        const presetStock = params.get('stock') || params.get('scheduleNo');
+        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || presetStock || '可售';
+        const presetTag = /紧张|少量|确认|询位/.test(presetStatus) ? 'tag tag-orange' : 'tag tag-green';
+        if (!sourceContext.isCustomProject && (presetDate || presetStock)) {
+          presetStockOverride = [
+            presetDate || '已选班期',
+            [presetDate, presetStock].filter(Boolean).join(' / '),
+            presetStock || '以提交校验为准',
+            priceNumber(params.get('price')),
+            presetStatus,
+            presetTag
+          ];
+        }
+      }
+      selectedPlanIndex = indexByText(planOptions(), presetPlanOverride || params.get('plan'));
+      selectedStockIndex = stockIndexFromParams(params.get('date'), params.get('stock') || params.get('scheduleNo'));
+      if (isSingleServiceBookingEntry) {
+        bookingMode = 'manual';
+        bookingModeButtons.forEach(function (button) {
+          const active = button.dataset.bookingMode === bookingMode;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        bookingDrawer.dataset.bookingMode = bookingMode;
+        objectStep = 'manual';
+        hasSaleObject = true;
+        hydrateManualServiceFromParams(params);
+        refreshManualProduct();
+        applyPresetPrice(params.get('price'));
+      } else if (!presetMode && (params.get('mode') === 'manual' || params.get('mode') === 'service') && !isIntentTransferEntry) {
+        bookingMode = 'manual';
+        bookingModeButtons.forEach(function (button) {
+          const active = button.dataset.bookingMode === bookingMode;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        bookingDrawer.dataset.bookingMode = bookingMode;
+        objectStep = 'manual';
+        hasSaleObject = true;
+        renderManualTypeFields();
+        renderManualTripFields();
+        applyServiceTypeDefaults(false);
+        refreshManualProduct();
+      } else {
+        bookingDrawer.dataset.bookingMode = bookingMode;
+        renderManualTypeFields();
+        renderManualTripFields();
+        applyServiceTypeDefaults(false);
+      }
+      updateChannelFields();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

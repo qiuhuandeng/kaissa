@@ -13,6 +13,7 @@
         {
           title: "经营分析",
           children: [
+            { title: "业绩与经营分析", href: "data/performance-reports.html" },
             { title: "产品分析", href: "data/product-analysis.html" },
           ],
         },
@@ -101,6 +102,7 @@
       icon: "clipboard",
       children: [
         { title: "团期管控", href: "tour/schedules.html" },
+        { title: "团期订单", href: "tour/schedule-orders.html" },
         { title: "团期结算", href: "tour/fulfillment-cost.html" },
         { title: "付款申请", href: "tour/fulfillment-payment-apply.html" },
         { title: "签证办理", href: "tour/visa-processing.html" },
@@ -556,6 +558,14 @@
     "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-payment-apply.html", title: "付款申请" },
     "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管控" },
     "tour/fulfillment-notice.html": { href: "tour/schedules.html", title: "团期管控" },
+    "tour/schedule-orders.html": { href: "tour/schedule-orders.html", title: "团期订单" },
+    "tour/schedule-orders-detail.html": { href: "tour/schedule-orders.html", title: "团期订单详情" },
+    "tour/schedule-order-booking.html": { href: "tour/schedule-orders.html", title: "新建团期订单" },
+    "tour/schedule-orders-after-sales.html": { href: "tour/schedule-orders.html", title: "团期订单售后处理" },
+    "tour/schedule-orders-transfer.html": { href: "tour/schedule-orders.html", title: "变更申请" },
+    "tour/schedule-orders-cancel.html": { href: "tour/schedule-orders.html", title: "退团退订" },
+    "tour/schedule-orders-payment-transfer.html": { href: "tour/schedule-orders.html", title: "转单申请" },
+    "tour/schedule-orders-refund.html": { href: "tour/schedule-orders.html", title: "退款申请" },
     "sales/orders-detail.html": { href: "sales/orders.html", title: "订单详情" },
     "sales/booking.html": { href: "sales/orders.html", title: "新建订单" },
     "sales/orders-transfer.html": { href: "sales/orders-after-sales.html", title: "变更申请" },

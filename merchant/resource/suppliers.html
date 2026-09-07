@@ -317,7 +317,8 @@
                 <span>人民币</span>
               </div>
               <div class="supplier-contract-scope">
-                <span>适用：参团游、签证、邮轮</span>
+                <span>产品大类：跟团游、邮轮</span>
+                <span>目的地：欧洲 / 法国、日本 / 关西</span>
                 <span>结算账户：2个</span>
                 <span>附件：1份</span>
               </div>
@@ -344,7 +345,8 @@
                 <span>EUR</span>
               </div>
               <div class="supplier-contract-scope">
-                <span>适用：欧洲地接、定制团</span>
+                <span>产品大类：跟团游、MICE</span>
+                <span>目的地：欧洲 / 法国、欧洲 / 意大利</span>
                 <span>结算账户：1个</span>
                 <span>附件：2份</span>
               </div>
@@ -371,7 +373,8 @@
                 <span>人民币</span>
               </div>
               <div class="supplier-contract-scope">
-                <span>适用：短线参团、附加服务</span>
+                <span>产品大类：跟团游、单项委托</span>
+                <span>目的地：国内 / 西北、东南亚 / 泰国</span>
                 <span>结算账户：1个</span>
                 <span>附件：1份</span>
               </div>
@@ -404,8 +407,26 @@
           <div class="form-grid">
             <div class="form-group form-group-full"><label class="form-label">合同名称</label><input class="form-control" type="text" value="2026年度协成合作框架合同"></div>
             <div class="form-group"><label class="form-label">合同类型</label><select class="form-control"><option>年度框架</option><option>单团合同</option><option>酒店协议</option><option>车队协议</option><option>邮轮包舱</option><option>专列包列</option><option>补充协议</option></select></div>
-            <div class="form-group"><label class="form-label">适用产品线</label><input class="form-control" type="text" value="参团游、签证、邮轮"></div>
-            <div class="form-group form-group-full"><label class="form-label">适用范围</label><input class="form-control" type="text" value="国内参团游、欧洲地接、邮轮岸上服务"></div>
+            <div class="form-group">
+              <label class="form-label">适用产品大类 <span class="req">*</span></label>
+              <select class="form-control" data-contract-category>
+                <option value="">请选择</option>
+                <option selected>跟团游</option>
+                <option>邮轮</option>
+                <option>专列</option>
+                <option>自由行</option>
+                <option>研学</option>
+                <option>MICE</option>
+                <option>单项委托</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">目的地分类 <span class="req">*</span></label>
+              <div class="multi-select route-destination-tree-select" data-contract-destination-tree data-destination-root="欧洲" data-destination-branch="欧洲 / 法国">
+                <button class="multi-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" data-contract-destination-trigger><span data-contract-destination-label>欧洲 / 法国、日本 / 关西</span></button>
+                <div class="multi-select-menu destination-cascade-menu" role="listbox" aria-label="目的地分类"></div>
+              </div>
+            </div>
             <div class="form-group"><label class="form-label">开始日期</label><input class="form-control" type="date" value="2025-11-01"></div>
             <div class="form-group"><label class="form-label">截止日期</label><input class="form-control" type="date" value="2026-11-30"></div>
             <div class="form-group"><label class="form-label">默认合同</label><select class="form-control"><option>是</option><option>否</option></select></div>
@@ -530,6 +551,43 @@
       const supplierSettingsDrawer = document.getElementById("supplierSettingsDrawer");
       const supplierTypeSelect = document.querySelector("[data-supplier-type-select]");
       const supplierMaterials = document.querySelector("[data-supplier-materials]");
+      const contractCategorySelect = document.querySelector("[data-contract-category]");
+      const contractDestinationState = {
+        value: "欧洲 / 法国|日本 / 关西"
+      };
+
+      const contractDestinationOptions = [
+        {
+          value: "欧洲",
+          label: "欧洲",
+          children: [
+            { value: "欧洲 / 法国", label: "法国", children: [{ value: "欧洲 / 法国 / 巴黎", label: "巴黎" }] },
+            { value: "欧洲 / 意大利", label: "意大利", children: [{ value: "欧洲 / 意大利 / 罗马", label: "罗马" }] },
+            { value: "欧洲 / 地中海", label: "地中海", children: [] }
+          ]
+        },
+        {
+          value: "日本",
+          label: "日本",
+          children: [
+            { value: "日本 / 关西", label: "关西", children: [{ value: "日本 / 关西 / 大阪", label: "大阪" }, { value: "日本 / 关西 / 京都", label: "京都" }] }
+          ]
+        },
+        {
+          value: "东南亚",
+          label: "东南亚",
+          children: [
+            { value: "东南亚 / 泰国", label: "泰国", children: [{ value: "东南亚 / 泰国 / 曼谷", label: "曼谷" }] }
+          ]
+        },
+        {
+          value: "国内",
+          label: "国内",
+          children: [
+            { value: "国内 / 西北", label: "西北", children: [{ value: "国内 / 西北 / 敦煌", label: "敦煌" }] }
+          ]
+        }
+      ];
 
       const supplierAdmission = {
         "同业旅行社/外采线路供应商": {
@@ -650,6 +708,141 @@
       renderSupplierAdmission();
       if (supplierTypeSelect) supplierTypeSelect.addEventListener("change", renderSupplierAdmission);
 
+      function escapeHtml(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char];
+        });
+      }
+
+      function contractDestinationValues(value) {
+        return String(value || "").split("|").map(function (item) {
+          return item.trim();
+        }).filter(Boolean);
+      }
+
+      function contractDestinationLabel(value) {
+        const values = contractDestinationValues(value);
+        return values.length ? values.join("、") : "请选择目的地分类";
+      }
+
+      function findContractDestinationNode(value, nodes) {
+        const list = nodes || contractDestinationOptions;
+        for (let index = 0; index < list.length; index += 1) {
+          if (list[index].value === value) return list[index];
+          const child = findContractDestinationNode(value, list[index].children || []);
+          if (child) return child;
+        }
+        return null;
+      }
+
+      function contractDestinationOptionHtml(node, level, selectedValues, activeValue) {
+        const hasChildren = node.children && node.children.length;
+        const selected = selectedValues.indexOf(node.value) > -1;
+        return "<div class=\"destination-cascade-option" + (node.value === activeValue ? " active" : "") + (selected ? " is-selected" : "") + (hasChildren ? " has-children" : "") + "\" data-contract-destination-option data-level=\"" + level + "\" data-value=\"" + escapeHtml(node.value) + "\">" +
+          "<label><input type=\"checkbox\" value=\"" + escapeHtml(node.value) + "\" data-contract-destination-checkbox" + (selected ? " checked" : "") + "><span>" + escapeHtml(node.label) + "</span></label>" +
+          (hasChildren ? "<button type=\"button\" aria-label=\"查看下级\" data-contract-destination-drill>›</button>" : "<i aria-hidden=\"true\"></i>") +
+        "</div>";
+      }
+
+      function ensureContractDestinationActive(select) {
+        if (!select) return;
+        const values = contractDestinationValues(contractDestinationState.value);
+        const first = values[0] || "";
+        if (!select.dataset.destinationRoot) {
+          select.dataset.destinationRoot = first.split(" / ")[0] || (contractDestinationOptions[0] && contractDestinationOptions[0].value) || "";
+        }
+        const root = findContractDestinationNode(select.dataset.destinationRoot) || contractDestinationOptions[0];
+        if (!root) return;
+        select.dataset.destinationRoot = root.value;
+        if (!select.dataset.destinationBranch || !(root.children || []).some(function (child) { return child.value === select.dataset.destinationBranch; })) {
+          const parts = first.split(" / ");
+          const branchValue = parts.length > 1 ? parts.slice(0, 2).join(" / ") : "";
+          const branch = (root.children || []).find(function (child) { return child.value === branchValue; }) || (root.children || [])[0];
+          select.dataset.destinationBranch = branch ? branch.value : "";
+        }
+      }
+
+      function alignContractDestinationCascade(select) {
+        if (!select) return;
+        const menuWidth = Math.min(680, Math.max(0, window.innerWidth - 64));
+        const rect = select.getBoundingClientRect();
+        const container = select.closest(".modal-body, .drawer-modal, .form-grid") || document.documentElement;
+        const containerRect = container.getBoundingClientRect ? container.getBoundingClientRect() : { left: 16, right: window.innerWidth - 16 };
+        const rightLimit = Math.min(window.innerWidth - 16, containerRect.right - 16);
+        const leftLimit = Math.max(16, containerRect.left + 16);
+        const shouldAlignRight = rect.left + menuWidth > rightLimit && rect.right - menuWidth >= leftLimit;
+        select.classList.toggle("destination-cascade-align-right", shouldAlignRight);
+      }
+
+      function renderContractDestinationCascade(select) {
+        if (!select) return;
+        ensureContractDestinationActive(select);
+        const menu = select.querySelector(".destination-cascade-menu");
+        if (!menu) return;
+        const selectedValues = contractDestinationValues(contractDestinationState.value);
+        const root = findContractDestinationNode(select.dataset.destinationRoot) || contractDestinationOptions[0];
+        const branch = findContractDestinationNode(select.dataset.destinationBranch);
+        const secondLevel = root && root.children || [];
+        const thirdLevel = branch && branch.children || [];
+        menu.innerHTML = "<div class=\"destination-cascade-column\">" +
+          contractDestinationOptions.map(function (node) { return contractDestinationOptionHtml(node, 0, selectedValues, root && root.value); }).join("") +
+          "</div><div class=\"destination-cascade-column\">" +
+          (secondLevel.length ? secondLevel.map(function (node) { return contractDestinationOptionHtml(node, 1, selectedValues, branch && branch.value); }).join("") : "<div class=\"destination-cascade-empty\">暂无下级</div>") +
+          "</div><div class=\"destination-cascade-column\">" +
+          (thirdLevel.length ? thirdLevel.map(function (node) { return contractDestinationOptionHtml(node, 2, selectedValues, ""); }).join("") : "<div class=\"destination-cascade-empty\">暂无下级</div>") +
+          "</div>";
+        alignContractDestinationCascade(select);
+      }
+
+      function syncContractDestinationLabel(select) {
+        const label = select && select.querySelector("[data-contract-destination-label]");
+        if (label) label.textContent = contractDestinationLabel(contractDestinationState.value);
+      }
+
+      function renderContractDestinationControls() {
+        document.querySelectorAll("[data-contract-destination-tree]").forEach(function (select) {
+          renderContractDestinationCascade(select);
+          syncContractDestinationLabel(select);
+        });
+      }
+
+      function closeContractDestinationSelects(except) {
+        document.querySelectorAll("[data-contract-destination-tree].open").forEach(function (select) {
+          if (except && select === except) return;
+          select.classList.remove("open");
+          const trigger = select.querySelector("[data-contract-destination-trigger]");
+          if (trigger) trigger.setAttribute("aria-expanded", "false");
+        });
+      }
+
+      function activateContractDestinationOption(select, option) {
+        if (!select || !option) return;
+        const node = findContractDestinationNode(option.dataset.value);
+        const level = Number(option.dataset.level || 0);
+        if (!node) return;
+        if (level === 0) {
+          select.dataset.destinationRoot = node.value;
+          select.dataset.destinationBranch = (node.children && node.children[0] && node.children[0].value) || "";
+        } else if (level === 1) {
+          select.dataset.destinationBranch = node.value;
+        }
+        renderContractDestinationCascade(select);
+      }
+
+      function validateContractForm() {
+        if (contractCategorySelect && !contractCategorySelect.value) {
+          window.caesarUI.toast("请选择适用产品大类。", { type: "error" });
+          return false;
+        }
+        if (!contractDestinationValues(contractDestinationState.value).length) {
+          window.caesarUI.toast("请选择目的地分类。", { type: "error" });
+          return false;
+        }
+        return true;
+      }
+
+      renderContractDestinationControls();
+
       function openSupplierDrawer() {
         if (drawerTitle) drawerTitle.textContent = "供应商准入申请";
         window.caesarUI.openLayer(drawer);
@@ -683,7 +876,10 @@
         button.addEventListener("click", () => window.caesarUI.closeLayer(contractManageDrawer));
       });
       document.querySelectorAll("[data-open-contract-form]").forEach((button) => {
-        button.addEventListener("click", () => window.caesarUI.openLayer(contractFormDrawer));
+        button.addEventListener("click", () => {
+          renderContractDestinationControls();
+          window.caesarUI.openLayer(contractFormDrawer);
+        });
       });
       document.querySelectorAll("[data-close-contract-form]").forEach((button) => {
         button.addEventListener("click", () => window.caesarUI.closeLayer(contractFormDrawer));
@@ -713,8 +909,40 @@
         window.caesarUI.toast("合同草稿已保存。");
       });
       document.querySelector("[data-submit-contract-approval]").addEventListener("click", () => {
+        if (!validateContractForm()) return;
         window.caesarUI.closeLayer(contractFormDrawer);
-        window.caesarUI.toast("合同已提交审核。");
+        window.caesarUI.toast("合同已提交审核，适用产品和目的地已按合同规则保存。");
+      });
+      document.addEventListener("click", (event) => {
+        const destinationTrigger = event.target.closest("[data-contract-destination-trigger]");
+        if (destinationTrigger) {
+          const select = destinationTrigger.closest("[data-contract-destination-tree]");
+          const isOpen = select.classList.contains("open");
+          closeContractDestinationSelects(select);
+          select.classList.toggle("open", !isOpen);
+          destinationTrigger.setAttribute("aria-expanded", String(!isOpen));
+          if (!isOpen) renderContractDestinationCascade(select);
+          return;
+        }
+        const destinationDrill = event.target.closest("[data-contract-destination-drill]");
+        if (destinationDrill) {
+          activateContractDestinationOption(destinationDrill.closest("[data-contract-destination-tree]"), destinationDrill.closest("[data-contract-destination-option]"));
+          return;
+        }
+        if (!event.target.closest("[data-contract-destination-tree]")) closeContractDestinationSelects();
+      });
+      document.addEventListener("change", (event) => {
+        const destinationCheckbox = event.target.closest("[data-contract-destination-checkbox]");
+        if (!destinationCheckbox) return;
+        const select = destinationCheckbox.closest("[data-contract-destination-tree]");
+        const option = destinationCheckbox.closest("[data-contract-destination-option]");
+        if (!select || !option) return;
+        let values = contractDestinationValues(contractDestinationState.value);
+        if (destinationCheckbox.checked && values.indexOf(option.dataset.value) === -1) values.push(option.dataset.value);
+        if (!destinationCheckbox.checked) values = values.filter(function (value) { return value !== option.dataset.value; });
+        contractDestinationState.value = values.join("|");
+        activateContractDestinationOption(select, option);
+        syncContractDestinationLabel(select);
       });
       contractManageDrawer.addEventListener("click", (event) => {
         if (event.target === contractManageDrawer) window.caesarUI.closeLayer(contractManageDrawer);

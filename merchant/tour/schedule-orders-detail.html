@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>团期订单详情 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="order-detail-page order-detail-v2">
+    <section class="page-workbar">
+      <div>
+        <div class="page-title-row">
+          <a class="page-back-link" href="schedule-orders.html">返回</a>
+          <h1 id="orderDetailTitle" class="page-title">团期订单详情</h1>
+        </div>
+      </div>
+      <div class="btn-group order-actions">
+        <button id="orderPrimaryAction" class="btn btn-primary" type="button" data-open-drawer="receiptDrawer">收款</button>
+        <button id="orderSecondaryAction" class="btn btn-secondary" type="button" data-open-drawer="receivableDrawer">应收调整</button>
+        <span class="dropdown table-action-more" data-action-menu>
+          <button class="btn btn-secondary table-more-toggle" type="button" data-action-menu-toggle aria-expanded="false">更多</button>
+          <span class="dropdown-menu action-dropdown-menu">
+            <span class="dropdown-group-title hidden" data-project-menu="title">项目处理</span>
+            <button class="dropdown-item hidden" type="button" data-project-menu="contract" data-contract-entry>合同</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="payment" data-open-drawer="receiptDrawer">收款</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="receivable" data-open-drawer="receivableDrawer">应收调整</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="roster" data-open-drawer="travelerDrawer">项目名单</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="schedule" data-project-nav="schedule">项目团</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="settlement" data-open-drawer="projectSettlementDrawer">结算</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="change" data-open-drawer="aftersalesDrawer" data-aftersales-type="项目变更">售后</button>
+            <button class="dropdown-item hidden" type="button" data-project-menu="attachment" data-open-drawer="attachmentDrawer">附件</button>
+            <span class="dropdown-group-title" data-generic-menu>维护</span>
+            <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="confirm" data-open-detail-action="转确认">转确认</button>
+            <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="release" data-open-detail-action="释放">释放</button>
+            <button class="dropdown-item" type="button" data-generic-menu data-project-menu="owner" data-open-detail-action="修改归属">修改归属</button>
+            <button class="dropdown-item" type="button" data-generic-menu data-project-menu="sales" data-open-detail-action="修改店员">修改店员</button>
+            <button class="dropdown-item" type="button" data-generic-menu data-open-drawer="attachmentDrawer">附件</button>
+            <button class="dropdown-item danger hidden" type="button" data-generic-menu data-state-action="cancel" data-open-detail-action="取消订单">取消订单</button>
+            <button class="dropdown-item danger" type="button" data-generic-menu data-project-menu="void" data-open-detail-action="作废订单">作废订单</button>
+          </span>
+        </span>
+      </div>
+    </section>
+
+    <section class="card order-detail-hero-v2">
+      <div class="order-detail-info">
+        <div class="order-hero-primary">
+          <div class="order-hero-title-block">
+            <div class="order-code-row">
+              <strong id="orderNo">KS20260704001</strong>
+              <button class="copy-icon-btn" type="button" aria-label="复制订单号" data-copy-order-no>⧉</button>
+            </div>
+            <div id="orderHeroTags" class="product-detail-tag-row order-hero-tags"></div>
+            <div class="order-hero-title">
+              <strong id="orderProductName">欧洲十国经典游·12天</strong>
+              <span id="orderProductMeta">经济款 法德意经典12天 / EU20260715001 / 2026-07-15 出发</span>
+            </div>
+          </div>
+          <div class="product-detail-price-block order-hero-amount">
+            <span>订单应收</span>
+            <strong id="orderHeroTotal">¥25,600</strong>
+            <em id="orderHeroCollection">客户已收 ¥0 / 客户待收 ¥25,600</em>
+          </div>
+        </div>
+        <div class="product-detail-divider"></div>
+        <div class="product-detail-field-grid order-detail-field-grid">
+          <div><span id="orderContactLabel">联系人</span><strong id="orderContact">张建国 138****8001</strong></div>
+          <div><span id="orderOwnerLabel">归属</span><strong id="orderOwner">软件园门店 / 孙丽</strong></div>
+          <div><span>合同主体</span><strong id="contractEntityText">福建凯撒</strong></div>
+          <div><span id="orderStatusLabel">订单状态</span><strong id="orderStatusText">预留</strong></div>
+          <div id="projectContractHeroField" class="hidden"><span>合同状态</span><strong id="projectContractHeroStatus">待签署</strong></div>
+          <div><span id="paymentStatusLabel">收款状态</span><strong id="paymentStatusText">未收款</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card detail-tabs-card product-detail-unified-tabs">
+      <nav class="tab-bar" aria-label="订单详情标签页">
+        <button class="tab-item active" type="button" data-tab="overview">订单概览</button>
+        <button class="tab-item" type="button" data-tab="travelers">游客信息</button>
+        <button class="tab-item" type="button" data-tab="contract">合同资料</button>
+        <button class="tab-item" type="button" data-tab="receivable">应收收款</button>
+        <button class="tab-item" type="button" data-tab="payable">应付付款</button>
+        <button class="tab-item" type="button" data-tab="aftersales">售后变更</button>
+        <button class="tab-item" type="button" data-tab="financeHandoff">财务承接</button>
+        <button class="tab-item" type="button" data-tab="logs">操作日志</button>
+      </nav>
+
+      <section id="tab-overview" class="detail-tab-panel active">
+        <div class="product-detail-tab-inner order-overview-tab">
+          <div class="detail-section-title">产品信息</div>
+          <div id="overviewProductGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">订单信息</div>
+          <div id="overviewOrderGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">客户信息</div>
+          <div id="overviewCustomerGrid" class="description-grid order-overview-grid"></div>
+          <div id="bookingSectionTitle" class="detail-section-title">报名信息</div>
+          <div id="overviewBookingGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">财务承接摘要</div>
+          <div id="overviewFinanceGrid" class="description-grid order-overview-grid"></div>
+          <div id="trafficSectionTitle" class="detail-section-title">交通资源占用</div>
+          <div class="table-wrap order-detail-table">
+            <table>
+              <thead>
+                <tr>
+                  <th id="trafficScheduleHead">团期/资源</th>
+                  <th>占用对象</th>
+                  <th>占用子类型</th>
+                  <th>锁位状态</th>
+                  <th>出票/确认</th>
+                  <th>来源</th>
+                </tr>
+              </thead>
+              <tbody id="trafficOccupancyRows">
+                <tr><td class="table-empty-cell" colspan="6">暂无交通资源占用记录</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-travelers" class="detail-tab-panel">
+        <div class="product-detail-tab-inner">
+          <div class="table-wrap order-detail-table">
+            <table>
+              <thead id="travelerTableHead"></thead>
+              <tbody id="travelerTableRows"></tbody>
+            </table>
+          </div>
+          <section id="orderVisaSection" class="order-visa-section" hidden>
+            <div class="order-tab-section-head">
+              <div>
+                <div class="detail-section-title">游客签证</div>
+                <p id="orderVisaContext" class="order-visa-context"></p>
+              </div>
+              <a id="orderVisaWorkbenchLink" class="btn btn-outline btn-sm" href="../tour/visa-processing.html">进入签证办理</a>
+            </div>
+            <div id="orderVisaSummary" class="order-visa-summary"></div>
+            <div class="table-wrap order-detail-table order-visa-table-wrap">
+              <table>
+                <thead><tr><th>游客</th><th>常住地 / 匹配领区</th><th>签证方案</th><th>材料进度</th><th>最晚提交日</th><th>办理状态</th><th>操作</th></tr></thead>
+                <tbody id="orderVisaRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-receivable" class="detail-tab-panel">
+        <div class="product-detail-tab-inner">
+          <section class="order-tab-section">
+            <div class="detail-section-title">金额摘要</div>
+            <div id="orderMoneyGrid" class="order-money-grid"></div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">优惠使用明细</div>
+            <div class="table-wrap order-detail-table">
+              <table>
+                <thead><tr><th>优惠来源</th><th>活动/券编号</th><th>优惠名称</th><th>优惠金额</th><th>承担方</th><th>后续状态</th><th>下游单据</th></tr></thead>
+                <tbody id="discountUsageRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">应收明细</div>
+            <div class="table-wrap order-detail-table">
+              <table>
+                <thead><tr><th>科目</th><th>类型</th><th>金额</th><th>审批状态</th><th>应收状态</th><th>来源单号</th><th>说明</th></tr></thead>
+                <tbody id="receivableRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">收款/认款记录</div>
+            <div class="table-wrap order-detail-table">
+              <table>
+                <thead><tr><th>单号</th><th>收款节点</th><th>金额</th><th>方式</th><th>流水/账户</th><th>财务状态</th><th>时间</th></tr></thead>
+                <tbody id="receiptRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-payable" class="detail-tab-panel">
+        <div class="product-detail-tab-inner">
+          <section class="order-tab-section">
+            <div class="detail-section-title">应付付款统计</div>
+            <div id="orderPayableMoneyGrid" class="order-money-grid order-payable-money-grid"></div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">应付明细 <span id="orderPayableCount" class="text-muted">0条</span></div>
+            <div class="table-wrap order-detail-table order-payable-table">
+              <table>
+                <thead><tr><th>应付单号</th><th>成本项目</th><th>供应商</th><th>应付金额</th><th>已核销</th><th>未付金额</th><th>状态</th><th>来源/更新时间</th></tr></thead>
+                <tbody id="payableRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">付款明细 <span id="orderPaymentCount" class="text-muted">0条</span></div>
+            <div class="table-wrap order-detail-table order-payable-table">
+              <table>
+                <thead><tr><th>付款单号</th><th>收款方</th><th>付款金额</th><th>已分配</th><th>未分配</th><th>付款方式</th><th>付款日期</th><th>状态</th></tr></thead>
+                <tbody id="paymentRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-financeHandoff" class="detail-tab-panel">
+        <div class="product-detail-tab-inner order-finance-handoff-tab">
+          <section class="order-tab-section">
+            <div class="detail-section-title">财务承接摘要</div>
+            <div id="financeHandoffSummaryCards" class="order-money-grid order-finance-summary-grid"></div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">责任和资金口径</div>
+            <div class="table-wrap order-detail-table order-finance-table">
+              <table>
+                <thead><tr><th>核对事项</th><th>当前口径</th><th>业务依据</th><th>后续承接</th></tr></thead>
+                <tbody id="financeResponsibilityRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">金额和收款承接</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>核对项目</th><th>金额</th><th>结算方</th><th>当前状态</th><th>后续去向</th></tr></thead>
+                <tbody id="financeAmountRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">履约成本承接</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>承接对象</th><th>来源依据</th><th>责任单位</th><th>当前结果</th><th>后续去向</th></tr></thead>
+                <tbody id="financeCostRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">优惠和渠道结算</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>承接事项</th><th>计算依据</th><th>承担或结算方</th><th>当前金额</th><th>后续去向</th></tr></thead>
+                <tbody id="financeCommissionRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">内部或特殊结算</div>
+            <div class="table-wrap order-detail-table order-finance-table order-finance-table-wide">
+              <table>
+                <thead><tr><th>销售或接收方</th><th>产品或服务提供方</th><th>业务范围</th><th>当前结果</th><th>后续处理</th></tr></thead>
+                <tbody id="financeInternalRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-contract" class="detail-tab-panel">
+        <div class="product-detail-tab-inner">
+          <section class="order-tab-section">
+            <div class="order-section-action-head">
+              <div id="contractSectionTitle" class="detail-section-title">合同/确认书</div>
+              <button id="generateContractButton" class="btn btn-primary" type="button" data-contract-entry>进入合同管理</button>
+            </div>
+            <div class="table-wrap order-detail-table">
+              <table>
+                <thead><tr><th>文件名称</th><th>类型</th><th>状态</th><th>签署/发送</th><th>操作</th></tr></thead>
+                <tbody id="contractRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="order-tab-section">
+            <div class="detail-section-title">出行文件</div>
+            <div id="orderAttachmentCategoryList" class="order-attachment-category-grid"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-aftersales" class="detail-tab-panel">
+        <div class="product-detail-tab-inner">
+          <section class="order-tab-section">
+            <div class="order-section-action-head">
+              <div id="aftersalesSectionTitle" class="detail-section-title">售后记录</div>
+              <button id="aftersalesActionButton" class="btn btn-primary" type="button" data-open-drawer="aftersalesDrawer" data-aftersales-type="退款">发起售后</button>
+            </div>
+          </section>
+          <div class="table-wrap order-detail-table">
+            <table>
+              <thead><tr><th>售后单号</th><th>类型</th><th>申请时间</th><th>影响对象</th><th>金额影响</th><th>审批状态</th><th>财务状态</th></tr></thead>
+              <tbody id="afterSalesRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-logs" class="detail-tab-panel">
+        <div class="product-detail-tab-inner">
+          <div id="logList" class="timeline-list order-log-list"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="travelerDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="travelerDrawerTitle">
+      <div class="modal-header">
+        <div id="travelerDrawerTitle" class="modal-title">游客信息维护</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="travelerDrawerSummary" class="readonly-summary"></section>
+        <div id="travelerDrawerGaps" class="order-traveler-gap-list"></div>
+        <div id="travelerDrawerList" class="order-traveler-edit-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-result="保存资料">保存资料</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="aiCheckDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="aiCheckDrawerTitle">
+      <div class="modal-header">
+        <div id="aiCheckDrawerTitle" class="modal-title">AI资料预检</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section class="ai-suggestion-card">
+          <div class="ai-suggestion-title">🤖 AI预检结果</div>
+          <div id="aiDrawerText" class="ai-suggestion-content"></div>
+        </section>
+        <div id="aiCheckItems" class="order-task-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-modal>知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="receiptDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="receiptDrawerTitle">
+      <div class="modal-header">
+        <div id="receiptDrawerTitle" class="modal-title">订单收款</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="receiptDrawerSummary" class="readonly-summary"></section>
+        <div class="description-grid order-description-grid">
+          <div class="description-item"><div class="description-label">订单应收</div><div id="receiptTotal" class="description-value amount-strong">-</div></div>
+          <div class="description-item"><div class="description-label">客户已收</div><div id="receiptPaid" class="description-value amount-strong amount-green">-</div></div>
+          <div class="description-item"><div class="description-label">客户待收</div><div id="receiptUnpaid" class="description-value amount-strong amount-red">-</div></div>
+          <div class="description-item"><div class="description-label">结算单位</div><div id="receiptSettleUnit" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">应收币种</div><div id="receiptCurrency" class="description-value">CNY 人民币</div></div>
+        </div>
+        <div id="receiptDrawerFields" class="order-drawer-form">
+          <label class="form-group"><span class="form-label">收款节点</span><select class="form-control"><option>定金</option><option>尾款</option><option>补差</option><option>全款</option></select></label>
+          <label class="form-group"><span class="form-label">项目类型</span><select class="form-control"><option>团费</option><option>保险</option><option>签证</option><option>单项服务</option></select></label>
+          <label class="form-group"><span class="form-label">支付方式</span><select class="form-control"><option>门店预存账户</option><option>银行转账</option><option>POS</option><option>现金</option><option>线上支付</option></select></label>
+          <label class="form-group"><span class="form-label">本次收款金额</span><input class="form-control" type="text" value="¥12,800"></label>
+          <label class="form-group form-group-full"><span class="form-label">凭证/流水</span><div class="upload-box">上传凭证或选择财务流水</div></label>
+          <label class="form-group form-group-full"><span class="form-label">备注</span><textarea class="form-control" rows="3" placeholder="填写收款来源、流水说明或余额扣款授权"></textarea></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-result="提交收款">提交收款</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="receivableDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="receivableDrawerTitle">
+      <div class="modal-header">
+        <div id="receivableDrawerTitle" class="modal-title">应收调整申请</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="receivableDrawerSummary" class="readonly-summary"></section>
+        <div id="receivableDrawerFields" class="order-drawer-form">
+          <label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>新增应收项</option><option>补收差价</option><option>人数变化调整</option><option>售后减免</option><option>人工特批折扣</option><option>项目变更</option></select></label>
+          <label class="form-group"><span class="form-label">业务款项</span><select class="form-control"><option>团费</option><option>机票</option><option>签证</option><option>房差</option><option>保险</option><option>服务费</option></select></label>
+          <label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免或折扣填负数"></label>
+          <label class="form-group"><span class="form-label">审批流</span><select class="form-control"><option>店长 → 财务应收</option><option>财务应收直接复核</option></select></label>
+          <label class="form-group form-group-full"><span class="form-label">调整说明</span><textarea class="form-control" rows="4" placeholder="填写客户确认、补差原因、售后依据或人工特批说明"></textarea></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-result="提交应收调整">提交审批</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="projectContractDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="projectContractDrawerTitle">
+      <div class="modal-header">
+        <div id="projectContractDrawerTitle" class="modal-title">合同管理承接</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="projectContractDrawerSummary" class="readonly-summary"></section>
+        <div class="description-grid order-description-grid">
+          <div class="description-item"><div class="description-label">合同金额</div><div id="projectContractAmount" class="description-value amount-strong">-</div></div>
+          <div class="description-item"><div id="contractQuoteLabel" class="description-label">锁定报价</div><div id="projectContractQuote" class="description-value">-</div></div>
+          <div class="description-item"><div id="contractScheduleLabel" class="description-label">项目团</div><div id="projectContractSchedule" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">签署状态</div><div id="projectContractStatus" class="description-value">-</div></div>
+        </div>
+        <div id="contractDrawerFields" class="order-drawer-form"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>关闭</button>
+        <button class="btn btn-primary" type="button" data-contract-entry>进入合同管理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="projectSettlementDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="projectSettlementDrawerTitle">
+      <div class="modal-header">
+        <div id="projectSettlementDrawerTitle" class="modal-title">项目结算承接</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="projectSettlementDrawerSummary" class="readonly-summary"></section>
+        <div class="table-wrap order-detail-table drawer-table-fit drawer-table-cols-4">
+          <table>
+            <thead><tr><th>结算条件</th><th>当前结果</th><th>承接页面</th><th>操作</th></tr></thead>
+            <tbody id="projectSettlementRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-result="提交项目结算承接">提交结算承接</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="aftersalesDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-lg order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="aftersalesDrawerTitle">
+      <div class="modal-header">
+        <div id="aftersalesDrawerTitle" class="modal-title">发起售后</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="aftersalesDrawerSummary" class="readonly-summary"></section>
+        <div id="aftersalesDrawerFields" class="order-drawer-form"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-result="提交售后">提交审批</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="attachmentDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="attachmentDrawerTitle">
+      <div class="modal-header">
+        <div id="attachmentDrawerTitle" class="modal-title">附件维护</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="attachmentDrawerSummary" class="readonly-summary">按附件类型上传和维护，上传后在订单的合同资料页按分类查看。</section>
+        <div id="attachmentUploadSections" class="order-attachment-upload-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button class="btn btn-primary" type="button" data-result="保存附件">保存附件</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailActionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md order-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="detailActionDrawerTitle">
+      <div class="modal-header">
+        <div id="detailActionDrawerTitle" class="modal-title">订单操作</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="detailActionDrawerSummary" class="readonly-summary"></section>
+        <div id="detailActionDrawerFields" class="order-drawer-form"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
+        <button id="detailActionDrawerSubmit" class="btn btn-primary" type="button" data-result="保存订单操作">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+      <div class="modal-header">
+        <div id="resultModalTitle" class="modal-title">操作已记录</div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="resultModalText" class="modal-center-text"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" data-close-modal>知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const isProjectSource = params.get('source') === 'customProject' || params.get('source') === 'custom' || ['project', 'independent'].includes(params.get('groupMode')) || /^MICE/i.test(params.get('scheduleNo') || '');
+      const requestedType = params.get('type') || (isProjectSource ? 'customProject' : 'group');
+      const typeAliases = { standard: 'group', project: 'customProject', custom: 'customProject' };
+      const type = typeAliases[requestedType] || requestedType || 'group';
+      const attachmentCategories = [
+        ['行程附件', '客户确认的行程单、日程说明和版本变更记录', '已上传', '2个文件', '欧洲十国经典游行程单.pdf'],
+        ['保单附件', '旅游意外险保单、保险说明和投保回执', '待上传', '0个文件', '未上传'],
+        ['确认件附件', '供应商确认件、酒店/舱房/铺位/服务确认资料', '待补充', '1个文件', '酒店确认件待补齐'],
+        ['出团通知书附件', '出团通知书、集合信息、领队联系方式和注意事项', '待生成', '0个文件', '待团队执行生成']
+      ];
+      const projectAttachmentCategories = [
+        ['锁定报价附件', '客户确认的报价版本、费用包含/不含和变更规则', '已确认', '1个文件', '报价V4-客户确认版.pdf'],
+        ['项目合同附件', '电子合同、盖章合同、补充协议和签署回执', '待签署', '0个文件', '待发送客户签署'],
+        ['阶段收款计划', '首款、进度款、尾款节点、金额和触发条件', '待确认', '1个文件', '阶段收款计划.xlsx'],
+        ['客户验收资料', '回团确认、客户验收单、满意度和异常关闭记录', '待上传', '0个文件', '回团后上传']
+      ];
+      const configs = {
+        group: {
+          orderNo: 'KS20260704001',
+          productType: '参团游',
+          productTag: 'tag tag-blue',
+          productName: '欧洲十国经典游·12天',
+          meta: '经济款 法德意经典12天 / EU20260715001 / 2026-07-15 出发',
+          contact: '张建国 138****8001',
+          owner: '软件园门店 / 孙丽',
+          orderStatus: ['预留', 'tag tag-orange'],
+          paymentStatus: ['未收款', 'tag tag-gray'],
+          amount: ['¥25,600', '¥0', '¥24,600'],
+          discountCarry: '¥1,000',
+          discountUsages: [
+            { source: '营销活动', code: 'ACT-EU-202607', name: '欧洲长线早鸟满减', amount: 1000, share: '总部营销 70% / 销售门店 30%', status: '待财务确认', downstream: '待生成优惠减免明细' }
+          ],
+          todos: [
+            ['待补出行人证件', '2位游客护照信息待完善，影响签证预检'],
+            ['待收定金', '预留订单24小时未收款将释放库存'],
+            ['待生成合同', '收款或确认后生成合同']
+          ],
+          snapshot: [
+            ['订单来源', '门店'],
+            ['归属门店', '软件园门店'],
+            ['下单店员', '孙丽'],
+            ['团期编号', 'EU20260715001'],
+            ['线路', '经济款 法德意经典12天'],
+            ['出发/回团', '2026-07-15 / 2026-07-26']
+          ],
+          money: [
+            ['应收', '¥25,600', 'amount-red'],
+            ['已收', '¥0', ''],
+            ['待收', '¥24,600', 'amount-red'],
+            ['退款中', '¥0', '']
+          ],
+          downstream: [
+            ['团队执行', '游客名单、签证、出团通知由团队执行承接'],
+            ['收款认领', '银行转账流水需店员提交认款后财务复核'],
+            ['应收管理', '应收调整审批后进入财务应收']
+          ],
+          travelers: {
+            summary: '2人，护照和签证资料待补',
+            statuses: [['资料完整度', '60%', 'tag tag-orange'], ['证件状态', '待补护照', 'tag tag-orange'], ['签证预检', '待预检', 'tag tag-gray']],
+            head: ['姓名', '人群', '证件', '签证资料', '联系电话', '状态'],
+            rows: [
+              ['张建国', '成人', '身份证已填 / 护照待补', '申根材料待上传', '138****8001', ['待补', 'tag tag-orange']],
+              ['李梅', '成人', '护照待补', '资产证明待补', '139****2200', ['待补', 'tag tag-orange']]
+            ],
+            drawer: [
+              ['护照信息', '护照号、签发地、有效期、英文姓名'],
+              ['签证材料', '照片、在职证明、资产证明、行程单'],
+              ['随行人资料', '紧急联系人、健康声明、房型偏好']
+            ],
+            ai: ['护照有效期未录入，无法判断申根签证有效期要求。', '建议先补齐护照号、有效期和资产证明，再提交签证预检。']
+          },
+          services: {
+            summary: '参团游订单以团期为履约对象，订单详情只处理本单资料和特殊需求。',
+            feature: [['名单', '2人待补证件'], ['签证', '申根材料待补'], ['通知', '未发送']],
+            rows: [
+              ['游客名单', '2人，证件待补', '店员/计调', ['待补', 'tag tag-orange'], '维护资料'],
+              ['证件/签证', '申根材料待预检', '签证专员', ['待处理', 'tag tag-orange'], 'AI预检'],
+              ['出团通知', '待团队执行生成', '计调', ['未发送', 'tag tag-gray'], '查看执行']
+            ],
+            drawer: [
+              ['本单特殊需求', '房型、餐饮、座位、同行关系'],
+              ['资料交接', '是否同步团队执行名单'],
+              ['通知备注', '仅记录本单客户特殊提醒']
+            ]
+          },
+          rules: ['已确认团期、出发日期和退改规则', '已确认签证材料截止日和成团规则', '房型/座位偏好为申请项'],
+          contract: [['旅游合同', '待生成', '合同'], ['确认书', '待生成', '确认单']],
+          aftersales: [
+            ['SH20260704001', '退款', '2026-07-04 11:20', '李梅取消1成人', '退款 ¥12,800', '审批中', '待财务退款'],
+            ['SH20260702002', '转款', '2026-07-02 16:10', '客户改报巴黎自由行订单', '转出 ¥2,000', '已通过', '待财务核对'],
+            ['SH20260630003', '转团', '2026-06-30 09:45', 'EU20260715001 转 EU20260728001', '补差 ¥600', '已完成', '不涉及']
+          ]
+        },
+        cruise: {
+          orderNo: 'KSCZ20260704002',
+          productType: '邮轮',
+          productTag: 'tag tag-purple',
+          productName: '理想号地中海邮轮',
+          meta: '阳台舱岸上全含线路 / CR-MED-20250720-001 / 2025-07-20 开航',
+          contact: '刘洋 139****2200',
+          owner: '文灶门店 / 郑华',
+          orderStatus: ['已确认', 'tag tag-blue'],
+          paymentStatus: ['部分收款', 'tag tag-orange'],
+          amount: ['¥57,600', '¥28,800', '¥28,800'],
+          todos: [
+            ['待补登船资料', '英文姓名、护照、登船表需完整'],
+            ['舱房待确认', '阳台舱余8间，舱号待船方回传'],
+            ['待收尾款', '尾款未收齐前不建议出船票']
+          ],
+          snapshot: [['订单来源', '门店'], ['归属门店', '文灶门店'], ['下单店员', '郑华'], ['航次编号', 'CR-MED-20250720-001'], ['线路', '阳台舱岸上全含线路'], ['登船/离船', '2025-07-20 / 2025-08-03']],
+          money: [['应收', '¥57,600', 'amount-red'], ['已收', '¥28,800', 'amount-green'], ['待收', '¥28,800', 'amount-red'], ['退款中', '¥0', '']],
+          downstream: [['邮轮航次执行', '舱房、船票、岸上项目由航次执行承接'], ['收款认领', '尾款流水进入认款复核'], ['退款执行', '售后退款按船方规则扣损后财务执行']],
+          travelers: {
+            summary: '2人，登船表和护照有效期待复核',
+            statuses: [['资料完整度', '70%', 'tag tag-orange'], ['船票资料', '待船方确认', 'tag tag-orange'], ['AI预检', '英文姓名待核对', 'tag tag-orange']],
+            head: ['乘客', '证件', '英文姓名', '类型/占位', '舱型/舱号', '状态'],
+            rows: [['刘洋', '护照E****621', 'LIU/YANG', '成人占位', '阳台舱BA / 待回传', ['待补', 'tag tag-orange']], ['周丽', '护照E****712', 'ZHOU/LI', '成人占位', '阳台舱BA / 待回传', ['待确认', 'tag tag-blue']]],
+            drawer: [['登船资料', '英文姓名、国籍、出生日期、护照有效期'], ['舱房资料', '舱型、床型、同住人、舱号'], ['岸上项目', '岸上观光选择、餐食禁忌、保险信息']],
+            ai: ['英文姓名需与护照 MRZ 区一致。', '登船资料未完整前，不建议提交船票确认。']
+          },
+          services: {
+            summary: '邮轮订单重点处理舱房、登船资料、船票和岸上项目。',
+            feature: [['舱房', '阳台舱待舱号'], ['船票', '待回传'], ['岸上项目', '默认全含']],
+            rows: [['舱房确认', '阳台舱BA，舱号待回传', '邮轮计调', ['待确认', 'tag tag-orange'], '确认舱房'], ['登船资料', '护照、英文姓名、登船表', '邮轮专员', ['待补', 'tag tag-orange'], '维护资料'], ['船票', '船方未出票', '邮轮计调', ['未出票', 'tag tag-gray'], '录入船票']],
+            drawer: [['舱房信息', '舱型、舱号、床型、同舱人'], ['登船资料', '英文姓名、护照、生日、国籍'], ['船票记录', '船票号、出票时间、船方确认号']]
+          },
+          rules: ['已确认船方取消规则和港口税口径', '已确认舱房位置为申请偏好', '已确认英文姓名以护照为准'],
+          contract: [['邮轮合同', '已生成', '合同'], ['舱房补充条款', '待船票确认', '补充协议']],
+          aftersales: [
+            ['SH20260704011', '退款', '2026-07-04 14:10', '周丽取消岸上项目', '退款 ¥1,200', '待复核', '待财务退款'],
+            ['SH20260703012', '改舱', '2026-07-03 09:30', '阳台舱调整为海景舱', '退差 ¥3,600', '已通过', '待财务核对']
+          ]
+        },
+        train: {
+          orderNo: 'KSTR20260704003',
+          productType: '专列',
+          productTag: 'tag tag-orange',
+          productName: '东方丝路专列9日',
+          meta: '包厢品质线路 / TR-SILK-20250822-001 / 2025-08-22 发车',
+          contact: '赵明 138****5500',
+          owner: '泉州鲤城门店 / 李娜',
+          orderStatus: ['占位', 'tag tag-blue'],
+          paymentStatus: ['未收款', 'tag tag-gray'],
+          amount: ['¥41,600', '¥0', '¥41,600'],
+          todos: [['待确认铺位', '下铺余4铺，需确认铺位结构'], ['待补实名资料', '身份证信息未完整'], ['待收定金', '占位订单需人工确认释放']],
+          snapshot: [['订单来源', '门店'], ['归属门店', '泉州鲤城门店'], ['下单店员', '李娜'], ['班期编号', 'TR-SILK-20250822-001'], ['线路', '包厢品质线路'], ['发车/返程', '2025-08-22 / 2025-08-30']],
+          money: [['应收', '¥41,600', 'amount-red'], ['已收', '¥0', ''], ['待收', '¥41,600', 'amount-red'], ['退款中', '¥0', '']],
+          downstream: [['专列班期执行', '铺位、车厢、上下车站由班期执行承接'], ['收款认领', '定金到账后确认占位'], ['售后处理', '退铺和改期按运营商规则处理']],
+          travelers: {
+            summary: '2人，实名资料和上下车站待确认',
+            statuses: [['资料完整度', '50%', 'tag tag-orange'], ['铺位资料', '待分铺', 'tag tag-orange'], ['实名检查', '待检查', 'tag tag-gray']],
+            head: ['乘客', '证件', '类型/占位', '席别/铺位', '上下车站', '状态'],
+            rows: [['赵明', '身份证待补', '成人占位', '软卧下铺待分配', '西安上/乌鲁木齐下', ['待补', 'tag tag-orange']], ['陈芳', '身份证待补', '成人占位', '软卧下铺待分配', '西安上/乌鲁木齐下', ['待补', 'tag tag-orange']]],
+            drawer: [['实名资料', '身份证号、手机号、紧急联系人'], ['铺位细节', '车厢、席别、上下铺、同住关系'], ['乘车信息', '上下车站、集合时间、特殊照顾']],
+            ai: ['实名资料不完整，无法提交专列铺位确认。', '下铺余量紧张，建议先确认付款和铺位。']
+          },
+          services: {
+            summary: '专列订单重点处理车厢铺位、实名资料和上下车站。',
+            feature: [['铺位', '下铺余4铺'], ['实名', '待补'], ['上下车站', '西安上']],
+            rows: [['铺位分配', '下铺2铺，车厢待分配', '专列计调', ['待分配', 'tag tag-orange'], '分配铺位'], ['实名资料', '身份证信息待补', '店员/计调', ['待补', 'tag tag-orange'], '补实名'], ['出行通知', '集合信息待生成', '计调', ['未发送', 'tag tag-gray'], '生成通知']],
+            drawer: [['铺位信息', '车厢、席别、上下铺、同住关系'], ['运营商确认', '确认号、保留时间、备注'], ['出行资料', '集合地点、上下车站、行李规则']]
+          },
+          rules: ['已确认专列铺位实名规则', '已确认退铺扣损和运营商确认口径', '已确认上下车站和集合时间以后续通知为准'],
+          contract: [['专列确认书', '待生成', '确认单'], ['铺位规则附件', '待确认', '附件']],
+          aftersales: [
+            ['SH20260704021', '退团', '2026-07-04 10:45', '陈芳退1人下铺', '退款待核算', '审批中', '待财务退款'],
+            ['SH20260701022', '改期', '2026-07-01 17:25', '转至09-10班期', '补差 ¥800', '已完成', '不涉及']
+          ]
+        },
+        free: {
+          orderNo: 'KSFT20260704004',
+          productType: '自由行',
+          productTag: 'tag tag-green',
+          productName: '巴黎自由行5日',
+          meta: '机酒套餐 / FT-PAR-20250718-A / 2025-07-18 出行',
+          contact: '周伟 137****8800',
+          owner: '观音山门店 / 陈红',
+          orderStatus: ['待确认', 'tag tag-orange'],
+          paymentStatus: ['部分收款', 'tag tag-orange'],
+          amount: ['¥18,600', '¥9,300', '¥9,300'],
+          todos: [['待确认酒店', '房型和确认号待供应商回传'], ['待出票', '机票待出票确认'], ['待收尾款', '尾款未收齐']],
+          snapshot: [['订单来源', '门店'], ['归属门店', '观音山门店'], ['下单店员', '陈红'], ['出行日期', '2025-07-18'], ['套餐', '机票+酒店+接送机'], ['目的地', '巴黎']],
+          money: [['应收', '¥18,600', 'amount-red'], ['已收', '¥9,300', 'amount-green'], ['待收', '¥9,300', 'amount-red'], ['退款中', '¥0', '']],
+          downstream: [['供应商确认', '酒店、机票、接送机按订单服务项确认'], ['应付管理', '供应商费用确认后财务应付承接'], ['出行资料', '电子确认单、酒店确认单、接送机凭证']],
+          travelers: {
+            summary: '2人，护照已填，酒店入住信息待确认',
+            statuses: [['资料完整度', '80%', 'tag tag-blue'], ['入住资料', '待确认', 'tag tag-orange'], ['AI预检', '低风险', 'tag tag-green']],
+            head: ['旅客', '证件', '房型', '入住需求', '联系电话', '状态'],
+            rows: [['周伟', '护照E****889', '双床房', '高楼层', '137****8800', ['待确认', 'tag tag-orange']], ['吴芳', '护照E****990', '双床房', '无烟房', '136****9900', ['待确认', 'tag tag-orange']]],
+            drawer: [['入住资料', '英文姓名、护照、入住人、床型'], ['房型需求', '房型、早餐、加床、特殊偏好'], ['出行资料', '航班、接送机、当地联系人']],
+            ai: ['酒店入住人英文姓名需与护照一致。', '接送机信息缺少抵达航班号。']
+          },
+          services: {
+            summary: '自由行订单按订单服务项确认酒店、机票、接送机和当地服务。',
+            feature: [['酒店', '确认号待回传'], ['机票', '待出票'], ['接送机', '航班号待补']],
+            rows: [['酒店确认', '巴黎塞纳河酒店 / 双床房', '资源运营', ['待确认', 'tag tag-orange'], '确认酒店'], ['机票出票', '北京-巴黎往返', '票务', ['待出票', 'tag tag-orange'], '录入票号'], ['接送机', '抵达航班号待补', '地接', ['待补', 'tag tag-orange'], '补航班']],
+            drawer: [['酒店/房型', '酒店确认号、房型、早餐、入住人'], ['机票', '航班号、票号、出票时间'], ['接送机', '航班号、接送时间、联系人']]
+          },
+          rules: ['已确认自由行供应商取消规则', '已确认房型以供应商确认为准', '已确认机票出票后退改损失'],
+          contract: [['自由行确认单', '待生成', '确认单'], ['酒店确认单', '待供应商回传', '附件']],
+          aftersales: [
+            ['SH20260704031', '退款', '2026-07-04 15:02', '取消接送机服务', '退款 ¥600', '已驳回', '不涉及'],
+            ['SH20260702032', '改期', '2026-07-02 11:18', '酒店入住改至07-19', '补差 ¥420', '已通过', '待财务核对']
+          ]
+        },
+        single: {
+          orderNo: 'KSSV20260704005',
+          productType: '单项服务',
+          productTag: 'tag tag-gray',
+          productName: '日本签证代办',
+          meta: '标准办理 / SV-JP-20250701-001 / 服务单履约',
+          contact: '孙倩 136****1100',
+          owner: '软件园门店 / 孙丽',
+          orderStatus: ['处理中', 'tag tag-blue'],
+          paymentStatus: ['已收款', 'tag tag-green'],
+          amount: ['¥1,960', '¥1,960', '¥0'],
+          todos: [['待补材料', '1人资产证明待补'], ['待送签', '材料齐全后送签'], ['待交付结果', '出签后通知客户']],
+          snapshot: [['订单来源', '门店'], ['归属门店', '软件园门店'], ['下单店员', '孙丽'], ['服务单号', 'SV-JP-20250701-001'], ['服务项目', '日本签证代办'], ['办理时效', '8-10个工作日']],
+          money: [['应收', '¥1,960', 'amount-red'], ['已收', '¥1,960', 'amount-green'], ['待收', '¥0', ''], ['退款中', '¥0', '']],
+          downstream: [['服务单处理', '材料状态、送签、出签由服务单承接'], ['应收管理', '服务费应收已确认'], ['退款执行', '取消委托后进入售后退款']],
+          travelers: {
+            summary: '2人，1人资产证明待补',
+            statuses: [['材料完整度', '75%', 'tag tag-orange'], ['服务进度', '待送签', 'tag tag-orange'], ['AI审查', '材料待补', 'tag tag-orange']],
+            head: ['委托人', '证件', '材料状态', '办理项目', '联系电话', '状态'],
+            rows: [['孙倩', '护照E****223', '资产证明待补', '日本签证', '136****1100', ['待补', 'tag tag-orange']], ['王磊', '护照E****330', '材料齐', '日本签证', '135****3300', ['待送签', 'tag tag-blue']]],
+            drawer: [['材料清单', '护照、照片、申请表、资产证明'], ['办理进度', '收件、审查、送签、出签、交付'], ['客户信息', '委托人、联系人、回寄地址']],
+            ai: ['孙倩资产证明缺失，暂不建议送签。', '王磊资料可进入送签前复核。']
+          },
+          services: {
+            summary: '单项服务以服务单为履约对象，订单详情展示材料和办理状态。',
+            feature: [['材料', '1人待补'], ['送签', '待处理'], ['交付', '未完成']],
+            rows: [['材料审核', '1人资产证明待补', '签证专员', ['待补', 'tag tag-orange'], '维护材料'], ['送签进度', '未送签', '签证专员', ['待送签', 'tag tag-orange'], '更新进度'], ['结果交付', '未出签', '签证专员', ['未完成', 'tag tag-gray'], '交付记录']],
+            drawer: [['材料状态', '逐人勾选材料齐全情况'], ['办理节点', '收件、送签、补件、出签'], ['交付信息', '取件方式、快递单号、交付备注']]
+          },
+          rules: ['已确认签证材料清单', '已确认服务费不含使馆可能新增费用', '已确认材料不实产生风险由客户承担'],
+          contract: [['服务确认单', '已生成', '确认单'], ['材料清单', '已确认', '附件']],
+          aftersales: [
+            ['SH20260704041', '退款', '2026-07-04 13:12', '孙倩取消签证代办', '退款 ¥980', '审批中', '待财务退款'],
+            ['SH20260701042', '转款', '2026-07-01 10:06', '余额转至同客户保险订单', '转出 ¥300', '已完成', '已核对']
+          ]
+        }
+      };
+
+      configs.study = {
+        orderNo: 'KSST20260704006',
+        productType: '研学',
+        productTag: 'tag tag-blue',
+        productName: '新加坡科技创新研学6日',
+        meta: '科技营线路 / ST-SG-20250812-001 / 2025-08-12 出发',
+        contact: '韩老师 138****7788',
+        owner: '研学事业部 / 孙丽',
+        orderStatus: ['待确认', 'tag tag-orange'],
+        paymentStatus: ['未收款', 'tag tag-gray'],
+        amount: ['¥38,400', '¥0', '¥38,400'],
+        todos: [['待补学员资料', '监护人授权书和健康表待补'], ['待收定金', '未收款前不确认学位'], ['待安全复核', '保险和带队老师信息待确认']],
+        snapshot: [['订单来源', '学校团'], ['归属部门', '研学事业部'], ['下单店员', '孙丽'], ['研学团期', 'ST-SG-20250812-001'], ['线路', '科技营线路'], ['出发/返程', '2025-08-12 / 2025-08-17']],
+        money: [['应收', '¥38,400', 'amount-red'], ['已收', '¥0', ''], ['待收', '¥38,400', 'amount-red'], ['退款中', '¥0', '']],
+        downstream: [['研学执行', '学员资料、安全材料、带队老师由研学执行承接'], ['收款认领', '学校或家长付款后进入认款'], ['审批中心', '安全材料和特殊权限按审批流处理']],
+        travelers: {
+          summary: '4名学员，监护人授权书待补',
+          statuses: [['资料完整度', '65%', 'tag tag-orange'], ['安全材料', '待复核', 'tag tag-orange'], ['AI预检', '健康表待补', 'tag tag-orange']],
+          head: ['学员', '证件', '监护人', '健康表', '年级', '状态'],
+          rows: [['韩一一', '身份证待补', '韩老师', '待上传', '初二', ['待补', 'tag tag-orange']], ['李明明', '身份证已填', '李女士', '已上传', '初二', ['待复核', 'tag tag-blue']]],
+          drawer: [['学员资料', '身份证、学校、年级、出生日期'], ['监护人资料', '监护人姓名、联系方式、授权书'], ['安全材料', '健康表、过敏史、保险、紧急联系人']],
+          ai: ['监护人授权书缺失，暂不建议生成出行通知。', '健康表未齐全，安全复核无法通过。']
+        },
+        services: {
+          summary: '研学订单重点处理学员资料、安全材料、课程资源和带队安排。',
+          feature: [['学员资料', '4人待补'], ['安全材料', '待复核'], ['课程资源', '待确认']],
+          rows: [['学员资料', '监护人授权书待补', '研学运营', ['待补', 'tag tag-orange'], '维护资料'], ['安全材料', '健康表、保险待复核', '研学主管', ['待复核', 'tag tag-orange'], '安全复核'], ['课程资源', '科技营课程待确认', '研学运营', ['确认中', 'tag tag-blue'], '确认资源']],
+          drawer: [['学员资料', '证件、监护人、健康表'], ['带队安排', '带队老师、集合地、应急联系人'], ['课程资源', '课程、基地、住宿、保险']]
+        },
+        rules: ['已确认研学安全须知和监护人授权要求', '已确认课程资源以研学执行确认为准', '已确认未成年人退改和保险规则'],
+        contract: [['研学确认书', '待生成', '确认单'], ['监护人授权书', '待上传', '附件']],
+        aftersales: [
+          ['SH20260704051', '退团', '2026-07-04 16:40', '李明明退出研学营', '退款 ¥9,600', '待复核', '待财务退款'],
+          ['SH20260703052', '换人', '2026-07-03 14:22', '韩一一更换为韩小雨', '不影响金额', '已通过', '不涉及']
+        ]
+      };
+      configs.customProject = {
+        orderNo: 'KSMICE20260704001',
+        productType: '单团项目',
+        productTag: 'tag tag-purple',
+        productName: '某科技公司2025年会欧洲行',
+        meta: '方案A 豪华五星版 / MICE20250915001 / 2025-09-15 出发',
+        contact: '北京某科技有限公司 138****8001',
+        owner: '泉州丰泽门店 / 刘洋',
+        orderStatus: ['已确认', 'tag tag-blue'],
+        paymentStatus: ['未收款', 'tag tag-gray'],
+        projectOrderStage: 'pendingContract',
+        amount: ['¥1,906,000', '¥0', '¥1,906,000'],
+        todos: [
+          ['名单待导入', '项目团需要80人名单后承接证件、房型和交通分组'],
+          ['阶段应收待确认', '锁定报价付款节点需财务承接'],
+          ['成本待确认', '交通、酒店、会务和地接成本进入团期成本确认']
+        ],
+        snapshot: [['订单来源', '单团项目'], ['询价单号', 'INQ-20260711-001'], ['单团项目', 'MICE-20250623-001'], ['下单店员', '刘洋'], ['项目团', 'MICE20250915001'], ['锁定报价', '方案A 豪华五星版'], ['出发/回团', '2025-09-15 / 2025-09-24']],
+        money: [['应收', '¥1,906,000', 'amount-red'], ['已收', '¥0', ''], ['待收', '¥1,906,000', 'amount-red'], ['退款中', '¥0', '']],
+        downstream: [['项目团执行', '名单、资料、资源确认由项目团承接'], ['合同管理', '项目合同按锁定报价生成并签署'], ['团期成本', '预算成本和供应商确认成本由团期成本承接']],
+        travelers: {
+          summary: '80人，企业名单暂未导入',
+          statuses: [['名单完整度', '0%', 'tag tag-orange'], ['证件状态', '待导入', 'tag tag-gray'], ['AI预检', '名单导入后检查', 'tag tag-gray']],
+          head: ['分组', '人数', '舱位/交通', '房型', '资料状态', '状态'],
+          rows: [['管理层', '20人', '商务舱', '单间/大床优先', '名单待导入', ['待补', 'tag tag-orange']], ['员工组', '60人', '经济舱', '双床房', '名单待导入', ['待补', 'tag tag-orange']]],
+          drawer: [['名单资料', '姓名、证件、手机号、紧急联系人'], ['交通分组', '商务舱/经济舱、去返程航班、座位偏好'], ['住宿分房', '房型、同住人、特殊需求']],
+          ai: ['企业名单未导入，无法进行证件有效期和签证材料预检。', '建议先导入名单并确认管理层商务舱人数，再进入资源确认。']
+        },
+        services: {
+          summary: '单团项目订单以客户专属项目团为履约对象，订单详情处理名单、合同、收款和售后入口。',
+          feature: [['名单', '0/80'], ['资源', '交通酒店确认中'], ['成本', '待确认']],
+          rows: [['项目名单', '80人待导入', '店员/单团计调', ['待补', 'tag tag-orange'], '导入名单'], ['交通酒店', '商务舱20、经济舱60，酒店确认号待回传', '单团计调', ['确认中', 'tag tag-orange'], '查看项目团'], ['会务活动', '商务晚宴、团建、摄影服务待确认', '项目运营', ['待确认', 'tag tag-orange'], '维护需求']],
+          drawer: [['项目特殊需求', '会议活动、晚宴、摄影、无购物要求'], ['资料交接', '名单是否同步项目团执行'], ['通知备注', '企业客户统一通知口径']]
+        },
+        rules: ['合同金额来自锁定报价方案A', '项目团为客户专属，不进入公开渠道售卖', '金额、人数、日期变化进入单团项目变更记录'],
+        contract: [['项目旅游服务合同', '待签署', '合同'], ['锁定报价附件', '已确认', '附件'], ['阶段收款计划', '待确认', '附件']],
+        aftersales: [
+          ['SH-MICE-20260704001', '人数变更', '2026-07-04 16:40', '企业预估人数由78调整为80', '不影响单价', '待确认', '进入项目变更记录']
+        ]
+      };
+      const config = configs[type] || configs.group;
+      if (params.get('orderNo')) config.orderNo = params.get('orderNo');
+      if (type === 'customProject') {
+        const paramAmount = Number(params.get('amount') || 0);
+        const amountText = paramAmount ? '¥' + paramAmount.toLocaleString('zh-CN') : config.amount[0];
+        const projectNo = params.get('projectNo') || 'MICE-20250623-001';
+        const scheduleNo = params.get('scheduleNo') || 'MICE20250915001';
+        const quoteVersion = params.get('quoteVersion') || 'A';
+        if (params.get('product')) config.productName = params.get('product');
+        if (params.get('customer')) config.contact = params.get('customer') + ' 138****8001';
+        if (params.get('stage')) config.projectOrderStage = params.get('stage');
+        config.meta = '方案' + quoteVersion + ' 豪华五星版 / ' + scheduleNo + ' / 2025-09-15 出发';
+        config.amount = [amountText, '¥0', amountText];
+        config.money = [['应收', amountText, 'amount-red'], ['已收', '¥0', ''], ['待收', amountText, 'amount-red'], ['退款中', '¥0', '']];
+        config.snapshot = [['订单来源', '单团项目'], ['询价单号', params.get('inquiryNo') || 'INQ-20260711-001'], ['单团项目', projectNo], ['下单店员', params.get('owner') || '刘洋'], ['项目团', scheduleNo], ['锁定报价', '方案' + quoteVersion + ' 豪华五星版'], ['出发/回团', params.get('travelDate') || '2025-09-15 / 2025-09-24']];
+      }
+      if (type !== 'customProject' && params.get('amount')) {
+        const paramAmount = Number(params.get('amount') || 0);
+        if (paramAmount > 0) {
+          const amountText = '¥' + paramAmount.toLocaleString('zh-CN');
+          const receivedAmount = Number(String(config.amount[1] || '').replace(/[^\d.-]/g, '')) || 0;
+          if (!params.get('discount')) {
+            config.discountCarry = '¥0';
+            config.discountUsages = [];
+          }
+          const discountAmount = Number(String(config.discountCarry || '').replace(/[^\d.-]/g, '')) || 0;
+          const pendingText = '¥' + Math.max(paramAmount - receivedAmount - discountAmount, 0).toLocaleString('zh-CN');
+          config.amount = [amountText, config.amount[1], pendingText];
+          config.money = [['应收', amountText, 'amount-red'], ['已收', config.amount[1], receivedAmount > 0 ? 'amount-green' : ''], ['待收', pendingText, 'amount-red'], ['退款中', '¥0', '']];
+        }
+      }
+      if (params.get('discount')) {
+        const discountAmount = Number(params.get('discount') || 0);
+        if (discountAmount > 0) {
+          const discountText = '¥' + discountAmount.toLocaleString('zh-CN');
+          const receivableAmount = Number(String(config.amount[0] || '').replace(/[^\d.-]/g, '')) || 0;
+          const receivedAmount = Number(String(config.amount[1] || '').replace(/[^\d.-]/g, '')) || 0;
+          const pendingText = '¥' + Math.max(receivableAmount - receivedAmount - discountAmount, 0).toLocaleString('zh-CN');
+          config.discountCarry = discountText;
+          config.discountUsages = [{
+            source: '营销活动',
+            code: 'ORDER-DISCOUNT',
+            name: '订单优惠减免',
+            amount: discountAmount,
+            share: '按活动/券模板承担',
+            status: '待财务确认',
+            downstream: '待生成优惠减免明细'
+          }];
+          config.amount = [config.amount[0], config.amount[1], pendingText];
+          config.money = [['应收', config.amount[0], 'amount-red'], ['已收', config.amount[1], receivedAmount > 0 ? 'amount-green' : ''], ['待收', pendingText, 'amount-red'], ['退款中', '¥0', '']];
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+        });
+      }
+      function moneyNumber(value) {
+        return Number(String(value || '').replace(/[^\d.-]/g, '')) || 0;
+      }
+      function moneyText(value) {
+        return '¥' + Math.round(Number(value || 0)).toLocaleString('zh-CN');
+      }
+      function moneyTextFixed(value) {
+        return '¥' + Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function discountCarryAmount() {
+        return moneyNumber(config.discountCarry || '¥0');
+      }
+      function pendingCustomerAmount() {
+        return Math.max(moneyNumber(config.amount[0]) - moneyNumber(config.amount[1]) - discountCarryAmount(), 0);
+      }
+      function normalizedMoneyLabel(label) {
+        if (label === '应收') return '订单应收';
+        if (label === '已收') return '客户已收';
+        if (label === '待收') return '客户待收';
+        return label;
+      }
+      function orderMoneyCards() {
+        const cards = config.money.map(function (item) {
+          return [normalizedMoneyLabel(item[0]), item[1], item[2]];
+        });
+        const carry = discountCarryAmount();
+        cards.splice(Math.min(cards.length, 3), 0, ['优惠减免', moneyText(carry), carry > 0 ? 'amount-green' : '']);
+        const gap = moneyNumber(config.amount[0]) - moneyNumber(config.amount[1]) - pendingCustomerAmount() - carry;
+        cards.push(['应收平衡', Math.abs(gap) < 1 ? '已平' : ('差异 ' + moneyText(Math.abs(gap))), Math.abs(gap) < 1 ? 'amount-green' : 'amount-red']);
+        return cards;
+      }
+
+      function payableSupplierName() {
+        if (config.productType === '邮轮') return '理想号邮轮公司';
+        if (config.productType === '专列') return '西域铁路旅游服务有限公司';
+        if (config.productType === '自由行') return '巴黎机酒资源中心';
+        if (config.productType === '单项服务') return '日本签证受理服务中心';
+        if (config.productType === '研学') return '北京研学营地服务中心';
+        if (config.productType === '单团项目') return '巴黎会务地接服务商';
+        return '中青旅新域（北京）旅游有限公司_中东非';
+      }
+
+      function payableCostItem() {
+        if (config.productType === '邮轮') return '船票及岸上项目';
+        if (config.productType === '专列') return '铺位及车厢服务';
+        if (config.productType === '自由行') return '机票酒店套餐';
+        if (config.productType === '单项服务') return '服务代办费';
+        if (config.productType === '研学') return '营地及课程服务';
+        if (config.productType === '单团项目') return '项目地接服务';
+        return '订单团款';
+      }
+
+      function payableItems() {
+        if (config.payables && config.payables.length) return config.payables;
+        const amount = isProjectOrder() ? Math.max(Math.round(moneyNumber(config.amount[0]) * 0.62), 0) : 25000;
+        return [{
+          no: 'YF82663309D9F2D1C6C5',
+          item: payableCostItem(),
+          supplier: payableSupplierName(),
+          amount: moneyTextFixed(amount),
+          verified: '¥0.00',
+          unpaid: moneyTextFixed(amount),
+          status: '待付款',
+          source: isProjectOrder() ? '项目团' : 'TTY',
+          updatedAt: '2026-09-06 18:00'
+        }];
+      }
+
+      function paymentItems() {
+        return config.payments || [];
+      }
+
+      function payableSummaryCards() {
+        const payables = payableItems();
+        const payments = paymentItems();
+        const payableTotal = payables.reduce(function (sum, item) { return sum + moneyNumber(item.amount); }, 0);
+        const verifiedTotal = payables.reduce(function (sum, item) { return sum + moneyNumber(item.verified); }, 0);
+        const unpaidTotal = Math.max(payableTotal - verifiedTotal, 0);
+        const paymentTotal = payments.reduce(function (sum, item) { return sum + moneyNumber(item.amount); }, 0);
+        const allocatedTotal = payments.reduce(function (sum, item) { return sum + moneyNumber(item.allocated); }, 0);
+        const unallocatedTotal = Math.max(paymentTotal - allocatedTotal, 0);
+        return [
+          ['应付总额', moneyTextFixed(payableTotal), 'amount-strong'],
+          ['已核销', moneyTextFixed(verifiedTotal), 'amount-green'],
+          ['未付金额', moneyTextFixed(unpaidTotal), unpaidTotal > 0 ? 'amount-red' : 'amount-green'],
+          ['付款总额', moneyTextFixed(paymentTotal), 'amount-strong'],
+          ['已分配', moneyTextFixed(allocatedTotal), 'amount-green'],
+          ['未分配付款', moneyTextFixed(unallocatedTotal), unallocatedTotal > 0 ? 'amount-red' : 'amount-strong']
+        ];
+      }
+
+      function payableRow(item) {
+        return '<tr><td>' + escapeHtml(item.no || '-') + '</td><td>' + escapeHtml(item.item || '-') + '</td><td>' + escapeHtml(item.supplier || '-') + '</td><td class="amount-strong">' + escapeHtml(item.amount || '¥0.00') + '</td><td class="amount-green">' + escapeHtml(item.verified || '¥0.00') + '</td><td class="amount-red">' + escapeHtml(item.unpaid || '¥0.00') + '</td><td>' + tagHtml([item.status || '待付款', statusClass(item.status || '待付款')]) + '</td><td>' + escapeHtml(item.source || '-') + '<span class="text-muted">' + escapeHtml(item.updatedAt || '-') + '</span></td></tr>';
+      }
+
+      function paymentRow(item) {
+        return '<tr><td>' + escapeHtml(item.no || '-') + '</td><td>' + escapeHtml(item.payee || '-') + '</td><td class="amount-strong">' + escapeHtml(item.amount || '¥0.00') + '</td><td class="amount-green">' + escapeHtml(item.allocated || '¥0.00') + '</td><td>' + escapeHtml(item.unallocated || '¥0.00') + '</td><td>' + escapeHtml(item.method || '-') + '</td><td>' + escapeHtml(item.date || '-') + '</td><td>' + tagHtml([item.status || '待付款', statusClass(item.status || '待付款')]) + '</td></tr>';
+      }
+
+      function discountUsageItems() {
+        const items = config.discountUsages || [];
+        if (items.length) return items;
+        const carry = discountCarryAmount();
+        if (carry <= 0) return [];
+        return [{
+          source: '营销活动',
+          code: 'ORDER-DISCOUNT',
+          name: '订单优惠减免',
+          amount: carry,
+          share: '按活动/券模板承担',
+          status: '待财务确认',
+          downstream: '待生成优惠减免明细'
+        }];
+      }
+
+      function discountUsageRow(item) {
+        return '<tr><td>' + escapeHtml(item.source || '-') + '</td><td>' + escapeHtml(item.code || '-') + '</td><td>' + escapeHtml(item.name || '-') + '</td><td class="amount-strong">' + moneyText(moneyNumber(item.amount || 0)) + '</td><td>' + escapeHtml(item.share || '-') + '</td><td>' + tagHtml([item.status || '待财务确认', statusClass(item.status || '待财务确认')]) + '</td><td>' + escapeHtml(item.downstream || '-') + '</td></tr>';
+      }
+      function financeProfileFor() {
+        const base = {
+          contractEntity: '福建凯撒旅游有限公司',
+          fulfillmentEntity: '福建凯撒旅游有限公司',
+          revenueEntity: '福建凯撒旅游有限公司',
+          purchaseEntity: '福建凯撒旅游有限公司',
+          collectionUnit: '福建凯撒收款账户',
+          invoiceEntity: '福建凯撒旅游有限公司',
+          refundEntity: '福建凯撒旅游有限公司',
+          channelSettleParty: ownerParts().store,
+          channelMode: '公司直收 / 门店协助认款',
+          revenueMode: '主要责任方，按公司有权取得的订单金额测算',
+          priceBasis: '团期价格和订单确认金额',
+          collectPath: '客户付款进入合同主体收款账户，财务认款后核销应收',
+          internalMode: '无跨法人内部结算',
+          costProfiles: [
+            ['交通资源', '航司/票务供应商', '待出票或资源确认', '出票或资源确认后进入实际成本确认'],
+            ['酒店和地接', '境内外地接/酒店供应商', '待供应商确认', '服务确认和供应商账单核对后形成应付'],
+            ['签证、保险及其他', '签证/保险服务商', '待服务结果确认', '材料提交或保单出具后确认实际成本']
+          ]
+        };
+        const profiles = {
+          邮轮: {
+            fulfillmentEntity: '邮轮事业部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒邮轮采购主体',
+            collectionUnit: '福建凯撒邮轮收款账户',
+            priceBasis: '航次舱房价格、港务费和岸上项目规则',
+            collectPath: '客户定金和尾款进入邮轮收款账户，船方扣损随售后确认',
+            costProfiles: [
+              ['邮轮舱房', '船司', '待舱房确认', '舱房确认、退舱扣损和船方账单核对后确认'],
+              ['港务税费', '船司/港口服务方', '待船票确认', '船票确认后按账单确认'],
+              ['岸上项目', '岸上观光供应商', '待服务确认', '岸上项目完成后确认实际成本']
+            ]
+          },
+          专列: {
+            fulfillmentEntity: '专列事业部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒专列采购主体',
+            priceBasis: '班期铺位价格、包厢差价和服务费规则',
+            collectPath: '客户定金和尾款进入合同主体账户，铺位确认后承接成本',
+            costProfiles: [
+              ['专列铺位', '专列运营方', '待铺位确认', '铺位确认、退铺扣损和运营方账单核对后确认'],
+              ['沿途酒店餐饮', '酒店/餐饮供应商', '待实际人数确认', '服务完成后按实际人数确认'],
+              ['地接和门票', '地接/景区供应商', '待回团确认', '回团后按实际发生确认']
+            ]
+          },
+          自由行: {
+            fulfillmentEntity: '自由行业务部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒自由行采购主体',
+            priceBasis: '订单服务项价格和供应商确认价',
+            collectPath: '客户分期或全款进入合同主体账户，各服务项分别确认履约',
+            costProfiles: [
+              ['机票', '航司/B2B 票务平台', '待出票确认', '出票后确认实际成本，退改签单独调整'],
+              ['酒店', '酒店供应商/平台', '待供应商确认', '入住确认或供应商账单核对后确认'],
+              ['接送机和当地服务', '当地服务商', '待服务确认', '服务完成后确认']
+            ]
+          },
+          单项服务: {
+            fulfillmentEntity: '签证服务部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒旅游有限公司',
+            revenueMode: '按服务费或代理服务收入测算，代垫款单独列示',
+            priceBasis: '服务费、代垫费和材料费确认规则',
+            collectPath: '客户款进入合同主体账户，代垫款与服务费分开核对',
+            passThroughRatio: 0.28,
+            costProfiles: [
+              ['签证服务人工', '签证服务部', '待服务完成', '送签或服务完成后确认'],
+              ['代垫和快递', '使馆/快递/第三方服务商', '待实际发生', '实际代垫发生后确认'],
+              ['材料处理', '外部材料服务商', '待服务结果确认', '服务结果确认后入账']
+            ]
+          },
+          研学: {
+            fulfillmentEntity: '研学事业部 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒研学采购主体',
+            priceBasis: '营期价格、课程资源和安全材料规则',
+            collectPath: '学校或家长付款进入合同主体账户，按营期和学员名单核对',
+            costProfiles: [
+              ['课程和基地', '研学基地/课程供应商', '待课程验收', '课程确认和验收后确认'],
+              ['交通住宿餐饮', '交通/酒店/餐饮供应商', '待实际出行确认', '实际出行和服务完成后确认'],
+              ['保险和安全材料', '保险公司/材料服务商', '待保单或材料完成', '保单出具或材料完成后确认']
+            ]
+          },
+          单团项目: {
+            fulfillmentEntity: 'MICE/定制中心 / 福建凯撒旅游有限公司',
+            purchaseEntity: '福建凯撒项目采购主体',
+            channelSettleParty: contactParts().name,
+            channelMode: '企业客户账期 / 阶段收款',
+            priceBasis: '锁定报价、项目合同和阶段收款计划',
+            collectPath: '企业客户对公付款进入合同主体账户，按阶段应收认款',
+            costProfiles: [
+              ['国际交通', '航司/票务供应商', '待出票或名单确认', '出票或名单确认后进入项目团成本'],
+              ['酒店和地接', '酒店/地接供应商', '待供应商确认', '服务确认和供应商账单核对后确认'],
+              ['会务活动', '会务/摄影/活动供应商', '待项目验收', '项目验收后确认实际成本']
+            ]
+          }
+        };
+        return Object.assign({}, base, profiles[config.productType] || {});
+      }
+      function financeBasisValues() {
+        const orderAmount = moneyNumber(config.amount[0]);
+        const received = moneyNumber(config.amount[1]);
+        const discount = discountCarryAmount();
+        const profile = financeProfileFor();
+        const passThrough = Math.round(orderAmount * (profile.passThroughRatio || 0));
+        const customerCash = Math.max(orderAmount - discount, 0);
+        const expectedOrderAmount = Math.max(orderAmount - discount - passThrough, 0);
+        return {
+          orderAmount: orderAmount,
+          received: received,
+          discount: discount,
+          passThrough: passThrough,
+          customerCash: customerCash,
+          pending: Math.max(customerCash - received, 0),
+          expectedOrderAmount: expectedOrderAmount
+        };
+      }
+      function financeCostItems() {
+        const profile = financeProfileFor();
+        return profile.costProfiles.map(function (item) {
+          return {
+            item: item[0],
+            provider: item[1],
+            purchaseEntity: profile.purchaseEntity,
+            status: item[2],
+            condition: item[3] || '履约事实和账单核对后确认'
+          };
+        });
+      }
+      function financeResponsibilityItems() {
+        const profile = financeProfileFor();
+        return [
+          ['对客签约法人', profile.contractEntity, '客户合同、订单所属公司', '合同资料和客户应收'],
+          ['主要履约责任法人', profile.fulfillmentEntity, '产品模式、合同条款和责任方判断', '履约中心和团期/项目执行'],
+          ['收入确认承接主体', profile.revenueEntity, profile.revenueMode, '财务按履约事实判断收入确认'],
+          ['客户款收取单位', profile.collectionUnit, profile.channelMode, '到账流水、认款单、收款单和核销记录'],
+          ['对客开票法人', profile.invoiceEntity, '合同、税务和开票规则', '销项发票台账，不能替代收款和收入确认'],
+          ['客户退款责任法人', profile.refundEntity, '对客合同和售后条款', '售后单、客户退款单和退款执行'],
+          ['渠道结算方', profile.channelSettleParty, '门店、渠道或企业客户结算协议', '渠道/门店/客户结算单']
+        ];
+      }
+      function financeOverviewItems() {
+        const profile = financeProfileFor();
+        const basis = financeBasisValues();
+        return [
+          ['对客签约法人', profile.contractEntity],
+          ['主要履约责任', profile.fulfillmentEntity],
+          ['收款路径', profile.channelMode],
+          ['收入确认承接', profile.revenueMode],
+          ['成本承接方向', profile.purchaseEntity + ' / 履约成本确认'],
+          ['优惠承担', basis.discount > 0 ? moneyText(basis.discount) : '无优惠减免'],
+          ['客户待收', moneyText(basis.pending)],
+          ['后续处理', '收款、应收、成本、结算和发票分别由对应模块确认']
+        ];
+      }
+      function financeAmountItems() {
+        const profile = financeProfileFor();
+        const basis = financeBasisValues();
+        const standardAmount = basis.orderAmount + basis.discount;
+        const rows = [
+          ['标准报价合计', moneyText(standardAmount), profile.priceBasis, '已锁定', '用于解释成交来源，不等同客户实付和收入'],
+          ['客户约定成交金额', moneyText(basis.orderAmount), contactParts().name, '订单已记录', '合同资料和应收计划承接'],
+          ['客户现金应付', moneyText(basis.customerCash), contactParts().name, '待收款', '客户付款后进入收款认领和财务复核'],
+          ['客户已收/已认款', moneyText(basis.received), profile.collectionUnit, basis.received > 0 ? config.paymentStatus[0] : '暂无收款', '到账、认款、收款和核销分别记录'],
+          ['客户待收', moneyText(basis.pending), profile.collectionUnit, basis.pending > 0 ? '待收' : '已收齐', '由订单金额、优惠和收款核销明细计算']
+        ];
+        if (basis.discount > 0) {
+          rows.splice(2, 0, ['优惠减免', moneyText(basis.discount), discountUsageItems().map(function (item) { return item.share || item.source; }).join('；') || '按优惠规则承担', '待财务确认', '审批或结算确认后进入优惠承担或渠道结算']);
+        }
+        if (basis.passThrough > 0) {
+          rows.push(['代收代付金额', moneyText(basis.passThrough), '第三方服务提供方', '待结算', '只做往来和转付，不进入本公司服务收入']);
+        }
+        rows.push(['公司预计可取得订单金额', moneyText(basis.expectedOrderAmount), profile.revenueEntity, '用于财务判断', '实际收入按履约事实和财务政策确认']);
+        return rows;
+      }
+      function financeCommissionItems() {
+        const basis = financeBasisValues();
+        const profile = financeProfileFor();
+        const channelFee = Math.round(basis.orderAmount * (isProjectOrder() ? 0 : 0.015));
+        return [
+          ['本公司承担优惠', '客户成交金额和优惠规则', profile.revenueEntity, moneyText(basis.discount), '优惠审批或结算确认后进入财务承接，不减少供应商真实应付'],
+          ['渠道佣金或服务费', '有效客户款、渠道合同和结算方式', profile.channelSettleParty, moneyText(channelFee), '渠道结算条件满足后确认，全额上缴和扣佣上缴分开记录'],
+          ['预存或授信使用', '客户授权、预存账户或企业账期规则', profile.collectionUnit, '按实际使用确认', '进入预存账户、授信额度或企业客户账期核对']
+        ];
+      }
+      function financeInternalItems() {
+        const profile = financeProfileFor();
+        if (profile.internalMode === '无跨法人内部结算') {
+          return [[profile.contractEntity, '-', '本订单销售、履约和采购责任当前均在同一法人或同一核算链路内', '无内部结算', '如后续改为集团内采购，需生成双方可核对的内部结算关系']];
+        }
+        return [[profile.contractEntity, profile.fulfillmentEntity, config.productName + ' / ' + scheduleValue(), '待集团内部协议确认', '占位、出团、回团、验收或对账节点达到后正式成立']];
+      }
+      function financeTableRows(rows, tagColumns) {
+        const tagIndex = tagColumns || [];
+        return rows.map(function (row) {
+          return '<tr>' + row.map(function (cell, index) {
+            const text = cell == null ? '-' : String(cell);
+            const html = tagIndex.indexOf(index) >= 0 ? tagHtml([text, statusClass(text)]) : escapeHtml(text);
+            return '<td>' + html + '</td>';
+          }).join('') + '</tr>';
+        }).join('');
+      }
+      function financeCostRowsHtml() {
+        return financeCostItems().map(function (item) {
+          return '<tr><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(item.provider) + '</td><td>' + escapeHtml(item.purchaseEntity) + '</td><td>' + tagHtml([item.status, statusClass(item.status)]) + '</td><td>' + escapeHtml(item.condition) + '</td></tr>';
+        }).join('');
+      }
+      function readStored(key) {
+        try {
+          return JSON.parse(window.localStorage.getItem(key) || '{}');
+        } catch (error) {
+          return {};
+        }
+      }
+      function storedOrderFor(orderNo) {
+        const store = readStored('caesarOrderFinanceEvents');
+        return store.orders && orderNo ? store.orders[orderNo] : null;
+      }
+      function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+      function setHtml(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = value;
+      }
+      function orderSourceSnapshotLabel(type) {
+        if (type === '邮轮') return '航次编号';
+        if (type === '专列') return '班期编号';
+        if (type === '自由行') return '出行日期';
+        if (type === '单项服务') return '服务单号';
+        if (type === '研学') return '研学团期';
+        if (type === '单团项目') return '项目团';
+        return '团期编号';
+      }
+      function orderRouteSnapshotLabel(type) {
+        if (type === '自由行') return '套餐';
+        if (type === '单项服务') return '服务项目';
+        if (type === '单团项目') return '锁定报价';
+        return '线路';
+      }
+      function orderTravelSnapshotLabel(type) {
+        if (type === '邮轮') return '登船/离船';
+        if (type === '专列') return '发车/返程';
+        if (type === '自由行') return '出行日期';
+        return '出发/回团';
+      }
+      const storedOrder = storedOrderFor(config.orderNo);
+      function applyStoredOrder(order) {
+        if (!order) return;
+        const amountText = order.amount || moneyText(order.amountValue || 0);
+        const receivedText = order.received || '¥0';
+        const carryText = order.discountCarry || '¥0';
+        const pendingText = order.pending || moneyText(Math.max(moneyNumber(amountText) - moneyNumber(receivedText) - moneyNumber(carryText), 0));
+        const orderType = order.orderType || (order.salesSnapshot && order.salesSnapshot.type) || config.productType;
+        if (orderType) config.productType = orderType;
+        if (order.productName) config.productName = order.productName;
+        if (order.customer) config.contact = [order.customer, order.contactPhone].filter(Boolean).join(' ');
+        if (order.store || order.advisor) config.owner = [order.store || '软件园门店', order.advisor || ''].filter(Boolean).join(' / ');
+        config.receivableCurrency = order.receivableCurrency || config.receivableCurrency || params.get('currency') || 'CNY';
+        config.amount = [amountText, receivedText, pendingText];
+        config.discountCarry = carryText;
+        config.discountUsages = order.discountUsages || (order.salesSnapshot && order.salesSnapshot.discountUsages) || config.discountUsages || [];
+        config.money = [
+          ['应收', amountText, 'amount-red'],
+          ['已收', receivedText, moneyNumber(receivedText) > 0 ? 'amount-green' : ''],
+          ['待收', pendingText, moneyNumber(pendingText) > 0 ? 'amount-red' : ''],
+          ['退款中', '¥0', '']
+        ];
+        if (order.orderStatus) config.orderStatus = [order.orderStatus, statusClass(order.orderStatus)];
+        if (order.paymentStatus) config.paymentStatus = [order.paymentStatus, statusClass(order.paymentStatus)];
+        const snapshot = order.salesSnapshot || {};
+        const routeText = order.routeText || snapshot.planName || snapshot.productName || '';
+        const scheduleText = snapshot.scheduleNo || order.sourceNo || params.get('scheduleNo') || '';
+        const travelDate = snapshot.travelDate || order.sourceDate || params.get('travelDate') || '';
+        if (routeText || scheduleText || travelDate) {
+          config.meta = [routeText, scheduleText, travelDate].filter(Boolean).join(' / ');
+        }
+        const sourceValue = scheduleText || scheduleValue();
+        config.snapshot = [
+          ['订单来源', order.productSource || '指定产品'],
+          ['归属门店', order.store || '软件园门店'],
+          ['下单店员', order.advisor || '-'],
+          [orderSourceSnapshotLabel(orderType), sourceValue],
+          [orderRouteSnapshotLabel(orderType), routeText || snapshot.productName || config.productName],
+          [orderTravelSnapshotLabel(orderType), travelDate || '-']
+        ];
+      }
+      applyStoredOrder(storedOrder);
+      config.receivableCurrency = config.receivableCurrency || params.get('currency') || 'CNY';
+      function isProjectOrder() {
+        return config.productType === '单团项目';
+      }
+      function setHidden(el, hidden) {
+        if (!el) return;
+        el.classList.toggle('hidden', Boolean(hidden));
+      }
+      function setTabLabel(tab, label) {
+        const button = document.querySelector('.detail-tabs-card .tab-item[data-tab="' + tab + '"]');
+        if (button) button.textContent = label;
+      }
+      function projectStage() {
+        if (!isProjectOrder()) return '';
+        if (params.get('stage')) return params.get('stage');
+        return config.projectOrderStage || 'pendingContract';
+      }
+      function projectScheduleHref(tab) {
+        const scheduleNo = scheduleValue();
+        let href = '../tour/schedules-detail.html?scheduleNo=' + encodeURIComponent(scheduleNo) + '&groupMode=project&source=customProject&projectNo=' + encodeURIComponent(snapshotValue('单团项目')) + '&customer=' + encodeURIComponent(contactParts().name);
+        if (tab) href += '&tab=' + encodeURIComponent(tab);
+        return href;
+      }
+      function contractTypeParam() {
+        if (isProjectOrder()) return 'project';
+        const map = { 参团游: 'group', 邮轮: 'cruise', 专列: 'train', 自由行: 'free', 单项服务: 'single', 研学: 'study' };
+        return map[config.productType] || 'group';
+      }
+      function contractEntryHref() {
+        const query = new URLSearchParams();
+        query.set('type', contractTypeParam());
+        query.set('orderNo', config.orderNo);
+        query.set('customer', contactParts().name);
+        query.set('product', config.productName);
+        query.set('scheduleNo', scheduleValue());
+        if (isProjectOrder()) {
+          query.set('source', 'customProject');
+          query.set('projectNo', snapshotValue('单团项目'));
+          query.set('quoteVersion', params.get('quoteVersion') || 'A');
+        }
+        return '../sales/contracts.html?' + query.toString();
+      }
+      function activeAttachmentCategories() {
+        return isProjectOrder() ? projectAttachmentCategories : attachmentCategories;
+      }
+      function setButtonAction(button, label, action) {
+        if (!button) return;
+        button.textContent = label;
+        delete button.dataset.openDrawer;
+        delete button.dataset.result;
+        delete button.dataset.projectNav;
+        delete button.dataset.contractEntry;
+        if (action.drawer) button.dataset.openDrawer = action.drawer;
+        if (action.result) button.dataset.result = action.result;
+        if (action.nav) button.dataset.projectNav = action.nav;
+        if (action.contract) button.dataset.contractEntry = 'true';
+      }
+      function updateProjectActionBar() {
+        const primary = document.getElementById('orderPrimaryAction');
+        const secondary = document.getElementById('orderSecondaryAction');
+        document.querySelectorAll('[data-project-menu]').forEach(function (item) { setHidden(item, true); });
+        document.querySelectorAll('[data-generic-menu]').forEach(function (item) { setHidden(item, false); });
+        if (!isProjectOrder()) {
+          setHidden(primary, false);
+          setHidden(secondary, false);
+          setButtonAction(primary, '收款', { drawer: 'receiptDrawer' });
+          setButtonAction(secondary, '应收调整', { drawer: 'receivableDrawer' });
+          return;
+        }
+        document.querySelectorAll('[data-generic-menu]').forEach(function (item) { setHidden(item, true); });
+        setHidden(primary, false);
+        setHidden(secondary, true);
+        const stage = projectStage();
+        const stageActions = {
+          pendingContract: { primary: ['处理项目合同', { contract: true }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'attachment', 'owner', 'sales', 'void'] },
+          pendingPayment: { primary: ['收款', { drawer: 'receiptDrawer' }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'change', 'attachment', 'owner', 'sales', 'void'] },
+          inExecution: { primary: ['项目团', { nav: 'schedule' }], menu: ['title', 'contract', 'payment', 'receivable', 'roster', 'schedule', 'change', 'settlement', 'attachment', 'owner', 'sales', 'void'] },
+          settlement: { primary: ['结算', { drawer: 'projectSettlementDrawer' }], menu: ['title', 'contract', 'payment', 'receivable', 'schedule', 'change', 'settlement', 'attachment', 'owner', 'sales'] },
+          completed: { primary: ['项目团', { nav: 'schedule' }], menu: ['title', 'contract', 'payment', 'schedule', 'settlement', 'attachment', 'owner', 'sales'] }
+        };
+        const current = stageActions[stage] || stageActions.pendingContract;
+        setButtonAction(primary, current.primary[0], current.primary[1]);
+        current.menu.forEach(function (name) {
+          document.querySelectorAll('[data-project-menu="' + name + '"]').forEach(function (item) { setHidden(item, false); });
+        });
+      }
+      function renderProjectOrderChrome() {
+        if (!isProjectOrder()) return;
+        setText('orderDetailTitle', '项目订单详情');
+        setText('orderContactLabel', '客户单位');
+        setText('orderOwnerLabel', '来源单团项目');
+        setText('orderStatusLabel', '项目团');
+        setText('paymentStatusLabel', '收款状态');
+        setHidden(document.getElementById('projectContractHeroField'), false);
+        setTabLabel('receivable', '应收收款');
+        setTabLabel('financeHandoff', '项目财务承接');
+        setTabLabel('travelers', '项目名单');
+        setTabLabel('contract', '项目合同');
+        setTabLabel('aftersales', '项目变更/售后');
+        setText('bookingSectionTitle', '项目结构');
+        setText('trafficSectionTitle', '项目资源占用');
+        setText('trafficScheduleHead', '项目团/资源');
+        setText('contractSectionTitle', '项目合同/确认材料');
+        setText('aftersalesSectionTitle', '项目变更记录');
+        const contractButton = document.getElementById('generateContractButton');
+        if (contractButton) {
+          contractButton.textContent = '处理项目合同';
+          delete contractButton.dataset.result;
+          delete contractButton.dataset.openDrawer;
+          contractButton.dataset.contractEntry = 'true';
+        }
+        const aftersalesButton = document.getElementById('aftersalesActionButton');
+        if (aftersalesButton) {
+          aftersalesButton.textContent = '发起项目变更';
+          aftersalesButton.dataset.aftersalesType = '项目变更';
+        }
+        updateProjectActionBar();
+      }
+      function renderStateActionButtons() {
+        document.querySelectorAll('[data-state-action]').forEach(function (item) { setHidden(item, true); });
+        if (isProjectOrder()) return;
+        const stateText = config.orderStatus[0] + ' ' + config.paymentStatus[0];
+        const closed = /已取消|已完成|已退款/.test(stateText);
+        document.querySelectorAll('[data-state-action="confirm"]').forEach(function (item) { setHidden(item, !/预留|占位|待确认/.test(stateText)); });
+        document.querySelectorAll('[data-state-action="release"]').forEach(function (item) { setHidden(item, !/预留|占位/.test(stateText)); });
+        document.querySelectorAll('[data-state-action="cancel"]').forEach(function (item) { setHidden(item, closed); });
+      }
+      function tagHtml(pair) {
+        return '<span class="' + escapeHtml(pair[1] || 'tag tag-gray') + '">' + escapeHtml(pair[0]) + '</span>';
+      }
+      function heroSnapshot(items) {
+        return items.map(function (item) {
+          return '<div class="product-detail-field"><span>' + escapeHtml(item[0]) + '</span><strong>' + escapeHtml(item[1]) + '</strong></div>';
+        }).join('');
+      }
+      function snapshotValue(names) {
+        const labels = Array.isArray(names) ? names : [names];
+        const found = config.snapshot.find(function (item) { return labels.indexOf(item[0]) >= 0; });
+        return found ? found[1] : '-';
+      }
+      function ownerParts() {
+        const parts = String(config.owner || '').split('/');
+        return {
+          store: (parts[0] || '-').trim(),
+          sales: (parts[1] || '-').trim()
+        };
+      }
+      function contactParts() {
+        const parts = String(config.contact || '').split(' ');
+        return {
+          name: parts[0] || '-',
+          phone: parts.slice(1).join(' ') || '-'
+        };
+      }
+      function scheduleLabel() {
+        if (config.productType === '单团项目') return '项目团';
+        if (config.productType === '邮轮') return '航次号';
+        if (config.productType === '专列') return '班期号';
+        if (config.productType === '自由行') return '出行日期';
+        if (config.productType === '单项服务') return '服务单号';
+        if (config.productType === '研学') return '研学团期';
+        return '团号';
+      }
+      function scheduleValue() {
+        return snapshotValue(['团期编号', '航次编号', '班期编号', '出行日期', '服务单号', '研学团期', '项目团']);
+      }
+      function optionList(options) {
+        return options.map(function (option) { return '<option>' + escapeHtml(option) + '</option>'; }).join('');
+      }
+      function selectControl(label, options, full) {
+        return '<label class="form-group' + (full ? ' form-group-full' : '') + '"><span class="form-label">' + escapeHtml(label) + '</span><select class="form-control">' + optionList(options) + '</select></label>';
+      }
+      function currencyLabel(code) {
+        const labels = { CNY: 'CNY 人民币', USD: 'USD 美元', EUR: 'EUR 欧元', JPY: 'JPY 日元', HKD: 'HKD 港币' };
+        return labels[code] || code || 'CNY 人民币';
+      }
+      function receivableCurrencyCode() {
+        return String(config.receivableCurrency || params.get('currency') || 'CNY').toUpperCase();
+      }
+      function currencySelectControl(label, selectedCode) {
+        const codes = ['CNY', 'USD', 'EUR', 'JPY', 'HKD'];
+        return '<label class="form-group"><span class="form-label">' + escapeHtml(label) + '</span><select class="form-control">' + codes.map(function (code) {
+          return '<option value="' + code + '"' + (code === selectedCode ? ' selected' : '') + '>' + escapeHtml(currencyLabel(code)) + '</option>';
+        }).join('') + '</select></label>';
+      }
+      function inputControl(label, value, full, attrs) {
+        return '<label class="form-group' + (full ? ' form-group-full' : '') + '"><span class="form-label">' + escapeHtml(label) + '</span><input class="form-control" type="text" ' + (attrs || '') + ' value="' + escapeHtml(value || '') + '"></label>';
+      }
+      function textareaControl(label, value, placeholder) {
+        return '<label class="form-group form-group-full"><span class="form-label">' + escapeHtml(label) + '</span><textarea class="form-control" rows="3" placeholder="' + escapeHtml(placeholder || '') + '">' + escapeHtml(value || '') + '</textarea></label>';
+      }
+      function uploadControl(label, text) {
+        return '<label class="form-group form-group-full"><span class="form-label">' + escapeHtml(label) + '</span><div class="upload-box">' + escapeHtml(text) + '</div></label>';
+      }
+      function readonlyMiniGrid(items) {
+        return '<div class="description-grid order-description-grid">' + items.map(descriptionItem).join('') + '</div>';
+      }
+      function receiptProfileFor() {
+        if (isProjectOrder()) {
+          return {
+            title: '登记阶段收款',
+            nodeLabel: '收款阶段',
+            nodeOptions: ['项目首款 / 锁定报价节点', '项目进度款 / 锁定报价节点', '项目尾款 / 锁定报价节点', '项目补差'],
+            projectLabel: '对应应收',
+            projectOptions: ['YS-MICE-20260704-001 项目首款', 'YS-MICE-20260704-002 项目进度款', 'YS-MICE-20260704-003 项目尾款'],
+            sourceLabel: '收款来源',
+            sourceOptions: ['客户对公转账', '门店预存账户', '银行流水认领', '线下收款待认领'],
+            amount: '按本次到账金额',
+            voucherText: '上传银行回单或选择收款流水，提交后进入销售中心收款认领/财务复核',
+            remark: '填写付款公司名称、流水号、差额说明或客户付款备注'
+          };
+        }
+        const profiles = {
+          邮轮: [['收款项目', ['船票款', '港务费', '升舱差价', '岸上项目', '补差']], ['款项类型', ['船票款', '港务费', '升舱差价', '保险', '补差']]],
+          专列: [['收款项目', ['铺位款', '包厢差价', '保险/服务费', '补差']], ['款项类型', ['铺位款', '包厢差价', '保险/服务费', '补差']]],
+          自由行: [['收款项目', ['套餐款', '服务项补差', '酒店尾款', '机票补差', '全款']], ['款项类型', ['套餐款', '酒店', '机票', '接送机', '当地玩乐', '补差']]],
+          单项服务: [['收款项目', ['服务费', '代垫费', '材料费', '快递费', '补差']], ['款项类型', ['服务费', '代垫费', '材料费', '快递费', '补差']]],
+          研学: [['收款项目', ['营费', '材料费', '保险费', '补差']], ['款项类型', ['营费', '材料费', '保险费', '补差']]]
+        };
+        const profile = profiles[config.productType] || [['收款节点', ['定金', '尾款', '补差', '全款']], ['项目类型', ['团费', '保险', '签证', '房差', '补差']]];
+        return {
+          title: '订单收款',
+          nodeLabel: profile[0][0],
+          nodeOptions: profile[0][1],
+          projectLabel: profile[1][0],
+          projectOptions: profile[1][1],
+          sourceLabel: '支付方式',
+          sourceOptions: ['银行转账', 'POS', '现金', '线上支付', '门店预存账户'],
+          amount: config.amount[2] === '¥0' ? config.amount[0] : config.amount[2],
+          voucherText: '上传凭证或选择财务流水，提交后进入收款认领/财务复核',
+          remark: '填写收款来源、流水说明或余额扣款授权'
+        };
+      }
+      function receiptFieldsHtml() {
+        const profile = receiptProfileFor();
+        const currencyCode = receivableCurrencyCode();
+        return [
+          selectControl(profile.nodeLabel, profile.nodeOptions),
+          selectControl(profile.sourceLabel, profile.sourceOptions),
+          currencySelectControl('收款币种', currencyCode),
+          inputControl('原币金额', currencyCode === 'CNY' ? profile.amount : '', false, 'placeholder="客户实际到账金额"'),
+          inputControl('成交汇率', currencyCode === 'CNY' ? '1.0000' : '', false, 'placeholder="按银行到账或财务确认汇率"'),
+          inputControl('本次收款金额', profile.amount),
+          inputControl('银行手续费', '¥0'),
+          inputControl('汇兑差额', '¥0'),
+          selectControl(profile.projectLabel, profile.projectOptions),
+          uploadControl('凭证/流水', profile.voucherText),
+          textareaControl('收款说明', '', profile.remark)
+        ].join('');
+      }
+      function receivableProfileFor() {
+        if (isProjectOrder()) {
+          return {
+            title: '项目应收调整申请',
+            typeOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '项目变更'],
+            subjectLabel: '业务款项',
+            subjectOptions: ['项目团费', '会务服务费', '交通差价', '住宿差价', '活动增项', '其他'],
+            changeLabel: '关联变更',
+            changeOptions: ['BG-MICE-20260704-001 人数调整', '无，先提交应收调整'],
+            reason: '填写人数、日期、服务标准、售后依据或人工特批说明，以及是否影响项目团成本'
+          };
+        }
+        const profiles = {
+          邮轮: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['船票款', '港务费', '升舱差价', '岸上项目', '保险']],
+          专列: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['铺位款', '包厢差价', '保险/服务费', '补差']],
+          自由行: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['套餐款', '酒店', '机票', '接送机', '当地玩乐']],
+          单项服务: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['服务费', '代垫费', '材料费', '快递费']],
+          研学: [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'], ['营费', '材料费', '保险费', '补差']]
+        };
+        const profile = profiles[config.productType] || [['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '项目变更'], ['团费', '机票', '签证', '房差', '保险', '服务费']];
+        return {
+          title: '应收调整申请',
+          typeOptions: profile[0],
+          subjectLabel: '业务款项',
+          subjectOptions: profile[1],
+          reason: '填写客户确认、补差原因、售后依据或人工特批说明'
+        };
+      }
+      function receivableFieldsHtml() {
+        const profile = receivableProfileFor();
+        return [
+          selectControl('调整类型', profile.typeOptions),
+          selectControl(profile.subjectLabel, profile.subjectOptions),
+          profile.changeOptions ? selectControl(profile.changeLabel, profile.changeOptions) : '',
+          inputControl('调整金额', '', false, 'placeholder="增加填正数，减免或折扣填负数"'),
+          selectControl('审批流', ['店长 → 财务应收', '财务应收直接复核']),
+          uploadControl(isProjectOrder() ? '客户确认依据' : '关联附件/依据', isProjectOrder() ? '上传客户邮件、盖章确认单、变更报价或补充协议' : '上传客户确认、价格依据或补充服务说明'),
+          textareaControl('调整说明', '', profile.reason)
+        ].join('');
+      }
+      function contractFieldsHtml() {
+        return readonlyMiniGrid([
+          ['承接页面', '合同管理 / 合同列表'],
+          ['订单号', config.orderNo],
+          ['合同金额', config.amount[0]],
+          [isProjectOrder() ? '锁定报价' : '线路/套餐', isProjectOrder() ? '方案' + (params.get('quoteVersion') || 'A') + ' / 锁定报价' : snapshotValue(['线路', '套餐', '服务项目', '方案'])],
+          [isProjectOrder() ? '项目团' : scheduleLabel(), scheduleValue()],
+          ['签署对象', contactParts().name]
+        ]);
+      }
+      function detailActionFields(action) {
+        const base = readonlyMiniGrid([
+          ['订单号', config.orderNo],
+          ['产品类型', config.productType],
+          ['客户', contactParts().name],
+          ['订单状态', config.orderStatus[0]]
+        ]);
+        if (action === '修改归属') {
+          const ownerOptions = isProjectOrder() ? ['泉州丰泽门店', '软件园门店', '观音山门店', '泉州鲤城门店'] : ['软件园门店', '文灶门店', '观音山门店', '泉州丰泽门店'];
+          return base + selectControl('调整为', ownerOptions) + textareaControl('调整原因', '', isProjectOrder() ? '如项目归属交接、企业客户归属调整或项目负责人变更' : '如门店选择错误、业绩归属调整或项目归属交接');
+        }
+        if (action === '修改店员') {
+          const salesOptions = isProjectOrder() ? ['李梅', '郑华', '孙丽', '吴芳'] : ['孙丽', '郑华', '李梅', '吴芳', '陈红'];
+          return base + selectControl('调整为', salesOptions) + textareaControl('调整原因', '', isProjectOrder() ? '如企业客户交接、项目负责人调整或单团店员变更' : '如店员录入错误、客户归属交接或项目负责人变更');
+        }
+        const reasons = action === '转确认'
+          ? ['客户已确认', '收款已满足', '资源已确认', '主管确认']
+          : action === '释放'
+            ? ['预留到期', '客户放弃', '重复占位', '资源需释放给其他订单']
+            : ['客户放弃', '重复下单', '资料/合同未确认', '资源无法确认', '其他'];
+        return base + selectControl(action + '原因', reasons) + selectControl('财务影响', ['无收款，仅关闭订单', '有收款，需发起退款/冲减', '需保留扣损并退款', '待财务复核']) + textareaControl('处理说明', '', '记录客户确认、资源释放和财务承接要求');
+      }
+      function openDetailActionDrawer(action) {
+        setText('detailActionDrawerTitle', action);
+        setText('detailActionDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + contactParts().name);
+        setHtml('detailActionDrawerFields', detailActionFields(action));
+        const submit = document.getElementById('detailActionDrawerSubmit');
+        if (submit) {
+          submit.textContent = /作废|取消|释放/.test(action) ? '确认' + action : '保存';
+          submit.dataset.result = action;
+        }
+        openLayer('detailActionDrawer');
+      }
+      function travelDateValue() {
+        return snapshotValue(['出发/回团', '登船/离船', '发车/返程', '出行日期', '出发/返程']);
+      }
+      function splitTravelDates() {
+        const raw = travelDateValue();
+        if (!raw || raw === '-') return { start: '-', end: '-' };
+        const parts = raw.split('/').map(function (item) { return item.trim(); });
+        return {
+          start: parts[0] || raw,
+          end: parts[1] || '-'
+        };
+      }
+      function productOverviewMeta() {
+        const typeMeta = {
+          '参团游': { source: '门店', channel: 'PC后台', service: '孙丽', department: '参团游事业部', departure: '北京', destination: '法国 / 德国等', reservationDue: '2026-07-05 00:55:57' },
+          '邮轮': { source: '门店', channel: 'PC后台', service: '郑华', department: '邮轮事业部', departure: '巴塞罗那', destination: '地中海', reservationDue: '-' },
+          '专列': { source: '门店', channel: 'PC后台', service: '李娜', department: '专列事业部', departure: '西安', destination: '西北', reservationDue: '-' },
+          '自由行': { source: '门店', channel: 'PC后台', service: '陈红', department: '自由行业务部', departure: '广州', destination: snapshotValue('目的地'), reservationDue: '-' },
+          '单项服务': { source: '门店', channel: 'PC后台', service: '孙丽', department: '签证服务部', departure: '-', destination: snapshotValue('服务项目'), reservationDue: '-' },
+          '研学': { source: '学校团', channel: 'PC后台', service: '孙丽', department: '研学事业部', departure: '-', destination: '新加坡', reservationDue: '-' },
+          '单团项目': { source: '单团项目', channel: 'PC后台', service: '陈刚', department: 'MICE/定制中心', departure: '北京', destination: '法国 / 德国 / 捷克', reservationDue: '-' }
+        };
+        return typeMeta[config.productType] || typeMeta['参团游'];
+      }
+      function bookingStructure() {
+        const snapshot = storedOrder && storedOrder.salesSnapshot;
+        if (snapshot && snapshot.compositionRows && snapshot.compositionRows.length) {
+          return [
+            [snapshot.sourceLabel || scheduleLabel(), snapshot.scheduleNo || scheduleValue()],
+            ['出发日期', snapshot.travelDate || '-'],
+            ['销售构成', (snapshot.compositionRows.length || 0) + '种' + (snapshot.compositionKind || '资源')],
+            ['出行人数', (snapshot.peopleCount || 0) + '人'],
+            ['订单金额', snapshot.totalText || moneyText(snapshot.total)],
+            ['库存口径', snapshot.stockUnit ? '按' + snapshot.stockUnit + '占用' : '按订单确认']
+          ];
+        }
+        if (config.productType === '邮轮') return [['占用航次', scheduleValue()], ['占用舱型', '阳台舱BA'], ['成人占位', '2'], ['儿童占位', '1'], ['儿童不占位', '1（不扣舱房）'], ['舱房数量', '1间'], ['第三/第四人', '1'], ['库存状态', '已占用1间阳台舱']];
+        if (config.productType === '专列') return [['占用班期', scheduleValue()], ['席别/铺位', '软卧下铺'], ['成人占位', '2'], ['儿童占位', '1'], ['儿童不占位', '1（不扣铺位）'], ['铺位数量', '3铺'], ['包厢占用', '0'], ['库存状态', '已占用3个下铺']];
+        if (config.productType === '自由行') return [['成人人数', '2'], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['单房差数量', '0'], ['出行人数', '2']];
+        if (config.productType === '单项服务') return [['委托人数', String(config.travelers.rows.length)], ['儿童人数', '0'], ['老人人数', '0'], ['服务数量', '2'], ['材料份数', '2'], ['加急数量', '0']];
+        if (config.productType === '研学') return [['学员人数', String(config.travelers.rows.length)], ['成人陪同', '0'], ['老师人数', '1'], ['房间数量', '-'], ['特殊材料', '监护人授权书'], ['出行人数', String(config.travelers.rows.length)]];
+        if (config.productType === '单团项目') return [['项目人数', params.get('people') || '80'], ['企业客户', contactParts().name], ['项目团', scheduleValue()], ['合同来源', snapshotValue('单团项目')], ['报价版本', params.get('quoteVersion') || 'A'], ['店员范围', '客户专属']];
+        return [['成人人数', String(config.travelers.rows.length)], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['单房差数量', '0'], ['出行人数', String(config.travelers.rows.length)]];
+      }
+      function trafficOccupancyData() {
+        const scheduleNo = params.get('scheduleNo') || scheduleValue();
+        const byOrder = {
+          KS202607010018: [['EU20260818001', 'CA937去程 / CA938返程', '张建国', '经济舱G舱座位', '已锁位', '已出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊 ¥6,666 · 转团调整 ¥666']],
+          KS202607030025: [['EU20260818001', 'CA937去程 / CA938返程', '王敏', '经济舱G舱座位', '已占用', '待出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊 ¥6,666 · 待出票']],
+          KS202607030026: [['EU20260818001', 'CA937去程 / CA938返程', '李梅', '经济舱K舱座位', '待资料补齐', '待出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊待确认']],
+          KS202607020039: [['TR-SILK-20250822-001', 'Y653 东方丝路专列', '李建军', '软卧下铺', '已锁位', '已确认', 'TRN-BLK-20260628-004']],
+          KS202607020040: [['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵琳', '软卧下铺', '已占用', '待确认', 'TRN-BLK-20260628-004']],
+          KSCZ20260704002: [['CR-MED-20250720-001', '理想号 MED-20260912', '刘洋', '阳台舱BA / 成人占位', '已占用', '待确认', 'CRU-BLK-20260622-003', '占用同一间阳台舱'], ['CR-MED-20250720-001', '理想号 MED-20260912', '周丽', '阳台舱BA / 儿童占位', '已占用', '待确认', 'CRU-BLK-20260622-003', '占用舱位容量'], ['CR-MED-20250720-001', '理想号 MED-20260912', '刘小小', '儿童不占位', '已计费', '待确认', 'CRU-BLK-20260622-003', '不扣舱房库存'], ['CR-MED-20250720-001', '理想号 MED-20260912', '陈明', '第三/第四人', '已计费', '待确认', 'CRU-BLK-20260622-003', '同舱加人，不新增舱房']],
+          KSTR20260704003: [['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵明', '软卧下铺 / 成人占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用1个下铺'], ['TR-SILK-20250822-001', 'Y653 东方丝路专列', '陈芳', '软卧下铺 / 成人占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用1个下铺'], ['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵小雨', '软卧下铺 / 儿童占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用1个下铺'], ['TR-SILK-20250822-001', 'Y653 东方丝路专列', '赵小明', '儿童不占位', '已计费', '待确认', 'TRN-BLK-20260628-004', '不扣铺位库存']]
+        };
+        if (byOrder[config.orderNo]) return byOrder[config.orderNo];
+        if (config.productType === '邮轮') return [[scheduleNo, '理想号 MED-20260912', contactParts().name, '阳台舱BA / 成人占位', '已占用', '待确认', 'CRU-BLK-20260622-003', '占用舱房容量']];
+        if (config.productType === '专列') return [[scheduleNo, 'Y653 东方丝路专列', contactParts().name, '软卧下铺 / 成人占位', '已占用', '待确认', 'TRN-BLK-20260628-004', '占用铺位库存']];
+        if (config.productType === '单团项目') return [[scheduleNo, 'CA933去程 / CA934返程', '管理层20人', '商务舱锁位', '待确认', '待出票', 'AIR-MICE-20260704-001', '随项目团确认交通成本'], [scheduleNo, 'CA937去程 / CA938返程', '员工组60人', '经济舱锁位', '待确认', '待出票', 'AIR-MICE-20260704-002', '名单导入后分配乘机人']];
+        if (config.productType === '参团游') return [[scheduleNo, 'CA937去程 / CA938返程', contactParts().name, '经济舱G舱座位', '已占用', '待出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊随团期应付扣减']];
+        return [];
+      }
+      function trafficOccupancyRow(row) {
+        const scheduleNo = row[0] || scheduleValue();
+        let scheduleHref = '../tour/schedules-detail.html?scheduleNo=' + encodeURIComponent(scheduleNo) + '&tab=resource';
+        if (config.productType === '单团项目') {
+          scheduleHref += '&groupMode=project&source=customProject&projectNo=' + encodeURIComponent(snapshotValue('单团项目')) + '&customer=' + encodeURIComponent(contactParts().name);
+        }
+        return '<tr><td><a class="link-primary table-main-link" href="' + scheduleHref + '">' + escapeHtml(scheduleNo) + '</a><span class="text-muted">' + escapeHtml(row[1]) + '</span></td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td><td>' + tagHtml([row[4], statusClass(row[4])]) + '</td><td>' + tagHtml([row[5], statusClass(row[5])]) + '</td><td>' + escapeHtml(row[6]) + '<span class="text-muted">' + escapeHtml(row[7] || '从团期交通资源占用生成') + '</span></td></tr>';
+      }
+      function descriptionItem(item) {
+        const value = item[2] === 'html' ? item[1] : escapeHtml(item[1]);
+        return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + value + '</div></div>';
+      }
+      function descriptionGrid(items) {
+        return items.map(descriptionItem).join('');
+      }
+      function bookingCompositionColumns(snapshot) {
+        if (config.productType === '邮轮') return [
+          ['spec', snapshot.compositionKind || '舱型'],
+          ['cabinCount', '舱房数'],
+          ['adultOccupancy', '成人占位'],
+          ['childOccupancy', '儿童占位'],
+          ['childNoBerth', '儿童不占位'],
+          ['thirdFourth', '第三/第四人'],
+          ['total', '金额', true]
+        ];
+        if (config.productType === '专列') return [
+          ['spec', snapshot.compositionKind || '铺位'],
+          ['adultOccupancy', '成人占位'],
+          ['childOccupancy', '儿童占位'],
+          ['childNoBerth', '儿童不占位'],
+          ['total', '金额', true]
+        ];
+        if (config.productType === '自由行') return [
+          ['spec', snapshot.compositionKind || '房型'],
+          ['roomCount', '房间数'],
+          ['adult', '成人'],
+          ['child', '儿童'],
+          ['total', '金额', true]
+        ];
+        return [
+          ['spec', '销售构成'],
+          ['total', '金额', true]
+        ];
+      }
+      function bookingCompositionHtml(snapshot) {
+        const columns = bookingCompositionColumns(snapshot);
+        const summary = [
+          [snapshot.sourceLabel || scheduleLabel(), snapshot.scheduleNo || scheduleValue()],
+          ['出发日期', snapshot.travelDate || '-'],
+          ['人数', (snapshot.peopleCount || 0) + '人'],
+          ['订单金额', snapshot.totalText || moneyText(snapshot.total)]
+        ];
+        return '<div class="order-booking-composition-summary">' + summary.map(function (item) {
+          return '<span>' + escapeHtml(item[0]) + ' <strong>' + escapeHtml(item[1]) + '</strong></span>';
+        }).join('') + '</div>' +
+          '<div class="table-wrap order-detail-table order-booking-composition-table"><table><thead><tr>' +
+          columns.map(function (column) { return '<th>' + escapeHtml(column[1]) + '</th>'; }).join('') +
+          '</tr></thead><tbody>' + snapshot.compositionRows.map(function (row) {
+            return '<tr>' + columns.map(function (column) {
+              const value = column[2] ? moneyText(row[column[0]]) : (row[column[0]] || 0);
+              return '<td' + (column[2] ? ' class="amount-strong"' : '') + '>' + escapeHtml(value) + '</td>';
+            }).join('') + '</tr>';
+          }).join('') + '</tbody></table></div>';
+      }
+      function renderBookingStructureHtml() {
+        const target = document.getElementById('overviewBookingGrid');
+        const snapshot = storedOrder && storedOrder.salesSnapshot;
+        if (target && snapshot && snapshot.compositionRows && snapshot.compositionRows.length) {
+          target.className = 'order-booking-composition';
+          return bookingCompositionHtml(snapshot);
+        }
+        if (target) target.className = 'description-grid order-overview-grid';
+        return descriptionGrid(bookingStructure());
+      }
+      function moneyCard(item) {
+        return '<div class="order-money-card"><span>' + escapeHtml(item[0]) + '</span><strong class="' + escapeHtml(item[2]) + '">' + escapeHtml(item[1]) + '</strong></div>';
+      }
+      function taskItem(item) {
+        return '<div class="order-task-item"><strong>' + escapeHtml(item[0]) + '</strong><span>' + escapeHtml(item[1]) + '</span></div>';
+      }
+      function contractDocRow(item) {
+        const status = item[1];
+        const sendStatus = /已生成|已确认|已上传/.test(status) ? '待发送' : '未生成';
+        const contractHref = contractEntryHref();
+        const canDownload = /已生成|已确认|已签署|待签署/.test(status);
+        if (isProjectOrder()) {
+          const contractActions = '<a class="table-action-primary" href="' + contractHref + '">进入合同</a>' + (canDownload ? '<button type="button" data-result="下载合同">下载合同</button>' : '');
+          const attachmentActions = '<button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button><button type="button" data-result="下载' + escapeHtml(item[0]) + '">下载</button><button type="button" data-open-drawer="attachmentDrawer" data-attachment-type="' + escapeHtml(item[0]) + '">维护</button>';
+          return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml([status, statusClass(status)]) + '</td><td>' + tagHtml([sendStatus, statusClass(sendStatus)]) + '</td><td><div class="table-action">' + (item[2] === '合同' ? contractActions : attachmentActions) + '</div></td></tr>';
+        }
+        const mainAction = /合同|确认单|确认书|协议/.test(item[2]) ? '<a class="table-action-primary" href="' + contractHref + '">进入合同</a>' : '<button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button>';
+        const downloadAction = canDownload ? '<button type="button" data-result="下载' + escapeHtml(item[0]) + '">下载</button>' : '';
+        return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml([status, statusClass(status)]) + '</td><td>' + tagHtml([sendStatus, statusClass(sendStatus)]) + '</td><td><div class="table-action">' + mainAction + downloadAction + '</div></td></tr>';
+      }
+      function travelerGapItems() {
+        const names = config.travelers.rows.map(function (row) { return row[0]; }).join('、');
+        return config.travelers.drawer.map(function (item, index) {
+          const state = index === 0 ? '待补' : index === 1 ? '待确认' : '待复核';
+          return [item[0], item[1], state, names];
+        });
+      }
+      function travelerGapCard(item) {
+        return '<div class="order-traveler-gap-card"><div><strong>' + escapeHtml(item[0]) + '</strong><span>' + escapeHtml(item[1]) + '</span></div><div><em>' + escapeHtml(item[3]) + '</em>' + tagHtml([item[2], statusClass(item[2])]) + '</div></div>';
+      }
+      function travelerEditCard(row) {
+        const travelerName = row[0];
+        const status = Array.isArray(row[row.length - 1]) ? row[row.length - 1] : ['待维护', 'tag tag-orange'];
+        return '<section class="order-traveler-edit-card"><div class="order-traveler-edit-head"><div><strong>' + escapeHtml(travelerName) + '</strong><span>' + escapeHtml(row.slice(1, -1).join(' / ')) + '</span></div>' + tagHtml(status) + '</div><div class="order-traveler-field-grid">' + config.travelers.drawer.map(function (item) { return '<label class="form-group"><span class="form-label">' + escapeHtml(item[0]) + '</span><input class="form-control" type="text" placeholder="' + escapeHtml(item[1]) + '"></label>'; }).join('') + '</div><div class="order-traveler-material-strip"><span>材料上传</span><button class="table-action-primary" type="button" data-result="上传' + escapeHtml(travelerName) + '材料">上传材料</button><button class="table-action-primary" type="button" data-result="查看' + escapeHtml(travelerName) + '预检">查看预检</button></div></section>';
+      }
+      function attachmentStatusClass(status) {
+        if (/已/.test(status)) return 'tag tag-green';
+        if (/待|补/.test(status)) return 'tag tag-orange';
+        return 'tag tag-gray';
+      }
+      function attachmentCategoryCard(item) {
+        return '<div class="order-attachment-category-card"><div class="order-attachment-card-head"><div><strong>' + escapeHtml(item[0]) + '</strong><span>' + escapeHtml(item[1]) + '</span></div>' + tagHtml([item[2], attachmentStatusClass(item[2])]) + '</div><div class="order-attachment-card-foot"><span>' + escapeHtml(item[3]) + '</span><div class="table-action"><button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button><button class="table-action-primary" type="button" data-open-drawer="attachmentDrawer" data-attachment-type="' + escapeHtml(item[0]) + '">维护</button></div></div></div>';
+      }
+      function attachmentUploadCard(item) {
+        const uploadLabel = isProjectOrder() ? '上传附件' : '上传';
+        return '<section class="order-attachment-upload-row"><div class="order-attachment-upload-main"><strong>' + escapeHtml(item[0]) + '</strong><span>' + escapeHtml(item[1]) + '</span></div><div class="order-attachment-upload-file"><span>' + escapeHtml(item[3]) + '</span><strong>' + escapeHtml(item[4]) + '</strong></div><div class="order-attachment-upload-actions">' + tagHtml([item[2], attachmentStatusClass(item[2])]) + '<button class="table-action-primary" type="button" data-result="' + escapeHtml(uploadLabel + item[0]) + '">' + escapeHtml(uploadLabel) + '</button><button class="table-action-primary" type="button" data-result="查看' + escapeHtml(item[0]) + '">查看</button></div></section>';
+      }
+      function statusClass(status) {
+        if (/已|完成|通过|已生成|已确认|已上传/.test(status)) return 'tag tag-green';
+        if (/待|未|部分|审批|复核|确认|补/.test(status)) return 'tag tag-orange';
+        return 'tag tag-gray';
+      }
+      function projectReceivableItems() {
+        return [
+          ['项目首款', '阶段应收', '待合同确认', '系统生成', '待收款', 'YS-MICE-20260704-001', '合同签署后按锁定报价节点收取'],
+          ['项目进度款', '阶段应收', '待合同确认', '待触发', '未生效', 'YS-MICE-20260704-002', '出发前按锁定报价节点收取'],
+          ['项目尾款', '阶段应收', '待合同确认', '待触发', '未生效', 'YS-MICE-20260704-003', '回团验收后按锁定报价节点收取']
+        ];
+      }
+      function salesSnapshotReceivableItems() {
+        const snapshot = storedOrder && storedOrder.salesSnapshot;
+        if (!snapshot || !snapshot.priceGroups || !snapshot.priceGroups.length) return null;
+        const digits = config.orderNo.replace(/\D/g, '').slice(-8) || '20260704';
+        const rows = [];
+        snapshot.priceGroups.forEach(function (group) {
+          (group.lines || []).forEach(function (line) {
+            if (!Number(line.amount || 0)) return;
+            rows.push([
+              line.label,
+              '初始应收',
+              moneyText(line.amount),
+              '系统生成',
+              '已生效',
+              'YS' + digits,
+              [group.title, line.quantity + '×' + moneyText(line.price)].filter(Boolean).join(' / ')
+            ]);
+          });
+        });
+        return rows.length ? rows : null;
+      }
+      function projectReceiptFieldsHtml() {
+        const currencyCode = receivableCurrencyCode();
+        return [
+          '<label class="form-group"><span class="form-label">收款阶段</span><select class="form-control"><option>项目首款 / 锁定报价节点</option><option>项目进度款 / 锁定报价节点</option><option>项目尾款 / 锁定报价节点</option><option>项目补差</option></select></label>',
+          '<label class="form-group"><span class="form-label">收款来源</span><select class="form-control"><option>客户对公转账</option><option>门店预存账户</option><option>银行流水认领</option><option>线下收款待认领</option></select></label>',
+          currencySelectControl('收款币种', currencyCode),
+          '<label class="form-group"><span class="form-label">原币金额</span><input class="form-control" type="text" placeholder="客户实际到账金额" value="' + (currencyCode === 'CNY' ? '按银行流水' : '') + '"></label>',
+          '<label class="form-group"><span class="form-label">成交汇率</span><input class="form-control" type="text" placeholder="按银行到账或财务确认汇率" value="' + (currencyCode === 'CNY' ? '1.0000' : '') + '"></label>',
+          '<label class="form-group"><span class="form-label">本次收款金额</span><input class="form-control" type="text" value="按银行流水"></label>',
+          '<label class="form-group"><span class="form-label">银行手续费</span><input class="form-control" type="text" value="¥0"></label>',
+          '<label class="form-group"><span class="form-label">汇兑差额</span><input class="form-control" type="text" value="¥0"></label>',
+          '<label class="form-group"><span class="form-label">对应应收</span><select class="form-control"><option>YS-MICE-20260704-001 项目首款</option><option>YS-MICE-20260704-002 项目进度款</option><option>YS-MICE-20260704-003 项目尾款</option></select></label>',
+          '<label class="form-group form-group-full"><span class="form-label">凭证/流水</span><div class="upload-box">上传银行回单或选择收款流水，提交后进入销售中心收款认领/财务复核</div></label>',
+          '<label class="form-group form-group-full"><span class="form-label">收款说明</span><textarea class="form-control" rows="3" placeholder="填写付款公司名称、流水号、差额说明或客户付款备注"></textarea></label>'
+        ].join('');
+      }
+      function projectReceivableFieldsHtml() {
+        return [
+          '<label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>新增应收项</option><option>补收差价</option><option>人数变化调整</option><option>售后减免</option><option>人工特批折扣</option><option>项目变更</option></select></label>',
+          '<label class="form-group"><span class="form-label">业务款项</span><select class="form-control"><option>项目团费</option><option>会务服务费</option><option>交通差价</option><option>住宿差价</option><option>活动增项</option><option>其他</option></select></label>',
+          '<label class="form-group"><span class="form-label">关联变更</span><select class="form-control"><option>BG-MICE-20260704-001 人数调整</option><option>无，先提交应收调整</option></select></label>',
+          '<label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免或折扣填负数"></label>',
+          '<label class="form-group form-group-full"><span class="form-label">客户确认依据</span><div class="upload-box">上传客户邮件、盖章确认单、变更报价或补充协议</div></label>',
+          '<label class="form-group form-group-full"><span class="form-label">调整说明</span><textarea class="form-control" rows="4" placeholder="填写人数、日期、服务标准或会议活动变化，以及是否影响项目团成本"></textarea></label>'
+        ].join('');
+      }
+      function projectChangeFieldsHtml() {
+        return [
+          '<label class="form-group"><span class="form-label">变更类型</span><select class="form-control"><option>人数变化</option><option>日期变化</option><option>服务范围变化</option><option>费用调整</option><option>取消项目</option></select></label>',
+          '<label class="form-group"><span class="form-label">影响对象</span><select class="form-control"><option>合同 + 阶段应收 + 项目团</option><option>仅项目团执行</option><option>仅合同附件</option><option>仅应收补差</option></select></label>',
+          '<label class="form-group"><span class="form-label">变更后人数</span><input class="form-control" type="text" value="80"></label>',
+          '<label class="form-group"><span class="form-label">金额影响</span><select class="form-control"><option>不影响总额</option><option>需补收</option><option>需优惠减免</option><option>待重新报价</option></select></label>',
+          '<label class="form-group form-group-full"><span class="form-label">客户确认依据</span><div class="upload-box">上传客户邮件、确认单、补充协议或变更报价</div></label>',
+          '<label class="form-group form-group-full"><span class="form-label">变更说明</span><textarea class="form-control" rows="4" placeholder="说明变更原因、执行影响、是否需要补充成本确认或客户确认附件"></textarea></label>'
+        ].join('');
+      }
+      function renderProjectDrawers() {
+        if (!isProjectOrder()) return;
+        setText('receiptDrawerTitle', '登记阶段收款');
+        setText('receiptDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。提交后进入销售中心收款认领和财务复核。');
+        setHtml('receiptDrawerFields', projectReceiptFieldsHtml());
+        setText('receivableDrawerTitle', '项目应收调整申请');
+        setText('receivableDrawerSummary', '项目订单应收 ' + config.amount[0] + '，调整必须关联客户确认或项目变更，审批通过后由财务应收承接。');
+        setHtml('receivableDrawerFields', projectReceivableFieldsHtml());
+        setText('projectContractDrawerTitle', '合同管理承接');
+        setText('projectContractDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name);
+        setText('projectContractAmount', config.amount[0]);
+        setText('contractQuoteLabel', '锁定报价');
+        setText('contractScheduleLabel', '项目团');
+        setText('projectContractQuote', '方案' + (params.get('quoteVersion') || 'A') + ' / 锁定报价');
+        setText('projectContractSchedule', scheduleValue());
+        setHtml('projectContractStatus', tagHtml(['待签署', 'tag tag-orange']));
+        setHtml('contractDrawerFields', contractFieldsHtml());
+        const contractSubmit = document.querySelector('#projectContractDrawer .modal-footer .btn-primary');
+        if (contractSubmit) {
+          contractSubmit.textContent = '进入合同管理';
+          delete contractSubmit.dataset.result;
+          contractSubmit.dataset.contractEntry = 'true';
+        }
+        setText('projectSettlementDrawerSummary', config.orderNo + ' / ' + scheduleValue() + '。订单详情只承接结算入口，实际成本、应付、付款和 NC 在团期成本、回团结算和财务模块处理。');
+        const settlementRows = [
+          ['客户验收单', '待上传', '履约中心 > 团期结算 > 回团处理', '上传验收单'],
+          ['阶段收款', '首款待收，进度款/尾款未触发', '销售中心 > 收款认领', '查看认款'],
+          ['实际成本', '交通、酒店、会务成本待确认', '履约中心 > 团期结算', '查看成本'],
+          ['项目变更', '人数变更待确认', '履约中心 > 团期订单 > 项目订单详情', '发起变更'],
+          ['结算单', '未生成', '财务 > 业务结算', '查看承接']
+        ];
+        setHtml('projectSettlementRows', settlementRows.map(function (row) {
+          const action = row[3] === '发起变更' ? ' data-open-drawer="aftersalesDrawer" data-aftersales-type="项目变更"' : ' data-result="' + escapeHtml(row[3]) + '"';
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + tagHtml([row[1], statusClass(row[1])]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><button class="table-action-primary" type="button"' + action + '>' + escapeHtml(row[3]) + '</button></td></tr>';
+        }).join(''));
+      }
+      function render() {
+        renderProjectOrderChrome();
+        renderStateActionButtons();
+        setText('orderNo', config.orderNo);
+        setText('orderProductName', config.productName);
+        setText('orderProductMeta', config.meta);
+        setText('orderContact', config.contact);
+        setText('orderOwner', config.owner);
+        setText('orderStatusText', config.orderStatus[0]);
+        setText('paymentStatusText', config.paymentStatus[0]);
+        setText('contractEntityText', financeProfileFor().contractEntity);
+        if (isProjectOrder()) {
+          setText('orderContact', contactParts().name);
+          setText('orderOwner', snapshotValue('单团项目'));
+          setText('orderStatusText', scheduleValue());
+          setHtml('projectContractHeroStatus', tagHtml(['待签署', 'tag tag-orange']));
+        }
+        setHtml('orderHeroTags', tagHtml([config.productType, config.productTag]) + tagHtml(config.orderStatus) + tagHtml(config.paymentStatus));
+        setText('orderHeroTotal', config.amount[0]);
+        config.amount[2] = moneyText(pendingCustomerAmount());
+        setText('orderHeroCollection', '客户已收 ' + config.amount[1] + ' / 客户待收 ' + config.amount[2]);
+        const owner = ownerParts();
+        const contact = contactParts();
+        const meta = productOverviewMeta();
+        const travelDates = splitTravelDates();
+        setHtml('overviewProductGrid', descriptionGrid([
+          ['产品名称', config.productName],
+          ['产品类型', config.productType],
+          ['线路/套餐', snapshotValue(['线路', '套餐', '服务项目', '方案'])],
+          [scheduleLabel(), scheduleValue()],
+          ['出发', travelDates.start],
+          ['回团', travelDates.end],
+          ['出发地', meta.departure],
+          ['目的地', meta.destination]
+        ]));
+        setHtml('overviewOrderGrid', descriptionGrid([
+          ['订单号', config.orderNo],
+          ['订单类型', config.productType],
+          ['订单状态', tagHtml(config.orderStatus), 'html'],
+          ['收款状态', tagHtml(config.paymentStatus), 'html'],
+          ['下单时间', '2026-07-04 10:30'],
+          ['预留到期', meta.reservationDue],
+          ['来源', meta.source],
+          ['渠道', meta.channel]
+        ]));
+        setHtml('overviewCustomerGrid', descriptionGrid([
+          ['客户名称', contact.name],
+          ['客户类型', meta.source === '门店' ? '门店客户' : meta.source],
+          ['联系人', contact.name],
+          ['联系方式', contact.phone],
+          ['门店', owner.store],
+          ['店员', owner.sales],
+          ['客服', meta.service],
+          ['部门', meta.department]
+        ]));
+        setHtml('overviewBookingGrid', renderBookingStructureHtml());
+        setHtml('overviewFinanceGrid', descriptionGrid(financeOverviewItems()));
+        const trafficRows = trafficOccupancyData();
+        setHtml('trafficOccupancyRows', trafficRows.length ? trafficRows.map(trafficOccupancyRow).join('') : '<tr><td class="table-empty-cell" colspan="6">本订单暂无交通资源占用记录。</td></tr>');
+        setHtml('orderMoneyGrid', orderMoneyCards().map(moneyCard).join(''));
+        const payableList = payableItems();
+        const paymentList = paymentItems();
+        setHtml('orderPayableMoneyGrid', payableSummaryCards().map(moneyCard).join(''));
+        setText('orderPayableCount', payableList.length + '条');
+        setHtml('payableRows', payableList.length ? payableList.map(payableRow).join('') : '<tr><td class="table-empty-cell" colspan="8">暂无应付明细。应付由团期成本或供应商账单确认后承接。</td></tr>');
+        setText('orderPaymentCount', paymentList.length + '条');
+        setHtml('paymentRows', paymentList.length ? paymentList.map(paymentRow).join('') : '<tr><td class="table-empty-cell" colspan="8">暂无付款明细。</td></tr>');
+        const discountItems = discountUsageItems();
+        setHtml('discountUsageRows', discountItems.length ? discountItems.map(discountUsageRow).join('') : '<tr><td class="table-empty-cell" colspan="7">本订单暂无优惠减免。</td></tr>');
+        setHtml('financeHandoffSummaryCards', [
+          ['客户现金应付', moneyText(financeBasisValues().customerCash), 'amount-red'],
+          ['客户待收', moneyText(financeBasisValues().pending), financeBasisValues().pending > 0 ? 'amount-red' : 'amount-green'],
+          ['优惠承接', financeBasisValues().discount > 0 ? moneyText(financeBasisValues().discount) : '无', financeBasisValues().discount > 0 ? 'amount-green' : ''],
+          ['成本承接状态', '待履约确认', '']
+        ].map(moneyCard).join(''));
+        setHtml('financeResponsibilityRows', financeTableRows(financeResponsibilityItems()));
+        setHtml('financeAmountRows', financeTableRows(financeAmountItems(), [3]));
+        setHtml('financeCostRows', financeCostRowsHtml());
+        setHtml('financeCommissionRows', financeTableRows(financeCommissionItems()));
+        setHtml('financeInternalRows', financeTableRows(financeInternalItems()));
+        setText('aiDrawerText', config.travelers.ai.join(' '));
+        setHtml('aiCheckItems', config.travelers.ai.map(function (text, index) { return taskItem(['预检项' + (index + 1), text]); }).join(''));
+
+        setHtml('travelerTableHead', '<tr>' + config.travelers.head.map(function (item) { return '<th>' + escapeHtml(item) + '</th>'; }).join('') + '<th>操作</th></tr>');
+        setHtml('travelerTableRows', config.travelers.rows.map(function (row) {
+          const editLabel = isProjectOrder() ? '项目名单编辑' : '编辑';
+          const materialLabel = isProjectOrder() ? '材料维护' : '材料';
+          return '<tr>' + row.map(function (cell, index) {
+            if (Array.isArray(cell)) return '<td>' + tagHtml(cell) + '</td>';
+            return '<td>' + escapeHtml(cell) + '</td>';
+          }).join('') + '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-drawer="travelerDrawer" data-traveler-name="' + escapeHtml(row[0]) + '" data-traveler-mode="edit">' + editLabel + '</button><button class="table-action-primary" type="button" data-open-drawer="travelerDrawer" data-traveler-name="' + escapeHtml(row[0]) + '" data-traveler-mode="material">' + materialLabel + '</button></div></td></tr>';
+        }).join(''));
+
+        const snapshotReceivableItems = salesSnapshotReceivableItems();
+        const receivableItems = snapshotReceivableItems || (isProjectOrder() ? projectReceivableItems() : [
+          ['团费/服务费', '初始应收', config.amount[0], '系统生成', '已生效', 'SK' + config.orderNo.slice(-8), config.productName],
+          ['应收调整', '补差/售后减免/人工特批', '¥0', '无调整', '未生效', '-', '如需补差、人数变化、售后减免或人工特批折扣，从右上角“应收调整”发起']
+        ]);
+        setHtml('receivableRows', receivableItems.map(function (row) {
+          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td class="amount-strong">' + escapeHtml(row[2]) + '</td><td>' + tagHtml([row[3], statusClass(row[3])]) + '</td><td>' + tagHtml([row[4], statusClass(row[4])]) + '</td><td>' + escapeHtml(row[5]) + '</td><td>' + escapeHtml(row[6]) + '</td></tr>';
+        }).join(''));
+        const receiptItems = config.amount[1] === '¥0' ? [] : [
+          ['RK20260704001', '定金', config.amount[1], '门店预存/银行流水', 'G120260704001', config.paymentStatus[0], '2026-07-04 10:46']
+        ];
+        setHtml('receiptRows', receiptItems.length ? receiptItems.map(function (row) { return '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td class="amount-strong">' + row[2] + '</td><td>' + row[3] + '</td><td>' + row[4] + '</td><td>' + tagHtml([row[5], statusClass(row[5])]) + '</td><td>' + row[6] + '</td></tr>'; }).join('') : '<tr><td class="table-empty-cell" colspan="7">' + (isProjectOrder() ? '暂无阶段收款/认款记录。客户付款后从“登记阶段收款”关联阶段应收，再由收款认领和财务复核承接。' : '暂无收款/认款记录。客户付款后可从“收款”登记或到收款认领中关联流水。') + '</td></tr>');
+        setHtml('contractRows', config.contract.map(contractDocRow).join(''));
+        setHtml('orderAttachmentCategoryList', activeAttachmentCategories().map(attachmentCategoryCard).join(''));
+        setHtml('attachmentUploadSections', activeAttachmentCategories().map(attachmentUploadCard).join(''));
+        const aftersaleRecords = config.aftersales || [];
+        setHtml('afterSalesRows', aftersaleRecords.length ? aftersaleRecords.map(function (row, index) {
+          const no = row[0] || ('SH' + config.orderNo.slice(-6) + String(index + 1).padStart(2, '0'));
+          const type = row[1] || '售后';
+          const applyTime = row[2] || '2026-07-04 11:20';
+          const target = row[3] || '-';
+          const amountImpact = row[4] || '待核算';
+          const approveStatus = row[5] || '待复核';
+          const financeStatus = row[6] || (/退款|退/.test(type) ? '待财务退款' : /转款/.test(type) ? '待财务核对' : '不涉及');
+          return '<tr><td>' + escapeHtml(no) + '</td><td>' + escapeHtml(type) + '</td><td>' + escapeHtml(applyTime) + '</td><td>' + escapeHtml(target) + '</td><td>' + escapeHtml(amountImpact) + '</td><td>' + tagHtml([approveStatus, statusClass(approveStatus)]) + '</td><td>' + tagHtml([financeStatus, statusClass(financeStatus)]) + '</td></tr>';
+        }).join('') : '<tr><td class="table-empty-cell" colspan="7">暂无售后记录。</td></tr>');
+        setHtml('logList', [
+          ['2026-07-04 10:42', '孙丽', '补充联系人和归属门店信息'],
+          ['2026-07-04 10:35', '系统', '生成应收记录，等待收款或认款'],
+          ['2026-07-04 10:30', '孙丽', '创建订单并锁定可售对象：' + config.productName],
+          ['2026-07-04 10:28', '孙丽', '选择' + scheduleLabel() + scheduleValue()],
+          ['2026-07-04 10:25', '孙丽', '进入预订中心，搜索并选择' + config.productName]
+        ].map(function (item) {
+          return '<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-time"><span>' + escapeHtml(item[0]) + '</span><span>' + escapeHtml(item[1]) + '</span></div><div class="timeline-text">' + escapeHtml(item[2]) + '</div></div></div>';
+        }).join(''));
+
+        setText('travelerDrawerSummary', config.travelers.summary + (isProjectOrder() ? '。按客户分组维护项目名单、证件资料、房型和交通分组，保存后同步用于项目团执行。' : '。按游客维护证件、材料和产品类型资料，保存后同步用于资料预检、合同资料和后续执行。'));
+        setHtml('travelerDrawerGaps', travelerGapItems().map(travelerGapCard).join(''));
+        setHtml('travelerDrawerList', config.travelers.rows.map(travelerEditCard).join(''));
+        setText('receiptDrawerTitle', receiptProfileFor().title);
+        setHtml('receiptDrawerFields', receiptFieldsHtml());
+        setText('receiptDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + config.contact);
+        setText('receiptTotal', config.amount[0]);
+        setText('receiptPaid', config.amount[1]);
+        setText('receiptUnpaid', config.amount[2]);
+        setText('receiptSettleUnit', isProjectOrder() ? contactParts().name : config.owner);
+        setText('receiptCurrency', currencyLabel(receivableCurrencyCode()));
+        setText('receivableDrawerTitle', receivableProfileFor().title);
+        setText('receivableDrawerSummary', '订单应收 ' + config.amount[0] + '，调整提交后进入审批和财务应收审核。');
+        setHtml('receivableDrawerFields', receivableFieldsHtml());
+        setText('projectContractDrawerTitle', '合同管理承接');
+        setText('projectContractDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + contactParts().name);
+        setText('projectContractAmount', config.amount[0]);
+        setText('contractQuoteLabel', isProjectOrder() ? '锁定报价' : '线路/套餐');
+        setText('contractScheduleLabel', scheduleLabel());
+        setText('projectContractQuote', snapshotValue(['线路', '套餐', '服务项目', '方案']));
+        setText('projectContractSchedule', scheduleValue());
+        setHtml('projectContractStatus', tagHtml([config.contract && config.contract[0] ? config.contract[0][1] : '待生成', statusClass(config.contract && config.contract[0] ? config.contract[0][1] : '待生成')]));
+        setHtml('contractDrawerFields', contractFieldsHtml());
+        renderProjectDrawers();
+      }
+
+      function drawerField(item) {
+        return '<label class="form-group form-group-full"><span class="form-label">' + escapeHtml(item[0]) + '</span><input class="form-control" type="text" placeholder="' + escapeHtml(item[1]) + '"></label>';
+      }
+      function refundSubjectsFor() {
+        if (config.productType === '邮轮') return ['船票费', '港务税', '小费', '岸上项目'];
+        if (config.productType === '专列') return ['铺位费', '包厢差价', '餐饮服务', '保险'];
+        if (config.productType === '自由行') return ['酒店', '机票', '接送机', '当地玩乐'];
+        if (config.productType === '单项服务') return ['服务费', '代垫费', '材料费', '快递费'];
+        if (config.productType === '研学') return ['课程费', '住宿餐饮', '保险', '材料费'];
+        if (config.productType === '单团项目') return ['项目首款', '项目进度款', '项目尾款', '项目补差'];
+        return ['团费', '保险', '签证', '单房差'];
+      }
+      function changeTargetLabel() {
+        if (config.productType === '邮轮') return '目标航次/舱型';
+        if (config.productType === '专列') return '目标班期/铺位';
+        if (config.productType === '自由行') return '目标出行日期/套餐';
+        if (config.productType === '单项服务') return '变更服务项';
+        if (config.productType === '研学') return '目标营期';
+        if (config.productType === '单团项目') return '目标项目团';
+        return '目标团期';
+      }
+      function refundDiscountRecalcGrid() {
+        const originalDiscount = discountCarryAmount();
+        return '<div class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">优惠减免重算</h3></div>' +
+          '<div class="description-grid order-description-grid" data-refund-discount-recalc>' +
+            descriptionItem(['原订单应收', config.amount[0]]) +
+            descriptionItem(['原优惠减免', moneyText(originalDiscount)]) +
+            descriptionItem(['本次退款', '<span id="detailRefundAmountImpact">¥0</span>', 'html']) +
+            descriptionItem(['退款后有效优惠', '<span id="detailRefundEffectiveDiscount">' + escapeHtml(moneyText(originalDiscount)) + '</span>', 'html']) +
+            descriptionItem(['需冲回优惠减免', '<span id="detailRefundDiscountReverse">¥0</span>', 'html']) +
+            descriptionItem(['影响承担方', '<span id="detailRefundAffectedBearer">' + escapeHtml(originalDiscount > 0 ? '按原优惠承担比例' : '无影响') + '</span>', 'html']) +
+            descriptionItem(['后续承接', '<span id="detailRefundDiscountDownstream">' + escapeHtml(originalDiscount > 0 ? '未结算随本次结算重算；已结算进入结算调整' : '无优惠减免') + '</span>', 'html']) +
+          '</div></div>';
+      }
+      function updateDetailRefundDiscountRecalc() {
+        const grid = document.querySelector('#aftersalesDrawer [data-refund-discount-recalc]');
+        const input = document.getElementById('aftersalesRefundAmount');
+        if (!grid || !input) return;
+        const refundAmount = moneyNumber(input.value);
+        const receivable = moneyNumber(config.amount[0]);
+        const received = moneyNumber(config.amount[1]);
+        const originalDiscount = discountCarryAmount();
+        const customerPaidTarget = Math.max(receivable - originalDiscount, 0);
+        const fullRefundBase = received > 0 ? received : customerPaidTarget;
+        let effectiveDiscount = originalDiscount;
+        if (originalDiscount > 0 && refundAmount > 0) {
+          effectiveDiscount = refundAmount >= fullRefundBase ? 0 : Math.max(originalDiscount - Math.round(refundAmount * originalDiscount / Math.max(receivable, 1)), 0);
+        }
+        const reverseAmount = Math.max(originalDiscount - effectiveDiscount, 0);
+        setText('detailRefundAmountImpact', moneyText(refundAmount));
+        setText('detailRefundEffectiveDiscount', moneyText(effectiveDiscount));
+        setText('detailRefundDiscountReverse', moneyText(reverseAmount));
+        setText('detailRefundAffectedBearer', originalDiscount > 0 ? (reverseAmount > 0 ? '按原优惠承担比例冲回' : '按原优惠承担比例') : '无影响');
+        setText('detailRefundDiscountDownstream', originalDiscount > 0 ? (reverseAmount > 0 ? '审批通过后生成优惠减免冲回；已结算进入结算调整' : '优惠减免保持不变') : '无优惠减免');
+      }
+      function afterSalesFieldsHtml(kind) {
+        const base = readonlyMiniGrid([
+          ['订单号', config.orderNo],
+          ['产品类型', config.productType],
+          ['当前安排', scheduleValue()],
+          ['客户已收', config.amount[1]]
+        ]);
+        if (kind === '项目变更') return projectChangeFieldsHtml();
+        if (kind === '退款') {
+          return base + selectControl('退款科目', refundSubjectsFor()) + inputControl('退款金额', '', false, 'id="aftersalesRefundAmount" placeholder="不得超过最大可退金额"') + refundDiscountRecalcGrid() + selectControl('退款方式', ['原路退回', '银行转账', '退回预存账户']) + textareaControl('退款说明', '', '填写扣损依据、退款原因和财务备注');
+        }
+        if (kind === '退团/退订') {
+          return base + selectControl('退订范围', config.productType === '邮轮' ? ['退舱房', '退乘客', '退岸上项目'] : config.productType === '专列' ? ['退铺位', '退乘客', '退包厢'] : config.productType === '自由行' ? ['退订服务项', '整单退订'] : config.productType === '单项服务' ? ['取消服务项', '整单取消'] : ['退团人员', '整单退订']) + inputControl('扣损金额', '0') + uploadControl('客户确认/扣损依据', '上传客户确认、供应商扣损或取消确认') + textareaControl('退订原因', '', '填写客户原因、资源释放和退款承接要求');
+        }
+        if (kind === '转款') {
+          return base + inputControl('转入订单', '', false, 'placeholder="搜索同客户或同门店未结清订单"') + inputControl('本次转款金额', '', false, 'placeholder="不得超过可转金额"') + textareaControl('转款说明', '', '说明原订单和目标订单关系');
+        }
+        return base + inputControl(changeTargetLabel(), '', false, 'placeholder="搜索可变更的履约对象"') + selectControl('价差处理', ['补差', '退差', '平价变更', '待重新核价']) + uploadControl('客户确认附件', '上传客户邮件、确认单或补充协议') + textareaControl('变更原因', '', '填写客户原因、资源确认要求和履约影响');
+      }
+      function openLayer(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        if (window.caesarUI && window.caesarUI.openLayer) window.caesarUI.openLayer(modal);
+        else {
+          modal.hidden = false;
+          modal.classList.add('show');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+      function closeLayer(modal) {
+        if (!modal) return;
+        if (window.caesarUI && window.caesarUI.closeLayer) window.caesarUI.closeLayer(modal);
+        else {
+          modal.classList.remove('show');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      }
+      function setAfterSalesDrawer(kind, actionTitle) {
+        const title = kind || '售后';
+        setText('aftersalesDrawerTitle', actionTitle || title);
+        setText('aftersalesDrawerSummary', isProjectOrder() && title === '项目变更' ? config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。项目变更会影响合同附件、阶段应收和项目团执行，审批通过后再交财务应收承接。' : config.orderNo + ' / ' + config.productName + ' / 当前收款 ' + config.paymentStatus[0]);
+        setHtml('aftersalesDrawerFields', afterSalesFieldsHtml(title));
+        if (title === '退款') updateDetailRefundDiscountRecalc();
+        const submit = document.querySelector('#aftersalesDrawer .modal-footer .btn-primary');
+        if (submit) {
+          submit.textContent = title === '项目变更' ? '提交项目变更' : '提交审批';
+          submit.dataset.result = title === '项目变更' ? '提交项目变更' : '提交售后';
+        }
+      }
+      function showResult(text) {
+        setText('resultModalText', text + '已记录，后续状态在当前订单和对应模块查看。');
+        openLayer('resultModal');
+      }
+
+      document.addEventListener('click', function (event) {
+        const tab = event.target.closest('[data-tab]');
+        if (tab) {
+          document.querySelectorAll('[data-tab]').forEach(function (item) { item.classList.toggle('active', item === tab); });
+          document.querySelectorAll('.detail-tab-panel').forEach(function (panel) { panel.classList.toggle('active', panel.id === 'tab-' + tab.dataset.tab); });
+          return;
+        }
+        const menuToggle = event.target.closest('[data-action-menu-toggle]');
+        if (menuToggle) {
+          const menu = menuToggle.closest('[data-action-menu]');
+          const open = !menu.classList.contains('open');
+          menu.classList.toggle('open', open);
+          menuToggle.setAttribute('aria-expanded', String(open));
+          return;
+        }
+        const contractEntry = event.target.closest('[data-contract-entry]');
+        if (contractEntry) {
+          const href = contractEntryHref();
+          if (window.caesarNavigateTo) window.caesarNavigateTo(href);
+          else window.location.href = href;
+          return;
+        }
+        const projectNav = event.target.closest('[data-project-nav]');
+        if (projectNav) {
+          if (projectNav.dataset.projectNav === 'schedule') {
+            const href = projectScheduleHref('overview');
+            if (window.caesarNavigateTo) window.caesarNavigateTo(href);
+            else window.location.href = href;
+          }
+          return;
+        }
+        const detailAction = event.target.closest('[data-open-detail-action]');
+        if (detailAction) {
+          openDetailActionDrawer(detailAction.dataset.openDetailAction);
+          return;
+        }
+        const copyOrderNo = event.target.closest('[data-copy-order-no]');
+        if (copyOrderNo) {
+          const no = text('orderNo');
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(no);
+          showResult('复制订单号 ' + no);
+          return;
+        }
+        const drawerButton = event.target.closest('[data-open-drawer]');
+        if (drawerButton) {
+          const drawerActionTitle = drawerButton.textContent.trim();
+          if (drawerButton.dataset.openDrawer === 'travelerDrawer') {
+            const travelerName = drawerButton.dataset.travelerName;
+            const mode = drawerButton.dataset.travelerMode;
+            setText('travelerDrawerTitle', drawerActionTitle || (travelerName ? (isProjectOrder() ? '名单维护' : (mode === 'material' ? '材料维护' : '资料维护')) : (isProjectOrder() ? '项目名单维护' : '游客信息维护')));
+            setText('travelerDrawerSummary', travelerName ? '当前维护：' + travelerName + (isProjectOrder() ? '。可在下方维护名单导入、资料状态、房型和交通分组。' : '。可在下方补齐证件、材料和当前产品类型所需资料。') : config.travelers.summary + (isProjectOrder() ? '。按客户分组维护项目名单、证件资料、房型和交通分组。' : '。按游客维护证件、材料和产品类型资料，保存后同步用于资料预检、合同资料和后续执行。'));
+          }
+          if (drawerButton.dataset.openDrawer === 'aftersalesDrawer') setAfterSalesDrawer(drawerButton.dataset.aftersalesType || '退款', drawerActionTitle);
+          if (drawerButton.dataset.openDrawer === 'attachmentDrawer') {
+            const attachmentType = drawerButton.dataset.attachmentType;
+            setText('attachmentDrawerTitle', drawerActionTitle || '附件');
+            setText('attachmentDrawerSummary', attachmentType ? '当前维护：' + attachmentType + (isProjectOrder() ? '。项目附件用于合同签署、阶段收款和回团结算承接。' : '。也可以在下方继续维护其他出行文件类型。') : (isProjectOrder() ? '按项目附件类型上传和维护，上传后在项目合同页、阶段收款和回团结算承接中查看。' : '按出行文件类型上传和维护，上传后在订单的合同资料页按分类查看。'));
+          }
+          openLayer(drawerButton.dataset.openDrawer);
+          return;
+        }
+        const result = event.target.closest('[data-result]');
+        if (result) {
+          const modal = result.closest('.modal-overlay');
+          if (modal) closeLayer(modal);
+          showResult(result.dataset.result);
+          return;
+        }
+        const close = event.target.closest('[data-close-modal]');
+        if (close) {
+          closeLayer(close.closest('.modal-overlay'));
+          return;
+        }
+        if (event.target.classList.contains('modal-overlay')) closeLayer(event.target);
+      });
+      document.addEventListener('input', function (event) {
+        if (event.target && event.target.id === 'aftersalesRefundAmount') updateDetailRefundDiscountRecalc();
+      });
+
+      render();
+    })();
+  </script>
+  <script src="../../shared/order-visa-detail.js"></script>
+</body>
+</html>

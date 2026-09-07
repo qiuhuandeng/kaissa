@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业绩与经营分析 - 凯撒旅游</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .performance-page { display:grid; gap:12px; }
+    .performance-surface { display:grid; gap:0; overflow:hidden; }
+    .performance-head-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .performance-view-presets { display:flex; align-items:center; gap:8px; min-height:44px; padding:7px 12px; overflow-x:auto; border-bottom:1px solid #edf1f7; background:#fff; white-space:nowrap; }
+    .performance-view-presets > strong { flex:none; color:var(--color-text); font-size:12px; }
+    .performance-preset { flex:none; height:28px; padding:0 10px; border:1px solid #dfe5ee; border-radius:999px; background:#fff; color:var(--color-text-muted); cursor:pointer; font-size:12px; }
+    .performance-preset.active { border-color:#b9d2ff; background:#eef5ff; color:var(--color-primary); font-weight:600; }
+    .performance-period-note { margin-left:auto; color:var(--color-text-muted); font-size:12px; }
+    .performance-data-note { display:flex; align-items:center; gap:12px; min-height:38px; padding:8px 16px; border-bottom:1px solid #edf1f7; background:#f8fafc; color:var(--color-text-muted); font-size:12px; line-height:20px; }
+    .performance-data-note strong { color:var(--color-text); font-weight:600; }
+    .performance-data-note .performance-note-spacer { flex:1; }
+    .performance-data-note button { padding:0; border:0; background:none; color:var(--color-primary); cursor:pointer; font:inherit; }
+    .performance-main-tabs { overflow-x:auto; white-space:nowrap; }
+    .performance-panel { display:none; min-width:0; }
+    .performance-panel.active { display:grid; gap:12px; padding:12px; }
+    .performance-filter { margin:0; border:1px solid #edf1f7; border-radius:var(--radius-md); }
+    .performance-filter .filter-row { align-items:center; }
+    .performance-filter .filter-item-basis { min-width:168px; }
+    .performance-filter .filter-item-period { min-width:118px; }
+    .performance-filter .filter-item-scope { min-width:132px; }
+    .performance-section-title { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; min-height:28px; }
+    .performance-section-title h2 { margin:0; color:var(--color-text); font-size:16px; line-height:24px; }
+    .performance-section-title p { margin:0; color:var(--color-text-muted); font-size:12px; line-height:20px; }
+    .performance-metrics { display:grid; grid-template-columns:repeat(6,minmax(145px,1fr)); gap:10px; }
+    .performance-metric { min-width:0; padding:13px 14px; border:1px solid #e7ecf3; border-radius:var(--radius-md); background:#fff; }
+    .performance-metric span,.performance-metric em { display:block; overflow:hidden; color:var(--color-text-muted); font-size:12px; font-style:normal; line-height:18px; text-overflow:ellipsis; white-space:nowrap; }
+    .performance-metric strong { display:block; margin:5px 0 3px; color:var(--color-text); font-size:22px; line-height:30px; white-space:nowrap; }
+    .performance-metric strong small { margin-left:2px; color:var(--color-text-muted); font-size:12px; font-weight:500; }
+    .performance-metric[data-tone="success"] strong { color:var(--color-success); }
+    .performance-metric[data-tone="warning"] strong { color:#c27b12; }
+    .performance-metric[data-tone="danger"] strong { color:var(--color-danger); }
+    .performance-visual-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(330px,.65fr); gap:12px; }
+    .performance-card { min-width:0; overflow:hidden; border:1px solid #e7ecf3; border-radius:var(--radius-md); background:#fff; }
+    .performance-card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:46px; padding:0 14px; border-bottom:1px solid #edf1f7; }
+    .performance-card-head h3 { margin:0; color:var(--color-text); font-size:14px; line-height:22px; }
+    .performance-card-head span { color:var(--color-text-muted); font-size:12px; white-space:nowrap; }
+    .performance-trend { display:grid; gap:11px; padding:14px; }
+    .performance-trend-row { display:grid; grid-template-columns:76px minmax(0,1fr) 98px; align-items:center; gap:10px; min-height:26px; color:var(--color-text); font-size:12px; }
+    .performance-trend-row > strong { text-align:right; white-space:nowrap; }
+    .performance-bar-track { height:10px; overflow:hidden; border-radius:999px; background:#eef2f7; }
+    .performance-bar-track i { display:block; width:var(--bar,0%); height:100%; border-radius:inherit; background:var(--bar-color,var(--color-primary)); }
+    .performance-legend { display:flex; align-items:center; gap:12px; padding:0 14px 14px; color:var(--color-text-muted); font-size:12px; }
+    .performance-legend span { display:inline-flex; align-items:center; gap:5px; }
+    .performance-legend i { width:8px; height:8px; border-radius:50%; background:var(--legend,var(--color-primary)); }
+    .performance-watch { display:grid; gap:10px; padding:14px; }
+    .performance-watch-item { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:10px 11px; border:1px solid #edf1f7; border-radius:var(--radius-sm); background:#fbfcfe; }
+    .performance-watch-item strong,.performance-watch-item span { display:block; }
+    .performance-watch-item strong { color:var(--color-text); font-size:13px; line-height:20px; }
+    .performance-watch-item span { color:var(--color-text-muted); font-size:12px; line-height:18px; }
+    .performance-watch-item em { color:var(--watch,var(--color-primary)); font-size:18px; font-style:normal; font-weight:700; white-space:nowrap; }
+    .performance-table-wrap { overflow:auto; border:1px solid #e7ecf3; border-radius:var(--radius-md); background:#fff; }
+    .performance-table { width:max(100%,var(--table-min,1480px)); min-width:var(--table-min,1480px); table-layout:fixed; }
+    .performance-table th,.performance-table td { vertical-align:middle; }
+    .performance-table .performance-action-head,.performance-table .performance-action-cell { position:sticky; right:0; z-index:2; width:128px; min-width:128px; max-width:128px; background:#fff; box-shadow:-8px 0 14px rgba(15,23,42,.05); }
+    .performance-table .performance-action-head { z-index:3; background:#fbfcfe; }
+    .performance-table tbody tr:hover .performance-action-cell { background:#fbfcfe; }
+    .performance-table .table-action { justify-content:flex-start; }
+    .performance-cell { display:grid; gap:3px; min-width:0; }
+    .performance-cell strong,.performance-cell span,.performance-cell em { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .performance-cell strong { color:var(--color-text); font-size:13px; line-height:20px; }
+    .performance-cell span,.performance-cell em { color:var(--color-text-muted); font-size:12px; font-style:normal; line-height:18px; }
+    .performance-cell .amount-positive { color:var(--color-success); }
+    .performance-cell .amount-negative { color:var(--color-danger); }
+    .performance-table .amount-positive { color:var(--color-success); }
+    .performance-table .amount-negative { color:var(--color-danger); }
+    .performance-number { color:var(--color-text); font-weight:700; white-space:nowrap; }
+    .performance-number-sub { display:block; margin-top:3px; color:var(--color-text-muted); font-size:12px; white-space:nowrap; }
+    .performance-link-number { padding:0; border:0; background:none; color:var(--color-primary); font:inherit; font-weight:600; cursor:pointer; }
+    .performance-progress { display:grid; gap:5px; min-width:0; }
+    .performance-progress-head { display:flex; justify-content:space-between; gap:8px; color:var(--color-text); font-size:12px; }
+    .performance-progress-track { height:7px; overflow:hidden; border-radius:999px; background:#eef2f7; }
+    .performance-progress-track i { display:block; width:var(--progress,0%); height:100%; border-radius:inherit; background:var(--progress-color,var(--color-primary)); }
+    .performance-progress[data-level="success"] i { --progress-color:var(--color-success); }
+    .performance-progress[data-level="warning"] i { --progress-color:#d99123; }
+    .performance-progress[data-level="danger"] i { --progress-color:var(--color-danger); }
+    .performance-inner-tabs { display:flex; align-items:center; gap:18px; min-height:40px; padding:0 4px; border-bottom:1px solid #edf1f7; }
+    .performance-inner-tabs button { position:relative; height:40px; padding:0 2px; border:0; background:none; color:var(--color-text-muted); cursor:pointer; font-size:13px; }
+    .performance-inner-tabs button.active { color:var(--color-primary); font-weight:600; }
+    .performance-inner-tabs button.active::after { position:absolute; right:0; bottom:-1px; left:0; height:2px; border-radius:2px 2px 0 0; background:var(--color-primary); content:""; }
+    .performance-inner-panel { display:none; }
+    .performance-inner-panel.active { display:grid; gap:12px; }
+    .performance-dimension-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 14px; border:1px solid #e7ecf3; border-radius:var(--radius-md); background:#fff; }
+    .performance-dimension-toolbar strong { margin-right:4px; font-size:13px; }
+    .performance-chip { height:30px; padding:0 12px; border:1px solid #dfe5ee; border-radius:999px; background:#fff; color:var(--color-text-muted); cursor:pointer; font-size:12px; }
+    .performance-chip.active { border-color:#b9d2ff; background:#eef5ff; color:var(--color-primary); font-weight:600; }
+    .performance-summary-line { display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:10px 14px; border:1px solid #e7ecf3; border-radius:var(--radius-md); background:#fff; color:var(--color-text-muted); font-size:12px; }
+    .performance-summary-line strong { color:var(--color-text); }
+    .performance-drawer { width:min(900px,96vw); }
+    .performance-drawer-small { width:min(700px,94vw); }
+    .performance-object { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; padding:12px 14px; border:1px solid var(--color-border); border-radius:var(--radius-md); background:#f8fafc; }
+    .performance-object strong,.performance-object span,.performance-object em { display:block; }
+    .performance-object strong { color:var(--color-text); font-size:15px; line-height:22px; }
+    .performance-object span,.performance-object em { color:var(--color-text-muted); font-size:12px; font-style:normal; line-height:18px; }
+    .performance-object-side { display:grid; justify-items:end; gap:4px; }
+    .performance-drawer-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .performance-drawer-kpi { padding:10px 12px; border:1px solid #edf1f7; border-radius:var(--radius-sm); background:#fff; }
+    .performance-drawer-kpi span { display:block; color:var(--color-text-muted); font-size:12px; }
+    .performance-drawer-kpi strong { display:block; margin-top:4px; color:var(--color-text); font-size:16px; }
+    .performance-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .performance-form-full { grid-column:1/-1; }
+    .performance-empty { padding:36px 16px; color:var(--color-text-muted); text-align:center; }
+    .performance-check-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .performance-check-card { padding:12px 14px; border:1px solid #e7ecf3; border-radius:var(--radius-md); background:#fff; }
+    .performance-check-card strong,.performance-check-card span,.performance-check-card em { display:block; }
+    .performance-check-card strong { color:var(--color-text); font-size:13px; }
+    .performance-check-card span { margin-top:4px; color:var(--color-text-muted); font-size:12px; line-height:18px; }
+    .performance-check-card em { margin-top:6px; color:var(--color-success); font-size:12px; font-style:normal; }
+    .performance-matrix-note { padding:10px 14px; border:1px solid #dbeafe; border-radius:var(--radius-md); background:#f7fbff; color:#45627f; font-size:12px; line-height:20px; }
+    @media (max-width:1280px) {
+      .performance-metrics { grid-template-columns:repeat(3,minmax(145px,1fr)); }
+      .performance-visual-grid { grid-template-columns:1fr; }
+      .performance-check-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width:760px) {
+      .performance-metrics,.performance-drawer-kpis,.performance-form-grid { grid-template-columns:1fr; }
+      .performance-object { grid-template-columns:1fr; }
+      .performance-object-side { justify-items:start; }
+      .performance-data-note { align-items:flex-start; flex-direction:column; gap:2px; }
+      .performance-check-grid { grid-template-columns:1fr; }
+      .performance-period-note { margin-left:0; }
+    }
+  </style>
+</head>
+<body>
+  <script src="../../shared/nav-merchant.js"></script>
+
+  <main class="performance-page">
+    <section class="list-page-panel">
+      <div class="list-page-head">
+        <div><h1 class="page-title">业绩与经营分析</h1></div>
+        <div class="performance-head-actions">
+          <button class="btn btn-secondary" type="button" data-open-method>口径说明</button>
+          <button class="btn btn-secondary" type="button" data-open-subscribe>订阅发送</button>
+          <button class="btn btn-secondary" type="button" data-open-records>生成记录</button>
+          <button class="btn btn-primary" type="button" data-open-generate>生成报表</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="list-surface performance-surface" data-list-surface>
+      <div class="list-surface-tabbar-row">
+        <nav class="tab-bar list-surface-tabs list-function-tabs performance-main-tabs" aria-label="业绩与经营分析报表">
+          <button class="tab-item active" type="button" data-performance-view="detail">财务业绩明细</button>
+          <button class="tab-item" type="button" data-performance-view="order">订单业绩</button>
+          <button class="tab-item" type="button" data-performance-view="return">回团业绩</button>
+          <button class="tab-item" type="button" data-performance-view="dimension">产品渠道人员</button>
+          <button class="tab-item" type="button" data-performance-view="profit">毛利预算异常</button>
+        </nav>
+      </div>
+
+      <div class="performance-data-note">
+        <span>数据截止 <strong id="dataCutoff">2026-09-05 23:59</strong></span>
+        <span>口径版本 <strong>经营业绩 V1.0</strong></span>
+        <span>金额单位 <strong>万元</strong></span>
+        <span>币种 <strong>人民币本位币</strong></span>
+        <span class="performance-note-spacer"></span>
+        <span>当前为原型示例数据</span>
+        <button type="button" data-open-source>来源核对</button>
+        <button type="button" data-open-mapping>分类例外</button>
+        <button type="button" data-open-quality>查看数据完整度</button>
+      </div>
+
+      <div class="performance-view-presets" aria-label="财务常用分析视图">
+        <strong>常用分析视图</strong>
+        <button class="performance-preset active" type="button" data-report-habit="自然周">自然周</button>
+        <button class="performance-preset" type="button" data-report-habit="双周">双周</button>
+        <button class="performance-preset" type="button" data-report-habit="月度同进度">月度同进度</button>
+        <button class="performance-preset" type="button" data-report-habit="三年分月">三年分月</button>
+        <button class="performance-preset" type="button" data-report-habit="呼叫中心">呼叫中心</button>
+        <button class="performance-preset" type="button" data-report-habit="体验店任务">体验店任务</button>
+        <button class="performance-preset" type="button" data-report-habit="产品周报">产品周报</button>
+        <span class="performance-period-note" id="periodCompareNote">本期 09-01—09-05，对比上期及上年相同进度</span>
+      </div>
+
+      <section id="performance-detail" class="performance-panel active" aria-label="财务业绩明细">
+        <section class="filter-card filter-card-compact performance-filter list-surface-filter" aria-label="财务业绩明细筛选">
+          <div class="filter-row">
+            <div class="filter-item filter-item-search"><label class="sr-only" for="detailKeyword">订单号/团号/产品/客户</label><input id="detailKeyword" type="search" placeholder="订单号/团号/产品/客户"></div>
+            <div class="filter-item filter-item-basis"><label class="sr-only" for="detailBasis">时间口径</label><select id="detailBasis"><option>订单确认日期</option><option>实际回团日期</option><option>财务回团月份</option><option>业务结算日期</option><option>会计期间</option></select></div>
+            <div class="filter-item filter-item-period"><label class="sr-only" for="detailPeriod">快捷期间</label><select id="detailPeriod" data-period-select><option value="week">本周</option><option value="month" selected>本月</option><option value="year">本年累计</option><option value="custom">自定义</option></select></div>
+            <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">统计日期</label><div class="date-range"><input type="date" value="2026-09-01" data-date-start aria-label="开始日期"><span>至</span><input type="date" value="2026-09-05" data-date-end aria-label="结束日期"></div></div>
+            <div class="filter-item filter-item-scope"><label class="sr-only" for="detailProductType">产品类型</label><select id="detailProductType"><option value="">全部产品类型</option><option>参团游</option><option>自由行</option><option>邮轮</option><option>单团</option><option>签证</option><option>机票</option><option>酒店</option></select></div>
+            <div class="filter-item filter-item-scope"><label class="sr-only" for="detailStatus">数据状态</label><select id="detailStatus"><option value="">全部数据状态</option><option>完整</option><option>待补充</option><option>异常</option></select></div>
+            <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-apply-filter>查询</button><button class="btn btn-secondary" type="button" data-open-advanced>更多筛选</button><button class="btn btn-secondary" type="button" data-reset-filter>重置</button></div>
+          </div>
+        </section>
+
+        <div class="performance-summary-line"><span>共 <strong>12,486</strong> 项销售内容</span><span>涉及 <strong>8,964</strong> 张订单</span><span>订单成交 <strong>12,680.4万元</strong></span><span>正式实收 <strong>10,942.8万元</strong></span><span>财务确认收入 <strong>8,264.7万元</strong></span><span>数据完整率 <strong>96.8%</strong></span></div>
+
+        <section class="performance-table-wrap" aria-label="财务业绩明细表">
+          <table class="performance-table" style="--table-min:1960px">
+            <colgroup><col style="width:190px"><col style="width:220px"><col style="width:220px"><col style="width:210px"><col style="width:210px"><col style="width:150px"><col style="width:190px"><col style="width:190px"><col style="width:190px"><col style="width:150px"><col style="width:128px"></colgroup>
+            <thead><tr><th>订单/来源</th><th>产品/团期</th><th>业务日期</th><th>产品归属</th><th>销售/渠道</th><th>人数或数量</th><th>订单成交/实收</th><th>成本/供应商结算</th><th>收入/毛利</th><th>数据状态</th><th class="performance-action-head">操作</th></tr></thead>
+            <tbody>
+              <tr data-detail-row data-order="KS20260901018" data-schedule="EU20260912001" data-product="欧洲三国经典游 10日" data-status="完整" data-status-class="tag-green" data-amount="¥58,600" data-received="¥58,600" data-income="¥47,920" data-cost="¥36,480" data-profit="¥11,440 / 23.9%">
+                <td><div class="performance-cell"><strong>KS20260901018</strong><span>新ERP · 新系统订单</span><em>确认 09-01 10:26</em></div></td>
+                <td><div class="performance-cell"><strong>欧洲三国经典游 10日</strong><span>EU20260912001 · 参团游</span><em>出境 / 欧洲</em></div></td>
+                <td><div class="performance-cell"><strong>下单 2026-09-01</strong><span>出团 2026-09-12</span><em>实际回团 2026-09-21</em></div></td>
+                <td><div class="performance-cell"><strong>北京凯撒 / 欧洲部</strong><span>产品负责人 张明</span><em>凯撒自营</em></div></td>
+                <td><div class="performance-cell"><strong>王芳 / 京津冀一区</strong><span>呼叫中心 · 一组</span><em>预算区域 京津冀直营</em></div></td>
+                <td><span class="performance-number">4人</span><span class="performance-number-sub">3成人 / 1儿童</span></td>
+                <td><div class="performance-cell"><strong>成交 ¥58,600</strong><span>正式实收 ¥58,600</span><em>退款 ¥0</em></div></td>
+                <td><div class="performance-cell"><strong>实际成本 ¥36,480</strong><span>供应商结算 ¥36,480</span><em>成本已确认</em></div></td>
+                <td><div class="performance-cell"><strong>收入 ¥47,920</strong><span>毛利 ¥11,440</span><em class="amount-positive">毛利率 23.9%</em></div></td>
+                <td><div class="performance-cell"><span class="tag tag-green">完整</span><em>已回团已确认</em></div></td>
+                <td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>明细</button><button type="button" data-open-trace>下钻</button></div></td>
+              </tr>
+              <tr data-detail-row data-order="TTY20251228036" data-schedule="JP20260103002" data-product="日本关西新年团 7日" data-status="待补充" data-status-class="tag-orange" data-amount="¥41,800" data-received="¥41,800" data-income="待确认" data-cost="¥29,600" data-profit="暂估 ¥12,200">
+                <td><div class="performance-cell"><strong>TTY20251228036</strong><span>通通游 · 原单 TTY-881936</span><em>导入批次 2026-01-02</em></div></td>
+                <td><div class="performance-cell"><strong>日本关西新年团 7日</strong><span>JP20260103002 · 参团游</span><em>出境 / 日本</em></div></td>
+                <td><div class="performance-cell"><strong>下单 2025-12-28</strong><span>出团 2026-01-03</span><em>实际回团 2026-01-09</em></div></td>
+                <td><div class="performance-cell"><strong>北京凯撒 / 亚洲部</strong><span>产品负责人 李梅</span><em>凯撒自营</em></div></td>
+                <td><div class="performance-cell"><strong>赵倩 / 软件园门店</strong><span>门店 · 零售组</span><em>预算区域 京津冀直营</em></div></td>
+                <td><span class="performance-number">2人</span><span class="performance-number-sub">2成人</span></td>
+                <td><div class="performance-cell"><strong>成交 ¥41,800</strong><span>正式实收 ¥41,800</span><em>跨年订单</em></div></td>
+                <td><div class="performance-cell"><strong>实际成本 ¥29,600</strong><span>供应商结算待复核</span><em>账单差异 ¥1,200</em></div></td>
+                <td><div class="performance-cell"><strong>业务收入待确认</strong><span>暂估毛利 ¥12,200</span><em>已回团待财务确认</em></div></td>
+                <td><div class="performance-cell"><span class="tag tag-orange">待补充</span><em>结算依据缺失</em></div></td>
+                <td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>明细</button><button type="button" data-open-trace>下钻</button></div></td>
+              </tr>
+              <tr data-detail-row data-order="KS20260903042" data-schedule="CR20261018001" data-product="地中海邮轮 8天7晚" data-status="完整" data-status-class="tag-blue" data-amount="¥86,400" data-received="¥43,200" data-income="尚未形成" data-cost="预估 ¥62,000" data-profit="预计 ¥24,400">
+                <td><div class="performance-cell"><strong>KS20260903042</strong><span>新ERP · 新系统订单</span><em>确认 09-03 14:08</em></div></td>
+                <td><div class="performance-cell"><strong>地中海邮轮 8天7晚</strong><span>CR20261018001 · 邮轮</span><em>出境 / 地中海</em></div></td>
+                <td><div class="performance-cell"><strong>下单 2026-09-03</strong><span>计划登船 2026-10-18</span><em>尚未完成履约</em></div></td>
+                <td><div class="performance-cell"><strong>北京凯撒 / 邮轮部</strong><span>产品负责人 赵明</span><em>凯撒甄选</em></div></td>
+                <td><div class="performance-cell"><strong>孙丽 / 体验中心</strong><span>体验中心 · 邮轮组</span><em>预算区域 京津冀直营</em></div></td>
+                <td><span class="performance-number">1舱</span><span class="performance-number-sub">2成人 / 阳台舱</span></td>
+                <td><div class="performance-cell"><strong>成交 ¥86,400</strong><span>正式实收 ¥43,200</span><em>待收 ¥43,200</em></div></td>
+                <td><div class="performance-cell"><strong>预估成本 ¥62,000</strong><span>实际成本尚未形成</span><em>船方尾款待付</em></div></td>
+                <td><div class="performance-cell"><strong>收入尚未形成</strong><span>预计毛利 ¥24,400</span><em>预计口径</em></div></td>
+                <td><div class="performance-cell"><span class="tag tag-blue">完整</span><em>订单口径可用</em></div></td>
+                <td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>明细</button><button type="button" data-open-trace>下钻</button></div></td>
+              </tr>
+              <tr data-detail-row data-order="KS20260828015" data-schedule="SV-VISA-0828" data-product="日本个人旅游签证" data-status="异常" data-status-class="tag-red" data-amount="¥3,920" data-received="¥3,920" data-income="¥3,200" data-cost="¥3,520" data-profit="-¥320 / -10.0%">
+                <td><div class="performance-cell"><strong>KS20260828015</strong><span>新ERP · 单项服务</span><em>确认 08-28 16:32</em></div></td>
+                <td><div class="performance-cell"><strong>日本个人旅游签证</strong><span>SV-VISA-0828 · 签证</span><em>出境 / 日本</em></div></td>
+                <td><div class="performance-cell"><strong>下单 2026-08-28</strong><span>服务完成 2026-09-02</span><em>财务确认 2026-09</em></div></td>
+                <td><div class="performance-cell"><strong>北京凯撒 / 单项部</strong><span>产品负责人 周颖</span><em>外采</em></div></td>
+                <td><div class="performance-cell"><strong>陈晨 / 全员营销</strong><span>全员营销 · 华北</span><em>预算区域 非京津冀</em></div></td>
+                <td><span class="performance-number">2份</span><span class="performance-number-sub">签证服务</span></td>
+                <td><div class="performance-cell"><strong>成交 ¥3,920</strong><span>正式实收 ¥3,920</span><em>退款 ¥0</em></div></td>
+                <td><div class="performance-cell"><strong>实际成本 ¥3,520</strong><span>供应商结算 ¥3,520</span><em>加急费补录</em></div></td>
+                <td><div class="performance-cell"><strong>收入 ¥3,200</strong><span class="amount-negative">毛利 -¥320</span><em class="amount-negative">毛利率 -10.0%</em></div></td>
+                <td><div class="performance-cell"><span class="tag tag-red">异常</span><em>负毛利待复核</em></div></td>
+                <td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-open-detail>明细</button><button type="button" data-open-trace>下钻</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        <div class="pagination list-surface-pagination list-pagination-attached"><span>第1-4条/共12,486条</span><div class="pager"><button class="pager-btn" type="button" disabled>上一页</button><button class="pager-btn active" type="button">1</button><button class="pager-btn" type="button">2</button><button class="pager-btn" type="button">下一页</button></div></div>
+      </section>
+
+      <section id="performance-order" class="performance-panel" aria-label="订单口径业绩">
+        <section class="filter-card filter-card-compact performance-filter list-surface-filter" aria-label="订单业绩筛选">
+          <div class="filter-row">
+            <div class="filter-item filter-item-basis"><label class="sr-only" for="orderBasis">统计口径</label><select id="orderBasis"><option>订单确认日期</option></select></div>
+            <div class="filter-item filter-item-period"><label class="sr-only" for="orderPeriod">快捷期间</label><select id="orderPeriod" data-period-select><option value="week">本周</option><option value="month" selected>本月</option><option value="year">本年累计</option><option value="custom">自定义</option></select></div>
+            <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">统计日期</label><div class="date-range"><input type="date" value="2026-09-01" data-date-start aria-label="开始日期"><span>至</span><input type="date" value="2026-09-05" data-date-end aria-label="结束日期"></div></div>
+            <div class="filter-item filter-item-scope"><label class="sr-only" for="orderScope">经营公司</label><select id="orderScope"><option>全部经营公司</option><option>北京凯撒</option><option>福建凯撒</option><option>广州凯撒</option></select></div>
+            <div class="filter-item filter-item-scope"><label class="sr-only" for="orderProduct">产品类型</label><select id="orderProduct"><option>全部产品类型</option><option>参团游</option><option>自由行</option><option>邮轮</option><option>单团</option><option>单项服务</option></select></div>
+            <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-apply-filter>查询</button><button class="btn btn-secondary" type="button" data-open-advanced>更多筛选</button><button class="btn btn-secondary" type="button" data-reset-filter>重置</button></div>
+          </div>
+        </section>
+        <section class="performance-metrics" aria-label="订单业绩核心指标">
+          <article class="performance-metric"><span>当周净订单业绩</span><strong>286.4<small>万</small></strong><em>上周同期 251.8万</em></article>
+          <article class="performance-metric" data-tone="success"><span>周环比</span><strong>+13.7<small>%</small></strong><em>增加 34.6万</em></article>
+          <article class="performance-metric"><span>当月净订单业绩</span><strong>1,268.0<small>万</small></strong><em>上年同月进度 1,112.6万</em></article>
+          <article class="performance-metric" data-tone="success"><span>月度同比</span><strong>+14.0<small>%</small></strong><em>同口径同进度</em></article>
+          <article class="performance-metric"><span>当年累计</span><strong>9,846.2<small>万</small></strong><em>上年同期 8,932.4万</em></article>
+          <article class="performance-metric" data-tone="warning"><span>年度任务完成率</span><strong>73.0<small>%</small></strong><em>年度任务 13,480万</em></article>
+        </section>
+        <section class="performance-check-grid" aria-label="订单业绩多期间核对">
+          <article class="performance-check-card"><strong>自然周与双周</strong><span>本周 286.4万；近双周 538.2万</span><em>均可对比上期相同天数</em></article>
+          <article class="performance-check-card"><strong>当月与上月</strong><span>当月进度 1,268.0万；上月同期 1,206.8万</span><em>月环比 +5.1%</em></article>
+          <article class="performance-check-card"><strong>当月与上年同月</strong><span>上年同月相同进度 1,112.6万</span><em>月度同比 +14.0%</em></article>
+          <article class="performance-check-card"><strong>年度累计与上年同期</strong><span>9,846.2万；上年同期 8,932.4万</span><em>年度同比 +10.2%</em></article>
+        </section>
+        <section class="performance-visual-grid">
+          <article class="performance-card"><div class="performance-card-head"><h3>近8周订单业绩趋势</h3><span>净订单业绩 / 万元</span></div><div class="performance-trend">
+            <div class="performance-trend-row"><span>第28周</span><div class="performance-bar-track"><i style="--bar:61%"></i></div><strong>196.8</strong></div>
+            <div class="performance-trend-row"><span>第29周</span><div class="performance-bar-track"><i style="--bar:68%"></i></div><strong>218.6</strong></div>
+            <div class="performance-trend-row"><span>第30周</span><div class="performance-bar-track"><i style="--bar:74%"></i></div><strong>237.9</strong></div>
+            <div class="performance-trend-row"><span>第31周</span><div class="performance-bar-track"><i style="--bar:66%"></i></div><strong>212.4</strong></div>
+            <div class="performance-trend-row"><span>第32周</span><div class="performance-bar-track"><i style="--bar:82%"></i></div><strong>263.7</strong></div>
+            <div class="performance-trend-row"><span>第33周</span><div class="performance-bar-track"><i style="--bar:78%"></i></div><strong>251.8</strong></div>
+            <div class="performance-trend-row"><span>第34周</span><div class="performance-bar-track"><i style="--bar:89%"></i></div><strong>286.4</strong></div>
+            <div class="performance-trend-row"><span>第35周</span><div class="performance-bar-track"><i style="--bar:47%;--bar-color:#9abcf7"></i></div><strong>本周进度 151.2</strong></div>
+          </div><div class="performance-legend"><span><i></i>完整周</span><span><i style="--legend:#9abcf7"></i>进行中</span></div></article>
+          <article class="performance-card"><div class="performance-card-head"><h3>订单结构</h3><span>本月</span></div><div class="performance-watch">
+            <div class="performance-watch-item"><div><strong>有效订单</strong><span>确认生效且满足当前口径</span></div><em>896单</em></div>
+            <div class="performance-watch-item"><div><strong>有效业绩数量</strong><span>人数与商品数量分开展示</span></div><em>2,684人</em></div>
+            <div class="performance-watch-item"><div><strong>当期调增</strong><span>补差、增项等已生效调整</span></div><em style="--watch:var(--color-success)">+36.8万</em></div>
+            <div class="performance-watch-item"><div><strong>当期调减</strong><span>取消、退款等已生效调整</span></div><em style="--watch:var(--color-danger)">-52.4万</em></div>
+          </div></article>
+        </section>
+        <div class="performance-section-title"><div><h2>经营单位完成情况</h2><p>所有比率均按合计金额计算，不平均各行百分比</p></div></div>
+        <section class="performance-table-wrap"><table class="performance-table" style="--table-min:1500px"><colgroup><col style="width:210px"><col style="width:140px"><col style="width:140px"><col style="width:130px"><col style="width:150px"><col style="width:140px"><col style="width:130px"><col style="width:170px"><col style="width:170px"><col style="width:128px"></colgroup><thead><tr><th>经营单位</th><th>当周</th><th>上周同期</th><th>周环比</th><th>当月</th><th>上年同月</th><th>月度同比</th><th>月度任务/完成率</th><th>年度累计/完成率</th><th class="performance-action-head">操作</th></tr></thead><tbody>
+          <tr><td><div class="performance-cell"><strong>北京凯撒</strong><span>京津冀直营</span></div></td><td><strong>126.8万</strong></td><td>108.4万</td><td class="amount-positive">+17.0%</td><td><strong>546.2万</strong></td><td>481.6万</td><td class="amount-positive">+13.4%</td><td><div class="performance-progress" data-level="success"><div class="performance-progress-head"><span>620万</span><strong>88.1%</strong></div><div class="performance-progress-track"><i style="--progress:88.1%"></i></div></div></td><td><div class="performance-progress"><div class="performance-progress-head"><span>5,820万</span><strong>74.8%</strong></div><div class="performance-progress-track"><i style="--progress:74.8%"></i></div></div></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="北京凯撒订单业绩">明细</button></div></td></tr>
+          <tr><td><div class="performance-cell"><strong>福建凯撒</strong><span>非京津冀</span></div></td><td><strong>82.6万</strong></td><td>76.2万</td><td class="amount-positive">+8.4%</td><td><strong>368.4万</strong></td><td>342.5万</td><td class="amount-positive">+7.6%</td><td><div class="performance-progress" data-level="warning"><div class="performance-progress-head"><span>455万</span><strong>81.0%</strong></div><div class="performance-progress-track"><i style="--progress:81%"></i></div></div></td><td><div class="performance-progress"><div class="performance-progress-head"><span>4,260万</span><strong>71.2%</strong></div><div class="performance-progress-track"><i style="--progress:71.2%"></i></div></div></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="福建凯撒订单业绩">明细</button></div></td></tr>
+          <tr><td><div class="performance-cell"><strong>广州凯撒</strong><span>非京津冀</span></div></td><td><strong>77.0万</strong></td><td>67.2万</td><td class="amount-positive">+14.6%</td><td><strong>353.4万</strong></td><td>288.5万</td><td class="amount-positive">+22.5%</td><td><div class="performance-progress" data-level="success"><div class="performance-progress-head"><span>390万</span><strong>90.6%</strong></div><div class="performance-progress-track"><i style="--progress:90.6%"></i></div></div></td><td><div class="performance-progress"><div class="performance-progress-head"><span>3,400万</span><strong>72.1%</strong></div><div class="performance-progress-track"><i style="--progress:72.1%"></i></div></div></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="广州凯撒订单业绩">明细</button></div></td></tr>
+        </tbody></table></section>
+      </section>
+
+      <section id="performance-return" class="performance-panel" aria-label="回团口径业绩">
+        <section class="filter-card filter-card-compact performance-filter list-surface-filter" aria-label="回团业绩筛选"><div class="filter-row">
+          <div class="filter-item filter-item-basis"><label class="sr-only" for="returnBasis">回团口径</label><select id="returnBasis"><option>实际回团日期</option><option>财务回团月份</option></select></div>
+          <div class="filter-item filter-item-period"><label class="sr-only" for="returnPeriod">快捷期间</label><select id="returnPeriod" data-period-select><option value="week">本周</option><option value="month" selected>本月</option><option value="year">本年累计</option><option value="custom">自定义</option></select></div>
+          <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">统计日期</label><div class="date-range"><input type="date" value="2026-09-01" data-date-start aria-label="开始日期"><span>至</span><input type="date" value="2026-09-05" data-date-end aria-label="结束日期"></div></div>
+          <div class="filter-item filter-item-scope"><label class="sr-only" for="returnState">确认状态</label><select id="returnState"><option>全部确认状态</option><option>已回团待确认</option><option>已确认回团业绩</option></select></div>
+          <div class="filter-item filter-item-scope"><label class="sr-only" for="returnCrossYear">跨年类型</label><select id="returnCrossYear"><option>全部订单</option><option>当年下单当年回团</option><option>上年下单本年回团</option></select></div>
+          <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-apply-filter>查询</button><button class="btn btn-secondary" type="button" data-open-advanced>更多筛选</button><button class="btn btn-secondary" type="button" data-reset-filter>重置</button></div>
+        </div></section>
+        <section class="performance-metrics"><article class="performance-metric"><span>本月实际回团业绩</span><strong>986.4<small>万</small></strong><em>含待财务确认</em></article><article class="performance-metric" data-tone="success"><span>已确认回团业绩</span><strong>842.6<small>万</small></strong><em>85.4%</em></article><article class="performance-metric" data-tone="warning"><span>已回团待确认</span><strong>143.8<small>万</small></strong><em>18个团期/服务</em></article><article class="performance-metric"><span>跨年回团业绩</span><strong>126.5<small>万</small></strong><em>上年下单本年完成</em></article><article class="performance-metric" data-tone="danger"><span>回团后净调整</span><strong>-18.6<small>万</small></strong><em>退款及成本调整</em></article><article class="performance-metric"><span>已确认业务毛利率</span><strong>24.8<small>%</small></strong><em>按合计金额计算</em></article></section>
+        <div class="performance-summary-line"><span>上月相同进度 <strong>931.8万</strong></span><span>月环比 <strong>+5.9%</strong></span><span>上年同月相同进度 <strong>874.6万</strong></span><span>月度同比 <strong>+12.8%</strong></span><span>月度回团任务 <strong>1,180万 / 83.6%</strong></span><span>年度累计 <strong>8,962.4万 / 69.8%</strong></span></div>
+        <section class="performance-visual-grid"><article class="performance-card"><div class="performance-card-head"><h3>本月回团构成</h3><span>按实际回团日期</span></div><div class="performance-trend"><div class="performance-trend-row"><span>当年订单</span><div class="performance-bar-track"><i style="--bar:87%"></i></div><strong>859.9万</strong></div><div class="performance-trend-row"><span>跨年订单</span><div class="performance-bar-track"><i style="--bar:13%;--bar-color:#7b61d1"></i></div><strong>126.5万</strong></div><div class="performance-trend-row"><span>已确认</span><div class="performance-bar-track"><i style="--bar:85.4%;--bar-color:var(--color-success)"></i></div><strong>842.6万</strong></div><div class="performance-trend-row"><span>待确认</span><div class="performance-bar-track"><i style="--bar:14.6%;--bar-color:#d99123"></i></div><strong>143.8万</strong></div></div></article><article class="performance-card"><div class="performance-card-head"><h3>回团后变化</h3><span>本月生效</span></div><div class="performance-watch"><div class="performance-watch-item"><div><strong>收入调减</strong><span>退款、减项和价格调整</span></div><em style="--watch:var(--color-danger)">-12.4万</em></div><div class="performance-watch-item"><div><strong>成本调增</strong><span>补账单、损耗和差异</span></div><em style="--watch:var(--color-danger)">+8.6万</em></div><div class="performance-watch-item"><div><strong>返点调增</strong><span>已确认并完成分配</span></div><em style="--watch:var(--color-success)">+2.4万</em></div></div></article></section>
+        <div class="performance-section-title"><div><h2>回团业绩明细</h2><p>先看实际完成，再区分待确认与已确认，不能等结算完成后才纳入</p></div></div>
+        <section class="performance-table-wrap"><table class="performance-table" style="--table-min:1740px"><colgroup><col style="width:220px"><col style="width:190px"><col style="width:190px"><col style="width:170px"><col style="width:160px"><col style="width:170px"><col style="width:170px"><col style="width:180px"><col style="width:160px"><col style="width:128px"></colgroup><thead><tr><th>团期/产品</th><th>订单期间/回团期间</th><th>实际完成/确认</th><th>回团业绩</th><th>财务确认收入</th><th>实际成本</th><th>业务毛利</th><th>结算状态</th><th>回团后调整</th><th class="performance-action-head">操作</th></tr></thead><tbody>
+          <tr><td><div class="performance-cell"><strong>EU20260912001</strong><span>欧洲三国经典游 10日</span></div></td><td><div class="performance-cell"><strong>订单 2026-09</strong><span>回团 2026-09</span></div></td><td><div class="performance-cell"><strong>2026-09-21</strong><span>王强 · 09-21 18:20</span></div></td><td><strong>146.8万</strong></td><td>119.6万</td><td>91.2万</td><td><div class="performance-cell"><strong class="amount-positive">28.4万</strong><span>23.7%</span></div></td><td><span class="tag tag-green">已确认回团业绩</span></td><td>无</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="EU20260912001回团业绩">明细</button></div></td></tr>
+          <tr><td><div class="performance-cell"><strong>JP20260103002</strong><span>日本关西新年团 7日</span></div></td><td><div class="performance-cell"><strong>订单 2025-12</strong><span>回团 2026-01 · 跨年</span></div></td><td><div class="performance-cell"><strong>2026-01-09</strong><span>刘洋 · 01-09 20:05</span></div></td><td><strong>126.5万</strong></td><td>待确认</td><td>96.4万</td><td><div class="performance-cell"><strong>暂估 30.1万</strong><span>23.8%</span></div></td><td><span class="tag tag-orange">已回团待确认</span></td><td>账单差异待处理</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="JP20260103002回团业绩">明细</button></div></td></tr>
+          <tr><td><div class="performance-cell"><strong>SV-VISA-0828</strong><span>日本个人旅游签证</span></div></td><td><div class="performance-cell"><strong>订单 2026-08</strong><span>完成 2026-09</span></div></td><td><div class="performance-cell"><strong>2026-09-02</strong><span>周颖 · 09-02 15:18</span></div></td><td><strong>0.39万</strong></td><td>0.32万</td><td>0.35万</td><td><div class="performance-cell"><strong class="amount-negative">-0.03万</strong><span>-10.0%</span></div></td><td><span class="tag tag-green">已确认回团业绩</span></td><td class="amount-negative">成本补录 +0.12万</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="SV-VISA-0828回团业绩">明细</button></div></td></tr>
+        </tbody></table></section>
+      </section>
+
+      <section id="performance-dimension" class="performance-panel" aria-label="产品渠道人员分析">
+        <section class="filter-card filter-card-compact performance-filter list-surface-filter" aria-label="经营维度分析筛选"><div class="filter-row">
+          <div class="filter-item filter-item-basis"><label class="sr-only" for="dimensionBasis">统计口径</label><select id="dimensionBasis"><option>订单确认日期</option><option>实际回团日期</option><option>财务回团月份</option></select></div>
+          <div class="filter-item filter-item-period"><label class="sr-only" for="dimensionPeriod">快捷期间</label><select id="dimensionPeriod" data-period-select><option value="week">本周</option><option value="month" selected>本月</option><option value="year">本年累计</option><option value="custom">自定义</option></select></div>
+          <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">统计日期</label><div class="date-range"><input type="date" value="2026-09-01" data-date-start aria-label="开始日期"><span>至</span><input type="date" value="2026-09-05" data-date-end aria-label="结束日期"></div></div>
+          <div class="filter-item filter-item-scope"><label class="sr-only" for="dimensionScope">经营公司</label><select id="dimensionScope"><option>全部经营公司</option><option>北京凯撒</option><option>福建凯撒</option><option>广州凯撒</option></select></div>
+          <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-apply-filter>查询</button><button class="btn btn-secondary" type="button" data-open-advanced>更多筛选</button><button class="btn btn-secondary" type="button" data-reset-filter>重置</button></div>
+        </div></section>
+        <div class="performance-dimension-toolbar"><strong>分析维度</strong><button class="performance-chip active" type="button" data-dimension="产品类型">产品类型</button><button class="performance-chip" type="button" data-dimension="旅游范围">旅游范围</button><button class="performance-chip" type="button" data-dimension="业务类型">业务类型</button><button class="performance-chip" type="button" data-dimension="目的地">目的地</button><button class="performance-chip" type="button" data-dimension="渠道">渠道</button><button class="performance-chip" type="button" data-dimension="区域">区域</button><button class="performance-chip" type="button" data-dimension="产品负责人">产品负责人</button><button class="performance-chip" type="button" data-dimension="销售人员">销售人员</button><button class="performance-chip" type="button" data-dimension="销售组">销售组</button><button class="performance-chip" type="button" data-dimension="团控人">团控人</button></div>
+        <section class="performance-visual-grid"><article class="performance-card"><div class="performance-card-head"><h3 id="dimensionChartTitle">产品类型业绩构成</h3><span>净订单业绩 / 万元</span></div><div id="dimensionChart" class="performance-trend"></div></article><article class="performance-card"><div class="performance-card-head"><h3>当前判断</h3><span id="dimensionInsightTitle">产品类型</span></div><div id="dimensionInsights" class="performance-watch"></div></article></section>
+        <div class="performance-section-title"><div><h2 id="dimensionTableTitle">按产品类型分析</h2><p>切换维度后沿用同一时间和金额口径</p></div></div>
+        <section class="performance-table-wrap"><table class="performance-table" style="--table-min:1570px"><colgroup><col style="width:210px"><col style="width:150px"><col style="width:130px"><col style="width:130px"><col style="width:160px"><col style="width:150px"><col style="width:150px"><col style="width:170px"><col style="width:150px"><col style="width:128px"></colgroup><thead><tr><th id="dimensionColumnName">产品类型</th><th>净订单业绩</th><th>占比</th><th>同比</th><th>业务结算收入</th><th>实际成本</th><th>毛利/毛利率</th><th>月度任务/完成率</th><th>订单数/数量</th><th class="performance-action-head">操作</th></tr></thead><tbody id="dimensionRows"></tbody></table></section>
+        <div class="performance-section-title"><div><h2>交叉构成核对</h2><p>保留原表“目的地 × 自营/甄选/外采”两层占比习惯，金额只计一次</p></div></div>
+        <section class="performance-table-wrap"><table class="performance-table" style="--table-min:1120px"><colgroup><col style="width:190px"><col style="width:170px"><col style="width:170px"><col style="width:170px"><col style="width:160px"><col style="width:160px"><col style="width:100px"></colgroup><thead><tr><th>目的地分区</th><th>凯撒自营</th><th>凯撒甄选</th><th>外采</th><th>目的地合计/占比</th><th>同比</th><th>核对</th></tr></thead><tbody><tr><td><strong>欧洲</strong></td><td>168.6万 / 48.6%</td><td>112.4万 / 32.4%</td><td>65.8万 / 19.0%</td><td><strong>346.8万 / 27.4%</strong></td><td class="amount-positive">+18.5%</td><td><span class="tag tag-green">平衡</span></td></tr><tr><td><strong>日本</strong></td><td>92.8万 / 42.5%</td><td>86.4万 / 39.6%</td><td>39.2万 / 17.9%</td><td><strong>218.4万 / 17.2%</strong></td><td class="amount-positive">+9.8%</td><td><span class="tag tag-green">平衡</span></td></tr><tr><td><strong>东南亚</strong></td><td>76.8万 / 39.1%</td><td>62.4万 / 31.8%</td><td>57.0万 / 29.1%</td><td><strong>196.2万 / 15.5%</strong></td><td class="amount-positive">+14.4%</td><td><span class="tag tag-orange">2项待分类</span></td></tr></tbody></table></section>
+        <div class="performance-matrix-note">目的地占比＝该目的地业绩 ÷ 全部业绩；业务类型内占比＝该目的地在该业务类型中的业绩 ÷ 该业务类型全部业绩。多目的地用于分析标签，不重复分摊订单金额；待确认国家、省份和特殊排除进入“分类例外”。</div>
+      </section>
+
+      <section id="performance-profit" class="performance-panel" aria-label="毛利预算异常管理">
+        <section class="filter-card filter-card-compact performance-filter list-surface-filter" aria-label="毛利预算异常筛选"><div class="filter-row">
+          <div class="filter-item filter-item-basis"><label class="sr-only" for="profitBasis">统计口径</label><select id="profitBasis"><option>实际回团日期</option><option>财务回团月份</option><option>会计期间</option></select></div>
+          <div class="filter-item filter-item-period"><label class="sr-only" for="profitPeriod">快捷期间</label><select id="profitPeriod" data-period-select><option value="week">本周</option><option value="month" selected>本月</option><option value="year">本年累计</option><option value="custom">自定义</option></select></div>
+          <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">统计日期</label><div class="date-range"><input type="date" value="2026-09-01" data-date-start aria-label="开始日期"><span>至</span><input type="date" value="2026-09-05" data-date-end aria-label="结束日期"></div></div>
+          <div class="filter-item filter-item-scope"><label class="sr-only" for="profitScope">经营公司</label><select id="profitScope"><option>全部经营公司</option><option>北京凯撒</option><option>福建凯撒</option><option>广州凯撒</option></select></div>
+          <div class="filter-item filter-item-scope"><label class="sr-only" for="profitTaxBasis">金额口径</label><select id="profitTaxBasis"><option>含税业务毛利</option><option>不含税财务毛利</option></select></div>
+          <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-apply-filter>查询</button><button class="btn btn-secondary" type="button" data-open-advanced>更多筛选</button><button class="btn btn-secondary" type="button" data-reset-filter>重置</button></div>
+        </div></section>
+        <section class="performance-metrics"><article class="performance-metric"><span>业务结算收入</span><strong>842.6<small>万</small></strong><em>已确认回团业绩</em></article><article class="performance-metric"><span>实际成本</span><strong>633.6<small>万</small></strong><em>已确认成本范围</em></article><article class="performance-metric" data-tone="success"><span>业务毛利</span><strong>209.0<small>万</small></strong><em>毛利率 24.8%</em></article><article class="performance-metric"><span>不含税毛利</span><strong>187.2<small>万</small></strong><em>口径完整率 91.6%</em></article><article class="performance-metric" data-tone="danger"><span>负毛利团队</span><strong>6<small>个</small></strong><em>影响毛利 -18.4万</em></article><article class="performance-metric" data-tone="warning"><span>待处理异常</span><strong>38<small>项</small></strong><em>7项阻断正式发布</em></article></section>
+        <nav class="performance-inner-tabs" aria-label="毛利预算异常子页签"><button class="active" type="button" data-profit-view="margin">毛利与单团</button><button type="button" data-profit-view="settlement">结算与返点</button><button type="button" data-profit-view="budget">预算任务</button><button type="button" data-profit-view="exception">异常事项</button></nav>
+        <section id="profit-margin" class="performance-inner-panel active"><div class="performance-section-title"><div><h2>团期与单团毛利</h2><p>业务毛利与不含税毛利并列，缺失税务或成本依据时不显示虚假毛利率</p></div></div><section class="performance-table-wrap"><table class="performance-table" style="--table-min:1700px"><colgroup><col style="width:230px"><col style="width:160px"><col style="width:160px"><col style="width:160px"><col style="width:170px"><col style="width:170px"><col style="width:170px"><col style="width:170px"><col style="width:150px"><col style="width:128px"></colgroup><thead><tr><th>团期/项目团</th><th>业务结算收入</th><th>实际成本</th><th>业务毛利率</th><th>不含税收入</th><th>不含税成本</th><th>不含税毛利率</th><th>预付/已付/待付</th><th>成本完整状态</th><th class="performance-action-head">操作</th></tr></thead><tbody>
+          <tr><td><div class="performance-cell"><strong>EU20260912001</strong><span>欧洲三国经典游 10日</span><em>团控 王强</em></div></td><td>119.6万</td><td>91.2万</td><td class="amount-positive">23.7%</td><td>112.8万</td><td>86.0万</td><td class="amount-positive">23.8%</td><td><div class="performance-cell"><strong>预付 24.0万</strong><span>已付 76.2万 / 待付 15.0万</span></div></td><td><span class="tag tag-green">完整</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="EU20260912001毛利">明细</button></div></td></tr>
+          <tr><td><div class="performance-cell"><strong>MICE20260905003</strong><span>科技公司年度会议项目</span><em>团控 陈伟</em></div></td><td>86.0万</td><td>72.8万</td><td class="amount-positive">15.3%</td><td>81.1万</td><td>68.7万</td><td class="amount-positive">15.3%</td><td><div class="performance-cell"><strong>预付 18.0万</strong><span>已付 48.0万 / 待付 24.8万</span></div></td><td><span class="tag tag-orange">待补1项</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="MICE20260905003毛利">明细</button></div></td></tr>
+          <tr><td><div class="performance-cell"><strong>SV-VISA-0828</strong><span>日本个人旅游签证</span><em>团控 周颖</em></div></td><td>0.32万</td><td>0.35万</td><td class="amount-negative">-10.0%</td><td>0.30万</td><td>0.33万</td><td class="amount-negative">-10.0%</td><td><div class="performance-cell"><strong>预付 0</strong><span>已付 0.25万 / 待付 0.10万</span></div></td><td><span class="tag tag-red">负毛利</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="SV-VISA-0828毛利">明细</button></div></td></tr>
+        </tbody></table></section></section>
+        <section id="profit-settlement" class="performance-inner-panel"><div class="performance-section-title"><div><h2>团队结算、资金与返点</h2><p>把产品底稿中的结算进度、预付款、付款、待付款和预计返点放在同一核对视图</p></div></div><section class="performance-table-wrap"><table class="performance-table" style="--table-min:1580px"><colgroup><col style="width:230px"><col style="width:150px"><col style="width:160px"><col style="width:160px"><col style="width:160px"><col style="width:170px"><col style="width:180px"><col style="width:160px"><col style="width:128px"></colgroup><thead><tr><th>团期/项目团</th><th>结算进度</th><th>总成本/已确认</th><th>预付款/已分摊</th><th>已付款/待付款</th><th>供应商返点</th><th>结算依据完整度</th><th>准单状态</th><th class="performance-action-head">操作</th></tr></thead><tbody><tr><td><div class="performance-cell"><strong>EU20260912001</strong><span>欧洲三国经典游 10日</span></div></td><td>已确认</td><td>91.2万 / 91.2万</td><td>24.0万 / 24.0万</td><td>76.2万 / 15.0万</td><td>预计 2.8万 / 已确认 2.4万</td><td><span class="tag tag-green">完整</span></td><td><span class="tag tag-green">已提交</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="EU20260912001结算进度">明细</button></div></td></tr><tr><td><div class="performance-cell"><strong>MICE20260905003</strong><span>科技公司年度会议项目</span></div></td><td>待补依据</td><td>72.8万 / 66.0万</td><td>18.0万 / 12.0万</td><td>48.0万 / 24.8万</td><td>不适用</td><td><span class="tag tag-orange">缺1项</span></td><td><span class="tag tag-orange">未提交准单*</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="MICE20260905003结算进度">明细</button></div></td></tr></tbody></table></section><div class="performance-matrix-note">“未提交准单”沿用财务原表叫法，仅用于保证原有异常不丢失；它在新系统中究竟对应成本确认、供应商账单还是航服准单，仍需财务和业务共同确认后再定正式名称与判断规则。</div></section>
+        <section id="profit-budget" class="performance-inner-panel"><div class="performance-section-title"><div><h2>任务与完成情况</h2><p>个人、销售组、门店和渠道任务使用同一实际业绩口径和任务版本</p></div></div><section class="performance-table-wrap"><table class="performance-table" style="--table-min:1450px"><colgroup><col style="width:180px"><col style="width:210px"><col style="width:160px"><col style="width:160px"><col style="width:180px"><col style="width:180px"><col style="width:170px"><col style="width:128px"></colgroup><thead><tr><th>责任层级</th><th>责任对象</th><th>任务指标</th><th>本月实际</th><th>月度任务/完成率</th><th>年度累计/完成率</th><th>任务版本</th><th class="performance-action-head">操作</th></tr></thead><tbody><tr><td>个人</td><td><div class="performance-cell"><strong>王芳</strong><span>北京呼叫中心一组</span></div></td><td>订单业绩</td><td>86.4万</td><td><div class="performance-progress" data-level="success"><div class="performance-progress-head"><span>90万</span><strong>96.0%</strong></div><div class="performance-progress-track"><i style="--progress:96%"></i></div></div></td><td>688.2万 / 76.5%</td><td>2026年度 V2</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="王芳任务完成">明细</button></div></td></tr><tr><td>销售组</td><td><div class="performance-cell"><strong>北京呼叫中心一组</strong><span>负责人 李倩</span></div></td><td>订单业绩</td><td>268.5万</td><td><div class="performance-progress" data-level="warning"><div class="performance-progress-head"><span>310万</span><strong>86.6%</strong></div><div class="performance-progress-track"><i style="--progress:86.6%"></i></div></div></td><td>2,184.0万 / 72.8%</td><td>2026年度 V2</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="呼叫中心一组任务完成">明细</button></div></td></tr><tr><td>门店</td><td><div class="performance-cell"><strong>软件园门店</strong><span>京津冀直营</span></div></td><td>回团收入</td><td>118.6万</td><td><div class="performance-progress" data-level="danger"><div class="performance-progress-head"><span>150万</span><strong>79.1%</strong></div><div class="performance-progress-track"><i style="--progress:79.1%"></i></div></div></td><td>926.4万 / 68.6%</td><td>2026年度 V1</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="软件园门店任务完成">明细</button></div></td></tr><tr><td>渠道</td><td><div class="performance-cell"><strong>OTA</strong><span>全平台</span></div></td><td>订单业绩</td><td>196.2万</td><td><div class="performance-progress" data-level="success"><div class="performance-progress-head"><span>205万</span><strong>95.7%</strong></div><div class="performance-progress-track"><i style="--progress:95.7%"></i></div></div></td><td>1,684.2万 / 75.2%</td><td>2026年度 V2</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="OTA任务完成">明细</button></div></td></tr></tbody></table></section></section>
+        <section id="profit-exception" class="performance-inner-panel"><div class="performance-section-title"><div><h2>经营和数据异常</h2><p>只展示系统可以判断的数据缺口和金额异常，人的沟通事项不进入列表</p></div></div><section class="performance-table-wrap"><table class="performance-table" style="--table-min:1500px"><colgroup><col style="width:190px"><col style="width:230px"><col style="width:230px"><col style="width:170px"><col style="width:170px"><col style="width:190px"><col style="width:160px"><col style="width:128px"></colgroup><thead><tr><th>异常类型</th><th>业务对象</th><th>问题结果</th><th>影响金额</th><th>发现时间</th><th>来源模块</th><th>主状态</th><th class="performance-action-head">操作</th></tr></thead><tbody><tr><td>负毛利团队</td><td><div class="performance-cell"><strong>SV-VISA-0828</strong><span>日本个人旅游签证</span></div></td><td>业务毛利率 -10.0%</td><td class="amount-negative">-0.03万</td><td>09-05 08:30</td><td>团期成本 / 收入确认</td><td><span class="tag tag-red">待处理</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="负毛利SV-VISA-0828">详情</button></div></td></tr><tr><td>成本不完整</td><td><div class="performance-cell"><strong>MICE20260905003</strong><span>科技公司年度会议项目</span></div></td><td>会务执行费缺确认依据</td><td>预计 6.8万</td><td>09-05 08:30</td><td>团期成本</td><td><span class="tag tag-orange">处理中</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="成本不完整MICE20260905003">详情</button></div></td></tr><tr><td>已回团待确认</td><td><div class="performance-cell"><strong>JP20260103002</strong><span>日本关西新年团 7日</span></div></td><td>供应商账单差异未处理</td><td>回团业绩 126.5万</td><td>09-05 08:30</td><td>业务结算</td><td><span class="tag tag-orange">待确认</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="回团待确认JP20260103002">详情</button></div></td></tr><tr><td>预付款异常</td><td><div class="performance-cell"><strong>PRE20260118006</strong><span>皇家加勒比预付款</span></div></td><td>账龄超过180天仍未完整分摊</td><td>余额 38.6万</td><td>09-05 08:30</td><td>预付管理</td><td><span class="tag tag-red">待处理</span></td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="预付款异常PRE20260118006">详情</button></div></td></tr></tbody></table></section></section>
+      </section>
+    </section>
+  </main>
+
+  <div id="advancedDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer-small" role="dialog" aria-modal="true" aria-labelledby="advancedDrawerTitle"><div class="modal-header"><div id="advancedDrawerTitle" class="modal-title">更多筛选</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong id="advancedViewName">财务业绩明细</strong><span>补充筛选条件只影响当前报表页签</span></div><div class="performance-object-side"><em>当前口径将保留在导出记录</em></div></section><section class="drawer-section"><div class="performance-form-grid"><label class="form-group"><span class="form-label">旅游范围</span><select class="form-control"><option>全部旅游范围</option><option>出境</option><option>国内</option><option>港澳台</option><option>入境</option></select></label><label class="form-group"><span class="form-label">业务类型</span><select class="form-control"><option>全部业务类型</option><option>凯撒自营</option><option>凯撒甄选</option><option>外采</option></select></label><label class="form-group"><span class="form-label">目的地分区</span><select class="form-control"><option>全部目的地</option><option>欧洲</option><option>亚洲</option><option>美洲</option><option>中东非</option><option>国内</option></select></label><label class="form-group"><span class="form-label">渠道</span><select class="form-control"><option>全部渠道</option><option>呼叫中心</option><option>体验中心</option><option>门店</option><option>全员营销</option><option>分公司</option><option>OTA</option></select></label><label class="form-group"><span class="form-label">预算区域</span><select class="form-control"><option>全部预算区域</option><option>京津冀直营</option><option>京津冀加盟</option><option>非京津冀</option></select></label><label class="form-group"><span class="form-label">来源系统</span><select class="form-control"><option>全部来源系统</option><option>新ERP</option><option>老ERP</option><option>通通游</option></select></label><label class="form-group"><span class="form-label">产品负责人</span><input class="form-control" type="search" placeholder="姓名"></label><label class="form-group"><span class="form-label">销售人员/销售组</span><input class="form-control" type="search" placeholder="姓名或销售组"></label><label class="form-group"><span class="form-label">团控人</span><input class="form-control" type="search" placeholder="姓名"></label><label class="form-group"><span class="form-label">数据完整状态</span><select class="form-control"><option>全部状态</option><option>完整</option><option>待补充</option><option>异常</option></select></label></div></section></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-layer>取消</button><button class="btn btn-primary" type="button" data-apply-advanced>应用筛选</button></div></section></div>
+
+  <div id="detailDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer" role="dialog" aria-modal="true" aria-labelledby="detailDrawerTitle"><div class="modal-header"><div id="detailDrawerTitle" class="modal-title">业绩明细</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section id="detailObject" class="performance-object"></section><section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">关键金额</h3></div><div id="detailKpis" class="performance-drawer-kpis"></div></section><section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">业务和财务关系</h3></div><div class="table-wrap drawer-table-fit"><table><thead><tr><th>环节</th><th>业务结果</th><th>当前状态</th><th>查看入口</th></tr></thead><tbody><tr><td>客户订单</td><td id="detailOrderResult">订单已确认</td><td><span class="tag tag-green">有效</span></td><td><a id="detailOrderLink" class="table-link" href="../sales/orders-detail.html">订单详情</a></td></tr><tr><td>实际履约</td><td id="detailFulfillmentResult">实际回团已确认</td><td><span class="tag tag-green">已完成</span></td><td><a class="table-link" href="../tour/schedules-detail.html">团期详情</a></td></tr><tr><td>收退款</td><td>正式实收与退款分别记录</td><td><span class="tag tag-green">已核对</span></td><td><a class="table-link" href="../finance/finance-matching.html">认款记录</a></td></tr><tr><td>成本和应付</td><td>实际成本、供应商结算和付款分别记录</td><td><span class="tag tag-orange">部分待处理</span></td><td><a class="table-link" href="../tour/fulfillment-cost.html">成本明细</a></td></tr><tr><td>业务结算</td><td>业务收入及成本范围确认</td><td><span class="tag tag-orange">按来源显示</span></td><td><a class="table-link" href="../finance/finance-settlement.html">业务结算</a></td></tr></tbody></table></div></section><section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">发生时经营归属</h3></div><div class="description-grid"><div class="description-item"><div class="description-label">产品归属</div><div class="description-value">北京凯撒 / 欧洲部 / 张明</div></div><div class="description-item"><div class="description-label">销售归属</div><div class="description-value">京津冀一区 / 呼叫中心一组 / 王芳</div></div><div class="description-item"><div class="description-label">渠道与门店</div><div class="description-value">呼叫中心 / 直营网电销</div></div><div class="description-item"><div class="description-label">预算区域</div><div class="description-value">京津冀直营</div></div></div></section></div></section></div>
+
+  <div id="methodDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer" role="dialog" aria-modal="true" aria-labelledby="methodDrawerTitle"><div class="modal-header"><div id="methodDrawerTitle" class="modal-title">报表口径说明</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong>经营业绩 V1.0</strong><span>适用于财务业绩明细及四类汇总分析</span></div><div class="performance-object-side"><span>数据截止 2026-09-05 23:59</span><em>示例版本</em></div></section><section class="drawer-section"><div class="table-wrap drawer-table-fit"><table><thead><tr><th>报表结果</th><th>时间口径</th><th>主要金额</th><th>关键边界</th></tr></thead><tbody><tr><td>财务业绩明细</td><td>可切换订单、实际回团、财务回团月份、结算或会计期间</td><td>成交、实收、成本、业务收入、财务收入分别展示</td><td>一项销售内容一条最细记录</td></tr><tr><td>订单业绩</td><td>订单确认生效日期</td><td>确认时有效成交金额加当期调整</td><td>预留、占位和报价不计入有效订单</td></tr><tr><td>回团业绩</td><td>实际回团日期或财务回团月份</td><td>回团业绩、业务收入、财务收入分层</td><td>已回团待确认不能从分析中消失</td></tr><tr><td>产品渠道人员</td><td>沿用订单或回团口径</td><td>同一明细按发生时归属汇总</td><td>多目的地明细不重复合计金额</td></tr><tr><td>毛利预算异常</td><td>实际回团、财务月份或会计期间</td><td>业务毛利和不含税毛利分别计算</td><td>缺成本或税务依据时标明不完整</td></tr></tbody></table></div></section><section class="drawer-section"><div class="alert alert-blue"><strong>同比、环比和完成率</strong><p>比率统一使用合计分子除以合计分母；分母为0时显示“—”。进行中的本周或本月与上期相同进度比较，并明确显示精确起止日期。</p></div></section></div></section></div>
+
+  <div id="habitDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer" role="dialog" aria-modal="true" aria-labelledby="habitDrawerTitle"><div class="modal-header"><div id="habitDrawerTitle" class="modal-title">常用分析视图</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong id="habitViewName">自然周</strong><span id="habitViewDescription">本期与上期、上年同期按相同进度核对</span></div><div class="performance-object-side"><span>数据截止 09-05 23:59</span><em>金额：万元</em></div></section><section class="drawer-section"><div class="table-wrap drawer-table-fit"><table><thead><tr id="habitTableHead"></tr></thead><tbody id="habitTableRows"></tbody></table></div></section><div class="alert alert-blue"><strong>网页与原表的关系</strong><p>视图保存期间、口径、维度和任务类型；点击明细后仍回到共同业绩明细。它替代同结构的重复工作表，不改变财务原有对比顺序。</p></div></div></section></div>
+
+  <div id="sourceDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer" role="dialog" aria-modal="true" aria-labelledby="sourceDrawerTitle"><div class="modal-header"><div id="sourceDrawerTitle" class="modal-title">来源核对</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong>通通游、老ERP、新ERP合并核对</strong><span>先核对来源与排除项，再发布汇总结果</span></div><div class="performance-object-side"><span>最后刷新 09-05 08:30</span><em>示例数据</em></div></section><section class="drawer-section"><div class="table-wrap drawer-table-fit"><table><thead><tr><th>来源系统</th><th>原始记录</th><th>重复或排除</th><th>进入明细</th><th>金额验算</th><th>状态</th></tr></thead><tbody><tr><td>新ERP</td><td>5,286项</td><td>测试产品 8项</td><td>5,278项</td><td>4,836.2万</td><td><span class="tag tag-green">平衡</span></td></tr><tr><td>通通游</td><td>4,968项</td><td>重复订单 26项</td><td>4,942项</td><td>3,624.8万</td><td><span class="tag tag-green">平衡</span></td></tr><tr><td>老ERP</td><td>2,304项</td><td>关闭/零流水 38项</td><td>2,266项</td><td>1,385.2万</td><td><span class="tag tag-orange">7项待补归属</span></td></tr><tr><td><strong>合计</strong></td><td>12,558项</td><td>72项</td><td><strong>12,486项</strong></td><td><strong>9,846.2万</strong></td><td><span class="tag tag-green">总额一致</span></td></tr></tbody></table></div></section><section class="drawer-section"><div class="alert alert-blue"><strong>保留财务验算习惯</strong><p>每次生成记录保存来源行数、排除原因、重复订单、进入明细数量和金额差额。网页展示两位小数，导出底表保留原始精度；旧表中的人工排除必须改为可查看的规则和例外记录。</p></div></section></div></section></div>
+
+  <div id="mappingDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer" role="dialog" aria-modal="true" aria-labelledby="mappingDrawerTitle"><div class="modal-header"><div id="mappingDrawerTitle" class="modal-title">分类例外</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong>目的地与业务类型待确认项</strong><span>来源于财务业务说明中的3张分区和标签调整图</span></div><div class="performance-object-side"><span>规则版本 2026-09 V1</span><em>3项待确认</em></div></section><section class="drawer-section"><div class="table-wrap drawer-table-fit"><table><thead><tr><th>分类对象</th><th>当前归类</th><th>例外或问题</th><th>报表处理</th><th>状态</th></tr></thead><tbody><tr><td>美洲目的地</td><td>北美洲/南美洲/中美洲</td><td>美国加拿大之外的地理分区需业务确认</td><td>保留国家并进入待确认分区</td><td><span class="tag tag-orange">待确认</span></td></tr><tr><td>亚洲目的地</td><td>东亚/东南亚/南亚</td><td>部分国家归属在原说明中标记需短线确认</td><td>按有效版本映射，不回改历史</td><td><span class="tag tag-orange">待确认</span></td></tr><tr><td>自营/甄选/外采</td><td>内部供应商与产品标签共同判断</td><td>旧表存在筛选后人工二次加工</td><td>显示系统判断、人工调整和调整原因</td><td><span class="tag tag-orange">规则待定</span></td></tr><tr><td>多目的地订单</td><td>保留全部目的地标签</td><td>金额不能在多个目的地重复合计</td><td>主目的地计金额，其他目的地只用于筛选</td><td><span class="tag tag-blue">建议口径</span></td></tr></tbody></table></div></section></div></section></div>
+
+  <div id="subscribeDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer-small" role="dialog" aria-modal="true" aria-labelledby="subscribeDrawerTitle"><div class="modal-header"><div id="subscribeDrawerTitle" class="modal-title">订阅发送</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong>经营业绩日报</strong><span>每日9:00刷新后发送，沿用财务业务说明中的分发习惯</span></div><div class="performance-object-side"><span class="tag tag-green">启用</span><em>原型示意</em></div></section><section class="drawer-section"><div class="performance-form-grid"><label class="form-group"><span class="form-label">发送频率</span><select class="form-control"><option>每日 09:00</option><option>每周一 09:00</option><option>每月1日 09:00</option></select></label><label class="form-group"><span class="form-label">报表视图</span><select class="form-control"><option>订单与回团经营周报</option><option>产品周报</option><option>渠道与人员周报</option></select></label><label class="form-group performance-form-full"><span class="form-label">收件人</span><input class="form-control" type="text" value="总部财务、经营负责人、产品负责人"></label><label class="form-group performance-form-full"><span class="form-label">附件</span><select class="form-control"><option>Excel明细 + PDF摘要</option><option>Excel明细</option><option>邮件摘要</option></select></label></div></section><div class="alert alert-blue"><strong>原型说明</strong><p>这里只表达发送对象、时间、报表视图和生成记录；当前不会真实发邮件。</p></div></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-layer>取消</button><button class="btn btn-primary" type="button" data-save-subscribe>保存订阅</button></div></section></div>
+
+  <div id="qualityDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer-small" role="dialog" aria-modal="true" aria-labelledby="qualityDrawerTitle"><div class="modal-header"><div id="qualityDrawerTitle" class="modal-title">数据完整度</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-drawer-kpis"><div class="performance-drawer-kpi"><span>整体完整率</span><strong>96.8%</strong></div><div class="performance-drawer-kpi"><span>待补充</span><strong>392项</strong></div><div class="performance-drawer-kpi"><span>异常</span><strong>38项</strong></div><div class="performance-drawer-kpi"><span>阻断发布</span><strong>7项</strong></div></section><section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">主要缺口</h3></div><div class="table-wrap drawer-table-fit"><table><thead><tr><th>缺口</th><th>数量</th><th>影响</th></tr></thead><tbody><tr><td>实际回团日期缺失</td><td>6</td><td>不能进入回团口径</td></tr><tr><td>成本范围不完整</td><td>18</td><td>毛利暂不可用</td></tr><tr><td>经营归属缺失</td><td>9</td><td>渠道和人员分析不完整</td></tr><tr><td>收入确认或会计期间缺失</td><td>7</td><td>不能发布财务确认收入</td></tr></tbody></table></div></section></div></section></div>
+
+  <div id="recordsDrawer" class="modal-overlay drawer-overlay" hidden aria-hidden="true"><section class="modal drawer-modal performance-drawer" role="dialog" aria-modal="true" aria-labelledby="recordsDrawerTitle"><div class="modal-header"><div id="recordsDrawerTitle" class="modal-title">报表生成记录</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="table-wrap drawer-table-fit"><table><thead><tr><th>生成时间</th><th>报表</th><th>数据截止</th><th>口径版本</th><th>格式</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>2026-09-05 08:35</td><td>经营业绩周报</td><td>09-04 23:59</td><td>V1.0</td><td>Excel</td><td><span class="tag tag-green">已完成</span></td><td><button class="table-link" type="button" data-download-demo>下载</button></td></tr><tr><td>2026-09-01 09:02</td><td>8月经营月报</td><td>08-31 23:59</td><td>V1.0</td><td>Excel + PDF</td><td><span class="tag tag-green">已完成</span></td><td><button class="table-link" type="button" data-download-demo>下载</button></td></tr><tr><td>2026-08-29 08:30</td><td>经营业绩周报</td><td>08-28 23:59</td><td>V0.9</td><td>Excel</td><td><span class="tag tag-gray">历史版本</span></td><td><button class="table-link" type="button" data-download-demo>下载</button></td></tr></tbody></table></section></div></section></div>
+
+  <div id="generateModal" class="modal-overlay" hidden aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="generateModalTitle"><div class="modal-header"><div id="generateModalTitle" class="modal-title">生成报表</div><button class="modal-close" type="button" aria-label="关闭" data-close-layer>×</button></div><div class="modal-body"><section class="performance-object"><div><strong id="generateViewName">财务业绩明细</strong><span>当前筛选条件、数据截止和口径版本将写入生成记录</span></div><div class="performance-object-side"><em>经营业绩 V1.0</em></div></section><section class="drawer-section"><div class="performance-form-grid"><label class="form-group performance-form-full"><span class="form-label">报表名称</span><input id="generateName" class="form-control" type="text" value="2026年9月经营业绩报表"></label><label class="form-group"><span class="form-label">文件格式</span><select class="form-control"><option>Excel</option><option>Excel + PDF</option><option>PDF</option></select></label><label class="form-group"><span class="form-label">数据版本</span><select class="form-control"><option>包含后续调整</option><option>原发布版本</option></select></label><label class="form-group performance-form-full"><span class="form-label">生成说明</span><textarea class="form-control" rows="3" placeholder="可填写本次报表用途或特殊口径说明"></textarea></label></div></section><div class="alert alert-blue"><strong>原型说明</strong><p>本次操作只演示报表生成、版本和记录流程，不会真实生成或发送文件。</p></div></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-layer>取消</button><button class="btn btn-primary" type="button" data-confirm-generate>确认生成</button></div></section></div>
+
+  <script>
+    (function () {
+      var viewLabels = { detail:'财务业绩明细', order:'订单业绩', return:'回团业绩', dimension:'产品渠道人员', profit:'毛利预算异常' };
+      var activeView = 'detail';
+      var layers = {
+        advanced: document.getElementById('advancedDrawer'), detail: document.getElementById('detailDrawer'), method: document.getElementById('methodDrawer'),
+        quality: document.getElementById('qualityDrawer'), records: document.getElementById('recordsDrawer'), generate: document.getElementById('generateModal'),
+        source: document.getElementById('sourceDrawer'), mapping: document.getElementById('mappingDrawer'), subscribe: document.getElementById('subscribeDrawer'), habit: document.getElementById('habitDrawer')
+      };
+      var dimensionData = {
+        '产品类型': [
+          ['参团游',468.2,36.9,12.4,326.8,248.4,24.0,520,90.0,'326单 / 986人'],['邮轮',286.4,22.6,18.8,196.2,164.8,16.0,310,92.4,'94单 / 286人'],['自由行',168.6,13.3,9.6,108.4,82.1,24.3,205,82.2,'128单 / 342人'],['单团',156.8,12.4,21.5,132.0,101.4,23.2,180,87.1,'18单 / 420人'],['单项服务',112.4,8.9,6.2,46.8,34.6,26.1,125,89.9,'284单 / 516份'],['研学',75.6,6.0,24.0,32.4,22.3,31.2,80,94.5,'46单 / 134人']
+        ],
+        '旅游范围': [['出境',786.4,62.0,16.8,532.6,418.4,21.4,850,92.5,'568单 / 1,846人'],['国内',326.8,25.8,9.4,214.8,154.6,28.0,360,90.8,'242单 / 698人'],['港澳台',112.6,8.9,6.2,72.4,57.8,20.2,135,83.4,'68单 / 102人'],['入境',42.2,3.3,28.6,22.8,16.4,28.1,55,76.7,'18单 / 38人']],
+        '业务类型': [['凯撒自营',638.6,50.4,14.2,456.8,338.2,26.0,680,93.9,'426单 / 1,428人'],['凯撒甄选',386.4,30.5,18.6,248.2,207.6,16.4,430,89.9,'258单 / 716人'],['外采',243.0,19.1,7.8,137.6,101.4,26.3,290,83.8,'212单 / 540人']],
+        '目的地': [['欧洲',346.8,27.4,18.5,248.6,192.4,22.6,390,88.9,'186单 / 604人'],['日本',218.4,17.2,9.8,132.8,106.4,19.9,250,87.4,'142单 / 398人'],['东南亚',196.2,15.5,14.4,118.6,88.2,25.6,210,93.4,'128单 / 426人'],['国内华东',168.6,13.3,6.8,102.4,72.1,29.6,190,88.7,'116单 / 334人'],['国内西北',142.8,11.3,22.6,96.8,66.0,31.8,150,95.2,'84单 / 286人'],['其他',195.2,15.3,8.2,143.4,122.1,14.9,215,90.8,'240单 / 636人']],
+        '渠道': [['呼叫中心',326.4,25.7,16.2,218.6,164.8,24.6,350,93.3,'206单 / 648人'],['体验中心',248.6,19.6,21.4,172.4,139.2,19.3,275,90.4,'146单 / 414人'],['门店',286.2,22.6,8.6,186.8,141.6,24.2,330,86.7,'218单 / 702人'],['全员营销',126.8,10.0,12.8,68.4,49.2,28.1,145,87.4,'112单 / 264人'],['分公司',164.2,12.9,5.4,116.8,92.4,20.9,185,88.8,'126单 / 402人'],['OTA',115.8,9.2,18.9,79.6,59.4,25.4,125,92.6,'88单 / 254人']],
+        '区域': [['京津冀直营',546.2,43.1,13.4,386.4,286.8,25.8,620,88.1,'368单 / 1,096人'],['京津冀加盟',248.4,19.6,8.2,156.8,121.6,22.4,290,85.7,'186单 / 524人'],['非京津冀',473.4,37.3,18.6,299.4,238.2,20.4,535,88.5,'342单 / 1,064人']],
+        '产品负责人': [['张明',218.6,17.2,18.4,148.2,108.6,26.7,230,95.0,'128单 / 416人'],['李梅',196.4,15.5,12.8,126.8,98.4,22.4,220,89.3,'116单 / 342人'],['赵明',186.2,14.7,9.6,118.4,98.2,17.1,205,90.8,'102单 / 306人'],['王强',168.8,13.3,26.4,116.2,76.4,34.3,175,96.5,'76单 / 284人'],['周颖',146.4,11.5,6.8,86.4,66.8,22.7,170,86.1,'184单 / 298份'],['其他',351.6,27.8,11.2,246.6,198.2,19.6,400,87.9,'290单 / 1,138人']],
+        '销售人员': [['王芳',86.4,6.8,22.4,54.6,41.2,24.5,90,96.0,'52单 / 148人'],['孙丽',78.6,6.2,18.8,48.2,36.4,24.5,85,92.5,'46单 / 136人'],['陈晨',72.8,5.7,9.6,42.8,31.6,26.2,80,91.0,'58单 / 124人'],['赵倩',68.4,5.4,12.6,46.2,37.8,18.2,78,87.7,'42单 / 118人'],['刘洋',62.6,4.9,6.4,38.6,29.2,24.4,75,83.5,'38单 / 106人'],['其他',899.2,71.0,13.8,612.2,457.4,25.3,1047,85.9,'660单 / 2,052人']],
+        '销售组': [['北京呼叫中心一组',268.5,21.2,16.8,178.6,132.4,25.9,310,86.6,'166单 / 512人'],['北京体验中心邮轮组',226.4,17.9,21.6,158.2,128.4,18.8,245,92.4,'118单 / 346人'],['软件园门店零售组',186.2,14.7,8.4,116.8,88.6,24.1,215,86.6,'142单 / 408人'],['华北全员营销组',126.8,10.0,12.8,68.4,49.2,28.1,145,87.4,'112单 / 264人'],['其他销售组',460.1,36.2,11.6,320.6,242.0,24.5,505,91.1,'358单 / 1,154人']],
+        '团控人': [['王强',236.4,18.6,18.4,168.2,126.4,24.9,260,90.9,'18团 / 468人'],['陈伟',218.6,17.2,22.8,156.8,119.2,24.0,235,93.0,'12团 / 386人'],['刘洋',196.8,15.5,9.4,132.4,106.8,19.3,225,87.5,'16团 / 426人'],['赵敏',168.4,13.3,16.2,106.8,78.4,26.6,185,91.0,'14团 / 364人'],['周颖',112.6,8.9,6.8,46.8,34.6,26.1,125,90.1,'284服务 / 516份'],['其他',335.2,26.5,11.4,231.6,172.8,25.4,390,86.0,'28团 / 524人']]
+      };
+      var habitViews = {
+        '自然周': {description:'本周、上周和上年同期按相同天数核对',headers:['经营范围','本周','上周同期','周环比','上年同期','同比'],rows:[['整体','286.4','251.8','+13.7%','246.8','+16.0%'],['京津冀直营','126.8','108.4','+17.0%','104.2','+21.7%'],['非京津冀','159.6','143.4','+11.3%','142.6','+11.9%']]},
+        '双周': {description:'近14天与前14天、上年相同日期范围比较',headers:['经营范围','近双周','前双周','环比','上年同期','同比'],rows:[['整体','538.2','476.4','+13.0%','462.8','+16.3%'],['呼叫中心','146.8','128.2','+14.5%','121.6','+20.7%'],['体验中心','112.6','96.4','+16.8%','94.8','+18.8%']]},
+        '月度同进度': {description:'本月截至统计日与上月、上年同月相同天数比较',headers:['经营范围','本月进度','上月同期','月环比','上年同月','同比'],rows:[['整体','1,268.0','1,206.8','+5.1%','1,112.6','+14.0%'],['北京凯撒','546.2','518.4','+5.4%','481.6','+13.4%'],['福建凯撒','368.4','352.6','+4.5%','342.5','+7.6%']]},
+        '三年分月': {description:'保留原表2024—2026逐月、季度小计和年度合计的观察方式',headers:['月份','2024年','2025年','2026年','较上年','核对'],rows:[['1月','846.2','918.6','986.4','+7.4%','已平衡'],['2月','768.4','826.2','894.8','+8.3%','已平衡'],['一季度','2,486.8','2,682.4','2,914.6','+8.7%','已平衡']]},
+        '呼叫中心': {description:'销售人员、销售组的订单与回团业绩及任务分别核对',headers:['人员/销售组','本月订单','订单任务','本月回团','回团任务','年度完成'],rows:[['王芳','86.4','90 / 96.0%','72.8','85 / 85.6%','76.5%'],['孙丽','78.6','85 / 92.5%','69.4','80 / 86.8%','74.2%'],['一组合计','268.5','310 / 86.6%','238.6','295 / 80.9%','72.8%']]},
+        '体验店任务': {description:'门店与人员的订单任务、回团任务使用两套独立指标',headers:['门店/人员','订单实际','订单任务','回团实际','回团任务','任务版本'],rows:[['软件园门店','132.8','145 / 91.6%','118.6','150 / 79.1%','2026 V1'],['金融街门店','108.4','120 / 90.3%','96.2','115 / 83.7%','2026 V1'],['体验店合计','248.6','275 / 90.4%','221.4','270 / 82.0%','2026 V1']]},
+        '产品周报': {description:'按目的地和产品负责人看订单、回团、毛利与结算异常',headers:['目的地/负责人','订单业绩','回团业绩','毛利率','结算进度','异常'],rows:[['欧洲 / 张明','218.6','186.4','23.8%','92.6%','1项'],['日本 / 李梅','196.4','168.2','19.9%','86.8%','3项'],['东南亚 / 赵明','186.2','146.8','25.6%','90.4%','2项待分类']]}
+      };
+
+      function escapeHtml(value) { return String(value == null ? '' : value).replace(/[&<>"']/g,function (char) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]; }); }
+      function toast(message, type) { if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message,{type:type||'success'}); }
+      function openLayer(layer) { if (!layer) return; layer.hidden=false; layer.setAttribute('aria-hidden','false'); }
+      function closeLayer(layer) { if (!layer) return; layer.hidden=true; layer.setAttribute('aria-hidden','true'); }
+      function setView(view, updateUrl) {
+        if (!viewLabels[view]) view='detail'; activeView=view;
+        document.querySelectorAll('[data-performance-view]').forEach(function (button) { button.classList.toggle('active',button.dataset.performanceView===view); });
+        document.querySelectorAll('.performance-panel').forEach(function (panel) { panel.classList.toggle('active',panel.id==='performance-'+view); });
+        if (updateUrl) { var url=new URL(window.location.href); url.searchParams.set('view',view); window.history.replaceState({},'',url); }
+      }
+      function renderDimension(name) {
+        var data=dimensionData[name]||dimensionData['产品类型']; var max=Math.max.apply(null,data.map(function(row){return row[1];}));
+        document.getElementById('dimensionChartTitle').textContent=name+'业绩构成'; document.getElementById('dimensionInsightTitle').textContent=name; document.getElementById('dimensionTableTitle').textContent='按'+name+'分析'; document.getElementById('dimensionColumnName').textContent=name;
+        document.getElementById('dimensionChart').innerHTML=data.slice(0,6).map(function(row){return '<div class="performance-trend-row"><span>'+escapeHtml(row[0])+'</span><div class="performance-bar-track"><i style="--bar:'+Math.max(6,row[1]/max*100).toFixed(1)+'%"></i></div><strong>'+row[1].toFixed(1)+'万</strong></div>';}).join('');
+        var best=data.slice().sort(function(a,b){return b[3]-a[3];})[0]; var largest=data.slice().sort(function(a,b){return b[1]-a[1];})[0]; var lag=data.slice().sort(function(a,b){return a[8]-b[8];})[0];
+        document.getElementById('dimensionInsights').innerHTML='<div class="performance-watch-item"><div><strong>规模贡献最高</strong><span>'+escapeHtml(largest[0])+'占比'+largest[2].toFixed(1)+'%</span></div><em>'+largest[1].toFixed(1)+'万</em></div><div class="performance-watch-item"><div><strong>同比增长最快</strong><span>'+escapeHtml(best[0])+'</span></div><em style="--watch:var(--color-success)">+'+best[3].toFixed(1)+'%</em></div><div class="performance-watch-item"><div><strong>任务进度最低</strong><span>'+escapeHtml(lag[0])+'，需关注进度</span></div><em style="--watch:#d99123">'+lag[8].toFixed(1)+'%</em></div>';
+        document.getElementById('dimensionRows').innerHTML=data.map(function(row){var level=row[8]>=90?'success':row[8]>=85?'warning':'danger'; return '<tr><td><div class="performance-cell"><strong>'+escapeHtml(row[0])+'</strong><span>'+escapeHtml(name)+'发生时归属</span></div></td><td><strong>'+row[1].toFixed(1)+'万</strong></td><td>'+row[2].toFixed(1)+'%</td><td class="'+(row[3]>=0?'amount-positive':'amount-negative')+'">'+(row[3]>=0?'+':'')+row[3].toFixed(1)+'%</td><td>'+row[4].toFixed(1)+'万</td><td>'+row[5].toFixed(1)+'万</td><td><div class="performance-cell"><strong>'+((row[4]-row[5]).toFixed(1))+'万</strong><span>'+row[6].toFixed(1)+'%</span></div></td><td><div class="performance-progress" data-level="'+level+'"><div class="performance-progress-head"><span>'+row[7].toFixed(0)+'万</span><strong>'+row[8].toFixed(1)+'%</strong></div><div class="performance-progress-track"><i style="--progress:'+Math.min(100,row[8])+'%"></i></div></div></td><td>'+escapeHtml(row[9])+'</td><td class="performance-action-cell"><div class="table-action"><button class="table-action-primary" type="button" data-drill="'+escapeHtml(row[0]+name+'业绩')+'">明细</button></div></td></tr>';}).join('');
+      }
+      function renderHabit(name) {
+        var view=habitViews[name]||habitViews['自然周'];
+        document.getElementById('habitViewName').textContent=name;
+        document.getElementById('habitViewDescription').textContent=view.description;
+        document.getElementById('habitTableHead').innerHTML=view.headers.map(function(item){return '<th>'+escapeHtml(item)+'</th>';}).join('');
+        document.getElementById('habitTableRows').innerHTML=view.rows.map(function(row){return '<tr>'+row.map(function(item,index){return '<td>'+(index===0?'<strong>'+escapeHtml(item)+'</strong>':escapeHtml(item))+'</td>';}).join('')+'</tr>';}).join('');
+        openLayer(layers.habit);
+      }
+      function openDetail(row) {
+        if (!row) return; document.getElementById('detailObject').innerHTML='<div><strong>'+escapeHtml(row.dataset.order)+' / '+escapeHtml(row.dataset.product)+'</strong><span>'+escapeHtml(row.dataset.schedule)+' · 当前筛选条件下的业绩明细</span></div><div class="performance-object-side"><span class="tag '+escapeHtml(row.dataset.statusClass)+'">'+escapeHtml(row.dataset.status)+'</span><em>口径版本 V1.0</em></div>';
+        document.getElementById('detailKpis').innerHTML=[['订单成交',row.dataset.amount],['正式实收',row.dataset.received],['财务确认收入',row.dataset.income],['成本/毛利',row.dataset.cost+' / '+row.dataset.profit]].map(function(item){return '<div class="performance-drawer-kpi"><span>'+escapeHtml(item[0])+'</span><strong>'+escapeHtml(item[1])+'</strong></div>';}).join('');
+        document.getElementById('detailOrderLink').href='../sales/orders-detail.html?orderNo='+encodeURIComponent(row.dataset.order); openLayer(layers.detail);
+      }
+      function openGenericDetail(title) {
+        document.getElementById('detailObject').innerHTML='<div><strong>'+escapeHtml(title)+'</strong><span>沿用当前统计时间、金额和经营归属条件</span></div><div class="performance-object-side"><span class="tag tag-blue">已带入筛选</span><em>经营业绩 V1.0</em></div>';
+        document.getElementById('detailKpis').innerHTML='<div class="performance-drawer-kpi"><span>下钻层级</span><strong>汇总 → 明细</strong></div><div class="performance-drawer-kpi"><span>时间范围</span><strong>2026-09-01 至 09-05</strong></div><div class="performance-drawer-kpi"><span>金额单位</span><strong>万元</strong></div><div class="performance-drawer-kpi"><span>数据截止</span><strong>09-05 23:59</strong></div>'; openLayer(layers.detail);
+      }
+      function updateDates(select) {
+        var filter=select.closest('.performance-filter'); if (!filter) return; var start=filter.querySelector('[data-date-start]'); var end=filter.querySelector('[data-date-end]'); if(!start||!end)return;
+        if(select.value==='week'){start.value='2026-08-31';end.value='2026-09-05';} else if(select.value==='month'){start.value='2026-09-01';end.value='2026-09-05';} else if(select.value==='year'){start.value='2026-01-01';end.value='2026-09-05';}
+      }
+      document.addEventListener('click',function(event){
+        var viewButton=event.target.closest('[data-performance-view]'); if(viewButton){setView(viewButton.dataset.performanceView,true);return;}
+        var habitButton=event.target.closest('[data-report-habit]'); if(habitButton){document.querySelectorAll('[data-report-habit]').forEach(function(b){b.classList.toggle('active',b===habitButton);});var notes={'自然周':'本期 09-01—09-05，对比上期及上年相同进度','双周':'近14天，对比前14天及上年相同日期','月度同进度':'本月截至09-05，对比上月及上年同月截至同一天','三年分月':'2024—2026年逐月对比，季度和年度可验算','呼叫中心':'人员、销售组与年度/月度订单及回团任务','体验店任务':'门店、人员的订单任务与回团任务分别核对','产品周报':'目的地、产品负责人、毛利、结算进度及异常'};document.getElementById('periodCompareNote').textContent=notes[habitButton.dataset.reportHabit];renderHabit(habitButton.dataset.reportHabit);return;}
+        var dimensionButton=event.target.closest('[data-dimension]'); if(dimensionButton){document.querySelectorAll('[data-dimension]').forEach(function(b){b.classList.toggle('active',b===dimensionButton);});renderDimension(dimensionButton.dataset.dimension);return;}
+        var profitButton=event.target.closest('[data-profit-view]'); if(profitButton){document.querySelectorAll('[data-profit-view]').forEach(function(b){b.classList.toggle('active',b===profitButton);});document.querySelectorAll('.performance-inner-panel').forEach(function(panel){panel.classList.toggle('active',panel.id==='profit-'+profitButton.dataset.profitView);});return;}
+        var rowDetail=event.target.closest('[data-open-detail]'); if(rowDetail){openDetail(rowDetail.closest('[data-detail-row]'));return;}
+        var drill=event.target.closest('[data-drill]'); if(drill){openGenericDetail(drill.dataset.drill);return;}
+        if(event.target.closest('[data-open-trace]')){openGenericDetail('订单—团期—收付—成本—结算下钻');return;}
+        if(event.target.closest('[data-open-advanced]')){document.getElementById('advancedViewName').textContent=viewLabels[activeView];openLayer(layers.advanced);return;}
+        if(event.target.closest('[data-open-method]')){openLayer(layers.method);return;}
+        if(event.target.closest('[data-open-source]')){openLayer(layers.source);return;}
+        if(event.target.closest('[data-open-mapping]')){openLayer(layers.mapping);return;}
+        if(event.target.closest('[data-open-subscribe]')){openLayer(layers.subscribe);return;}
+        if(event.target.closest('[data-open-quality]')){openLayer(layers.quality);return;}
+        if(event.target.closest('[data-open-records]')){openLayer(layers.records);return;}
+        if(event.target.closest('[data-open-generate]')){document.getElementById('generateViewName').textContent=viewLabels[activeView];openLayer(layers.generate);return;}
+        if(event.target.closest('[data-apply-filter]')){toast(viewLabels[activeView]+'已按当前条件更新');return;}
+        if(event.target.closest('[data-reset-filter]')){toast('当前页签筛选条件已重置');return;}
+        if(event.target.closest('[data-apply-advanced]')){closeLayer(layers.advanced);toast('更多筛选已应用');return;}
+        if(event.target.closest('[data-confirm-generate]')){closeLayer(layers.generate);toast('报表生成任务已创建，原型不生成真实文件');return;}
+        if(event.target.closest('[data-save-subscribe]')){closeLayer(layers.subscribe);toast('订阅方案已保存，原型不发送真实邮件');return;}
+        if(event.target.closest('[data-download-demo]')){toast('原型仅展示下载入口，不生成真实文件');return;}
+        var close=event.target.closest('[data-close-layer]'); if(close){closeLayer(close.closest('.modal-overlay'));}
+      });
+      document.querySelectorAll('[data-period-select]').forEach(function(select){select.addEventListener('change',function(){updateDates(select);});});
+      document.querySelectorAll('.modal-overlay').forEach(function(layer){layer.addEventListener('click',function(event){if(event.target===layer)closeLayer(layer);});});
+      document.addEventListener('keydown',function(event){if(event.key==='Escape')document.querySelectorAll('.modal-overlay:not([hidden])').forEach(closeLayer);});
+      renderDimension('产品类型');
+      setView(new URLSearchParams(window.location.search).get('view')||'detail',false);
+    })();
+  </script>
+</body>
+</html>
