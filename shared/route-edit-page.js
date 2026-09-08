@@ -549,6 +549,7 @@
     if (/专列/.test(value)) return 'train';
     if (/自由行/.test(value)) return 'free';
     if (/研学/.test(value)) return 'study';
+    if (/单项服务|服务/.test(value)) return 'service';
     return 'group';
   }
 
@@ -557,6 +558,7 @@
     if (/train|专列/i.test(value || '')) return 'train';
     if (/free|自由行/i.test(value || '')) return 'free';
     if (/study|研学/i.test(value || '')) return 'study';
+    if (/service|单项服务/i.test(value || '')) return 'service';
     return 'group';
   }
 
@@ -590,6 +592,7 @@
       cruise: '当前航线关联 4 类舱型，结算参考价 ¥7,200 - ¥10,900/间',
       train: '当前线路关联 3 类铺位，结算参考价 ¥18,800 - ¥22,800/铺',
       free: '当前套餐结算参考价 ¥3,680 - ¥4,980/套',
+      service: '当前服务关联接送、门票和当地体验，结算参考价按服务日期维护',
       domestic: '当前线路结算参考价 ¥4,800 - ¥7,800/人'
     };
     return map[kind] || String(summary || '').replace(/参考起价|参考价/g, '结算参考价');
@@ -654,6 +657,14 @@
       return {
         kind: 'study',
         labels: ['课程基础', '行程课程', '营地资源', '费用与证件'],
+        ids: ['lineBasicSection', 'lineItinerarySection', 'lineTrafficSection', 'lineFeeSection'],
+        combineFeeAndVisa: true
+      };
+    }
+    if (normalizedKind === 'service') {
+      return {
+        kind: 'service',
+        labels: ['服务基础', '服务内容', '可售规则', '费用规则'],
         ids: ['lineBasicSection', 'lineItinerarySection', 'lineTrafficSection', 'lineFeeSection'],
         combineFeeAndVisa: true
       };
@@ -1117,6 +1128,59 @@
       navigateText: '查看出行日期',
       scheduleHref: 'product-free-travel-list.html?tab=calendar',
       modalNext: '通过后在出行日期页承接价格名额'
+    },
+    service: {
+      scheduleType: 'service',
+      tagText: '单项服务',
+      tagClass: 'tag tag-blue',
+      title: '巴黎机场接送服务',
+      desc: '戴高乐机场至巴黎市区，按服务日期和订单人数确认车辆与价格。',
+      subtitle: '接送机、门票、当地体验等单项服务，按服务日期维护可售量和报价',
+      supplier: ['福建凯撒'],
+      ownerOrg: ['单项服务运营组', '欧洲产品中心', '外采计调部'],
+      routeType: '单项服务',
+      travelType: '出境游',
+      chips: [['供货方', '福建凯撒'], ['服务城市', '巴黎'], ['服务类型', '接送机']],
+      heroTags: ['接送机', '按单确认', '服务日期'],
+      readiness: [['服务项目', '2个'], ['参考起价', '¥680/份'], ['数据完整度', '100%']],
+      plans: [
+        { name: '戴高乐机场接机', meta: '机场至巴黎市区 · 5座商务车 · 按订单确认' },
+        { name: '巴黎市区送机', meta: '市区至戴高乐机场 · 可选中文举牌' }
+      ],
+      planTitle: '服务项目',
+      planSummary: '当前服务关联接送机、门票和当地体验项目',
+      extraHtml: [
+        '<div class="route-section-titlebar"><h2 class="route-section-title">服务范围</h2></div>',
+        '<div class="route-field-grid">',
+        '<div class="form-group"><label class="form-label" for="serviceCity">服务城市 <span class="req">*</span></label><input id="serviceCity" class="form-control" type="text" value="巴黎"></div>',
+        '<div class="form-group"><label class="form-label" for="serviceType">服务类型 <span class="req">*</span></label><select id="serviceType" class="form-control"><option selected>接送机</option><option>门票</option><option>当地体验</option><option>导游讲解</option><option>签证/保险</option></select></div>',
+        destinationTreeSelectHtml('serviceDestinationTree', ['欧洲 / 法国 / 巴黎']),
+        '<div class="form-group route-field-full"><label class="form-label" for="serviceAudience">适用客群</label><input id="serviceAudience" class="form-control" type="text" value="自由行客人、参团游加购客人、MICE小团"></div>',
+        '</div>'
+      ].join(''),
+      planStructureHtml: [
+        '<div class="route-section-titlebar"><h2 class="route-section-title">服务内容</h2><button class="btn btn-secondary" type="button" data-add-row="#serviceMatrix">新增服务</button></div>',
+        '<div class="table-wrap"><table id="serviceMatrix" data-matrix-type="service"><thead><tr><th>服务项目</th><th>服务区域</th><th>供应方</th><th>确认方式</th><th>操作</th></tr></thead><tbody>',
+        '<tr><td><input class="form-control" type="text" value="戴高乐机场接机"></td><td><input class="form-control" type="text" value="戴高乐机场-巴黎市区"></td><td><input class="form-control" type="text" value="巴黎当地车队"></td><td><select class="form-control"><option selected>每单确认</option><option>库存内确认</option><option>仅询位</option></select></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '<tr><td><input class="form-control" type="text" value="巴黎市区送机"></td><td><input class="form-control" type="text" value="巴黎市区-戴高乐机场"></td><td><input class="form-control" type="text" value="巴黎当地车队"></td><td><select class="form-control"><option selected>每单确认</option><option>库存内确认</option><option>仅询位</option></select></td><td><button class="table-link danger" type="button" data-remove-row>删除</button></td></tr>',
+        '</tbody></table></div>'
+      ].join(''),
+      costHtml: [
+        '<div class="route-section-titlebar"><h2 class="route-section-title">费用规则</h2></div>',
+        '<div class="route-field-grid">',
+        '<div class="form-group"><label class="form-label" for="serviceRef">服务参考价</label><input id="serviceRef" class="form-control" type="text" value="¥680/份"></div>',
+        '<div class="form-group"><label class="form-label" for="serviceConfirmMode">确认方式 <span class="req">*</span></label><select id="serviceConfirmMode" class="form-control"><option selected>每单确认</option><option>按服务日期库存确认</option><option>仅询位</option></select></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="includeFee">费用包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">所选服务项目、车辆或服务人员基础服务费、服务确认单约定内容。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">费用不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">超时等待费、临时改点加价、未约定的附加服务和客人个人消费。</textarea></div>',
+        '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">服务日前按供应方确认规则退改；临近服务日或车辆已派单后按实际损失核算。</textarea></div>',
+        '</div>'
+      ].join(''),
+      publishTiles: [['服务基础', '城市与类型已维护'], ['服务内容', '2个服务项目'], ['费用规则', '确认和退改已维护'], ['后续动作', '审核通过后按服务日期维护可售量']],
+      modalTitle: '已提交单项服务审核',
+      modalFocus: '服务内容与确认方式',
+      navigateText: '查看服务日期',
+      scheduleHref: 'product-schedules.html?type=service',
+      modalNext: '通过后在服务日期页维护可售量'
     }
   };
 
@@ -1284,6 +1348,18 @@
       ].join('');
     }
 
+    if (type === 'service') {
+      return [
+        '<tr>',
+        '<td><input class="form-control" type="text" value="新增服务项目"></td>',
+        '<td><input class="form-control" type="text" value="待维护服务区域"></td>',
+        '<td><input class="form-control" type="text" value="待选择供应方"></td>',
+        '<td><select class="form-control"><option selected>每单确认</option><option>库存内确认</option><option>仅询位</option></select></td>',
+        '<td><button class="table-link danger" type="button" data-remove-row>删除</button></td>',
+        '</tr>'
+      ].join('');
+    }
+
     return [
       '<tr>',
       '<td><input class="form-control" type="text" value="新增服务项"></td>',
@@ -1312,7 +1388,8 @@
       cruise: 'D1 巴塞罗那码头登船，含登船日接送机和码头协助。\nD2 马赛靠港，安排普罗旺斯岸上观光。\nD3 热那亚靠港，安排老城与港区游览，离船日可选送机。',
       train: 'D1 西安站集合登车，办理实名核验、铺位分配与行前说明。\nD2 兰州停靠，下车游览后由地接接驳返车。\nD3 张掖停靠，游览丹霞景区，晚间车上活动。',
       free: 'D1 抵达巴黎，接机后入住酒店。\nD2 巴黎市区自由活动，可加订卢浮宫门票。\nD3 凡尔赛或塞纳河游船可选，晚间自由安排。',
-      study: 'D1 抵达敦煌，开营仪式与安全说明。\nD2 莫高窟主题课程，完成壁画艺术观察记录。\nD3 鸣沙山自然地理实践，晚间进行课题复盘。'
+      study: 'D1 抵达敦煌，开营仪式与安全说明。\nD2 莫高窟主题课程，完成壁画艺术观察记录。\nD3 鸣沙山自然地理实践，晚间进行课题复盘。',
+      service: '服务前1日确认订单人数、航班号、接送地点和联系人。\n服务当日按确认单派车或派服务人员，异常改点需回传凯撒。\n服务完成后回传服务结果，作为后续结算依据。'
     };
     target.value = textMap[kind] || textMap.group;
     target.dispatchEvent(new Event('input', { bubbles: true }));

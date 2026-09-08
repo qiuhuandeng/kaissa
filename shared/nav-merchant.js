@@ -14,6 +14,8 @@
           title: "经营分析",
           children: [
             { title: "业绩与经营分析", href: "data/performance-reports.html" },
+            { title: "经营数据中心·方案二", href: "data/finance-dashboard-v2.html" },
+            { title: "财务数据看板·方案三", href: "data/finance-dashboard-v3.html" },
             { title: "产品分析", href: "data/product-analysis.html" },
           ],
         },
