@@ -980,6 +980,16 @@
     var type = selectedType();
     var plan = selectedPlan();
     var depart = date || $('#departDate').value;
+    var plannedReturn = date ? addDays(depart, plan.days - 1) : ($('#returnDate').value || addDays(depart, plan.days - 1));
+    var routeContext = readRouteScheduleContext();
+    var typeKey = selectedTypeKey();
+    var ownerProfiles = {
+      group: '产品中心 / 长线部',
+      free: '产品中心 / 自由行部',
+      cruise: '产品中心 / 邮轮部',
+      train: '产品中心 / 专列部',
+      study: '产品中心 / 研学部'
+    };
     var totals = matrixTotals();
     var saleStatusField = $('#saleStatus');
     var executionStatusField = $('#executionStatus');
@@ -1014,7 +1024,16 @@
       route: plan.name,
       batchType: type.scheduleType,
       depart: depart,
-      back: addDays(depart, plan.days - 1),
+      back: plannedReturn,
+      plannedDepart: depart,
+      plannedReturn: plannedReturn,
+      departureCity: params.get('departureCity') || type.startValue || '待确认',
+      destination: params.get('destination') || type.endValue || '待确认',
+      destinationZone: params.get('destinationZone') || params.get('destination') || type.endValue || '待确认',
+      company: params.get('company') || '福建凯撒旅游有限公司',
+      ownerOrg: params.get('ownerOrg') || routeContext.ownerOrg || ownerProfiles[typeKey] || '产品中心',
+      mainSupplier: params.get('supplier') || routeContext.supplier || (isSupplierSchedule ? '外采供应商' : '待履约确认'),
+      productVersion: params.get('productVersion') || routeContext.version || '当前发布版',
       stock: totals.total,
       sold: 0,
       left: totals.saleable,

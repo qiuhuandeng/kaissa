@@ -30,6 +30,7 @@
         </div>
       </div>
       <div class="btn-group">
+        <button id="openReturnConfirmation" class="btn btn-primary" type="button" hidden>确认回团</button>
         <button id="openEditSchedule" class="btn btn-primary" type="button">编辑</button>
         <span class="dropdown page-action-more">
           <button class="btn btn-secondary" type="button" data-row-more aria-expanded="false">更多操作</button>
@@ -58,9 +59,9 @@
           <span>
             <em>线路 <strong id="summaryRoutePlan">A线 法德意12天</strong></em>
             <i class="schedule-dot-separator" aria-hidden="true"></i>
-            <em>出发 <strong id="summaryDepart">2024-07-15（周一）</strong></em>
+            <em>计划出发 <strong id="summaryDepart">2024-07-15（周一）</strong></em>
             <i class="schedule-dot-separator" aria-hidden="true"></i>
-            <em>回团 <strong id="summaryReturn">2024-07-26</strong></em>
+            <em>计划回团 <strong id="summaryReturn">2024-07-26</strong></em>
           </span>
         </div>
         <div class="product-detail-divider"></div>
@@ -153,11 +154,29 @@
               <div class="description-item"><div class="description-label">成团方式</div><div id="infoGroupMode" class="description-value">散拼</div></div>
               <div class="description-item"><div id="infoPrivateCustomerLabel" class="description-label">指定客户</div><div id="infoPrivateCustomer" class="description-value">-</div></div>
               <div class="description-item"><div id="infoCustomProjectLabel" class="description-label">关联单团项目</div><div id="infoCustomProject" class="description-value">-</div></div>
-              <div class="description-item"><div class="description-label">出发日期</div><div id="infoDepart" class="description-value">2024-07-15（周一）</div></div>
-              <div class="description-item"><div class="description-label">回团日期</div><div id="infoReturn" class="description-value">2024-07-26</div></div>
+              <div class="description-item"><div class="description-label">计划出团日期</div><div id="infoDepart" class="description-value">2024-07-15（周一）</div></div>
+              <div class="description-item"><div class="description-label">计划回团日期</div><div id="infoReturn" class="description-value">2024-07-26</div></div>
               <div class="description-item"><div class="description-label">行程天数</div><div id="infoDuration" class="description-value">12天11晚</div></div>
               <div class="description-item"><div class="description-label">出发地</div><div id="infoOrigin" class="description-value">北京</div></div>
               <div class="description-item"><div class="description-label">目的地</div><div id="infoDestination" class="description-value">法国、德国、意大利、荷兰、比利时等</div></div>
+            </div>
+          </section>
+
+          <section class="schedule-overview-section">
+            <h2 class="detail-section-title schedule-section-title">实际履约</h2>
+            <div class="description-grid schedule-overview-grid">
+              <div class="description-item"><div class="description-label">实际出团/开始</div><div id="infoActualDepart" class="description-value">尚未确认</div></div>
+              <div class="description-item"><div class="description-label">实际回团/完成</div><div id="infoActualReturn" class="description-value">尚未确认</div></div>
+              <div class="description-item"><div class="description-label">完成依据</div><div id="infoReturnBasis" class="description-value">-</div></div>
+              <div class="description-item"><div class="description-label">确认人/时间</div><div id="infoReturnConfirmer" class="description-value">-</div></div>
+              <div class="description-item"><div class="description-label">异常说明</div><div id="infoReturnReason" class="description-value">-</div></div>
+              <div class="description-item"><div class="description-label">后续承接</div><div id="infoReturnHandoff" class="description-value">实际回团确认后进入成本整理</div></div>
+            </div>
+            <div class="table-wrap order-detail-table">
+              <table>
+                <thead><tr><th>记录类型</th><th>原日期</th><th>实际日期</th><th>完成依据</th><th>原因</th><th>确认人/时间</th></tr></thead>
+                <tbody id="returnConfirmationHistory"><tr><td colspan="6" class="table-empty-cell">尚未形成回团确认记录</td></tr></tbody>
+              </table>
             </div>
           </section>
 
@@ -1437,6 +1456,47 @@
     </div>
   </div>
 
+  <div id="returnConfirmationDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md" role="dialog" aria-modal="true" aria-labelledby="returnConfirmationTitle">
+      <div class="modal-header">
+        <div id="returnConfirmationTitle" class="modal-title">确认回团</div>
+        <button class="modal-close" type="button" aria-label="关闭回团确认" data-close-return-confirmation>×</button>
+      </div>
+      <div class="modal-body">
+        <div id="returnConfirmationSummary" class="readonly-summary"></div>
+        <div class="description-grid">
+          <div class="description-item"><div class="description-label">计划出团</div><div id="returnPlannedDepart" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">实际出团</div><div id="returnActualDepart" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">计划回团</div><div id="returnPlannedDate" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">确认人</div><div id="returnConfirmationPerson" class="description-value">-</div></div>
+        </div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="actualReturnDate">实际回团/完成日期 <span class="req">*</span></label>
+            <input id="actualReturnDate" class="form-control" type="date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="returnCompletionBasis">完成依据 <span class="req">*</span></label>
+            <select id="returnCompletionBasis" class="form-control"></select>
+          </div>
+          <div class="form-group form-group-full"><div id="returnDateVariance" class="alert alert-orange" hidden></div></div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="returnCorrectionReason">异常/更正原因</label>
+            <textarea id="returnCorrectionReason" class="form-control" rows="3" placeholder="提前、延期、部分完成或更正时填写"></textarea>
+          </div>
+          <div class="form-group form-group-full">
+            <label class="form-label" for="returnEvidence">依据说明</label>
+            <textarea id="returnEvidence" class="form-control" rows="3" placeholder="填写回团、离船、结营、服务完成或项目验收依据"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-return-confirmation>取消</button>
+        <button id="saveReturnConfirmation" class="btn btn-primary" type="button">确认回团</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var tabButtons = Array.from(document.querySelectorAll('.detail-tabs-card .tab-item[data-tab]'));
@@ -1468,6 +1528,8 @@
       var orderDetailDrawer = document.getElementById('orderDetailDrawer');
       var financeDocDrawer = document.getElementById('financeDocDrawer');
       var successModal = document.getElementById('successModal');
+      var returnConfirmationDrawer = document.getElementById('returnConfirmationDrawer');
+      var returnConfirmationMode = 'confirm';
       var costRows = document.getElementById('costRows');
       var costDetailRows = document.getElementById('costDetailRows');
       var inventoryRows = document.getElementById('inventoryRows');
@@ -2343,6 +2405,154 @@
         window.localStorage.setItem(key, JSON.stringify(value));
       }
 
+      function readReturnConfirmations() {
+        return readStored('caesarScheduleReturnConfirmations');
+      }
+
+      function returnConfirmationPerson() {
+        return pageParams.get('planner') || scheduleData.planner || '当前团控';
+      }
+
+      function returnBasisOptions() {
+        var type = activeDetailConfig.typeKey;
+        if (type === 'cruise') return ['离船确认', '船方航次完成记录'];
+        if (type === 'study') return ['结营确认', '学校/家长验收'];
+        if (type === 'project') return ['项目验收', '客户完成确认'];
+        if (type === 'free') return ['服务完成', '最后服务项完成'];
+        return ['回团确认', '领队回团记录', '团控履约确认'];
+      }
+
+      function returnDateGap(planned, actual) {
+        if (!planned || !actual) return 0;
+        return Math.round((new Date(actual + 'T00:00:00') - new Date(planned + 'T00:00:00')) / 86400000);
+      }
+
+      function currentReturnConfirmation() {
+        var records = readReturnConfirmations();
+        return records[scheduleData.code] || scheduleData.returnConfirmation || null;
+      }
+
+      function refreshReturnConfirmationView() {
+        var record = currentReturnConfirmation();
+        var history = record && Array.isArray(record.history) ? record.history : [];
+        setText('infoActualDepart', (record && record.actualDepartDate) || scheduleData.actualDepartDate || '尚未单独确认');
+        setText('infoActualReturn', (record && record.actualReturnDate) || '尚未确认');
+        setText('infoReturnBasis', (record && record.basis) || '-');
+        setText('infoReturnConfirmer', record ? [record.confirmedBy, record.confirmedAt].filter(Boolean).join(' / ') : '-');
+        setText('infoReturnReason', (record && record.reason) || '-');
+        setText('infoReturnHandoff', record ? '已回团，待成本整理和业务结算；财务回团月份待财务确认' : '实际回团确认后进入成本整理');
+        setHtml('returnConfirmationHistory', history.length ? history.map(function (item) {
+          return '<tr><td>' + escapeHtml(item.type || '首次确认') + '</td><td>' + escapeHtml(item.originalDate || '-') + '</td><td>' + escapeHtml(item.actualReturnDate || '-') + '</td><td>' + escapeHtml(item.basis || '-') + '</td><td>' + escapeHtml(item.reason || '-') + '</td><td>' + escapeHtml([item.confirmedBy, item.confirmedAt].filter(Boolean).join(' / ')) + '</td></tr>';
+        }).join('') : '<tr><td colspan="6" class="table-empty-cell">尚未形成回团确认记录</td></tr>');
+        var action = document.getElementById('openReturnConfirmation');
+        var canConfirm = ['出团中', '已出发'].indexOf(scheduleData.executionStatus) >= 0;
+        action.hidden = !record && !canConfirm;
+        action.textContent = record ? '更正回团' : '确认回团';
+        action.className = 'btn btn-primary';
+        document.getElementById('openEditSchedule').className = action.hidden ? 'btn btn-primary' : 'btn btn-secondary';
+      }
+
+      function updateReturnDateVariance() {
+        var actual = document.getElementById('actualReturnDate').value;
+        var gap = returnDateGap(scheduleData.back, actual);
+        var variance = document.getElementById('returnDateVariance');
+        var reason = document.getElementById('returnCorrectionReason');
+        var needsReason = returnConfirmationMode === 'correct' || gap !== 0;
+        variance.hidden = !needsReason;
+        if (needsReason) {
+          variance.textContent = returnConfirmationMode === 'correct'
+            ? '本次更正会保留原日期、新日期、原因和处理时间。'
+            : (gap > 0 ? '比计划回团晚 ' + gap + ' 天。' : '比计划回团早 ' + Math.abs(gap) + ' 天。');
+        }
+        reason.required = needsReason;
+      }
+
+      function openReturnConfirmationDrawer() {
+        var record = currentReturnConfirmation();
+        returnConfirmationMode = record ? 'correct' : 'confirm';
+        setText('returnConfirmationTitle', record ? '更正回团' : '确认回团');
+        setText('returnConfirmationSummary', scheduleData.code + ' / ' + scheduleData.product + ' / ' + (scheduleData.route || '-'));
+        setText('returnPlannedDepart', scheduleData.depart || '-');
+        setText('returnActualDepart', (record && record.actualDepartDate) || scheduleData.actualDepartDate || '尚未单独确认');
+        setText('returnPlannedDate', scheduleData.back || '-');
+        setText('returnConfirmationPerson', returnConfirmationPerson() + ' / 时间由系统记录');
+        document.getElementById('actualReturnDate').value = (record && record.actualReturnDate) || scheduleData.actualReturnDate || scheduleData.back;
+        document.getElementById('returnCompletionBasis').innerHTML = returnBasisOptions().map(function (option) { return '<option>' + escapeHtml(option) + '</option>'; }).join('');
+        if (record && record.basis) document.getElementById('returnCompletionBasis').value = record.basis;
+        document.getElementById('returnCorrectionReason').value = '';
+        document.getElementById('returnEvidence').value = record && record.evidence || '';
+        document.getElementById('saveReturnConfirmation').textContent = record ? '提交更正' : '确认回团';
+        updateReturnDateVariance();
+        window.caesarUI.openLayer(returnConfirmationDrawer);
+      }
+
+      function saveReturnConfirmation() {
+        var actualDate = document.getElementById('actualReturnDate').value;
+        var basis = document.getElementById('returnCompletionBasis').value;
+        var reason = document.getElementById('returnCorrectionReason').value.trim();
+        var evidence = document.getElementById('returnEvidence').value.trim();
+        var gap = returnDateGap(scheduleData.back, actualDate);
+        if (!actualDate || !basis) return;
+        if ((returnConfirmationMode === 'correct' || gap !== 0) && !reason) {
+          window.alert('请填写异常或更正原因');
+          return;
+        }
+        var records = readReturnConfirmations();
+        var previous = records[scheduleData.code] || {};
+        var history = Array.isArray(previous.history) ? previous.history.slice() : [];
+        var confirmedAt = new Date().toLocaleString('zh-CN', { hour12: false });
+        history.push({
+          type: returnConfirmationMode === 'correct' ? '回团更正' : '首次确认',
+          originalDate: returnConfirmationMode === 'correct' ? (previous.actualReturnDate || scheduleData.actualReturnDate || scheduleData.back) : '',
+          actualReturnDate: actualDate,
+          basis: basis,
+          reason: reason,
+          evidence: evidence,
+          confirmedBy: returnConfirmationPerson(),
+          confirmedAt: confirmedAt
+        });
+        records[scheduleData.code] = {
+          scheduleNo: scheduleData.code,
+          plannedDepart: scheduleData.depart,
+          plannedReturn: scheduleData.back,
+          actualDepartDate: previous.actualDepartDate || scheduleData.actualDepartDate || '',
+          actualReturnDate: actualDate,
+          basis: basis,
+          reason: reason,
+          evidence: evidence,
+          confirmedBy: returnConfirmationPerson(),
+          confirmedAt: confirmedAt,
+          history: history
+        };
+        writeStored('caesarScheduleReturnConfirmations', records);
+        scheduleData.returnConfirmation = records[scheduleData.code];
+        scheduleData.actualReturnDate = actualDate;
+        scheduleData.executionStatus = '已回团';
+        scheduleData.settlementStatus = scheduleData.settlementStatus === '已结算' ? '已结算' : '未结算';
+        closeScheduleLayer(returnConfirmationDrawer);
+        refreshScheduleSummary();
+        document.getElementById('successTitle').textContent = returnConfirmationMode === 'correct' ? '回团记录已更正' : '实际回团已确认';
+        document.getElementById('successText').textContent = '实际完成事实已记录；成本、业务结算和财务回团月份仍需后续确认。';
+        window.caesarUI.openLayer(successModal);
+      }
+
+      function applyInboundScheduleFacts() {
+        if (pageParams.get('plannedDepart')) scheduleData.depart = pageParams.get('plannedDepart');
+        if (pageParams.get('plannedReturn')) scheduleData.back = pageParams.get('plannedReturn');
+        if (pageParams.get('actualDepartDate')) scheduleData.actualDepartDate = pageParams.get('actualDepartDate');
+        if (pageParams.get('actualReturnDate')) scheduleData.actualReturnDate = pageParams.get('actualReturnDate');
+        if (pageParams.get('executionStatus')) scheduleData.executionStatus = pageParams.get('executionStatus');
+        if (pageParams.get('saleStatus')) scheduleData.saleStatus = pageParams.get('saleStatus');
+        if (pageParams.get('planner')) scheduleData.planner = pageParams.get('planner');
+        var record = currentReturnConfirmation();
+        if (record) {
+          scheduleData.returnConfirmation = record;
+          scheduleData.actualDepartDate = record.actualDepartDate || scheduleData.actualDepartDate || '';
+          scheduleData.actualReturnDate = record.actualReturnDate;
+          scheduleData.executionStatus = '已回团';
+        }
+      }
+
       function sourceDigits(value) {
         return String(value || '').replace(/\D/g, '').slice(-8) || '00000000';
       }
@@ -2601,6 +2811,11 @@
       function setText(id, value) {
         var element = document.getElementById(id);
         if (element) element.textContent = value == null ? '' : String(value);
+      }
+
+      function setHtml(id, value) {
+        var element = document.getElementById(id);
+        if (element) element.innerHTML = value == null ? '' : String(value);
       }
 
       function escapeHtml(value) {
@@ -4740,6 +4955,7 @@
         setText('inventoryLocked', stockText(scheduleData.locked || 0));
         setText('costModalTitle', '成本结算摘要');
         document.title = scheduleData.code + ' - ' + objectName + '详情 - 凯撒旅游';
+        refreshReturnConfirmationView();
         refreshProjectGroupSummary(config);
       }
 
@@ -5153,6 +5369,10 @@
         fillEditForm();
         window.caesarUI.openLayer(editModal);
       });
+
+      document.getElementById('openReturnConfirmation').addEventListener('click', openReturnConfirmationDrawer);
+      document.getElementById('actualReturnDate').addEventListener('change', updateReturnDateVariance);
+      document.getElementById('saveReturnConfirmation').addEventListener('click', saveReturnConfirmation);
 
       var openCostButton = document.getElementById('openCostModal');
       if (openCostButton) {
@@ -5685,8 +5905,11 @@
       document.querySelectorAll('[data-close-success]').forEach(function (button) {
         button.addEventListener('click', function () { closeScheduleLayer(successModal); });
       });
+      document.querySelectorAll('[data-close-return-confirmation]').forEach(function (button) {
+        button.addEventListener('click', function () { closeScheduleLayer(returnConfirmationDrawer); });
+      });
 
-      [editModal, costModal, addScheduleCostDrawer, sendFileModal, rosterHandleDrawer, changeOperatorModal, cancelModal, releaseModal, trafficAllocationDrawer, trafficOrderDrawer, trafficTicketDrawer, trafficReturnDrawer, trafficLossDrawer, resourceConfirmModal, resourceViewModal, remindResourceModal, orderDetailDrawer, financeDocDrawer, successModal].forEach(function (modal) {
+      [editModal, costModal, addScheduleCostDrawer, sendFileModal, rosterHandleDrawer, changeOperatorModal, cancelModal, releaseModal, trafficAllocationDrawer, trafficOrderDrawer, trafficTicketDrawer, trafficReturnDrawer, trafficLossDrawer, resourceConfirmModal, resourceViewModal, remindResourceModal, orderDetailDrawer, financeDocDrawer, successModal, returnConfirmationDrawer].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target === modal) closeScheduleLayer(modal);
         });
@@ -5694,6 +5917,7 @@
       applyScheduleConfig(pageParams.get('type') || pageParams.get('batchType') || pageParams.get('code') || pageParams.get('product') || 'group');
       applyInboundPrivateGroupContext();
       applyInboundOrderContext();
+      applyInboundScheduleFacts();
       refreshScheduleSummary();
       if (pageParams.get('tab')) activateDetailTab(pageParams.get('tab'));
       else activateInboundFocus();

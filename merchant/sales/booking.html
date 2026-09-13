@@ -215,7 +215,11 @@
                   <input id="contactPhone" class="form-control" type="tel" value="13800138001" placeholder="联系人手机">
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="channelSource">来源渠道</label>
+                  <label class="form-label" for="channelCategory">渠道大类</label>
+                  <input id="channelCategory" class="form-control" type="text" value="门店零售" readonly>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="channelSource">具体渠道</label>
                   <select id="channelSource" class="form-control">
                     <option>门店</option>
                     <option>直客</option>
@@ -240,6 +244,15 @@
                     <option>李导</option>
                     <option>陈刚</option>
                     <option>张三</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="customerServiceName">客服</label>
+                  <select id="customerServiceName" class="form-control">
+                    <option>孙丽</option>
+                    <option>王芳</option>
+                    <option>李导</option>
+                    <option>陈红</option>
                   </select>
                 </div>
                 <div id="distributorField" class="form-group" hidden>
@@ -267,6 +280,14 @@
                   </select>
                 </div>
               </div>
+            </section>
+
+            <section class="booking-section" aria-labelledby="bookingOwnershipTitle">
+              <div class="booking-section-head">
+                <h2 id="bookingOwnershipTitle" class="booking-section-title">本单经营归属</h2>
+                <span id="businessOwnershipStatus" class="tag tag-blue">待核对</span>
+              </div>
+              <div id="businessOwnershipGrid" class="description-grid"></div>
             </section>
 
             <section id="orderProcessSection" class="booking-section" aria-labelledby="bookingProcessTitle">
@@ -336,8 +357,11 @@
           <div class="description-item"><div class="description-label">优惠减免</div><div id="createdDiscount" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">客户需收</div><div id="createdCustomerPayable" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">订单状态</div><div id="createdOrderStatus" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">创建时间</div><div id="createdCreatedAt" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">确认生效时间</div><div id="createdConfirmedAt" class="description-value">-</div></div>
           <div class="description-item"><div class="description-label">收款状态</div><div class="description-value"><span class="tag tag-gray">未收款</span></div></div>
           <div class="description-item"><div class="description-label">来源归属</div><div id="createdSource" class="description-value">-</div></div>
+          <div class="description-item"><div class="description-label">发生时经营归属</div><div id="createdOwnership" class="description-value">-</div></div>
         </div>
         <div class="finance-link-card booking-created-finance">
           <div class="finance-link-title">生成信息</div>
@@ -1197,6 +1221,100 @@
         return { status: '预留', inventory: '24小时预留', button: '生成预留订单', tag: 'tag tag-orange' };
       }
 
+      function dateTimeText(date) {
+        const value = date || new Date();
+        const pad = function (number) { return String(number).padStart(2, '0'); };
+        return value.getFullYear() + '-' + pad(value.getMonth() + 1) + '-' + pad(value.getDate()) + ' ' + pad(value.getHours()) + ':' + pad(value.getMinutes()) + ':' + pad(value.getSeconds());
+      }
+
+      function channelCategoryValue(source) {
+        return {
+          '门店': '门店零售',
+          '直客': '直客零售',
+          '分销': '渠道分销',
+          'OTA': '平台电商',
+          '企业客户': '大客户'
+        }[source] || '其他渠道';
+      }
+
+      function ownershipProfile() {
+        const type = detailType();
+        const profiles = {
+          group: { org: '产品中心 / 长线部', owner: '李娜', line: '跟团游', subtype: '多日跟团', scope: '出境游', mode: '自营' },
+          cruise: { org: '产品中心 / 邮轮部', owner: '王洋', line: '邮轮', subtype: '邮轮航次', scope: '出境游', mode: '自营' },
+          train: { org: '产品中心 / 专列部', owner: '赵明', line: '专列', subtype: '专列班期', scope: '境内游', mode: '自营' },
+          free: { org: '产品中心 / 自由行部', owner: '陈晨', line: '自由行', subtype: '机票酒店套餐', scope: '出境游', mode: '组合外采' },
+          study: { org: '产品中心 / 研学部', owner: '周静', line: '研学', subtype: '研学营期', scope: '境内游', mode: '自营' },
+          single: { org: '产品中心 / 单项服务部', owner: '孙丽', line: '单项服务', subtype: isManualMode() ? manualServiceTypeLabel() : '单项服务', scope: '单项服务', mode: '外采服务' },
+          customProject: { org: '产品中心 / 单团部', owner: '王芷', line: 'MICE / 单团', subtype: '客户专属项目团', scope: '出境游', mode: '自营组织' }
+        };
+        return profiles[type] || profiles.group;
+      }
+
+      function businessOwnershipSnapshot() {
+        const profile = ownershipProfile();
+        const source = channelSource.value;
+        const store = document.getElementById('storeName').value || '未分配门店';
+        const sales = document.getElementById('salesName').value || '';
+        const salesIds = { '王芳': 'XS10086', '李导': 'XS10128', '陈刚': 'XS10216', '张三': 'XS10305' };
+        const branch = /(软件园|文灶|观音山)/.test(store) ? '厦门分公司' : (/泉州/.test(store) ? '泉州分公司' : '福建销售中心');
+        const budgetRegion = /泉州/.test(store) ? '闽南区域' : '厦门区域';
+        return {
+          contractCompany: '福建凯撒旅游有限公司',
+          productCompany: '福建凯撒旅游有限公司',
+          productOrg: pageParams.get('productOrg') || profile.org,
+          productOwner: pageParams.get('productOwner') || profile.owner,
+          productType: orderTypeLabel(),
+          productSubtype: pageParams.get('productSubtype') || profile.subtype,
+          travelScope: pageParams.get('travelScope') || profile.scope,
+          supplyMode: pageParams.get('supplyMode') || profile.mode,
+          businessLine: pageParams.get('businessLine') || profile.line,
+          supplier: currentProduct.manualSupplier || pageParams.get('supplier') || '待履约确认',
+          departureCity: pageParams.get('departureCity') || (currentProduct.meta || '').split('/')[0].trim() || '待确认',
+          destination: currentProduct.manualDestination || pageParams.get('destination') || (currentProduct.meta || '').split('/')[1] || '待确认',
+          destinationZone: pageParams.get('destinationZone') || pageParams.get('destination') || '待确认',
+          salesCompany: '福建凯撒旅游有限公司',
+          salesBranch: branch,
+          salesDepartment: source === '企业客户' ? '大客户部' : '零售销售部',
+          salesGroup: source === 'OTA' ? '平台运营组' : (source === '分销' ? '渠道销售组' : '门店销售组'),
+          salesId: salesIds[sales] || 'XS-待确认',
+          salesName: sales,
+          customerService: document.getElementById('customerServiceName').value || '未分配',
+          store: store,
+          channelCategory: channelCategoryValue(source),
+          channel: source,
+          distributor: source === '分销' ? document.getElementById('distributorName').value : '不适用',
+          distributorMember: source === '分销' ? document.getElementById('distributorMember').value : '不适用',
+          platformStore: source === 'OTA' ? document.getElementById('otaPlatform').value : '不适用',
+          budgetRegion: budgetRegion,
+          productRuleVersion: pageParams.get('quoteVersion') || '2026-07发布版',
+          organizationRuleVersion: '2026-07任职版',
+          channelRuleVersion: '2026年渠道规则'
+        };
+      }
+
+      function renderBusinessOwnership() {
+        const ownership = businessOwnershipSnapshot();
+        document.getElementById('channelCategory').value = ownership.channelCategory;
+        const items = [
+          ['产品经营归属', ownership.productOrg + ' / ' + ownership.productOwner],
+          ['产品分类', ownership.travelScope + ' / ' + ownership.productType + ' / ' + ownership.productSubtype],
+          ['供应与业务线', ownership.supplyMode + ' / ' + ownership.businessLine],
+          ['出发地 / 目的地', ownership.departureCity + ' / ' + ownership.destination],
+          ['销售组织', ownership.salesBranch + ' / ' + ownership.salesDepartment + ' / ' + ownership.salesGroup],
+          ['销售 / 客服', ownership.salesId + ' ' + ownership.salesName + ' / ' + ownership.customerService],
+          ['渠道归属', ownership.channelCategory + ' / ' + ownership.channel],
+          ['门店 / 结算对象', ownership.store + ' / ' + (ownership.distributor !== '不适用' ? ownership.distributor : ownership.platformStore)],
+          ['预算区域', ownership.budgetRegion],
+          ['归属规则', ownership.productRuleVersion + ' / ' + ownership.organizationRuleVersion + ' / ' + ownership.channelRuleVersion]
+        ];
+        document.getElementById('businessOwnershipGrid').innerHTML = items.map(function (item) {
+          return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + escapeHtml(item[1] || '-') + '</div></div>';
+        }).join('');
+        document.getElementById('businessOwnershipStatus').textContent = orderProcessMode.value === 'confirm' ? '确认后留存' : '待订单确认';
+        document.getElementById('businessOwnershipStatus').className = orderProcessMode.value === 'confirm' ? 'tag tag-green' : 'tag tag-blue';
+      }
+
       function selectedStock() {
         if (isManualMode()) {
           refreshManualProduct();
@@ -1811,6 +1929,9 @@
         const travelDate = stock && stock[0] ? stock[0] : '';
         const amountNumber = calcTotal();
         const discountAmount = discountTotal(discountUsages);
+        const createdAt = dateTimeText();
+        const confirmedAt = process.status === '已确认' ? createdAt : '';
+        const ownership = businessOwnershipSnapshot();
         store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
           orderNo: orderNo,
           orderType: typeLabel,
@@ -1822,8 +1943,25 @@
           sourceDate: travelDate,
           customer: customer,
           contactPhone: phone,
-          store: document.getElementById('storeName').value || '软件园门店',
-          advisor: document.getElementById('salesName').value || '',
+          sourceSystem: '新系统',
+          originalOrderNo: '',
+          store: ownership.store,
+          advisor: ownership.salesName,
+          advisorId: ownership.salesId,
+          customerService: ownership.customerService,
+          channelCategory: ownership.channelCategory,
+          channel: ownership.channel,
+          distributor: ownership.distributor,
+          distributorMember: ownership.distributorMember,
+          otaPlatform: ownership.platformStore,
+          salesBranch: ownership.salesBranch,
+          salesDepartment: ownership.salesDepartment,
+          salesGroup: ownership.salesGroup,
+          budgetRegion: ownership.budgetRegion,
+          businessOwnership: Object.assign({}, ownership, {
+            capturedAt: createdAt,
+            confirmedAt: confirmedAt
+          }),
           amount: totalText,
           amountValue: amountNumber,
           receivableCurrency: receivableCurrencyValue(),
@@ -1843,6 +1981,14 @@
           salesSnapshot: {
             type: typeLabel,
             productName: currentProduct.name,
+            productVersion: ownership.productRuleVersion,
+            productSubtype: ownership.productSubtype,
+            travelScope: ownership.travelScope,
+            supplyMode: ownership.supplyMode,
+            businessLine: ownership.businessLine,
+            supplier: ownership.supplier,
+            departureCity: ownership.departureCity,
+            destination: ownership.destination,
             planName: isManualMode() ? currentProduct.manualServiceType + ' / ' + currentProduct.name : selectedPlanName(),
             sourceLabel: currentProduct.stockLabel || '团期',
             scheduleNo: scheduleNo,
@@ -1859,7 +2005,8 @@
             compositionRows: salesCompositionRowsSnapshot(),
             priceGroups: salesPriceGroupsSnapshot()
           },
-          createdAt: new Date().toLocaleString('zh-CN', { hour12: false })
+          createdAt: createdAt,
+          confirmedAt: confirmedAt
         });
         writeStored('caesarOrderFinanceEvents', store);
         return store.orders[orderNo];
@@ -2039,6 +2186,7 @@
         syncSummary();
         syncPresetPanel();
         renderSourceContext();
+        renderBusinessOwnership();
       }
 
       function indexByText(list, value) {
@@ -2230,6 +2378,7 @@
         distributorField.hidden = source !== '分销';
         distributorMemberField.hidden = source !== '分销';
         otaField.hidden = source !== 'OTA';
+        renderBusinessOwnership();
       }
 
       function validate() {
@@ -2277,8 +2426,10 @@
         const prefix = currentProduct.type === 'manual'
           ? 'KSSV'
           : ({ group: 'KS', customProject: 'KSMICE', cruise: 'KSCZ', train: 'KSTR', free: 'KSFT', study: 'KSST', single: 'KSSV' }[currentProduct.type] || 'KS');
-        const seed = String(Date.now()).slice(-8);
-        return prefix + '20260704' + seed;
+        const now = new Date();
+        const dateCode = String(now.getFullYear()) + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+        const seed = String(Date.now()).slice(-5);
+        return prefix + dateCode + seed;
       }
 
       function sourceText() {
@@ -2334,7 +2485,7 @@
           if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
           if (sourceContext.people) detailParams.set('people', sourceContext.people);
         }
-        saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
+        const createdOrder = saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
         document.getElementById('createdText').textContent = isManualMode()
@@ -2350,7 +2501,10 @@
         document.getElementById('createdDiscount').textContent = discountText;
         document.getElementById('createdCustomerPayable').textContent = customerPayableText;
         document.getElementById('createdOrderStatus').innerHTML = '<span class="' + process.tag + '">' + process.status + '</span>';
+        document.getElementById('createdCreatedAt').textContent = createdOrder.createdAt;
+        document.getElementById('createdConfirmedAt').textContent = createdOrder.confirmedAt || '尚未生效';
         document.getElementById('createdSource').textContent = sourceText();
+        document.getElementById('createdOwnership').textContent = createdOrder.businessOwnership.productOrg + ' / ' + createdOrder.businessOwnership.salesBranch + ' / ' + createdOrder.businessOwnership.channelCategory;
         const financeItems = isManualMode() ? [
           '订单：单项服务订单已生成',
           '客户需收：' + customerPayableText + ' 待收',
@@ -2544,7 +2698,14 @@
       }
 
       channelSource.addEventListener('change', updateChannelFields);
-      orderProcessMode.addEventListener('change', syncSummary);
+      orderProcessMode.addEventListener('change', function () {
+        syncSummary();
+        renderBusinessOwnership();
+      });
+      ['storeName', 'salesName', 'customerServiceName', 'distributorName', 'distributorMember', 'otaPlatform'].forEach(function (id) {
+        const field = document.getElementById(id);
+        if (field) field.addEventListener('change', renderBusinessOwnership);
+      });
       changePresetSelection.addEventListener('click', function () {
         resetSaleObjectSearch();
       });

@@ -103,7 +103,8 @@
         <div class="filter-item filter-item-status orders-date-type">
           <label class="sr-only" for="dateType">日期类型</label>
           <select id="dateType">
-            <option value="order">下单日期</option>
+            <option value="confirmed">订单确认日期</option>
+            <option value="created">订单创建日期</option>
             <option value="travel">出发/服务日期</option>
           </select>
         </div>
@@ -490,6 +491,41 @@
                 <option>北京远行国际代理中心</option>
                 <option>广州邮轮联盟分销中心</option>
                 <option>华北企业客户渠道</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sourceSystemFilter">来源系统</label>
+              <select id="sourceSystemFilter" class="form-control">
+                <option>全部来源系统</option>
+                <option>新系统</option>
+                <option>通通游</option>
+                <option>外部平台</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="salesBranchFilter">销售分公司</label>
+              <select id="salesBranchFilter" class="form-control">
+                <option>全部销售分公司</option>
+                <option>厦门分公司</option>
+                <option>泉州分公司</option>
+                <option>福建销售中心</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="salesGroupFilter">销售组</label>
+              <select id="salesGroupFilter" class="form-control">
+                <option>全部销售组</option>
+                <option>门店销售组</option>
+                <option>渠道销售组</option>
+                <option>平台运营组</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="budgetRegionFilter">预算区域</label>
+              <select id="budgetRegionFilter" class="form-control">
+                <option>全部预算区域</option>
+                <option>厦门区域</option>
+                <option>闽南区域</option>
               </select>
             </div>
           </div>
@@ -1395,16 +1431,20 @@
         if (type === 'travel') {
           return row.dataset.travelDate || isoDateFromText(row.children[3] ? plainText(row.children[3]) : rowAllText(row), '2026');
         }
-        return isoDateFromText(orderTimeCell(row) ? plainText(orderTimeCell(row)) : rowAllText(row), '2026');
+        if (type === 'confirmed') {
+          if (row.dataset.confirmedDate) return row.dataset.confirmedDate;
+          if ((row.dataset.orderStatus || '').indexOf('已确认') < 0 && (row.dataset.orderStatus || '').indexOf('已完成') < 0) return '';
+        }
+        return row.dataset.createdDate || isoDateFromText(orderTimeCell(row) ? plainText(orderTimeCell(row)) : rowAllText(row), '2026');
       }
 
       function rowMatchesDateRange(row) {
         var start = fieldValue('dateStart');
         var end = fieldValue('dateEnd');
         if (!start && !end) return true;
-        var type = fieldValue('dateType') || 'order';
+        var type = fieldValue('dateType') || 'confirmed';
         var current = rowDateValue(row, type);
-        if (!current) return true;
+        if (!current) return false;
         return (!start || current >= start) && (!end || current <= end);
       }
 
@@ -1491,6 +1531,10 @@
         var channel = selectValue('channelSource');
         var otaPlatform = selectValue('otaPlatform');
         var distributor = selectValue('distributorFilter');
+        var sourceSystem = selectValue('sourceSystemFilter');
+        var salesBranch = selectValue('salesBranchFilter');
+        var salesGroup = selectValue('salesGroupFilter');
+        var budgetRegion = selectValue('budgetRegionFilter');
         var store = selectValue('store');
         var advisor = selectValue('advisor');
         var docStatus = selectValue('docStatusFilter');
@@ -1522,6 +1566,10 @@
             rowMatchesValue(row, 'channel', channel) &&
             rowMatchesDatasetOrText(row, 'otaPlatform', otaPlatform) &&
             rowMatchesDatasetOrText(row, 'distributor', distributor) &&
+            rowMatchesDatasetOrText(row, 'sourceSystem', sourceSystem) &&
+            rowMatchesDatasetOrText(row, 'salesBranch', salesBranch) &&
+            rowMatchesDatasetOrText(row, 'salesGroup', salesGroup) &&
+            rowMatchesDatasetOrText(row, 'budgetRegion', budgetRegion) &&
             rowMatchesDatasetOrText(row, 'store', store) &&
             rowMatchesDatasetOrText(row, 'advisor', advisor) &&
             rowMatchesDatasetOrText(row, 'docStatus', docStatus) &&
@@ -1837,9 +1885,10 @@
         row.dataset.orderNo = orderNo;
         if (customer) row.dataset.customer = customer;
         if (time) row.dataset.orderTime = time;
+        var timeLabel = row.dataset.confirmedDate ? '确认 ' : '创建 ';
         return linkFromCell(orderCell, orderNo, 'orders-detail.html') +
           (customer ? '<span class="orders-customer-line">' + escapeHtml(customer + (customerMeta ? ' / ' + customerMeta : '')) + '</span>' : '') +
-          (time ? '<span class="text-muted orders-order-time">' + escapeHtml('下单 ' + time) + '</span>' : '');
+          (time ? '<span class="text-muted orders-order-time">' + escapeHtml(timeLabel + time) + '</span>' : '');
       }
 
       function productTravelHtml(row, productCell, planCell) {
@@ -1859,15 +1908,16 @@
       }
 
       function sourceOwnerHtml(row, sourceCell) {
-        var main = firstMeaningfulText(sourceCell);
+        var main = row.dataset.channelCategory || row.dataset.channel || firstMeaningfulText(sourceCell);
         var tagMeta = sourceCell ? Array.from(sourceCell.querySelectorAll('.tag')).map(function (tag) {
           return plainText(tag);
         }).filter(Boolean).join(' · ') : '';
         var sourceMeta = [secondaryText(sourceCell), tagMeta].filter(Boolean).join(' · ');
         var advisor = row.dataset.advisor || '';
+        var party = row.dataset.distributor || row.dataset.otaPlatform || row.dataset.store || '';
         return '<strong>' + escapeHtml(main || '-') + '</strong>' +
-          (sourceMeta ? '<span class="text-muted">' + escapeHtml(sourceMeta) + '</span>' : '') +
-          (advisor ? '<span class="text-muted">' + escapeHtml('店员 ' + advisor) + '</span>' : '');
+          (party ? '<span class="text-muted">' + escapeHtml(party) + '</span>' : (sourceMeta ? '<span class="text-muted">' + escapeHtml(sourceMeta) + '</span>' : '')) +
+          (advisor ? '<span class="text-muted">' + escapeHtml('销售 ' + advisor) + '</span>' : '');
       }
 
       function contractDocsHtml(row, docCell) {
@@ -2367,6 +2417,17 @@
           row.dataset.productType = type;
           row.dataset.productSource = order.productSource || '';
           row.dataset.productName = order.productName || '';
+          row.dataset.sourceSystem = order.sourceSystem || '新系统';
+          row.dataset.channelCategory = order.channelCategory || '';
+          row.dataset.channel = order.channel || '';
+          row.dataset.distributor = order.distributor && order.distributor !== '不适用' ? order.distributor : '';
+          row.dataset.otaPlatform = order.otaPlatform && order.otaPlatform !== '不适用' ? order.otaPlatform : '';
+          row.dataset.advisor = order.advisor || '';
+          row.dataset.salesBranch = order.salesBranch || '';
+          row.dataset.salesGroup = order.salesGroup || '';
+          row.dataset.budgetRegion = order.budgetRegion || '';
+          row.dataset.createdDate = String(order.createdAt || '').slice(0, 10);
+          row.dataset.confirmedDate = String(order.confirmedAt || '').slice(0, 10);
           row.dataset.store = storeName;
           row.dataset.resourceStatus = resourceStatus;
           row.dataset.purchaseStatus = purchaseStatus;
@@ -2387,7 +2448,15 @@
             order.routeText,
             order.sourceNo,
             serviceNo,
-            order.receivableNo
+            order.receivableNo,
+            order.channelCategory,
+            order.channel,
+            order.distributor,
+            order.otaPlatform,
+            order.salesBranch,
+            order.salesGroup,
+            order.budgetRegion,
+            order.sourceSystem
           ].join(' ');
           if (type === '自由行') {
             row.dataset.batchCode = order.sourceNo || '';

@@ -35,7 +35,7 @@
             <span class="dropdown-group-title" data-generic-menu>维护</span>
             <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="confirm" data-open-detail-action="转确认">转确认</button>
             <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="release" data-open-detail-action="释放">释放</button>
-            <button class="dropdown-item" type="button" data-generic-menu data-project-menu="owner" data-open-detail-action="修改归属">修改归属</button>
+            <button class="dropdown-item" type="button" data-generic-menu data-project-menu="owner" data-open-detail-action="归属调整">归属调整</button>
             <button class="dropdown-item" type="button" data-generic-menu data-project-menu="sales" data-open-detail-action="修改店员">修改店员</button>
             <button class="dropdown-item" type="button" data-generic-menu data-open-drawer="attachmentDrawer">附件</button>
             <button class="dropdown-item danger hidden" type="button" data-generic-menu data-state-action="cancel" data-open-detail-action="取消订单">取消订单</button>
@@ -94,6 +94,14 @@
           <div id="overviewProductGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">订单信息</div>
           <div id="overviewOrderGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">发生时经营归属</div>
+          <div id="overviewOwnershipGrid" class="description-grid order-overview-grid"></div>
+          <div class="table-wrap order-detail-table">
+            <table>
+              <thead><tr><th>记录类型</th><th>发起时间</th><th>原归属</th><th>调整内容</th><th>原因</th><th>状态</th></tr></thead>
+              <tbody id="ownershipHistoryRows"></tbody>
+            </table>
+          </div>
           <div class="detail-section-title">客户信息</div>
           <div id="overviewCustomerGrid" class="description-grid order-overview-grid"></div>
           <div id="bookingSectionTitle" class="detail-section-title">报名信息</div>
@@ -1014,10 +1022,11 @@
         const orderAmount = moneyNumber(config.amount[0]);
         const received = moneyNumber(config.amount[1]);
         const discount = discountCarryAmount();
-        const profile = financeProfileFor();
-        const passThrough = Math.round(orderAmount * (profile.passThroughRatio || 0));
+        const latestOrder = storedOrderFor(config.orderNo) || {};
+        const financeFacts = latestOrder.financeFacts || {};
+        const passThrough = moneyNumber(financeFacts.passThrough || 0);
         const customerCash = Math.max(orderAmount - discount, 0);
-        const expectedOrderAmount = Math.max(orderAmount - discount - passThrough, 0);
+        const expectedOrderAmount = financeFacts.businessIncome == null ? null : moneyNumber(financeFacts.businessIncome);
         return {
           orderAmount: orderAmount,
           received: received,
@@ -1083,16 +1092,15 @@
         if (basis.passThrough > 0) {
           rows.push(['代收代付金额', moneyText(basis.passThrough), '第三方服务提供方', '待结算', '只做往来和转付，不进入本公司服务收入']);
         }
-        rows.push(['公司预计可取得订单金额', moneyText(basis.expectedOrderAmount), profile.revenueEntity, '用于财务判断', '实际收入按履约事实和财务政策确认']);
+        rows.push(['业务结算收入', basis.expectedOrderAmount == null ? '尚未确认' : moneyText(basis.expectedOrderAmount), profile.revenueEntity, basis.expectedOrderAmount == null ? '未形成' : '已有结算结果', '由履约完成和业务结算模块确认']);
         return rows;
       }
       function financeCommissionItems() {
         const basis = financeBasisValues();
         const profile = financeProfileFor();
-        const channelFee = Math.round(basis.orderAmount * (isProjectOrder() ? 0 : 0.015));
         return [
           ['本公司承担优惠', '客户成交金额和优惠规则', profile.revenueEntity, moneyText(basis.discount), '优惠审批或结算确认后进入财务承接，不减少供应商真实应付'],
-          ['渠道佣金或服务费', '有效客户款、渠道合同和结算方式', profile.channelSettleParty, moneyText(channelFee), '渠道结算条件满足后确认，全额上缴和扣佣上缴分开记录'],
+          ['渠道佣金或服务费', '有效客户款、渠道合同和结算方式', profile.channelSettleParty, '尚未形成', '渠道结算条件满足后由结算模块确认'],
           ['预存或授信使用', '客户授权、预存账户或企业账期规则', profile.collectionUnit, '按实际使用确认', '进入预存账户、授信额度或企业客户账期核对']
         ];
       }
@@ -1124,6 +1132,9 @@
         } catch (error) {
           return {};
         }
+      }
+      function writeStored(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value));
       }
       function storedOrderFor(orderNo) {
         const store = readStored('caesarOrderFinanceEvents');
@@ -1159,6 +1170,62 @@
         return '出发/回团';
       }
       const storedOrder = storedOrderFor(config.orderNo);
+      function detailOwnership() {
+        const latest = storedOrderFor(config.orderNo) || storedOrder || {};
+        if (latest.businessOwnership) return latest.businessOwnership;
+        const owner = ownerParts();
+        const meta = productOverviewMeta();
+        return {
+          contractCompany: financeProfileFor().contractEntity,
+          productCompany: financeProfileFor().fulfillmentEntity,
+          productOrg: meta.department || '产品归属待确认',
+          productOwner: '待确认',
+          travelScope: config.productType === '参团游' || config.productType === '邮轮' ? '出境游' : '待确认',
+          productType: config.productType,
+          productSubtype: config.productType,
+          supplyMode: '待确认',
+          businessLine: config.productType,
+          departureCity: meta.departure,
+          destination: meta.destination,
+          salesBranch: owner.store,
+          salesDepartment: meta.department,
+          salesGroup: '待确认',
+          salesId: '待确认',
+          salesName: owner.sales,
+          customerService: meta.service,
+          store: owner.store,
+          channelCategory: meta.source,
+          channel: meta.channel,
+          distributor: '待确认',
+          platformStore: '待确认',
+          budgetRegion: '待确认',
+          productRuleVersion: '历史订单待补录',
+          organizationRuleVersion: '历史订单待补录',
+          channelRuleVersion: '历史订单待补录'
+        };
+      }
+
+      function ownershipHistoryHtml() {
+        const latest = storedOrderFor(config.orderNo) || storedOrder || {};
+        const ownership = detailOwnership();
+        const rows = [];
+        rows.push([
+          latest.confirmedAt ? '订单确认' : '订单创建',
+          latest.confirmedAt || latest.createdAt || '2026-07-04 10:30:00',
+          '-',
+          [ownership.productOrg, ownership.salesBranch, ownership.channelCategory].filter(Boolean).join(' / '),
+          latest.confirmedAt ? '订单确认时留存' : '历史订单待补录',
+          latest.confirmedAt ? '已生效' : '未生效'
+        ]);
+        (latest.ownershipAdjustments || []).forEach(function (item) {
+          rows.push(['归属调整', item.createdAt, item.original, item.target, item.reason, item.status || '待审批']);
+        });
+        return rows.map(function (row) {
+          return '<tr>' + row.map(function (cell, index) {
+            return '<td>' + (index === 5 ? tagHtml([cell, statusClass(cell)]) : escapeHtml(cell || '-')) + '</td>';
+          }).join('') + '</tr>';
+        }).join('');
+      }
       function applyStoredOrder(order) {
         if (!order) return;
         const amountText = order.amount || moneyText(order.amountValue || 0);
@@ -1507,9 +1574,9 @@
           ['客户', contactParts().name],
           ['订单状态', config.orderStatus[0]]
         ]);
-        if (action === '修改归属') {
+        if (action === '归属调整') {
           const ownerOptions = isProjectOrder() ? ['泉州丰泽门店', '软件园门店', '观音山门店', '泉州鲤城门店'] : ['软件园门店', '文灶门店', '观音山门店', '泉州丰泽门店'];
-          return base + selectControl('调整为', ownerOptions) + textareaControl('调整原因', '', isProjectOrder() ? '如项目归属交接、企业客户归属调整或项目负责人变更' : '如门店选择错误、业绩归属调整或项目归属交接');
+          return base + selectControl('调整类型', ['销售组织', '产品经营归属', '渠道与预算区域']) + selectControl('调整为', ownerOptions) + textareaControl('调整原因', '', isProjectOrder() ? '如项目归属交接、企业客户归属调整或项目负责人变更' : '如门店选择错误、业绩归属调整或项目归属交接');
         }
         if (action === '修改店员') {
           const salesOptions = isProjectOrder() ? ['李梅', '郑华', '孙丽', '吴芳'] : ['孙丽', '郑华', '李梅', '吴芳', '陈红'];
@@ -1532,6 +1599,32 @@
           submit.dataset.result = action;
         }
         openLayer('detailActionDrawer');
+      }
+
+      function saveOwnershipAdjustment() {
+        const fields = document.getElementById('detailActionDrawerFields');
+        const selects = fields.querySelectorAll('select');
+        const reason = fields.querySelector('textarea');
+        if (!reason || !reason.value.trim()) {
+          window.alert('请填写调整原因');
+          return false;
+        }
+        const store = readStored('caesarOrderFinanceEvents');
+        if (!store.orders) store.orders = {};
+        const current = store.orders[config.orderNo] || { orderNo: config.orderNo };
+        const ownership = detailOwnership();
+        if (!current.ownershipAdjustments) current.ownershipAdjustments = [];
+        current.ownershipAdjustments.push({
+          createdAt: new Date().toLocaleString('zh-CN', { hour12: false }),
+          original: [ownership.productOrg, ownership.salesBranch, ownership.channelCategory].filter(Boolean).join(' / '),
+          target: (selects[0] ? selects[0].value + ' / ' : '') + (selects[1] ? selects[1].value : ''),
+          reason: reason.value.trim(),
+          status: '待审批'
+        });
+        store.orders[config.orderNo] = current;
+        writeStored('caesarOrderFinanceEvents', store);
+        setHtml('ownershipHistoryRows', ownershipHistoryHtml());
+        return true;
       }
       function travelDateValue() {
         return snapshotValue(['出发/回团', '登船/离船', '发车/返程', '出行日期', '出发/返程']);
@@ -1861,11 +1954,28 @@
           ['订单类型', config.productType],
           ['订单状态', tagHtml(config.orderStatus), 'html'],
           ['收款状态', tagHtml(config.paymentStatus), 'html'],
-          ['下单时间', '2026-07-04 10:30'],
+          ['创建时间', (storedOrder && storedOrder.createdAt) || '2026-07-04 10:30:00'],
+          ['确认生效时间', (storedOrder && storedOrder.confirmedAt) || (config.orderStatus[0] === '已确认' ? '2026-07-04 10:35:00' : '尚未生效')],
+          ['来源系统', (storedOrder && storedOrder.sourceSystem) || '新系统'],
+          ['原订单号', (storedOrder && storedOrder.originalOrderNo) || '不适用'],
           ['预留到期', meta.reservationDue],
           ['来源', meta.source],
           ['渠道', meta.channel]
         ]));
+        const ownership = detailOwnership();
+        setHtml('overviewOwnershipGrid', descriptionGrid([
+          ['产品经营归属', [ownership.productCompany, ownership.productOrg, ownership.productOwner].filter(Boolean).join(' / ')],
+          ['产品分类', [ownership.travelScope, ownership.productType, ownership.productSubtype].filter(Boolean).join(' / ')],
+          ['供应方式 / 业务线', [ownership.supplyMode, ownership.businessLine].filter(Boolean).join(' / ')],
+          ['出发地 / 目的地', [ownership.departureCity, ownership.destination].filter(Boolean).join(' / ')],
+          ['销售组织', [ownership.salesBranch, ownership.salesDepartment, ownership.salesGroup].filter(Boolean).join(' / ')],
+          ['销售 / 客服', [ownership.salesId, ownership.salesName, ownership.customerService].filter(Boolean).join(' / ')],
+          ['渠道与门店', [ownership.channelCategory, ownership.channel, ownership.store].filter(Boolean).join(' / ')],
+          ['分销商 / 平台店铺', [ownership.distributor, ownership.platformStore].filter(function (value) { return value && value !== '不适用'; }).join(' / ') || '不适用'],
+          ['预算区域', ownership.budgetRegion],
+          ['归属规则', [ownership.productRuleVersion, ownership.organizationRuleVersion, ownership.channelRuleVersion].filter(Boolean).join(' / ')]
+        ]));
+        setHtml('ownershipHistoryRows', ownershipHistoryHtml());
         setHtml('overviewCustomerGrid', descriptionGrid([
           ['客户名称', contact.name],
           ['客户类型', meta.source === '门店' ? '门店客户' : meta.source],
@@ -2141,6 +2251,7 @@
         }
         const result = event.target.closest('[data-result]');
         if (result) {
+          if (result.closest('#detailActionDrawer') && result.dataset.result === '归属调整' && !saveOwnershipAdjustment()) return;
           const modal = result.closest('.modal-overlay');
           if (modal) closeLayer(modal);
           showResult(result.dataset.result);

@@ -283,7 +283,7 @@
     <div class="modal drawer-modal product-market-detail-modal" role="dialog" aria-modal="true" aria-labelledby="bookingProductDetailTitle">
       <div class="modal-header">
         <div>
-          <div id="bookingProductDetailTitle" class="modal-title">详情</div>
+          <div id="bookingProductDetailTitle" class="modal-title">产品详情</div>
           <div class="product-market-modal-sub"><span id="bookingProductDetailSupplier">凯撒欧洲线路中心</span><span class="tag tag-blue" id="bookingProductDetailType">参团游</span></div>
         </div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-modal>×</button>
@@ -386,6 +386,27 @@
 
       function productSaleStatus(card) {
         return card ? (card.dataset.saleStatus || '可预订') : '可预订';
+      }
+
+      function productOwnership(card) {
+        var type = card ? card.dataset.type || '参团游' : '参团游';
+        var profiles = {
+          '参团游': { org: '产品中心 / 长线部', owner: '李娜', line: '跟团游', subtype: '多日跟团' },
+          '邮轮': { org: '产品中心 / 邮轮部', owner: '王洋', line: '邮轮', subtype: '邮轮航次' },
+          '专列': { org: '产品中心 / 专列部', owner: '赵明', line: '专列', subtype: '专列班期' },
+          '自由行': { org: '产品中心 / 自由行部', owner: '陈晨', line: '自由行', subtype: '机票酒店套餐' },
+          '研学': { org: '产品中心 / 研学部', owner: '周静', line: '研学', subtype: '研学营期' },
+          '单项服务': { org: '产品中心 / 单项服务部', owner: '孙丽', line: '单项服务', subtype: card && card.dataset.serviceType || '其他服务' },
+          '代理产品': { org: '产品中心 / 代理运营部', owner: '张雪', line: '代理产品', subtype: '外采旅游产品' }
+        };
+        var profile = profiles[type] || profiles['参团游'];
+        return Object.assign({}, profile, {
+          travelScope: card && card.dataset.tourismType || '待确认',
+          supplyMode: card && card.dataset.model || (type === '代理产品' ? '外采' : '自营'),
+          destination: card && card.dataset.destination || '待确认',
+          departureCity: card && card.dataset.departCity || '待确认',
+          supplier: card && card.dataset.supplier || '待确认'
+        });
       }
 
       function saleStatusTagClass(status) {
@@ -674,6 +695,7 @@
       function renderDetailBody(card) {
         var config = detailConfig(card);
         var info = cardInfo(card);
+        var ownership = productOwnership(card);
         var cover = document.getElementById('bookingProductDetailCover');
         cover.className = 'product-market-carousel ' + coverClass(card);
         cover.textContent = card.dataset.type + ' · ' + info.destination;
@@ -682,7 +704,12 @@
           '<span class="' + saleStatusTagClass(config.tags[2]) + '">' + escapeHtml(config.tags[2]) + '</span>'
         ].join('');
         document.getElementById('bookingProductDetailHeadline').textContent = info.destination + ' · ' + info.duration;
-        document.getElementById('bookingProductDetailFacts').innerHTML = detailRowsHtml(config.facts);
+        document.getElementById('bookingProductDetailFacts').innerHTML = detailRowsHtml((config.facts || []).concat([
+          ['旅游范围', ownership.travelScope],
+          ['供应方式', ownership.supplyMode],
+          ['经营归属', ownership.org],
+          ['产品负责人', ownership.owner]
+        ]));
         document.getElementById('bookingPlanSectionTitle').textContent = config.planTitle;
         document.getElementById('bookingPlanList').innerHTML = config.plans.map(function (plan, index) {
           return [
@@ -729,12 +756,22 @@
         var plan = config && config.plans ? config.plans[planIndex] || config.plans[0] : null;
         var schedules = config ? schedulesForPlan(config, planIndex) : [];
         var schedule = schedules[Number(scheduleIndex || 0)] || schedules[0] || [];
+        var ownership = productOwnership(card);
         var params = new URLSearchParams();
         params.set('type', kind);
         params.set('product', product);
         params.set('from', 'quote');
         params.set('entry', 'product-booking');
         if (card && card.dataset.supplier) params.set('supplier', card.dataset.supplier);
+        params.set('travelScope', ownership.travelScope);
+        params.set('supplyMode', ownership.supplyMode);
+        params.set('productOrg', ownership.org);
+        params.set('productOwner', ownership.owner);
+        params.set('businessLine', ownership.line);
+        params.set('productSubtype', ownership.subtype);
+        params.set('destination', ownership.destination);
+        params.set('departureCity', ownership.departureCity);
+        params.set('quoteVersion', '2026-07发布版');
         if (card && card.dataset.type === '单项服务') {
           params.set('productType', '单项服务');
           params.set('serviceType', card.dataset.serviceType || '其他');
@@ -788,6 +825,7 @@
       function renderCardActions(card) {
         var body = card.querySelector('.market-product-body');
         if (!body) return;
+        var ownership = productOwnership(card);
         card.setAttribute('tabindex', '0');
         card.setAttribute('role', 'button');
         var businessInfo = card.querySelector('[data-market-business-info]');
@@ -799,7 +837,9 @@
         }
         businessInfo.innerHTML = [
           '<div class="market-product-price"><span>起售价</span><strong>' + escapeHtml(referencePrice(card)) + '</strong></div>',
-          '<div class="market-product-theme"><span>主题</span><em>' + escapeHtml(themeTagText(card)) + '</em></div>'
+          '<div class="market-product-theme"><span>主题</span><em>' + escapeHtml(themeTagText(card)) + '</em></div>',
+          '<div class="market-product-ownership"><span>范围/供应</span><em>' + escapeHtml(ownership.travelScope + ' · ' + ownership.supplyMode) + '</em></div>',
+          '<div class="market-product-ownership"><span>经营/负责</span><em>' + escapeHtml(ownership.org + ' · ' + ownership.owner) + '</em></div>'
         ].join('');
 
         var statusWrap = card.querySelector('[data-market-sale-status-wrap]');
@@ -810,12 +850,12 @@
           body.appendChild(statusWrap);
         }
         var modelText = card.dataset.type === '代理产品'
-          ? (card.dataset.model || '代理入库') + ' · ' + (card.dataset.agencyStatus || '已入库')
-          : card.dataset.type + ' · ' + (card.dataset.model || '自营');
+          ? card.dataset.type + ' · ' + (card.dataset.agencyStatus || '已入库')
+          : card.dataset.type;
         statusWrap.innerHTML = '<span class="market-card-meta">' + escapeHtml(modelText) + '</span>';
         var statusActions = document.createElement('span');
         statusActions.className = 'market-card-status-actions';
-        statusActions.innerHTML = '<span class="' + saleStatusTagClass(productSaleStatus(card)) + '">' + escapeHtml(productSaleStatus(card)) + '</span><button class="market-card-text-action" type="button" data-open-market-detail>查看班期</button>';
+        statusActions.innerHTML = '<span class="' + saleStatusTagClass(productSaleStatus(card)) + '">' + escapeHtml(productSaleStatus(card)) + '</span><button class="market-card-text-action" type="button" data-open-market-detail>查看详情</button>';
         statusWrap.appendChild(statusActions);
       }
 
@@ -870,18 +910,19 @@
           var row = document.createElement('tr');
           var info = cardInfo(card);
           var schedule = scheduleParts(card);
+          var ownership = productOwnership(card);
           row.dataset.productIndex = String(index);
           row.setAttribute('tabindex', '0');
           row.setAttribute('role', 'button');
 
           row.appendChild(createStackCell([
             card.dataset.product,
-            sourceText(card),
-            themeTagText(card)
+            (card.dataset.supplier || '供货方待确认') + ' · ' + ownership.supplyMode,
+            ownership.org + ' · ' + ownership.owner
           ], 'market-product-table-name'));
 
           row.appendChild(createStackCell([
-            travelTypeText(card),
+            card.dataset.type + ' · ' + ownership.travelScope,
             info.destination + ' / ' + info.depart,
             info.duration
           ], 'market-product-table-type'));
@@ -919,7 +960,7 @@
           scheduleButton.dataset.openMarketDetail = '';
           scheduleButton.dataset.productIndex = String(index);
           scheduleButton.className = 'table-action-primary';
-          scheduleButton.textContent = '查看班期';
+          scheduleButton.textContent = '查看详情';
           actionWrap.appendChild(scheduleButton);
           actionCell.appendChild(actionWrap);
           row.appendChild(actionCell);
