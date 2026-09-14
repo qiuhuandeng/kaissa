@@ -268,11 +268,12 @@
           title: "资金票据",
           children: [
             { title: "资金池", href: "finance/finance-fund-pool.html" },
+            { title: "收付款配置", href: "finance/finance-account-settings.html" },
             { title: "资金调拨", href: "finance/finance-control.html?view=fund-transfer" },
             { title: "发票管理", href: "finance/finance-invoice.html" },
           ],
         },
-        { title: "财务报表", href: "finance/finance-reports.html?report=profit" },
+        { title: "财务报表", href: "finance/finance-reports.html?report=cashflow" },
         { title: "NC推送", href: "finance/finance-nc.html" },
       ],
     },
@@ -473,7 +474,7 @@
       if (report === "fund" && url.searchParams.get("view") === "pool") {
         return "finance/finance-fund-pool.html";
       }
-      return "finance/finance-reports.html?report=profit";
+      return "finance/finance-reports.html?report=cashflow";
     }
     if (file === "finance/finance-control.html") {
       const view = url.searchParams.get("view") || "fund-transfer";

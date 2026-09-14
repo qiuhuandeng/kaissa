@@ -397,6 +397,21 @@
     '<div class="report-query-actions"><button type="submit" class="report-button">查询</button><button type="button" class="report-button" data-reset>重置</button><span class="report-query-status" role="status" data-query-status>已查询</span></div><div class="report-error" role="alert" data-error hidden></div></form>' +
     '<div class="report-meta" data-meta></div><div data-results></div><section class="report-note" aria-label="数据口径说明"><h2>数据口径说明</h2><div data-notes></div></section>';
   const form = root.querySelector("form");
+  let financialActive = false, financialView;
+  let financialHost;
+  if (isReturn) {
+    form.insertAdjacentHTML('beforebegin', '<div data-return-tabs>' + tabs() + '</div>');
+    financialHost = document.createElement('div');
+    financialHost.dataset.returnFinance = '';
+    financialHost.hidden = true;
+    root.appendChild(financialHost);
+  }
+  function showReturnFinance(active) {
+    financialActive = active;
+    [form, root.querySelector('[data-meta]'), root.querySelector('[data-results]'), root.querySelector('.report-note')].forEach(el => { el.hidden = active; });
+    financialHost.hidden = !active;
+    if (active && !financialView) financialView = window.mountReturnFinance(financialHost, api, iconsBase);
+  }
   function setForm(values) {
     Object.entries(values).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value; });
   }
@@ -714,7 +729,7 @@
     activeTable = { rows, columns };
     const pager = pagination(rows.length);
     const visible = rows.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
-    return '<section class="report-section">' + tabs() + '<div class="report-section-head"><h2>' + (isOrder && applied.view === "orders" && applied.status !== "有效" ? "订单成交核对" : { orders: "有效成交组成", changes: "成交变化记录", actual: "实际完成记录", financial: "已完成业务的财务确认资料", future: "已售未完成安排", adjustments: "完成后调整记录" }[applied.view]) +
+    return '<section class="report-section">' + (isReturn ? '' : tabs()) + '<div class="report-section-head"><h2>' + (isOrder && applied.view === "orders" && applied.status !== "有效" ? "订单成交核对" : { orders: "有效成交组成", changes: "成交变化记录", actual: "实际完成记录", financial: "已完成业务的财务确认资料", future: "已售未完成安排", adjustments: "完成后调整记录" }[applied.view]) +
       '</h2><span class="report-muted">金额单位：' + unitLabel() + '</span></div>' + menu + tableHTML(visible, columns) +
       '<div class="report-total"><span data-total>' + totalLabel(rows) + '</span>' + pager + '</div></section>';
   }
@@ -977,6 +992,7 @@
     ].map(t => '<p>' + t + '</p>').join("");
   }
   function render() {
+    if (isReturn) root.querySelectorAll('[data-return-tabs] [data-view]').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.view === (financialActive ? 'financial' : draftView))));
     root.querySelector("[data-results]").innerHTML = isProduct ? renderProduct() : isOverview ? renderOverview() : renderDetails();
     root.querySelector("[data-meta]").innerHTML = '<span class="report-demo">演示数据 · 财务口径待确认</span><span>' + esc(periodDescription()) +
       '</span><span>截止：2026-05-07 23:59</span><span>已查范围：' + esc(names[applied.company] || "演示集团全部") +
@@ -1005,6 +1021,11 @@
     }
     const tab = event.target.closest("[data-view]");
     if (tab) {
+      if (isReturn) {
+        showReturnFinance(tab.dataset.view === 'financial');
+        root.querySelectorAll('[data-view]').forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+        if (financialActive) return;
+      }
       draftView = tab.dataset.view;
       if (form.elements.calendar) form.elements.calendar.value = "actual";
       if (form.elements.settlement) form.elements.settlement.value = "";
@@ -1035,6 +1056,7 @@
     if (target.hasAttribute("data-page-size")) { pageSize = Number(target.value); pageNumber = 1; renderKeepingDraft(); }
   });
   root.querySelector("[data-export]").addEventListener("click", () => {
+    if (isReturn && financialActive) { financialView.exportResult(); return; }
     const viewNames = { orders: (orderDateBasis(applied) === "created" ? "订单创建期间" : "订单确认期间") + "截至日净值", changes: "变化生效期间净变动", actual: "实际完成分配成交额", financial: "已完成业务财务确认资料", future: "已售未完成安排", adjustments: "完成后调整" };
     const filterLabels = {
       version: "数据版本", period: "统计期间", start: "已查询范围开始日", end: "已查询范围结束日", view: "金额视图",

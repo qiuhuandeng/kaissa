@@ -19,7 +19,7 @@
   const fields = {
     profile: { name: '门店名称', type: '门店类型', company: '所属公司', org: '所属组织', contact: '负责人', phone: '联系电话', address: '地址', start: '合作开始', expiry: '合作到期', license: '营业执照', agreement: '合作协议', openDate: '开通日期' },
     sales: { products: '可售产品类型', destinations: '可售目的地', contractCompany: '签约公司', template: '合同模板', reserveHours: '预留时长（小时）', holdHours: '人工占位时长（小时）', conditions: '订单与合同付款条件' },
-    finance: { settlement: '结算安排', methods: '允许付款方式', merchant: '选用支付商户', accountName: '门店缴款户名', account: '门店缴款账号', bank: '开户行', invoice: '开票抬头', fee: '月管理费', feeMethod: '管理费收取方式', paymentNode: '付款节点' },
+    finance: { settlement: '结算安排', methods: '允许付款方式', companyReceive: '门店缴款至公司', customerReceive: '客户转账收款', merchant: '客户扫码收款商户', payer: '门店缴款来源', beneficiary: '门店接收分润或退款', invoice: '开票抬头', fee: '月管理费', feeMethod: '管理费收取方式', paymentNode: '付款节点' },
     restore: { status: '合作状态' }
   };
   const titles = { profile: '档案准入', sales: '销售授权', finance: '财务配置', restore: '恢复营业' };
@@ -30,7 +30,7 @@
       id: 'store-' + (i + 1), status: i === 1 ? '待开通' : i === 2 || i === 5 ? '暂停' : '正常',
       profile: { name, type: ['自营门店', '加盟门店', '合作门店'][i % 3], company: '福建凯撒', org: i < 3 ? '厦门分公司 / 厦门思明区门市部' : '泉州分公司 / 泉州丰泽门市部', contact: ['孙丽', '沈悦', '陈红', '李梅', '吴芳', '周伟'][i], phone: '138****8800', address: i < 3 ? '厦门市思明区观日路18号' : '泉州市丰泽区丰泽街128号', start: '2026-05-01', expiry: i === 5 ? day(-5, today) : day(180, today), license: '营业执照已提交', agreement: '门店合作协议已提交', openDate: i === 1 ? day(3, today) : '2026-05-01' },
       sales: { products: ['参团游', '邮轮'], destinations: ['欧洲', '国内'], contractCompany: '福建凯撒', template: '标准国内/出境旅游合同', reserveHours: '', holdHours: '', conditions: '待销售、计调、财务及法务确认' },
-      finance: { settlement: i === 4 ? '月结' : '单单结', methods: ['对公转账', '预存抵扣'], merchant: '福建凯撒聚合支付商户', accountName: name + '旅行服务有限公司', account: '6225 **** 0038', bank: '民生银行厦门思明支行', invoice: name + '旅行服务有限公司', fee: '待协议确认', feeMethod: '随门店对账收取', paymentNode: '待财务确认' },
+      finance: { settlement: i === 4 ? '月结' : '单单结', methods: ['对公转账', '预存抵扣'], companyReceive: 'bank-fj-1', customerReceive: 'bank-fj-1', merchant: 'pay-fj-1', payer: 'store-bank-' + (i + 1), beneficiary: 'store-bank-' + (i + 1), invoice: name + '旅行服务有限公司', fee: '待协议确认', feeMethod: '随门店对账收取', paymentNode: '待财务确认' },
       reviews: { profile: i === 1 ? '审批中' : '已通过', sales: i === 1 ? '未提交' : '已生效', finance: i === 1 ? '已退回' : '已生效' },
       accountState: i === 2 ? '整户冻结' : '正常', available: i === 0 ? '¥86,000' : '¥18,600', frozen: i === 0 ? '¥12,800' : '¥0',
       orders: i === 1 ? 0 : 3, refunds: i === 1 ? 0 : 1, reconciliation: i === 1 ? 0 : 1,

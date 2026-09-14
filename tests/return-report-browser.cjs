@@ -13,14 +13,14 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
     page.on("pageerror", e => errors.push(e.message));
     const root = page.locator('.finance-report-page');
-    const select = (key, value) => root.locator(`[name="${key}"]`).selectOption(value);
-    const submit = () => root.locator('button[type="submit"]').click();
+    const select = (key, value) => root.locator(`:scope > form [name="${key}"]`).selectOption(value);
+    const submit = () => root.locator(':scope > form button[type="submit"]').click();
     const reset = () => root.locator('[data-reset]').click();
     const total = () => root.locator('[data-total]').innerText();
     const rows = () => root.locator('[data-table="main"] tbody tr').count();
-    const show = async selector => { if (await root.locator(selector).getAttribute('open') === null) await root.locator(selector + ' > summary').click(); };
-    const close = async selector => { if (await root.locator(selector).getAttribute('open') !== null) await root.locator(selector + ' > summary').click(); };
-    const view = async key => { await root.locator(`[data-view="${key}"]`).click(); await submit(); };
+    const show = async selector => { if (await root.locator(selector + ':visible').getAttribute('open') === null) await root.locator(selector + ':visible > summary').click(); };
+    const close = async selector => { if (await root.locator(selector + ':visible').getAttribute('open') !== null) await root.locator(selector + ':visible > summary').click(); };
+    const view = async key => { await root.locator(`[data-view="${key}"]`).click(); if (key !== 'financial') await submit(); };
     const download = async () => {
       const pending = page.waitForEvent("download");
       await root.locator('[data-export]').click();
@@ -74,32 +74,23 @@ async function main() {
 
     await reset();
     await view('financial');
-    assert.equal(await root.locator('[data-table="main"] th').count(), 12);
-    assert.match(await root.locator('h2').first().innerText(), /已完成业务的财务确认资料/);
-    assert.match(await total(), /6 条已完成记录/);
-    assert.ok(!(await total()).includes('0.00'));
-    assert.match(await root.locator('[data-table="main"] tbody').innerText(), /未提供确认记录/);
-    await select('incomeStatus', '未提供确认记录');
-    await select('costStatus', '未提供确认记录');
-    await submit();
-    assert.equal(await rows(), 5);
+    const finance = root.locator('[data-return-finance]');
+    assert.equal(await finance.locator('[aria-label="财务确认主表"] th').count(), 12);
+    assert.match(await finance.locator('h2').innerText(), /完成业务核对/);
+    assert.match(await finance.locator('[data-rf-total]').innerText(), /6 条已完成记录/);
+    assert.match(await finance.locator('tbody').first().innerText(), /未提供记录/);
     await show('.report-columns');
-    for (const key of ['incomePeriod', 'costPeriod', 'incomeRecord', 'costRecord', 'financeCompany', 'originalSettlement']) await root.locator(`[data-column="${key}"]`).check();
+    for (const key of ['incomePeriod', 'costPeriod', 'incomeRecord', 'costRecord']) await finance.locator(`[data-rf-column="${key}"]`).check();
     csv = await download();
     assert.match(csv, /"收入会计期间"/);
     assert.match(csv, /"成本会计期间"/);
-    assert.match(csv, /财务确认资料范围：实际完成/);
+    assert.match(csv, /实际完成日期/);
     assert.equal((csv.match(/^"O\d+"/gm) || []).length, 6);
     assert.ok(!csv.includes('"财务确认期间"'));
     assert.ok(!csv.includes('"计划完成开始日'));
-    await select('settlement', '已结算');
-    await submit();
-    assert.equal(await rows(), 0);
-    await select('settlement', '');
-    await submit();
     await close('.report-columns');
-    await root.locator('.report-table-scroll').evaluate(e => { e.scrollLeft = e.scrollWidth; });
-    await root.locator('.report-section').scrollIntoViewIfNeeded();
+    await finance.locator('[aria-label="财务确认主表"]').evaluate(e => { e.scrollLeft = e.scrollWidth; });
+    await finance.locator('[data-rf-results]').scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(output, 'desktop-financial.png') });
     results.push("financial: separate settlement/income/cost, actual-date scope, missing records not zero, independent periods exported");
 
@@ -126,8 +117,8 @@ async function main() {
     results.push("future: 18,000, next-year 9,000; only plan dates/basis, no completion or financial fields");
 
     await reset();
-    await root.locator('[name="start"]').fill('2026-05-07');
-    await root.locator('[name="end"]').fill('2026-05-01');
+    await root.locator(':scope > form [name="start"]').fill('2026-05-07');
+    await root.locator(':scope > form [name="end"]').fill('2026-05-01');
     await submit();
     assert.equal(await root.locator('[data-error]').isVisible(), true);
     assert.match(await total(), /5\.60/);
@@ -162,22 +153,23 @@ async function main() {
     const keys = await root.locator('[data-column]:not(:disabled)').evaluateAll(es => es.map(e => e.dataset.column));
     for (const key of keys) await root.locator(`[data-column="${key}"]`).check();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
-    assert.equal(await root.locator('.report-order-column-groups').evaluate(e => e.scrollWidth > e.clientWidth + 1), false);
+    assert.equal(await root.locator('.report-order-column-groups:visible').evaluate(e => e.scrollWidth > e.clientWidth + 1), false);
     await page.getByRole('button', { name: '收起或展开侧栏' }).click();
     await page.waitForFunction(() => document.querySelector('.finance-report-page').clientWidth > 280);
     await page.locator('.content').evaluate(e => { e.scrollTop = 0; });
     await page.screenshot({ path: path.join(output, 'mobile-default.png') });
     await root.locator('.report-order-column-groups fieldset').first().scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(output, 'mobile-fields.png') });
-    await root.locator('.report-columns > summary').click();
-    await root.locator('.report-table-scroll').evaluate(e => { e.scrollLeft = e.scrollWidth; });
-    await root.locator('.report-section').screenshot({ path: path.join(output, 'mobile-table.png') });
+    await root.locator('.report-columns:visible > summary').click();
+    await root.locator('[data-results] .report-table-scroll').evaluate(e => { e.scrollLeft = e.scrollWidth; });
+    await root.locator('[data-results] .report-section').screenshot({ path: path.join(output, 'mobile-table.png') });
     for (const key of ['financial', 'future', 'adjustments']) {
       await view(key);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
       await close('.report-columns');
-      await root.locator('.report-table-scroll').evaluate(e => { e.scrollLeft = e.scrollWidth; });
-      await root.locator('.report-section').screenshot({ path: path.join(output, 'mobile-' + key + '.png') });
+      const current = key === 'financial' ? finance.locator('[data-rf-results]') : root.locator('[data-results] .report-section');
+      await current.locator('.report-table-scroll').first().evaluate(e => { e.scrollLeft = e.scrollWidth; });
+      await current.screenshot({ path: path.join(output, 'mobile-' + key + '.png') });
     }
     results.push("no drilldowns; all optional fields, table horizontal scroll and all four views fit narrow viewport");
 

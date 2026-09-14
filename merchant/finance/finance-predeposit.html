@@ -42,9 +42,9 @@
           <select id="predepositStatus">
             <option>全部状态</option>
             <option>正常</option>
-            <option>低余额</option>
-            <option>冻结中</option>
-            <option>停用</option>
+
+            <option>冻结</option>
+            <option>已关闭</option>
           </select>
         </div>
 
@@ -287,6 +287,10 @@
     </div>
   </div>
 
+  <script src="../../shared/predeposit-control-model.js"></script>
+  <script src="../../shared/predeposit-control.js"></script>
+  <script src="../../shared/predeposit-recharge-model.js"></script>
+  <script src="../../shared/predeposit-recharge.js"></script>
   <script>
     (function () {
       var accountDrawer = document.getElementById('accountDrawer');
@@ -403,7 +407,7 @@
           owner: '门店财务：林琪',
           available: '¥31,200',
           frozen: '¥20,000',
-          status: '冻结中',
+          status: '冻结',
           threshold: '¥20,000',
           lastChange: 'DJ20260621001 / 争议冻结 ¥20,000',
           pending: [
@@ -428,7 +432,7 @@
           owner: '门店财务：叶青',
           available: '¥9,200',
           frozen: '¥6,600',
-          status: '低余额',
+          status: '正常',
           threshold: '¥20,000',
           lastChange: 'DK20260625008 / 订单补差扣款 ¥6,600',
           pending: [
@@ -508,21 +512,15 @@
 
       function accountMenuItems(account) {
         var items = [];
-        account.pending.forEach(function (item) {
-          if (item.status === '审批中') {
-            items.push({ label: '审批单', adjust: true });
-          } else {
-            items.push({ label: item.actionText, itemNo: item.no });
-          }
-        });
+        if(account.status === '已关闭') return [];
         var available = amountNumber(account.available);
         var frozen = amountNumber(account.frozen);
         var hasRefundPending = account.pending.some(function (item) {
           return item.actionType === 'refund' && item.status !== '审批中';
         });
         if (available > 0 && !hasRefundPending) items.push({ label: '退款申请', actionType: 'refund' });
-        if (available > 0) items.push({ label: '冻结申请', actionType: 'freeze' });
-        if (frozen > 0) items.push({ label: '解冻申请', actionType: 'unfreeze' });
+        if (available > 0) items.push({ label: '金额冻结', actionType: 'freeze' });
+        if (frozen > 0) items.push({ label: '金额解冻', actionType: 'unfreeze' });
         items.push({ label: '余额调整', actionType: 'adjust' });
         return items;
       }
@@ -702,9 +700,6 @@
 
       function formFor(actionType, item) {
         var amount = item ? item.amount : activeAccount.available;
-        if (actionType === 'recharge') {
-          return '<div class="form-row"><div class="form-group"><label class="form-label" for="workSource">来源流水</label><input id="workSource" class="form-control" type="text" value="' + escapeHtml(item.source) + '" readonly></div><div class="form-group"><label class="form-label" for="workAmount">确认金额</label><input id="workAmount" class="form-control" type="text" value="' + escapeHtml(item.amount) + '" readonly></div></div><div class="form-row"><div class="form-group"><label class="form-label" for="workResult">处理结论 <span class="req">*</span></label><select id="workResult" class="form-control"><option>确认入账</option><option>退回补充</option></select></div><div class="form-group"><label class="form-label" for="workDate">入账日期</label><input id="workDate" class="form-control" type="date" value="' + todayText() + '"></div></div><div class="form-row" data-work-field="return" hidden><div class="form-group"><label class="form-label" for="workReturnReason">退回原因 <span class="req">*</span></label><select id="workReturnReason" class="form-control"><option value="">请选择</option><option>付款方不一致</option><option>充值申请不一致</option><option>金额不一致</option><option>流水凭证不清晰</option><option>其他</option></select></div></div><div class="form-group"><label class="form-label" for="workRemark">处理备注</label><textarea id="workRemark" class="form-control" rows="3">付款方、收款账户、充值申请一致。</textarea></div>';
-        }
         if (actionType === 'retain') {
           return '<div class="form-row"><div class="form-group"><label class="form-label" for="workOrder">来源订单</label><input id="workOrder" class="form-control" type="text" value="' + escapeHtml(item.order) + '" readonly></div><div class="form-group"><label class="form-label" for="workAmount">留存金额</label><input id="workAmount" class="form-control" type="text" value="' + escapeHtml(item.amount) + '" readonly></div></div><div class="form-row"><div class="form-group"><label class="form-label" for="workResult">处理结论 <span class="req">*</span></label><select id="workResult" class="form-control"><option>确认留存</option><option>退回认款</option><option>转退款申请</option></select></div><div class="form-group"><label class="form-label" for="workDate">留存日期</label><input id="workDate" class="form-control" type="date" value="' + todayText() + '"></div></div><div class="form-row" data-work-field="return" hidden><div class="form-group"><label class="form-label" for="workReturnReason">退回原因 <span class="req">*</span></label><select id="workReturnReason" class="form-control"><option value="">请选择</option><option>客户未确认留存</option><option>订单认款有误</option><option>金额不一致</option><option>其他</option></select></div></div><div class="form-row" data-work-field="refund" hidden><div class="form-group"><label class="form-label" for="workRefundReason">退款原因</label><select id="workRefundReason" class="form-control"><option>客户申请退回超收款</option><option>订单取消余额退回</option><option>其他</option></select></div><div class="form-group"><label class="form-label" for="workMethod">退款方式</label><select id="workMethod" class="form-control"><option>原路退回</option><option>银行转账</option></select></div></div><div class="form-group"><label class="form-label" for="workRemark">处理备注</label><textarea id="workRemark" class="form-control" rows="3">客户订单超收金额转入客户预存账户。</textarea></div>';
         }
@@ -746,6 +741,9 @@
 
       function openWork(actionType, item) {
         if (!activeAccount) return;
+        var blocked = predepositControl.guard(actionType,activeAccount);
+        if(blocked){notify(blocked);return;}
+        if(actionType==='recharge'){window.caesarUI.closeLayer(accountDrawer);recharge.open(item&&item.no);return;}
         activeWork = { actionType: actionType, item: item || null };
         document.getElementById('workDrawerTitle').textContent = workTitle(actionType, item);
         document.getElementById('workSectionTitle').textContent = actionType === 'adjust' || actionType === 'freeze' || actionType === 'unfreeze' || actionType === 'refund' ? '本次申请' : '本次处理';
@@ -827,11 +825,15 @@
         renderLedgerRows(activeAccount);
         renderAdjustRows(activeAccount);
         renderFinancial(activeAccount);
+        if(activeAccount.controlAccount){var control=activeAccount.controlAccount;control.ledger=amountNumber(activeAccount.available)+amountNumber(activeAccount.frozen);control.held=amountNumber(activeAccount.frozen);control.pendingCount=activeAccount.pending.length;}
+        predepositControl.sync();
         applyFilters();
       }
 
       function confirmWork() {
         if (!activeAccount || !activeWork) return;
+        var blocked = predepositControl.guard(activeWork.actionType,activeAccount);
+        if(blocked){notify(blocked);return;}
         var item = activeWork.item;
         var actionType = activeWork.actionType;
         var resultControl = document.getElementById('workResult');
@@ -842,19 +844,7 @@
 
         if (result.indexOf('退回') >= 0 && !requireReturnReason()) return;
 
-        if (actionType === 'recharge') {
-          if (result === '退回补充') {
-            removePendingItem(item);
-            activeAccount.lastChange = item.no + ' / 充值已退回';
-            message = '充值已退回补充';
-          } else {
-            activeAccount.available = amountText(amountNumber(activeAccount.available) + amountNumber(item.amount));
-            removePendingItem(item);
-            activeAccount.lastChange = item.no + ' / 充值确认 ' + item.amount;
-            addLedger('门店充值', item.no, '+' + item.amount.replace(/^¥/, '¥'));
-            message = '充值已确认';
-          }
-        } else if (actionType === 'retain') {
+        if (actionType === 'retain') {
           if (result === '退回认款') {
             removePendingItem(item);
             activeAccount.lastChange = item.no + ' / 留存已退回';
@@ -902,8 +892,8 @@
           message = '处理申请已提交审批';
         }
 
-        if (amountNumber(activeAccount.frozen) <= 0 && activeAccount.status === '冻结中') activeAccount.status = '正常';
-        if (activeAccount.status === '正常' && amountNumber(activeAccount.threshold) > 0 && amountNumber(activeAccount.available) < amountNumber(activeAccount.threshold)) activeAccount.status = '低余额';
+
+
         window.caesarUI.closeLayer(workDrawer);
         refreshAccountViews();
         notify(message);
@@ -957,7 +947,7 @@
       function findRowByDataset(key, value) {
         if (!value) return null;
         return Array.from(document.querySelectorAll('#predepositRows tr')).find(function (row) {
-          return row.dataset[key] === value;
+          return row.dataset[key] === value || (key === 'accountNo' && row.dataset.previousAccountNo === value);
         }) || null;
       }
 
@@ -987,6 +977,7 @@
       }
 
       document.addEventListener('click', function (event) {
+        if (!accountDrawer.isConnected) return;
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {
           switchDetailTab(detailTab.dataset.detailTab);
@@ -1050,8 +1041,10 @@
       });
 
       updateAccountRows();
+      var predepositControl = initPredepositControl({role:'finance',accounts:accounts,actionCell:actionCellHtml});
+      var recharge = initPredepositRecharge({role:'finance',control:predepositControl,legacy:accounts});
       applyFilters();
-      openFromParams();
+      (function waitForUI(){if(!accountDrawer.isConnected)return;if(!window.caesarUI){setTimeout(waitForUI,50);return;}if(!new URLSearchParams(location.search).get('flowNo'))openFromParams();})();
     })();
   </script>
 </body>

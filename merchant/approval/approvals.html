@@ -231,7 +231,7 @@
         "改期转团",
         "合同作废",
         "组织人事",
-        "门店档案准入", "门店销售授权", "门店财务配置", "门店恢复营业", "员工组织调整"
+        "门店档案准入", "门店销售授权", "门店财务配置", "门店恢复营业", "员工组织调整", "收付款配置变更", "收付款资料停用"
       ];
       const sourceOptions = ["产品中心", "资源", "履约中心", "销售中心", "门店中心", "渠道中心", "营销中心", "财务", "系统设置"];
       const statusOptions = ["待审批", "审批中", "已退回", "已通过", "已拒绝", "已撤回"];
@@ -908,7 +908,33 @@
         detail: [["已有员工", "郑华 / 138****8801"], ["当前组织", "福建凯撒 / 厦门分公司 / 厦门思明区门市部 / 软件园门店"], ["目标组织", "福建凯撒 / 厦门分公司 / 厦门思明区门市部 / 观音山门店"], ["期望生效日", "2026-10-01"], ["生效后", "更新组织归属，目标门店角色单独授权；原订单销售归属及业绩保留"]], flow: [["提交", "集团组织调整申请"], ["当前", "目标组织负责人审核"]], opinion: ""
       });
 
+      baseApprovals.push({
+        no: "APR-ZJ-001", matter: "收付款配置变更", source: "财务", scopes: ["todo", "mine", "overview"], status: "待审批",
+        applicant: "公司财务专员", applicantRole: "资金管理", businessTitle: "民生银行公司收款账户使用范围调整", businessNo: "SP-ZJ-001", context: "福建凯撒 / 6214 **** 0038 / CNY", impact: "泉州门店停止新选用", risk: "门店默认账户需单独调整", riskLevel: "warning", node: "公司财务负责人", due: "按审批设置", appliedAt: "2026-09-14", sourceHref: "../finance/finance-account-settings.html?account=bank-fj-1", fundMatter: true, fundBlock: "关联商户仍覆盖泉州门店，请先办理商户范围变更后重提", requestedDate: "2026-10-01",
+        detail: [["归属核对", "福建凯撒国际旅行社有限公司；民生银行北京分行；开户证明已核验"], ["变更前", "软件园、文灶、观音山、泉州丰泽、泉州鲤城、泉州东海门店"], ["变更后", "软件园、文灶、观音山门店"], ["用途", "门店缴款至公司、客户转账收款、商户结算"], ["关联商户", "福建凯撒聚合支付商户的泉州使用范围需同步办理变更；未完成前退回本申请"], ["生效日期", "期望2026-10-01，审批延迟以实际批准日为准"], ["历史交易", "保留原收款账户和商户号，不改既有退款；默认选用另走门店财务配置审批"]], flow: [["2026-09-14", "公司财务专员提交范围调整申请"]], opinion: ""
+      }, {
+        no: "APR-ZJ-002", matter: "收付款资料停用", source: "财务", scopes: ["todo", "overview"], status: "待审批", applicant: "公司财务专员", applicantRole: "资金管理", businessTitle: "福建凯撒聚合支付商户停用申请", businessNo: "SP-ZJ-STOP-001", context: "福建凯撒 / YB-FJ-2026001", impact: "停止新交易及新选用", risk: "历史退款继续保留原商户", riskLevel: "warning", node: "公司财务负责人", due: "按审批设置", appliedAt: "2026-09-14", sourceHref: "../finance/finance-account-settings.html?account=pay-fj-1", fundMatter: true, requestedDate: "2026-10-01",
+        detail: [["停用对象", "易宝支付 / 福建凯撒聚合支付商户 / YB-FJ-2026001"], ["结算账户", "福建凯撒 / 民生银行北京分行 / 6214 **** 0038 / CNY"], ["使用范围", "福建凯撒六家门店"], ["停用后", "不可发起新交易，不自动替换门店当前默认商户"], ["原收退款", "保留历史商户资料，原路退不可用由财务核实并另办非原路退款审批"], ["审核事项", "核对待退款、在途收款和清算安排；停用不等同于支付平台注销"]], flow: [["2026-09-14", "财务提交商户停用申请"]], opinion: ""
+      });
+
+      [
+        {no:'APR-YC-001', name:'开元门店', request:'KHSQ20260914001', status:'待审批', explanation:'核对门店余额归属、负责公司、币种、用途及开户资料。'},
+        {no:'APR-YC-002', name:'东海门店', request:'KHSQ20260914002', status:'已通过', explanation:'开户资料已随财务配置完整核准，引用原审批，无需重复审核。'},
+        {no:'APR-YC-003', name:'湖里门店', request:'KHSQ20260914003', status:'已退回', explanation:'请补充余额归属方确认及预存协议。'}
+      ].forEach(function(r){baseApprovals.push({
+        no:r.no,matter:'预存账户开户',source:'门店',scopes:['todo','mine','overview'],status:r.status,
+        applicant:'门店负责人',applicantRole:'门店管理',businessTitle:r.name+'预存账户开户',businessNo:r.request,
+        context:'福建凯撒 / 人民币 / 门店订单预存',impact:'资料批准后交公司财务开通',risk:'开户成功才生成正式账户号',riskLevel:'normal',
+        node:'公司财务负责人',due:'按审批设置',appliedAt:'2026-09-14',sourceHref:'../finance/finance-predeposit.html?opening='+r.request,
+        fundMatter:true,storeEffect:'资料审核通过，等待公司财务执行开通；尚未生成账户号。',requestedDate:'2026-09-14',
+        detail:[['门店 / 余额归属方',r.name],['负责公司','福建凯撒国际旅行社有限公司'],['币种 / 用途','人民币 / 门店订单预存'],['开户资料',r.explanation],['执行结果','审核不等于开户；财务开通成功后生成正式账户号，原申请保留。']],
+        flow:[['2026-09-14',r.explanation]],opinion:r.status==='已退回'?r.explanation:''
+      });});
+
       const configItems = [
+        ["预存账户开户", "核对余额归属、负责公司、币种、用途及开户资料", "门店", "公司财务负责人", "按审批设置", "核准后交公司财务开通，开户成功才生成账户号", "启用"],
+        ["收付款配置变更", "公司账户、支付商户及门店收付款资料新增或变更", "财务", "公司财务负责人", "按审批设置", "批准且到达生效日期后供新交易选用；历史资料保留", "启用"],
+        ["收付款资料停用", "停止新选用，核对在途收付及原路退款安排", "财务", "公司财务负责人", "按审批设置", "停用不删除历史资料，不自动更换门店默认配置", "启用"],
         ["产品发布", "产品、线路、代理包装、研学或单项服务从草稿提交发布", "产品中心", "产品负责人 → 业务中心负责人", "4小时提醒，8小时升级", "产品主状态、发布记录、渠道可售范围", "启用"],
         ["团期开排", "团期开排、邮轮航次或专列班期开排", "履约中心", "产品负责人 → 运营经理", "2小时提醒，6小时升级", "团期主状态、名额和销售准备状态", "启用"],
         ["团期调整", "取消团期、关闭销售、名额/配额大幅调整", "履约中心", "运营经理 → 产品负责人", "2小时提醒，6小时升级", "团期名额、渠道配额、销售状态", "启用"],
@@ -1203,7 +1229,7 @@
       }
 
       function approvalResultText(item) {
-        if (item.storeMatter && item.status === "已通过") return item.storeEffect || "审批通过，按批准时间和期望生效日期启用";
+        if ((item.storeMatter || item.fundMatter) && item.status === "已通过") return item.storeEffect || "审批通过，按批准时间和期望生效日期启用";
         if (item.status === "已通过") return "已通过，来源单据进入下一业务节点";
         if (item.status === "已拒绝") return "已拒绝，来源单据停止当前流转";
         if (item.status === "已退回") return "已退回，等待申请人补充材料";
@@ -1306,7 +1332,7 @@
       }
 
       function writeApprovalResult(item, decision) {
-        if (item.storeMatter) return; // 门店本批仅演示审批结果，不跨页回写。
+        if (item.storeMatter || item.fundMatter) return; // 门店本批仅演示审批结果，不跨页回写。
         const results = readStored("caesarApprovalResults");
         results[item.no] = {
           status: decision === "通过" ? "approved" : "rejected",
@@ -1346,7 +1372,8 @@
             opinionInput.focus();
             return;
           }
-          if (activeApproval.storeMatter) {
+          if (decisionValue === "通过" && activeApproval.fundBlock) { toast(activeApproval.fundBlock); return; }
+          if (activeApproval.storeMatter || activeApproval.fundMatter) {
             const now = new Date();
             const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
             activeApproval.opinion = opinionInput.value.trim();
@@ -1360,7 +1387,7 @@
           updateApprovalStatus(activeApproval, decisionValue === "通过" ? "已通过" : decisionValue === "驳回" ? "已拒绝" : "已退回");
           writeApprovalResult(activeApproval, decisionValue);
           renderApprovals();
-          toast(activeApproval.storeMatter ? approvalResultText(activeApproval) : decisionValue === "通过" ? "审批已通过，来源单据进入下一节点" : "审批意见已提交，来源单据等待处理");
+          toast((activeApproval.storeMatter || activeApproval.fundMatter) ? approvalResultText(activeApproval) : decisionValue === "通过" ? "审批已通过，来源单据进入下一节点" : "审批意见已提交，来源单据等待处理");
           closeModal();
           return;
         }

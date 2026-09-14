@@ -4,6 +4,7 @@
   if (!root || root.dataset.ready) return;
   root.dataset.ready = 'true';
   const M = window.CaesarStoreGovernance, state = M.create();
+  const F = window.CaesarFundAccounts, funds = F.create(state.today);
   const page = root.dataset.storeGovernance;
   const params = new URLSearchParams(location.search);
   const legacyStores = { 'store-xiamen-a': 'store-1', 'store-xiamen-b': 'store-2', 'store-xiamen-c': 'store-3', 'store-quanzhou-a': 'store-4', 'store-quanzhou-b': 'store-5', 'store-quanzhou-c': 'store-6' };
@@ -12,6 +13,12 @@
   let editing = null, dirty = false, activeMember = null, focusBefore = null, closeTimer = null;
   const e = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const display = value => Array.isArray(value) ? value.join('、') || '未设置' : value || '未设置';
+  const fieldDisplay = (kind, key, value) => kind === 'finance' && F.selections[key] ? F.label(funds, value) : value;
+  function accountField(key, value, store) {
+    const options = F.eligible(funds, key, store.profile.company, store.profile.name);
+    const invalid = value && !options.some(r => r.id === value);
+    return '<label class="sg-field"><span>' + e(M.fields.finance[key]) + '</span><select name="' + key + '"><option value="">请选择已核准资料</option>' + (invalid ? '<option selected disabled value="' + e(value) + '">原选用已不可用于新交易，请重新选择</option>' : '') + options.map(r => '<option value="' + e(r.id) + '"' + (r.id === value ? ' selected' : '') + '>' + e(r.name + ' / ' + r.number) + '</option>').join('') + '</select></label>';
+  }
   const badge = value => '<span class="tag tag-' + (/正常|已生效|已通过/.test(value) ? 'green' : /暂停|退回|冻结/.test(value) ? 'orange' : /关闭|停用|撤回/.test(value) ? 'gray' : 'blue') + '">' + e(value) + '</span>';
   const button = (label, action, data, primary) => '<button type="button" class="' + (primary ? 'btn btn-primary' : 'table-link') + '" data-sg-action="' + action + '" ' + (data || '') + '>' + label + '</button>';
   const link = (label, href) => '<a class="table-link" href="' + e(href) + '">' + label + '</a>';
@@ -68,7 +75,7 @@
     let body = '';
     if (tab === 'profile') body = heading(s.reviews.profile === '已通过' ? '当前有效档案' : '门店准入资料', button('申请变更', 'edit', 'data-kind="profile"')) + grid(Object.entries(M.fields.profile).map(([k, label]) => [label, s.profile[k]])) + heading('分项审核') + reviewTable(s);
     if (tab === 'sales') body = heading(s.reviews.sales === '已生效' ? '当前销售授权' : '销售授权尚未生效', button('申请变更', 'edit', 'data-kind="sales"')) + grid(Object.entries(M.fields.sales).map(([k, label]) => [label, s.sales[k]])) + '<p class="sg-note">新预订需满足当前授权和产品可售条件；已有订单继续按原合同办理。时长及付款条件待业务确认后配置。</p>';
-    if (tab === 'finance') body = heading(s.reviews.finance === '已生效' ? '当前财务配置' : '财务配置尚未生效', button('申请变更', 'edit', 'data-kind="finance"')) + grid(Object.entries(M.fields.finance).map(([k, label]) => [label, s.finance[k]])) + heading('账户与核对', link('预存账户', 'predeposit.html') + link('门店对账', 'reconciliation.html')) + grid([['账户状态', s.accountState], ['可用预存余额', s.available], ['冻结金额', s.frozen]]) + '<p class="sg-note">月结仅约定核对周期，付款仍按订单条件执行。变更默认商户后，原收退款继续使用原账户。</p>';
+    if (tab === 'finance') body = heading(s.reviews.finance === '已生效' ? '当前财务配置' : '财务配置尚未生效', button('申请变更', 'edit', 'data-kind="finance"')) + grid(Object.entries(M.fields.finance).map(([k, label]) => [label, fieldDisplay('finance', k, s.finance[k])])) + '<div class="sg-related">' + link('收付款配置', '../../finance/finance-account-settings.html') + '</div>' + heading('账户与核对', link('预存账户', 'predeposit.html') + link('门店对账', 'reconciliation.html')) + grid([['账户状态', s.accountState], ['可用预存余额', s.available], ['冻结金额', s.frozen]]) + '<p class="sg-note">月结仅约定核对周期，付款仍按订单条件执行。变更默认商户后，原收退款继续使用原账户。</p>';
     if (tab === 'members') body = heading('门店成员', link('成员管理', 'members.html') + link('集团统一组织架构', '../../../admin/org.html')) + memberTable(state.members.filter(m => m.store === s.profile.name), true);
     if (tab === 'business') body = heading('历史业务') + links(s) + heading('经营查询') + '<div class="sg-related">' + link('渠道经营', '../../data/channel-reports.html') + link('订单明细', '../../data/order-report-details.html') + '</div>';
     if (tab === 'records') body = heading('变更申请') + recordsTable(s) + heading('合作状态记录') + table(['日期', '操作', '原因／承接人'], s.log.map(x => '<tr><td>' + e(x.date) + '</td><td>' + e(x.action) + '</td><td>' + e(x.reason) + '</td></tr>'));
@@ -92,9 +99,9 @@
     let html = '';
     if (kind === 'profile') html = '<div class="sg-form-grid">' + field('门店名称', 'name', data.name) + field('门店类型', 'type', data.type, '', ['自营门店', '合作门店', '加盟门店']) + field('所属公司', 'company', data.company, '', ['福建凯撒']) + field('所属组织', 'org', data.org, '', ['厦门分公司 / 厦门思明区门市部', '泉州分公司 / 泉州丰泽门市部']) + field('负责人', 'contact', data.contact) + field('联系电话', 'phone', data.phone, 'tel') + field('合作开始', 'start', data.start, 'date') + field('合作到期', 'expiry', data.expiry, 'date') + field('开通日期', 'openDate', data.openDate, 'date') + field('地址', 'address', data.address) + field('营业执照资料', 'license', data.license) + field('合作协议资料', 'agreement', data.agreement) + '</div><label class="sg-field"><span>补充附件</span><input type="file" name="attachments" multiple></label>';
     if (kind === 'sales') html = checks('可售产品类型', 'products', data.products, ['参团游', '邮轮', '专列', '自由行', '单项服务', '单团项目', '研学']) + checks('可售目的地', 'destinations', data.destinations, ['欧洲', '国内', '日本', '东南亚']) + '<div class="sg-form-grid">' + field('签约公司', 'contractCompany', data.contractCompany, '', ['福建凯撒']) + field('合同模板', 'template', data.template, '', ['标准国内/出境旅游合同', '邮轮旅游合同', '单项服务确认单', 'MICE项目合同']) + field('预留时长（小时）', 'reserveHours', data.reserveHours, 'number') + field('人工占位时长（小时）', 'holdHours', data.holdHours, 'number') + '</div>' + field('订单与合同付款条件', 'conditions', data.conditions, 'textarea') + '<p class="sg-note">只选择所属公司已授权范围。未确定的时长保持空白，付款条件按已批准规则填写。</p>';
-    if (kind === 'finance') html = '<div class="sg-form-grid">' + field('结算安排', 'settlement', data.settlement, '', ['单单结', '月结']) + field('选用支付商户', 'merchant', data.merchant, '', ['福建凯撒聚合支付商户']) + field('门店缴款户名', 'accountName', data.accountName) + field('门店缴款账号', 'account', data.account) + field('开户行', 'bank', data.bank) + field('开票抬头', 'invoice', data.invoice) + field('月管理费', 'fee', data.fee) + field('管理费收取方式', 'feeMethod', data.feeMethod, '', ['随门店对账收取', '从预存账户扣款', '按协议免收']) + '</div>' + checks('允许付款方式', 'methods', data.methods, ['对公转账', '聚合扫码', '现金收款', '预存抵扣']) + field('付款节点', 'paymentNode', data.paymentNode, 'textarea');
+    if (kind === 'finance') html = '<div class="sg-form-grid">' + field('结算安排', 'settlement', data.settlement, '', ['单单结', '月结']) + Object.keys(F.selections).map(key => accountField(key, data[key], s)).join('') + field('开票抬头', 'invoice', data.invoice) + field('月管理费', 'fee', data.fee) + field('管理费收取方式', 'feeMethod', data.feeMethod, '', ['随门店对账收取', '从预存账户扣款', '按协议免收']) + '</div>' + checks('允许付款方式', 'methods', data.methods, ['对公转账', '聚合扫码', '现金收款', '预存抵扣']) + field('付款节点', 'paymentNode', data.paymentNode, 'textarea') + '<p class="sg-note">仅列出本公司、本门店已核准且可用于新交易的资料。门店缴款至公司、客户收款及门店接收分润或退款分别选用；客户退款不使用门店收款账户。缺少可选资料时由公司财务维护，再提交选用申请。</p><div class="sg-related">' + link('收付款配置', '../../finance/finance-account-settings.html') + '</div>';
     const mode = record?.mode || '批准后生效';
-    html = (fresh ? '' : '<details class="sg-current"><summary>查看当前有效内容</summary>' + grid(Object.entries(M.fields[kind]).map(([key, title]) => [title, s[kind][key]])) + '</details>') + html + heading('申请生效') + '<div class="sg-form-grid">' + field('生效方式', 'mode', mode, '', ['批准后生效', '指定日期', '下账期生效']) + field('生效日期', 'requestedDate', record?.requestedDate || '', 'date') + '</div><p class="sg-note" id="sgDateNote">批准后启用；指定日期或下账期需填写具体日期，审批延迟按实际批准时间启用。</p>' + field('申请原因', 'reason', record?.reason || '', 'textarea');
+    html = (fresh ? '' : '<details class="sg-current"><summary>查看当前有效内容</summary>' + grid(Object.entries(M.fields[kind]).map(([key, title]) => [title, fieldDisplay(kind, key, s[kind][key])])) + '</details>') + html + heading('申请生效') + '<div class="sg-form-grid">' + field('生效方式', 'mode', mode, '', ['批准后生效', '指定日期', '下账期生效']) + field('生效日期', 'requestedDate', record?.requestedDate || '', 'date') + '</div><p class="sg-note" id="sgDateNote">批准后启用；指定日期或下账期需填写具体日期，审批延迟按实际批准时间启用。</p>' + field('申请原因', 'reason', record?.reason || '', 'textarea');
     open(fresh ? '新增门店 · 档案准入' : s.profile.name + ' · ' + M.titles[kind] + '变更', html, button('保存草稿', 'save-draft') + button('核对并提交', 'preview-submit', '', true), true);
     syncDate();
   }
@@ -106,6 +113,7 @@
     if (editing.kind === 'profile' && (!after.name || !after.contact || !after.phone || !after.address || !after.start || !after.expiry || !after.openDate || !after.license || !after.agreement)) throw Error('请补齐门店名称、联系人、地址、合作日期、开通日期及资质资料');
     if (editing.kind === 'profile' && (after.expiry < after.start || after.openDate < after.start || after.openDate > after.expiry)) throw Error('开通日期需在合作有效期内');
     if (editing.kind === 'sales' && (!after.products.length || !after.destinations.length)) throw Error('请选择可售产品类型和目的地');
+    if (editing.kind === 'finance') F.validateSelection(funds, after, editing.s.profile.company, editing.s.profile.name);
     if (editing.kind === 'finance' && !after.methods.length) throw Error('请选择至少一种付款方式');
     const files = data.getAll('attachments').filter(f => f && f.name).map(f => f.name);
     return { after, options: { mode: data.get('mode'), requestedDate: data.get('requestedDate') || '', reason: String(data.get('reason') || '').trim() }, files };
@@ -128,7 +136,7 @@
     close(true); render(); record(r);
   }
   function comparison(kind, before, after) {
-    return table(['内容', '变更前', '申请内容'], Object.entries(M.fields[kind]).map(([key, title]) => '<tr><td>' + e(title) + '</td><td>' + e(display(before[key])) + '</td><td' + (JSON.stringify(before[key]) !== JSON.stringify(after[key]) ? ' class="sg-changed"' : '') + '>' + e(display(after[key])) + '</td></tr>'));
+    return table(['内容', '变更前', '申请内容'], Object.entries(M.fields[kind]).map(([key, title]) => '<tr><td>' + e(title) + '</td><td>' + e(display(fieldDisplay(kind, key, before[key]))) + '</td><td' + (JSON.stringify(before[key]) !== JSON.stringify(after[key]) ? ' class="sg-changed"' : '') + '>' + e(display(fieldDisplay(kind, key, after[key]))) + '</td></tr>'));
   }
   function recordView(r) { return record(r); }
   function record(r) {

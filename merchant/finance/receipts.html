@@ -167,6 +167,7 @@
     </div>
   </div>
 
+  <script src="../../shared/predeposit-recharge-model.js"></script>
   <script>
     (function () {
 	      var activeRow = null;
@@ -253,7 +254,7 @@
 	        document.getElementById('identifyTitle').textContent = '识别流水';
 	        document.getElementById('identifyObject').innerHTML = '<strong>' + escapeHtml(row.dataset.flowNo) + '</strong><span>' + escapeHtml(row.dataset.payer) + ' / ' + escapeHtml(row.dataset.amount) + '</span>';
 	        document.getElementById('identifyAvailable').value = row.dataset.available;
-	        document.getElementById('identifyAmount').value = parseMoney(row.dataset.available) || parseMoney(row.dataset.amount);
+	        document.getElementById('identifyAmount').value = parseMoney(row.dataset.available);
 	        document.getElementById('identifyRemark').value = row.dataset.remark || '';
 	        document.getElementById('identifyRemain').value = row.dataset.status === '异常' ? '标记异常' : '全部识别';
 	        document.getElementById('identifyType').value = row.dataset.type === '待识别' ? '订单收款' : row.dataset.type;
@@ -289,11 +290,11 @@
 	        var type = document.getElementById('identifyType').value;
 	        var diff = document.getElementById('identifyDiff').value;
 	        var remainMode = document.getElementById('identifyRemain').value;
-	        var currentAvailable = parseMoney(activeRow.dataset.available) || parseMoney(activeRow.dataset.amount);
+	        var currentAvailable = parseMoney(activeRow.dataset.available);
 	        var currentAccepted = parseMoney(activeRow.dataset.accepted);
 	        var identifyAmount = Number(document.getElementById('identifyAmount').value || 0);
 	        if (!identifyAmount || identifyAmount < 0) { notify('请填写本次识别金额'); return; }
-	        identifyAmount = Math.min(identifyAmount, currentAvailable);
+	        if (!Number.isFinite(identifyAmount) || identifyAmount > currentAvailable) { notify('本次识别超过流水剩余金额'); return; }
 	        var remaining = Math.max(currentAvailable - identifyAmount, 0);
 	        activeRow.dataset.type = type;
 	        activeRow.dataset.basis = document.getElementById('identifyBasis').value;
@@ -322,7 +323,7 @@
 	          ['资金用途', escapeHtml(row.dataset.type)], ['识别对象', escapeHtml(row.dataset.object)], ['未识别金额', '<span class="amount-strong">' + escapeHtml(row.dataset.available) + '</span>'], ['已识别金额', escapeHtml(row.dataset.accepted)], ['识别依据', escapeHtml(row.dataset.basis)], ['识别差异', escapeHtml(row.dataset.diff)], ['识别备注', escapeHtml(row.dataset.remark || '-'), true]
 	        ]);
 	        renderGrid(document.getElementById('downstreamGrid'), [
-	          ['后续页面', escapeHtml(downstreamLabel(row.dataset.type))], ['处理结果', escapeHtml(row.dataset.downstream)], ['关联编号', escapeHtml(row.dataset.object)], ['检索条件', escapeHtml(row.dataset.target ? '流水号 ' + row.dataset.flowNo : '-')]
+	          ['后续页面', row.dataset.target ? '<a href="'+escapeHtml(row.dataset.target)+'">'+escapeHtml(downstreamLabel(row.dataset.type))+'</a>' : escapeHtml(downstreamLabel(row.dataset.type))], ['处理结果', escapeHtml(row.dataset.downstream)], ['关联编号', escapeHtml(row.dataset.object)], ['检索条件', escapeHtml(row.dataset.target ? '流水号 ' + row.dataset.flowNo : '-')]
 	        ]);
 	        document.getElementById('logRows').innerHTML = '<tr><td>' + escapeHtml(row.dataset.time) + '</td><td>导入到账流水</td><td>已登记</td><td>出纳</td></tr><tr><td>2026-07-13 10:20</td><td>识别资金用途</td><td>' + escapeHtml(row.dataset.status === '待识别' ? '待识别' : row.dataset.type) + '</td><td>财务专员</td></tr><tr><td>2026-07-13 14:30</td><td>记录后续去向</td><td>' + escapeHtml(row.dataset.downstream) + '</td><td>系统</td></tr>';
         switchDetailTab('basic');
@@ -337,11 +338,12 @@
         var payer = document.getElementById('registerPayer').value.trim();
         var amount = Number(document.getElementById('registerAmount').value || 0);
         var time = document.getElementById('registerTime').value.replace('T', ' ');
-        if (!flowNo || !payer || !amount || !time) { notify('请补齐到账信息'); return; }
+        if (!flowNo || !payer || !Number.isFinite(amount) || amount <= 0 || !time) { notify('请补齐到账信息'); return; }
 	        var company = document.getElementById('registerCompany').value;
 	        var account = document.getElementById('registerAccount').value;
 	        var method = document.getElementById('registerMethod').value;
 	        var source = document.getElementById('registerSource').value;
+          if(rows.some(function(r){return r.dataset.flowNo===flowNo&&r.dataset.company===company&&r.dataset.account===account;})){notify('此账户的到账流水已存在，请查看原记录');return;}
 	        var settleDate = document.getElementById('registerSettleDate').value;
 	        var payerAccount = document.getElementById('registerPayerAccount').value.trim();
 	        var receiptInput = document.getElementById('registerReceipt');
@@ -380,6 +382,7 @@
       }
 
       document.addEventListener('click', function (event) {
+        if(!emptyRow.isConnected)return;
         if (event.target.closest('[data-open-register]')) { openLayer(registerDrawer); return; }
         if (event.target.closest('[data-open-import]')) { openLayer(importDrawer); return; }
         if (event.target.closest('[data-save-register]')) { appendRow(); return; }
@@ -402,7 +405,17 @@
 	      });
       document.querySelector('[aria-label="到账流水详情标签"]').addEventListener('click', function (event) { var button = event.target.closest('[data-detail-tab]'); if (button) switchDetailTab(button.dataset.detailTab); });
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) { overlay.addEventListener('click', function (event) { if (event.target === overlay) closeLayer(overlay); }); });
+      // 与充值复核复用同一组到账示例；旧流水保持原有来源记录。
+      PredepositRechargeModel.flows().forEach(function(f){
+        if(rows.some(function(r){return r.dataset.flowNo===f.no;}))return;
+        var row=document.createElement('tr'),m=PredepositRechargeModel.money,remain=PredepositRechargeModel.remaining(f);
+        Object.assign(row.dataset,{flowNo:f.no,sourceNo:'银行流水',sourceChannel:'银行流水',time:f.date+' 10:00',account:'民生银行北京分行',accountNo:f.account,payer:f.payer,payerAccount:'6222****0188',amount:m(f.total),accepted:m(f.total-remain),available:m(remain),company:'fj',method:'银行转账',type:'门市充值',status:remain===f.total?'待识别':'部分识别',object:f.uses.map(function(u){return u.no;}).join('、')||'待匹配预存账户',objectNote:'剩余金额可用于充值核对',basis:f.uses.map(function(u){return u.kind+' '+u.no+' '+m(u.amount);}).join('；')||'待核对',diff:'无差异',target:'finance-predeposit.html?flowNo='+f.no,downstream:'充值申请复核',settleDate:f.date,attachment:'银行回单.pdf'});
+        row.innerHTML='<td>'+f.no+'</td><td>'+f.date+'</td><td>民生银行北京分行 / '+f.account+'</td><td>'+escapeHtml(f.payer)+'</td><td>'+m(f.total)+'</td>'+Array(5).fill('<td></td>').join('');
+        updateRow(row);document.getElementById('flowRows').insertBefore(row,emptyRow);rows.push(row);
+      });
       applyFilters();
+      var flowTarget=new URLSearchParams(location.search).get('flowNo');
+      if(flowTarget)(function wait(){if(!emptyRow.isConnected)return;if(!window.caesarUI){setTimeout(wait,50);return;}var row=rows.find(function(r){return r.dataset.flowNo===flowTarget;});if(row)openDetail(row);})();
     })();
   </script>
 </body>
