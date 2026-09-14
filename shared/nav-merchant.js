@@ -11,12 +11,31 @@
       icon: "trend",
       children: [
         {
-          title: "经营分析",
+          title: "经营报表",
           children: [
-            { title: "业绩与经营分析", href: "data/performance-reports.html" },
-            { title: "经营数据中心·方案二", href: "data/finance-dashboard-v2.html" },
-            { title: "财务数据看板·方案三", href: "data/finance-dashboard-v3.html" },
-            { title: "产品分析", href: "data/product-analysis.html" },
+            { title: "经营总览", href: "data/performance-reports.html" },
+            { title: "产品经营", href: "data/product-reports.html" },
+            { title: "渠道经营", href: "data/channel-reports.html" },
+            { title: "团期毛利", href: "data/settlement-reports.html" },
+            { title: "供应商采购与返点", href: "data/supplier-reports.html" },
+            { title: "订单明细", href: "data/order-report-details.html" },
+            { title: "回团明细", href: "data/return-report-details.html" },
+          ],
+        },
+        {
+          title: "报表管理",
+          children: [
+            { title: "预算任务管理", href: "data/budget-targets.html" },
+            { title: "口径与数据核对", href: "data/report-management.html" },
+          ],
+        },
+        {
+          title: "历史方案",
+          children: [
+            { title: "经营分析旧版", href: "data/performance-reports-legacy.html" },
+            { title: "方案二", href: "data/finance-dashboard-v2.html" },
+            { title: "方案三", href: "data/finance-dashboard-v3.html" },
+            { title: "产品分析旧版", href: "data/product-analysis.html" },
           ],
         },
       ],
@@ -1226,6 +1245,8 @@
     scripts.forEach((oldScript) => {
       const script = document.createElement("script");
       Array.from(oldScript.attributes).forEach((attr) => script.setAttribute(attr.name, attr.value));
+      // Keep ordered external dependencies when a page is opened through the menu.
+      if (script.src && !oldScript.hasAttribute("async")) script.async = false;
       script.textContent = oldScript.textContent;
       document.body.appendChild(script);
       script.remove();
