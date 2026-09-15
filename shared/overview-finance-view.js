@@ -1,6 +1,29 @@
 (function(){
   'use strict';const host=document.querySelector('[data-overview-finance]'),m=window.CaesarOverviewFinance;if(!host||!m)return;
-  const labels={company:'核算/资金公司',period:'会计月份',currency:'原币',income:'确认收入',cost:'结转成本',gross:'毛利',expense:'经营费用',operating:'经营结果',status:'核对情况',opening:'期初',incoming:'实际流入',outgoing:'实际流出',closing:'余额',restricted:'受限资金',available:'可用资金',plannedIn:'计划收款',plannedOut:'计划付款/退款',plannedClosing:'计划期末可用',coverage:'资料情况',batch:'采购批次',product:'产品',unit:'单位',committed:'承诺数量',sold:'已售',used:'已用',returnable:'可退未退',nonRefundableUnsold:'不可退未售',confirmedLoss:'已确认损耗',pendingLoss:'待确认损耗',quantityStatus:'数量资料',source:'核对报表',conditions:'核对条件',id:'来源记录号',kind:'确认类型',amount:'确认金额',original:'原确认',reason:'调整原因',evidence:'确认依据',tour:'团期号',type:'成本项目',quantity:'分配数量',confirmedCost:'已确认分配成本',pendingCost:'待确认成本',planned:'计划日期',inclusion:'纳入情况',proof:'确认凭据',account:'实际账户号'};
-  const cols={profit:['company','period','currency','income','cost','gross','expense','operating','status'],funds:['company','currency','opening','incoming','outgoing','closing','restricted','available','coverage'],plan:['company','currency','available','plannedIn','plannedOut','plannedClosing','coverage'],resources:['batch','product','unit','committed','sold','used','returnable','nonRefundableUnsold','confirmedLoss','pendingLoss','quantityStatus']};
-  window.CaesarReadonlyReport.mount(host,{title:'财务与资源观察',defaults:m.defaults,views:m.views,query:m.query,labels,money:['income','cost','gross','expense','operating','opening','incoming','outgoing','closing','restricted','available','plannedIn','plannedOut','plannedClosing','confirmedLoss','pendingLoss','amount','confirmedCost','pendingCost'],columns:q=>cols[q.view],extras:['source','conditions'],filters:[{key:'company',label:'核算/资金公司'},{key:'currency',label:'原币',options:[['CNY','人民币'],['EUR','欧元']]},{key:'month',label:'会计/确认月份',type:'month'},{key:'asOf',label:'资金/资源截止',type:'date'},{key:'planEnd',label:'计划结束',type:'date',more:true},{key:'version',label:'损益资料版本',options:[['published','已发布算例V1'],['corrected','更正算例V2']],more:true}],definition:'经营规模按订单/履约口径，经营结果按会计确认月份，资金按实际账户日期，资源按采购批次。不同资料范围不混成同一业绩；计划与待确认损耗不当实际支出成本。各主题金额直接引用已验收报表规则。'});
+  const labels={company:'公司',period:'统计期间',currency:'原币',income:'确认收入',cost:'结转成本',gross:'毛利',expense:'经营费用',operating:'经营结果',status:'核对情况',
+    opening:'期初余额',incoming:'实际流入',outgoing:'实际流出',closing:'账户余额',restricted:'受限资金',available:'可用资金',coverage:'资料情况',
+    source:'核对报表',conditions:'统计范围',scope:'责任组织',metric:'任务指标',actual:'实际完成额（元）',target:'任务金额（元）',gap:'未完成金额（元）',completion:'完成率',targetPeriod:'任务期间',
+    risk:'风险类别',objects:'涉及批次数',quantity:'涉及数量',unit:'单位',department:'责任部门',deadline:'最早到期日'};
+  const cols={profit:['company','period','currency','income','cost','gross','expense','operating','status'],
+    funds:['company','currency','closing','restricted','available','coverage'],
+    plan:['scope','metric','period','actual','target','gap','completion','coverage'],
+    resources:['company','risk','objects','quantity','unit','department','deadline','coverage']};
+  const notPlan=q=>q.view!=='plan',isPlan=q=>q.view==='plan';
+  window.CaesarReadonlyReport.mount(host,{title:'经营总览',defaults:m.defaults,views:m.views,query:m.query,labels,explorer:true,clearOnError:true,
+    money:['income','cost','gross','expense','operating','opening','incoming','outgoing','closing','restricted','available','actual','target','gap'],
+    columns:q=>cols[q.view],extras:q=>q.view==='plan'?['targetPeriod','source','conditions']:['source','conditions'],
+    filters:[
+      {key:'company',label:'公司',visible:notPlan},
+      {key:'currency',label:'原币（元）',options:[['CNY','人民币·元'],['EUR','欧元·元']],visible:notPlan},
+      {key:'month',label:'会计/确认月份',type:'month',visible:q=>['profit','resources'].includes(q.view)},
+      {key:'asOf',label:'余额/风险截止',type:'date',visible:q=>['funds','resources'].includes(q.view)},
+      {key:'version',label:'损益版本',options:[['published','已发布算例V1'],['corrected','更正算例V2']],visible:q=>q.view==='profit'},
+      {key:'metric',label:'经营任务指标',options:[['orders','订单净成交额'],['actual','回团成交额']],visible:isPlan},
+      {key:'planCompany',label:'销售公司',options:[['','全部销售公司'],['A','A公司'],['B','B公司']],visible:isPlan},
+      {key:'level',label:'责任层级',options:[['salesDepartment','销售部门'],['company','销售公司'],['group','集团']],visible:isPlan},
+      {key:'planFrom',label:'实际统计开始',type:'date',visible:isPlan},{key:'planThrough',label:'实际统计结束',type:'date',visible:isPlan},
+      {key:'taskVersion',label:'任务版本',options:[['none','正式任务未接入'],['sample','集团5月样例·非批准']],visible:isPlan}
+    ],
+    definition:'损益按会计月；资金按截止日实际余额，不混入预测。计划按所选经营指标和责任层级，金额为人民币元；缺批准任务不计算完成率。风险按公司、类别及数量单位汇总批次，同一批次可能涉及多类风险，不跨类加总；无完整期限、责任资料时显示未提供。明细及办理仍归对应专题。'
+  });
 })();

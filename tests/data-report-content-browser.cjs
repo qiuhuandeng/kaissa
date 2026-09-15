@@ -3,16 +3,16 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const pages = {
-  'performance-reports': ['经营规模', '损益摘要', '资金概况', '计划概况', '风险概况'],
-  'monthly-profit-reports': ['公司损益', '部门损益', '费用构成', '预算差异', '集团调整'],
-  'product-reports': ['经营业绩', '产品结构', '渠道构成', '跨年收客', '经营贡献', '产品风险'],
-  'channel-reports': ['渠道概况', '门店业绩', '呼叫中心', '产品构成', '经营贡献', '毛利校验'],
+  'performance-reports': ['订单业绩', '回团业绩', '损益摘要', '资金概况', '计划概况', '风险概况'],
+  'monthly-profit-reports': ['公司损益', '部门损益', '费用构成', '预算差异', '集团调整', '内部调整'],
+  'product-reports': ['产品订单', '产品回团', '产品结构', '渠道构成', '跨年收客', '经营贡献', '产品风险'],
+  'channel-reports': ['渠道订单', '渠道回团', '门店业绩', '呼叫中心', '产品构成', '经营贡献', '毛利校验'],
   'settlement-reports': ['毛利明细', '部门毛利', '结算异常', '结算调整', '成本分配', '资源风险'],
   'supplier-reports': ['采购汇总', '采购明细', '返点核对', '返点分配', '预付占用'],
   'order-report-details': ['成交净值', '成交变动'],
   'return-report-details': ['实际完成', '已售未完', '完成核对', '完成后调整'],
-  'cashflow-reports': ['收款', '退款', '转款', '付款'],
-  'balance-reports': ['应收余额', '应付余额', '账龄分析', '内部清算'],
+  'cashflow-reports': ['收款', '退款', '转款', '付款', '收付分配', '核销明细', '原款追溯'],
+  'balance-reports': ['应收余额', '应付余额', '账龄分析', '内部清算', '订单收付'],
   'prepayment-reports': ['预收款', '预存款', '预付款', '保证金'],
   'fund-reports': ['账户余额', '账户收支', '收支汇总', '资金计划'],
   'invoice-reports': ['已收未开', '已开未收', '已付未收票', '已收票未付'],

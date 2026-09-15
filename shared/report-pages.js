@@ -344,7 +344,7 @@
     order: "", sourceOrder: "", status: "有效", type: "", supply: "", travel: "", business: "", destination: "", source: "",
     unit: "wan", grouping: "company", comparison: "previous", budget: "none", calendar: "actual", month: "2026-05",
     planStart: "2026-05-08", planEnd: "2027-01-03", confirmYear: "", finishYear: "", settlement: "",
-    productView: "organizations", productLevel: "productOrg", structureBy: "type", crossBasis: "planned",
+    productView: "organizations", productGranularity: "summary", productLevel: "productOrg", structureBy: "type", crossBasis: "planned",
     orderYear: "", targetYear: "", productCompany: "", division: "", ownerState: "", planMonth: "", fulfillmentStatus: "",
     ...((isDetail || isOverview || isProduct) ? { dataQuality: "", ...Object.fromEntries(orderFilterFields.map(([k]) => [k, ""])) } : {}),
     ...(isOverview ? { responsibility: "sales" } : {}),
@@ -378,8 +378,6 @@
   root.innerHTML = '<header class="report-head"><h1>' + titles[page] + '</h1><div class="report-actions"><button class="report-button" type="button" data-export title="导出全查询结果">' + icon("download") + '导出</button></div></header>' +
     '<form class="report-filters"><div class="report-filter-row">' +
     select("version", "数据版本", [["demo-v1", VERSION]], "report-field-wide") +
-    (isOverview ? select("view", "统计内容", [["orders", "订单净值"], ["changes", "当期变化"], ["actual", "实际回团"]]) : "") +
-    (isProduct ? select("view", "金额口径", [["orders", "订单净成交额"], ["actual", "实际回团成交额"]], "report-field-wide") : "") +
     select("company", "销售公司", [["", "演示集团全部"], ...Object.entries(names)]) +
     select("period", "统计期间", [["demo", "演示7日"], ["biweek", "演示14日"], ["month", "本月截至日"], ["quarter", "本季截至日"], ["year", "本年截至日"], ["custom", "自定义"]]) +
     (isOrder ? '<span data-date-basis>' + select("dateBasis", "日期依据", [["confirmed", "订单确认日期"], ["created", "订单创建日期"]]) + '</span>' : '') +
@@ -410,10 +408,10 @@
       select("grouping", "责任分组", Object.entries(overviewModel.levels).filter(([, v]) => v[1] === 'sales').map(([k, v]) => [k, v[0]])) +
       select("comparison", "比较期间", [["previous", "上一等长期间"], ["year", "上年同期"]]) +
       select("budget", "任务版本", [["none", "正式任务未接入"], ["sample", "任务样例·非正式"]], "report-field-wide") + '</div>' : "") +
-    (isProduct ? '<div class="report-filter-row report-more">' +
+    (isProduct ? '<div class="report-filter-row report-more">' + select('productGranularity', '统计层级', [['summary','汇总结果'],['records','组成记录']]) +
       '<span data-product-level>' + select("productLevel", "责任层级", [["productOrg", "产品经营组"], ["division", "产品事业部"], ["productCompany", "产品经营公司"]]) + '</span>' +
       '<span data-product-structure hidden>' + select("structureBy", "结构分类", [["type", "产品类型"], ["destination", "主归属目的地"], ["geographyZone", "地理目的地分区"], ["managementZone", "管理目的地分区"], ["management", "经营分类"], ["travel", "旅游范围"], ["business", "业务线"]]) + '</span>' +
-      '<span data-product-cross hidden>' + select("crossBasis", "完成年份口径", [["planned", "计划完成年份"], ["actual", "实际完成年份"]]) + '</span>' +
+      '<span data-product-cross hidden>' + select("crossBasis", "完成年份口径", [["planned", "计划完成年份"]]) + '</span>' +
       '<span data-product-cross hidden>' + select("orderYear", "订单确认年份", [["", "全部年份"], ["2025", "2025年"], ["2026", "2026年"]]) + '</span>' +
       '<span data-product-cross hidden>' + select("targetYear", "目标完成年份", [["", "全部年份"], ["2026", "2026年"], ["2027", "2027年"]]) + '</span><span data-product-cross hidden>' + input('planMonth', '完成月份（按所选口径）', 'month') + '</span><span data-product-cross hidden>' + select('fulfillmentStatus', '截至日履约情况', [['', '全部'], ...['已完成', '尚未开始', '履约中', '到期未确认', '开始资料待补'].map(v => [v, v])]) + '</span></div>' : "") +
     '<div class="report-query-actions"><button type="submit" class="report-button">查询</button><button type="button" class="report-button" data-reset>重置</button><span class="report-query-status" role="status" data-query-status>已查询</span></div><div class="report-error" role="alert" data-error hidden></div></form>' +
@@ -470,8 +468,9 @@
       const cross = draftProductView === "crossYear";
       root.querySelector("[data-actual-dates]").hidden = cross;
       form.elements.start.required = form.elements.end.required = !cross;
-      form.elements.period.disabled = form.elements.view.disabled = cross;
-      form.elements.period.closest("label").hidden = form.elements.view.closest("label").hidden = cross;
+      form.elements.period.disabled = cross;
+      form.elements.period.closest("label").hidden = cross;
+      form.elements.productGranularity.closest("label").hidden = !["organizations","crossYear"].includes(draftProductView);
       root.querySelector("[data-product-level]").hidden = draftProductView !== "organizations";
       root.querySelector("[data-product-structure]").hidden = !["structure", "channels"].includes(draftProductView);
       root.querySelectorAll("[data-product-cross]").forEach(el => { el.hidden = !cross; });
@@ -550,7 +549,7 @@
     applied = next; draftView = applied.view; draftProductView = applied.productView; pageNumber = 1; render();
   });
   root.querySelector("[data-reset]").addEventListener("click", () => {
-    applied = { ...defaults, version: applied.version, view: (isProduct || isOverview) ? defaults.view : draftView, productView: draftProductView };
+    applied = { ...defaults, version: applied.version, view: draftView, productView: draftProductView };
     draftView = applied.view;
     draftProductView = applied.productView;
     if (isOverview) form.elements.grouping.innerHTML = Object.entries(overviewModel.levels).filter(([, v]) => v[1] === 'sales').map(([k, v]) => '<option value="' + k + '">' + v[0] + '</option>').join('');
@@ -673,7 +672,7 @@
         (["money", "number", "percent"].includes(c.kind) ? "report-numeric " : "") + (typeof r[c.key] === "number" && r[c.key] < 0 ? "report-negative" : "") + '" title="' + esc(cellValue(r, c)) + '">' + esc(cellValue(r, c)) + '</td>').join("") + '</tr>').join("") +
       '</tbody></table>' + (!rows.length ? '<div class="report-empty">' + (applied.view === "adjustments" ? "此演示版本未提供完成后调整记录" : "当前条件无匹配的演示记录") + '</div>' : "") + '</div>';
   }
-  function columnSelectionKey() { return isProduct ? applied.productView + ":" + applied.crossBasis : applied.view; }
+  function columnSelectionKey() { return isProduct ? [applied.productView, applied.view, applied.crossBasis, applied.productGranularity].join(":") : applied.view; }
   function columnMenu(all) {
     const view = columnSelectionKey();
     if (!selectedColumns[view]) selectedColumns[view] = new Set(all.filter(c => !c.optional).map(c => c.key));
@@ -791,7 +790,7 @@
   function renderOverview() {
     const result = overviewData(), p = result.periods, sources = overviewSources(result), u = unitLabel();
     const all = [
-      column("name", overviewModel.levels[applied.grouping][0]), column("amount", applied.view === "actual" ? "本期回团金额" : applied.view === "changes" ? "本期变动金额" : "本期订单净成交额", "money"),
+      column("name", overviewModel.levels[applied.grouping][0]), column("amount", applied.view === "actual" ? "本期回团成交额" : "本期订单净成交额", "money"),
       column("previous", applied.comparison === 'year' ? "上年同期金额" : "上一等长期间金额"), column("difference", "变动额"), column("growth", applied.comparison === 'year' ? "同比增长率" : "期间增长率"),
       column("monthly", "本月累计", "money"), column("target", "本月任务", "money"), column("completion", "月度完成率", "percent"),
       column("yearly", "年累计", "money"), column("annualTarget", "年度任务"), column("annualCompletion", "年度完成率"),
@@ -802,30 +801,21 @@
     const menu = columnMenu(all), cols = all.filter(c => selectedColumns[columnSelectionKey()].has(c.key));
     activeTable = { rows: [...sorted(result.rows), result.total], columns: cols };
     const range = r => r.start + ' 至 ' + r.end;
-    const pending = result.actualRows.filter(r => r.settlement === '待结算');
-    const coverageText = rows => { const c = amountCoverage(rows); return (c.unknown || c.unallocated) ? '金额缺数 ' + (c.unknown + c.unallocated) + ' 条' : rows.length + ' 条明细'; };
-    return '<dl class="report-metrics">' + metric("本期订单净成交额（" + u + "）", amount(amountCoverage(result.orderRows).value), orderCount(result.orderRows) + " 个有效订单 · " + coverageText(result.orderRows)) +
-      metric("本期实际回团成交额（" + u + "）", amount(amountCoverage(result.actualRows).value), coverageText(result.actualRows)) +
-      metric("已确认业务毛利", "待确认", "未提供可归属的结算收入及成本", true) +
-      metric("已完成待结算额（" + u + "）", amount(amountCoverage(pending).value), "分配成交额，非确认收入 · " + coverageText(pending)) + '</dl>' +
-      '<section class="report-section">' + tabs() + '<div class="report-section-head"><h2>' + (applied.view === "actual" ? "回团业绩汇总" : applied.view === "changes" ? "成交变动汇总" : "订单业绩汇总") + '</h2><span class="report-muted" data-comparison-period>对比期：' + range(p.previous) + ' · 未提供完整资料</span></div>' +
-      '<p class="report-query-status" data-accumulation-period>本月累计：' + range(p.month) + ' · 年累计：' + range(p.year) + '</p>' + menu + tableHTML(activeTable.rows, cols) +
+    return '<section class="report-section">' +
+      '<p class="report-query-status" data-comparison-period>对比期：' + range(p.previous) + ' · 未提供完整资料</p>' +
+      '<p class="report-query-status" data-accumulation-period>本月累计：' + range(p.month) + ' · 年累计：' + range(p.year) + '</p>' +
+      menu + tableHTML(activeTable.rows, cols) +
       '<div class="report-total"><span data-total>' + totalLabel(result.facts) + '</span><span>' +
-      (result.sample ? '集团5月任务算例（非批准） · 月度完成率 ' + (typeof result.total.completion === 'number' ? result.total.completion.toFixed(2) + '%' : '未计算') : '无匹配批准任务，不计算完成率') + '</span></div></section>' +
-      '<section class="report-section"><div class="report-section-head"><h2>任务与完成率</h2><span class="report-muted">' + (applied.view === 'changes' ? '成交变化不作为任务考核指标' : '任务和实际须同指标、同责任范围') + '</span></div>' + tableHTML(overviewTasks(result), overviewTaskColumns(), 'tasks', false) + '</section>' +
-      '<section class="report-section"><div class="report-section-head"><h2>期间趋势</h2><span class="report-muted">8个等长期间 · 仅演示样例，非完整经营数据</span></div><div class="report-chart-wrap"><canvas class="report-chart" aria-label="期间样例金额趋势，下方为同一组数据表" role="img"></canvas></div><div data-trend-table></div></section>' +
-      '<section class="report-section"><div class="report-section-head"><h2>已售未完成安排</h2><span class="report-muted">截至数据截止日 ' + CUTOFF + ' · 全部计划日期，含到期未确认</span></div>' +
-      tableHTML(result.futureGroups, [column("planned", "计划完成日"), column("orders", "订单数", "number"), column("amount", "未完成安排额", "money")], "future", false) +
-      '<div class="report-total">未完成安排合计 ' + amount(amountCoverage(result.future).value) + ' ' + u + '</div></section>' +
-      '<section class="report-section"><details class="ov-sources"><summary>本期来源明细（' + result.facts.length + '条）</summary>' + tableHTML(sources.rows, sources.columns, 'sources', false) + '</details></section>';
+      (result.sample ? '集团5月任务算例（非批准）' : '无匹配批准任务，不计算完成率') + '</span></div></section>';
   }
+
   function productColumns() {
     const category = { type: "产品类型", destination: "主归属目的地", geographyZone: '地理目的地分区', managementZone: '管理目的地分区', management: '经营分类', travel: "旅游范围", business: "业务线" }[applied.structureBy];
     if (applied.productView === "organizations") return [
       column("name", { productOrg: "产品经营组", division: "产品事业部", productCompany: "产品经营公司" }[applied.productLevel]),
       ...(applied.productLevel !== "productCompany" ? [column("productCompany", "经营公司")] : []),
       column("division", "事业部", "", applied.productLevel !== 'productOrg'), column("owner", "负责人", 'product'),
-      column("amount", applied.view === "actual" ? "本期回团金额" : "本期订单净成交额", "money"), column("previous", applied.view === "actual" ? "上期回团金额" : "上期成交额"), column("growth", "环比"),
+      column("amount", applied.view === "orders" ? "本期订单净成交额" : "本期回团成交额", "money"), column("previous", "上期成交额"), column("growth", "环比"),
       column("lastYear", "上年同期额"), column("annualGrowth", "同比"), column("yearly", "年累计", "money"),
       column("annualTarget", "年度任务"), column("completion", "年度完成率"), column("orders", "订单数", "number", true),
       column('monthly', '本月累计', 'money', true), column('monthlyTarget', '本月任务', '', true), column('monthlyCompletion', '月度完成率', '', true),
@@ -835,10 +825,10 @@
     if (applied.productView === "structure") return [
       column("name", category), column("selfAmount", "自营组织", "money"), column("internalAmount", "集团内部供应", "money"),
       column("externalAmount", "外部采购", "money"), column("unknownAmount", "供应关系待归类", "money"),
-      column("amount", applied.view === "actual" ? "回团金额合计" : "成交额合计", "money"), column("share", "占本范围比例", "percent"), column("orders", "订单数", "number", true)
+      column("amount", "成交额合计", "money"), column("share", "占本范围比例", "percent"), column("orders", "订单数", "number", true)
     ];
     if (applied.productView === "channels") return [
-      column("name", category), column("amount", applied.view === "actual" ? "所选渠道回团金额" : "所选渠道成交额", "money"), column("share", "占所选渠道比例", "percent"),
+      column("name", category), column("amount", "所选渠道成交额", "money"), column("share", "占所选渠道比例", "percent"),
       column("allAmount", "同范围全部渠道额", "money"), column("contribution", "该渠道贡献比例", "percent"), column("orders", "订单数", "number", true)
     ];
     return [
@@ -859,7 +849,7 @@
   }
   function productSources(result) {
     const columns = [column('order', '订单号'), column('sourceOrder', '来源订单号'), column('record', '销售内容／完成记录号'), column('product', '销售内容', 'product'),
-      column('confirmed', '订单确认日'), column('planned', '计划完成日'), column('actual', '实际完成日'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '截至日履约情况'), column('amount', '分配成交额', 'money'),
+      column('confirmed', '订单确认日'), column('planned', '计划完成日'), column('actual', '实际完成日'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '截至日履约情况'), column('amount', applied.productView === 'crossYear' ? '销售内容分配额' : applied.view === 'orders' ? '订单净成交额' : '实际完成分配成交额', 'money'),
       column('company', '销售公司'), column('salesDepartment', '销售部门'), column('productCompany', '产品经营公司'), column('division', '产品事业部'),
       column('productOrg', '产品经营组'), column('productLeader', '产品部门领导'), column('owner', '产品负责人'), column('supply', '供应关系'),
       column('geographyZone', '地理目的地分区'), column('managementZone', '管理目的地分区'), column('management', '经营分类'), column('channel', '主成交渠道'), column('organizationVersion', '发生时组织版本')];
@@ -879,41 +869,16 @@
   }
   const productPeriodColumns = () => [column('name', '比较／任务'), column('actual', '实际统计期间'), column('reference', '比较／任务期间'), column('basis', '计算依据与资料')];
   function renderProduct() {
-    const result = productReport(applied), all = productColumns(), menu = columnMenu(all);
-    const columns = all.filter(c => selectedColumns[columnSelectionKey()].has(c.key));
-    const rows = sorted(result.rows), pager = pagination(rows.length);
+    const result = productReport(applied);
+    const records = ["organizations","crossYear"].includes(applied.productView) && applied.productGranularity === 'records';
+    const source = records ? productSources(result) : null;
+    const all = records ? source.columns.map(c => ({...c, optional: !['record','order','product','amount','company','productOrg','confirmed','planned','actual'].includes(c.key)})) : productColumns();
+    const menu = columnMenu(all), columns = all.filter(c => selectedColumns[columnSelectionKey()].has(c.key));
+    const rows = sorted(records ? source.rows : result.rows), pager = pagination(rows.length);
     activeTable = { rows, columns };
-    const total = productAmount(result.facts), u = unitLabel();
-    let metrics;
-    if (applied.productView === "crossYear") {
-      metrics = metric(applied.crossBasis === "actual" ? "实际完成额（" + u + "）" : "截至日已售额（" + u + "）", total, "按所选完成年份归集") +
-        (applied.crossBasis === "actual" ? metric("往年订单完成额（" + u + "）", productAmount(result.facts.filter(r => r.confirmed.slice(0, 4) < r.actual.slice(0, 4))), "订单确认年份早于实际完成年份") :
-          metric("已实际完成额（" + u + "）", productAmount(result.facts.filter(r => r.actual && r.actual <= CUTOFF)), "按已完成记录的分配成交额")) +
-        (applied.crossBasis === "actual" ? metric("同年订单完成额（" + u + "）", productAmount(result.facts.filter(r => r.confirmed.slice(0, 4) === r.actual.slice(0, 4))), "订单确认与实际完成在同一年") : metric("未完成安排额（" + u + "）", productAmount(result.facts.filter(r => !r.actual || r.actual > CUTOFF)), "未作为实际回团或确认收入")) +
-        metric("订单数", orderCount(result.facts), "全查询范围去重");
-    } else if (applied.productView === "channels") {
-      const ratio = productShare(result.facts, result.allRows);
-      metrics = metric((applied.view === "actual" ? "所选渠道回团金额" : "所选渠道成交额") + "（" + u + "）", total, applied.channel || "全部主成交渠道") +
-        metric("同范围全部渠道额（" + u + "）", productAmount(result.allRows), "保留公司、产品、门店和期间条件") +
-        metric("渠道贡献比例", typeof ratio === 'number' ? ratio.toFixed(2) + '%' : ratio, "所选渠道额 / 同范围全部渠道额") +
-        metric("订单数", orderCount(result.facts), "所选渠道内去重");
-    } else {
-      metrics = metric((applied.view === "orders" ? "订单净成交额" : "实际回团成交额") + "（" + u + "）", total, "当前已查询期间及产品责任范围") +
-        metric("订单数", orderCount(result.facts), "按订单号去重") +
-        metric("目的地待补充额（" + u + "）", productAmount(result.facts.filter(r => missingFact(r.destination))), "保留在成交合计中") +
-        metric("年度任务", "未提供", "未提供产品责任范围批准任务", true);
-    }
-    return '<dl class="report-metrics">' + metrics + '</dl><section class="report-section"><div class="report-tabbar" role="tablist" aria-label="产品分析视图">' +
-      Object.entries(productViews).map(([value, title]) => '<button type="button" class="report-tab" role="tab" data-product-view="' + value + '" aria-selected="' + (draftProductView === value) + '">' + title + '</button>').join("") +
-      '</div><div class="report-section-head"><h2>' + (applied.productView === 'crossYear' ? (applied.crossBasis === 'actual' ? '跨年回团分析' : '跨年完成计划') : (applied.view === 'actual' ? '回团产品分析 · ' : '订单产品分析 · ') + productViews[applied.productView]) + '</h2><span class="report-muted">' +
-      (applied.productView === "crossYear" ? (applied.crossBasis === "actual" ? "按实际完成年份" : "按计划完成年份") + " · 截至2026-05-07" : (applied.view === "orders" ? "订单确认日" : "实际完成日") + " · " + applied.start + " 至 " + applied.end) +
-      '</span></div>' + menu + tableHTML(rows.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), columns) +
-      '<div class="report-total"><span data-total>' + productTotal(result) + '</span>' + pager + '</div></section>' +
-      (applied.productView === 'organizations' ? '<section class="report-section"><h2>比较期间与任务依据</h2>' + tableHTML(productPeriodRows(result), productPeriodColumns(), 'periods', false) + '</section>' : '') +
-      (applied.productView === 'crossYear' && applied.crossBasis !== 'actual' ? '<section class="report-section"><h2>未完成月份与状态</h2>' + tableHTML(pendingMonths(result.facts), [column('company', '销售公司'), column('productCompany', '产品公司'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '未完成情况'), column('amount', '未完成安排额', 'money'), column('orders', '订单数', 'number')], 'pending-months', false) + '</section>' : '') +
-      '<section class="report-section"><div class="report-section-head"><h2>' + (applied.productView === "crossYear" ? (applied.crossBasis === "actual" ? "回团年份构成" : "计划完成构成") : applied.view === "actual" ? "回团金额构成" : "成交构成") + '</h2><span class="report-muted">金额单位：' + u + ' · 全查询范围</span></div>' +
-      '<div class="report-chart-wrap"><canvas class="report-chart" role="img" aria-label="当前查询成交额构成，数值见上方报表"></canvas></div></section>' +
-      '<section class="report-section"><details class="report-product-sources"><summary>本次查询来源明细（' + result.facts.length + '条）</summary>' + tableHTML(productSources(result).rows, productSources(result).columns, 'sources', false) + '</details></section>';
+    return '<section class="report-section">' + menu +
+      tableHTML(rows.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), columns) +
+      '<div class="report-total"><span data-total>' + productTotal(result) + '</span>' + pager + '</div></section>';
   }
   function drawProductChart() {
     const canvas = root.querySelector("canvas"); if (!canvas) return;
@@ -1002,7 +967,7 @@
       "供应分类：自营组织、集团内部供应、外部采购和待归类分别统计；自营／甄选／外采的集团正式经营分类仍待确认，不把内部供应强行算作外采。",
       "目的地：每项销售内容只按一个主归属目的地计入；未提供目的地仍保留待补充行。多目的地的正式分配政策待确认，不在报表按途经国家重复计数。",
       "渠道比例：占所选渠道比例以该渠道查询总额为分母；渠道贡献比例只解除主成交渠道筛选，公司、产品、门店及期间等条件保持不变。分母非正时不计算比例。",
-      "跨年收客：按截至日全部有效已售记录及目标完成年份统计，不套用本期订单确认日期；计划年份表分别列实际完成与未完成安排，实际年份表只列已完成。两张表不能相加。",
+      "跨年收客：按截至日全部有效已售记录及目标完成年份统计，不套用本期订单确认日期；本页按计划完成年份列实际完成与未完成安排，汇总和组成记录金额相同，不能相加。实际完成分析见产品回团。",
       "比较及任务：上期为相邻等长期间，上年同日遇闰日取有效月末仅为演示约定，正式日历待确认。月度、年度、累计进度任务分别匹配，不读取集团算例或预算草稿；完整同期、批准任务缺失不生成增长率或完成率。",
       "缺失资料：同组已知负责人和待补充同时保留；部分金额缺失只列已知金额和缺失条数，不计算占比。数量不作为旅客人次。跨年收客固定按数据截止日，不提供历史时点还原。"
     ].map(t => "<p>" + t + "</p>").join("");
@@ -1087,7 +1052,7 @@
       comparison: "比较期间", responsibility: "分析责任", budget: "任务版本", calendar: "日期口径", month: "管理月（仅管理月查询适用）",
       planStart: "计划完成开始日（仅未来安排适用）", planEnd: "计划完成结束日（仅未来安排适用）", planMonth: '完成月份（按所选口径）', fulfillmentStatus: '截至日履约情况',
       confirmYear: "订单确认年份", finishYear: "完成／计划年份", settlement: "结算状态",
-      productView: "产品分析视图", productLevel: "责任层级", structureBy: "结构分类", crossBasis: "完成年份口径",
+      productView: "产品分析视图", productGranularity: "统计层级", productLevel: "责任层级", structureBy: "结构分类", crossBasis: "完成年份口径",
       orderYear: "订单确认年份", targetYear: "目标完成年份", productCompany: "产品经营公司", division: "产品事业部", ownerState: "负责人资料",
       dateBasis: "日期依据", dataQuality: "资料情况", incomeStatus: "收入确认资料", costStatus: "成本确认资料", ...Object.fromEntries(orderFilterFields)
     };
@@ -1117,26 +1082,17 @@
         const control = form.elements[k];
         const option = control?.tagName === "SELECT" ? Array.from(control.options).find(o => o.value === v)?.textContent : null;
         const orderOption = (isDetail || isOverview || isProduct) && orderFilterFields.some(([key]) => key === k) ? orderOptions(k).find(([value]) => value === v)?.[1] : null;
-        return [isReturn && k === "finishYear" ? (applied.view === "future" ? "计划完成年份" : "实际完成年份") : filterLabels[k], k === "productView" ? productViews[v] : k === "view" ? viewNames[v] : isOverview && k === 'grouping' ? overviewModel.levels[v][0] : orderOption || option || v];
+        return [isReturn && k === "finishYear" ? (applied.view === "future" ? "计划完成年份" : "实际完成年份") : filterLabels[k], k === "productView" ? (v === "organizations" ? applied.view === "actual" ? "产品回团" : "产品订单" : productViews[v]) : k === "view" ? viewNames[v] : isOverview && k === 'grouping' ? overviewModel.levels[v][0] : orderOption || option || v];
       }), ["全查询合计", isProduct ? productTotal() : isOverview ? totalLabel(overviewData().facts) : totalLabel(activeTable.rows)], []
     ];
     const extra = [];
-    if (isProduct) {
-      const result = productReport(applied), sources = productSources(result);
-      const section = (name, rows, cols) => extra.push([], [name], cols.map(c => c.label + (c.kind === 'money' ? '（' + unitLabel() + '）' : '')), ...rows.map(r => cols.map(c => cellValue(r, c, true))));
-      if (applied.productView === 'organizations') section('比较期间与任务依据', productPeriodRows(result), productPeriodColumns());
-      if (applied.productView === 'crossYear' && applied.crossBasis !== 'actual') section('未完成月份与状态', pendingMonths(result.facts), [column('company', '销售公司'), column('productCompany', '产品公司'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '未完成情况'), column('amount', '未完成安排额', 'money'), column('orders', '订单数', 'number')]);
-      section('本次查询来源明细', sources.rows, sources.columns);
-      if (applied.productView === 'channels') section('同范围全部渠道来源（仅解除主渠道）', productSources({ facts: result.allRows }).rows, sources.columns);
+    if (isProduct && applied.productView === 'organizations') {
+      productPeriodRows(productReport(applied)).forEach(r => metadata.push([r.name, r.actual, r.reference, r.basis]));
     }
     if (isOverview) {
       const result = overviewData(), sources = overviewSources(result), p = result.periods;
-      metadata.push(['比较起止日', p.previous.start, p.previous.end, '未提供完整资料'], ['月累计起止日', p.month.start, p.month.end], ['年累计起止日', p.year.start, p.year.end]);
-      const section = (name, rows, cols) => extra.push([], [name], cols.map(c => c.label + (c.kind === 'money' ? '（' + unitLabel() + '）' : '')), ...rows.map(r => cols.map(c => cellValue(r, c, true))));
-      section('任务与完成率', overviewTasks(result), overviewTaskColumns());
-      section('期间趋势（演示样例）', result.trend, [column('period', '期间'), column('amount', '样例金额', 'money'), column('coverage', '资料范围')]);
-      section('数据截止日全部已售未完成安排（非查询结束日历史结果）', result.futureGroups, [column('planned', '计划完成日'), column('orders', '订单数', 'number'), column('amount', '未完成安排额', 'money')]);
-      section('本期来源明细', sources.rows, sources.columns);
+      metadata.push(['比较起止日', p.previous.start, p.previous.end, '未提供完整资料'], ['月累计起止日', p.month.start, p.month.end], ['年累计起止日', p.year.start, p.year.end], ['月度任务期间', p.monthTarget.start, p.monthTarget.end], ['年度任务期间', p.annualTarget.start, p.annualTarget.end], ['累计任务期间', p.cumulative.start, p.cumulative.end], ['完成率说明', '月累计/完整月任务；年累计/全年任务；年累计/同期累计任务；缺批准任务不计算']);
+
     }
     const csv = metadata.concat([activeTable.columns.map(c => c.label + (c.kind === "money" ? "（" + unitLabel() + "）" : ""))],
       activeTable.rows.map(r => activeTable.columns.map(c => cellValue(r, c, true))), extra).map(row => row.map(csvCell).join(",")).join("\r\n");
@@ -1156,7 +1112,7 @@
       Object.keys(selectedColumns).forEach(k => delete selectedColumns[k]); Object.entries(s.columns).forEach(([k,v]) => selectedColumns[k] = new Set(v));
       if (isOverview) form.elements.grouping.innerHTML = Object.entries(overviewModel.levels).filter(([,v]) => v[1] === s.draft.responsibility).map(([k,v]) => '<option value="' + k + '">' + v[0] + '</option>').join('');
       setForm(s.draft); refreshTeams(); refreshOrderOrganizations(); setForm(s.draft); updateDateControls(); render(); },
-    activate: key => { applied = { ...defaults, ...(isProduct ? { productView: key } : isOverview ? {} : { view: key }) }; draftView = applied.view; draftProductView = applied.productView;
+    activate: key => { applied = { ...defaults, ...(isProduct ? { productView: key === "completed" ? "organizations" : key, view: key === "organizations" ? "orders" : "actual" } : isOverview ? { view: key === "actual" ? "actual" : "orders" } : { view: key }) }; draftView = applied.view; draftProductView = applied.productView;
       pageNumber = 1; sortKey = ''; setForm(applied); refreshTeams(); refreshOrderOrganizations(); updateDateControls(); render(); },
     show: key => { if (isReturn) showReturnFinance(key === 'financial'); }
   });
