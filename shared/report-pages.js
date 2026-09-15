@@ -791,7 +791,7 @@
   function renderOverview() {
     const result = overviewData(), p = result.periods, sources = overviewSources(result), u = unitLabel();
     const all = [
-      column("name", overviewModel.levels[applied.grouping][0]), column("amount", "本期金额", "money"),
+      column("name", overviewModel.levels[applied.grouping][0]), column("amount", applied.view === "actual" ? "本期回团金额" : applied.view === "changes" ? "本期变动金额" : "本期订单净成交额", "money"),
       column("previous", applied.comparison === 'year' ? "上年同期金额" : "上一等长期间金额"), column("difference", "变动额"), column("growth", applied.comparison === 'year' ? "同比增长率" : "期间增长率"),
       column("monthly", "本月累计", "money"), column("target", "本月任务", "money"), column("completion", "月度完成率", "percent"),
       column("yearly", "年累计", "money"), column("annualTarget", "年度任务"), column("annualCompletion", "年度完成率"),
@@ -808,7 +808,7 @@
       metric("本期实际回团成交额（" + u + "）", amount(amountCoverage(result.actualRows).value), coverageText(result.actualRows)) +
       metric("已确认业务毛利", "待确认", "未提供可归属的结算收入及成本", true) +
       metric("已完成待结算额（" + u + "）", amount(amountCoverage(pending).value), "分配成交额，非确认收入 · " + coverageText(pending)) + '</dl>' +
-      '<section class="report-section">' + tabs() + '<div class="report-section-head"><h2>经营对照</h2><span class="report-muted" data-comparison-period>对比期：' + range(p.previous) + ' · 未提供完整资料</span></div>' +
+      '<section class="report-section">' + tabs() + '<div class="report-section-head"><h2>' + (applied.view === "actual" ? "回团业绩汇总" : applied.view === "changes" ? "成交变动汇总" : "订单业绩汇总") + '</h2><span class="report-muted" data-comparison-period>对比期：' + range(p.previous) + ' · 未提供完整资料</span></div>' +
       '<p class="report-query-status" data-accumulation-period>本月累计：' + range(p.month) + ' · 年累计：' + range(p.year) + '</p>' + menu + tableHTML(activeTable.rows, cols) +
       '<div class="report-total"><span data-total>' + totalLabel(result.facts) + '</span><span>' +
       (result.sample ? '集团5月任务算例（非批准） · 月度完成率 ' + (typeof result.total.completion === 'number' ? result.total.completion.toFixed(2) + '%' : '未计算') : '无匹配批准任务，不计算完成率') + '</span></div></section>' +
@@ -825,7 +825,7 @@
       column("name", { productOrg: "产品经营组", division: "产品事业部", productCompany: "产品经营公司" }[applied.productLevel]),
       ...(applied.productLevel !== "productCompany" ? [column("productCompany", "经营公司")] : []),
       column("division", "事业部", "", applied.productLevel !== 'productOrg'), column("owner", "负责人", 'product'),
-      column("amount", "本期成交额", "money"), column("previous", "上期成交额"), column("growth", "环比"),
+      column("amount", applied.view === "actual" ? "本期回团金额" : "本期订单净成交额", "money"), column("previous", applied.view === "actual" ? "上期回团金额" : "上期成交额"), column("growth", "环比"),
       column("lastYear", "上年同期额"), column("annualGrowth", "同比"), column("yearly", "年累计", "money"),
       column("annualTarget", "年度任务"), column("completion", "年度完成率"), column("orders", "订单数", "number", true),
       column('monthly', '本月累计', 'money', true), column('monthlyTarget', '本月任务', '', true), column('monthlyCompletion', '月度完成率', '', true),
@@ -835,10 +835,10 @@
     if (applied.productView === "structure") return [
       column("name", category), column("selfAmount", "自营组织", "money"), column("internalAmount", "集团内部供应", "money"),
       column("externalAmount", "外部采购", "money"), column("unknownAmount", "供应关系待归类", "money"),
-      column("amount", "成交额合计", "money"), column("share", "占本范围比例", "percent"), column("orders", "订单数", "number", true)
+      column("amount", applied.view === "actual" ? "回团金额合计" : "成交额合计", "money"), column("share", "占本范围比例", "percent"), column("orders", "订单数", "number", true)
     ];
     if (applied.productView === "channels") return [
-      column("name", category), column("amount", "所选渠道成交额", "money"), column("share", "占所选渠道比例", "percent"),
+      column("name", category), column("amount", applied.view === "actual" ? "所选渠道回团金额" : "所选渠道成交额", "money"), column("share", "占所选渠道比例", "percent"),
       column("allAmount", "同范围全部渠道额", "money"), column("contribution", "该渠道贡献比例", "percent"), column("orders", "订单数", "number", true)
     ];
     return [
@@ -893,7 +893,7 @@
         metric("订单数", orderCount(result.facts), "全查询范围去重");
     } else if (applied.productView === "channels") {
       const ratio = productShare(result.facts, result.allRows);
-      metrics = metric("所选渠道成交额（" + u + "）", total, applied.channel || "全部主成交渠道") +
+      metrics = metric((applied.view === "actual" ? "所选渠道回团金额" : "所选渠道成交额") + "（" + u + "）", total, applied.channel || "全部主成交渠道") +
         metric("同范围全部渠道额（" + u + "）", productAmount(result.allRows), "保留公司、产品、门店和期间条件") +
         metric("渠道贡献比例", typeof ratio === 'number' ? ratio.toFixed(2) + '%' : ratio, "所选渠道额 / 同范围全部渠道额") +
         metric("订单数", orderCount(result.facts), "所选渠道内去重");
@@ -905,13 +905,13 @@
     }
     return '<dl class="report-metrics">' + metrics + '</dl><section class="report-section"><div class="report-tabbar" role="tablist" aria-label="产品分析视图">' +
       Object.entries(productViews).map(([value, title]) => '<button type="button" class="report-tab" role="tab" data-product-view="' + value + '" aria-selected="' + (draftProductView === value) + '">' + title + '</button>').join("") +
-      '</div><div class="report-section-head"><h2>' + productViews[applied.productView] + '</h2><span class="report-muted">' +
+      '</div><div class="report-section-head"><h2>' + (applied.productView === 'crossYear' ? (applied.crossBasis === 'actual' ? '跨年回团分析' : '跨年完成计划') : (applied.view === 'actual' ? '回团产品分析 · ' : '订单产品分析 · ') + productViews[applied.productView]) + '</h2><span class="report-muted">' +
       (applied.productView === "crossYear" ? (applied.crossBasis === "actual" ? "按实际完成年份" : "按计划完成年份") + " · 截至2026-05-07" : (applied.view === "orders" ? "订单确认日" : "实际完成日") + " · " + applied.start + " 至 " + applied.end) +
       '</span></div>' + menu + tableHTML(rows.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), columns) +
       '<div class="report-total"><span data-total>' + productTotal(result) + '</span>' + pager + '</div></section>' +
       (applied.productView === 'organizations' ? '<section class="report-section"><h2>比较期间与任务依据</h2>' + tableHTML(productPeriodRows(result), productPeriodColumns(), 'periods', false) + '</section>' : '') +
       (applied.productView === 'crossYear' && applied.crossBasis !== 'actual' ? '<section class="report-section"><h2>未完成月份与状态</h2>' + tableHTML(pendingMonths(result.facts), [column('company', '销售公司'), column('productCompany', '产品公司'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '未完成情况'), column('amount', '未完成安排额', 'money'), column('orders', '订单数', 'number')], 'pending-months', false) + '</section>' : '') +
-      '<section class="report-section"><div class="report-section-head"><h2>成交构成</h2><span class="report-muted">金额单位：' + u + ' · 全查询范围</span></div>' +
+      '<section class="report-section"><div class="report-section-head"><h2>' + (applied.productView === "crossYear" ? (applied.crossBasis === "actual" ? "回团年份构成" : "计划完成构成") : applied.view === "actual" ? "回团金额构成" : "成交构成") + '</h2><span class="report-muted">金额单位：' + u + ' · 全查询范围</span></div>' +
       '<div class="report-chart-wrap"><canvas class="report-chart" role="img" aria-label="当前查询成交额构成，数值见上方报表"></canvas></div></section>' +
       '<section class="report-section"><details class="report-product-sources"><summary>本次查询来源明细（' + result.facts.length + '条）</summary>' + tableHTML(productSources(result).rows, productSources(result).columns, 'sources', false) + '</details></section>';
   }

@@ -22,6 +22,13 @@ const pages = {
   'report-scenarios': ['销售与内部供货', '跨年分次完成', '包舱跨团及未售', '同产品多渠道', '企业分期与逾期', '后补成本与代收']
 };
 
+const archivedPages = [
+  'finance-dashboard-v2',
+  'finance-dashboard-v3',
+  'performance-reports-legacy',
+  'product-analysis'
+];
+
 let socket;
 let sequence = 0;
 const pending = new Map();
@@ -34,7 +41,7 @@ function send(method, params = {}) {
   });
 }
 
-async function open(url) {
+async function open(url, requireReportTabs = true) {
   const target = await (await fetch('http://127.0.0.1:9222/json/new?' + encodeURIComponent(url), { method: 'PUT' })).json();
   socket = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
@@ -51,7 +58,7 @@ async function open(url) {
   await send('Runtime.enable');
   await send('Page.enable');
   await evaluate(`new Promise(resolve => {
-    const ready = () => document.readyState === 'complete' && document.querySelector('[data-report-tab], [data-fr-view]') ? resolve(true) : setTimeout(ready, 25);
+    const ready = () => document.readyState === 'complete' && (${JSON.stringify(requireReportTabs)} ? document.querySelector('[data-report-tab], [data-fr-view]') : true) ? resolve(true) : setTimeout(ready, 25);
     ready();
   })`);
   return target.id;
@@ -73,6 +80,37 @@ async function inspect(tab) {
       const first = tables[0];
       const businessRows = first ? [...first.querySelectorAll('tbody tr')].filter(row => !row.querySelector('.cf-empty, .report-empty')).length : 0;
       const text = document.body.innerText;
+      const misalignedCells = tables.flatMap((table, tableIndex) =>
+        [...table.querySelectorAll('th, td')]
+          .filter(visible)
+          .filter(cell => !['left', 'start'].includes(getComputedStyle(cell).textAlign))
+          .map(cell => ({
+            table: tableIndex + 1,
+            tag: cell.tagName.toLowerCase(),
+            text: cell.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
+            textAlign: getComputedStyle(cell).textAlign
+          }))
+      );
+      const misalignedHeaderControls = tables.flatMap((table, tableIndex) =>
+        [...table.querySelectorAll('th > button, th > a')]
+          .filter(visible)
+          .filter(control => {
+            const style = getComputedStyle(control);
+            const textAligned = ['left', 'start'].includes(style.textAlign);
+            const flexAligned = !['flex', 'inline-flex'].includes(style.display) || ['flex-start', 'start', 'normal'].includes(style.justifyContent);
+            return !textAligned || !flexAligned;
+          })
+          .map(control => {
+            const style = getComputedStyle(control);
+            return {
+              table: tableIndex + 1,
+              text: control.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
+              display: style.display,
+              textAlign: style.textAlign,
+              justifyContent: style.justifyContent
+            };
+          })
+      );
       resolve({
         selected: [...document.querySelectorAll('[data-report-tab][aria-selected="true"], [data-fr-view][aria-selected="true"]')].find(visible)?.textContent.trim(),
         tables: tables.length,
@@ -81,10 +119,45 @@ async function inspect(tab) {
         redundant: text.match(/演示|非正式|算例|来源待接入|待补资料/g) || [],
         datasetFilters: [...document.querySelectorAll('[name="dataset"]')].filter(visible).length,
         notices: [...document.querySelectorAll('.cf-notice, .report-meta, .data-report-filter-surface [role="status"]')].filter(visible).map(item => item.textContent.trim()),
-        alerts: [...document.querySelectorAll('[role="alert"]')].filter(visible).map(item => item.textContent.trim())
+        alerts: [...document.querySelectorAll('[role="alert"]')].filter(visible).map(item => item.textContent.trim()),
+        misalignedCells,
+        misalignedHeaderControls
       });
     }, 120);
   })`);
+}
+
+async function inspectArchived() {
+  return evaluate(`(() => {
+    const cells = [...document.querySelectorAll('table th, table td')];
+    const controls = [...document.querySelectorAll('table th > button, table th > a')];
+    return {
+      tables: document.querySelectorAll('table').length,
+      misalignedCells: cells
+        .filter(cell => !['left', 'start'].includes(getComputedStyle(cell).textAlign))
+        .map(cell => ({
+          tag: cell.tagName.toLowerCase(),
+          text: cell.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
+          textAlign: getComputedStyle(cell).textAlign
+        })),
+      misalignedHeaderControls: controls
+        .filter(control => {
+          const style = getComputedStyle(control);
+          const textAligned = ['left', 'start'].includes(style.textAlign);
+          const flexAligned = !['flex', 'inline-flex'].includes(style.display) || ['flex-start', 'start', 'normal'].includes(style.justifyContent);
+          return !textAligned || !flexAligned;
+        })
+        .map(control => {
+          const style = getComputedStyle(control);
+          return {
+            text: control.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
+            display: style.display,
+            textAlign: style.textAlign,
+            justifyContent: style.justifyContent
+          };
+        })
+    };
+  })()`);
 }
 
 (async () => {
@@ -108,6 +181,8 @@ async function inspect(tab) {
         assert.equal(result.datasetFilters, 0, '仍显示资料范围筛选');
         assert.deepEqual(result.notices, []);
         assert.deepEqual(result.alerts, []);
+        assert.deepEqual(result.misalignedCells, [], '仍有未左对齐的表头或单元格');
+        assert.deepEqual(result.misalignedHeaderControls, [], '仍有未左对齐的表头排序控件');
       } catch (error) {
         failures.push({ file, tab, error: error.message, result });
       }
@@ -115,7 +190,23 @@ async function inspect(tab) {
     socket.close();
     await fetch('http://127.0.0.1:9222/json/close/' + targetId);
   }
-  console.log(JSON.stringify({ checked: results.length, failures }, null, 2));
+  for (const file of archivedPages) {
+    const url = process.env.REPORT_BASE_URL
+      ? process.env.REPORT_BASE_URL.replace(/\/$/, '') + '/merchant/data/' + file + '.html'
+      : pathToFileURL(path.join(repo, 'merchant/data/' + file + '.html')).href;
+    const targetId = await open(url, false);
+    const result = await inspectArchived();
+    try {
+      assert.ok(result.tables > 0, '归档页没有保留表格');
+      assert.deepEqual(result.misalignedCells, [], '归档页仍有未左对齐的表头或单元格');
+      assert.deepEqual(result.misalignedHeaderControls, [], '归档页仍有未左对齐的表头控件');
+    } catch (error) {
+      failures.push({ file, tab: '归档页全表', error: error.message, result });
+    }
+    socket.close();
+    await fetch('http://127.0.0.1:9222/json/close/' + targetId);
+  }
+  console.log(JSON.stringify({ checked: results.length, archived: archivedPages.length, failures }, null, 2));
   if (failures.length) process.exitCode = 1;
 })().catch(error => {
   console.error(error);
