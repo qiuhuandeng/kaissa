@@ -1,0 +1,22 @@
+const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http');
+const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
+(async()=>{
+ const root=path.resolve(__dirname,'..'),out='/private/tmp/caesar-supplier-prepayment';await fs.mkdir(out,{recursive:true});
+ const server=http.createServer(async(req,res)=>{try{const p=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!p.startsWith(root+path.sep))throw Error();res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml'})[path.extname(p)]||'application/octet-stream');res.end(await fs.readFile(p));}catch{res.writeHead(404);res.end();}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({channel:'chrome',headless:true}),errors=[],checks=[];
+ try{for(const protocol of ['file','http']){
+ const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
+ const url=protocol==='file'?pathToFileURL(path.join(root,'merchant/data/supplier-reports.html')).href:'http://127.0.0.1:'+server.address().port+'/merchant/data/supplier-reports.html';
+
+ await page.goto(url);const host=page.locator('#finance-prepayments'),field=n=>host.locator('[name="'+n+'"]'),tab=key=>page.locator('[data-report-tab="'+key+'"]').click(),submit=()=>host.locator('[type=submit]').click();
+ const csv=async()=>{const pending=page.waitForEvent('download');await host.locator('[data-fr-export]').click();const d=await pending,p=path.join(out,protocol+'-'+d.suggestedFilename());await d.saveAs(p);return fs.readFile(p,'utf8');};
+ await tab('prepay');assert.equal(await host.locator('table').count(),1);assert.equal(await host.locator('[name=direction]').count(),0);assert.deepEqual(await host.locator('[data-fr-content] option').evaluateAll(os=>os.map(o=>o.value)),['main','accounts']);
+ await field('party').fill('S1');await field('currency').selectOption('CNY');await submit();assert.equal(await host.locator('tbody tr').count(),1);assert.match(await host.locator('tbody').innerText(),/230,000.00/);
+ await host.locator('[data-fr-content]').selectOption('accounts');assert.match(await host.locator('tbody').innerText(),/YF-001/);let data=await csv();assert.match(data,/YF-001/);assert.doesNotMatch(data,/YS-001|YC-001|YF-EUR/);checks.push(protocol+': 供应商汇总及同范围账户导出');
+ await field('party').fill('未查询条件');await tab('summary');await tab('prepay');assert.equal(await field('party').inputValue(),'未查询条件');assert.match(await host.locator('tbody').innerText(),/YF-001/);await page.reload();assert.equal(await field('party').inputValue(),'未查询条件');assert.match(await host.locator('tbody').innerText(),/YF-001/);checks.push(protocol+': Tab刷新保留已查询和未提交条件');
+ await host.locator('[data-fr-reset]').click();await field('end').fill('2026-08-31');await submit();assert.equal(await host.locator('.cf-error').isVisible(),true);assert.equal(await host.locator('tbody tr').count(),0);assert.equal(await host.locator('[data-fr-export]').isDisabled(),true);await host.locator('[data-fr-reset]').click();data=await csv();assert.match(data,/分页供应商24/);assert.match(data,/'=分页供应商/);assert.match(data,/2500/);assert.match(data,/资料不足/);checks.push(protocol+': 错误清空及跨页完整导出');
+ for(const content of ['main','accounts']){await host.locator('[data-fr-content]').selectOption(content);for(const width of [1440,768]){await page.setViewportSize({width,height:1000});await host.locator('[data-fr-main]').evaluate(el=>el.scrollLeft=el.scrollWidth);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.equal(await host.locator('tbody td').evaluateAll(cs=>cs.every(c=>getComputedStyle(c).textAlign==='left'&&c.scrollWidth<=c.clientWidth+1)),true);await page.screenshot({path:path.join(out,protocol+'-'+content+'-'+width+'.png'),fullPage:true});}}
+ assert.equal(await host.locator('tbody a,tbody button').count(),0);for(const key of ['summary','purchases','rebates','allocations']){await tab(key);assert.equal(await page.locator('table:visible').count(),1);}checks.push(protocol+': 桌面窄屏只读横滚及其他四Tab回归');await page.close();
+ }assert.deepEqual(errors,[]);await fs.writeFile(path.join(out,'results.json'),JSON.stringify({checks,errors},null,2));console.log(JSON.stringify({checks,errors}));}
+ finally{await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exitCode=1});
