@@ -39,48 +39,6 @@
       href: "dashboard.html",
     },
     {
-      title: "数据中心",
-      icon: "trend",
-      children: [
-        {
-          title: "经营分析",
-          children: [
-            { title: "经营总览", href: "data/performance-reports.html" },
-            { title: "月度损益", href: "data/monthly-profit-reports.html" },
-            { title: "产品分析", href: "data/product-reports.html" },
-            { title: "渠道分析", href: "data/channel-reports.html" },
-            { title: "业务毛利", href: "data/settlement-reports.html" },
-            { title: "供应商分析", href: "data/supplier-reports.html" },
-          ],
-        },
-        {
-          title: "业务明细",
-          children: [
-            { title: "订单明细", href: "data/order-report-details.html" },
-            { title: "回团明细", href: "data/return-report-details.html" },
-          ],
-        },
-        {
-          title: "资金核算",
-          children: [
-            { title: "收付明细", href: "data/cashflow-reports.html" },
-            { title: "往来账龄", href: "data/balance-reports.html" },
-            { title: "预款余额", href: "data/prepayment-reports.html" },
-            { title: "资金分析", href: "data/fund-reports.html" },
-            { title: "票款核对", href: "data/invoice-reports.html" },
-            { title: "核算核对", href: "data/accounting-reports.html" },
-          ],
-        },
-        {
-          title: "报表管理",
-          children: [
-            { title: "任务预算", href: "data/budget-targets.html" },
-            { title: "数据管理", href: "data/report-management.html" },
-          ],
-        },
-      ],
-    },
-    {
       title: "资源",
       icon: "file",
       children: [
@@ -314,6 +272,49 @@
         },
         { title: "NC推送", href: "finance/finance-nc.html" },
         { title: "收付款配置", href: "finance/finance-account-settings.html" },
+      ],
+    },
+    {
+      title: "数据中心",
+      icon: "trend",
+      children: [
+        {
+          title: "经营分析",
+          children: [
+            { title: "经营总览", href: "data/performance-reports.html" },
+            { title: "月度损益", href: "data/monthly-profit-reports.html" },
+            { title: "产品分析", href: "data/product-reports.html" },
+            { title: "渠道分析", href: "data/channel-reports.html" },
+            { title: "门店分润", href: "data/store-profit-reports.html" },
+            { title: "业务毛利", href: "data/settlement-reports.html" },
+            { title: "供应商分析", href: "data/supplier-reports.html" },
+          ],
+        },
+        {
+          title: "业务明细",
+          children: [
+            { title: "订单明细", href: "data/order-report-details.html" },
+            { title: "回团明细", href: "data/return-report-details.html" },
+          ],
+        },
+        {
+          title: "资金核算",
+          children: [
+            { title: "收付明细", href: "data/cashflow-reports.html" },
+            { title: "往来账龄", href: "data/balance-reports.html" },
+            { title: "预款余额", href: "data/prepayment-reports.html" },
+            { title: "资金分析", href: "data/fund-reports.html" },
+            { title: "票款核对", href: "data/invoice-reports.html" },
+            { title: "核算核对", href: "data/accounting-reports.html" },
+          ],
+        },
+        {
+          title: "报表管理",
+          children: [
+            { title: "任务预算", href: "data/budget-targets.html" },
+            { title: "数据管理", href: "data/report-management.html" },
+          ],
+        },
       ],
     },
     {

@@ -21,6 +21,7 @@
       }
     }
     const fee=(id,amount,extra={})=>({id,company:'A公司（演示）',currency:'CNY',period:'2026-09',date:'2026-09-22',recorded:'2026-09-22',category:'管理费用',amount,department:'',item:'',approved:true,included:false,evidence:'费用确认'+id,allocations:[],...extra});
+    expenses.find(e=>e.id==='FEE1').profitShareId='FR202609001';
     expenses.push(fee('ADMIN',900,{allocations:departments.map(department=>({department,amount:300,approved:true,evidence:'批准分摊表ALLOC-01'}))}),fee('UNASSIGNED',600),fee('PRODUCT',600,{company:'B公司（演示）',department:'欧洲产品部'}),fee('INCLUDED',200,{category:'公司承担优惠',department:departments[0],item:'SA1',included:true,includedIn:'SA1-SR',evidence:'优惠已包含确认收入，不再扣减'}));
     const late=rf.confirmation('PB1-LATE','cost',500,[['PB1',500]],{entity:'B公司（演示）',book:'B公司（演示）主账簿',source:'独立经营贡献确认',date:'2026-10-05',period:'2026-09',effective:'2026-10-05',recorded:'2026-10-05',adjustment:true,original:'PB1-CB',reason:'9月成本后补确认（更正示例）'});
     const rebate=rf.confirmation('PB1-REBATE','cost',-300,[['PB1',-300]],{entity:'B公司（演示）',book:'B公司（演示）主账簿',source:'独立经营贡献确认',date:'2026-10-10',period:'2026-10',effective:'2026-10-10',recorded:'2026-10-10',adjustment:true,original:'PB1-CB',reason:'次月返点已确认冲减成本，只计本记录'});
@@ -34,8 +35,10 @@
     const period=r=>r.period>=q.start&&r.period<=q.end;
     const legal=r=>(!q.company||(r.entity||r.company)===q.company)&&(!q.currency||r.currency===q.currency);
     const ledger=rf.ledger(data,cutoff), flows=ledger.flows.filter(r=>period(r)&&legal(r)), sourceRecords=ledger.records.filter(r=>period(r)&&legal(r));
-    const costs=dedup(data.expenses.filter(r=>period(r)&&legal(r)&&r.date<=cutoff&&r.recorded<=cutoff)).map(r=>{
+    const costSources=dedup(data.expenses.filter(r=>period(r)&&legal(r)&&r.date<=cutoff&&r.recorded<=cutoff));
+    const costs=costSources.map(r=>{
       let valid=!r.conflict&&r.approved&&known(r.amount)&&r.amount>=0&&typeof r.included==='boolean'&&!!r.evidence;
+      if(r.profitShareId&&costSources.filter(e=>e.profitShareId===r.profitShareId&&e.company===r.company&&e.currency===r.currency&&e.period===r.period).length>1)valid=false;
       if(r.included&&!sourceRecords.some(s=>s.id===r.includedIn&&s.entity===r.company&&s.currency===r.currency&&s.valid))valid=false;
       const allocations=r.allocations||[];
       if(allocations.some(a=>!a.approved||!a.evidence||!a.department||!known(a.amount)||a.amount<0)||sum(allocations.map(a=>a.amount))>r.amount||r.department&&allocations.length)valid=false;
@@ -106,11 +109,11 @@
     const facts=items.map(c=>{
       const fs=b.flows.filter(r=>r.target===c.record&&r.entity===c.company), expenses=b.expenses.filter(e=>e.item===c.record&&e.company===c.company), valid=fs.some(r=>r.kind==='income')&&fs.some(r=>r.kind==='cost')&&expenses.every(e=>e.valid)&&b.companies.filter(r=>r.company===c.company).every(r=>known(r.operating));
       const income=valid?sum(fs.filter(r=>r.kind==='income').map(r=>r.amount)):null,cost=valid?sum(fs.filter(r=>r.kind==='cost').map(r=>r.amount)):null,fees=valid?sum(expenses.map(e=>e.impact)):null;
-      return {...c,id:c.record,company:c.company,income,cost,gross:valid?sum([income,-cost]):null,fees,contribution:valid?sum([income,-cost,-fees]):null,commission:sum(expenses.filter(e=>e.category==='渠道佣金').map(e=>e.impact)),platform:sum(expenses.filter(e=>e.category==='平台服务费').map(e=>e.impact)),discount:sum(expenses.filter(e=>e.category==='公司承担优惠').map(e=>e.impact)),direct:sum(expenses.filter(e=>e.category==='直接销售费用').map(e=>e.impact)),external:c.external?'对外销售':'内部供货',status:valid?'扣除已归属直接费用，未扣部门公共费用':'确认或费用范围待补'};
+      return {...c,id:c.record,company:c.company,income,cost,gross:valid?sum([income,-cost]):null,fees,contribution:valid?sum([income,-cost,-fees]):null,profitShare:valid?sum(expenses.filter(e=>e.profitShareId).map(e=>e.impact)):null,commission:sum(expenses.filter(e=>e.category==='渠道佣金').map(e=>e.impact)),platform:sum(expenses.filter(e=>e.category==='平台服务费').map(e=>e.impact)),discount:sum(expenses.filter(e=>e.category==='公司承担优惠').map(e=>e.impact)),direct:sum(expenses.filter(e=>e.category==='直接销售费用').map(e=>e.impact)),external:c.external?'对外销售':'内部供货',status:valid?'扣除已归属直接费用，未扣部门公共费用':'确认或费用范围待补'};
     }).filter(r=>b.flows.some(f=>f.target===r.id));
     const group=q.view==='channel'?'channel':q.grouping;
     const groups=new Map();facts.forEach(r=>{const k=JSON.stringify([r.company,r.currency,r[group]]);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);});
-    const rows=[...groups.values()].map(rs=>({company:rs[0].company,currency:rs[0].currency,group:rs[0][group],...Object.fromEntries(['income','cost','gross','fees','contribution','commission','platform','discount','direct'].map(k=>[k,sum(rs.map(r=>r[k]))])),status:rs.some(r=>r.contribution===null)?'确认或费用范围待补':'直接经营贡献（非部门利润）'}));
+    const rows=[...groups.values()].map(rs=>({company:rs[0].company,currency:rs[0].currency,group:rs[0][group],...Object.fromEntries(['income','cost','gross','fees','contribution','commission','platform','discount','direct','profitShare'].map(k=>[k,sum(rs.map(r=>r[k]))])),status:rs.some(r=>r.contribution===null)?'确认或费用范围待补':'直接经营贡献（非部门利润）'}));
     return {rows,notice:result.notice,sections:[{key:'contribution',title:'逐销售内容与责任公司依据',rows:facts,columns:['id','order','company','product','destination','type','supply','channel','customer','external','income','cost','commission','platform','discount','direct','contribution','status']},...result.sections.filter(s=>['source','expenses'].includes(s.key))]};
   }
   const api={defaults,views,versions,fixture,build,query,contribution,budgetRows,sum};

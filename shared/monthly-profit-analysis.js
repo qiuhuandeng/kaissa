@@ -4,8 +4,8 @@
   const group=(rows,keys)=>{const out=new Map();for(const r of rows){const k=JSON.stringify(keys.map(k=>r[k]));if(!out.has(k))out.set(k,[]);out.get(k).push(r);}return [...out.values()];};
   const companyCols=['company','period','currency','income','cost','gross','expense','operating','unassigned','status'];
   function query(input,supplied){
-    const q={...m.defaults,expenseGrouping:'category',...input};
-    const relevant=['departments','expenses','management'].includes(q.view);
+    const q={...m.defaults,...input};
+    const relevant=['departments','expenses','departmentExpenses','management'].includes(q.view);
     const r=m.query({...q,department:relevant?q.department:''},supplied),b=r.data;
     if(!b)return r;
     const sec=(key,title,rows,columns)=>({key,title,rows,columns});
@@ -23,18 +23,35 @@
       });
       main=sec('main',q.department?'所选部门损益':'部门损益汇总（含未归属及未分配）',rows,['company','department','period','currency','income','cost','gross','directExpense','sharedExpense','transfer','operating','status']);
       sections=[];
+    }else if(q.view==='departmentExpenses'){
+      const details=b.expenses.flatMap(e=>e.parts.map(part=>{
+        const covered=b.companies.find(c=>c.company===e.company&&c.period===e.period&&c.currency===e.currency)?.expense!==null;
+        const amount=covered?part.amount:null;
+        const unassigned=part.department==='未分配费用',direct=!!e.department;
+        return {id:e.id,company:e.company,period:e.period,currency:e.currency,department:part.department,category:e.category,
+          attribution:unassigned?'未分配':direct?'直接归属':'批准分配',
+          directExpense:direct?amount:0,allocatedExpense:!direct&&!unassigned?amount:0,unassignedExpense:unassigned?amount:0,
+          burden:unassigned?0:amount,checkAmount:amount,
+          allocationEvidence:unassigned?'尚无部门分配依据':direct?'直接归属，无需分配':part.evidence||'分配依据待补',
+          evidence:e.evidence,status:!covered?'公司费用范围或确认资料待补':e.status};
+      })).filter(e=>belongs(e.department));
+      const rows=group(details,['company','period','currency','department']).map(xs=>({
+        company:xs[0].company,period:xs[0].period,currency:xs[0].currency,department:xs[0].department,
+        ...Object.fromEntries(['directExpense','allocatedExpense','burden','unassignedExpense','checkAmount'].map(k=>[k,m.sum(xs.map(e=>e[k]))])),
+        status:xs.some(e=>e.checkAmount===null)?'费用或分配资料待核对':xs[0].department==='未分配费用'?'尚未分配到部门':'费用资料齐全'
+      }));
+      main=sec('main','部门费用汇总',rows,['company','department','period','currency','directExpense','allocatedExpense','burden','unassignedExpense','status']);
+      sections=[sec('fees','部门费用明细',details,['id','company','department','period','currency','category','attribution','directExpense','allocatedExpense','burden','unassignedExpense','allocationEvidence','evidence','status'])];
     }else if(q.view==='expenses'){
-      const byDept=q.expenseGrouping==='department';
       const facts=allocations.map(e=>({...e,expense:e.allocated}));
-      const rows=group(facts,['company','period','currency',byDept?'department':'category']).map(xs=>{
+      const rows=group(facts,['company','period','currency','category']).map(xs=>{
         const total=m.sum(facts.filter(e=>e.company===xs[0].company&&e.period===xs[0].period&&e.currency===xs[0].currency).map(e=>e.expense));
         const expense=m.sum(xs.map(e=>e.expense));
         return {...xs[0],expense,share:total>0&&expense!==null?(expense/total*100).toFixed(2)+'%':'不适用',previous:'无完整可比资料',difference:'不可比',growth:'不可比',unassigned:m.sum(xs.filter(e=>e.department==='未分配费用').map(e=>e.expense))};
       });
-      main=sec('main',byDept?'部门费用构成':'费用类别构成',rows,['company','period','currency',byDept?'department':'category','expense','share','previous','difference','growth','unassigned']);
-      // With a department filter, show its allocated impact rather than full company expense.
-      const selected=byDept?allocations.map(e=>({...e,impact:e.allocated})):original.filter(e=>e.parts.some(a=>belongs(a.department))).map(e=>({...e,impact:m.sum(e.parts.filter(a=>belongs(a.department)).map(a=>a.amount))}));
-      sections=[{...feeRecords,title:byDept?'部门费用明细':'费用项目明细',rows:selected,columns:byDept?['id','company','period','currency','department','category','originalAmount','impact','status','evidence']:feeRecords.columns}];
+      main=sec('main','费用类别构成',rows,['company','period','currency','category','expense','share','previous','difference','growth','unassigned']);
+      const selected=original.filter(e=>e.parts.some(a=>belongs(a.department))).map(e=>({...e,impact:m.sum(e.parts.filter(a=>belongs(a.department)).map(a=>a.amount))}));
+      sections=[{...feeRecords,title:'费用项目明细',rows:selected}];
     }else if(q.view==='budgets'){
       const rows=r.rows.filter(v=>!q.budgetMetric||v.metric===q.budgetMetric).map(v=>({...v,varianceRate:v.budget>0&&v.variance!==null?(v.variance/v.budget*100).toFixed(2)+'%':'不适用',direction:v.variance===null?'资料不足':v.variance===0?'持平':(v.metric==='经营费用'?v.variance<0:v.variance>0)?'有利':'不利'}));
       main=sec('main','公司预算差异',rows,['company','period','currency','metric','budget','actual','variance','varianceRate','direction','reason']);
@@ -58,12 +75,12 @@
       sections=[sec('details','集团调整明细',details,['id','period','currency','metric','adjustment','evidence'])];
     }
     let totals=[];
-    if(['companies','departments','expenses'].includes(q.view)) {
+    if(['companies','departments','expenses','departmentExpenses'].includes(q.view)) {
       const keys=q.view==='companies'?['period','currency']:['company','period','currency'];
       totals=group(main.rows,keys).filter(xs=>xs.length>1).map(xs=>{
         const out=Object.fromEntries(keys.map(k=>[k,xs[0][k]]));
         Object.assign(out,q.view==='companies'?{company:'所选公司合计'}:q.view==='departments'?{department:q.department?'所选部门合计':'公司核对合计'}:{category:'合计',department:'合计'});
-        for(const k of ['income','cost','gross','expense','operating','unassigned','directExpense','sharedExpense','transfer'])if(main.columns.includes(k))out[k]=m.sum(xs.map(x=>x[k]));
+        for(const k of ['income','cost','gross','expense','operating','unassigned','directExpense','sharedExpense','transfer','allocatedExpense','burden','unassignedExpense'])if(main.columns.includes(k))out[k]=m.sum(xs.map(x=>x[k]));
         out.status='全部查询结果合计';return out;
       });
     }

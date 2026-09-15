@@ -4,10 +4,11 @@ const { pathToFileURL } = require('node:url');
 
 const pages = {
   'performance-reports': ['订单业绩', '回团业绩', '损益摘要', '资金概况', '计划概况', '风险概况'],
-  'monthly-profit-reports': ['公司损益', '部门损益', '费用构成', '预算差异', '集团调整', '内部调整'],
+  'monthly-profit-reports': ['公司损益', '部门损益', '费用构成', '部门费用', '预算差异', '集团调整', '内部调整'],
   'product-reports': ['产品订单', '产品回团', '产品结构', '渠道构成', '跨年收客', '经营贡献', '产品风险'],
   'channel-reports': ['渠道订单', '渠道回团', '门店业绩', '呼叫中心', '产品构成', '经营贡献', '毛利校验'],
-  'settlement-reports': ['毛利明细', '部门毛利', '结算异常', '结算调整', '成本分配', '资源风险'],
+  'settlement-reports': ['毛利明细', '部门毛利', '结算异常', '结算调整', '成本构成', '成本分配', '资源风险'],
+  'store-profit-reports': ['分润汇总', '结算执行', '调整核对'],
   'supplier-reports': ['采购汇总', '采购明细', '返点核对', '返点分配', '预付占用'],
   'order-report-details': ['成交净值', '成交变动'],
   'return-report-details': ['实际完成', '已售未完', '完成核对', '完成后调整'],

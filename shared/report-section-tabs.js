@@ -5,10 +5,11 @@
   const views = (selector, pairs) => pairs.map(([key, label]) => ({ selector, key, label }));
   const config = {
     'performance-reports': ['经营总览', [...views(primary, [['orders','订单业绩'],['actual','回团业绩']]), ...views('[data-overview-finance]', [['profit','损益摘要'],['funds','资金概况'],['plan','计划概况'],['resources','风险概况']])]],
-    'monthly-profit-reports': ['月度损益', views('[data-monthly-profit]', [['companies','公司损益'],['departments','部门损益'],['expenses','费用构成'],['budgets','预算差异'],['group','集团调整'],['management','内部调整']])],
+    'monthly-profit-reports': ['月度损益', [...views('[data-monthly-profit]', [['companies','公司损益'],['departments','部门损益'],['expenses','费用构成']]), ...views('[data-department-expenses]', [['departmentExpenses','部门费用']]), ...views('[data-monthly-profit]', [['budgets','预算差异'],['group','集团调整'],['management','内部调整']])]],
     'product-reports': ['产品分析', [...views(primary, [['organizations','产品订单'],['completed','产品回团'],['structure','产品结构'],['channels','渠道构成'],['crossYear','跨年收客']]), ...views('[data-contribution="product"]', [['product','经营贡献']]), ...views('[data-resource-cost]', [['resources','产品风险']])]],
     'channel-reports': ['渠道分析', [...views(channel, [['channels','渠道订单'],['completed','渠道回团'],['stores','门店业绩'],['calls','呼叫中心'],['structure','产品构成']]), ...views('[data-contribution="channel"]', [['channel','经营贡献']]), { selector: '[data-channel-margin]', key: 'margin', label: '毛利校验', owner: channel }]],
-    'settlement-reports': ['业务毛利', [...views(settlement, [['tours','毛利明细'],['groups','部门毛利'],['gaps','结算异常'],['adjustments','结算调整']]), ...views('[data-resource-cost]', [['costs','成本分配'],['resources','资源风险']])]],
+    'settlement-reports': ['业务毛利', [...views(settlement, [['tours','毛利明细'],['groups','部门毛利'],['gaps','结算异常'],['adjustments','结算调整']]), ...views('[data-cost-composition]', [['composition','成本构成']]), ...views('[data-resource-cost]', [['costs','成本分配'],['resources','资源风险']])]],
+    'store-profit-reports': ['门店分润', views('[data-store-profit]', [['summary','分润汇总'],['execution','结算执行'],['adjustments','调整核对']])],
     'supplier-reports': ['供应商分析', [...views(supplier, [['summary','采购汇总'],['purchases','采购明细'],['rebates','返点核对'],['allocations','返点分配']]), ...views('#finance-prepayments', [['prepay','预付占用']])]],
     'order-report-details': ['订单明细', views(primary, [['orders','成交净值'],['changes','成交变动']])],
     'return-report-details': ['回团明细', [...views(primary, [['actual','实际完成'],['future','已售未完']]), { selector: '[data-return-finance]', key: 'financial', label: '完成核对', owner: primary }, ...views(primary, [['adjustments','完成后调整']])]],
@@ -19,7 +20,7 @@
     'invoice-reports': ['票款核对', [...views('#finance-invoice-received', [['received','已收未开']]), ...views('#finance-invoice-issued', [['issued','已开未收']]), ...views('#finance-invoice-paid', [['paid','已付未收票']]), ...views('#finance-invoice-invoiced', [['invoiced','已收票未付']]), ...views('#finance-invoice-documents', [['documents','票据明细']]), ...views('#finance-invoice-allocations', [['allocations','票款分配']]), ...views('#finance-invoice-corrections', [['corrections','红冲更正']])]],
     'accounting-reports': ['核算核对', [...views('#finance-accounting-flows', [['flows','确认明细']]), ...views('#finance-accounting-completion', [['completion','结算对照']]), ...views('#finance-accounting-report', [['internal','内部对账'],['nc','凭证核对']])]],
     'budget-targets': ['任务预算', [...views('[data-budget-targets]', [['primary','经营任务']]), ...views('[data-profit-budget]', [['budgets','批准预算']])]],
-    'report-management': ['数据管理', [...views('#report-check-summary', [['checks','数据核对']]), ...views('[data-report-management]', [['rules','分类规则'],['organizations','组织对应']]), ...views('#report-access-scope', [['records','查看范围']]), ...views(governance, [['versions','版本记录'],['subscriptions','订阅设置']]).map(e => ({ ...e, panel: '[data-report-governance]' }))]]
+    'report-management': ['数据管理', [...views('#report-check-summary', [['checks','数据核对']]), ...views('[data-report-management]', [['rules','分类规则'],['organizations','组织对应']]), ...views(governance, [['versions','版本记录']]).map(e => ({ ...e, panel: '[data-report-governance]' })), ...views('#report-access-scope', [['records','查看范围']]), ...views(governance, [['subscriptions','订阅设置']]).map(e => ({ ...e, panel: '[data-report-governance]' }))]]
   };
   const file = location.pathname.split('/').pop().replace('.html',''), definition = config[file];
   if (!definition) return;
@@ -41,6 +42,7 @@
   if(file==='supplier-reports' && saved.supplierPrepayVersion!==2)delete states.prepay;
   if(['settlement-reports','product-reports'].includes(file) && saved.resourceVersion!==2) ['costs','resources'].forEach(key=>delete states[key]);
   if(file === "performance-reports" && saved.summaryVersion !== 2) ['profit','funds','plan','resources'].forEach(key=>delete states[key]);
+  if(file==='monthly-profit-reports' && saved.departmentExpenseVersion!==1)delete states.expenses;
   const panels = [...new Set(entries.map(e => e.panel || e.owner || e.selector))];
   const container = q('#finance-cashflow') || q(panels[0]);
   if (!container) throw new Error('报表主入口未加载：' + title);
@@ -53,7 +55,7 @@
     if (active && !switching) {
       const controller = q(active.selector)?.reportNavigation;
       if (controller) states[active.key] = controller.capture();
-      try { sessionStorage.setItem(storageKey, JSON.stringify({ active: active.key, states, managementScopeVersion:1, accountingConfirmationVersion:1, invoiceGapVersion:1, fundPlanVersion:1, fundAccountVersion:1, prepayGuaranteeVersion:1, advanceDepositVersion:1, agingClearingVersion:1, counterpartyVersion:1, supplierPrepayVersion:2, resourceVersion:2, ...(file === "performance-reports" ? {summaryVersion:2} : {}) })); } catch (_) { /* In-memory navigation still works. */ }
+      try { sessionStorage.setItem(storageKey, JSON.stringify({ active: active.key, states, departmentExpenseVersion:1, managementScopeVersion:1, accountingConfirmationVersion:1, invoiceGapVersion:1, fundPlanVersion:1, fundAccountVersion:1, prepayGuaranteeVersion:1, advanceDepositVersion:1, agingClearingVersion:1, counterpartyVersion:1, supplierPrepayVersion:2, resourceVersion:2, ...(file === "performance-reports" ? {summaryVersion:2} : {}) })); } catch (_) { /* In-memory navigation still works. */ }
     }
   }
   function activate(key, initial = false) {

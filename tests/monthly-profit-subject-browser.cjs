@@ -9,12 +9,12 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright'),{pat
   for(const [tab,options] of Object.entries(cases)){
    await page.locator('[data-report-tab="'+tab+'"]').click();await page.waitForTimeout(160);
    assert.equal(await page.locator('table:visible').count(),1);
-   assert.equal(await page.locator('[data-fr-content]').isVisible(),options.length>0);
-   assert.deepEqual(await page.locator('[data-fr-content]').evaluate(e=>[...e.options].slice(1).map(o=>o.value)),options);
-   for(const option of options){await page.locator('[data-fr-content]').selectOption(option);await page.waitForTimeout(150);assert.equal(await page.locator('table:visible').count(),1);}
+   assert.equal(await page.locator('[data-monthly-profit] [data-fr-content]').isVisible(),options.length>0);
+   assert.deepEqual(await page.locator('[data-monthly-profit] [data-fr-content]').evaluate(e=>[...e.options].slice(1).map(o=>o.value)),options);
+   for(const option of options){await page.locator('[data-monthly-profit] [data-fr-content]').selectOption(option);await page.waitForTimeout(150);assert.equal(await page.locator('table:visible').count(),1);}
   }
-  await page.reload();await page.waitForTimeout(160);assert.equal(await page.locator('[data-fr-content]').inputValue(),'details');
-  await page.locator('[data-report-tab="departments"]').click();await page.waitForTimeout(150);assert.equal(await page.locator('[data-fr-content]').isVisible(),false);
+  await page.reload();await page.waitForTimeout(160);assert.equal(await page.locator('[data-monthly-profit] [data-fr-content]').inputValue(),'details');
+  await page.locator('[data-report-tab="departments"]').click();await page.waitForTimeout(150);assert.equal(await page.locator('[data-monthly-profit] [data-fr-content]').isVisible(),false);
   await page.screenshot({path:'/private/tmp/monthly-subject.png',fullPage:true});
   await page.goto(url('budget-targets'));await page.locator('[data-report-tab="budgets"]').click();await page.waitForTimeout(200);
   assert.equal(await page.locator('table:visible').count(),1);assert.equal(await page.locator('[data-fr-content]:visible').count(),0);

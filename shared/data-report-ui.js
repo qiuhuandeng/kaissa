@@ -81,6 +81,27 @@
     });
   }
 
+  function positionMoreFilters(form) {
+    const more = form.querySelector('details.report-more, details.cf-more');
+    form.classList.toggle('data-filter-has-more', Boolean(more));
+    if (!more) return;
+    more.classList.add('data-filter-more');
+    // Generic financial forms render their first-line fields directly in the form.
+    const fields = Array.from(form.children).filter(el => el.matches('label.cf-field, label.report-field'));
+    if (fields.length) {
+      let row = form.querySelector(':scope > .data-filter-first-row');
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'report-filter-row data-filter-first-row';
+        fields[0].before(row);
+      }
+      fields.forEach(field => row.append(field));
+    }
+    const rows = Array.from(form.querySelectorAll('.report-filter-row')).filter(row => !row.closest('details') && isAvailable(row));
+    const lastRow = rows[rows.length - 1];
+    if (lastRow && more.parentElement !== lastRow) lastRow.append(more);
+  }
+
   function cleanText(value) {
     return String(value)
       .replace(/演示集团全部/g, '全部公司')
@@ -242,6 +263,7 @@
       if (!form) { cleanPresentation(unit); return; }
       form.classList.add('data-report-filter-surface', 'filter-card', 'filter-card-compact', 'list-surface-filter');
       standardizeLabels(form);
+      positionMoreFilters(form);
       moveMetadata(unit, form);
       moveActions(unit, form, units);
       wrapResults(form);
