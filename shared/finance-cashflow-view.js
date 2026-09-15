@@ -11,12 +11,12 @@
   const invoices = report === 'invoices';
   const accounting = report === 'accounting';
   const e = m.esc;
-  host.innerHTML = '<header class="cf-heading"><h1>' + (balances ? '订单收付与往来账龄' : '收退转付明细') + '</h1></header>';
-  if (balances) { host.setAttribute('aria-label', '订单收付与往来账龄'); return; }
-  if (prepayments) { host.querySelector('h1').textContent = '预款与保证金'; return; }
-  if (funds) { host.querySelector('h1').textContent = '资金收支与安排'; return; }
-  if (invoices) { host.querySelector('h1').textContent = '发票与收付款核对'; return; }
-  if (accounting) { host.querySelector('h1').textContent = '结算与核算核对'; return; }
+  host.innerHTML = '<header class="cf-heading"><h1>' + (balances ? '往来账龄' : '收付明细') + '</h1></header>';
+  if (balances) { host.setAttribute('aria-label', '往来账龄'); return; }
+  if (prepayments) { host.querySelector('h1').textContent = '预款余额'; return; }
+  if (funds) { host.querySelector('h1').textContent = '资金分析'; return; }
+  if (invoices) { host.querySelector('h1').textContent = '票款核对'; return; }
+  if (accounting) { host.querySelector('h1').textContent = '核算核对'; return; }
   const initialType = ['receipt', 'payment'].includes(report) ? report : params.get('type');
   let applied = m.defaults(initialType), result, page = 1, size = 10, sortKey = 'id', direction = 1;
   let extras = new Set();
@@ -79,7 +79,7 @@
     '<details class="cf-more"><summary>更多条件</summary><div class="cf-filter-more">' + ['account', 'category', 'method', 'status', 'order', 'contractCompany', 'department', 'store', 'center'].map(k => control(k)).join('') + control('internal', [['', '全部往来'], ['外部', '外部'], ['集团内部', '集团内部']]) + '</div></details>' +
     '<div class="cf-filter-actions"><button type="submit" class="btn btn-secondary">查询</button>' + btn('data-cf-reset', '重置') + '</div></form>' +
     '<p class="cf-error" role="alert" hidden></p><p class="cf-notice" data-cf-notice role="status"></p>' +
-    '<div class="cf-workbar"><div class="cf-modes" role="group" aria-label="查询方式"><button type="button" data-cf-mode="documents">单据明细</button><button type="button" data-cf-mode="allocations">订单分配</button></div><details class="cf-columns"><summary>显示字段</summary><div data-cf-columns></div></details></div>' +
+    '<div class="cf-workbar"><label class="cf-field">展示方式<select data-cf-display><option value="documents">单据明细</option><option value="allocations">订单分配</option></select></label><details class="cf-columns"><summary>显示字段</summary><div data-cf-columns></div></details></div>' +
     '<div data-cf-main class="cf-scroll" tabindex="0" aria-label="收退转付主表"></div><div class="cf-pagination">' + btn('data-cf-prev aria-label="上一页"', '', 'chevron-left') + '<span data-cf-count></span>' + btn('data-cf-next aria-label="下一页"', '', 'chevron-right') + '<label>每页<select data-cf-size aria-label="每页条数"><option>10</option><option>25</option><option>50</option></select></label></div>' +
     '<section class="cf-section"><h2>本次查询合计 <small>按资金公司及原币</small></h2><div data-cf-totals class="cf-scroll" aria-label="查询合计"></div></section>' +
     '<section class="cf-section"><h2>原款与转款依据</h2><div data-cf-trace class="cf-scroll" aria-label="原款与转款依据"></div></section>' +
@@ -116,7 +116,7 @@
     host.querySelector('[data-cf-notice]').textContent = result.notice + ' · ' + basisLabels[applied.dateBasis] + ' · 资料截止 ' + (applied.cutoff.replace('T', ' ') || '不限') + ' · 核对缺口/重复 ' + result.exceptions.length + ' 条';
     host.querySelector('[data-cf-print]').hidden = applied.type !== 'receipt';
     host.querySelectorAll('[data-cf-type]').forEach(b => { b.classList.toggle('active', b.dataset.cfType === applied.type); b.setAttribute('aria-selected', b.dataset.cfType === applied.type); });
-    host.querySelectorAll('[data-cf-mode]').forEach(b => { b.classList.toggle('active', b.dataset.cfMode === applied.mode); b.setAttribute('aria-pressed', b.dataset.cfMode === applied.mode); });
+    host.querySelector('[data-cf-display]').value = applied.mode;
     const totals = result.totals.map(t => ({ ...t, nonCashAmount: t.noncash, issue: t.unknown ? t.unknown + '笔资金结果未核实' : '已提供记录', note: t.internal ? '含集团内部款，未抵销' : '' }));
     host.querySelector('[data-cf-totals]').innerHTML = table(totals, ['company', 'currency', 'cashIn', 'cashOut', 'nonCashAmount', 'allocation', 'unallocated', 'issue', 'note'], { ...labels, cashIn: '来源实际流入（核对）', cashOut: '来源实际流出（核对）', allocation: '所选订单分配', unallocated: '来源未分配（核对）' });
     host.querySelector('[data-cf-trace]').innerHTML = table(result.trace, ['id', 'type', 'root', 'previous', 'original', 'fromOrder', 'toOrder', 'transaction', 'company', 'currency', 'amount', 'confirmedAt'], { ...labels, type: '记录类别', amount: '原记录金额（不合计）' });
@@ -169,7 +169,6 @@
   host.addEventListener('click', event => {
     const b = event.target.closest('button'); if (!b) return;
     if (b.hasAttribute('data-cf-type')) { const next = m.defaults(b.dataset.cfType); extras.clear(); setForm(next); run(next); }
-    if (b.hasAttribute('data-cf-mode')) { run({ ...applied, mode: b.dataset.cfMode }); }
     if (b.hasAttribute('data-cf-reset')) { const next = m.defaults(applied.type); setForm(next); extras.clear(); run(next); }
     if (b.hasAttribute('data-cf-sort')) { direction = sortKey === b.dataset.cfSort ? -direction : 1; sortKey = b.dataset.cfSort; render(); }
     if (b.hasAttribute('data-cf-prev')) { page--; render(); }
@@ -181,8 +180,14 @@
   host.addEventListener('change', event => {
     const b = event.target;
     if (b.hasAttribute('data-cf-column')) { if (b.checked) extras.add(b.dataset.cfColumn); else extras.delete(b.dataset.cfColumn); render(); }
+    if (b.hasAttribute('data-cf-display')) run({ ...applied, mode: b.value });
     if (b.hasAttribute('data-cf-size')) { size = Number(b.value); page = 1; render(); }
   });
-  document.title = '收退转付明细 - 凯撒旅游';
+  document.title = '收付明细 - 凯撒旅游';
   setForm(applied); run(applied);
+  window.CaesarReportNavigation?.bind(host, {
+    capture: () => ({ applied, page, size, sortKey, direction, extras: [...extras] }),
+    restore: s => { applied = s.applied; run(applied); page = s.page; size = s.size; sortKey = s.sortKey; direction = s.direction; extras.clear(); s.extras.forEach(k => extras.add(k)); setForm(applied); render(); host.querySelector('[data-cf-size]').value = size; },
+    activate: key => { extras.clear(); const next = m.defaults(key); setForm(next); run(next); }
+  });
 })();

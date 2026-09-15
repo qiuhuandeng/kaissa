@@ -87,7 +87,7 @@
       (applied.view === 'summary' ? '<details class="spr-source"><summary>前十与其他及完整采购依据</summary>' + table(result.rankReady ? [...result.ranking.slice(0, 10), { name: '其他供应商', amount: result.other.amount, rank: '', count: result.rows.filter(r => result.ranking.slice(10).some(g => g.supplierId === r.supplierId)).length }] : result.ranking, ['rank', 'name', 'amount', 'missing'], '前十与其他') + table(result.rows, [...columns.purchases, ...extras.purchases], '完整采购依据') + '</details>' : '') +
       (applied.view === 'rebates' ? '<details class="spr-source"><summary>完整返点依据及实现记录</summary>' + table(result.rows, [...columns.rebates, ...extras.rebates], '返点确认依据') + table(result.receipts, ['id', 'rebate', 'date', 'kind', 'amount', 'reference', 'company', 'currency'], '返点实现记录', false, 'receipts') + '</details>' : '');
   }
-  root.innerHTML = '<header class="report-head"><h1>供应商采购与返点</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及完整依据"') + '</header>' +
+  root.innerHTML = '<header class="report-head"><h1>供应商分析</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及完整依据"') + '</header>' +
     '<div class="report-tabbar" role="tablist" aria-label="供应商分析视图">' + Object.entries(m.views).map(([k, text]) => '<button type="button" class="report-tab" role="tab" data-view="' + k + '" aria-selected="' + (view === k) + '">' + text + '</button>').join('') + '</div>' +
     '<form class="report-filters"><div data-filter-fields></div><div class="report-query-actions"><button type="submit" class="report-button">查询</button>' + button('重置', 'data-reset') + '</div><p data-status class="report-query-status" role="status">已查询</p><p class="report-error" data-error role="alert" hidden></p></form>' +
     '<div class="report-meta" data-meta></div><div class="report-metrics" data-metrics></div><section class="report-section" data-result></section>' +
@@ -125,7 +125,7 @@
     if (el.dataset.page) { page += +el.dataset.page; render(); }
     if (el.hasAttribute('data-export')) {
       const cols = currentColumns(), purchase = ['summary', 'purchases'].includes(applied.view);
-      const lines = [['供应商采购与返点', m.views[applied.view], '独立演示资料，非正式业务取数'], ['资料截止', m.cutoff, 'V1'],
+      const lines = [['供应商分析', m.views[applied.view], '独立演示资料，非正式业务取数'], ['资料截止', m.cutoff, 'V1'],
         ['日期依据', purchase ? applied.basis === 'bill' ? '账单确认' : '采购确认' : applied.view === 'allocations' ? '分配确认日期' : applied.basis === 'confirmed' ? '返点确认日期' : '返点预计日期'],
         ['开始日期', applied.start], ['结束日期', applied.end], ['币种', applied.currency], ['金额单位', applied.unit === 'wan' ? '万原币' : '原币'],
         ['采购公司', applied.company || '全部'], ['集团内外', applied.relation || '全部（不抵销）'], ['供应商', applied.supplier || '全部'], ['搜索', applied.keyword],
@@ -143,5 +143,10 @@
       const url = URL.createObjectURL(new Blob(['\uFEFF' + lines.map(row => row.map(report.csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
       const a = document.createElement('a'); a.href = url; a.download = '供应商-' + m.views[applied.view] + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
+  });
+  window.CaesarReportNavigation?.bind(root, {
+    capture: () => ({ applied, view, page, size, sort, direction, optional: [...optional] }),
+    restore: s => { ({ applied, view, page, size, sort, direction } = s); optional = new Set(s.optional); filters(); render(); },
+    activate: key => { view = key; applied = { ...m.defaults, view, basis: isPurchase() ? 'purchase' : 'expected' }; optional.clear(); page = 1; sort = ''; filters(); render(); }
   });
 })();

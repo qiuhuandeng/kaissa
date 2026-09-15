@@ -282,7 +282,7 @@
               </div>
             </section>
 
-            <section class="booking-section" aria-labelledby="bookingOwnershipTitle">
+            <section class="booking-section" aria-labelledby="bookingOwnershipTitle" hidden>
               <div class="booking-section-head">
                 <h2 id="bookingOwnershipTitle" class="booking-section-title">本单经营归属</h2>
                 <span id="businessOwnershipStatus" class="tag tag-blue">待核对</span>
@@ -296,9 +296,11 @@
                 <div class="form-group">
                   <label class="form-label" for="orderProcessMode">处理方式</label>
                   <select id="orderProcessMode" class="form-control">
-                    <option value="reserve">预留：24小时未收款释放库存</option>
-                    <option value="hold">占位：人工占位，不自动释放</option>
-                    <option value="confirm">直接确认：立即扣库存</option>
+                    <option value="reserve">预留</option>
+                    <option value="hold">占位</option>
+                    <option value="confirm">直接确认</option>
+                    <option value="pending">待确认</option>
+                    <option value="draft">草稿</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -1210,6 +1212,8 @@
 
       function processProfile() {
         const mode = orderProcessMode.value;
+        if (mode === 'draft') return { status: '草稿', inventory: '未占位', button: '保存草稿', tag: 'tag tag-gray' };
+        if (mode === 'pending') return { status: '待确认', inventory: '未占位', button: '提交待确认', tag: 'tag tag-blue' };
         if (currentProduct.type === 'manual') {
           return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
         }
@@ -1218,7 +1222,7 @@
         }
         if (mode === 'confirm') return { status: '已确认', inventory: '立即扣库存', button: '确认并扣库存', tag: 'tag tag-green' };
         if (mode === 'hold') return { status: '占位', inventory: '人工占位', button: '生成占位订单', tag: 'tag tag-blue' };
-        return { status: '预留', inventory: '24小时预留', button: '生成预留订单', tag: 'tag tag-orange' };
+        return { status: '预留', inventory: '已预留', button: '生成预留订单', tag: 'tag tag-orange' };
       }
 
       function dateTimeText(date) {
@@ -1972,7 +1976,7 @@
           pending: customerPayableText,
           orderStatus: process.status,
           paymentStatus: '未收款',
-          resourceStatus: isManualMode() ? '服务待受理' : process.inventory,
+          resourceStatus: process.status === '待确认' ? '未占位' : isManualMode() ? '服务待受理' : process.inventory,
           resourceMeta: isManualMode() ? (currentProduct.manualServiceType + ' / 服务待受理') : ((salesPeopleCountSnapshot() || 0) + '人'),
           docStatus: '待补资料',
           productMeta: currentProduct.meta || '',
@@ -2115,6 +2119,11 @@
       }
 
       function syncSummary() {
+        if (orderProcessMode.value === 'draft') {
+          document.getElementById('createOrder').disabled = false;
+          document.getElementById('createOrder').textContent = '保存草稿';
+          return;
+        }
         if (isManualMode()) {
           refreshManualProduct();
           const process = processProfile();
@@ -2382,6 +2391,7 @@
       }
 
       function validate() {
+        if (orderProcessMode.value === 'draft') return [];
         const missing = [];
         if (isManualMode()) {
           refreshManualProduct();
@@ -2422,6 +2432,56 @@
         return missing;
       }
 
+      // 当前页演示资料按门店列表的有效可售范围设置，不模拟跨页审批回写。
+      // 保留时长、释放方式及付款条件尚待业务确定，空值不得当作已批准。
+      const bookingStores = {
+        '软件园门店': { types: ['group', 'cruise'], regions: ['欧洲', '境内'], reserve: false, hold: true },
+        '文灶门店': { types: ['group', 'free'], regions: ['国内短线'], reserve: true, hold: false },
+        '观音山门店': { types: ['group', 'free'], regions: ['福建', '厦门'], reserve: false, hold: false },
+        '泉州丰泽门店': { types: ['group', 'cruise'], regions: ['欧洲', '境内'], reserve: true, hold: false }
+      };
+      Object.values(bookingStores).forEach(function (store) {
+        store.status = '正常';
+        store.qualificationUntil = '2027-04-30';
+        store.salesEffective = true;
+        store.reserveHours = null;
+        store.holdHours = null;
+        store.releaseMode = '';
+        store.paymentRequired = null;
+      });
+      const bookingRegions = { EU2024: ['欧洲'], CR2025: ['欧洲'], FREE2026: ['境内', '国内短线'] };
+
+      function submissionIssues() {
+        const mode = orderProcessMode.value;
+        if (mode === 'draft' || channelSource.value !== '门店') return [];
+        const store = bookingStores[document.getElementById('storeName').value];
+        if (!store) return ['门店有效档案缺失'];
+        const issues = [];
+        if (store.status !== '正常') issues.push('门店' + store.status + '，不能新增订单');
+        if (!store.qualificationUntil || store.qualificationUntil < dateTimeText().slice(0, 10)) issues.push('门店资质未生效或已到期');
+        if (!store.salesEffective) issues.push('门店销售授权尚未生效');
+        if (store.types.indexOf(detailType()) < 0) issues.push('该产品类型不在门店可售范围内');
+        const regions = bookingRegions[currentProduct.id] || [];
+        if (!regions.some(function (region) { return store.regions.indexOf(region) >= 0; })) issues.push('产品目的地未获门店销售授权');
+        const stock = selectedStock();
+        if (stock && /停售|未发布|已关闭|不可售/.test(stock[4] || '')) issues.push('所选产品或团期当前不可售');
+        if (mode === 'pending') return issues;
+        if (mode === 'reserve' || mode === 'hold') {
+          if (!store[mode]) issues.push('门店未开通' + (mode === 'reserve' ? '预留' : '占位') + '权限');
+          if (!(Number(store[mode + 'Hours']) > 0) || !store.releaseMode) issues.push('保留期限及到期处理规则尚未确定，请提交待确认或保存草稿');
+        }
+        // 普通团期按人数核对；组合舱房、铺位及房型需取得对应规格余量。
+        const remaining = stock && !usesCompositionRows() && /余\s*(\d+)\s*位/.exec(stock[2] || '');
+        if (!remaining) issues.push('所选资源余量尚未确认');
+        else if (salesPeopleCountSnapshot() > Number(remaining[1])) issues.push('所选团期余位不足');
+        if (mode === 'confirm') {
+          if (!currentProduct.resourceConfirmed) issues.push('本单资源尚未确认');
+          if (store.paymentRequired === null) issues.push('本单付款条件尚未确定');
+          else if (Number(store.paymentRequired) > 0) issues.push('本单尚无已认款或已成功扣款记录');
+        }
+        return issues;
+      }
+
       function generatedOrderNo() {
         const prefix = currentProduct.type === 'manual'
           ? 'KSSV'
@@ -2447,7 +2507,14 @@
           window.alert('请先补充：' + missing.join('、'));
           return;
         }
-        const orderNo = generatedOrderNo();
+        const issues = submissionIssues();
+        if (issues.length) {
+          window.alert('暂不能提交：' + issues.join('；'));
+          return;
+        }
+        const isDraft = orderProcessMode.value === 'draft';
+        const isPending = orderProcessMode.value === 'pending';
+        const orderNo = (isDraft ? 'DRAFT-' : '') + generatedOrderNo();
         const process = processProfile();
         const stock = selectedStock();
         const discounts = currentDiscountUsages();
@@ -2485,15 +2552,17 @@
           if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
           if (sourceContext.people) detailParams.set('people', sourceContext.people);
         }
-        const createdOrder = saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
+        const createdOrder = isDraft
+          ? { createdAt: dateTimeText(), confirmedAt: '', businessOwnership: businessOwnershipSnapshot() }
+          : saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
-        document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
-        document.getElementById('createdText').textContent = isManualMode()
+        document.getElementById('createdTitle').textContent = (isDraft ? '已保存草稿 ' : '已生成销售订单 ') + orderNo;
+        document.getElementById('createdText').textContent = isDraft ? '草稿已保存，未占用名额。' : isPending ? '待确认订单已提交，未占用名额。' : isManualMode()
           ? process.status + '订单已生成，单项服务已进入服务单受理。'
           : (sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，客户需收与优惠使用明细已记录。');
         document.getElementById('createdOrderNo').textContent = orderNo;
-        document.getElementById('createdProduct').textContent = currentProduct.name + ' / ' + currentProduct.tag + (isManualMode() ? ' / ' + manualServiceTypeLabel() : '');
-        document.getElementById('createdStock').textContent = isManualMode()
+        document.getElementById('createdProduct').textContent = isDraft && !hasSaleObject && !isManualMode() ? '未选择' : currentProduct.name + ' / ' + currentProduct.tag + (isManualMode() ? ' / ' + manualServiceTypeLabel() : '');
+        document.getElementById('createdStock').textContent = isDraft && !hasSaleObject && !isManualMode() ? '未选择' : isManualMode()
           ? (currentProduct.manualDisplay || stock[0])
           : currentProduct.stockLabel + ' ' + stock[1];
         document.getElementById('createdContact').textContent = document.getElementById('contactName').value.trim() + ' / ' + document.getElementById('contactPhone').value.trim();
@@ -2505,7 +2574,9 @@
         document.getElementById('createdConfirmedAt').textContent = createdOrder.confirmedAt || '尚未生效';
         document.getElementById('createdSource').textContent = sourceText();
         document.getElementById('createdOwnership').textContent = createdOrder.businessOwnership.productOrg + ' / ' + createdOrder.businessOwnership.salesBranch + ' / ' + createdOrder.businessOwnership.channelCategory;
-        const financeItems = isManualMode() ? [
+        document.querySelector('.booking-created-finance').hidden = isDraft;
+        document.getElementById('createdNextSteps').closest('section').hidden = isDraft;
+        const financeItems = isPending ? ['订单：待确认', '库存占用：未占位', '客户需收：' + customerPayableText + ' 待收'] : isManualMode() ? [
           '订单：单项服务订单已生成',
           '客户需收：' + customerPayableText + ' 待收',
           '应收币种：' + receivableCurrencyValue(),
@@ -2546,8 +2617,19 @@
         formActions.hidden = true;
         if (footerCurrencyControl) footerCurrencyControl.hidden = true;
         bookingResultView.hidden = false;
-        resultActions.hidden = true;
+        resultActions.hidden = !isDraft;
+        resultActions.innerHTML = isDraft ? '<button class="btn btn-primary" type="button" data-edit-booking-draft>继续编辑</button>' : '';
       }
+
+      resultActions.addEventListener('click', function (event) {
+        if (!event.target.closest('[data-edit-booking-draft]')) return;
+        bookingResultView.hidden = true;
+        resultActions.hidden = true;
+        bookingFormView.hidden = false;
+        formActions.hidden = false;
+        if (footerCurrencyControl) footerCurrencyControl.hidden = false;
+        syncSummary();
+      });
 
       planCards.addEventListener('click', function (event) {
         const button = event.target.closest('[data-plan-index]');

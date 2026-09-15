@@ -22,7 +22,7 @@
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="storeKeyword">门店/账户/单据</label><input id="storeKeyword" type="search" placeholder="门店/账户/单据"></div>
         <div class="filter-item-sm"><label class="sr-only" for="accountStatus">账户状态</label><select id="accountStatus"><option>全部状态</option><option>正常</option><option>余额不足</option><option>充值中</option><option>扣款复核中</option><option>冻结/异常</option></select></div>
-        <div class="filter-item-sm"><label class="sr-only" for="settleMode">结算方式</label><select id="settleMode"><option>全部结算方式</option><option>预存</option><option>月结</option><option>单单结</option><option>授信</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="settleMode">结算方式</label><select id="settleMode"><option>全部结算方式</option><option>预存</option><option>月结</option><option>单单结</option></select></div>
         <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-filter-search>搜索</button><button class="btn btn-secondary" type="button" data-filter-reset>重置</button></div>
       </div>
     </section>
@@ -172,7 +172,7 @@
         <h2 class="detail-section-title">订单扣款关联</h2>
         <section class="table-wrap list-surface-table drawer-table-compact drawer-table-cols-7" aria-label="订单扣款关联">
           <table>
-            <thead><tr><th>扣款单</th><th>订单号</th><th>客户</th><th>扣款节点</th><th>扣款金额</th><th>收款状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>扣款单</th><th>订单号</th><th>客户</th><th>扣款节点</th><th>扣款金额</th><th>状态 / 操作</th></tr></thead>
             <tbody id="balanceOrderRows">
               <tr><td>DK20260625001</td><td>KS2024061809</td><td>东方丝路专列客户</td><td>订单定金</td><td class="amount-red">-¥12,800</td><td><span class="tag tag-blue">复核中</span></td><td><div class="table-action"><a class="table-action-primary" href="../orders-detail.html">订单详情</a></div></td></tr>
               <tr><td>DK20260623003</td><td>KS2024061712</td><td>欧洲亲子客户</td><td>订单尾款</td><td class="amount-red">-¥21,200</td><td><span class="tag tag-green">已扣款</span></td><td><div class="table-action"><a class="table-action-primary" href="../orders-detail.html">订单详情</a></div></td></tr>
@@ -254,7 +254,7 @@
       }
 
       function statusTag(status) {
-        var cls = status === '正常' ? 'tag tag-green' : status === '余额不足' || status === '充值中' ? 'tag tag-orange' : status === '冻结/异常' ? 'tag tag-gray' : 'tag tag-blue';
+        var cls = ['正常', '已入账', '已扣款', '已解冻', '已转扣款'].indexOf(status) >= 0 ? 'tag tag-green' : ['已撤回', '已撤销', '草稿', '冻结/异常'].indexOf(status) >= 0 ? 'tag tag-gray' : status === '已退回' ? 'tag tag-red' : 'tag tag-orange';
         return '<span class="' + cls + '">' + escapeHtml(status || '正常') + '</span>';
       }
 
@@ -307,6 +307,9 @@
         currentAccountRow = row || currentAccountRow;
         renderSummary(accountSummaryGrid, currentAccountRow);
         renderAccountTables(currentAccountRow);
+        accountDrawer.querySelector('[data-open-apply]').hidden = currentAccountRow.dataset.status === '冻结/异常';
+        accountDrawer.querySelector('[data-open-apply]').classList.toggle('hidden', currentAccountRow.dataset.status === '冻结/异常');
+        renderRecordExamples(currentAccountRow);
       }
 
       function renderBalance(row) {
@@ -314,7 +317,10 @@
         var data = currentAccountRow ? currentAccountRow.dataset : {};
         balanceDrawerTitle.textContent = '余额明细';
         renderSummary(balanceSummaryGrid, currentAccountRow);
-        renderBalanceRows(currentAccountRow);
+        renderAccountTables(currentAccountRow);
+        renderRecordExamples(currentAccountRow);
+        balanceDetailRows.innerHTML = accountBalanceFlowRows.innerHTML;
+        document.getElementById('balanceOrderRows').innerHTML = accountDeductRows.innerHTML;
       }
 
       function renderApply(row) {
@@ -325,6 +331,56 @@
         if (data.account) applyAccount.value = data.account;
       }
 
+      var recordExamples = new WeakMap();
+      var editingRecharge = null;
+      function recordRows(items, kind) {
+        return items.map(function (item) {
+          var status = item[item.length - 1];
+          var actions = '<button class="table-action-primary" type="button" data-view-account-record>查看</button>';
+          if (kind === 'recharge' && ['草稿', '已退回', '已撤回'].indexOf(status) >= 0) actions += '<button type="button" data-edit-recharge>' + (status === '草稿' ? '继续填写' : '重新提交') + '</button>';
+          if (kind === 'recharge' && status === '财务确认中') actions += '<button type="button" data-withdraw-recharge>撤回</button>';
+          return '<tr data-record-kind="' + kind + '" data-record-status="' + status + '">' + item.slice(0, -1).map(function (cell) { return '<td>' + String(cell).split(' / ').map(function (line) { return '<div>' + escapeHtml(line) + '</div>'; }).join('') + '</td>'; }).join('') + '<td>' + statusTag(status) + '<div class="table-action">' + actions + '</div></td></tr>';
+        }).join('');
+      }
+      function renderRecordExamples(row) {
+        if (!recordExamples.has(row)) {
+          var suffix = row.dataset.account.split('-')[1];
+          recordExamples.set(row, {
+            recharge: ['草稿', '财务确认中', '部分确认', '已入账', '已退回', '已撤回'].map(function (status, i) { return ['CZSQ-' + suffix + '-' + (i + 1), '¥1,000', '2026-06-20 10:00', status === '已入账' ? 'CMBC-' + suffix + '-' + i : status === '部分确认' ? '已确认¥600 / 余¥400待确认' : '待匹配', status === '草稿' ? '未上传' : status === '已退回' ? '退回：凭证不清晰' : '银行回单', status]; }),
+            deduct: ['待复核', '待执行', '扣款中', '已扣款', '已退回', '已撤销', '待核查'].map(function (status, i) { return ['DK-' + suffix + '-' + (i + 1), 'KS20240617' + (12 + i), row.dataset.store + '客户', '订单定金', '¥1,000', status]; }),
+            freeze: ['冻结中', '已解冻', '已转扣款'].map(function (status, i) { return ['DJ-' + suffix + '-' + (i + 1), 'KS20240617' + (12 + i), '订单付款保留', '¥1,000', '按原申请处理', status]; }),
+            flow: [['2026-06-20 10:00', '充值入账', 'CZSQ-' + suffix + '-4', '+¥1,000', row.dataset.available, '已入账'], ['2026-06-21 10:00', '订单扣款', 'DK-' + suffix + '-4', '-¥1,000', row.dataset.available, '已扣款'], ['2026-06-22 10:00', '冻结解除', 'DJ-' + suffix + '-2', '+¥1,000', row.dataset.available, '已解冻']]
+          });
+        }
+        var records = recordExamples.get(row);
+        accountRechargeRows.innerHTML = recordRows(records.recharge, 'recharge');
+        accountDeductRows.innerHTML = recordRows(records.deduct, 'deduct');
+        document.getElementById('accountFreezeRows').innerHTML = recordRows(records.freeze, 'freeze');
+        accountBalanceFlowRows.innerHTML = recordRows(records.flow, 'flow');
+      }
+      accountRows.forEach(function (row) {
+        var restricted = row.dataset.status === '冻结/异常';
+        row.children[6].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-account>详情</button><button type="button" data-open-balance>明细</button>' + (restricted ? '<button type="button" data-account-limits>查看限制</button>' : '<button type="button" data-open-apply>充值</button>') + '</div>';
+      });
+      document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-account-limits]')) { window.alert('账户限制：暂停新增充值及扣款。已有明细可查询；解除限制由财务处理。'); return; }
+        var record = event.target.closest('tr[data-record-kind]');
+        if (!record) return;
+        var rows = recordExamples.get(currentAccountRow)[record.dataset.recordKind];
+        var item = rows.find(function (value) { return value[0] === record.children[0].textContent; });
+        if (event.target.closest('[data-view-account-record]')) { window.alert(item.join('\n')); return; }
+        if (event.target.closest('[data-withdraw-recharge]')) {
+          if (item[5] !== '财务确认中') return;
+          item[5] = '已撤回'; renderRecordExamples(currentAccountRow); notify('充值申请已撤回，余额不变'); return;
+        }
+        if (event.target.closest('[data-edit-recharge]')) {
+          if (currentAccountRow.dataset.status === '冻结/异常') { notify('账户限制新增充值'); return; }
+          editingRecharge = item; renderApply(currentAccountRow);
+          document.getElementById('applyAmount').value = item[1];
+          document.getElementById('applyRemark').value = item[5] === '已退回' ? item[4] : '';
+          window.caesarUI.openLayer(applyDrawer);
+        }
+      });
       function rowMatchesFilters(row) {
         var keyword = (keywordInput.value || '').trim().toLowerCase();
         var status = statusSelect.value;
@@ -361,6 +417,9 @@
         }
         var applyButton = event.target.closest('[data-open-apply]');
         if (applyButton) {
+          editingRecharge = null;
+          var targetAccount = applyButton.closest('tr') || currentAccountRow;
+          if (targetAccount && targetAccount.dataset.status === '冻结/异常') { notify('账户限制新增充值，请查看限制'); return; }
           renderApply(applyButton.closest('tr') || currentAccountRow);
           window.caesarUI.openLayer(applyDrawer);
           return;
@@ -377,6 +436,13 @@
           return;
         }
         if (event.target.closest('[data-submit-apply]')) {
+          if (currentAccountRow.dataset.status === '冻结/异常') { notify('账户限制新增充值'); return; }
+          var amount = Number(document.getElementById('applyAmount').value.replace(/[^\d.-]/g, ''));
+          if (!Number.isFinite(amount) || amount <= 0) { notify('请填写正确的打款金额'); return; }
+          renderRecordExamples(currentAccountRow);
+          if (editingRecharge) { editingRecharge[1] = '¥' + amount; editingRecharge[5] = '财务确认中'; editingRecharge = null; }
+          else recordExamples.get(currentAccountRow).recharge.unshift(['CZSQ-' + Date.now(), '¥' + amount, document.getElementById('applyTime').value, '待匹配', '待财务核验', '财务确认中']);
+          renderRecordExamples(currentAccountRow);
           window.caesarUI.closeLayer(applyDrawer);
           notify('充值申请已提交，待财务根据到账流水确认入账。');
           return;
@@ -394,7 +460,9 @@
         select.addEventListener('change', applyFilters);
       });
 
+      applyFilters();
       applyStore.addEventListener('change', function () {
+        editingRecharge = null;
         var selectedRow = accountRows.find(function (row) { return row.dataset.store === applyStore.value; }) || currentAccountRow;
         renderApply(selectedRow);
       });

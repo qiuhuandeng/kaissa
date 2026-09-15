@@ -100,7 +100,7 @@
     const money = value => value === null ? "待确认" : (value / (applied.unit === 'wan' ? 10000 : 1)).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const unit = () => applied.unit === 'wan' ? '万元' : '元';
     function shell() {
-      root.innerHTML = '<header class="report-head"><h1>口径与数据核对</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') +
+      root.innerHTML = '<header class="report-head"><h1>数据管理</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') +
         (tab === 'checks' ? button('重新检查', 'data-recheck') : button('新建', 'data-new', true)) + '</div></header>' +
         '<div class="rm-tabs report-tabbar" role="tablist" aria-label="报表管理视图">' + Object.entries(labels).map(([key, name]) => '<button type="button" class="report-tab" role="tab" aria-selected="' + (tab === key) + '" data-tab="' + key + '">' + name + '</button>').join('') + '</div>' +
         '<div data-list><form class="report-filters" data-filter><div class="report-filter-row">' + (tab === 'checks'
@@ -233,6 +233,12 @@
       }
     });
     shell();
+    window.CaesarReportNavigation?.bind(root, {
+      capture: () => ({ tab, applied, ruleFilter, page, pageSize, sort, direction }),
+      restore: s => { ({ tab, applied, ruleFilter, page, pageSize, sort, direction } = s); shell(); },
+      activate: key => { tab = key; ruleFilter = { ...ruleDefaults }; page = 1; sort = ''; shell(); },
+      leave: () => !editor || leaveEditor()
+    });
   }
   if (window.CaesarReports) mount(window.CaesarReports);
   else root.innerHTML = '<p role="alert">报表资料未加载，请检查 shared/report-pages.js 文件是否完整后刷新。</p>';

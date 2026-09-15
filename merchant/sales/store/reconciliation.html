@@ -79,7 +79,7 @@
             <td class="amount-strong"><strong>退款 ¥3,200</strong><span class="amount-red">管理费 -¥2,000</span></td>
             <td><span class="tag tag-red">差异¥1,000</span></td>
             <td><span class="tag tag-red">有异议</span></td>
-            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>差异</button></div></td>
+            <td><div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>查看异议</button></div></td>
           </tr>
           <tr data-bill="MSDZ202606004" data-period="2026-06" data-store="泉州丰泽门店" data-account="8888-0004-2025-0001" data-begin="¥22,000" data-recharge="¥35,000" data-deduct="-¥18,000" data-refund="¥0" data-fee="-¥2,000" data-end="¥37,000" data-diff="¥0" data-status="待财务复核">
             <td><strong>MSDZ202606004</strong><span class="text-muted">2026-06</span></td>
@@ -196,7 +196,7 @@
 
       function actionHtml(status) {
         if (status === '待门店确认') return '<div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>核对</button></div>';
-        if (status === '有异议') return '<div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>差异</button></div>';
+        if (status === '有异议') return '<div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>查看异议</button></div>';
         if (status === '财务退回') return '<div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>再提交</button></div>';
         return '<div class="table-action"><button class="table-action-primary" type="button" data-open-reconcile>详情</button></div>';
       }
@@ -217,6 +217,18 @@
         pagination.textContent = visible ? '第1-' + visible + '条/共' + visible + '条' : '共0条';
       }
 
+      function canSubmitReconcile() { return activeRow && ['待门店确认', '财务退回'].indexOf(activeRow.dataset.status) >= 0; }
+      function syncReconcileActions(row) {
+        var editable = ['待门店确认', '财务退回'].indexOf(row.dataset.status) >= 0;
+        drawer.querySelectorAll('#diffType, #diffAmount, #diffReason').forEach(function (field) { field.disabled = !editable; });
+        drawer.querySelector('[data-submit-diff]').hidden = !editable;
+        drawer.querySelector('[data-submit-diff]').classList.toggle('hidden', !editable);
+        drawer.querySelector('[data-confirm-reconcile]').hidden = !editable;
+        drawer.querySelector('[data-confirm-reconcile]').classList.toggle('hidden', !editable);
+        drawer.querySelector('[data-confirm-reconcile]').textContent = row.dataset.status === '财务退回' ? '重新提交财务复核' : '确认并提交财务复核';
+        document.getElementById('diffAmount').value = (row.dataset.diff.match(/[\d,.]+/) || ['0'])[0];
+        document.getElementById('diffReason').value = row.dataset.diff === '¥0' ? '' : row.dataset.diff;
+      }
       function renderSummary(row) {
         var data = row ? row.dataset : {};
         summaryGrid.innerHTML = [
@@ -249,10 +261,13 @@
         if (openButton) {
           activeRow = openButton.closest('tr');
           renderSummary(activeRow);
+          syncReconcileActions(activeRow);
           window.caesarUI.openLayer(drawer);
           return;
         }
         if (event.target.closest('[data-submit-diff]')) {
+          if (!canSubmitReconcile()) return;
+          if (!document.getElementById('diffReason').value.trim()) { notify('请填写异议说明'); return; }
           if (activeRow) {
             activeRow.dataset.status = '有异议';
             activeRow.dataset.diff = document.getElementById('diffAmount').value || activeRow.dataset.diff;
@@ -266,6 +281,9 @@
           return;
         }
         if (event.target.closest('[data-confirm-reconcile]')) {
+          if (!canSubmitReconcile()) return;
+          if (Number(document.getElementById('diffAmount').value.replace(/[^\d.-]/g, '')) !== 0) { notify('仍有差异，请提交异议'); return; }
+          if (activeRow.dataset.status === '财务退回' && !document.getElementById('diffReason').value.trim()) { notify('请补充退回问题的处理说明'); return; }
           if (activeRow) {
             activeRow.dataset.status = '待财务复核';
             activeRow.dataset.diff = '¥0';
@@ -297,6 +315,16 @@
         if (event.key === 'Enter') applyFilters();
       });
       statusSelect.addEventListener('change', applyFilters);
+      document.querySelectorAll('#reconcileRows tr').forEach(function (row) { row.children[7].innerHTML = actionHtml(row.dataset.status); });
+      applyFilters();
+      drawer.querySelectorAll('tbody tr').forEach(function (row) {
+        var statusCell = row.lastElementChild;
+        statusCell.insertAdjacentHTML('beforeend', '<div class="table-action"><button class="table-action-primary" type="button" data-view-reconcile-record>查看</button></div>');
+      });
+      document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-view-reconcile-record]');
+        if (button) window.alert(Array.from(button.closest('tr').cells).map(function (cell) { return cell.textContent.replace('查看', '').trim(); }).join('\n'));
+      });
     })();
   </script>
 </body>

@@ -5,7 +5,7 @@
 })(typeof globalThis === 'object' ? globalThis : this, function (cashflow) {
   'use strict';
   const { sum, money, fmt, esc, csv, sort } = cashflow;
-  const views = { ar: '应收明细', ap: '应付明细', aging: '账龄汇总', clearing: '内部待清算' };
+  const views = { ar: '应收余额', ap: '应付余额', aging: '账龄分析', clearing: '内部清算' };
   const cases = { BA01: '历史余额与期后收款', BA02: '企业项目分阶段收款', BA03: '减项与核销冲回', BA04: '付款与预付冲抵', BA05: '缺日期、金额及历史', BA06: '同名往来与原币', BA07: '集团代收代付', BA08: '迟到调整与资料截止', BA09: '到期日变更', BA10: '重复、冲突及反向余额', BA11: '账龄与逾期边界', BA12: '分页及完整导出' };
   const kinds = { adjustment: '应收应付调整', cash: '收付核销', offset: '预款冲抵', relief: '批准减免核销', terms: '到期日变更' };
   const dateOK = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) && new Date(s).toISOString().slice(0, 10) === s;

@@ -3,7 +3,7 @@
   const known = v => typeof v === 'number' && Number.isFinite(v);
   const sum = xs => xs.reduce((a, v) => a + Math.round(v * 100), 0) / 100;
   const defaults = { dataset: 'pending', view: 'costs', company: '', supplier: '', product: '', tour: '', batch: '', unit: '', start: '2026-09-01', end: '2026-09-30' };
-  const views = { costs: '成本组成与分配', resources: '资源批次风险' };
+  const views = { costs: '成本分配', resources: '资源风险' };
   function fixture() {
     const base = { company: '北京凯撒', currency: 'CNY', date: '2026-09-20', supplier: '邮轮供应商（演示）', product: '地中海邮轮', destination: '欧洲', supply: '自营组织', evidence: '已确认采购及分配依据（独立算例）' };
     return { batches: [

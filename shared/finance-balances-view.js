@@ -77,7 +77,7 @@
     catch (err) { error.textContent = err.message; error.hidden = false; }
   }
   function download(full) {
-    const rows = [['报表', '订单收付与往来账龄 / ' + m.views[applied.view]], ['资料', result.notice], ['金额单位', '元，按原币；内部未抵销'], ['口径', '原确认+调整-收付核销-预款冲抵-减免核销'],
+    const rows = [['报表', '往来账龄 / ' + m.views[applied.view]], ['资料', result.notice], ['金额单位', '元，按原币；内部未抵销'], ['口径', '原确认+调整-收付核销-预款冲抵-减免核销'],
       ...Object.entries(fieldNames).filter(([k]) => applied.view === 'aging' || !['direction', 'ageBasis', 'group'].includes(k)).map(([k, v]) => {
         const select = field(k); const option = select.tagName === 'SELECT' ? [...select.options].find(o => o.value === applied[k]) : null;
         return [v, option ? option.textContent : applied[k] || '全部'];
@@ -106,6 +106,11 @@
     if (b.hasAttribute('data-ba-column')) { b.checked ? extras.add(b.dataset.baColumn) : extras.delete(b.dataset.baColumn); render(); }
     if (b.hasAttribute('data-ba-size')) { size = Number(b.value); page = 1; render(); }
   });
-  document.title = '订单收付与往来账龄 - 凯撒旅游';
+  document.title = '往来账龄 - 凯撒旅游';
   setForm(applied); run(applied);
+  window.CaesarReportNavigation?.bind(host, {
+    capture: () => ({ applied, page, size, sortKey, direction, extras: [...extras] }),
+    restore: s => { applied = s.applied; run(applied); page = s.page; size = s.size; sortKey = s.sortKey; direction = s.direction; extras.clear(); s.extras.forEach(k => extras.add(k)); setForm(applied); render(); host.querySelector('[data-ba-size]').value = size; },
+    activate: key => { extras.clear(); const next = { ...m.defaults(), view: key }; setForm(next); run(next); }
+  });
 })();

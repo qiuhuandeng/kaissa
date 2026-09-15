@@ -121,6 +121,12 @@
       if (b.dataset.rfSort) { state().direction = state().sort === b.dataset.rfSort ? -state().direction : 1; state().sort = b.dataset.rfSort; render(); }
       if (b.dataset.rfPage) { state().page += Number(b.dataset.rfPage); render(); }
     });
-    form(); render(); return { exportResult };
+    form(); render();
+    root.CaesarReportNavigation?.bind(host, {
+      capture: () => { saveDraft(); return { ...state(), extras: [...state().extras] }; },
+      restore: s => { states[mode] = { ...s, extras: new Set(s.extras) }; form(); render(); },
+      activate: () => {}
+    });
+    return { exportResult };
   };
 })(window);

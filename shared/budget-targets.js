@@ -135,7 +135,7 @@
     const now = () => new Date().toLocaleString('zh-CN', { hour12: false });
     function error(message, edit = false) { const el = root.querySelector(edit ? '[data-edit-error]' : '[data-error]'); el.textContent = message; el.hidden = !message; }
     function shell() {
-      root.innerHTML = '<header class="report-head"><h1>经营任务与预算</h1><div class="report-actions" data-list-actions>' + button(icon('download') + '导出', 'data-export title="导出全查询任务及月度分解"') + button('新建任务', 'data-new') + '</div></header>' +
+      root.innerHTML = '<header class="report-head"><h1>任务预算</h1><div class="report-actions" data-list-actions>' + button(icon('download') + '导出', 'data-export title="导出全查询任务及月度分解"') + button('新建任务', 'data-new') + '</div></header>' +
         '<div class="report-meta"><span class="report-demo">演示任务 · 无正式批准版本</span><span>人民币 · 元</span><span>考核日历：自然月（演示）</span></div>' +
         '<div data-list><form class="report-filters" data-filter><div class="report-filter-row">' + input('search', '任务／责任名称', applied.search) + input('year', '任务年度', applied.year) +
         select('metric', '任务指标', [['', '全部指标'], ...Object.entries(m.metrics)], applied.metric) + select('state', '主状态', [['', '全部状态'], ...states.map(s => [s, s])], applied.state) +
@@ -200,13 +200,14 @@
       root.querySelector('[data-child-total]').textContent = '下级已分配 ' + money(t.allocated) + ' · 尚未分配 ' + money(t.unallocated);
       if (p) root.querySelector('[data-version-comparison]').textContent = '原V' + p.version + '：' + money(m.cents(p.annual, p.metric === 'margin')) + '元；本次V' + editor.version + '：' + money(t.annual) + '元；年度变化：' + (t.annual === null ? '未填写' : money(t.annual - m.cents(p.annual, p.metric === 'margin'))) + '元';
     }
+    root.reportCanLeave = () => { if (dirty && !confirm('本次修改尚未保存，确认放弃？')) return false; if (editor) { dirty = false; back(); } return true; };
     function back() {
       if (dirty && !confirm('本次修改尚未保存，确认放弃？')) return;
       editor = null; dirty = false; root.querySelector('[data-editor]').hidden = true;
       root.querySelector('[data-list]').hidden = false; root.querySelector('[data-list-actions]').hidden = false; render();
     }
     function exportRows() {
-      const rows = queryRows(), data = [['经营任务与预算', '演示资料，非正式批准任务'], ['金额单位', '人民币·元'], ['考核日历', '自然月（演示）'], ['导出时间', now()],
+      const rows = queryRows(), data = [['任务预算', '演示资料，非正式批准任务'], ['金额单位', '人民币·元'], ['考核日历', '自然月（演示）'], ['导出时间', now()],
         ...Object.entries(applied).map(([k, v]) => [{ search: '任务／责任名称', year: '年度', metric: '任务指标', state: '主状态', role: '责任口径', level: '责任层级', date: '版本适用日期' }[k], k === 'metric' ? m.metrics[v] || '全部' : v || '全部']),
         ['任务名称', '年度', '指标', '责任口径', '责任层级', '责任范围', '组织版本', '金额定义', '含税口径', '年度任务', ...Array.from({ length: 12 }, (_, i) => i + 1 + '月'), '月度已分解', '月度差额', '未填写月数', '下级已分配', '尚未分配', '版本', '主状态', '生效日', '结束日', '原版本', '编制负责人', '依据', '原因', '批准记录']];
       const amount = n => n === null ? '未填写' : n / 100;
@@ -214,7 +215,7 @@
       data.push([], ['下级年度分配（包含在上级任务内，不重复累计）'], ['任务名称', '版本', '下级责任范围', '分配金额（元）']);
       rows.forEach(r => r.children.forEach(c => data.push([r.name, 'V' + r.version, m.scopeFor(c.scope).name, amount(m.cents(c.amount, r.metric === 'margin'))])));
       const url = URL.createObjectURL(new Blob(['\uFEFF' + data.map(row => row.map(report.csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
-      const a = document.createElement('a'); a.href = url; a.download = '经营任务与预算-演示.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const a = document.createElement('a'); a.href = url; a.download = '任务预算-演示.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     root.addEventListener('submit', e => {
       e.preventDefault();
@@ -264,6 +265,11 @@
       } catch (err) { error(err.message, !!editor); }
     });
     shell();
+    window.CaesarReportNavigation?.bind(root, {
+      capture: () => ({ applied, page, size, sort, direction }),
+      restore: s => { ({ applied, page, size, sort, direction } = s); shell(); },
+      activate: () => {}
+    });
   }
   if (window.CaesarReports) mount(window.CaesarReports);
   else root.innerHTML = '<p role="alert">报表资料未加载，请检查 shared/report-pages.js 文件是否完整后刷新。</p>';

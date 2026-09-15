@@ -126,7 +126,7 @@
     const select = (name, label, options, value) => '<label class="report-field"><span>' + label + '</span><select name="' + name + '">' + options.map(([v, t]) => '<option value="' + esc(v) + '"' + (value === v ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></label>';
     function shell() {
       const all = [...m.common(), ...m.scenarios];
-      root.innerHTML = '<header class="report-head"><h1>业务毛利与结算分析</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及确认依据"') + '</header>' +
+      root.innerHTML = '<header class="report-head"><h1>业务毛利</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及确认依据"') + '</header>' +
         '<div class="report-tabbar sr-tabs" role="tablist" aria-label="结算分析视图">' + Object.entries(m.views).map(([k, t]) => '<button class="report-tab" role="tab" data-view="' + k + '" aria-selected="' + (k === view) + '">' + t + '</button>').join('') + '</div>' +
         '<form class="report-filters"><div class="report-filter-row">' + select('dataset', '资料范围', Object.entries(m.datasets), applied.dataset) + select('basis', '日期依据', [['actual', '实际完成日'], ['settlement', '原结算确认日']], applied.basis) +
         ['start', 'end'].map(k => '<label class="report-field"><span>' + (k === 'start' ? '开始日期' : '结束日期') + '</span><input name="' + k + '" type="date" value="' + applied[k] + '" required></label>').join('') +
@@ -192,7 +192,7 @@
         const isAdjustment = applied.view === 'adjustments';
         const totalKeys = isAdjustment ? ['incomeChange', 'costChange', 'profitChange'] : ['profit', 'knownProfit', 'knownRevenue', 'knownCost', 'knownRate'];
         const lines = [
-          ['业务毛利与结算分析', m.views[applied.view], m.datasets[applied.dataset], '演示资料，非正式财务结果'],
+          ['业务毛利', m.views[applied.view], m.datasets[applied.dataset], '演示资料，非正式财务结果'],
           ['资料截止', m.cutoff, 'V1'], ['日期依据', isAdjustment ? '已生效按生效日；待确认按调整日' : applied.basis === 'actual' ? '实际完成日' : '原结算确认日'],
           ['开始日期', applied.start], ['结束日期', applied.end], ['金额单位', applied.unit === 'wan' ? '万元' : '元'],
           ...m.filterKeys.map(k => [m.labels[k], applied[k] || '全部']), ['搜索条件', applied.keyword],
@@ -206,6 +206,11 @@
       }
     });
     shell();
+    window.CaesarReportNavigation?.bind(root, {
+      capture: () => ({ applied, view, page, size, sort, direction, optional: [...optional] }),
+      restore: s => { ({ applied, view, page, size, sort, direction } = s); optional = new Set(s.optional); shell(); },
+      activate: key => { view = key; applied = { ...m.defaults, view }; optional.clear(); page = 1; sort = 'id'; shell(); }
+    });
   }
   if (window.CaesarReports) mount(window.CaesarReports);
   else root.innerHTML = '<p role="alert">报表资料未加载，请检查 shared/report-pages.js 文件是否完整后刷新。</p>';

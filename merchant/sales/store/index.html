@@ -731,8 +731,9 @@
         { name: "观音山门店", type: "合作门店", settle: "单单结", subject: "福建凯撒", org: "厦门分公司 / 厦门思明区门市部", keys: "all fujian xiamen-branch xiamen-store-dept store-xiamen-c", manager: "陈红", phone: "135****5500", amount: "单单结 ¥9,200", note: "冻结 ¥6,600 · 管理费 ¥800/月", scope: "参团游/自由行 · 福建/厦门", contract: "福建凯撒", merchant: "福建主体聚合支付商户 · 财务确认", status: "正常", tag: "合作", tagClass: "tag tag-orange", rules: ["可发合同", "主体复核"] },
         { name: "泉州丰泽门店", type: "自营门店", settle: "", subject: "福建凯撒", org: "泉州分公司 / 泉州丰泽门市部", keys: "all fujian quanzhou-branch quanzhou-store-dept store-quanzhou-a", manager: "李梅", phone: "138****6600", amount: "预存 ¥52,000", note: "冻结 ¥0 · 管理费 ¥1,000/月", scope: "参团游/邮轮 · 欧洲/国内", contract: "福建凯撒", merchant: "福建主体聚合支付商户 · 自动认款", status: "正常", tag: "自营", tagClass: "tag tag-green", rules: ["可发合同", "可预留", "先交团费"] },
         { name: "泉州鲤城门店", type: "加盟门店", settle: "月结", subject: "福建凯撒", org: "泉州分公司 / 泉州丰泽门市部", keys: "all fujian quanzhou-branch quanzhou-store-dept store-quanzhou-b", manager: "吴芳", phone: "136****0909", amount: "月结 ¥38,000", note: "账期30天 · 管理费 ¥1,200/月", scope: "参团游/自由行 · 东南亚", contract: "福建凯撒", merchant: "福建主体聚合支付商户 · 自动认款", status: "正常", tag: "加盟", tagClass: "tag tag-blue", rules: ["可发合同", "未收禁确认"] },
-        { name: "泉州东海门店", type: "合作门店", settle: "", subject: "福建凯撒", org: "泉州分公司 / 泉州丰泽门市部", keys: "all fujian quanzhou-branch quanzhou-store-dept store-quanzhou-c", manager: "周伟", phone: "137****7700", amount: "预存 ¥18,600", note: "冻结 ¥2,000 · 管理费 ¥800/月", scope: "参团游/单项服务 · 国内", contract: "福建凯撒", merchant: "福建主体聚合支付商户 · 财务确认", status: "正常", tag: "合作", tagClass: "tag tag-orange", rules: ["可预留", "主体复核"] }
+        { name: "泉州东海门店", type: "合作门店", settle: "", subject: "福建凯撒", org: "泉州分公司 / 泉州丰泽门市部", keys: "all fujian quanzhou-branch quanzhou-store-dept store-quanzhou-c", manager: "周伟", phone: "137****7700", amount: "预存 ¥18,600", note: "冻结 ¥2,000 · 管理费 ¥800/月", scope: "参团游/单项服务 · 国内", contract: "福建凯撒", merchant: "福建主体聚合支付商户 · 财务确认", status: "暂停", tag: "合作", tagClass: "tag tag-orange", rules: ["可预留", "主体复核"] }
       ];
+      rows.push({ name: "厦门海沧门店", type: "合作门店", settle: "单单结", subject: "福建凯撒", org: "厦门分公司 / 厦门思明区门市部", keys: "all fujian xiamen-branch xiamen-store-dept", manager: "沈悦", phone: "138****9911", amount: "预存 ¥0", note: "待开预存账户", scope: "待开通", contract: "福建凯撒", merchant: "待财务审核", status: "待审核", tag: "合作", tagClass: "tag tag-orange", rules: [] });
       var tbody = document.getElementById("storeRows");
       if (tbody) {
         tbody.innerHTML = rows.map(function (item) {
@@ -743,7 +744,7 @@
             '<td><div class="store-name-line"><strong>' + item.name + '</strong><span class="' + item.tagClass + '">' + item.tag + '</span></div><span class="text-muted">负责人 ' + item.manager + ' ' + item.phone + '</span></td>' +
             '<td class="amount-strong"><strong>' + item.amount + '</strong><span class="text-muted">' + item.note + '</span></td>' +
             '<td><div class="tag-row">' + ruleHtml + '</div><span class="text-muted">' + item.scope + '</span></td>' +
-            '<td><span class="tag tag-green">' + item.status + '</span></td>' +
+            '<td><span class="tag ' + (item.status === '正常' ? 'tag-green' : 'tag-orange') + '">' + item.status + '</span></td>' +
             '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-sales-config>销售设置</button><button type="button" data-open-finance-config>财务设置</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item" href="detail.html">详情</a><button type="button" class="dropdown-item danger" data-open-pause>暂停</button></span></span></div></td>' +
             '</tr>';
         }).join('');
@@ -1688,6 +1689,8 @@
           if (optionEnabled(status) && row.dataset.status !== status) visible = false;
           row.hidden = !visible;
         });
+        var count = Array.from(document.querySelectorAll('#storeRows tr')).filter(function (row) { return !row.hidden; }).length;
+        document.querySelector('.list-surface-pagination > span').textContent = count ? '第1-' + count + '条/共' + count + '条' : '共0条';
       }
 
       function resetFilters() {
@@ -1695,6 +1698,46 @@
         document.querySelectorAll('.store-filter select').forEach(function (select) { select.selectedIndex = 0; });
         applyFilters();
       }
+
+      var activeReviewRow = null;
+      function renderStoreStatusActions(row) {
+        if (row.dataset.status === '待审核') {
+          row.dataset.finance = '待财务审核';
+          row.children[4].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-view-store-review>查看申请</button><button type="button" data-withdraw-store-review>撤回</button></div>';
+        } else if (row.dataset.status === '草稿') {
+          row.children[4].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-view-store-review>继续编辑</button></div>';
+        } else {
+          var button = row.querySelector('[data-open-pause]');
+          if (button) { button.textContent = row.dataset.status === '暂停' ? '恢复' : '暂停'; button.classList.toggle('danger', row.dataset.status === '正常'); }
+        }
+      }
+      function openStoreReview(row) {
+        activeReviewRow = row;
+        var pending = row.dataset.status === '待审核';
+        storeModal.querySelector('.modal-title').textContent = pending ? '查看门店申请' : '编辑门店草稿';
+        document.getElementById('storeFormName').value = row.dataset.storeName;
+        document.getElementById('storeFormType').value = row.dataset.type;
+        document.getElementById('storeFormSubject').value = row.dataset.subject;
+        document.getElementById('storeFormCenter').value = row.dataset.center;
+        var contact = row.children[0].querySelector('.text-muted').textContent.replace('负责人 ', '').split(' ');
+        document.getElementById('storeManager').value = contact[0] || '';
+        document.getElementById('storePhone').value = contact[1] || '';
+        document.getElementById('storeSettle').value = row.dataset.settle;
+        if (row._draftValues) storeModal.querySelectorAll('input[id], select[id], textarea[id]').forEach(function (field) { if (row._draftValues[field.id] !== undefined) field.value = row._draftValues[field.id]; });
+        storeModal.querySelectorAll('input, select, textarea').forEach(function (el) { el.disabled = pending; });
+        storeModal.querySelector('[data-submit-store-review]').hidden = pending;
+        storeModal.querySelector('[data-submit-store-draft]').hidden = pending;
+        window.caesarUI.openLayer(storeModal);
+      }
+      document.querySelectorAll('#storeRows tr').forEach(renderStoreStatusActions);
+      var draftOption = new Option('草稿', '草稿');
+      document.getElementById('storeStatus').add(draftOption);
+      var draftRow = document.querySelector('#storeRows tr[data-status="待审核"]').cloneNode(true);
+      draftRow.dataset.storeName = '厦门集美门店'; draftRow.dataset.status = draftRow.dataset.tabStatus = '草稿';
+      draftRow.dataset.keywords = '厦门集美门店 福建凯撒 厦门分公司 沈悦';
+      draftRow.querySelector('strong').textContent = '厦门集美门店';
+      draftRow.children[3].innerHTML = '<span class="tag tag-gray">草稿</span>';
+      document.getElementById('storeRows').appendChild(draftRow); renderStoreStatusActions(draftRow);
 
       function addReviewRow() {
         var name = document.getElementById('storeFormName').value || '新门店';
@@ -1712,11 +1755,20 @@
           '<td><span class="tag tag-blue">待审核</span></td>' +
           '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-sales-config>销售设置</button><button type="button" data-open-finance-config>财务设置</button><span class="dropdown table-action-more"><button class="muted table-more-toggle" type="button" data-row-more aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu"><a class="dropdown-item" href="detail.html">详情</a><button type="button" class="dropdown-item">补资料</button><button type="button" class="dropdown-item danger">撤回</button></span></span></div></td>' +
           '</tr>';
+        if (activeReviewRow) { activeReviewRow.remove(); activeReviewRow = null; }
         document.getElementById('storeRows').insertAdjacentHTML('afterbegin', row);
+        renderStoreStatusActions(document.getElementById('storeRows').firstElementChild);
       }
 
       document.addEventListener('click', function (event) {
         if (!storeModal.isConnected) return;
+        if (event.target.closest('[data-view-store-review]')) { openStoreReview(event.target.closest('tr')); return; }
+        if (event.target.closest('[data-withdraw-store-review]')) {
+          var reviewRow = event.target.closest('tr');
+          reviewRow.dataset.status = reviewRow.dataset.tabStatus = '草稿';
+          reviewRow.children[3].innerHTML = '<span class="tag tag-gray">草稿</span>';
+          renderStoreStatusActions(reviewRow); applyFilters(); notify('申请已撤回，可继续编辑'); return;
+        }
         if (permissionModal.dataset.configPending === 'true' && event.target.closest('[data-remove-config-scope-item], [data-clear-config-scope]')) return;
         var orgRow = event.target.closest('[data-store-org-row]');
         if (orgRow) {
@@ -1759,6 +1811,11 @@
           toggleStoreOrgPicker(false);
         }
         if (event.target.closest('#openStoreModal')) {
+          activeReviewRow = null;
+          storeModal.querySelector('.modal-title').textContent = '新增门店';
+          storeModal.querySelectorAll('input, select, textarea').forEach(function (el) { el.disabled = false; });
+          storeModal.querySelector('[data-submit-store-review]').hidden = false;
+          storeModal.querySelector('[data-submit-store-draft]').hidden = false;
           applyStoreOrgDefaultsToForm();
           window.caesarUI.openLayer(storeModal);
           return;
@@ -1776,7 +1833,20 @@
           return;
         }
         if (event.target.closest('[data-submit-store-draft]')) {
+          if (!activeReviewRow) {
+            addReviewRow(); activeReviewRow = document.getElementById('storeRows').firstElementChild;
+            activeReviewRow.dataset.status = activeReviewRow.dataset.tabStatus = '草稿';
+            activeReviewRow.children[3].innerHTML = '<span class="tag tag-gray">草稿</span>';
+            renderStoreStatusActions(activeReviewRow);
+          }
+          if (activeReviewRow) {
+            activeReviewRow._draftValues = {};
+            storeModal.querySelectorAll('input[id], select[id], textarea[id]').forEach(function (field) { activeReviewRow._draftValues[field.id] = field.value; });
+            activeReviewRow.dataset.storeName = document.getElementById('storeFormName').value || activeReviewRow.dataset.storeName;
+            activeReviewRow.querySelector('strong').textContent = activeReviewRow.dataset.storeName;
+          }
           window.caesarUI.closeLayer(storeModal);
+          applyFilters();
           notify('门店草稿已保存');
           return;
         }
@@ -1940,6 +2010,12 @@
       syncProductScopeRanges();
       syncStoreRuleSummaries(permissionModal);
       initStoreOrgFromUrl();
+      document.querySelectorAll('[data-store-org-row]').forEach(function (node) {
+        var matching = Array.from(document.querySelectorAll('#storeRows tr')).filter(function (row) { return (' ' + row.dataset.orgKeys + ' ').indexOf(' ' + node.dataset.orgId + ' ') >= 0; });
+        node.dataset.orgCount = matching.length;
+        node.dataset.orgStatus = matching.length + '家门店';
+      });
+      applyFilters();
     })();
   </script>
 </body>

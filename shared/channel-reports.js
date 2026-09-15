@@ -107,8 +107,8 @@
       root.querySelectorAll('[data-view]').forEach(el => el.setAttribute('aria-selected', String(el.dataset.view === draft.view)));
     }
     function shell() {
-      const links = [['performance-reports.html', '经营总览'], ['product-reports.html', '产品经营分析'], ['channel-reports.html', '渠道经营分析'], ['order-report-details.html', '订单明细'], ['return-report-details.html', '回团明细']];
-      root.innerHTML = '<header class="report-head"><h1>渠道经营分析</h1><div class="report-actions"><nav class="report-links" aria-label="经营报表">' + links.map(([href, text]) => '<a href="' + href + '"' + (href.startsWith('channel-') ? ' aria-current="page"' : '') + '>' + text + '</a>').join('') + button(icon('download') + '导出', 'data-export title="导出全查询结果"') + '</div></header>' +
+      const links = [['performance-reports.html', '经营总览'], ['product-reports.html', '产品分析'], ['channel-reports.html', '渠道分析'], ['order-report-details.html', '订单明细'], ['return-report-details.html', '回团明细']];
+      root.innerHTML = '<header class="report-head"><h1>渠道分析</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') + '</div></header>' +
         '<div class="report-tabbar cr-tabs" role="tablist" aria-label="渠道经营视图">' + Object.entries({ ...m.views, margin: '渠道毛利校验' }).map(([key, label]) => '<button type="button" class="report-tab" role="tab" data-view="' + key + '">' + label + '</button>').join('') + '</div>' +
         '<form class="report-filters"><div data-filters></div><p class="report-query-status" data-status role="status">已查询 · 演示资料</p><p class="report-error" data-error role="alert" hidden></p></form><div data-meta class="report-meta"></div><section class="report-section" data-result></section>' +
         '<section class="report-note"><h2>数据口径</h2><p>演示资料，非正式财务业绩。订单按确认日期及截止时净成交额；回团按实际完成日期及分配成交额，包含待结算业务。退款支付不再重复冲减成交；计划到期不等于实际完成。</p><p>归属采用业务发生时资料。主渠道与获客来源分开；集团内部供应不增加对客成交。同名顾问按演示员工编号区分，缺编号不合并为同一人。</p><p>结构占比以所选范围成交额为分母；渠道贡献只解除主渠道条件，保留公司、产品、门店、销售组及期间。无有效分母或金额缺失不计算比例。</p><p>未提供完整对比期资料、批准任务及渠道毛利确认依据；升舱、优惠还原公式与10%比较方式待财务确认。未接正式权限、取数及发布。</p></section>';
@@ -184,7 +184,7 @@
       if (el.dataset.sort) { direction = sort === el.dataset.sort ? -direction : 1; sort = el.dataset.sort; render(); }
       if (el.dataset.page) { page += Number(el.dataset.page); render(); }
       if (el.hasAttribute('data-export')) {
-        const metadata = [['渠道经营分析', m.views[applied.view], '演示资料，非正式财务业绩'], ['数据截止', report.CUTOFF + ' 23:59'], ['日期依据', applied.basis === 'orders' ? '订单确认日期' : '实际完成日期'], ['开始日期', applied.start], ['结束日期', applied.end], ['金额单位', applied.unit === 'wan' ? '人民币·万元' : '人民币·元'],
+        const metadata = [['渠道分析', m.views[applied.view], '演示资料，非正式财务业绩'], ['数据截止', report.CUTOFF + ' 23:59'], ['日期依据', applied.basis === 'orders' ? '订单确认日期' : '实际完成日期'], ['开始日期', applied.start], ['结束日期', applied.end], ['金额单位', applied.unit === 'wan' ? '人民币·万元' : '人民币·元'],
           ...Object.keys(m.labels).filter(k => Object.hasOwn(applied, k) && applied[k]).map(k => [m.labels[k], applied[k] === '__missing' ? '待补充' : ['company', 'productCompany'].includes(k) ? applied[k] + '公司（演示）' : k === 'productOrg' ? applied[k] + '产品经营组' : applied[k]]), ['资料情况', { ownership: '销售归属待补充', amount: '成交金额待确认' }[applied.quality] || '全部'], ['汇总方式', m.groupKeys(applied).map(k => m.labels[k]).join('、')], ['合计', totalText()], ['比较及任务', '未提供完整对比期资料和批准任务'], ['渠道毛利', '规则及资料待确认'], ['比例分母', '结构占比为所选范围；渠道贡献仅解除主渠道条件'], [], columns().map(header)];
         const rows = [...metadata, ...sorted().map(r => columns().map(k => display(r, k))), [], ['来源明细'], detailColumns.map(header), ...result.details.map(r => detailColumns.map(k => display(r, k)))];
         const url = URL.createObjectURL(new Blob(['\uFEFF' + rows.map(r => r.map(report.csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
@@ -192,6 +192,12 @@
       }
     });
     shell();
+    window.CaesarReportNavigation?.bind(root, {
+      capture: () => { readDraft(); return { applied, draft, page, size, sort, direction, optional: [...optional] }; },
+      restore: s => { ({ applied, draft, page, size, sort, direction } = s); optional = new Set(s.optional); filters(); render(); },
+      activate: view => { applied = m.clean({ ...m.defaults, view }); draft = { ...applied }; optional.clear(); page = 1; sort = 'amount'; filters(); render(); },
+      show: key => { marginActive = key === 'margin'; if (marginActive && !margin) margin = window.mountChannelMargin(marginHost, report, assets); performance.hidden = marginActive; marginHost.hidden = !marginActive; }
+    });
   }
   if (window.CaesarReports) mount(window.CaesarReports);
   else root.innerHTML = '<p role="alert">报表资料未加载，请检查 shared/report-pages.js 文件是否完整后刷新。</p>';

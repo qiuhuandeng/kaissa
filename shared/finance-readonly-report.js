@@ -60,6 +60,11 @@
       if (b.hasAttribute('data-fr-column')) { b.checked ? extra.add(b.dataset.frColumn) : extra.delete(b.dataset.frColumn); render(); }
     });
     fields(); run(applied);
+    window.CaesarReportNavigation?.bind(host, {
+      capture: () => ({ applied, page, size, sort, direction, extra: [...extra] }),
+      restore: s => { applied = s.applied; result = config.query(applied); page = s.page; size = s.size; sort = s.sort; direction = s.direction; extra.clear(); s.extra.forEach(k => extra.add(k)); fields(); render(); host.querySelector('[data-fr-size]').value = size; },
+      activate: view => { extra.clear(); run({ ...config.defaults, view }); fields(); }
+    });
     return { refresh: () => run(applied), applied: () => ({ ...applied }) };
   }
   return { mount };

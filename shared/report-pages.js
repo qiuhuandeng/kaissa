@@ -327,7 +327,7 @@
   const isOrder = page === "orders";
   const isReturn = page === "returns";
   const isDetail = isOrder || isReturn;
-  const titles = { overview: "经营总览", products: "产品经营分析", channels: "渠道经营分析", orders: "订单明细", returns: "回团与履约明细" };
+  const titles = { overview: "经营总览", products: "产品分析", channels: "渠道分析", orders: "订单明细", returns: "回团明细" };
   const paths = { overview: "performance-reports.html", products: "product-reports.html", channels: "channel-reports.html", orders: "order-report-details.html", returns: "return-report-details.html" };
   const productViews = { organizations: "经营组业绩", structure: "产品结构", channels: "渠道交叉", crossYear: "跨年收客" };
   const iconsBase = new URL("report-icons/", document.currentScript.src).href;
@@ -370,11 +370,10 @@
     const values = Array.from(new Set(rows.map(r => r[key]).filter(v => !missingFact(v))));
     return [["", "全部"], ...values.map(v => [v, key === "productCompany" ? names[v] || v : v]), ["__missing", "待补充／待确认"]];
   }
-  root.innerHTML = '<header class="report-head"><h1>' + titles[page] + '</h1><div class="report-actions"><nav class="report-links" aria-label="经营报表">' +
-    Object.entries(paths).map(([k, v]) => '<a href="' + v + '" data-report-link="' + k + '"' + (k === page ? ' aria-current="page"' : "") + '>' + titles[k] + '</a>').join("") +
-    '</nav><button class="report-button" type="button" data-export title="导出全查询结果">' + icon("download") + '导出</button></div></header>' +
+  root.innerHTML = '<header class="report-head"><h1>' + titles[page] + '</h1><div class="report-actions"><button class="report-button" type="button" data-export title="导出全查询结果">' + icon("download") + '导出</button></div></header>' +
     '<form class="report-filters"><div class="report-filter-row">' +
     select("version", "数据版本", [["demo-v1", VERSION]], "report-field-wide") +
+    (isOverview ? select("view", "统计内容", [["orders", "订单净值"], ["changes", "当期变化"], ["actual", "实际回团"]]) : "") +
     (isProduct ? select("view", "金额口径", [["orders", "订单净成交额"], ["actual", "实际回团成交额"]], "report-field-wide") : "") +
     select("company", "销售公司", [["", "演示集团全部"], ...Object.entries(names)]) +
     select("period", "统计期间", [["demo", "演示7日"], ["biweek", "演示14日"], ["month", "本月截至日"], ["quarter", "本季截至日"], ["year", "本年截至日"], ["custom", "自定义"]]) +
@@ -504,7 +503,7 @@
     if (isOverview && name === "responsibility") {
       form.elements.grouping.innerHTML = Object.entries(overviewModel.levels).filter(([, v]) => v[1] === event.target.value).map(([k, v]) => '<option value="' + k + '">' + v[0] + '</option>').join('');
     }
-    if (isProduct && name === "view") draftView = event.target.value;
+    if ((isProduct || isOverview) && name === "view") draftView = event.target.value;
     if (name === "period") {
       const value = event.target.value;
       if (value !== "custom") {
@@ -546,7 +545,7 @@
     applied = next; draftView = applied.view; draftProductView = applied.productView; pageNumber = 1; render();
   });
   root.querySelector("[data-reset]").addEventListener("click", () => {
-    applied = { ...defaults, version: applied.version };
+    applied = { ...defaults, version: applied.version, view: draftView, productView: draftProductView };
     draftView = applied.view;
     draftProductView = applied.productView;
     if (isOverview) form.elements.grouping.innerHTML = Object.entries(overviewModel.levels).filter(([, v]) => v[1] === 'sales').map(([k, v]) => '<option value="' + k + '">' + v[0] + '</option>').join('');
@@ -692,6 +691,7 @@
     });
   }
   function tabs() {
+    if (isOverview) return "";
     const choices = isOverview ? [["orders", "订单净值"], ["changes", "当期变化"], ["actual", "实际回团"]]
       : page === "orders" ? [["orders", "订单净值"], ["changes", "当期变化"]]
       : [["actual", "实际完成"], ["financial", "财务确认资料"], ["future", "未来安排"], ["adjustments", "完成后调整"]];
@@ -1024,10 +1024,6 @@
     root.querySelector("[data-notes]").innerHTML = notes();
     const status = root.querySelector("[data-query-status]"); status.textContent = "已查询 · " + VERSION; status.classList.remove("is-dirty");
     root.querySelector("[data-error]").hidden = true;
-    root.querySelectorAll("[data-report-link]").forEach(a => {
-      const p = new URLSearchParams(); sharedKeys.forEach(k => { if (applied[k]) p.set(k, applied[k]); });
-      a.href = paths[a.dataset.reportLink] + "?" + p.toString();
-    });
     if (isOverview) drawTrend();
     if (isProduct) drawProductChart();
   }
@@ -1149,6 +1145,15 @@
   const initialError = validate(applied);
   if (initialError) { applied = { ...defaults }; setForm(applied); updateDateControls(); }
   render();
+  window.CaesarReportNavigation?.bind(root, {
+    capture: () => ({ applied, draft: readForm(), pageNumber, pageSize, sortKey, sortDirection, columns: Object.fromEntries(Object.entries(selectedColumns).map(([k,v]) => [k,[...v]])) }),
+    restore: s => { applied = s.applied; draftView = s.draft.view; draftProductView = s.draft.productView; pageNumber = s.pageNumber; pageSize = s.pageSize; sortKey = s.sortKey; sortDirection = s.sortDirection;
+      Object.keys(selectedColumns).forEach(k => delete selectedColumns[k]); Object.entries(s.columns).forEach(([k,v]) => selectedColumns[k] = new Set(v));
+      setForm(s.draft); refreshTeams(); refreshOrderOrganizations(); setForm(s.draft); updateDateControls(); render(); },
+    activate: key => { applied = { ...defaults, ...(isProduct ? { productView: key } : isOverview ? {} : { view: key }) }; draftView = applied.view; draftProductView = applied.productView;
+      pageNumber = 1; sortKey = ''; setForm(applied); refreshTeams(); refreshOrderOrganizations(); updateDateControls(); render(); },
+    show: key => { if (isReturn) showReturnFinance(key === 'financial'); }
+  });
   if (isOverview || isProduct) {
     const observer = new ResizeObserver(() => { if (root.isConnected) { if (isProduct) drawProductChart(); else drawTrend(); } else observer.disconnect(); });
     observer.observe(root);

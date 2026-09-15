@@ -15,7 +15,7 @@
     { key: 'risk', label: '占用情况', options: [['', '全部'], ...['正常持有', '长期未结', '应退未退', '资料不足', '已结清'].map(v => [v, v])], more: true },
     { key: 'threshold', label: '长期占用天数', type: 'number', more: true }, { key: 'direction', label: '款项方向', options: [['', '全部，分别合计'], ['收取', '收取'], ['支付', '支付']], more: true }, { key: 'keyword', label: '款项/账户号', more: true }
   ];
-  const config = { title: supplier ? '供应商预付款占用' : '预款与保证金', defaults: { ...m.defaults, ...(supplier ? { view: 'prepay' } : {}) }, views: supplier ? { prepay: '预付款占用' } : m.views, labels, money, filters, query: q => {
+  const config = { title: supplier ? '供应商预付款占用' : '预款余额', defaults: { ...m.defaults, ...(supplier ? { view: 'prepay' } : {}) }, views: supplier ? { prepay: '预付款占用' } : m.views, labels, money, filters, query: q => {
     const result = m.query(q);
     return supplier ? { ...result, sections: [] } : result;
   },
@@ -24,10 +24,7 @@
     definition: '期末 = 期初 + 增加 + 转入 - 使用/冲抵 - 退回 - 转出 - 批准损失；冻结只影响可用，不再扣账面。团期分摊不等于冲抵。保证金收取与支付分列；未履约金额仅在有当日确认依据时列示。长期天数及退回政策待确认，资料缺失不是零。' };
   const host = document.createElement('section'); host.id = 'finance-prepayments';
   if (supplier) {
-    const tabs = document.createElement('div'); tabs.className = 'cf-tabs'; tabs.setAttribute('role', 'tablist');
-    tabs.innerHTML = '<button type="button" role="tab" class="active" aria-selected="true" data-sp-main>采购与返点</button><button type="button" role="tab" aria-selected="false" data-sp-prepay>预付款占用</button>';
-    supplier.before(tabs); supplier.after(host); host.hidden = true;
-    tabs.addEventListener('click', e => { const button = e.target.closest('button'); if (!button) return; const on = button.hasAttribute('data-sp-prepay'); supplier.hidden = on; host.hidden = !on; tabs.querySelectorAll('button').forEach(b => { const active = b === button; b.classList.toggle('active', active); b.setAttribute('aria-selected', active); }); });
+    supplier.after(host); host.hidden = true;
   } else document.getElementById('finance-cashflow').append(host);
   config.showTitle = Boolean(supplier);
   ui.mount(host, config);

@@ -34,6 +34,7 @@
             <button class="dropdown-item hidden" type="button" data-project-menu="attachment" data-open-drawer="attachmentDrawer">附件</button>
             <span class="dropdown-group-title" data-generic-menu>维护</span>
             <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="confirm" data-open-detail-action="转确认">转确认</button>
+            <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="increase" data-open-detail-action="增人">增人</button>
             <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="release" data-open-detail-action="释放">释放</button>
             <button class="dropdown-item" type="button" data-generic-menu data-project-menu="owner" data-open-detail-action="归属调整">归属调整</button>
             <button class="dropdown-item" type="button" data-generic-menu data-project-menu="sales" data-open-detail-action="修改店员">修改店员</button>
@@ -469,8 +470,10 @@
         <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
       </div>
       <div class="modal-body">
-        <section id="detailActionDrawerSummary" class="readonly-summary"></section>
-        <div id="detailActionDrawerFields" class="order-drawer-form"></div>
+        <div>
+          <section id="detailActionDrawerSummary" class="readonly-summary"></section>
+          <div id="detailActionDrawerFields" class="order-drawer-form"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
@@ -531,7 +534,7 @@
           ],
           todos: [
             ['待补出行人证件', '2位游客护照信息待完善，影响签证预检'],
-            ['待收定金', '预留订单24小时未收款将释放库存'],
+            ['待收定金', '按本单保留截止时间及到期处理规则核对'],
             ['待生成合同', '收款或确认后生成合同']
           ],
           snapshot: [
@@ -1101,7 +1104,7 @@
         return [
           ['本公司承担优惠', '客户成交金额和优惠规则', profile.revenueEntity, moneyText(basis.discount), '优惠审批或结算确认后进入财务承接，不减少供应商真实应付'],
           ['渠道佣金或服务费', '有效客户款、渠道合同和结算方式', profile.channelSettleParty, '尚未形成', '渠道结算条件满足后由结算模块确认'],
-          ['预存或授信使用', '客户授权、预存账户或企业账期规则', profile.collectionUnit, '按实际使用确认', '进入预存账户、授信额度或企业客户账期核对']
+          ['预存使用', '客户授权及预存扣款记录', profile.collectionUnit, '按实际使用确认', '进入预存账户核对']
         ];
       }
       function financeInternalItems() {
@@ -1385,11 +1388,108 @@
         }
         updateProjectActionBar();
       }
+      // 当前页原型：资料与门店页示例一致；未明确的订单条件保持待确认。
+      const storeSaleTypes = {
+        '软件园门店': ['参团游', '邮轮'], '文灶门店': ['参团游', '自由行'],
+        '观音山门店': ['参团游', '自由行'], '泉州丰泽门店': ['参团游', '邮轮']
+      };
+      const isStoreOrder = storedOrder
+        ? /门店/.test(storedOrder.channelCategory || (storedOrder.businessOwnership || {}).channelCategory || (storedOrder.store ? '门店' : ''))
+        : productOverviewMeta().source === '门店';
+      const storeTypeAllowed = (storeSaleTypes[ownerParts().store] || []).indexOf(config.productType) >= 0;
+      const europeAllowed = /软件园|丰泽/.test(ownerParts().store) && /参团游|邮轮/.test(config.productType);
+      const orderConditions = Object.assign({
+        storeStatus: '正常', qualificationUntil: '2027-04-30',
+        salesAuthorized: storeTypeAllowed && europeAllowed,
+        resourceConfirmed: false, paymentRequired: null,
+        holdUntil: storedOrder ? '' : (productOverviewMeta().reservationDue === '-' ? '' : productOverviewMeta().reservationDue),
+        expiryAction: '', remaining: null,
+        occupation: storedOrder && storedOrder.resourceStatus === '未占位' ? '未占位' : (/预留|占位|已确认/.test(config.orderStatus[0]) ? '保留中' : '未占位'),
+        contractState: (config.contract || []).map(function (item) { return item[1]; }).join(' / '),
+        ticketed: /已出票/.test(JSON.stringify(config.services || {}))
+      }, (storedOrder && storedOrder.confirmationConditions) || {});
+      const orderActionLogs = [];
+      let increasePending = false;
+      let confirmedAtInPage = '';
+
+      function authorizationIssue() {
+        if (!isStoreOrder) return '';
+        if (orderConditions.storeStatus !== '正常') return '门店' + orderConditions.storeStatus;
+        const today = new Date().toLocaleDateString('sv-SE');
+        if (!orderConditions.qualificationUntil || orderConditions.qualificationUntil < today) return '门店资质未生效或已到期';
+        return orderConditions.salesAuthorized ? '' : '产品类型或目的地未获门店销售授权';
+      }
+      function confirmationItems() {
+        return [
+          ['销售授权', isStoreOrder ? (authorizationIssue() || '有效') : '不适用'],
+          ['资源确认', orderConditions.resourceConfirmed ? '已确认' : '待计调确认'],
+          ['付款条件', Number.isFinite(orderConditions.paymentRequired) && orderConditions.paymentRequired >= 0 ? (orderConditions.paymentRequired === 0 ? '无需先付款' : '需已认款 ' + moneyText(orderConditions.paymentRequired)) : '待财务确认'],
+          ['名额状态', orderConditions.occupation],
+          ['保留截止', orderConditions.occupation === '保留中' ? (orderConditions.holdUntil || '待确认') : '不适用'],
+          ['到期处理', orderConditions.occupation === '保留中' ? (orderConditions.expiryAction || '待业务确认') : '不适用']
+        ];
+      }
+      function orderActionIssues(action, quantity, reason) {
+        const issues = [];
+        const state = config.orderStatus[0];
+        const protectedOrder = moneyNumber(config.amount[1]) > 0 || /签署中|已签署|已签约|签署完成/.test(orderConditions.contractState) || orderConditions.ticketed;
+        const deadline = Date.parse(String(orderConditions.holdUntil || '').replace(' ', 'T'));
+        if (action === '释放') {
+          if (!/^(预留|占位)$/.test(state) || orderConditions.occupation !== '保留中') issues.push('当前订单没有可直接释放的保留名额');
+          if (protectedOrder) issues.push('已有收款、签署中合同或出票记录，请由销售通过售后处理，计调核对释放');
+          if (reason === '预留到期' && (!Number.isFinite(deadline) || deadline > Date.now())) issues.push('保留期限未确定或尚未到期');
+          return issues;
+        }
+        if (authorizationIssue()) issues.push(authorizationIssue());
+        if (action === '转确认') {
+          if (!/^(预留|占位|待确认)$/.test(state)) issues.push('当前订单状态不能转确认');
+          if (!orderConditions.resourceConfirmed) issues.push('本单资源尚未由计调确认');
+          if (orderConditions.occupation === '已释放') issues.push('原名额已释放，需计调重新确认余位');
+          if (!Number.isFinite(orderConditions.paymentRequired) || orderConditions.paymentRequired < 0) issues.push('本单付款条件尚未由财务确定');
+          else if (moneyNumber(config.amount[1]) < orderConditions.paymentRequired) issues.push('本单已认款金额未达到付款条件');
+        } else if (action === '增人') {
+          if (!/^(预留|占位|待确认|已确认)$/.test(state)) issues.push('当前订单状态不能增人');
+          if (increasePending) issues.push('已有待处理的增人申请');
+          if (!Number.isInteger(quantity) || quantity <= 0) issues.push('请填写大于0的整数人数');
+          if (!Number.isFinite(orderConditions.remaining)) issues.push('可增人数尚未由计调确认');
+          else if (quantity > orderConditions.remaining) issues.push('可增人数不足');
+          if (orderConditions.occupation === '已释放') issues.push('原名额已释放，需先重新确认资源');
+        }
+        if (orderConditions.occupation === '保留中' && (!Number.isFinite(deadline) || deadline <= Date.now())) issues.push('保留期限未确定或已到期，需计调核对名额');
+        return issues;
+      }
+      function saveOrderAction(action) {
+        const fields = document.getElementById('detailActionDrawerFields');
+        const reason = fields.querySelector('textarea').value.trim();
+        if (!reason) { window.alert('请填写处理说明'); return false; }
+        const quantityField = document.getElementById('increasePeople');
+        const quantity = quantityField ? Number(quantityField.value) : 0;
+        const reasonSelect = fields.querySelector('select');
+        const issues = orderActionIssues(action, quantity, reasonSelect && reasonSelect.value);
+        if (issues.length) { window.alert(issues.join('；')); return false; }
+        const now = new Date().toLocaleString('zh-CN', { hour12: false });
+        if (action === '转确认') {
+          config.orderStatus = ['已确认', 'tag tag-green'];
+          orderConditions.occupation = '已确认';
+          confirmedAtInPage = now;
+        } else if (action === '释放') {
+          config.orderStatus = ['待确认', 'tag tag-orange'];
+          orderConditions.occupation = '已释放';
+          orderConditions.resourceConfirmed = false;
+        } else {
+          increasePending = true;
+          config.aftersales.unshift(['ZRY-' + Date.now(), '增人', now, '申请增加' + quantity + '人', '待核价', '待计调确认', '补款条件待核对']);
+        }
+        orderActionLogs.unshift([now, ownerParts().sales, (action === '增人' ? '提交增人申请：' + quantity + '人' : action) + '；' + reason]);
+        render();
+        return true;
+      }
       function renderStateActionButtons() {
         document.querySelectorAll('[data-state-action]').forEach(function (item) { setHidden(item, true); });
         if (isProjectOrder()) return;
-        const stateText = config.orderStatus[0] + ' ' + config.paymentStatus[0];
-        const closed = /已取消|已完成|已退款/.test(stateText);
+        const stateText = config.orderStatus[0];
+        const closed = /已取消|已完成|已退款|已作废/.test(stateText);
+        document.querySelectorAll('[data-state-action="increase"]').forEach(function (item) { setHidden(item, !/^(预留|占位|待确认|已确认)$/.test(stateText)); });
         document.querySelectorAll('[data-state-action="confirm"]').forEach(function (item) { setHidden(item, !/预留|占位|待确认/.test(stateText)); });
         document.querySelectorAll('[data-state-action="release"]').forEach(function (item) { setHidden(item, !/预留|占位/.test(stateText)); });
         document.querySelectorAll('[data-state-action="cancel"]').forEach(function (item) { setHidden(item, closed); });
@@ -1582,6 +1682,14 @@
           const salesOptions = isProjectOrder() ? ['李梅', '郑华', '孙丽', '吴芳'] : ['孙丽', '郑华', '李梅', '吴芳', '陈红'];
           return base + selectControl('调整为', salesOptions) + textareaControl('调整原因', '', isProjectOrder() ? '如企业客户交接、项目负责人调整或单团店员变更' : '如店员录入错误、客户归属交接或项目负责人变更');
         }
+        if (['转确认', '释放', '增人'].indexOf(action) >= 0) {
+          const details = '<div class="form-group form-group-full">' + readonlyMiniGrid(confirmationItems()) + '</div>';
+          const operator = inputControl('处理岗位', action === '转确认' ? '销售确认 / 计调确认资源 / 财务核对认款' : action === '释放' ? '销售 / 计调' : '销售申请 / 计调确认 / 财务核对补款', true, 'readonly');
+          const input = action === '增人'
+            ? inputControl('增加人数', '', false, 'id="increasePeople" inputmode="numeric"')
+            : action === '释放' ? selectControl('释放原因', ['预留到期', '客户放弃', '重复占位']) : '';
+          return details + operator + input + textareaControl('处理说明', '', '填写本次处理原因');
+        }
         const reasons = action === '转确认'
           ? ['客户已确认', '收款已满足', '资源已确认', '主管确认']
           : action === '释放'
@@ -1595,7 +1703,7 @@
         setHtml('detailActionDrawerFields', detailActionFields(action));
         const submit = document.getElementById('detailActionDrawerSubmit');
         if (submit) {
-          submit.textContent = /作废|取消|释放/.test(action) ? '确认' + action : '保存';
+          submit.textContent = action === '转确认' ? '确认订单' : action === '增人' ? '提交申请' : /作废|取消|释放/.test(action) ? '确认' + action : '保存';
           submit.dataset.result = action;
         }
         openLayer('detailActionDrawer');
@@ -1955,13 +2063,12 @@
           ['订单状态', tagHtml(config.orderStatus), 'html'],
           ['收款状态', tagHtml(config.paymentStatus), 'html'],
           ['创建时间', (storedOrder && storedOrder.createdAt) || '2026-07-04 10:30:00'],
-          ['确认生效时间', (storedOrder && storedOrder.confirmedAt) || (config.orderStatus[0] === '已确认' ? '2026-07-04 10:35:00' : '尚未生效')],
+          ['确认生效时间', confirmedAtInPage || (storedOrder && storedOrder.confirmedAt) || (config.orderStatus[0] === '已确认' ? '2026-07-04 10:35:00' : '尚未生效')],
           ['来源系统', (storedOrder && storedOrder.sourceSystem) || '新系统'],
           ['原订单号', (storedOrder && storedOrder.originalOrderNo) || '不适用'],
-          ['预留到期', meta.reservationDue],
           ['来源', meta.source],
           ['渠道', meta.channel]
-        ]));
+        ].concat(isProjectOrder() ? [] : confirmationItems())));
         const ownership = detailOwnership();
         setHtml('overviewOwnershipGrid', descriptionGrid([
           ['产品经营归属', [ownership.productCompany, ownership.productOrg, ownership.productOwner].filter(Boolean).join(' / ')],
@@ -2043,13 +2150,13 @@
           const financeStatus = row[6] || (/退款|退/.test(type) ? '待财务退款' : /转款/.test(type) ? '待财务核对' : '不涉及');
           return '<tr><td>' + escapeHtml(no) + '</td><td>' + escapeHtml(type) + '</td><td>' + escapeHtml(applyTime) + '</td><td>' + escapeHtml(target) + '</td><td>' + escapeHtml(amountImpact) + '</td><td>' + tagHtml([approveStatus, statusClass(approveStatus)]) + '</td><td>' + tagHtml([financeStatus, statusClass(financeStatus)]) + '</td></tr>';
         }).join('') : '<tr><td class="table-empty-cell" colspan="7">暂无售后记录。</td></tr>');
-        setHtml('logList', [
+        setHtml('logList', orderActionLogs.concat([
           ['2026-07-04 10:42', '孙丽', '补充联系人和归属门店信息'],
           ['2026-07-04 10:35', '系统', '生成应收记录，等待收款或认款'],
           ['2026-07-04 10:30', '孙丽', '创建订单并锁定可售对象：' + config.productName],
           ['2026-07-04 10:28', '孙丽', '选择' + scheduleLabel() + scheduleValue()],
           ['2026-07-04 10:25', '孙丽', '进入预订中心，搜索并选择' + config.productName]
-        ].map(function (item) {
+        ]).map(function (item) {
           return '<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-time"><span>' + escapeHtml(item[0]) + '</span><span>' + escapeHtml(item[1]) + '</span></div><div class="timeline-text">' + escapeHtml(item[2]) + '</div></div></div>';
         }).join(''));
 
@@ -2251,10 +2358,11 @@
         }
         const result = event.target.closest('[data-result]');
         if (result) {
+          if (result.closest('#detailActionDrawer') && ['转确认', '释放', '增人'].indexOf(result.dataset.result) >= 0 && !saveOrderAction(result.dataset.result)) return;
           if (result.closest('#detailActionDrawer') && result.dataset.result === '归属调整' && !saveOwnershipAdjustment()) return;
           const modal = result.closest('.modal-overlay');
           if (modal) closeLayer(modal);
-          showResult(result.dataset.result);
+          showResult(result.dataset.result === '增人' ? '提交增人申请' : result.dataset.result);
           return;
         }
         const close = event.target.closest('[data-close-modal]');

@@ -4,7 +4,7 @@
 })(typeof window==='object'?window:globalThis,function(profit,funds,resource){
   'use strict';
   const defaults={dataset:'pending',view:'profit',company:'',currency:'CNY',month:'2026-09',asOf:'2026-09-30',planEnd:'2026-12-31',version:'published'};
-  const views={profit:'已确认经营结果',funds:'实际资金',plan:'未来资金安排',resources:'资源风险'};
+  const views={profit:'损益摘要',funds:'资金概况',plan:'计划概况',resources:'风险概况'};
   function query(input){
     const q={...defaults,...input};
     if(q.dataset==='pending')return {rows:[],sections:[],pending:true,notice:'共同经营资料尚无正式财务确认、资金或资源风险来源；不以成交额推算'};

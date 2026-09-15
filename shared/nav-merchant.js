@@ -1,12 +1,12 @@
 (function () {
   const bootScript = document.currentScript;
   const financeReportPages = {
-    cashflow: ['cashflow-reports', '收退转付明细'],
-    balances: ['balance-reports', '订单收付与往来账龄'],
-    prepayments: ['prepayment-reports', '预款与保证金'],
-    funds: ['fund-reports', '资金收支与安排'],
-    invoices: ['invoice-reports', '发票与收付款核对'],
-    accounting: ['accounting-reports', '结算与核算核对']
+    cashflow: ['cashflow-reports', '收付明细'],
+    balances: ['balance-reports', '往来账龄'],
+    prepayments: ['prepayment-reports', '预款余额'],
+    funds: ['fund-reports', '资金分析'],
+    invoices: ['invoice-reports', '票款核对'],
+    accounting: ['accounting-reports', '核算核对']
   };
   function reportDestination(input) {
     const url = new URL(input.href), params = url.searchParams;
@@ -46,36 +46,36 @@
           title: "经营分析",
           children: [
             { title: "经营总览", href: "data/performance-reports.html" },
-            { title: "产品经营分析", href: "data/product-reports.html" },
-            { title: "渠道经营分析", href: "data/channel-reports.html" },
-            { title: "业务毛利与结算分析", href: "data/settlement-reports.html" },
-            { title: "供应商采购与返点", href: "data/supplier-reports.html" },
-            { title: "月度经营损益", href: "data/monthly-profit-reports.html" },
+            { title: "月度损益", href: "data/monthly-profit-reports.html" },
+            { title: "产品分析", href: "data/product-reports.html" },
+            { title: "渠道分析", href: "data/channel-reports.html" },
+            { title: "业务毛利", href: "data/settlement-reports.html" },
+            { title: "供应商分析", href: "data/supplier-reports.html" },
           ],
         },
         {
           title: "业务明细",
           children: [
             { title: "订单明细", href: "data/order-report-details.html" },
-            { title: "回团与履约明细", href: "data/return-report-details.html" },
+            { title: "回团明细", href: "data/return-report-details.html" },
           ],
         },
         {
-          title: "资金与核算",
+          title: "资金核算",
           children: [
-            { title: "收退转付明细", href: "data/cashflow-reports.html" },
-            { title: "订单收付与往来账龄", href: "data/balance-reports.html" },
-            { title: "预款与保证金", href: "data/prepayment-reports.html" },
-            { title: "资金收支与安排", href: "data/fund-reports.html" },
-            { title: "发票与收付款核对", href: "data/invoice-reports.html" },
-            { title: "结算与核算核对", href: "data/accounting-reports.html" },
+            { title: "收付明细", href: "data/cashflow-reports.html" },
+            { title: "往来账龄", href: "data/balance-reports.html" },
+            { title: "预款余额", href: "data/prepayment-reports.html" },
+            { title: "资金分析", href: "data/fund-reports.html" },
+            { title: "票款核对", href: "data/invoice-reports.html" },
+            { title: "核算核对", href: "data/accounting-reports.html" },
           ],
         },
         {
           title: "报表管理",
           children: [
-            { title: "经营任务与预算", href: "data/budget-targets.html" },
-            { title: "口径与数据核对", href: "data/report-management.html" },
+            { title: "任务预算", href: "data/budget-targets.html" },
+            { title: "数据管理", href: "data/report-management.html" },
           ],
         },
       ],
@@ -308,12 +308,12 @@
           title: "资金票据",
           children: [
             { title: "资金池", href: "finance/finance-fund-pool.html" },
-            { title: "收付款配置", href: "finance/finance-account-settings.html" },
             { title: "资金调拨", href: "finance/finance-control.html?view=fund-transfer" },
             { title: "发票管理", href: "finance/finance-invoice.html" },
           ],
         },
         { title: "NC推送", href: "finance/finance-nc.html" },
+        { title: "收付款配置", href: "finance/finance-account-settings.html" },
       ],
     },
     {
@@ -1112,7 +1112,7 @@
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
       const archived = ['data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
-      const reportTitles = { 'data/settlement-reports.html': '业务毛利与结算分析', 'data/return-report-details.html': '回团与履约明细', 'data/budget-targets.html': '经营任务与预算', 'data/report-management.html': '口径与数据核对', 'data/product-reports.html': '产品经营分析', 'data/channel-reports.html': '渠道经营分析' };
+      const reportTitles = { 'data/settlement-reports.html': '业务毛利', 'data/return-report-details.html': '回团明细', 'data/budget-targets.html': '任务预算', 'data/report-management.html': '数据管理', 'data/product-reports.html': '产品分析', 'data/channel-reports.html': '渠道分析' };
       Object.values(financeReportPages).forEach(([file, title]) => { reportTitles['data/' + file + '.html'] = title; });
       if (!Array.isArray(tabs)) return [];
       const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href)).map(tab => {

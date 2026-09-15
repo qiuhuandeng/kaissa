@@ -86,6 +86,11 @@
       if (el.dataset.marginPage) { page += Number(el.dataset.marginPage); render(); }
     });
     form(); render();
+    root.CaesarReportNavigation?.bind(host, {
+      capture: () => ({ applied, page, size, sort, direction, extras: [...extras] }),
+      restore: s => { ({ applied, page, size, sort, direction } = s); extras = new Set(s.extras); form(); render(); },
+      activate: () => {}
+    });
     return { exportResult };
   };
 })(window);
