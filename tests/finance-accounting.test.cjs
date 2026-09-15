@@ -1,7 +1,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const m = require('../shared/finance-accounting-model.js'), rf = require('../shared/return-finance-model.js'), rc = require('../shared/resource-cost-report-model.js');
 const query = (q = {}, data) => m.query({ dataset: 'demo', ...q }, data);
-test('待接入不是零', () => assert.equal(m.query({}).pending, true));
+test('待补资料不是零', () => assert.equal(m.query({ ...m.defaults, dataset: 'pending' }).pending, true));
 test('会计发生完全复用回团算法', () => {
   const q = { ...m.defaults, dataset: 'demo', scenario: 'cross' };
   const a = m.query(q), b = rf.run({ ...q, mode: 'flows' }, null, m.fixture());

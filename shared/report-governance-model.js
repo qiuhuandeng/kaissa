@@ -6,7 +6,7 @@
     const rows=[['A公司（演示）','直营销售部','朝阳门店'],['A公司（演示）','直营销售部','海淀门店'],['A公司（演示）','呼叫中心','不适用'],['B公司（演示）','直营销售部','外地门店']].map(([company,department,store],i)=>({id:'ACCESS-'+(i+1),company,department,store,customer:'合同付款客户'+(i+1),phone:'1380000000'+i,bank:'62220000000000000'+i,amount:(i+1)*1000,source:'独立权限验收资料'}));
     const original={id:'PUB01',state:'已发布版（演示）',rule:'RPT-DEMO-V1',cutoff:'2026-09-30',period:'2026-09',parent:'',reason:'首版验收样例',evidence:'演示校验依据CHECK01',rows:structuredClone(rows)};
     const corrected={...structuredClone(original),id:'COR02',state:'更正版（演示）',parent:'PUB01',cutoff:'2026-10-05',reason:'原记录金额更正，保留原版',evidence:'更正依据CHECK02'};corrected.rows[0].amount=900;
-    return {versions:[original,corrected,{...structuredClone(corrected),id:'WORK03',state:'工作版（演示）',parent:'COR02'}],subscriptions:[],logs:[],sequence:3};
+    return {versions:[original,corrected,{...structuredClone(corrected),id:'WORK03',state:'工作版（演示）',parent:'COR02'}],subscriptions:[{id:'SUB1',createdBy:'group',recipient:'company',company:'A公司（演示）',department:'',store:'',state:'订阅草稿（演示，未发送）',evidence:'发送前按接收人权限复核'}],logs:[],sequence:3};
   }
   const allowed=(r,p)=>!p.noData&&['company','department','store'].every(k=>!p[k]||r[k]===p[k]);
   function readable(rows,role,filter={}){

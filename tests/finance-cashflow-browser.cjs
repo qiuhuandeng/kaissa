@@ -30,15 +30,14 @@ async function main() {
       const download = async (full = false) => { const pending = page.waitForEvent('download'); await host.locator(full ? '[data-cf-evidence-export]' : '[data-cf-export]').click(); const d = await pending, file = path.join(output, protocol + '-' + d.suggestedFilename()); await d.saveAs(file); return fs.readFile(file, 'utf8'); };
       await page.goto(url());
       await host.locator('[data-cf-notice]').waitFor();
-      assert.match(await host.innerText(), /来源待接入/);
       assert.equal(await main.locator('th').count(), 12);
-      assert.equal(await main.locator('tbody tr').count(), 0);
+      assert.ok(await main.locator('tbody tr').count() > 0);
       assert.equal(await page.locator('.finance-report-content').isVisible(), false);
       await scenario('CF01');
       assert.equal(await main.locator('tbody tr').count(), 1); assert.match(await main.innerText(), /100,000.00/);
       await host.locator('[data-cf-display]').selectOption('allocations');
       assert.equal(await main.locator('tbody tr').count(), 3); assert.equal(await main.locator('th').count(), 12);
-      results.push(protocol + ': pending formal source and separate document/order queries');
+      results.push(protocol + ': default records and separate document/order queries');
 
       await page.locator('[data-report-tab=payment]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF10');
       await host.locator('.cf-more > summary').click(); await field('order').fill('KS2026091001'); await submit();

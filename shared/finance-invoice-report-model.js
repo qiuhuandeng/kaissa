@@ -4,7 +4,7 @@
 })(typeof window === 'object' ? window : globalThis, function (b) {
   'use strict';
   const views = { received: '已收未开', issued: '已开未收', paid: '已付未收票', invoiced: '已收票未付' };
-  const defaults = { dataset: 'pending', view: 'received', asOf: '2026-09-30', cutoff: '2026-10-31', dateBasis: 'all', start: '2026-09-01', end: '2026-09-30', company: '', currency: '', party: '', keyword: '', status: '' };
+  const defaults = { dataset: 'demo', view: 'received', asOf: '2026-09-30', cutoff: '2026-10-31', dateBasis: 'all', start: '2026-09-01', end: '2026-09-30', company: '', currency: '', party: '', keyword: '', status: '' };
   const round = n => Math.round(n * 100) / 100;
   const docKey = d => JSON.stringify([d.company, d.currency, d.kind, d.id]);
   const scopeKey = s => JSON.stringify([s.company, s.currency, s.side, s.scope || s.id]);

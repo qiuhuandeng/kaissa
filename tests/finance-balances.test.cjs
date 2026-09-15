@@ -6,7 +6,7 @@ const one = (scenario, options = {}, data) => query(scenario, options, data).det
 const eventFor = (d, patch = {}) => ({ docKey: m.key(d), id: 'TEST-HX', kind: 'cash', amount: 100, effectiveAt: '2026-09-01', recordedAt: '2026-09-01T12:00:00', actualAt: '2026-09-01', fundsCompany: d.company, confirmed: true, currency: d.currency, source: '测试资料', proof: '确认记录', reference: '收款单', ...patch });
 
 test('执02 formal source is empty, never a fake zero balance', () => {
-  const r = m.query(m.defaults()); assert.equal(r.pending, true); assert.deepEqual(r.rows, []); assert.deepEqual(r.totals, []);
+  const r = m.query({ ...m.defaults(), dataset: 'pending' }); assert.equal(r.pending, true); assert.deepEqual(r.rows, []); assert.deepEqual(r.totals, []);
 });
 test('执02 BA01 subsequent collection does not rewrite September', () => {
   const d = one('BA01'); assert.equal(d.balance, 6000); assert.equal(d.settled, 4000);

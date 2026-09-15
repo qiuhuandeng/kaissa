@@ -26,7 +26,8 @@
     };
     const money = new Set(['businessRevenue', 'income', 'cost', 'difference', 'amount', 'originalAmount', 'unallocatedAmount', 'allocated', 'gross', 'taxAmount', 'referenceAmount']);
     let mode = config.mode || 'completion', result;
-    const states = Object.fromEntries(Object.keys(names).map(k => [k, { applied: { ...m.defaults, mode: k }, draft: { ...m.defaults, mode: k }, extras: new Set(), page: 1, size: 10, sort: '', direction: 1, dirty: false }]));
+    const baseDefaults = { ...m.defaults, ...(config.defaults || {}) };
+    const states = Object.fromEntries(Object.keys(names).map(k => [k, { applied: { ...baseDefaults, mode: k }, draft: { ...baseDefaults, mode: k }, extras: new Set(), page: 1, size: 10, sort: '', direction: 1, dirty: false }]));
     const state = () => states[mode];
     function display(row, key) {
       const v = key === 'productOwner' ? row.productOwner || row.owner : key === 'referenceAmount' ? row.referenceAmount ?? (mode === 'completion' ? row.amount : null) : row[key];
@@ -50,7 +51,7 @@
       const draft = state().draft;
       host.querySelector('[data-rf-modes]').innerHTML = Object.entries(names).map(([k, v]) => '<button type="button" class="report-tab" data-rf-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + v + '</button>').join('');
       host.querySelector('[data-rf-modes]').hidden = Boolean(config.mode);
-      host.querySelector('[data-rf-form]').innerHTML = '<div class="report-filter-row">' + select('dataset', [['common', '共同回团资料'], ['demo', '独立财务算例']]) +
+      host.querySelector('[data-rf-form]').innerHTML = '<div class="report-filter-row">' +
         (mode === 'flows' ? select('dateBasis', [['period', '会计期间'], ['date', '财务确认日期']]) : '') +
         (mode === 'flows' && draft.dateBasis === 'period' ? input('periodStart', 'month') + input('periodEnd', 'month') : input('start', 'date') + input('end', 'date')) + input('cutoff', 'date') + '</div>' +
         '<div class="report-filter-row report-more">' + select('entity', options('entity')) + select('quality', [['', '全部'], ['missing', '资料缺口'], ...(mode === 'flows' ? [['unassigned', '未归属/未分配']] : []), ['conflict', '来源或分配冲突']]) +
@@ -104,7 +105,6 @@
     host.addEventListener('change', e => {
       if (e.target.closest('form')) {
         saveDraft(); state().dirty = true; host.querySelector('[data-rf-status]').textContent = '条件已修改，尚未查询';
-        if (e.target.name === 'dataset') { const demo = e.target.value === 'demo'; state().draft = { ...m.defaults, mode, dataset: e.target.value, end: demo ? '2026-06-30' : m.defaults.end, periodEnd: demo ? '2026-06' : m.defaults.periodEnd, cutoff: demo ? '2026-06-30' : m.defaults.cutoff }; form(); }
         if (e.target.name === 'dateBasis') form();
       }
       if (e.target.dataset.rfColumn) { const k = e.target.dataset.rfColumn; e.target.checked ? state().extras.add(k) : state().extras.delete(k); render(); host.querySelector('.report-columns').open = true; }
@@ -117,14 +117,14 @@
     host.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.rfMode) { saveDraft(); mode = b.dataset.rfMode; form(); render(); }
-      if (b.hasAttribute('data-rf-reset')) { const f = { ...m.defaults, mode }; states[mode] = { applied: f, draft: { ...f }, extras: new Set(), page: 1, size: 10, sort: '', direction: 1, dirty: false }; form(); render(); }
+      if (b.hasAttribute('data-rf-reset')) { const f = { ...baseDefaults, mode }; states[mode] = { applied: f, draft: { ...f }, extras: new Set(), page: 1, size: 10, sort: '', direction: 1, dirty: false }; form(); render(); }
       if (b.dataset.rfSort) { state().direction = state().sort === b.dataset.rfSort ? -state().direction : 1; state().sort = b.dataset.rfSort; render(); }
       if (b.dataset.rfPage) { state().page += Number(b.dataset.rfPage); render(); }
     });
     form(); render();
     root.CaesarReportNavigation?.bind(host, {
       capture: () => { saveDraft(); return { ...state(), extras: [...state().extras] }; },
-      restore: s => { states[mode] = { ...s, extras: new Set(s.extras) }; form(); render(); },
+      restore: s => { states[mode] = { ...s, applied: { ...s.applied, dataset: baseDefaults.dataset }, draft: { ...s.draft, dataset: baseDefaults.dataset }, extras: new Set(s.extras) }; form(); render(); },
       activate: () => {}
     });
     return { exportResult };

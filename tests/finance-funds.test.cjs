@@ -3,7 +3,7 @@ const m = require('../shared/finance-funds-model.js'), reports = require('../sha
 const run = (q = {}, s) => m.query({ dataset: 'demo', ...q }, s);
 const bank = (q = {}, s) => run(q, s).accounts.find(a => a.id === 'BANK-BJ');
 const forecast = (q = {}, s) => run({ view: 'plan', ...q }, s).forecast.find(r => r.company === '北京凯撒' && r.currency === 'CNY');
-test('pending formal records and missing history do not create zero balances', () => { assert.equal(m.query({}).pending, true); assert.equal(run({ dataset: 'gaps' }).accounts.find(a => a.id === 'GAP').closing, null); });
+test('pending formal records and missing history do not create zero balances', () => { assert.equal(m.query({ ...m.defaults, dataset: 'pending' }).pending, true); assert.equal(run({ dataset: 'gaps' }).accounts.find(a => a.id === 'GAP').closing, null); });
 test('actual bank excludes customer liability ledger, restrictions only affect available', () => { const r = bank(); assert.equal(r.closing, 97900); assert.equal(r.available, 87900); assert.equal(run().accounts.length, 4); });
 test('internal transfer and platform withdrawal not external income, platform fee remains external', () => { const r = run(), sum = k => r.totals.filter(r => r.currency === 'CNY').reduce((s, r) => s + r[k], 0); assert.equal(sum('externalIn'), 13000); assert.equal(sum('externalOut'), 5100); assert.equal(sum('closing'), 127900); assert.equal(sum('opening'), 120000); });
 test('currency translation only uses provided date/rate proof', () => { assert.equal(run().accounts.find(a => a.currency === 'EUR').converted, 7020); assert.equal(run({ end: '2026-09-29' }).accounts.find(a => a.currency === 'EUR').converted, null); });

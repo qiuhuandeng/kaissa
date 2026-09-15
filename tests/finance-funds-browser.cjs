@@ -4,7 +4,7 @@ run('funds', async ({ page, url, shot, download, passed }) => {
   await page.goto(url('merchant/finance/finance-reports.html?report=funds'));
   const host = page.locator('#finance-funds'), main = host.locator('[data-fr-main]');
   const field = n => host.locator('form [name="' + n + '"]'), submit = () => host.locator('button[type=submit]').click();
-  await host.locator('[data-fr-notice]').waitFor(); assert.equal(await main.locator('tbody tr').count(), 0);
+  await host.locator('[data-fr-notice]').waitFor(); assert.equal(await main.locator('tbody tr').count(), 4);
   await field('dataset').selectOption('demo'); await submit(); assert.match(await main.innerText(), /97,900.00/); assert.match(await main.innerText(), /87,900.00/); assert.equal(await main.locator('tbody tr').count(), 4);
   await selectQueryView(page, 'movements'); assert.match(await main.innerText(), /平台提现/); assert.match(await host.locator('[data-fr-section=totals]').innerText(), /13,000.00/);
   await selectQueryView(page, 'periods'); await host.locator('.cf-more > summary').click(); await field('frequency').selectOption('month'); await submit(); assert.match(await main.innerText(), /2026-09/); assert.match(await main.innerText(), /97,900.00/);

@@ -8,7 +8,6 @@
   const labels = { id: '款项/账户号', accountId: '原款项/账户号', company: '核算公司', ledger: '账簿', party: '客户/门店/供应商', partyId: '往来身份', typeName: '款项类别', currency: '原币', direction: '款项方向', opening: '期初余额', increase: '本期增加', used: '本期使用/冲抵', refunded: '本期退回', transferIn: '本期转入', transferOut: '本期转出', loss: '批准损失', closing: '期末账面余额', frozen: '期末冻结', available: '期末可用余额', allocated: '累计团期分摊', refundDue: '待退余额', overdueReturn: '应退未退', unperformed: '未履约占用', days: '持有天数', risk: '占用情况', coverage: '资料情况', since: '原款持有起日', openingDate: '期初资料日', proof: '确认凭据', reference: '对应依据', date: '生效日期', recorded: '录入日期', amount: '变动金额', kindName: '变动类型', inclusion: '本次是否纳入', issue: '核对缺口', batch: '采购批次', tour: '关联团期/航次', returnDue: '约定退回日' };
   const money = ['opening', 'increase', 'used', 'refunded', 'transferIn', 'transferOut', 'loss', 'closing', 'frozen', 'available', 'allocated', 'refundDue', 'overdueReturn', 'unperformed', 'amount'];
   const filters = [
-    { key: 'dataset', label: '资料范围', options: [['pending', '来源待接入'], ['demo', '验收算例']] },
     { key: 'start', label: '期间开始', type: 'date' }, { key: 'end', label: '余额截止日', type: 'date' }, { key: 'cutoff', label: '资料截止日', type: 'date' },
     { key: 'company', label: '核算公司', options: [['', '全部'], ['北京凯撒', '北京凯撒'], ['福建凯撒', '福建凯撒']] },
     { key: 'currency', label: '原币', options: [['', '全部，分别合计'], ['CNY', '人民币'], ['EUR', '欧元']] }, { key: 'party', label: '客户/门店/供应商' },

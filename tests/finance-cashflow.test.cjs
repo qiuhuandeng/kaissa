@@ -105,7 +105,7 @@ test('CF21 full 25-row results, CSV external text escaped, pure query and stable
   assert.equal(m.sort(r.rows, 'amount', -1)[0].amount, 2500); assert.equal(JSON.stringify(d), before);
 });
 test('pending source and out-of-coverage are not presented as formal zero', () => {
-  const r = m.query(m.defaults('receipt')); assert.equal(r.pending, true); assert.equal(r.totals.length, 0);
+  const r = m.query({ ...m.defaults('receipt'), dataset: 'pending' }); assert.equal(r.pending, true); assert.equal(r.totals.length, 0);
   assert.match(q('CF01', 'receipt', { start: '2025-01-01' }).notice, /资料不足/);
   assert.throws(() => q('CF01', 'receipt', { start: '2026-11-01', end: '2026-09-01' }), /开始日期/);
 });

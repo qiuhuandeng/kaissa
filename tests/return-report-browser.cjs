@@ -24,7 +24,7 @@ async function main() {
     const view = async key => { await selectQueryView(page, `${key}`); if (key !== 'financial') await submit(); };
     const download = async () => {
       const pending = page.waitForEvent("download");
-      await root.locator('[data-export]').click();
+      await root.locator('[data-export]:visible').click();
       const file = await pending, target = path.join(output, file.suggestedFilename());
       await file.saveAs(target);
       return fs.readFile(target, "utf8");

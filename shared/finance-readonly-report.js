@@ -63,7 +63,7 @@
     window.CaesarReportNavigation?.bind(host, {
       capture: () => ({ applied, page, size, sort, direction, extra: [...extra], restorationError }),
       restore: s => {
-        applied = s.applied; restorationError = s.restorationError || '';
+        applied = { ...s.applied, dataset: config.defaults.dataset }; restorationError = s.restorationError || '';
         try { if (restorationError) throw new Error(restorationError); result = config.query(applied); }
         catch (error) {
           restorationError = error.message; applied = { ...config.defaults, view: s.applied.view };

@@ -3,7 +3,8 @@
   root.mountChannelMargin = function (host, report, assets) {
     const m = root.CaesarChannelMargin, esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const icon = name => '<img class="report-icon" alt="" src="' + assets + name + '.svg">';
-    let applied = { ...m.defaults }, result, page = 1, size = 10, sort = 'order', direction = 1, extras = new Set();
+    const uiDefaults = { ...m.defaults, dataset: 'demo' };
+    let applied = { ...uiDefaults }, result, page = 1, size = 10, sort = 'order', direction = 1, extras = new Set();
     const labels = { order: '订单号', product: '销售内容', sales: '渠道与销售公司', applicability: '适用范围', amount: '客户成交参考', restoredIncome: '还原后校验收入', restoredDeduction: '还原后校验扣减额', rate: '校验毛利率', status: '核对结果', gap: '资料缺口',
       income: '原校验收入', deduction: '原校验扣减额', incomeImpact: '收入还原影响', deductionImpact: '扣减额还原影响', profit: '校验毛利', rawRate: '未舍入比率', threshold: '阈值与比较方式', difference: '正式差距',
       company: '销售公司', channel: '主渠道', productCompany: '产品公司', productOrg: '产品经营组', store: '门店', center: '呼叫中心', salesGroup: '销售组', salesperson: '顾问', staff: '顾问识别及任职', management: '经营分类', supply: '供应关系', organization: '散拼／单团', source: '来源系统', currency: '币种', tax: '含税口径', ownership: '发生时归属版本', baseRef: '基础确认单号', rule: '规则版本', tour: '团号',
@@ -37,7 +38,7 @@
       return select(k, labels[k], [['', '全部'], ...values.map(v => [v, ['company', 'productCompany'].includes(k) ? v + '公司（演示）' : v])]);
     }
     function form() {
-      host.querySelector('[data-margin-filters]').innerHTML = '<div class="report-filter-row">' + select('dataset', '资料范围', [['common', '共同订单资料'], ['demo', '独立校验算例']]) + select('dateBasis', '日期依据', Object.entries(m.dates)) + input('start', '开始日期', 'date') + input('end', '结束日期', 'date') + input('cutoff', '资料截止', 'date') + '</div><div class="report-filter-row report-more">' + field('company') + field('channel') + select('status', '核对结果', [['', '全部'], ...['不适用', '适用范围待确认', '资料待补齐', '数据异常', '规则待确认'].map(v => [v, v])]) + '</div><details class="report-more"><summary>更多筛选</summary><div class="report-filter-row">' + input('order', '订单号') + input('tour', '团号') + ['productCompany', 'productOrg', 'store', 'center', 'salesGroup', 'salesperson', 'management', 'supply', 'organization', 'source'].map(field).join('') + select('quality', '费用资料', [['', '全部'], ['fees', '费用资料待补齐'], ['conflicts', '记录冲突或分配异常']]) + field('currency') + select('unit', '金额单位', [['yuan', '元'], ['wan', '万元']]) + '</div></details><div class="report-query-actions report-more"><button class="report-button" type="submit">查询</button><button class="report-button" type="button" data-margin-reset>重置</button></div>';
+      host.querySelector('[data-margin-filters]').innerHTML = '<div class="report-filter-row">' + select('dateBasis', '日期依据', Object.entries(m.dates)) + input('start', '开始日期', 'date') + input('end', '结束日期', 'date') + input('cutoff', '资料截止', 'date') + '</div><div class="report-filter-row report-more">' + field('company') + field('channel') + select('status', '核对结果', [['', '全部'], ...['不适用', '适用范围待确认', '资料待补齐', '数据异常', '规则待确认'].map(v => [v, v])]) + '</div><details class="report-more"><summary>更多筛选</summary><div class="report-filter-row">' + input('order', '订单号') + input('tour', '团号') + ['productCompany', 'productOrg', 'store', 'center', 'salesGroup', 'salesperson', 'management', 'supply', 'organization', 'source'].map(field).join('') + select('quality', '费用资料', [['', '全部'], ['fees', '费用资料待补齐'], ['conflicts', '记录冲突或分配异常']]) + field('currency') + select('unit', '金额单位', [['yuan', '元'], ['wan', '万元']]) + '</div></details>';
     }
     function sorted() { return [...result.summaries].sort((a, b) => {
       const av = a[sort], bv = b[sort];
@@ -66,7 +67,7 @@
       const url = URL.createObjectURL(new Blob(['\uFEFF' + rows.map(r => r.map(report.csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
       const a = document.createElement('a'); a.href = url; a.download = '渠道毛利校验-' + (applied.dataset === 'demo' ? '独立算例' : '共同资料') + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
-    host.innerHTML = '<form class="report-filters"><div data-margin-filters></div><p class="report-query-status" data-margin-status role="status">已查询 · 共同订单资料</p><p class="report-error" data-margin-error role="alert" hidden></p></form><div class="report-meta" data-margin-meta></div><section class="report-section" data-margin-result></section><section class="report-note"><h2>核对口径</h2><p>正式适用范围、原金额基础、还原公式与10%比较方式待财务确认；校验金额不是会计收入、团期毛利、门店分润或员工奖金。</p><p>独立算例以给定校验收入为分母，剔除已含升舱收费与成本、加回已计入收入的本公司优惠；未含且已确认的费用按分配额计入。已含补偿及返点不重复计入，升舱两侧分别确认。算例不计入共同经营业绩。</p><p>日期筛选不替代资料截止。来源费用原额、来源未分配额仅用于逐项核对，不按订单累加。缺失金额不视为0；同币种、同金额口径、同规则的齐全正分母子集单独合计，不平均订单毛利率。未接正式权限、取数与发布。</p></section>';
+    host.innerHTML = '<form class="report-filters"><div data-margin-filters></div><div class="report-query-actions report-more"><button class="report-button" type="submit">查询</button><button class="report-button" type="button" data-margin-reset>重置</button></div><p class="report-query-status" data-margin-status role="status">已查询 · 共同订单资料</p><p class="report-error" data-margin-error role="alert" hidden></p></form><div class="report-meta" data-margin-meta></div><section class="report-section" data-margin-result></section><section class="report-note"><h2>核对口径</h2><p>正式适用范围、原金额基础、还原公式与10%比较方式待财务确认；校验金额不是会计收入、团期毛利、门店分润或员工奖金。</p><p>独立算例以给定校验收入为分母，剔除已含升舱收费与成本、加回已计入收入的本公司优惠；未含且已确认的费用按分配额计入。已含补偿及返点不重复计入，升舱两侧分别确认。算例不计入共同经营业绩。</p><p>日期筛选不替代资料截止。来源费用原额、来源未分配额仅用于逐项核对，不按订单累加。缺失金额不视为0；同币种、同金额口径、同规则的齐全正分母子集单独合计，不平均订单毛利率。未接正式权限、取数与发布。</p></section>';
     host.addEventListener('input', e => { if (e.target.closest('form')) host.querySelector('[data-margin-status]').textContent = '条件已修改，尚未查询'; });
     host.addEventListener('change', e => {
       if (e.target.closest('form')) host.querySelector('[data-margin-status]').textContent = '条件已修改，尚未查询';
@@ -81,14 +82,14 @@
     });
     host.addEventListener('click', e => {
       const el = e.target.closest('button'); if (!el) return;
-      if (el.hasAttribute('data-margin-reset')) { applied = { ...m.defaults }; extras.clear(); page = 1; sort = 'order'; direction = 1; form(); render(); host.querySelector('[data-margin-error]').hidden = true; host.querySelector('[data-margin-status]').textContent = '已查询 · 共同订单资料'; }
+      if (el.hasAttribute('data-margin-reset')) { applied = { ...uiDefaults }; extras.clear(); page = 1; sort = 'order'; direction = 1; form(); render(); host.querySelector('[data-margin-error]').hidden = true; host.querySelector('[data-margin-status]').textContent = '已查询'; }
       if (el.dataset.marginSort) { direction = sort === el.dataset.marginSort ? -direction : 1; sort = el.dataset.marginSort; render(); }
       if (el.dataset.marginPage) { page += Number(el.dataset.marginPage); render(); }
     });
     form(); render();
     root.CaesarReportNavigation?.bind(host, {
       capture: () => ({ applied, page, size, sort, direction, extras: [...extras] }),
-      restore: s => { ({ applied, page, size, sort, direction } = s); extras = new Set(s.extras); form(); render(); },
+      restore: s => { ({ applied, page, size, sort, direction } = s); applied.dataset = uiDefaults.dataset; extras = new Set(s.extras); form(); render(); },
       activate: () => {}
     });
     return { exportResult };

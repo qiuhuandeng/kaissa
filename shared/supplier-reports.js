@@ -41,7 +41,7 @@
       select('supplier', '供应商', [['', '全部'], ...[...new Map([...m.purchases, ...m.gaps].map(r => [r.supplierId, [r.supplierId, r.supplier + (r.supplierId === 'S2' ? ' · 华北' : r.supplierId === 'S8' ? ' · 华东' : '')]])).values()]], applied.supplier) +
       select('relation', '集团内外', [['外部', '外部'], ['内部', '内部'], ['待确认', '待确认'], ['', '全部（不抵销）']], applied.relation) +
       (purchase ? select('department', '产品部门', [...choices('department'), ['__missing', '待补充']], applied.department) + select('category', '采购类别', choices('category'), applied.category) + select('type', '采购用途', choices('type'), applied.type) +
-        select('dataset', '资料范围', [['standard', '基础采购算例'], ['gaps', '含缺数算例']], applied.dataset) + select('quality', '资料缺口', [['', '全部'], ['amount', '金额待补'], ['department', '产品部门待补']], applied.quality) : '') +
+        select('quality', '资料缺口', [['', '全部'], ['amount', '金额待补'], ['department', '产品部门待补']], applied.quality) : '') +
       '<label class="report-field report-field-wide"><span>' + (purchase ? '供应商／采购单／账单／团期' : '返点记录／协议／确认单／团期') + '</span><input type="search" name="keyword" value="' + esc(applied.keyword) + '"></label></div></details>' +
       (view === 'summary' ? '<div class="report-filter-row">' + select('grouping', '汇总方式', [['supplier', '供应商'], ['company', '采购公司'], ['department', '公司与产品部门'], ['category', '采购类别'], ['month', '确认月份']], applied.grouping) + '</div>' : '');
   }
@@ -146,7 +146,7 @@
   });
   window.CaesarReportNavigation?.bind(root, {
     capture: () => ({ applied, view, page, size, sort, direction, optional: [...optional] }),
-    restore: s => { ({ applied, view, page, size, sort, direction } = s); optional = new Set(s.optional); filters(); render(); },
+    restore: s => { ({ applied, view, page, size, sort, direction } = s); applied.dataset = m.defaults.dataset; optional = new Set(s.optional); filters(); render(); },
     activate: key => { view = key; applied = { ...m.defaults, view, basis: isPurchase() ? 'purchase' : 'expected' }; optional.clear(); page = 1; sort = ''; filters(); render(); }
   });
 })();

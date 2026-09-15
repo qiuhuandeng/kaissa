@@ -116,7 +116,8 @@
   function mount(report) {
     if (!root.isConnected) return;
     const m = createModel(report), esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    let applied = { ...m.defaults }, view = 'tours', result, optional = new Set(), page = 1, size = 10, sort = 'id', direction = 1;
+    const uiDefaults = { ...m.defaults, dataset: 'scenarios' };
+    let applied = { ...uiDefaults }, view = 'tours', result, optional = new Set(), page = 1, size = 10, sort = 'id', direction = 1;
     const money = new Set(['amount', 'originalRevenue', 'originalCost', 'revenue', 'cost', 'profit', 'knownProfit', 'knownRevenue', 'knownCost', 'revenueDelta', 'costDelta', 'incomeChange', 'costChange', 'profitChange', 'financeRevenue', 'financeCost', 'financeProfit']);
     const rates = new Set(['rate', 'knownRate', 'completion']);
     const base = { tours: ['id', 'name', 'group', 'actual', 'status', 'revenue', 'cost', 'profit', 'rate', 'gap'], groups: ['company', 'division', 'group', 'count', 'confirmed', 'completion', 'ready', 'missing', 'knownRevenue', 'knownCost', 'knownProfit', 'knownRate', 'profit'], gaps: ['id', 'name', 'actual', 'status', 'amount', 'revenue', 'cost', 'profit', 'gap', 'owner'], adjustments: ['record', 'id', 'settlementNo', 'originalPeriod', 'date', 'effective', 'businessPeriod', 'accountingPeriod', 'adjustmentStatus', 'incomeChange', 'costChange', 'profitChange', 'reason'] };
@@ -128,7 +129,7 @@
       const all = [...m.common(), ...m.scenarios];
       root.innerHTML = '<header class="report-head"><h1>业务毛利</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及确认依据"') + '</header>' +
         '<div class="report-tabbar sr-tabs" role="tablist" aria-label="结算分析视图">' + Object.entries(m.views).map(([k, t]) => '<button class="report-tab" role="tab" data-view="' + k + '" aria-selected="' + (k === view) + '">' + t + '</button>').join('') + '</div>' +
-        '<form class="report-filters"><div class="report-filter-row">' + select('dataset', '资料范围', Object.entries(m.datasets), applied.dataset) + select('basis', '日期依据', [['actual', '实际完成日'], ['settlement', '原结算确认日']], applied.basis) +
+        '<form class="report-filters"><div class="report-filter-row">' + select('basis', '日期依据', [['actual', '实际完成日'], ['settlement', '原结算确认日']], applied.basis) +
         ['start', 'end'].map(k => '<label class="report-field"><span>' + (k === 'start' ? '开始日期' : '结束日期') + '</span><input name="' + k + '" type="date" value="' + applied[k] + '" required></label>').join('') +
         select('unit', '金额单位', [['wan', '万元'], ['yuan', '元']], applied.unit) + '</div><details class="report-more"><summary>更多筛选</summary><div class="report-filter-row">' +
         m.filterKeys.map(k => select(k, m.labels[k], [['', '全部'], ...[...new Set(all.map(r => r[k]).filter(Boolean))].map(v => [v, v]), ['__missing', '待补充']], applied[k])).join('') +
@@ -177,14 +178,13 @@
     });
     root.addEventListener('input', e => { if (e.target.closest('form')) root.querySelector('[data-status]').textContent = '条件已修改，尚未查询'; });
     root.addEventListener('change', e => {
-      if (e.target.name === 'dataset') { m.filterKeys.forEach(k => root.querySelector('[name="' + k + '"]').value = ''); root.querySelector('[name="keyword"]').value = ''; }
       if (e.target.name === 'size') { size = +e.target.value; page = 1; render(); }
       if (e.target.dataset.column) { e.target.checked ? optional.add(e.target.dataset.column) : optional.delete(e.target.dataset.column); render(); root.querySelector('.report-columns').open = true; }
     });
     root.addEventListener('click', e => {
       const el = e.target.closest('button'); if (!el) return;
       if (el.dataset.view) { view = el.dataset.view; root.querySelectorAll('[data-view]').forEach(x => x.setAttribute('aria-selected', String(x.dataset.view === view))); setBasis(); root.querySelector('[data-status]').textContent = '视图已切换，尚未查询；下方保留上次结果'; }
-      if (el.hasAttribute('data-reset')) { applied = { ...m.defaults, view }; optional = new Set(); page = 1; shell(); }
+      if (el.hasAttribute('data-reset')) { applied = { ...uiDefaults, view }; optional = new Set(); page = 1; shell(); }
       if (el.dataset.sort) { direction = sort === el.dataset.sort ? -direction : 1; sort = el.dataset.sort; render(); }
       if (el.dataset.page) { page += +el.dataset.page; render(); }
       if (el.hasAttribute('data-export')) {
@@ -208,8 +208,8 @@
     shell();
     window.CaesarReportNavigation?.bind(root, {
       capture: () => ({ applied, view, page, size, sort, direction, optional: [...optional] }),
-      restore: s => { ({ applied, view, page, size, sort, direction } = s); optional = new Set(s.optional); shell(); },
-      activate: key => { view = key; applied = { ...m.defaults, view }; optional.clear(); page = 1; sort = 'id'; shell(); }
+      restore: s => { ({ applied, view, page, size, sort, direction } = s); applied.dataset = uiDefaults.dataset; optional = new Set(s.optional); shell(); },
+      activate: key => { view = key; applied = { ...uiDefaults, view }; optional.clear(); page = 1; sort = 'id'; shell(); }
     });
   }
   if (window.CaesarReports) mount(window.CaesarReports);

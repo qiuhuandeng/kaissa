@@ -6,7 +6,7 @@ run('accounting',async({page,url,shot,download,passed})=>{
   await f.locator('[name=dataset]').selectOption('demo'); await f.locator('button[type=submit]').click();
   assert.match(await f.locator('[aria-label="财务确认主表"]').innerText(),/收入确认/);
   await f.locator('[name=scenario]').selectOption('estimate'); await f.locator('button[type=submit]').click();
-  let csv=await download(f.locator('[data-export]')); assert.match(csv,/6,200.00/); assert.match(csv,/CB10-R/); passed('完整会计发生、暂估冲回、全依据导出');
+  let csv=await download(f.locator('[data-export]:visible')); assert.match(csv,/6,200.00/); assert.match(csv,/CB10-R/); passed('完整会计发生、暂估冲回、全依据导出');
   await page.locator('[data-report-tab=completion]').click();
   await h.locator('[name=dataset]').selectOption('demo'); await h.locator('button[type=submit]').click();
   await selectQueryView(page, 'internal'); assert.match(await h.locator('[data-fr-main]').innerText(),/对方未提供或在途/);

@@ -102,7 +102,7 @@
     }
     return { records, allocations, evidence, start: '2026-09-01', end: '2026-10-31', historical: true };
   }
-  const defaults = type => ({ dataset: 'pending', type: types[type] ? type : 'receipt', mode: 'documents', case: '', start: '2026-09-01', end: '2026-10-31',
+  const defaults = type => ({ dataset: 'demo', type: types[type] ? type : 'receipt', mode: 'documents', case: '', start: '2026-09-01', end: '2026-10-31',
     dateBasis: type === 'transfer' ? 'confirmedAt' : 'actualAt', cutoff: '2026-10-31T23:59', company: '', currency: '', account: '', category: '', method: '', status: '', internal: '', keyword: '', order: '', contractCompany: '', department: '', store: '', center: '' });
   function validate(q) {
     if (q.start && q.end && q.start > q.end) return '开始日期不能晚于结束日期';

@@ -4,7 +4,7 @@ run('invoice-report', async ({ page, url, shot, download, passed }) => {
   await page.goto(url('merchant/finance/finance-reports.html?report=invoices'));
   const host = page.locator('#finance-invoice-report'), main = host.locator('[data-fr-main]');
   const field = n => host.locator('form [name="' + n + '"]'), submit = () => host.locator('button[type=submit]').click();
-  await host.locator('[data-fr-notice]').waitFor(); assert.equal(await main.locator('tbody tr').count(), 0);
+  await host.locator('[data-fr-notice]').waitFor(); assert.ok(await main.locator('tbody tr').count() > 0);
   await field('dataset').selectOption('demo'); await field('company').selectOption('北京凯撒'); await submit();
   assert.match(await main.innerText(), /11,000.00/); assert.match(await main.innerText(), /9,000.00/); assert.match(await main.innerText(), /2,000.00/);
   await selectQueryView(page, 'issued'); assert.match(await main.innerText(), /未到约定节点/);

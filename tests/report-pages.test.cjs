@@ -38,10 +38,12 @@ test("取消可查但净值为零；预留不产生有效成交", () => {
   assert.equal(query({ status: "未确认" })[0].amount, null);
   assert.equal(query({ view: "actual", order: "O05" }).length, 0);
 });
-test("缺失收入成本不是零，不生成毛利或完成后调整", () => {
+test("缺失收入成本不是零，完成后调整独立列示", () => {
   assert.ok(query({ view: "financial" }).every(r => r.businessRevenue == null && r.cost == null));
   assert.equal(query({ view: "actual", settlement: "已结算" }).length, 0);
-  assert.equal(query({ view: "adjustments" }).length, 0);
+  const adjustments = query({ view: "adjustments" });
+  assert.equal(adjustments.length, 1);
+  assert.deepEqual([adjustments[0].amount, adjustments[0].cost], [-500, -300]);
 });
 test("管理月跨月跨年边界；任务分母必须有效", () => {
   assert.equal(report.managementMonth("2026-05-25"), "2026-05");

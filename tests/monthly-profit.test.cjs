@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const m=require('../shared/monthly-profit-model.js'),b=require('../shared/budget-targets.js'),s=require('../shared/supplier-report-model.js');
 const q=(v={},d)=>m.query({dataset:'demo',...v},d);
-test('默认待接入，不显示虚构利润',()=>assert.equal(m.query({}).pending,true));
+test('待补资料不显示虚构利润',()=>assert.equal(m.query({...m.defaults,dataset:'pending'}).pending,true));
 test('核算公司收入成本费用与经营结果',()=>{const r=q().rows;assert.deepEqual(r.map(r=>[r.income,r.cost,r.expense,r.operating]),[[30000,24000,2600,3400],[24000,18000,600,5400]]);});
 test('部门加未分配等于公司，管理结转不改公司总额',()=>{const r=q({view:'departments'});assert.equal(r.rows.filter(r=>r.company[0]==='A').reduce((a,r)=>a+r.operating,0),3400);assert.equal(r.rows.find(r=>r.department==='未分配费用').operating,-600);assert.equal(r.rows.reduce((a,r)=>a+r.transfer,0),0);});
 test('已含优惠不重复扣，分配依据保留',()=>{const r=q({view:'expenses'}).rows;assert.equal(r.find(r=>r.id==='INCLUDED').impact,0);assert.equal(r.find(r=>r.id==='ADMIN').parts.length,3);});

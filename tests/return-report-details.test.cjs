@@ -98,11 +98,13 @@ test("A06/A10 金额缺数、未分配、零值与税务结论分开", () => {
   assert.equal(report.quantitySummary([sample({ quantity: 2, unit: "张" }), sample({ quantity: 3, unit: "间夜" })]), "2 张、3 间夜");
 });
 
-test("缺确认结果不伪造收入毛利或二次结算，实际金额继续保留", () => {
+test("缺确认结果不伪造收入毛利，完成后调整独立列示", () => {
   const rows = query({ view: "financial", incomeStatus: "未提供确认记录", costStatus: "未提供确认记录" });
   assert.equal(report.sum(rows), 56000);
   assert.equal(report.amountCoverage(rows, "financeRevenue").value, null);
   assert.equal(report.amountCoverage(rows, "cost").unknown, 6);
-  assert.equal(query({ view: "adjustments" }).length, 0);
+  const adjustments = query({ view: "adjustments" });
+  assert.equal(adjustments.length, 1);
+  assert.equal(adjustments[0].adjustmentStatus, "已确认");
   assert.equal(report.returnFieldValue(rows[0], "originalSettlement"), "未提供记录");
 });

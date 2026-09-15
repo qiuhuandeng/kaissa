@@ -24,7 +24,8 @@
   const file = location.pathname.split('/').pop().replace('.html',''), definition = config[file];
   if (!definition) return;
   const [title, entries] = definition, q = s => document.querySelector(s);
-  const storageKey = 'caesar-report-navigation-v1:' + file;
+  // V2 drops obsolete data-source test filters so an old empty "pending" state cannot be restored.
+  const storageKey = 'caesar-report-navigation-v2:' + file;
   let saved = {}, active, switching = false;
   try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}'); } catch (_) { /* File browsers may disable storage. */ }
   const states = saved.states || {};

@@ -73,7 +73,7 @@
   const control = (name, options, type) => '<label class="cf-field">' + queryLabels[name] + (options ? '<select name="' + name + '" aria-label="' + queryLabels[name] + '">' + options.map(([v, t]) => '<option value="' + e(v) + '">' + e(t) + '</option>').join('') + '</select>' : '<input name="' + name + '" aria-label="' + queryLabels[name] + '" type="' + (type || 'text') + '">') + '</label>';
   const btn = (attr, text, icon) => '<button type="button" class="btn btn-secondary" ' + attr + '>' + (icon ? '<img alt="" width="14" height="14" src="../../shared/report-icons/' + icon + '.svg">' : '') + text + '</button>';
   host.insertAdjacentHTML('beforeend', '<div class="cf-workbar"><div class="cf-tabs" role="tablist" aria-label="收付类型">' + Object.entries(m.types).map(([k, t]) => '<button type="button" role="tab" data-cf-type="' + k + '">' + t + '</button>').join('') + '</div><div class="cf-actions">' + btn('data-cf-export', '导出明细', 'download') + btn('data-cf-evidence-export', '导出依据', 'download') + btn('data-cf-print', '打印收款清单') + '</div></div>' +
-    '<form class="cf-filters">' + control('dataset', [['pending', '来源待接入'], ['demo', '验收算例']]) + control('case', [['', '全部验收场景'], ...Object.entries(m.scenarios)]) +
+    '<form class="cf-filters">' + control('case', [['', '全部验收场景'], ...Object.entries(m.scenarios)]) +
     control('dateBasis', Object.entries(basisLabels)) + control('start', null, 'date') + control('end', null, 'date') + control('cutoff', null, 'datetime-local') +
     control('company', [['', '全部算例公司'], ['北京凯撒旅游', '北京凯撒旅游'], ['福建凯撒旅游', '福建凯撒旅游']]) + control('currency', [['', '全部币种'], ['CNY', 'CNY'], ['USD', 'USD']]) + control('keyword') +
     '<details class="cf-more"><summary>更多条件</summary><div class="cf-filter-more">' + ['account', 'category', 'method', 'status', 'order', 'contractCompany', 'department', 'store', 'center'].map(k => control(k)).join('') + control('internal', [['', '全部往来'], ['外部', '外部'], ['集团内部', '集团内部']]) + '</div></details>' +
@@ -187,7 +187,7 @@
   setForm(applied); run(applied);
   window.CaesarReportNavigation?.bind(host, {
     capture: () => ({ applied, page, size, sortKey, direction, extras: [...extras] }),
-    restore: s => { applied = s.applied; run(applied); page = s.page; size = s.size; sortKey = s.sortKey; direction = s.direction; extras.clear(); s.extras.forEach(k => extras.add(k)); setForm(applied); render(); host.querySelector('[data-cf-size]').value = size; },
+    restore: s => { applied = { ...s.applied, dataset: 'demo' }; run(applied); page = s.page; size = s.size; sortKey = s.sortKey; direction = s.direction; extras.clear(); s.extras.forEach(k => extras.add(k)); setForm(applied); render(); host.querySelector('[data-cf-size]').value = size; },
     activate: key => { extras.clear(); const next = m.defaults(key); setForm(next); run(next); }
   });
 })();

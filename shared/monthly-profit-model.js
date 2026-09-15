@@ -2,7 +2,7 @@
   'use strict';
   const rf = typeof module !== 'undefined' && module.exports ? require('./return-finance-model.js') : root.CaesarReturnFinance;
   const known = rf.known, sum = xs => xs.every(known) ? xs.reduce((a,v)=>a+Math.round(v*100),0)/100 : null;
-  const defaults = { dataset: 'pending', view: 'companies', start: '2026-09', end: '2026-09', version: 'published', company: '', department: '', currency: 'CNY', product: '', destination: '', type: '', supply: '', channel: '', customer: '', grouping: 'product', budgetVersion: '预算V1', groupScope: 'unapproved' };
+  const defaults = { dataset: 'demo', view: 'companies', start: '2026-09', end: '2026-09', version: 'published', company: '', department: '', currency: 'CNY', product: '', destination: '', type: '', supply: '', channel: '', customer: '', grouping: 'product', budgetVersion: '预算V1', groupScope: 'unapproved' };
   const views = { companies: '公司损益', departments: '部门损益', expenses: '费用构成', budgets: '预算差异', group: '集团调整' };
   const versions = { published: { name: '已发布算例V1', cutoff: '2026-09-30' }, corrected: { name: '更正算例V2', cutoff: '2026-10-31' } };
   function fixture() {

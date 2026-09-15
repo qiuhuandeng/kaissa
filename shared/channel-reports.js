@@ -102,14 +102,13 @@
         (draft.view === 'stores' ? field('store') + field('storeType') : draft.view === 'calls' ? field('salesGroup') + field('salesId') : draft.view === 'structure' ? field('store') + field('salesGroup') : '') +
         ['acquisition', 'productOrg', 'travel', 'business', 'source', 'type', 'supply', 'destination', 'management'].map(field).join('') + select('quality', '资料情况', [['', '全部'], ['ownership', '销售归属待补充'], ['amount', '成交金额待确认']], draft.quality) + '</div></details>' +
         '<div class="report-filter-row report-more">' + (draft.view === 'channels' ? select('level', '汇总方式', [['channel', '主成交渠道'], ['region', '预算区域与渠道'], ['company', '销售公司'], ['department', '销售部门']], draft.level) : draft.view === 'calls' ? select('callLevel', '汇总方式', [['center', '呼叫中心'], ['group', '销售组'], ['person', '顾问']], draft.callLevel) : draft.view === 'structure' ? select('structure', '产品结构', [['type', '产品类型'], ['destination', '主目的地'], ['supply', '供应关系']], draft.structure) : '') +
-        (draft.view !== 'structure' ? select('columns', '金额列组', [['amount', '本期业绩'], ['comparison', '同期与任务']], draft.columns) : '') +
-        '<div class="report-query-actions"><button type="submit" class="report-button">查询</button>' + button('重置', 'data-reset') + '</div></div>';
+        (draft.view !== 'structure' ? select('columns', '金额列组', [['amount', '本期业绩'], ['comparison', '同期与任务']], draft.columns) : '') + '</div>';
       root.querySelectorAll('[data-view]').forEach(el => el.setAttribute('aria-selected', String(el.dataset.view === draft.view)));
     }
     function shell() {
       root.innerHTML = '<header class="report-head"><h1>渠道分析</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') + '</div></header>' +
         '<div class="report-tabbar cr-tabs" role="tablist" aria-label="渠道经营视图">' + Object.entries({ ...m.views, margin: '渠道毛利校验' }).map(([key, label]) => '<button type="button" class="report-tab" role="tab" data-view="' + key + '">' + label + '</button>').join('') + '</div>' +
-        '<form class="report-filters"><div data-filters></div><p class="report-query-status" data-status role="status">已查询 · 演示资料</p><p class="report-error" data-error role="alert" hidden></p></form><div data-meta class="report-meta"></div><section class="report-section" data-result></section>' +
+        '<form class="report-filters"><div data-filters></div><div class="report-query-actions"><button type="submit" class="report-button">查询</button>' + button('重置', 'data-reset') + '</div><p class="report-query-status" data-status role="status">已查询 · 演示资料</p><p class="report-error" data-error role="alert" hidden></p></form><div data-meta class="report-meta"></div><section class="report-section" data-result></section>' +
         '<section class="report-note"><h2>数据口径</h2><p>演示资料，非正式财务业绩。订单按确认日期及截止时净成交额；回团按实际完成日期及分配成交额，包含待结算业务。退款支付不再重复冲减成交；计划到期不等于实际完成。</p><p>归属采用业务发生时资料。主渠道与获客来源分开；集团内部供应不增加对客成交。同名顾问按演示员工编号区分，缺编号不合并为同一人。</p><p>结构占比以所选范围成交额为分母；渠道贡献只解除主渠道条件，保留公司、产品、门店、销售组及期间。无有效分母或金额缺失不计算比例。</p><p>未提供完整对比期资料、批准任务及渠道毛利确认依据；升舱、优惠还原公式与10%比较方式待财务确认。未接正式权限、取数及发布。</p></section>';
       filters(); render();
       performance = document.createElement('div'); performance.dataset.channelPerformance = '';
@@ -166,7 +165,7 @@
       if (e.target.dataset.column) { e.target.checked ? optional.add(e.target.dataset.column) : optional.delete(e.target.dataset.column); render(); root.querySelector('.report-columns').open = true; }
     });
     root.addEventListener('click', e => {
-      if (e.target.closest('[data-channel-margin]')) return;
+      if (e.target.closest('[data-channel-margin]') && !e.target.closest('[data-export]')) return;
       const el = e.target.closest('button'); if (!el) return;
       if (el.dataset.view === 'margin') {
         if (!margin) margin = window.mountChannelMargin(marginHost, report, assets);

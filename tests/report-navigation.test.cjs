@@ -33,3 +33,18 @@ test('旧报表路由只迁移对应查询，保留参数与定位片段', () =>
   const unrelated = new URL('https://example.test/merchant/finance/finance-payable.html?order=O1');
   assert.equal(context.destination(unrelated).href, unrelated.href);
 });
+test('数据报表不再显示测试资料范围，并弃用会恢复空表的旧页签状态', () => {
+  const views = [
+    'monthly-profit-view.js', 'finance-cashflow-view.js', 'finance-balances-view.js',
+    'finance-prepayments-view.js', 'finance-funds-view.js', 'finance-invoice-report-view.js',
+    'finance-accounting-view.js', 'overview-finance-view.js', 'resource-cost-report-view.js',
+    'return-finance-view.js', 'channel-margin-view.js', 'settlement-reports.js', 'supplier-reports.js'
+  ];
+  for (const file of views) {
+    const source = fs.readFileSync(path.join(repo, 'shared', file), 'utf8');
+    assert.doesNotMatch(source, /(?:select|control)\(['"]dataset|key:\s*['"]dataset/);
+  }
+  const navigation = fs.readFileSync(path.join(repo, 'shared/report-section-tabs.js'), 'utf8');
+  assert.match(navigation, /caesar-report-navigation-v2/);
+  assert.doesNotMatch(navigation, /caesar-report-navigation-v1/);
+});

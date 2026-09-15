@@ -4,7 +4,7 @@ run('prepayments', async ({ page, url, shot, download, passed }) => {
   await page.goto(url('merchant/finance/finance-reports.html?report=prepayments'));
   const host = page.locator('#finance-prepayments'), main = host.locator('[data-fr-main]');
   const field = n => host.locator('form [name="' + n + '"]'), submit = () => host.locator('button[type=submit]').click();
-  await host.locator('[data-fr-notice]').waitFor(); assert.equal(await main.locator('tbody tr').count(), 0);
+  await host.locator('[data-fr-notice]').waitFor(); assert.ok(await main.locator('tbody tr').count() > 0);
   await field('dataset').selectOption('demo'); await submit(); assert.match(await main.innerText(), /8,000.00/); assert.match(await main.innerText(), /6,000.00/);
   await selectQueryView(page, 'deposit'); assert.match(await main.innerText(), /24,000.00/); assert.match(await main.innerText(), /21,000.00/);
   await selectQueryView(page, 'guarantee'); assert.equal(await main.locator('tbody tr').count(), 2); assert.match(await main.innerText(), /收取/); assert.match(await main.innerText(), /支付/);

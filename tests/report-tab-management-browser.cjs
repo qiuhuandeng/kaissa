@@ -12,7 +12,7 @@ run('report-tab-management',async({page,url,passed,shot})=>{
  assert.equal(await page.locator('[data-report-tab=versions]').getAttribute('aria-selected'),'true');
  passed('分类维护未保存时跨分区Tab提示，取消留在编辑，确认才离开');
  const gov=page.locator('[data-gov-report]');await gov.locator('[name=role]').selectOption('group');await gov.locator('[name=version]').selectOption('WORK03');await gov.locator('button[type=submit]').click();
- await page.locator('[data-gov-correct]').click();await gov.locator('[name=version]').selectOption('COR04');await gov.locator('button[type=submit]').click();
+ await page.locator('[data-gov-correct]:visible').click();await gov.locator('[name=version]').selectOption('COR04');await gov.locator('button[type=submit]').click();
  await page.reload();await page.locator('[data-report-tab=versions][aria-selected=true]').waitFor();
  assert.match(await gov.locator('.cf-error').innerText(),/条件已失效/);assert.ok(await gov.locator('[data-fr-export]').isDisabled());assert.equal(await gov.locator('[data-fr-main] tbody tr').count(),0);
  await page.locator('[data-report-tab=records]').click();await page.locator('[data-report-tab=versions]').click();

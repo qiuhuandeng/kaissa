@@ -24,7 +24,7 @@
   const button = (attrs, text, icon) => '<button type="button" class="btn btn-secondary" ' + attrs + '>' + (icon ? '<img alt="" width="14" height="14" src="../../shared/report-icons/' + icon + '.svg">' : '') + text + '</button>';
   host.innerHTML = '<div class="cf-workbar"><div class="cf-tabs" role="tablist" aria-label="往来报表视图">' + Object.entries(m.views).map(([k, v]) => '<button role="tab" type="button" data-ba-view="' + k + '">' + v + '</button>').join('') + '</div>' +
     '<div class="cf-actions">' + button('data-ba-export', '导出明细', 'download') + button('data-ba-evidence-export', '导出依据', 'download') + '</div></div>' +
-    '<form class="cf-filters">' + control('dataset', [['pending', '来源待接入'], ['demo', '验收算例']]) + control('case', [['', '全部核对场景'], ...Object.entries(m.cases)]) +
+    '<form class="cf-filters">' + control('case', [['', '全部核对场景'], ...Object.entries(m.cases)]) +
     control('asOf', null, 'date') + control('cutoff', null, 'datetime-local') + control('company', choices('company')) + control('currency', choices('currency')) + control('party') + control('order') +
     '<details class="cf-more"><summary>更多条件</summary><div class="cf-filter-more">' + ['ledger', 'customerType', 'channel', 'salesCompany', 'productCompany', 'department', 'store', 'center', 'scope'].map(k => control(k, choices(k))).join('') +
     control('status', [['', '全部'], ...['资料不足', '反向余额待核对', '已结清', '到期日待补', '未到期', '当日到期', '已逾期'].map(v => [v, v])]) + ['dueStart', 'dueEnd', 'confirmedStart', 'confirmedEnd'].map(k => control(k, null, 'date')).join('') + '</div></details>' +
@@ -52,7 +52,7 @@
   function table(rows, cols, sortable) {
     return '<table><thead><tr>' + cols.map(k => '<th' + (sortable ? ' aria-sort="' + (sortKey === k ? direction === 1 ? 'ascending' : 'descending' : 'none') + '"' : '') + '>' + (sortable ? '<button type="button" data-ba-sort="' + k + '">' + e(label(k)) + '</button>' : e(label(k))) + '</th>').join('') + '</tr></thead><tbody>' + rows.map(r => '<tr>' + cols.map(k => '<td class="' + (moneyKeys.has(k) ? 'cf-number' : 'cf-value') + '">' + e(display(r, k)) + '</td>').join('') + '</tr>').join('') + '</tbody></table>' + (!rows.length ? '<p class="cf-empty">' + (result.pending ? '资料不足，暂无可核对记录' : '当前条件下无记录') + '</p>' : '');
   }
-  function setForm(q) { Object.keys(fieldNames).forEach(k => field(k).value = q[k] || ''); }
+  function setForm(q) { Object.keys(fieldNames).forEach(k => { if (field(k)) field(k).value = q[k] || ''; }); }
   function render() {
     const ordered = m.sort(result.rows, sortKey, direction), last = Math.max(1, Math.ceil(ordered.length / size)); page = Math.min(page, last);
     host.querySelector('[data-ba-title]').textContent = m.views[applied.view];
@@ -110,7 +110,7 @@
   setForm(applied); run(applied);
   window.CaesarReportNavigation?.bind(host, {
     capture: () => ({ applied, page, size, sortKey, direction, extras: [...extras] }),
-    restore: s => { applied = s.applied; run(applied); page = s.page; size = s.size; sortKey = s.sortKey; direction = s.direction; extras.clear(); s.extras.forEach(k => extras.add(k)); setForm(applied); render(); host.querySelector('[data-ba-size]').value = size; },
+    restore: s => { applied = { ...s.applied, dataset: 'demo' }; run(applied); page = s.page; size = s.size; sortKey = s.sortKey; direction = s.direction; extras.clear(); s.extras.forEach(k => extras.add(k)); setForm(applied); render(); host.querySelector('[data-ba-size]').value = size; },
     activate: key => { extras.clear(); const next = { ...m.defaults(), view: key }; setForm(next); run(next); }
   });
 })();

@@ -13,7 +13,7 @@
   const days = (a, b) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
   const key = d => JSON.stringify([d.source, d.company, d.ledger, d.currency, d.id]);
   const signature = r => JSON.stringify(Object.keys(r).sort().map(k => [k, r[k]]));
-  const defaults = () => ({ dataset: 'pending', view: 'ar', case: '', asOf: '2026-09-30', cutoff: '2026-10-31T23:59', dueStart: '', dueEnd: '', confirmedStart: '', confirmedEnd: '', company: '', ledger: '', currency: '', party: '', customerType: '', channel: '', salesCompany: '', productCompany: '', department: '', store: '', center: '', order: '', scope: '', status: '', direction: 'ar', ageBasis: 'age', group: 'party' });
+  const defaults = () => ({ dataset: 'demo', view: 'ar', case: '', asOf: '2026-09-30', cutoff: '2026-10-31T23:59', dueStart: '', dueEnd: '', confirmedStart: '', confirmedEnd: '', company: '', ledger: '', currency: '', party: '', customerType: '', channel: '', salesCompany: '', productCompany: '', department: '', store: '', center: '', order: '', scope: '', status: '', direction: 'ar', ageBasis: 'age', group: 'party' });
 
   function fixture() {
     const documents = [], events = [];

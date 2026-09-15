@@ -66,6 +66,12 @@
       businessRevenue: null, financeRevenue: null, cost: null, adjustment: null
     };
   });
+  const completionAdjustments = [{
+    ...completions[0], record: 'FUL-ADJ-001', completionRecord: completions[0].record,
+    date: '2026-05-07', actual: completions[0].actual, financePeriod: '2026-05',
+    amount: -500, cost: -300, reason: '完成后人数减少确认', originalSettlement: 'JS-20260505-01',
+    adjustmentStatus: '已确认', originalFinancePeriod: '2026-05'
+  }];
   function managementMonth(date) {
     if (!date) return null;
     const d = new Date(date + "T00:00:00Z");
@@ -85,7 +91,7 @@
   function query(f) {
     if (f.view === "changes") return events.filter(r => match(r, f) && inRange(r.date, f.start, f.end));
     if (f.view === "orders") return selectOrders(f);
-    if (f.view === "adjustments") return [];
+    if (f.view === "adjustments") return completionAdjustments.filter(r => match(r, f) && inRange(r.date, f.start, f.end));
     return selectCompletions(f);
   }
   function selectCompletions(f, records = completions) {
@@ -183,7 +189,7 @@
     };
   }
   function returnDetailQuery(f, records = completions) {
-    if (f.view === "adjustments") return [];
+    if (f.view === "adjustments") return completionAdjustments.filter(r => match(r, f) && inRange(r.date, f.start, f.end));
     return selectCompletions(f, records).map(returnFacts).filter(r => ownershipMatch(r, f)
       && (!f.dataQuality || orderIssues(r)[f.dataQuality])
       && (f.view !== "financial" || ((!f.incomeStatus || r.incomeStatus === f.incomeStatus) && (!f.costStatus || r.costStatus === f.costStatus))));

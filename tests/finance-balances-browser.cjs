@@ -29,12 +29,12 @@ async function main() {
       const scenario = async c => { await field('dataset').selectOption('demo'); await field('case').selectOption(c); await submit(); };
       const view = v => selectQueryView(page, v);
       await page.goto(url()); await host.locator('[data-ba-notice]').waitFor();
-      assert.match(await host.innerText(), /来源待接入/); assert.equal(await table.locator('tbody tr').count(), 0);
+      assert.ok(await table.locator('tbody tr').count() > 0);
       assert.equal(await table.locator('th').count(), 12); assert.equal(await page.locator('.finance-report-content').isVisible(), false);
       await scenario('BA01'); assert.match(await table.innerText(), /6,000.00/);
       await field('asOf').fill('2026-10-05'); await submit(); assert.match(await table.innerText(), /已结清/);
       await field('asOf').fill('2026-09-30'); await submit(); assert.match(await table.innerText(), /6,000.00/);
-      results.push(protocol + ': pending source, historical balances and future receipts');
+      results.push(protocol + ': default balances, historical balances and future receipts');
       await view('ap'); await scenario('BA04'); assert.match(await table.innerText(), /11,000.00/);
       assert.match(await host.locator('[data-ba-totals]').innerText(), /3,000.00/);
       assert.match(await host.locator('[data-ba-totals]').innerText(), /6,000.00/);

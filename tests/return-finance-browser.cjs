@@ -28,7 +28,7 @@ async function main() {
       const submit = () => host.locator('button[type="submit"]').click();
       const table = host.locator('[aria-label="财务确认主表"]');
       const download = async () => {
-        const pending = page.waitForEvent('download'); await root.locator('[data-export]').click();
+        const pending = page.waitForEvent('download'); await root.locator('[data-export]:visible').click();
         const d = await pending, file = path.join(output, protocol + '-' + d.suggestedFilename()); await d.saveAs(file); return fs.readFile(file, 'utf8');
       };
       await page.goto(url('return-report-details'));

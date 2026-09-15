@@ -2,7 +2,7 @@ const test = require('node:test'), assert = require('node:assert/strict');
 const m = require('../shared/finance-prepayments-model.js');
 const run = (q = {}, s) => m.query({ dataset: 'demo', view: 'prepay', ...q }, s);
 const row = (q = {}, id = 'YF-001', s) => run(q, s).rows.find(r => r.id === id);
-test('pending and unsupported historical coverage never invent balances', () => { assert.equal(m.query({}).pending, true); assert.equal(run({ end: '2026-11-01', cutoff: '2026-11-01' }).pending, true); });
+test('pending and unsupported historical coverage never invent balances', () => { assert.equal(m.query({ ...m.defaults, dataset: 'pending' }).pending, true); assert.equal(run({ end: '2026-11-01', cutoff: '2026-11-01' }).pending, true); });
 test('opening evidence starts September; earlier history is not reconstructed', () => { assert.equal(row({ start: '2026-08-01', end: '2026-08-31' }).closing, null); assert.equal(m.fixture().accounts.find(r => r.id === 'YF-001').openingDate, '2026-09-01'); });
 test('advance reconciles 10000+5000-6000-1000=8000, freeze only affects available', () => { const r = row({ view: 'advance' }, 'YS-001'); assert.equal(r.closing, 8000); assert.equal(r.frozen, 2000); assert.equal(r.available, 6000); });
 test('deposit use releases a distinct freeze, rejected application does not deduct', () => { const r = row({ view: 'deposit' }, 'YC-001'); assert.equal(r.closing, 24000); assert.equal(r.frozen, 3000); assert.equal(r.available, 21000); assert.equal(row({ view: 'deposit' }, 'YC-BAD').closing, null); });

@@ -3,7 +3,7 @@
   else root.CaesarOverviewFinance=factory(root.CaesarMonthlyProfit,root.CaesarFunds,root.CaesarResourceCost);
 })(typeof window==='object'?window:globalThis,function(profit,funds,resource){
   'use strict';
-  const defaults={dataset:'pending',view:'profit',company:'',currency:'CNY',month:'2026-09',asOf:'2026-09-30',planEnd:'2026-12-31',version:'published'};
+  const defaults={dataset:'demo',view:'profit',company:'',currency:'CNY',month:'2026-09',asOf:'2026-09-30',planEnd:'2026-12-31',version:'published'};
   const views={profit:'损益摘要',funds:'资金概况',plan:'计划概况',resources:'风险概况'};
   function query(input){
     const q={...defaults,...input};

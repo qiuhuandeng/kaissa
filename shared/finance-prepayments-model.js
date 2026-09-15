@@ -4,7 +4,7 @@
 })(typeof window === 'object' ? window : globalThis, function (b) {
   'use strict';
   const views = { advance: '预收款', deposit: '预存款', prepay: '预付款', guarantee: '保证金' };
-  const defaults = { dataset: 'pending', view: 'advance', start: '2026-09-01', end: '2026-09-30', cutoff: '2026-10-31', company: '', currency: '', party: '', risk: '', threshold: '90', direction: '', keyword: '' };
+  const defaults = { dataset: 'demo', view: 'advance', start: '2026-09-01', end: '2026-09-30', cutoff: '2026-10-31', company: '', currency: '', party: '', risk: '', threshold: '90', direction: '', keyword: '' };
   const kinds = { increase: '增加', use: '使用', offset: '冲抵应付', refund: '确认退回', transferIn: '转入', transferOut: '转出', loss: '批准损失', freeze: '冻结', unfreeze: '解冻', allocate: '团期分摊', returnDue: '应退确认' };
   const balanceSign = { increase: 1, use: -1, offset: -1, refund: -1, transferIn: 1, transferOut: -1, loss: -1 };
   const round = v => Math.round(v * 100) / 100;

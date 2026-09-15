@@ -22,7 +22,8 @@ run('report-tab-architecture', async ({ page, url, shot, download, passed }) => 
  for (const [file,[title,...tabs]] of Object.entries(pages)) {
   await page.goto(url('merchant/data/'+file+'.html'));
   await page.locator('[data-report-tab][aria-selected="true"]').waitFor();
-  assert.equal(await page.locator('h1:visible').innerText(),title);
+  assert.equal(await page.locator('h1:visible').count(),0,file+' page title hidden');
+  assert.equal(await page.title(),title+' - 凯撒旅游');
   assert.deepEqual(await page.locator('[data-report-tab]').allTextContents(),tabs);
   assert.ok([title,...tabs].every(t=>Array.from(t).length<=5));
   assert.equal(await page.locator('.report-links').count(),0);
@@ -31,13 +32,21 @@ run('report-tab-architecture', async ({ page, url, shot, download, passed }) => 
    assert.equal(await page.locator('[role="tablist"]:visible').count(),1,file+'/'+label);
    assert.equal(await page.locator('[data-report-tab][aria-selected="true"]').innerText(),label);
    assert.ok(await page.locator('table:visible').count(),file+'/'+label+' result');
+   assert.ok(await page.locator('table:visible').first().locator('tbody tr').count(),file+'/'+label+' default data');
+   assert.doesNotMatch(await page.locator('body').innerText(),/演示|非正式|算例|来源待接入/,file+'/'+label+' redundant copy removed');
    assert.equal(await page.locator('[role="alert"]:visible').count(),0,file+'/'+label);
-   const form=page.locator('form:visible').last(),dataset=form.locator('[name=dataset]');
+   const form=page.locator('form.data-report-filter-surface:visible').last();await form.waitFor();const dataset=form.locator('[name=dataset]');
+   assert.ok(await form.locator('.data-filter-label').evaluateAll(labels=>labels.every(el=>{const style=getComputedStyle(el);return style.position==='absolute'&&el.getBoundingClientRect().width<=1.1;})),file+'/'+label+' filter labels hidden');
+   const more=form.locator('details').filter({hasText:'更多筛选'}).first();
+   if(await more.count()){if(!await more.evaluate(el=>el.open))await more.locator(':scope > summary').click();assert.ok(await more.evaluate(el=>el.open),file+'/'+label+' more filters');}
    if(await dataset.count() && await dataset.locator('option[value=demo]').count())await dataset.selectOption('demo');
    await form.locator('button[type=submit]').click();
    assert.equal(await page.locator('[role="alert"]:visible').count(),0,file+'/'+label+' query');
    const exp=page.locator('[data-export]:visible,[data-fr-export]:visible,[data-cf-export]:visible,[data-ba-export]:visible').first();
    assert.ok(await exp.count(),file+'/'+label+' export retained');
+   assert.ok(await exp.evaluate(button=>{const reset=button.parentElement.querySelector('[data-reset],[data-fr-reset],[data-cf-reset],[data-ba-reset],[data-rf-reset],[data-margin-reset]');return !!reset&&Array.from(button.parentElement.children).indexOf(button)>Array.from(button.parentElement.children).indexOf(reset);}),file+'/'+label+' export after reset');
+   assert.equal(await page.locator('.report-note:visible,.cf-definition:visible').count(),0,file+'/'+label+' basis note hidden');
+   assert.ok(await page.locator('.data-report-result-surface:visible').count(),file+'/'+label+' result card');
    if(await exp.isEnabled())assert.ok((await download(exp)).length>100,file+'/'+label+' full export');
    if(!['budget-targets','report-management'].includes(file))assert.equal(await page.locator('table:visible tbody a,table:visible tbody button').count(),0,file+' read only');
   }

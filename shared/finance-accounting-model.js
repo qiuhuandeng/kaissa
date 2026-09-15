@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const rf = typeof module !== 'undefined' && module.exports ? require('./return-finance-model.js') : root.CaesarReturnFinance;
-  const defaults = { dataset: 'pending', view: 'flows', periodStart: '2026-05', periodEnd: '2026-06', start: '2026-04-01', end: '2026-06-30', cutoff: '2026-06-30', entity: '', currency: '', order: '', scenario: '', status: '' };
+  const defaults = { dataset: 'demo', view: 'flows', periodStart: '2026-05', periodEnd: '2026-06', start: '2026-04-01', end: '2026-06-30', cutoff: '2026-06-30', entity: '', currency: '', order: '', scenario: '', status: '' };
   const views = { flows: '会计发生', completion: '结算对照', internal: '内部对账', nc: '凭证核对' };
   function fixture() {
     const pair = (id, type, overrides = {}) => ({ id, type, entity: 'A公司（演示）', partner: 'B公司（演示）', currency: 'CNY', peerCurrency: 'CNY', period: '2026-05', peerPeriod: '2026-05', amount: 8000, peerAmount: 8000, source: id + '-AR', peerSource: id + '-AP', effective: '2026-05-20', recorded: '2026-05-20', peerRecorded: '2026-05-20', evidence: '独立双方确认依据', ...overrides });

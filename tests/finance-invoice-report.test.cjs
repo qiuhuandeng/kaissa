@@ -1,7 +1,7 @@
 const test = require('node:test'), assert = require('node:assert/strict'), m = require('../shared/finance-invoice-report-model.js');
 const run = (q = {}, s) => m.query({ dataset: 'demo', company: '北京凯撒', ...q }, s);
 const row = (id, q = {}, s) => run(q, s).rows.find(r => r.id === id);
-test('formal source missing is not zero or auto invoice', () => { assert.equal(m.query({}).pending, true); assert.equal(run({ asOf: '2026-08-31' }).pending, true); });
+test('formal source missing is not zero or auto invoice', () => { assert.equal(m.query({ ...m.defaults, dataset: 'pending' }).pending, true); assert.equal(run({ asOf: '2026-08-31' }).pending, true); });
 test('many invoices and receipts allocated once, four directional differences correct', () => { assert.equal(row('ORDER-1').cash, 11000); assert.equal(row('ORDER-1').invoiced, 9000); assert.equal(row('ORDER-1').gap, 2000); assert.equal(row('ORDER-2', { view: 'issued' }).gap, 2000); assert.equal(row('AP-1', { view: 'paid' }).gap, 2000); assert.equal(row('AP-2', { view: 'invoiced' }).gap, 1000); });
 test('unallocated invoice1000 remains separate from allocatedAP6000', () => { const r = run({ view: 'paid' }); assert.equal(r.sections.find(s => s.key === 'unallocated').rows[0].unallocated, 1000); assert.equal(row('AP-1', { view: 'paid' }).invoiced, 6000); });
 test('not yet due, due today, overdue and absent node remain separate', () => { assert.equal(row('ORDER-2', { view: 'issued' }).status, '未到约定节点'); assert.equal(row('ORDER-1', { asOf: '2026-09-20' }).status, '约定节点当日'); const s = m.fixture(); s.scopes[0].invoiceDue = ''; assert.equal(row('ORDER-1', {}, s).status, '节点待补'); });

@@ -4,7 +4,7 @@
 })(typeof window === 'object' ? window : globalThis, function (b, prepay) {
   'use strict';
   const views = { accounts: '账户余额', movements: '账户收支', periods: '收支汇总', plan: '资金计划' };
-  const defaults = { dataset: 'pending', view: 'accounts', start: '2026-09-01', end: '2026-09-30', cutoff: '2026-10-31', frequency: 'day', company: '', currency: '', account: '', nature: '', keyword: '', planStart: '2026-10-01', planEnd: '2026-12-31' };
+  const defaults = { dataset: 'demo', view: 'accounts', start: '2026-09-01', end: '2026-09-30', cutoff: '2026-10-31', frequency: 'day', company: '', currency: '', account: '', nature: '', keyword: '', planStart: '2026-10-01', planEnd: '2026-12-31' };
   const round = v => Math.round(v * 100) / 100;
   function fixture() {
     const accounts = [
