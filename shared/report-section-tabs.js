@@ -63,6 +63,10 @@
       q('[data-gov-update]').parentElement.hidden = next.key !== 'versions';
       q('[data-gov-subscribe]').closest('details').hidden = next.key !== 'subscriptions';
     }
+    if (!initial) {
+      const address = new URL(location.href); address.searchParams.set('tab', next.key);
+      history.replaceState(history.state, '', address.href);
+    }
     switching = false; persist();
   }
   shell.addEventListener('click', event => { const b = event.target.closest('[data-report-tab]'); if (b) activate(b.dataset.reportTab); });
@@ -73,7 +77,7 @@
   });
   for (const panel of new Set(panels.map(q).filter(Boolean))) for (const type of ['input','change','click','submit']) panel.addEventListener(type, () => queueMicrotask(persist));
   const params = new URLSearchParams(location.search);
-  const legacy = { contribution: file === 'product-reports' ? 'product' : 'channel', resources: 'resources', finance: 'profit', budget: 'budgets', governance: 'versions', confirmations: 'flows', checks: 'completion', primary: entries[0].key };
+  const legacy = { contribution: file === 'product-reports' ? 'product' : 'channel', resources: 'resources', finance: 'profit', budget: 'budgets', governance: 'records', confirmations: 'flows', checks: 'completion', primary: entries[0].key };
   const queryView = params.get('tab') || (params.has('section') ? legacy[params.get('section')] : null) || (file === 'cashflow-reports' ? params.get('type') : null);
   activate(queryView || saved.active || entries[0].key, true);
 })();

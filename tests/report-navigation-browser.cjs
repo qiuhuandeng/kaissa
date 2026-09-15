@@ -1,21 +1,21 @@
 const { run, assert, openReport } = require('./finance-report-browser-support.cjs');
 const reports = [
   ['performance-reports', '经营总览', '[data-report-page="overview"]'],
-  ['product-reports', '产品经营分析', '[data-report-page="products"]'],
-  ['channel-reports', '渠道经营分析', '[data-channel-report]'],
-  ['settlement-reports', '业务毛利与结算分析', '[data-settlement-report]'],
-  ['supplier-reports', '供应商采购与返点', '[data-supplier-report]'],
-  ['monthly-profit-reports', '月度经营损益', '[data-monthly-profit]'],
+  ['product-reports', '产品分析', '[data-report-page="products"]'],
+  ['channel-reports', '渠道分析', '[data-channel-report]'],
+  ['settlement-reports', '业务毛利', '[data-settlement-report]'],
+  ['supplier-reports', '供应商分析', '[data-supplier-report]'],
+  ['monthly-profit-reports', '月度损益', '[data-monthly-profit]'],
   ['order-report-details', '订单明细', '[data-report-page="orders"]'],
-  ['return-report-details', '回团与履约明细', '[data-report-page="returns"]'],
-  ['cashflow-reports', '收退转付明细', '[data-cf-main]'],
-  ['balance-reports', '订单收付与往来账龄', '[data-ba-main]'],
-  ['prepayment-reports', '预款与保证金', '#finance-prepayments'],
-  ['fund-reports', '资金收支与安排', '#finance-funds'],
-  ['invoice-reports', '发票与收付款核对', '#finance-invoice-report'],
-  ['accounting-reports', '结算与核算核对', '[data-accounting-confirmations]'],
-  ['budget-targets', '经营任务与预算', '[data-budget-targets]'],
-  ['report-management', '口径与数据核对', '[data-report-management]']
+  ['return-report-details', '回团明细', '[data-report-page="returns"]'],
+  ['cashflow-reports', '收付明细', '[data-cf-main]'],
+  ['balance-reports', '往来账龄', '[data-ba-main]'],
+  ['prepayment-reports', '预款余额', '#finance-prepayments'],
+  ['fund-reports', '资金分析', '#finance-funds'],
+  ['invoice-reports', '票款核对', '#finance-invoice-report'],
+  ['accounting-reports', '核算核对', '[data-accounting-confirmations]'],
+  ['budget-targets', '任务预算', '[data-budget-targets]'],
+  ['report-management', '数据管理', '[data-report-management]']
 ];
 run('report-navigation', async ({ page, url, shot, download, passed }) => {
   await page.goto(url('merchant/data/performance-reports.html'));
@@ -41,8 +41,8 @@ run('report-navigation', async ({ page, url, shot, download, passed }) => {
   await openReport(page, 'balance-reports'); await page.locator('[data-ba-main]').waitFor();
   await openReport(page, 'invoice-reports'); await page.locator('#finance-invoice-report').waitFor();
   let tabs = await page.evaluate(() => JSON.parse(localStorage.getItem('caesar-merchant-tabs')));
-  assert(tabs.some(t => t.href === 'data/balance-reports.html' && t.title === '订单收付与往来账龄'));
-  assert(tabs.some(t => t.href === 'data/invoice-reports.html' && t.title === '发票与收付款核对'));
+  assert(tabs.some(t => t.href === 'data/balance-reports.html' && t.title === '往来账龄'));
+  assert(tabs.some(t => t.href === 'data/invoice-reports.html' && t.title === '票款核对'));
   await page.goBack(); await page.locator('[data-ba-main]').waitFor();
   await page.goForward(); await page.locator('#finance-invoice-report').waitFor();
   await page.reload(); await page.locator('#finance-invoice-report').waitFor();
@@ -58,7 +58,7 @@ run('report-navigation', async ({ page, url, shot, download, passed }) => {
     await page.waitForURL('**/data/' + file + '-reports.html?**');
     assert.equal(new URL(page.url()).searchParams.get('company'), 'A');
     assert.equal(new URL(page.url()).searchParams.get('start'), '2026-09-01');
-    if (['receipt', 'payment'].includes(old)) assert.equal(await page.locator('[data-cf-type="' + old + '"]').getAttribute('aria-selected'), 'true');
+    if (['receipt', 'payment'].includes(old)) assert.equal(await page.locator('[data-report-tab="' + old + '"]').getAttribute('aria-selected'), 'true');
   }
   await page.goto(url('merchant/finance/finance-reports.html?report=fund&view=pool'));
   await page.waitForURL('**/finance/finance-fund-pool.html?**');
@@ -89,6 +89,8 @@ run('report-navigation', async ({ page, url, shot, download, passed }) => {
     { href: 'finance/finance-reports.html?report=balances', title: '财务报表' },
     { href: 'finance/finance-reports.html?report=invoices', title: '财务报表' },
     { href: 'data/balance-reports.html', title: '旧账龄标题' },
+    { href: 'data/monthly-profit-reports.html', title: '月度经营损益' },
+    { href: 'data/supplier-reports.html', title: '供应商采购与返点' },
     { href: 'resource/resource-masterdata.html?type=hotel', title: '酒店库' }
   ])));
   await page.reload();
@@ -96,5 +98,7 @@ run('report-navigation', async ({ page, url, shot, download, passed }) => {
   assert.equal(tabs.filter(t => t.href === 'data/balance-reports.html').length, 1);
   assert(tabs.some(t => t.href === 'data/invoice-reports.html'));
   assert(tabs.some(t => t.href === 'resource/resource-masterdata.html?type=hotel'));
-  passed('旧页签迁移去重，非报表页签参数不受影响');
+  assert(tabs.some(t => t.href === 'data/monthly-profit-reports.html' && t.title === '月度损益'));
+  assert(tabs.some(t => t.href === 'data/supplier-reports.html' && t.title === '供应商分析'));
+  passed('旧页签迁移去重及短名更新，非报表页签参数不受影响');
 }).catch(error => { console.error(error); process.exitCode = 1; });

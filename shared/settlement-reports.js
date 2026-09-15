@@ -3,7 +3,7 @@
   function createModel(report) {
     const cutoff = report.CUTOFF;
     const defaults = { dataset: 'common', view: 'tours', basis: 'actual', start: '2026-05-01', end: cutoff, company: '', division: '', group: '', owner: '', supply: '', status: '', quality: '', keyword: '', unit: 'wan' };
-    const views = { tours: '团期利润', groups: '经营组毛利', gaps: '待确认与异常', adjustments: '结算后调整' };
+    const views = { tours: '毛利明细', groups: '部门毛利', gaps: '结算异常', adjustments: '结算调整' };
     const datasets = { common: '回团共同明细', scenarios: '独立结算算例' };
     const labels = { id: '团号／项目／服务单号', name: '名称', company: '产品经营公司', division: '事业部', group: '产品经营组', owner: '产品负责人', controller: '团控／项目负责人', supply: '供应关系', actual: '实际完成日', settlementDate: '原结算确认日', settlementNo: '原结算单号', status: '结算状态', amount: '完成分配成交额', originalRevenue: '原结算收入', originalCost: '原确认成本', revenue: '业务结算收入', cost: '确认成本', profit: '业务毛利', rate: '毛利率', revenueDelta: '已生效收入调整', costDelta: '已生效成本调整', gap: '确认资料缺口', evidence: '确认依据', currency: '币种', tax: '金额口径', record: '调整记录号', date: '调整日期', effective: '生效日期', originalPeriod: '原业务期间', businessPeriod: '本次业务期间', accountingPeriod: '本次会计期间', reason: '调整原因', incomeChange: '收入调整', costChange: '成本调整', profitChange: '毛利影响', adjustmentStatus: '调整状态', count: '团期／服务数', ready: '毛利资料齐全数', missing: '毛利待确认数', negative: '负毛利数', knownProfit: '资料齐全范围毛利', knownRate: '资料齐全范围毛利率', knownRevenue: '资料齐全范围收入', knownCost: '资料齐全范围成本', confirmed: '已结算数', completion: '结算完成比例', financeRevenue: '财务不含税收入', financeCost: '财务不含税成本', financeProfit: '财务不含税毛利', financePeriod: '财务确认期间', target: '批准毛利任务', source: '来源资料', version: '归属版本' };
     const valid = report.validProductDate;

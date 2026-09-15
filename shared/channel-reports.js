@@ -4,7 +4,7 @@
     const defaults = { view: 'channels', basis: 'orders', period: 'custom', start: '2026-05-01', end: report.CUTOFF, unit: 'wan',
       company: '', productCompany: '', channel: '', budgetRegion: '', salesDepartment: '', salesLeader: '', store: '', storeType: '', salesGroup: '', salesId: '',
       acquisition: '', productOrg: '', travel: '', business: '', source: '', type: '', supply: '', destination: '', management: '', quality: '', level: 'channel', callLevel: 'group', structure: 'type', columns: 'amount' };
-    const views = { channels: '渠道与区域', stores: '门店', calls: '呼叫中心', structure: '渠道产品结构' };
+    const views = { channels: '渠道概况', stores: '门店业绩', calls: '呼叫中心', structure: '产品构成' };
     const labels = { company: '销售公司', productCompany: '产品经营公司', channel: '主成交渠道', budgetRegion: '预算区域', salesDivision: '销售事业部', salesDepartment: '销售部门', salesLeader: '销售部门领导',
       store: '门店', storeType: '门店性质', salesGroup: '销售组', salesId: '员工编号', salesperson: '顾问', acquisition: '获客来源', salesOrigin: '具体成交来源',
       productOrg: '产品经营组', travel: '旅游范围', business: '业务线', source: '来源系统', type: '产品类型', supply: '供应关系', destination: '主目的地', management: '经营分类', amount: '成交额', orders: '订单数', count: '业务条数',
@@ -107,7 +107,6 @@
       root.querySelectorAll('[data-view]').forEach(el => el.setAttribute('aria-selected', String(el.dataset.view === draft.view)));
     }
     function shell() {
-      const links = [['performance-reports.html', '经营总览'], ['product-reports.html', '产品分析'], ['channel-reports.html', '渠道分析'], ['order-report-details.html', '订单明细'], ['return-report-details.html', '回团明细']];
       root.innerHTML = '<header class="report-head"><h1>渠道分析</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') + '</div></header>' +
         '<div class="report-tabbar cr-tabs" role="tablist" aria-label="渠道经营视图">' + Object.entries({ ...m.views, margin: '渠道毛利校验' }).map(([key, label]) => '<button type="button" class="report-tab" role="tab" data-view="' + key + '">' + label + '</button>').join('') + '</div>' +
         '<form class="report-filters"><div data-filters></div><p class="report-query-status" data-status role="status">已查询 · 演示资料</p><p class="report-error" data-error role="alert" hidden></p></form><div data-meta class="report-meta"></div><section class="report-section" data-result></section>' +

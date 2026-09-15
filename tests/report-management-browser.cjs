@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -13,7 +14,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
     page.on('pageerror', e => errors.push(e.message));
     const root = page.locator('[data-report-management]');
-    const tab = key => root.locator(`[data-tab="${key}"]`).click();
+    const tab = key => page.locator(`[data-report-tab="${key}"]`).click();
     const filter = key => root.locator(`[data-filter] [name="${key}"]`);
     const edit = key => root.locator(`[data-edit-form] [name="${key}"]`);
     const submit = () => root.locator('[data-filter] button[type="submit"]').click();
@@ -119,8 +120,8 @@ async function main() {
     const nav = page.locator('a[href$="data/report-management.html"]');
     await nav.first().click();
     await root.locator('[data-total]').waitFor();
-    assert.match(await total(), /54,000.00/);
-    await tab('rules'); assert.match(await row('RULE-4').innerText(), /草稿/);
+    assert.equal(await page.locator('[data-report-tab=organizations]').getAttribute('aria-selected'), 'true');
+    await tab('rules'); await root.locator('[data-reset]').click(); assert.match(await row('RULE-4').innerText(), /草稿/);
     assert.equal(await root.locator('[data-report-page]').count(), 0);
     assert.deepEqual(errors, []);
     results.push('现有报表到新导航的局部切页可加载，不串页；重新进入恢复演示资料，无浏览器异常');

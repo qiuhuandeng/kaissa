@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -71,9 +72,9 @@ async function main() {
     assert.match(await root.locator('[data-comparison-period]').innerText(), /2023-02-28/);
     results.push('仅月年有业绩的组织仍保留、快捷期间遵循结束日、闰日同比及无效日期保留结果');
 
-    await reset(); await root.locator('[data-view="actual"]').click(); await submit(); assert.match(await total(), /5.60/);
+    await reset(); await root.locator('[name=view]').selectOption('actual'); await submit(); assert.match(await total(), /5.60/);
     await field('budget').selectOption('sample'); await submit(); assert.match(await table('tasks').innerText(), /80.00%/);
-    await root.locator('[data-view="changes"]').click(); await submit(); assert.match(await total(), /5.30/);
+    await root.locator('[name=view]').selectOption('changes'); await submit(); assert.match(await total(), /5.30/);
     assert.match(await table('tasks').innerText(), /不适用/); assert.doesNotMatch(await table('tasks').innerText(), /80.00%/);
     await root.locator('.report-columns > summary').click();
     for (const key of ['cumulativeTarget', 'cumulativeCompletion', 'unknownAmount', 'taskVersion']) await root.locator(`[data-column="${key}"]`).check();
@@ -104,7 +105,7 @@ async function main() {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(origin + '/merchant/data/budget-targets.html'); await page.locator('[data-total]').waitFor();
     await page.locator('a[href$="data/performance-reports.html"]').first().click(); await root.locator('[data-total]').waitFor();
-    assert.match(await total(), /5.40/); assert.equal(await field('budget').inputValue(), 'none');
+    assert.match(await total(), /54,000.00/); assert.equal(await field('unit').inputValue(), 'yuan'); assert.equal(await field('budget').inputValue(), 'none');
     assert.deepEqual(errors, []); results.push('预算管理切回总览按序加载脚本、不读取草稿、无浏览器异常');
     await fs.writeFile(path.join(output, 'results.json'), JSON.stringify({ results, errors }, null, 2));
     console.log(JSON.stringify({ passed: results.length, results, output }, null, 2));

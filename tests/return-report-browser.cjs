@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -15,12 +16,12 @@ async function main() {
     const root = page.locator('.finance-report-page');
     const select = (key, value) => root.locator(`:scope > form [name="${key}"]`).selectOption(value);
     const submit = () => root.locator(':scope > form button[type="submit"]').click();
-    const reset = () => root.locator('[data-reset]').click();
+    const reset = async () => { await page.locator('[data-report-tab=actual]').click(); await root.locator('[data-reset]').click(); };
     const total = () => root.locator('[data-total]').innerText();
     const rows = () => root.locator('[data-table="main"] tbody tr').count();
     const show = async selector => { if (await root.locator(selector + ':visible').getAttribute('open') === null) await root.locator(selector + ':visible > summary').click(); };
     const close = async selector => { if (await root.locator(selector + ':visible').getAttribute('open') !== null) await root.locator(selector + ':visible > summary').click(); };
-    const view = async key => { await root.locator(`[data-view="${key}"]`).click(); if (key !== 'financial') await submit(); };
+    const view = async key => { await selectQueryView(page, `${key}`); if (key !== 'financial') await submit(); };
     const download = async () => {
       const pending = page.waitForEvent("download");
       await root.locator('[data-export]').click();

@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -35,26 +36,26 @@ async function main() {
       assert.equal(await page.locator('.finance-report-content').isVisible(), false);
       await scenario('CF01');
       assert.equal(await main.locator('tbody tr').count(), 1); assert.match(await main.innerText(), /100,000.00/);
-      await host.locator('[data-cf-mode=allocations]').click();
+      await host.locator('[data-cf-display]').selectOption('allocations');
       assert.equal(await main.locator('tbody tr').count(), 3); assert.equal(await main.locator('th').count(), 12);
       results.push(protocol + ': pending formal source and separate document/order queries');
 
-      await host.locator('[data-cf-type=payment]').click(); await scenario('CF10');
+      await page.locator('[data-report-tab=payment]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF10');
       await host.locator('.cf-more > summary').click(); await field('order').fill('KS2026091001'); await submit();
-      await host.locator('[data-cf-mode=allocations]').click();
+      await host.locator('[data-cf-display]').selectOption('allocations');
       assert.equal(await main.locator('tbody tr').count(), 1);
       assert.match(await main.innerText(), /7,000.00/); assert.match(await host.locator('[data-cf-totals]').innerText(), /12,000.00/);
       let csv = await download(true); assert.match(csv, /原款与转款依据/); assert.match(csv, /"7000"/); assert.match(csv, /"12000"/);
       assert.equal(await host.locator('[data-cf-print]').isVisible(), false);
-      await host.locator('[data-cf-type=refund]').click(); await scenario('CF08');
+      await page.locator('[data-report-tab=refund]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF08');
       assert.match(await main.innerText(), /TK26090801/);
       assert.match(await host.locator('[data-cf-trace]').innerText(), /SK26090801/); assert.match(await host.locator('[data-cf-trace]').innerText(), /ZK26090802/);
-      await host.locator('[data-cf-type=transfer]').click(); await scenario('CF14');
+      await page.locator('[data-report-tab=transfer]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF14');
       assert.equal(await field('dateBasis').inputValue(), 'confirmedAt');
       assert.match(await main.innerText(), /-6,000.00/); assert.equal(await main.locator('tbody tr').count(), 2);
       results.push(protocol + ': four working views, selected order 7000 versus source 12000, full root chain and reversal');
 
-      await host.locator('[data-cf-type=receipt]').click(); await scenario('CF21');
+      await page.locator('[data-report-tab=receipt]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF21');
       assert.equal(await main.locator('tbody tr').count(), 10);
       await host.locator('[data-cf-next]').click(); assert.match(await host.locator('[data-cf-count]').innerText(), /第 2/);
       await field('keyword').fill('NOT-QUERIED');
@@ -96,19 +97,19 @@ async function main() {
       await page.setViewportSize({ width: 1440, height: 1000 });
       for (const [report, type] of [['receipt', 'receipt'], ['payment', 'payment']]) {
         await page.goto(url('finance-reports.html', '?report=' + report));
-        assert.equal(await host.locator('[data-cf-type=' + type + ']').getAttribute('aria-selected'), 'true');
+        assert.equal(await page.locator('[data-report-tab=' + type + ']').getAttribute('aria-selected'), 'true');
       }
       await page.goto(url('finance-reports.html', '?report=profit'));
       await page.waitForURL('**/monthly-profit-reports.html'); assert.equal(await page.locator('[data-monthly-profit]').isVisible(), true);
       await page.goto(url()); await host.locator('[data-cf-main]').waitFor();
       await page.goto(url('finance-account-settings.html'));
       await page.evaluate(() => window.caesarNavigateTo('finance/finance-reports.html?report=cashflow'));
-      await host.locator('[data-cf-main]').waitFor(); await scenario('CF01');
+      await host.locator('[data-cf-main]').waitFor(); await page.locator('[data-report-tab=receipt]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF01');
       assert.equal(await main.locator('tbody tr').count(), 1);
       await page.evaluate(() => window.caesarNavigateTo('finance/finance-account-settings.html'));
       await page.waitForURL('**/finance-account-settings.html');
       await page.evaluate(() => window.caesarNavigateTo('finance/finance-reports.html?report=cashflow'));
-      await host.locator('[data-cf-main]').waitFor(); await scenario('CF01');
+      await host.locator('[data-cf-main]').waitFor(); await page.locator('[data-report-tab=receipt]').click(); await host.locator('[data-cf-reset]').click(); await scenario('CF01');
       assert.equal(await main.locator('tbody tr').count(), 1);
       assert.equal(await host.locator('a,[data-action],dialog').count(), 0);
       results.push(protocol + ': receipt/payment aliases, profit replaced by monthly report, account settings navigation and repeat initialization');

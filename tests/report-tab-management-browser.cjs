@@ -1,0 +1,27 @@
+const {run,assert}=require('./finance-report-browser-support.cjs');
+run('report-tab-management',async({page,url,passed,shot})=>{
+ await page.goto(url('merchant/data/report-management.html?section=governance'));
+ await page.locator('[data-report-tab=versions]').click();await page.reload();
+ assert.equal(await page.locator('[data-report-tab][aria-selected=true]').innerText(),'版本记录');
+ passed('旧分区链接进入后切换Tab，刷新仍保留当前选择');
+ await page.locator('[data-report-tab=rules]').click();const root=page.locator('[data-report-management]');
+ await root.locator('[data-new]').click();await root.locator('[data-edit-form] [name=reason]').fill('未保存校验');
+ page.once('dialog',d=>d.dismiss());await page.locator('[data-report-tab=versions]').click();
+ assert.equal(await page.locator('[data-report-tab=rules]').getAttribute('aria-selected'),'true');assert.ok(await root.locator('[data-editor]').isVisible());
+ page.once('dialog',d=>d.accept());await page.locator('[data-report-tab=versions]').click();
+ assert.equal(await page.locator('[data-report-tab=versions]').getAttribute('aria-selected'),'true');
+ passed('分类维护未保存时跨分区Tab提示，取消留在编辑，确认才离开');
+ const gov=page.locator('[data-gov-report]');await gov.locator('[name=role]').selectOption('group');await gov.locator('[name=version]').selectOption('WORK03');await gov.locator('button[type=submit]').click();
+ await page.locator('[data-gov-correct]').click();await gov.locator('[name=version]').selectOption('COR04');await gov.locator('button[type=submit]').click();
+ await page.reload();await page.locator('[data-report-tab=versions][aria-selected=true]').waitFor();
+ assert.match(await gov.locator('.cf-error').innerText(),/条件已失效/);assert.ok(await gov.locator('[data-fr-export]').isDisabled());assert.equal(await gov.locator('[data-fr-main] tbody tr').count(),0);
+ await page.locator('[data-report-tab=records]').click();await page.locator('[data-report-tab=versions]').click();
+ assert.ok(await gov.locator('[data-fr-export]').isDisabled());await gov.locator('button[type=submit]').click();assert.equal(await gov.locator('.cf-error:visible').count(),0);
+ passed('刷新后临时版本不伪造保留；失效条件明确提示，重新查询前禁止导出');
+ await page.goto(url('merchant/data/budget-targets.html'));const budget=page.locator('[data-budget-targets]');
+ await budget.locator('[data-new]').click();const field=budget.locator('[data-editor] input:not([readonly]):not([disabled])').first();await field.fill('未保存任务');
+ page.once('dialog',d=>d.dismiss());await page.locator('[data-report-tab=budgets]').click();assert.equal(await page.locator('[data-report-tab=primary]').getAttribute('aria-selected'),'true');
+ page.once('dialog',d=>d.accept());await page.locator('[data-report-tab=budgets]').click();assert.equal(await page.locator('[data-report-tab=budgets]').getAttribute('aria-selected'),'true');
+ assert.equal(await page.locator('[data-profit-budget] [data-new]').count(),0);passed('经营任务未保存保护，批准预算只读');
+ await shot('approved-budget');
+}).catch(e=>{console.error(e);process.exitCode=1});

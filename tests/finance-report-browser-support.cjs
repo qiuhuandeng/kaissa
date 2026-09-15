@@ -32,3 +32,23 @@ async function openReport(page, file) {
   await link.click();
 }
 module.exports = { run, assert, openReport };
+
+// Reapply an explicit fixture when an older calculation regression compares several views.
+// The architecture suite separately verifies that normal Tab switches keep their own conditions.
+async function selectQueryView(page, key) {
+  const identity = form => { let e=form; while(e && !e.reportNavigation) e=e.parentElement; return e ? e.tagName + e.id + e.getAttributeNames().filter(a=>a.startsWith('data-')).join(',') : ''; };
+  const before = await page.locator('form:visible').first().evaluate(identity);
+  const values = await page.locator('form:visible').first().evaluate(form => Object.fromEntries(Array.from(form.elements).filter(e => e.name && !['checkbox','radio'].includes(e.type)).map(e => [e.name,e.value])));
+  await page.locator('[data-report-tab="' + key + '"]').click();
+  const form = page.locator('form:visible').filter({ has: page.locator('button[type=submit]') }).last();
+  if (before !== await form.evaluate(identity)) return;
+  await form.evaluate((form, values) => {
+    for (const [name,value] of Object.entries(values)) {
+      const el = form.elements.namedItem(name);
+      if (!el || el.disabled || el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === value)) continue;
+      el.value = value;
+    }
+  }, values);
+  await form.evaluate(form => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+}
+module.exports.selectQueryView = selectQueryView;

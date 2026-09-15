@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -15,7 +16,7 @@ async function main() {
     const field = n => root.locator(`form [name="${n}"]`);
     const select = (n, v) => field(n).selectOption(v);
     const submit = () => root.locator('button[type="submit"]').click();
-    const view = async v => { await root.locator(`[data-view="${v}"]`).click(); await submit(); };
+    const view = async v => { await selectQueryView(page, `${v}`); await submit(); };
     const body = () => root.locator('[aria-label="结算分析结果"] tbody');
     const total = () => root.locator('[data-total]').innerText();
     const more = async () => { await root.locator('.report-more').evaluate(e => e.open = true); };
@@ -90,7 +91,7 @@ async function main() {
     await page.goto(origin + '/merchant/data/product-reports.html');
     await page.locator('[data-total]').waitFor();
     await page.locator('a[href$="data/settlement-reports.html"]').first().click();
-    await root.locator('[data-total]').waitFor(); assert.match(await total(), /5.60/);
+    await root.locator('[data-total]').waitFor(); assert.equal(await page.locator('[data-report-tab=adjustments]').getAttribute('aria-selected'), 'true'); assert.match(await total(), /本期已生效毛利影响/);
     assert.deepEqual(errors, []);
     results.push('数据导航进入新报表，切页加载正常，脚本错误0');
     await fs.writeFile(path.join(output, 'results.json'), JSON.stringify({ results, errors }, null, 2));

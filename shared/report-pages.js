@@ -328,8 +328,7 @@
   const isReturn = page === "returns";
   const isDetail = isOrder || isReturn;
   const titles = { overview: "经营总览", products: "产品分析", channels: "渠道分析", orders: "订单明细", returns: "回团明细" };
-  const paths = { overview: "performance-reports.html", products: "product-reports.html", channels: "channel-reports.html", orders: "order-report-details.html", returns: "return-report-details.html" };
-  const productViews = { organizations: "经营组业绩", structure: "产品结构", channels: "渠道交叉", crossYear: "跨年收客" };
+  const productViews = { organizations: "经营业绩", structure: "产品结构", channels: "渠道构成", crossYear: "跨年收客" };
   const iconsBase = new URL("report-icons/", document.currentScript.src).href;
   const icon = name => '<img class="report-icon" alt="" src="' + iconsBase + name + '.svg">';
   const esc = value => String(value == null ? "" : value).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -545,7 +544,7 @@
     applied = next; draftView = applied.view; draftProductView = applied.productView; pageNumber = 1; render();
   });
   root.querySelector("[data-reset]").addEventListener("click", () => {
-    applied = { ...defaults, version: applied.version, view: draftView, productView: draftProductView };
+    applied = { ...defaults, version: applied.version, view: (isProduct || isOverview) ? defaults.view : draftView, productView: draftProductView };
     draftView = applied.view;
     draftProductView = applied.productView;
     if (isOverview) form.elements.grouping.innerHTML = Object.entries(overviewModel.levels).filter(([, v]) => v[1] === 'sales').map(([k, v]) => '<option value="' + k + '">' + v[0] + '</option>').join('');
@@ -1149,6 +1148,7 @@
     capture: () => ({ applied, draft: readForm(), pageNumber, pageSize, sortKey, sortDirection, columns: Object.fromEntries(Object.entries(selectedColumns).map(([k,v]) => [k,[...v]])) }),
     restore: s => { applied = s.applied; draftView = s.draft.view; draftProductView = s.draft.productView; pageNumber = s.pageNumber; pageSize = s.pageSize; sortKey = s.sortKey; sortDirection = s.sortDirection;
       Object.keys(selectedColumns).forEach(k => delete selectedColumns[k]); Object.entries(s.columns).forEach(([k,v]) => selectedColumns[k] = new Set(v));
+      if (isOverview) form.elements.grouping.innerHTML = Object.entries(overviewModel.levels).filter(([,v]) => v[1] === s.draft.responsibility).map(([k,v]) => '<option value="' + k + '">' + v[0] + '</option>').join('');
       setForm(s.draft); refreshTeams(); refreshOrderOrganizations(); setForm(s.draft); updateDateControls(); render(); },
     activate: key => { applied = { ...defaults, ...(isProduct ? { productView: key } : isOverview ? {} : { view: key }) }; draftView = applied.view; draftProductView = applied.productView;
       pageNumber = 1; sortKey = ''; setForm(applied); refreshTeams(); refreshOrderOrganizations(); updateDateControls(); render(); },

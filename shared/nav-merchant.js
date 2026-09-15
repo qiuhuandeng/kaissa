@@ -1112,8 +1112,7 @@
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
       const archived = ['data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
-      const reportTitles = { 'data/settlement-reports.html': '业务毛利', 'data/return-report-details.html': '回团明细', 'data/budget-targets.html': '任务预算', 'data/report-management.html': '数据管理', 'data/product-reports.html': '产品分析', 'data/channel-reports.html': '渠道分析' };
-      Object.values(financeReportPages).forEach(([file, title]) => { reportTitles['data/' + file + '.html'] = title; });
+      const reportTitles = Object.fromEntries(menu.find(item => item.title === '数据中心').children.flatMap(group => group.children.map(item => [item.href, item.title])));
       if (!Array.isArray(tabs)) return [];
       const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href)).map(tab => {
         const affected = tab.href.startsWith('finance/finance-reports.html') || tab.href.startsWith('data/');

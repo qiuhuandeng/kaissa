@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -16,10 +17,10 @@ async function main() {
     const field = key => root.locator(`[name="${key}"]`);
     const table = key => root.locator(`[data-table="${key}"]`);
     const submit = () => root.locator('button[type="submit"]').click();
-    const reset = () => root.locator('[data-reset]').click();
+    const reset = async () => { await page.locator('[data-report-tab=organizations]').click(); await root.locator('[data-reset]').click(); };
     const total = () => root.locator('[data-total]').innerText();
     const more = async () => { if (await root.locator('details.report-more').getAttribute('open') === null) await root.locator('details.report-more > summary').click(); };
-    const tab = async key => { await root.locator(`[data-product-view="${key}"]`).click(); await submit(); };
+    const tab = async key => { await selectQueryView(page, `${key}`); await submit(); };
     const csv = async () => {
       const pending = page.waitForEvent('download'); await root.locator('[data-export]').click();
       const download = await pending, file = path.join(output, download.suggestedFilename());
@@ -88,7 +89,7 @@ async function main() {
     }
     await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(origin + '/merchant/data/budget-targets.html');
     await page.locator('[data-total]').waitFor(); await page.locator('a[href$="data/product-reports.html"]').first().click(); await root.locator('[data-total]').waitFor();
-    assert.match(await total(), /5.40/); assert.deepEqual(errors, []);
+    assert.equal(await page.locator('[data-report-tab=crossYear]').getAttribute('aria-selected'), 'true'); assert.match(await total(), /74,000.00/); assert.deepEqual(errors, []);
     results.push('元万元导出、窄屏四视图内部滚动、画布非空、预算返回不串页');
     await fs.writeFile(path.join(output, 'results.json'), JSON.stringify({ results, errors }, null, 2));
     console.log(JSON.stringify({ passed: results.length, results, output }, null, 2));

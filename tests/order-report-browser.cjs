@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -59,7 +60,7 @@ async function main() {
     assert.match(csv, /"产品经营公司","B公司（演示）"/);
     results.push("sales and product responsibility filter independently; sales-company change clears incompatible department");
 
-    await root.locator('[data-reset]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
     await select("unit", "yuan");
     await submit();
     await root.locator('[data-page-size]').selectOption("5");
@@ -78,7 +79,7 @@ async function main() {
     assert.match(csv, /"销售部门","门店销售部（演示）"/);
     results.push("unqueried filters never enter sorting/pagination/export; export covers all rows");
 
-    await root.locator('[data-reset]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
     await select("status", "未确认");
     assert.equal(await root.locator('[name="dateBasis"]').inputValue(), "created");
     assert.equal(await root.locator('[name="dateBasis"]').isDisabled(), true);
@@ -100,19 +101,19 @@ async function main() {
     assert.ok(csv.includes('"O08"'));
     results.push("unconfirmed orders use creation date; all-status query uses exactly one date basis; no fake zero");
 
-    await root.locator('[data-reset]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
     await select("salesLeader", "__missing");
     await submit();
     assert.equal(await rows(), 1);
     assert.match(await total(), /0\.90/);
-    await root.locator('[data-reset]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
     await select("geographyZone", "欧洲");
     await select("managementZone", "海岛经营区（演示）");
     await submit();
     assert.equal(await rows(), 0);
     assert.match(await root.locator('.report-empty').innerText(), /无匹配/);
-    await root.locator('[data-reset]').click();
-    await root.locator('[data-view="changes"]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
+    await selectQueryView(page, 'changes');
     await submit();
     assert.match(await total(), /5\.30/);
     csv = await download();
@@ -122,13 +123,13 @@ async function main() {
     for (const key of ["record", "order", "product"]) assert.equal(await root.locator(`[data-column="${key}"]`).isDisabled(), true);
     results.push("missing-data and independent destination filters; changes retain 53,000 and exclude inapplicable metadata");
 
-    await root.locator('[data-reset]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
     await root.locator('[name="start"]').fill("2026-05-07");
     await root.locator('[name="end"]').fill("2026-05-01");
     await submit();
     assert.equal(await root.locator('[data-error]').isVisible(), true);
     assert.match(await total(), /5\.40/);
-    await root.locator('[data-reset]').click();
+    await page.locator('[data-report-tab=orders]').click(); await root.locator('[data-reset]').click();
     assert.equal(await root.locator('[data-table="main"] tbody a, [data-table="main"] tbody button').count(), 0);
     const beforeUrl = page.url();
     await root.locator('[data-table="main"] tbody td').first().click();
@@ -160,7 +161,7 @@ async function main() {
     results.push("invalid date retains results; no business drilldowns; mobile all-columns stays inside scroll container");
 
     await page.setViewportSize({ width: 1440, height: 1000 });
-    for (const [file, heading] of [["performance-reports.html", "经营总览"], ["product-reports.html", "产品经营分析"], ["return-report-details.html", "回团与履约明细"]]) {
+    for (const [file, heading] of [["performance-reports.html", "经营总览"], ["product-reports.html", "产品分析"], ["return-report-details.html", "回团明细"]]) {
       await page.goto(new URL(file, page.url()).href);
       await root.locator('[data-total]').first().waitFor();
       assert.equal(await root.locator('h1').innerText(), heading);

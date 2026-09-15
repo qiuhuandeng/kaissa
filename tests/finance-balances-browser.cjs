@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -26,7 +27,7 @@ async function main() {
       const field = n => host.locator('form [name="' + n + '"]');
       const submit = () => host.locator('button[type=submit]').click();
       const scenario = async c => { await field('dataset').selectOption('demo'); await field('case').selectOption(c); await submit(); };
-      const view = v => host.locator('[data-ba-view=' + v + ']').click();
+      const view = v => selectQueryView(page, v);
       await page.goto(url()); await host.locator('[data-ba-notice]').waitFor();
       assert.match(await host.innerText(), /来源待接入/); assert.equal(await table.locator('tbody tr').count(), 0);
       assert.equal(await table.locator('th').count(), 12); assert.equal(await page.locator('.finance-report-content').isVisible(), false);

@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const { run, assert } = require('./finance-report-browser-support.cjs');
 run('invoice-report', async ({ page, url, shot, download, passed }) => {
   await page.goto(url('merchant/finance/finance-reports.html?report=invoices'));
@@ -6,10 +7,10 @@ run('invoice-report', async ({ page, url, shot, download, passed }) => {
   await host.locator('[data-fr-notice]').waitFor(); assert.equal(await main.locator('tbody tr').count(), 0);
   await field('dataset').selectOption('demo'); await field('company').selectOption('北京凯撒'); await submit();
   assert.match(await main.innerText(), /11,000.00/); assert.match(await main.innerText(), /9,000.00/); assert.match(await main.innerText(), /2,000.00/);
-  await host.locator('[data-fr-view=issued]').click(); assert.match(await main.innerText(), /未到约定节点/);
-  await host.locator('[data-fr-view=paid]').click(); assert.match(await main.innerText(), /8,000.00/); assert.match(await host.locator('[data-fr-section=unallocated]').innerText(), /1,000.00/);
-  await host.locator('[data-fr-view=invoiced]').click(); assert.match(await main.innerText(), /1,000.00/); passed('four allocated differences and separate unallocated invoice');
-  await host.locator('[data-fr-view=received]').click(); await host.locator('.cf-more > summary').click(); await field('keyword').fill('ORDER-REFUND'); await submit();
+  await selectQueryView(page, 'issued'); assert.match(await main.innerText(), /未到约定节点/);
+  await selectQueryView(page, 'paid'); assert.match(await main.innerText(), /8,000.00/); assert.match(await host.locator('[data-fr-section=unallocated]').innerText(), /1,000.00/);
+  await selectQueryView(page, 'invoiced'); assert.match(await main.innerText(), /1,000.00/); passed('four allocated differences and separate unallocated invoice');
+  await selectQueryView(page, 'received'); await host.locator('.cf-more > summary').click(); await field('keyword').fill('ORDER-REFUND'); await submit();
   await field('asOf').fill('2026-10-02'); await submit(); assert.match(await main.innerText(), /4,000.00/); assert.match(await main.innerText(), /1,000.00/);
   await field('asOf').fill('2026-10-03'); await submit(); assert.match(await main.innerText(), /本项无差额/);
   await field('keyword').fill('UNAPPLIED'); const csv = await download(host.locator('[data-fr-export]')); assert.doesNotMatch(csv, /UNAPPLIED/); assert.match(csv, /INV-PARTIAL-RED/); assert.match(csv, /REFUND-PARTIAL/); assert.match(csv, /收票日期/);
@@ -17,7 +18,7 @@ run('invoice-report', async ({ page, url, shot, download, passed }) => {
   await field('asOf').fill('2026-11-01'); await submit(); assert.equal(await host.locator('.cf-error').isVisible(), true); assert.match(await main.innerText(), /5,000.00/);
   passed('red and refund dates independent, correction only, source export and invalid query');
   await host.locator('[data-fr-reset]').click(); await field('dataset').selectOption('gaps'); await submit(); assert.match(await main.innerText(), /资料待核对/);
-  await field('company').selectOption('福建凯撒'); await host.locator('[data-fr-view=issued]').click(); await field('company').selectOption('福建凯撒'); await submit(); assert.equal(await main.locator('tbody tr').count(), 1); assert.match(await main.innerText(), /EUR/); assert.match(await main.innerText(), /500.00/);
+  await field('company').selectOption('福建凯撒'); await selectQueryView(page, 'issued'); await field('company').selectOption('福建凯撒'); await submit(); assert.equal(await main.locator('tbody tr').count(), 1); assert.match(await main.innerText(), /EUR/); assert.match(await main.innerText(), /500.00/);
   await host.locator('.cf-columns > summary').click(); await host.locator('[data-fr-column=invoiceIds]').check(); assert.match(await main.innerText(), /INV-OUT-1/); await host.locator('[data-fr-sort=gap]').click();
   await host.locator('.cf-columns > summary').click(); await shot('desktop');
   await page.setViewportSize({ width: 390, height: 844 }); await page.getByRole('button', { name: '收起或展开侧栏' }).click(); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);

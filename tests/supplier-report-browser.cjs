@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -17,7 +18,7 @@ async function main() {
     const total = () => root.locator('[data-total]').innerText();
     const more = async () => { if (!await root.locator('.report-more').evaluate(e => e.open)) await root.locator('.report-more > summary').click(); };
     const select = async (key, value) => { if (!await field(key).isVisible()) await more(); await field(key).selectOption(value); };
-    const view = async key => { await root.locator('[data-view="' + key + '"]').click(); await submit(); };
+    const view = async key => { await selectQueryView(page, '' + key + ''); await submit(); };
     const reset = () => root.locator('[data-reset]').click();
     const download = async () => { const pending = page.waitForEvent('download'); await root.locator('[data-export]').click(); const d = await pending; const target = path.join(output, d.suggestedFilename()); await d.saveAs(target); return fs.readFile(target, 'utf8'); };
     const url = process.env.REPORT_BASE_URL ? process.env.REPORT_BASE_URL + '/merchant/data/supplier-reports.html' : pathToFileURL(path.resolve(__dirname, '../merchant/data/supplier-reports.html')).href;

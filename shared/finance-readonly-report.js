@@ -6,7 +6,7 @@
   function mount(host, config) {
     const esc = base.esc;
     const heading = config.headingLevel === 1 ? 'h1' : 'h2';
-    let applied = { ...config.defaults }, result, page = 1, size = 10, sort = '', direction = 1;
+    let applied = { ...config.defaults }, result, page = 1, size = 10, sort = '', direction = 1, restorationError = '';
     const extra = new Set();
     const name = k => config.labels[k] || k;
     const control = f => '<label class="cf-field">' + esc(f.label || name(f.key)) + (f.options ? '<select name="' + f.key + '">' + f.options.map(([v, t]) => '<option value="' + esc(v) + '">' + esc(t) + '</option>').join('') + '</select>' : '<input name="' + f.key + '" type="' + (f.type || 'search') + '">') + '</label>';
@@ -35,7 +35,7 @@
     }
     function run(q) {
       const error = host.querySelector('.cf-error');
-      try { const next = config.query(q); result = next; applied = { ...q }; page = 1; error.hidden = true; render(); }
+      try { const next = config.query(q); result = next; applied = { ...q }; restorationError = ''; page = 1; error.hidden = true; render(); }
       catch (e) { error.textContent = e.message; error.hidden = false; }
     }
     form.addEventListener('submit', event => { event.preventDefault(); run({ ...applied, ...Object.fromEntries(new FormData(form)) }); });
@@ -61,8 +61,17 @@
     });
     fields(); run(applied);
     window.CaesarReportNavigation?.bind(host, {
-      capture: () => ({ applied, page, size, sort, direction, extra: [...extra] }),
-      restore: s => { applied = s.applied; result = config.query(applied); page = s.page; size = s.size; sort = s.sort; direction = s.direction; extra.clear(); s.extra.forEach(k => extra.add(k)); fields(); render(); host.querySelector('[data-fr-size]').value = size; },
+      capture: () => ({ applied, page, size, sort, direction, extra: [...extra], restorationError }),
+      restore: s => {
+        applied = s.applied; restorationError = s.restorationError || '';
+        try { if (restorationError) throw new Error(restorationError); result = config.query(applied); }
+        catch (error) {
+          restorationError = error.message; applied = { ...config.defaults, view: s.applied.view };
+          result = { rows: [], sections: [], pending: true, notice: '上次查询条件已失效，请重新选择后查询。' + restorationError };
+        }
+        page = s.page; size = s.size; sort = s.sort; direction = s.direction; extra.clear(); s.extra.forEach(k => extra.add(k)); fields(); render(); host.querySelector('[data-fr-size]').value = size;
+        if (restorationError) { const error = host.querySelector('.cf-error'); error.textContent = result.notice; error.hidden = false; return false; }
+      },
       activate: view => { extra.clear(); run({ ...config.defaults, view }); fields(); }
     });
     return { refresh: () => run(applied), applied: () => ({ ...applied }) };

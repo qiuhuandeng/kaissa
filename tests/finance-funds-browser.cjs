@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const { run, assert } = require('./finance-report-browser-support.cjs');
 run('funds', async ({ page, url, shot, download, passed }) => {
   await page.goto(url('merchant/finance/finance-reports.html?report=funds'));
@@ -5,10 +6,10 @@ run('funds', async ({ page, url, shot, download, passed }) => {
   const field = n => host.locator('form [name="' + n + '"]'), submit = () => host.locator('button[type=submit]').click();
   await host.locator('[data-fr-notice]').waitFor(); assert.equal(await main.locator('tbody tr').count(), 0);
   await field('dataset').selectOption('demo'); await submit(); assert.match(await main.innerText(), /97,900.00/); assert.match(await main.innerText(), /87,900.00/); assert.equal(await main.locator('tbody tr').count(), 4);
-  await host.locator('[data-fr-view=movements]').click(); assert.match(await main.innerText(), /平台提现/); assert.match(await host.locator('[data-fr-section=totals]').innerText(), /13,000.00/);
-  await host.locator('[data-fr-view=periods]').click(); await host.locator('.cf-more > summary').click(); await field('frequency').selectOption('month'); await submit(); assert.match(await main.innerText(), /2026-09/); assert.match(await main.innerText(), /97,900.00/);
+  await selectQueryView(page, 'movements'); assert.match(await main.innerText(), /平台提现/); assert.match(await host.locator('[data-fr-section=totals]').innerText(), /13,000.00/);
+  await selectQueryView(page, 'periods'); await host.locator('.cf-more > summary').click(); await field('frequency').selectOption('month'); await submit(); assert.match(await main.innerText(), /2026-09/); assert.match(await main.innerText(), /97,900.00/);
   passed('actual accounts not liability, transfer not external income, monthly conservation');
-  await host.locator('[data-fr-view=plan]').click(); assert.match(await main.innerText(), /40,000.00/); assert.match(await main.innerText(), /已转应付/);
+  await selectQueryView(page, 'plan'); assert.match(await main.innerText(), /40,000.00/); assert.match(await main.innerText(), /已转应付/);
   assert.match(await host.locator('[data-fr-section=forecast]').innerText(), /77,900.00/);
   await field('company').selectOption('北京凯撒'); await field('currency').selectOption('CNY'); await submit();
   await field('planEnd').fill('2026-10-31'); const before = await download(host.locator('[data-fr-export]')); assert.match(before, /77900/); assert.match(before, /2026-12-31/);
@@ -23,11 +24,11 @@ run('funds', async ({ page, url, shot, download, passed }) => {
   await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(url('merchant/finance/finance-reports.html?report=fund')); await host.locator('[data-fr-main]').waitFor();
   passed('desktop/mobile contained tables and legacy fund alias');
   await page.goto(url('merchant/data/return-report-details.html'));
-  const returns = page.locator('[data-report-page=returns]'); await returns.locator('[data-view=future]').click();
+  const returns = page.locator('[data-report-page=returns]'); await selectQueryView(page, 'future');
   await returns.locator('[name=planMonth]').fill('2027-01'); await returns.locator('button[type=submit]').click(); assert.match(await returns.locator('[data-table=main]').innerText(), /2027-01/); assert.match(await returns.locator('[data-table=main]').innerText(), /尚未开始/);
   const rcsv = await download(returns.locator('[data-export]')); assert.match(rcsv, /计划完成月份/); assert.match(rcsv, /0.90/);
   await returns.locator('[name=planMonth]').fill(''); await returns.locator('[name=fulfillmentStatus]').selectOption('履约中'); await returns.locator('button[type=submit]').click(); assert.match(await returns.locator('[data-table=main]').innerText(), /0.60/);
-  await page.goto(url('merchant/data/product-reports.html')); const product = page.locator('[data-report-page=products]'); await product.locator('[data-product-view=crossYear]').click(); await product.locator('button[type=submit]').click();
+  await page.goto(url('merchant/data/product-reports.html')); const product = page.locator('[data-report-page=products]'); await selectQueryView(page, 'crossYear'); await product.locator('button[type=submit]').click();
   assert.match(await product.locator('[data-table=pending-months]').innerText(), /履约中/); assert.match(await product.locator('[data-table=pending-months]').innerText(), /2027-01/);
   await product.locator('[name=fulfillmentStatus]').selectOption('履约中'); await product.locator('button[type=submit]').click(); assert.match(await product.locator('[data-table=pending-months]').innerText(), /0.60/);
   const pcsv = await download(product.locator('[data-export]')); assert.match(pcsv, /未完成月份与状态/); assert.match(pcsv, /履约中/);

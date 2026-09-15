@@ -17,13 +17,14 @@ const pages = {
  'budget-targets':['任务预算','经营任务','批准预算'],
  'report-management':['数据管理','数据核对','分类规则','组织对应','版本记录','查看范围','订阅设置']
 };
-run('report-tab-architecture', async ({ page, url, shot, passed }) => {
+run('report-tab-architecture', async ({ page, url, shot, download, passed }) => {
  page.on('pageerror', e => console.error(e.stack));
  for (const [file,[title,...tabs]] of Object.entries(pages)) {
   await page.goto(url('merchant/data/'+file+'.html'));
   await page.locator('[data-report-tab][aria-selected="true"]').waitFor();
   assert.equal(await page.locator('h1:visible').innerText(),title);
   assert.deepEqual(await page.locator('[data-report-tab]').allTextContents(),tabs);
+  assert.ok([title,...tabs].every(t=>Array.from(t).length<=5));
   assert.equal(await page.locator('.report-links').count(),0);
   for (const label of tabs) {
    await page.getByRole('tab', {name:label,exact:true}).click();
@@ -31,12 +32,29 @@ run('report-tab-architecture', async ({ page, url, shot, passed }) => {
    assert.equal(await page.locator('[data-report-tab][aria-selected="true"]').innerText(),label);
    assert.ok(await page.locator('table:visible').count(),file+'/'+label+' result');
    assert.equal(await page.locator('[role="alert"]:visible').count(),0,file+'/'+label);
+   const form=page.locator('form:visible').last(),dataset=form.locator('[name=dataset]');
+   if(await dataset.count() && await dataset.locator('option[value=demo]').count())await dataset.selectOption('demo');
+   await form.locator('button[type=submit]').click();
+   assert.equal(await page.locator('[role="alert"]:visible').count(),0,file+'/'+label+' query');
+   const exp=page.locator('[data-export]:visible,[data-fr-export]:visible,[data-cf-export]:visible,[data-ba-export]:visible').first();
+   assert.ok(await exp.count(),file+'/'+label+' export retained');
+   if(await exp.isEnabled())assert.ok((await download(exp)).length>100,file+'/'+label+' full export');
+   if(!['budget-targets','report-management'].includes(file))assert.equal(await page.locator('table:visible tbody a,table:visible tbody button').count(),0,file+' read only');
   }
   await page.reload();
   await page.locator('[data-report-tab][aria-selected="true"]').waitFor();
   assert.equal(await page.locator('[data-report-tab][aria-selected="true"]').innerText(),tabs.at(-1));
   if (['product-reports','return-report-details','report-management'].includes(file)) await shot(file);
-  passed(file+'：全部 Tab、唯一层级、结果、刷新恢复');
+  await page.setViewportSize({width:390,height:844});
+  if(!await page.locator('.nav-collapsed').count())await page.getByRole('button',{name:'收起或展开侧栏'}).click();
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),file+' mobile width');
+  assert.equal(await page.locator('[role=tablist]:visible').count(),1);
+  await page.locator('[data-report-tab][aria-selected=true]').focus();await page.keyboard.press('Home');
+  assert.equal(await page.locator('[data-report-tab][aria-selected=true]').innerText(),tabs[0]);
+  await page.keyboard.press('End');assert.equal(await page.locator('[data-report-tab][aria-selected=true]').innerText(),tabs.at(-1));
+  if(file==='product-reports')await shot('single-tabs-mobile');
+  await page.setViewportSize({width:1440,height:1000});
+  passed(file+'：全部 Tab、查询导出、只读、刷新、窄屏与键盘');
   console.log('PASS '+file);
  }
 }).catch(e => { console.error(e); process.exitCode=1; });

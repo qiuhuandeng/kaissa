@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -31,7 +32,7 @@ async function main() {
         const d = await pending, file = path.join(output, protocol + '-' + d.suggestedFilename()); await d.saveAs(file); return fs.readFile(file, 'utf8');
       };
       await page.goto(url('channel-reports')); await root.locator('[data-total]').waitFor();
-      await root.locator('[data-view="margin"]').click();
+      await selectQueryView(page, 'margin');
       assert.equal(await body().locator('tr').count(), 5); assert.equal(await field('dateBasis').inputValue(), 'confirmed');
       assert.match(await host.locator('[data-total]').innerText(), /5 单.*正式校验 0 单/);
       assert.match(await body().innerText(), /适用范围待确认/);
@@ -88,14 +89,14 @@ async function main() {
       results.push(protocol + ': desktop/mobile evidence, contained scroll and unclipped short values');
 
       await page.setViewportSize({ width: 1440, height: 1000 });
-      await root.locator('[data-view="channels"]').click();
+      await selectQueryView(page, 'channels');
       assert.match(await root.locator('[data-channel-performance] [data-total]').innerText(), /5.40/);
       await root.locator('[data-channel-performance] form [name="basis"]').selectOption('actual');
       await root.locator('[data-channel-performance] button[type="submit"]').click();
       assert.match(await root.locator('[data-channel-performance] [data-total]').innerText(), /5.60/);
-      await root.locator('[data-view="margin"]').click(); assert.equal(await field('dateBasis').inputValue(), 'confirmed');
+      await selectQueryView(page, 'margin'); assert.equal(await field('dateBasis').inputValue(), 'confirmed');
       assert.equal(await field('dataset').inputValue(), 'demo');
-      await root.locator('[data-view="channels"]').click();
+      await selectQueryView(page, 'channels');
       assert.match(await root.locator('[data-channel-performance] [data-total]').innerText(), /5.60/);
       results.push(protocol + ': preserved performance state and independent margin state');
       await page.close();
@@ -106,7 +107,7 @@ async function main() {
     const link = page.locator('a[href$="data/channel-reports.html"]').first();
     if (!await link.isVisible()) await page.locator('.nav-parent').filter({ has: link }).first().locator(':scope > .nav-item').click();
     await link.click();
-    await page.locator('[data-channel-report] [data-view="margin"]').click();
+    await selectQueryView(page, 'margin');
     await page.locator('[data-channel-margin] [data-total]').waitFor();
     assert.match(await page.locator('[data-channel-margin] [data-total]').innerText(), /5 单/);
     results.push('HTTP menu with delayed dependency remains ordered');

@@ -1,3 +1,4 @@
+const { selectQueryView } = require('./finance-report-browser-support.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -31,7 +32,7 @@ async function main() {
         const d = await pending, file = path.join(output, protocol + '-' + d.suggestedFilename()); await d.saveAs(file); return fs.readFile(file, 'utf8');
       };
       await page.goto(url('return-report-details'));
-      await root.locator('[data-view="financial"]').click();
+      await selectQueryView(page, 'financial');
       assert.equal(await table.locator('th').count(), 12);
       assert.equal(await table.locator('tbody tr').count(), 6);
       assert.match(await host.locator('[data-rf-total]').innerText(), /56,000.00/);
@@ -91,15 +92,15 @@ async function main() {
       assert.equal(await host.locator('.rf-short').evaluateAll(es => es.some(e => e.scrollWidth > e.clientWidth + 1)), false);
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.goto(url('return-report-details'));
-      await root.locator('[data-view="actual"]').click();
+      await selectQueryView(page, 'actual');
       assert.match(await root.locator('[data-total]').innerText(), /5.60/);
       for (const [key, expected] of [['future', /1.80/], ['adjustments', /未提供完成后调整记录/]]) {
-        await root.locator('[data-view="' + key + '"]').click();
+        await selectQueryView(page, '' + key + '');
         await root.locator(':scope > form button[type="submit"]').click();
         assert.match(await root.locator('[data-total]').innerText(), expected);
       }
-      await root.locator(':scope > form [data-reset]').click();
-      assert.equal(await root.locator('[data-view="actual"]').getAttribute('aria-selected'), 'true');
+      await page.locator('[data-report-tab=actual]').click(); await root.locator(':scope > form [data-reset]').click();
+      assert.equal(await page.locator('[data-report-tab="actual"]').getAttribute('aria-selected'), 'true');
       assert.match(await root.locator('[data-total]').innerText(), /5.60/);
       results.push(protocol + ': contained mobile tables, complete numeric values and unchanged other three main tabs');
       await page.close();
@@ -110,7 +111,7 @@ async function main() {
     await page.goto('http://127.0.0.1:' + server.address().port + '/merchant/data/product-analysis.html');
     const link = page.locator('a[href$="data/return-report-details.html"]').first();
     if (!await link.isVisible()) await page.locator('.nav-parent').filter({ has: link }).first().locator(':scope > .nav-item').click();
-    await link.click(); await page.locator('[data-view="financial"]').click();
+    await link.click(); await selectQueryView(page, 'financial');
     assert.match(await page.locator('[data-rf-total]').innerText(), /56,000.00/);
     results.push('HTTP navigation from legacy page preserves delayed script order');
     assert.deepEqual(errors, []);
