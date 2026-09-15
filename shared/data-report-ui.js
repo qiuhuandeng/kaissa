@@ -82,6 +82,10 @@
   }
 
   function positionMoreFilters(form) {
+    form.querySelectorAll('.report-filter-row').forEach(row => {
+      if (!row.closest('details')) row.classList.add('data-filter-inline-row');
+    });
+    form.querySelectorAll(':scope > [data-filters], :scope > [data-margin-filters]').forEach(wrapper => wrapper.classList.add('data-filter-inline-wrapper'));
     const more = form.querySelector('details.report-more, details.cf-more');
     form.classList.toggle('data-filter-has-more', Boolean(more));
     if (!more) return;
