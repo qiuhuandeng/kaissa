@@ -32,6 +32,6 @@ run('prepayments', async ({ page, url, shot, download, passed }) => {
   const supplierCSV = await download(host.locator('[data-fr-export]')); assert.match(supplierCSV, /230000/); assert.match(supplierCSV, /供应商预付款占用/);
   await shot('supplier'); await page.locator('[data-sp-main]').click(); assert.equal(await page.locator('[data-supplier-report]').isVisible(), true);
   await page.goto(url('merchant/finance/finance-reports.html?report=prepay')); await host.locator('[data-fr-notice]').waitFor();
-  await page.locator('[data-cf-history]').selectOption('balances'); await page.locator('[data-ba-main]').waitFor();
+  await require('./finance-report-browser-support.cjs').openReport(page, 'balance-reports'); await page.locator('[data-ba-main]').waitFor();
   passed('supplier shares identical balance query, old prepay alias and report navigation');
 }).catch(e => { console.error(e); process.exitCode = 1; });

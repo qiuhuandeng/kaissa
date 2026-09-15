@@ -1,5 +1,37 @@
 (function () {
   const bootScript = document.currentScript;
+  const financeReportPages = {
+    cashflow: ['cashflow-reports', '收退转付明细'],
+    balances: ['balance-reports', '订单收付与往来账龄'],
+    prepayments: ['prepayment-reports', '预款与保证金'],
+    funds: ['fund-reports', '资金收支与安排'],
+    invoices: ['invoice-reports', '发票与收付款核对'],
+    accounting: ['accounting-reports', '结算与核算核对']
+  };
+  function reportDestination(input) {
+    const url = new URL(input.href), params = url.searchParams;
+    if (url.pathname.endsWith('/finance/finance-reports.html')) {
+      const old = params.get('report') || 'cashflow';
+      const key = ({ receipt: 'cashflow', payment: 'cashflow', 'ar-ap': 'balances', prepay: 'prepayments', fund: 'funds' })[old] || old;
+      const target = old === 'profit' ? '../data/monthly-profit-reports.html' : old === 'fund' && params.get('view') === 'pool' ? 'finance-fund-pool.html' : '../data/' + (financeReportPages[key] || financeReportPages.cashflow)[0] + '.html';
+      const next = new URL(target, url);
+      if (['receipt', 'payment'].includes(old)) params.set('type', old);
+      params.delete('report');
+      next.search = params.toString(); next.hash = url.hash;
+      return next;
+    }
+    if (url.pathname.endsWith('/data/report-management.html') && params.get('section') === 'scenarios') {
+      url.pathname = url.pathname.replace('report-management.html', 'report-scenarios.html');
+      params.delete('section');
+    }
+    if (url.pathname.endsWith('/data/return-report-details.html') && (params.get('mode') === 'flows' || params.get('view') === 'flows')) {
+      url.pathname = url.pathname.replace('return-report-details.html', 'accounting-reports.html');
+      params.set('section', 'confirmations'); params.delete('view');
+    }
+    return url;
+  }
+  const initialReportUrl = reportDestination(new URL(location.href));
+  if (initialReportUrl.href !== location.href) { location.replace(initialReportUrl.href); return; }
   const menu = [
     {
       title: "工作",
@@ -11,16 +43,32 @@
       icon: "trend",
       children: [
         {
-          title: "经营报表",
+          title: "经营分析",
           children: [
             { title: "经营总览", href: "data/performance-reports.html" },
             { title: "产品经营分析", href: "data/product-reports.html" },
             { title: "渠道经营分析", href: "data/channel-reports.html" },
             { title: "业务毛利与结算分析", href: "data/settlement-reports.html" },
             { title: "供应商采购与返点", href: "data/supplier-reports.html" },
+            { title: "月度经营损益", href: "data/monthly-profit-reports.html" },
+          ],
+        },
+        {
+          title: "业务明细",
+          children: [
             { title: "订单明细", href: "data/order-report-details.html" },
             { title: "回团与履约明细", href: "data/return-report-details.html" },
-            { title: "月度经营损益", href: "data/monthly-profit-reports.html" },
+          ],
+        },
+        {
+          title: "资金与核算",
+          children: [
+            { title: "收退转付明细", href: "data/cashflow-reports.html" },
+            { title: "订单收付与往来账龄", href: "data/balance-reports.html" },
+            { title: "预款与保证金", href: "data/prepayment-reports.html" },
+            { title: "资金收支与安排", href: "data/fund-reports.html" },
+            { title: "发票与收付款核对", href: "data/invoice-reports.html" },
+            { title: "结算与核算核对", href: "data/accounting-reports.html" },
           ],
         },
         {
@@ -265,7 +313,6 @@
             { title: "发票管理", href: "finance/finance-invoice.html" },
           ],
         },
-        { title: "财务报表", href: "finance/finance-reports.html?report=cashflow" },
         { title: "NC推送", href: "finance/finance-nc.html" },
       ],
     },
@@ -451,6 +498,7 @@
   });
 
   function routeKeyFromUrl(url) {
+    url = reportDestination(url);
     const normalizedPath = url.pathname.replace(/\/+/g, "/");
     const merchantMarker = "/merchant/";
     const markerIndex = normalizedPath.lastIndexOf(merchantMarker);
@@ -460,13 +508,6 @@
     if (file === "resource/resource-masterdata.html") {
       const type = url.searchParams.get("type") || "poi";
       return "resource/resource-masterdata.html?type=" + (masterdataRouteKeys.has(type) ? type : "poi");
-    }
-    if (file === "finance/finance-reports.html") {
-      const report = url.searchParams.get("report") || "profit";
-      if (report === "fund" && url.searchParams.get("view") === "pool") {
-        return "finance/finance-fund-pool.html";
-      }
-      return "finance/finance-reports.html?report=cashflow";
     }
     if (file === "finance/finance-control.html") {
       const view = url.searchParams.get("view") || "fund-transfer";
@@ -523,6 +564,7 @@
   }
 
   const pageOwners = {
+    "data/report-scenarios.html": { href: "data/report-management.html", title: "报表业务场景验收" },
     "data/performance-reports-legacy.html": { href: "data/performance-reports.html", title: "历史经营分析（已归档）" },
     "data/finance-dashboard-v2.html": { href: "data/performance-reports.html", title: "历史方案二（已归档）" },
     "data/finance-dashboard-v3.html": { href: "data/performance-reports.html", title: "历史方案三（已归档）" },
@@ -1071,7 +1113,14 @@
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
       const archived = ['data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
       const reportTitles = { 'data/settlement-reports.html': '业务毛利与结算分析', 'data/return-report-details.html': '回团与履约明细', 'data/budget-targets.html': '经营任务与预算', 'data/report-management.html': '口径与数据核对', 'data/product-reports.html': '产品经营分析', 'data/channel-reports.html': '渠道经营分析' };
-      return Array.isArray(tabs) ? tabs.filter(tab => tab && !archived.includes(tab.href)).map(tab => ({ ...tab, title: reportTitles[tab.href] || tab.title })) : [];
+      Object.values(financeReportPages).forEach(([file, title]) => { reportTitles['data/' + file + '.html'] = title; });
+      if (!Array.isArray(tabs)) return [];
+      const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href)).map(tab => {
+        const affected = tab.href.startsWith('finance/finance-reports.html') || tab.href.startsWith('data/');
+        const href = affected ? fileFromUrl(new URL(tab.href, merchantBaseUrl)) : tab.href;
+        return { ...tab, href, title: reportTitles[href] || tab.title };
+      });
+      return migrated.filter((tab, i) => migrated.findIndex(t => t.href === tab.href) === i);
     } catch (error) {
       return [];
     }
@@ -1819,7 +1868,8 @@
     };
 
   async function loadPage(target, options) {
-    const url = target instanceof URL ? target : new URL(target, window.location.href);
+    const requested = target instanceof URL ? target : new URL(target, window.location.href);
+    const url = reportDestination(requested);
     const content = document.querySelector(".content");
 
     if (!content) {
@@ -1832,6 +1882,7 @@
       if (options && options.push && url.protocol !== "file:") {
         history.pushState({ caesarPjax: true }, "", url.href);
       }
+      else if (url.href !== requested.href) history.replaceState({ caesarPjax: true }, "", url.href);
       currentRouteUrl = url;
       syncNavActive(nextFile);
       showDemoUnavailablePage(content, url);
@@ -1850,6 +1901,7 @@
       if (options && options.push && url.protocol !== "file:") {
         history.pushState({ caesarPjax: true }, "", url.href);
       }
+      else if (url.href !== requested.href) history.replaceState({ caesarPjax: true }, "", url.href);
       currentRouteUrl = url;
 
       syncNavActive(nextFile);

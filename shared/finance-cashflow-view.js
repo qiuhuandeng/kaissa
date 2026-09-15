@@ -4,20 +4,16 @@
   if (!host) return;
   const m = window.CaesarCashflow;
   if (!m) { host.innerHTML = '<p role="alert">收退转付资料未加载，请刷新重试。</p>'; return; }
-  const params = new URLSearchParams(location.search), report = params.get('report');
+  const params = new URLSearchParams(location.search), report = host.dataset.report || params.get('report');
   const balances = ['balances', 'ar-ap'].includes(report);
   const prepayments = ['prepayments', 'prepay'].includes(report);
   const funds = ['funds', 'fund'].includes(report);
   const invoices = report === 'invoices';
   const accounting = report === 'accounting';
   const e = m.esc;
-  const history = '<label class="cf-history">报表主题<select aria-label="报表主题" data-cf-history>' + [['cashflow', '收退转付明细'], ['balances', '订单收付与往来账龄'], ['prepayments', '四类预款与保证金'], ['funds', '资金收支与安排'], ['invoices', '发票与收付款核对'], ['accounting', '结算与核算核对']].map(([v, t]) => '<option value="' + v + '"' + (v === (balances ? 'balances' : prepayments ? 'prepayments' : funds ? 'funds' : invoices ? 'invoices' : accounting ? 'accounting' : 'cashflow') ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>';
-  host.innerHTML = '<header class="cf-heading"><h1>' + (balances ? '订单收付与往来账龄' : '收退转付明细') + '</h1>' + history + '</header>';
-  host.querySelector('[data-cf-history]').addEventListener('change', event => {
-    const url = new URL(location.href); url.search = '?report=' + event.target.value; location.href = url.href;
-  });
+  host.innerHTML = '<header class="cf-heading"><h1>' + (balances ? '订单收付与往来账龄' : '收退转付明细') + '</h1></header>';
   if (balances) { host.setAttribute('aria-label', '订单收付与往来账龄'); return; }
-  if (prepayments) { host.querySelector('h1').textContent = '四类预款与保证金'; return; }
+  if (prepayments) { host.querySelector('h1').textContent = '预款与保证金'; return; }
   if (funds) { host.querySelector('h1').textContent = '资金收支与安排'; return; }
   if (invoices) { host.querySelector('h1').textContent = '发票与收付款核对'; return; }
   if (accounting) { host.querySelector('h1').textContent = '结算与核算核对'; return; }

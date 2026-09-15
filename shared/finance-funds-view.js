@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  if (!['funds', 'fund'].includes(new URLSearchParams(location.search).get('report'))) return;
+  if (!['funds', 'fund'].includes(document.getElementById('finance-cashflow')?.dataset.report || new URLSearchParams(location.search).get('report'))) return;
   const m = window.CaesarFunds, ui = window.CaesarReadonlyReport, parent = document.getElementById('finance-cashflow');
   if (!m || !ui || !parent) return;
   const host = document.createElement('section'); host.id = 'finance-funds'; parent.append(host);

@@ -28,3 +28,12 @@ test('资源跨团分配不复制采购', () => { const r=rc.query({dataset:'dem
 test('预估确认应付付款和待损分列', () => { const r=rc.query({dataset:'demo',view:'resources'}).rows[0]; assert.deepEqual([r.estimated,r.purchase,r.payable,r.paid,r.confirmedLoss,r.pendingLoss],[205000,200000,160000,70000,20000,20000]); });
 test('分配重复不重计、超额不计算', () => { const d=rc.fixture(); d.allocations.push({...d.allocations[0]}); assert.equal(rc.query({dataset:'demo'},d).sections[0].rows[0].allocated,140000); d.allocations[0].amount=300000; assert.equal(rc.query({dataset:'demo'},d).sections[0].rows[0].allocated,null); });
 test('数量单位及缺金额保持独立', () => { const r=rc.query({dataset:'demo',view:'resources'}).rows; assert.deepEqual(r.map(r=>r.unit),['舱','座','铺']); assert.equal(r[2].allocated,null); assert.equal(r[2].paid,0); });
+test('产品风险仅按明确产品归属筛选，不改变分配金额', () => {
+  const q = { dataset: 'demo', view: 'resources', product: '地中海邮轮' };
+  const result = rc.query(q);
+  assert.deepEqual(result.rows.map(r => r.batch), ['CABIN-01']);
+  assert.equal(result.rows[0].allocated, 140000);
+  const data = rc.fixture(); delete data.batches[0].product;
+  assert.equal(rc.query(q, data).rows.length, 0);
+  assert.equal(rc.query({ dataset: 'demo', view: 'resources' }, data).rows.length, 3);
+});

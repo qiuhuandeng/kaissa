@@ -22,7 +22,7 @@ async function main() {
       page.on('pageerror', e => errors.push(e.message));
       page.on('requestfailed', r => errors.push(r.url() + ': ' + r.failure().errorText));
       const url = name => protocol === 'file' ? pathToFileURL(path.join(repo, 'merchant/data', name + '.html')).href : 'http://127.0.0.1:' + server.address().port + '/merchant/data/' + name + '.html';
-      const root = page.locator('.finance-report-page'), host = root.locator('[data-return-finance]');
+      const root = page.locator('[data-report-page="returns"], [data-accounting-confirmations]'), host = root.locator('[data-return-finance]');
       const field = k => host.locator('form [name="' + k + '"]');
       const submit = () => host.locator('button[type="submit"]').click();
       const table = host.locator('[aria-label="财务确认主表"]');
@@ -51,7 +51,7 @@ async function main() {
       assert.match(csv, /2,300.00/); assert.doesNotMatch(csv, /"业务场景","net"/);
       assert.match(csv, /原确认与调整依据/); assert.match(csv, /金额分配依据/);
       await submit(); assert.match(await table.innerText(), /1,700.00/);
-      await host.locator('[data-rf-mode="flows"]').click();
+      await page.goto(url('accounting-reports'));
       assert.equal(await field('dataset').inputValue(), 'common');
       assert.equal(await table.locator('tbody tr').count(), 0);
       await field('dataset').selectOption('demo'); await submit();
@@ -59,11 +59,11 @@ async function main() {
       assert.equal(await table.locator('tbody tr').count(), 3);
       assert.match(await host.locator('[data-rf-amounts]').innerText(), /12,000.00.*3,000.00/s);
       await page.screenshot({ path: path.join(output, protocol + '-flows.png') });
-      await host.locator('[data-rf-mode="completion"]').click();
-      assert.equal(await field('scenario').inputValue(), 'net'); assert.match(await table.innerText(), /1,700.00/);
-      results.push(protocol + ': separate modes, unapplied filters, optional columns and full evidence export');
+      assert.equal(await host.locator('[data-rf-mode="completion"]').count(), 0);
+      results.push(protocol + ': separate report pages, unapplied filters, optional columns and full evidence export');
 
-      await host.locator('[data-rf-mode="flows"]').click();
+      await page.goto(url('accounting-reports'));
+      await field('dataset').selectOption('demo'); await submit();
       await field('scenario').selectOption('cross'); await field('periodEnd').fill('2026-05'); await submit();
       assert.equal(await table.locator('tbody tr').count(), 3);
       await field('periodStart').fill('2026-06'); await submit();
@@ -90,6 +90,7 @@ async function main() {
       await page.screenshot({ path: path.join(output, protocol + '-mobile-right.png') });
       assert.equal(await host.locator('.rf-short').evaluateAll(es => es.some(e => e.scrollWidth > e.clientWidth + 1)), false);
       await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.goto(url('return-report-details'));
       await root.locator('[data-view="actual"]').click();
       assert.match(await root.locator('[data-total]').innerText(), /5.60/);
       for (const [key, expected] of [['future', /1.80/], ['adjustments', /未提供完成后调整记录/]]) {

@@ -1,10 +1,13 @@
 const {run,assert}=require('./finance-report-browser-support.cjs');
 run('accounting',async({page,url,shot,download,passed})=>{
   await page.goto(url('merchant/finance/finance-reports.html?report=accounting'));
-  const h=page.locator('#finance-accounting-report'); await h.locator('[name=dataset]').selectOption('demo'); await h.locator('button[type=submit]').click();
-  assert.match(await h.locator('[data-fr-main]').innerText(),/收入确认/);
-  await h.locator('.cf-more summary').click(); await h.locator('[name=scenario]').selectOption('estimate'); await h.locator('button[type=submit]').click();
-  let csv=await download(h.locator('[data-fr-export]')); assert.match(csv,/6200/); assert.match(csv,/CB10-R/); passed('会计发生、暂估冲回、全依据导出');
+  const f=page.locator('[data-accounting-confirmations]'), h=page.locator('#finance-accounting-report');
+  await f.locator('[name=dataset]').selectOption('demo'); await f.locator('button[type=submit]').click();
+  assert.match(await f.locator('[aria-label="财务确认主表"]').innerText(),/收入确认/);
+  await f.locator('[name=scenario]').selectOption('estimate'); await f.locator('button[type=submit]').click();
+  let csv=await download(f.locator('[data-export]')); assert.match(csv,/6,200.00/); assert.match(csv,/CB10-R/); passed('完整会计发生、暂估冲回、全依据导出');
+  await page.locator('[data-report-section=checks]').click();
+  await h.locator('[name=dataset]').selectOption('demo'); await h.locator('button[type=submit]').click();
   await h.locator('[data-fr-view=internal]').click(); assert.match(await h.locator('[data-fr-main]').innerText(),/对方未提供或在途/);
   csv=await download(h.locator('[data-fr-export]')); assert.match(csv,/INT07/); passed('内部双方币种期间和在途');
   await h.locator('[data-fr-view=nc]').click(); assert.match(await h.locator('[data-fr-main]').innerText(),/来源借贷不平衡/);

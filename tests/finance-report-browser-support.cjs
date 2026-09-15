@@ -25,4 +25,10 @@ async function run(name, check) {
     assert.deepEqual(errors, []); await fs.writeFile(path.join(output, 'results.json'), JSON.stringify({ results, errors }, null, 2)); console.log(JSON.stringify({ output, results, errors }, null, 2));
   } finally { if (browser) await browser.close(); await new Promise(r => server.close(r)); }
 }
-module.exports = { run, assert };
+async function openReport(page, file) {
+  if (await page.locator('.nav-collapsed').count()) await page.getByRole('button', { name: '收起或展开侧栏' }).click();
+  const link = page.locator('.nav-secondary-panel a[href$="data/' + file + '.html"]');
+  if (!await link.isVisible()) await page.locator('.nav-parent').filter({ has: page.locator('a[href$="data/' + file + '.html"]') }).first().locator(':scope > .nav-item').click();
+  await link.click();
+}
+module.exports = { run, assert, openReport };

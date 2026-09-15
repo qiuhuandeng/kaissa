@@ -428,7 +428,7 @@
     financialActive = active;
     [form, root.querySelector('[data-meta]'), root.querySelector('[data-results]'), root.querySelector('.report-note')].forEach(el => { el.hidden = active; });
     financialHost.hidden = !active;
-    if (active && !financialView) financialView = window.mountReturnFinance(financialHost, api, iconsBase);
+    if (active && !financialView) financialView = window.mountReturnFinance(financialHost, api, iconsBase, { mode: 'completion' });
   }
   function setForm(values) {
     Object.entries(values).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value; });

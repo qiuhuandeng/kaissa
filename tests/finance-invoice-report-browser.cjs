@@ -23,7 +23,7 @@ run('invoice-report', async ({ page, url, shot, download, passed }) => {
   await page.setViewportSize({ width: 390, height: 844 }); await page.getByRole('button', { name: '收起或展开侧栏' }).click(); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
   await main.scrollIntoViewIfNeeded(); await shot('mobile'); await main.evaluate(e => e.scrollLeft = e.scrollWidth); assert.equal(await main.locator('td').evaluateAll(es => es.some(e => e.scrollWidth > e.clientWidth + 1)), false);
   assert.equal(await host.locator('a,dialog,[data-action]').count(), 0); passed('missing data, separate company/currency, selected columns and mobile');
-  await page.setViewportSize({ width: 1440, height: 1000 }); await page.locator('[data-cf-history]').selectOption('cashflow'); await page.locator('[data-cf-main]').waitFor();
-  await page.locator('[data-cf-history]').selectOption('invoices'); await host.locator('[data-fr-main]').waitFor();
+  await page.setViewportSize({ width: 1440, height: 1000 }); await require('./finance-report-browser-support.cjs').openReport(page, 'cashflow-reports'); await page.locator('[data-cf-main]').waitFor();
+  await require('./finance-report-browser-support.cjs').openReport(page, 'invoice-reports'); await host.locator('[data-fr-main]').waitFor();
   passed('theme navigation and repeat initialization');
 }).catch(e => { console.error(e); process.exitCode = 1; });

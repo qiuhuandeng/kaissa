@@ -2,7 +2,7 @@
   'use strict';
   const known = v => typeof v === 'number' && Number.isFinite(v);
   const sum = xs => xs.reduce((a, v) => a + Math.round(v * 100), 0) / 100;
-  const defaults = { dataset: 'pending', view: 'costs', company: '', supplier: '', tour: '', batch: '', unit: '', start: '2026-09-01', end: '2026-09-30' };
+  const defaults = { dataset: 'pending', view: 'costs', company: '', supplier: '', product: '', tour: '', batch: '', unit: '', start: '2026-09-01', end: '2026-09-30' };
   const views = { costs: '成本组成与分配', resources: '资源批次风险' };
   function fixture() {
     const base = { company: '北京凯撒', currency: 'CNY', date: '2026-09-20', supplier: '邮轮供应商（演示）', product: '地中海邮轮', destination: '欧洲', supply: '自营组织', evidence: '已确认采购及分配依据（独立算例）' };
@@ -31,7 +31,7 @@
     if (q.dataset === 'pending') return { rows: [], pending: true, notice: '资源确认与成本分配来源待接入', sections: [] };
     const data = supplied || fixture();
     const allocations = unique(data.allocations, r => r.batch + '|' + r.id);
-    const selected = unique(data.batches, r => r.company + '|' + r.batch).filter(r => r.date >= q.start && r.date <= q.end && ['company', 'supplier', 'batch', 'unit'].every(k => !q[k] || String(r[k]).includes(q[k])) && (!q.tour || allocations.some(a => a.batch === r.batch && a.tour.includes(q.tour))));
+    const selected = unique(data.batches, r => r.company + '|' + r.batch).filter(r => r.date >= q.start && r.date <= q.end && ['company', 'supplier', 'product', 'batch', 'unit'].every(k => !q[k] || String(r[k]).includes(q[k])) && (!q.tour || allocations.some(a => a.batch === r.batch && a.tour.includes(q.tour))));
     const batches = selected.map(r => {
       const assigned = allocations.filter(a => a.batch === r.batch && a.confirmed);
       const ambiguous = new Set(data.batches.filter(b => b.batch === r.batch).map(b => b.company)).size > 1;

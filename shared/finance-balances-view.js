@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  if (!['balances', 'ar-ap'].includes(new URLSearchParams(location.search).get('report'))) return;
+  if (!['balances', 'ar-ap'].includes(document.getElementById('finance-cashflow')?.dataset.report || new URLSearchParams(location.search).get('report'))) return;
   const parent = document.getElementById('finance-cashflow');
   if (!parent) return;
   parent.insertAdjacentHTML('beforeend', '<div id="finance-balances"></div>');

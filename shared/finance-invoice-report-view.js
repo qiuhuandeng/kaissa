@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  if (new URLSearchParams(location.search).get('report') !== 'invoices') return;
+  if ((document.getElementById('finance-cashflow')?.dataset.report || new URLSearchParams(location.search).get('report')) !== 'invoices') return;
   const m = window.CaesarInvoiceReport, ui = window.CaesarReadonlyReport, parent = document.getElementById('finance-cashflow');
   if (!m || !ui || !parent) return;
   const host = document.createElement('section'); host.id = 'finance-invoice-report'; parent.append(host);

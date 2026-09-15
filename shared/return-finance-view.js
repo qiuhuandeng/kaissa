@@ -1,10 +1,11 @@
 (function (root) {
   'use strict';
-  root.mountReturnFinance = function (host, report, assets) {
+  root.mountReturnFinance = function (host, report, assets, config = {}) {
     const m = root.CaesarReturnFinance;
     const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const icon = name => '<img class="report-icon" alt="" src="' + assets + name + '.svg">';
-    const names = { completion: '完成业务核对', flows: '确认发生明细' };
+    const allNames = { completion: '完成业务核对', flows: '确认发生明细' };
+    const names = config.mode ? { [config.mode]: allNames[config.mode] } : allNames;
     const labels = { dataset: '资料范围', mode: '查询方式', dateBasis: '日期依据', start: '开始日期', end: '结束日期', periodStart: '会计期间开始', periodEnd: '会计期间结束', cutoff: '资料截止', unit: '金额单位', scenario: '业务场景',
       order: '订单号', product: '销售内容', item: '销售内容号', service: '团号/服务单号', actual: '实际完成日', planned: '计划完成日', plannedStart: '计划开始日', actualStart: '实际开始日', completionType: '完成类型', completionQuantity: '完成数量', completionUnit: '数量单位', allocationBasis: '成交金额分配依据', entity: '核算主体', book: '账簿', businessRevenue: '业务结算收入', income: '财务确认收入', cost: '已结转成本', incomeStatus: '收入确认情况', costStatus: '成本确认情况', gap: '资料缺口', reference: '原单及分配依据',
       id: '确认记录号', kind: '确认类型', period: '会计期间', date: '财务确认日期', completionRecord: '销售内容/完成记录', change: '原确认/调整', amount: '本次确认金额', allocationState: '分配情况', original: '原记录号',
@@ -24,7 +25,7 @@
       '核算与价税': ['book', 'currency', 'basis', 'method', 'tax', 'taxEvidence', 'gross', 'taxAmount', 'rate', 'internal', 'partner']
     };
     const money = new Set(['businessRevenue', 'income', 'cost', 'difference', 'amount', 'originalAmount', 'unallocatedAmount', 'allocated', 'gross', 'taxAmount', 'referenceAmount']);
-    let mode = 'completion', result;
+    let mode = config.mode || 'completion', result;
     const states = Object.fromEntries(Object.keys(names).map(k => [k, { applied: { ...m.defaults, mode: k }, draft: { ...m.defaults, mode: k }, extras: new Set(), page: 1, size: 10, sort: '', direction: 1, dirty: false }]));
     const state = () => states[mode];
     function display(row, key) {
@@ -48,6 +49,7 @@
     function form() {
       const draft = state().draft;
       host.querySelector('[data-rf-modes]').innerHTML = Object.entries(names).map(([k, v]) => '<button type="button" class="report-tab" data-rf-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + v + '</button>').join('');
+      host.querySelector('[data-rf-modes]').hidden = Boolean(config.mode);
       host.querySelector('[data-rf-form]').innerHTML = '<div class="report-filter-row">' + select('dataset', [['common', '共同回团资料'], ['demo', '独立财务算例']]) +
         (mode === 'flows' ? select('dateBasis', [['period', '会计期间'], ['date', '财务确认日期']]) : '') +
         (mode === 'flows' && draft.dateBasis === 'period' ? input('periodStart', 'month') + input('periodEnd', 'month') : input('start', 'date') + input('end', 'date')) + input('cutoff', 'date') + '</div>' +

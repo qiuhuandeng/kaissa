@@ -74,8 +74,8 @@ async function main() {
       assert.equal(await host.locator('a,dialog,[data-action]').count(), 0);
       results.push(protocol + ': complete export, applied filters, field choice, sorting, error and mobile layout');
       await page.goto(url('?report=ar-ap')); await host.locator('[data-ba-main]').waitFor();
-      await page.locator('[data-cf-history]').selectOption('cashflow'); await page.locator('[data-cf-main]').waitFor();
-      await page.locator('[data-cf-history]').selectOption('balances'); await host.locator('[data-ba-main]').waitFor();
+      await require('./finance-report-browser-support.cjs').openReport(page, 'cashflow-reports'); await page.locator('[data-cf-main]').waitFor();
+      await require('./finance-report-browser-support.cjs').openReport(page, 'balance-reports'); await host.locator('[data-ba-main]').waitFor();
       await page.goto(url('', 'finance-account-settings.html'));
       await page.evaluate(() => window.caesarNavigateTo('finance/finance-reports.html?report=balances'));
       await host.locator('[data-ba-main]').waitFor(); await scenario('BA01'); assert.equal(await table.locator('tbody tr').count(), 1);
