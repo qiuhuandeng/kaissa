@@ -1,6 +1,7 @@
 (function(){
   'use strict';const host=document.querySelector('[data-report-governance]'),m=window.CaesarReportGovernance;if(!host||!m)return;
   let state=m.initial(),report;
+  window.CaesarGovernanceState=()=>state;
   const labels={id:'记录号',company:'可见公司',department:'可见部门',store:'可见门店',customer:'合同付款客户',phone:'客户联系电话',bank:'收款账号',amount:'可见金额',source:'来源资料',state:'版本/订阅状态',rule:'口径版本',period:'业务期间',cutoff:'资料截止',parent:'原发布版',reason:'更新/更正原因',evidence:'核对依据',recipient:'接收角色',createdBy:'创建角色'};
   const choices=()=>state.versions.map(v=>[v.id,v.id+' '+v.state]);
   host.innerHTML='<div class="cf-page"><div class="cf-tabs"><button class="btn btn-secondary" type="button" data-gov-update>更新工作版（演示）</button><button class="btn btn-secondary" type="button" data-gov-fail>检查更新失败</button><button class="btn btn-secondary" type="button" data-gov-publish>创建发布副本</button><button class="btn btn-secondary" type="button" data-gov-correct>创建更正副本</button></div><p role="status" data-gov-message></p><details class="cf-more"><summary>订阅对象</summary><form data-gov-subscribe class="cf-filters"><label class="cf-field">接收角色<select name="recipient">'+Object.entries(m.roles).map(([k,v])=>'<option value="'+k+'">'+v.name+'</option>').join('')+'</select></label><button class="btn btn-secondary" type="submit">保存订阅草稿</button></form></details></div><section data-gov-report></section>';

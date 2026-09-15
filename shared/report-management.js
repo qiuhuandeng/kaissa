@@ -86,7 +86,8 @@
   const assetBase = new URL("report-icons/", document.currentScript.src).href;
   function mount(report) {
     if (!root.isConnected) return;
-    const model = createModel(report), esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const model = createModel(report); window.CaesarManagementChecks=model;
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const icon = name => '<img class="report-icon" alt="" src="' + assetBase + name + '.svg">';
     let tab = "checks", records = structuredClone(model.initialRules), page = 1, pageSize = 5, sort = "", direction = 1, editor = null, editorDirty = false;
     const checkDefaults = { basis: "orders", start: "2026-05-01", end: report.CUTOFF, company: "", issue: "", unit: "yuan" };

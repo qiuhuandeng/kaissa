@@ -14,12 +14,12 @@
     'return-report-details': ['回团明细', [...views(primary, [['actual','实际完成'],['future','已售未完']]), { selector: '[data-return-finance]', key: 'financial', label: '完成核对', owner: primary }, ...views(primary, [['adjustments','完成后调整']])]],
     'cashflow-reports': ['收付明细', views('#finance-cashflow', [['receipt','收款'],['refund','退款'],['transfer','转款'],['payment','付款'],['allocations','收付分配'],['writeoffs','核销明细'],['trace','原款追溯']])],
     'balance-reports': ['往来账龄', [...views('#finance-ar-summary', [['ar','应收余额']]), ...views('#finance-ap-summary', [['ap','应付余额']]), ...views('#finance-balances', [['aging','账龄分析']]), ...views('#finance-clearing-summary', [['clearing','内部清算']]), ...views('#finance-order-cash', [['orders','订单收付']]), ...views('#finance-movement', [['movement','往来变动']]), ...views('#finance-overdue', [['overdue','逾期分析']])]],
-    'prepayment-reports': ['预款余额', [...views('#finance-advance-balance', [['advance','预收款']]), ...views('#finance-deposit-balance', [['deposit','预存款']]), ...views('#finance-prepayments', [['prepay','预付款'],['guarantee','保证金']])]],
-    'fund-reports': ['资金分析', views('#finance-funds', [['accounts','账户余额'],['movements','账户收支'],['periods','收支汇总'],['plan','资金计划']])],
-    'invoice-reports': ['票款核对', views('#finance-invoice-report', [['received','已收未开'],['issued','已开未收'],['paid','已付未收票'],['invoiced','已收票未付']])],
-    'accounting-reports': ['核算核对', [{ selector: '[data-accounting-confirmations] [data-return-finance]', panel: '[data-accounting-confirmations]', key: 'flows', label: '确认明细' }, ...views('#finance-accounting-report', [['completion','结算对照'],['internal','内部对账'],['nc','凭证核对']])]],
+    'prepayment-reports': ['预款余额', [...views('#finance-advance-balance', [['advance','预收款']]), ...views('#finance-deposit-balance', [['deposit','预存款']]), ...views('#finance-prepayments', [['prepay','预付款']]), ...views('#finance-guarantee-balance', [['guarantee','保证金']]), ...views('#finance-prepayment-movements', [['movements','款项变动']])]],
+    'fund-reports': ['资金分析', [...views('#finance-fund-accounts', [['accounts','账户余额']]), ...views('#finance-fund-movements', [['movements','账户收支']]), ...views('#finance-fund-periods', [['periods','收支汇总']]), ...views('#finance-fund-plan', [['plan','资金计划']]), ...views('#finance-fund-unarranged', [['unarranged','待安排收付']]), ...views('#finance-fund-daily', [['daily','资金日报']]), ...views('#finance-fund-monthly', [['monthly','月度执行']])]],
+    'invoice-reports': ['票款核对', [...views('#finance-invoice-received', [['received','已收未开']]), ...views('#finance-invoice-issued', [['issued','已开未收']]), ...views('#finance-invoice-paid', [['paid','已付未收票']]), ...views('#finance-invoice-invoiced', [['invoiced','已收票未付']]), ...views('#finance-invoice-documents', [['documents','票据明细']]), ...views('#finance-invoice-allocations', [['allocations','票款分配']]), ...views('#finance-invoice-corrections', [['corrections','红冲更正']])]],
+    'accounting-reports': ['核算核对', [...views('#finance-accounting-flows', [['flows','确认明细']]), ...views('#finance-accounting-completion', [['completion','结算对照']]), ...views('#finance-accounting-report', [['internal','内部对账'],['nc','凭证核对']])]],
     'budget-targets': ['任务预算', [...views('[data-budget-targets]', [['primary','经营任务']]), ...views('[data-profit-budget]', [['budgets','批准预算']])]],
-    'report-management': ['数据管理', [...views('[data-report-management]', [['checks','数据核对'],['rules','分类规则'],['organizations','组织对应']]), ...views(governance, [['versions','版本记录'],['records','查看范围'],['subscriptions','订阅设置']]).map(e => ({ ...e, panel: '[data-report-governance]' }))]]
+    'report-management': ['数据管理', [...views('#report-check-summary', [['checks','数据核对']]), ...views('[data-report-management]', [['rules','分类规则'],['organizations','组织对应']]), ...views('#report-access-scope', [['records','查看范围']]), ...views(governance, [['versions','版本记录'],['subscriptions','订阅设置']]).map(e => ({ ...e, panel: '[data-report-governance]' }))]]
   };
   const file = location.pathname.split('/').pop().replace('.html',''), definition = config[file];
   if (!definition) return;
@@ -29,6 +29,12 @@
   let saved = {}, active, switching = false;
   try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}'); } catch (_) { /* File browsers may disable storage. */ }
   const states = saved.states || {};
+  if(file==='report-management' && saved.managementScopeVersion!==1)['checks','records'].forEach(k=>delete states[k]);
+  if(file==='accounting-reports' && saved.accountingConfirmationVersion!==1)['flows','completion'].forEach(k=>delete states[k]);
+  if(file==='invoice-reports' && saved.invoiceGapVersion!==1)['received','issued','paid','invoiced'].forEach(k=>delete states[k]);
+  if(file==='fund-reports' && saved.fundPlanVersion!==1)['periods','plan','unarranged'].forEach(k=>delete states[k]);
+  if(file==='fund-reports' && saved.fundAccountVersion!==1)['accounts','movements'].forEach(k=>delete states[k]);
+  if(file==='prepayment-reports' && saved.prepayGuaranteeVersion!==1)['prepay','guarantee'].forEach(k=>delete states[k]);
   if(file==='prepayment-reports' && saved.advanceDepositVersion!==1)['advance','deposit'].forEach(k=>delete states[k]);
   if(file==='balance-reports' && saved.agingClearingVersion!==1)['aging','clearing'].forEach(k=>delete states[k]);
   if(file==='balance-reports' && saved.counterpartyVersion!==1)['ar','ap'].forEach(k=>delete states[k]);
@@ -47,7 +53,7 @@
     if (active && !switching) {
       const controller = q(active.selector)?.reportNavigation;
       if (controller) states[active.key] = controller.capture();
-      try { sessionStorage.setItem(storageKey, JSON.stringify({ active: active.key, states, advanceDepositVersion:1, agingClearingVersion:1, counterpartyVersion:1, supplierPrepayVersion:2, resourceVersion:2, ...(file === "performance-reports" ? {summaryVersion:2} : {}) })); } catch (_) { /* In-memory navigation still works. */ }
+      try { sessionStorage.setItem(storageKey, JSON.stringify({ active: active.key, states, managementScopeVersion:1, accountingConfirmationVersion:1, invoiceGapVersion:1, fundPlanVersion:1, fundAccountVersion:1, prepayGuaranteeVersion:1, advanceDepositVersion:1, agingClearingVersion:1, counterpartyVersion:1, supplierPrepayVersion:2, resourceVersion:2, ...(file === "performance-reports" ? {summaryVersion:2} : {}) })); } catch (_) { /* In-memory navigation still works. */ }
     }
   }
   function activate(key, initial = false) {
