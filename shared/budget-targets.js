@@ -32,16 +32,17 @@
       return false;
     };
     const dateValid = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(d)) && new Date(d).toISOString().slice(0, 10) === d;
-    function cents(value) {
+    function cents(value, signed = false) {
       const s = String(value ?? '').trim();
-      if (!/^(0|[1-9]\d{0,10})(\.\d{1,2})?$/.test(s)) return null;
-      const [whole, decimal = ''] = s.split('.');
-      return Number(whole) * 100 + Number(decimal.padEnd(2, '0'));
+      if (!(signed ? /^-?(0|[1-9]\d{0,10})(\.\d{1,2})?$/ : /^(0|[1-9]\d{0,10})(\.\d{1,2})?$/).test(s)) return null;
+      const [whole, decimal = ''] = s.replace(/^-/, '').split('.');
+      return (s.startsWith('-') ? -1 : 1) * (Number(whole) * 100 + Number(decimal.padEnd(2, '0')));
     }
     function totals(row) {
-      const values = row.months.map(cents), annual = cents(row.annual);
+      const parse = v => cents(v, row.metric === 'margin');
+      const values = row.months.map(parse), annual = parse(row.annual);
       const monthly = values.reduce((sum, n) => sum + (n ?? 0), 0);
-      const allocated = row.children.reduce((sum, c) => sum + (cents(c.amount) ?? 0), 0);
+      const allocated = row.children.reduce((sum, c) => sum + (parse(c.amount) ?? 0), 0);
       return { annual, monthly, missing: values.filter(v => v === null).length, difference: annual === null ? null : annual - monthly,
         allocated, unallocated: annual === null ? null : annual - allocated };
     }
@@ -72,7 +73,7 @@
       if (row.calendar !== '自然月（演示）') return '考核日历尚未提供批准资料。';
       if (row.definition && !definitions[row.metric].includes(row.definition)) return '金额定义与指标不匹配。';
       if (row.tax && !['含税', '不含税'].includes(row.tax)) return '请选择金额含税口径。';
-      if (row.months.length !== 12 || [row.annual, ...row.months].some(v => v !== '' && cents(v) === null)) return '金额须为非负数、最多两位小数且小于一千亿元；空白表示未分解。';
+      if (row.months.length !== 12 || [row.annual, ...row.months].some(v => v !== '' && cents(v, row.metric === 'margin') === null)) return '金额最多两位小数且绝对值小于一千亿元；订单和回团任务不能为负，毛利任务允许负数；空白表示未分解。';
       const parent = records.find(r => r.id === row.parent);
       if (row.parent && (!parent || parent.state !== '演示参照' || parent.family !== row.family || parent.scope !== row.scope || parent.metric !== row.metric || parent.year !== row.year || parent.tax !== row.tax || parent.definition !== row.definition || row.start < parent.start || row.end > parent.end)) return '调整须沿用原任务范围、年度和金额口径，生效期间应在原版本内。';
       if (old && ['family', 'parent', 'version', 'scope', 'metric', 'year'].some(k => old[k] !== row[k])) return '已保存任务的责任范围、指标、年度和版本不能改换，请新建任务。';
@@ -81,10 +82,11 @@
       for (const child of row.children) {
         if (!isDescendant(child.scope, row.scope)) return '下级责任范围须属于本任务，不能混入另一公司或产品责任。';
         if (seen.some(id => id === child.scope || isDescendant(id, child.scope) || isDescendant(child.scope, id))) return '下级分解有重复或上下级交叉，不能重复分配。';
-        if (cents(child.amount) === null) return '请填写有效的下级年度分配金额。';
+        if (cents(child.amount, row.metric === 'margin') === null) return '请填写有效的下级年度分配金额。';
         seen.push(child.scope);
       }
-      if (t.annual !== null && t.unallocated < 0) return '下级分配超出年度任务，请核对分配金额。';
+      if (row.metric !== 'margin' && t.annual !== null && t.unallocated < 0) return '下级分配超出年度任务，请核对分配金额。';
+      if (submitting && row.metric === 'margin' && row.children.length && t.unallocated !== 0) return '毛利任务下级分解须与年度金额核对一致，正负责任不能按大小判超额。';
       if (submitting && (!row.definition || !row.tax || !row.basis.trim() || !row.reason.trim() || !row.owner.trim())) return '金额口径、编制负责人、依据及编制／调整原因齐全后才能提交。';
       if (submitting && (t.annual === null || t.missing || t.difference !== 0)) return '年度任务及12个月须完整填写，月度合计必须等于年度任务后才能提交。';
       return '';
@@ -133,7 +135,7 @@
     const now = () => new Date().toLocaleString('zh-CN', { hour12: false });
     function error(message, edit = false) { const el = root.querySelector(edit ? '[data-edit-error]' : '[data-error]'); el.textContent = message; el.hidden = !message; }
     function shell() {
-      root.innerHTML = '<header class="report-head"><h1>预算任务管理</h1><div class="report-actions" data-list-actions>' + button(icon('download') + '导出', 'data-export title="导出全查询任务及月度分解"') + button('新建任务', 'data-new') + '</div></header>' +
+      root.innerHTML = '<header class="report-head"><h1>经营任务与预算</h1><div class="report-actions" data-list-actions>' + button(icon('download') + '导出', 'data-export title="导出全查询任务及月度分解"') + button('新建任务', 'data-new') + '</div></header>' +
         '<div class="report-meta"><span class="report-demo">演示任务 · 无正式批准版本</span><span>人民币 · 元</span><span>考核日历：自然月（演示）</span></div>' +
         '<div data-list><form class="report-filters" data-filter><div class="report-filter-row">' + input('search', '任务／责任名称', applied.search) + input('year', '任务年度', applied.year) +
         select('metric', '任务指标', [['', '全部指标'], ...Object.entries(m.metrics)], applied.metric) + select('state', '主状态', [['', '全部状态'], ...states.map(s => [s, s])], applied.state) +
@@ -196,7 +198,7 @@
       const t = m.totals(editor), p = records.find(r => r.id === editor.parent);
       root.querySelector('[data-month-total]').textContent = '年度任务 ' + money(t.annual) + ' · 月度已分解 ' + money(t.monthly) + ' · 差额 ' + money(t.difference) + ' · ' + t.missing + '个月未填写';
       root.querySelector('[data-child-total]').textContent = '下级已分配 ' + money(t.allocated) + ' · 尚未分配 ' + money(t.unallocated);
-      if (p) root.querySelector('[data-version-comparison]').textContent = '原V' + p.version + '：' + money(m.cents(p.annual)) + '元；本次V' + editor.version + '：' + money(t.annual) + '元；年度变化：' + (t.annual === null ? '未填写' : money(t.annual - m.cents(p.annual))) + '元';
+      if (p) root.querySelector('[data-version-comparison]').textContent = '原V' + p.version + '：' + money(m.cents(p.annual, p.metric === 'margin')) + '元；本次V' + editor.version + '：' + money(t.annual) + '元；年度变化：' + (t.annual === null ? '未填写' : money(t.annual - m.cents(p.annual, p.metric === 'margin'))) + '元';
     }
     function back() {
       if (dirty && !confirm('本次修改尚未保存，确认放弃？')) return;
@@ -204,15 +206,15 @@
       root.querySelector('[data-list]').hidden = false; root.querySelector('[data-list-actions]').hidden = false; render();
     }
     function exportRows() {
-      const rows = queryRows(), data = [['预算任务管理', '演示资料，非正式批准任务'], ['金额单位', '人民币·元'], ['考核日历', '自然月（演示）'], ['导出时间', now()],
+      const rows = queryRows(), data = [['经营任务与预算', '演示资料，非正式批准任务'], ['金额单位', '人民币·元'], ['考核日历', '自然月（演示）'], ['导出时间', now()],
         ...Object.entries(applied).map(([k, v]) => [{ search: '任务／责任名称', year: '年度', metric: '任务指标', state: '主状态', role: '责任口径', level: '责任层级', date: '版本适用日期' }[k], k === 'metric' ? m.metrics[v] || '全部' : v || '全部']),
         ['任务名称', '年度', '指标', '责任口径', '责任层级', '责任范围', '组织版本', '金额定义', '含税口径', '年度任务', ...Array.from({ length: 12 }, (_, i) => i + 1 + '月'), '月度已分解', '月度差额', '未填写月数', '下级已分配', '尚未分配', '版本', '主状态', '生效日', '结束日', '原版本', '编制负责人', '依据', '原因', '批准记录']];
       const amount = n => n === null ? '未填写' : n / 100;
-      rows.forEach(r => { const s = m.scopeFor(r.scope), t = m.totals(r); data.push([r.name, r.year, m.metrics[r.metric], s.role, s.level, s.name, s.version, r.definition || '待确认', r.tax || '待确认', amount(t.annual), ...r.months.map(v => amount(m.cents(v))), amount(t.monthly), amount(t.difference), t.missing, amount(t.allocated), amount(t.unallocated), 'V' + r.version, r.state, r.start, r.end, r.parent ? 'V' + records.find(p => p.id === r.parent).version : '', r.owner, r.basis, r.reason, '未提供正式批准记录']); });
+      rows.forEach(r => { const s = m.scopeFor(r.scope), t = m.totals(r); data.push([r.name, r.year, m.metrics[r.metric], s.role, s.level, s.name, s.version, r.definition || '待确认', r.tax || '待确认', amount(t.annual), ...r.months.map(v => amount(m.cents(v, r.metric === 'margin'))), amount(t.monthly), amount(t.difference), t.missing, amount(t.allocated), amount(t.unallocated), 'V' + r.version, r.state, r.start, r.end, r.parent ? 'V' + records.find(p => p.id === r.parent).version : '', r.owner, r.basis, r.reason, '未提供正式批准记录']); });
       data.push([], ['下级年度分配（包含在上级任务内，不重复累计）'], ['任务名称', '版本', '下级责任范围', '分配金额（元）']);
-      rows.forEach(r => r.children.forEach(c => data.push([r.name, 'V' + r.version, m.scopeFor(c.scope).name, amount(m.cents(c.amount))])));
+      rows.forEach(r => r.children.forEach(c => data.push([r.name, 'V' + r.version, m.scopeFor(c.scope).name, amount(m.cents(c.amount, r.metric === 'margin'))])));
       const url = URL.createObjectURL(new Blob(['\uFEFF' + data.map(row => row.map(report.csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
-      const a = document.createElement('a'); a.href = url; a.download = '预算任务管理-演示.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const a = document.createElement('a'); a.href = url; a.download = '经营任务与预算-演示.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     root.addEventListener('submit', e => {
       e.preventDefault();

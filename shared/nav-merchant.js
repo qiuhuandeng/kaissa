@@ -14,28 +14,20 @@
           title: "经营报表",
           children: [
             { title: "经营总览", href: "data/performance-reports.html" },
-            { title: "产品经营", href: "data/product-reports.html" },
-            { title: "渠道经营", href: "data/channel-reports.html" },
-            { title: "团期毛利", href: "data/settlement-reports.html" },
+            { title: "产品经营分析", href: "data/product-reports.html" },
+            { title: "渠道经营分析", href: "data/channel-reports.html" },
+            { title: "业务毛利与结算分析", href: "data/settlement-reports.html" },
             { title: "供应商采购与返点", href: "data/supplier-reports.html" },
             { title: "订单明细", href: "data/order-report-details.html" },
-            { title: "回团明细", href: "data/return-report-details.html" },
+            { title: "回团与履约明细", href: "data/return-report-details.html" },
+            { title: "月度经营损益", href: "data/monthly-profit-reports.html" },
           ],
         },
         {
           title: "报表管理",
           children: [
-            { title: "预算任务管理", href: "data/budget-targets.html" },
+            { title: "经营任务与预算", href: "data/budget-targets.html" },
             { title: "口径与数据核对", href: "data/report-management.html" },
-          ],
-        },
-        {
-          title: "历史方案",
-          children: [
-            { title: "经营分析旧版", href: "data/performance-reports-legacy.html" },
-            { title: "方案二", href: "data/finance-dashboard-v2.html" },
-            { title: "方案三", href: "data/finance-dashboard-v3.html" },
-            { title: "产品分析旧版", href: "data/product-analysis.html" },
           ],
         },
       ],
@@ -531,6 +523,10 @@
   }
 
   const pageOwners = {
+    "data/performance-reports-legacy.html": { href: "data/performance-reports.html", title: "历史经营分析（已归档）" },
+    "data/finance-dashboard-v2.html": { href: "data/performance-reports.html", title: "历史方案二（已归档）" },
+    "data/finance-dashboard-v3.html": { href: "data/performance-reports.html", title: "历史方案三（已归档）" },
+    "data/product-analysis.html": { href: "data/performance-reports.html", title: "历史产品分析（已归档）" },
     "dashboard-group.html": { href: "dashboard.html", title: "集团汇总视角工作台" },
     "dashboard-store.html": { href: "dashboard.html", title: "门店店长工作台" },
     "ai/ai-assistant.html": { href: "dashboard.html", title: "工作台助手" },
@@ -1073,7 +1069,9 @@
   function readTabs(storageKey) {
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      return Array.isArray(tabs) ? tabs : [];
+      const archived = ['data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
+      const reportTitles = { 'data/settlement-reports.html': '业务毛利与结算分析', 'data/return-report-details.html': '回团与履约明细', 'data/budget-targets.html': '经营任务与预算', 'data/report-management.html': '口径与数据核对', 'data/product-reports.html': '产品经营分析', 'data/channel-reports.html': '渠道经营分析' };
+      return Array.isArray(tabs) ? tabs.filter(tab => tab && !archived.includes(tab.href)).map(tab => ({ ...tab, title: reportTitles[tab.href] || tab.title })) : [];
     } catch (error) {
       return [];
     }

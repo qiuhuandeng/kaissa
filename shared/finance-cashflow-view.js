@@ -5,16 +5,22 @@
   const m = window.CaesarCashflow;
   if (!m) { host.innerHTML = '<p role="alert">收退转付资料未加载，请刷新重试。</p>'; return; }
   const params = new URLSearchParams(location.search), report = params.get('report');
-  const legacy = ['profit', 'ar-ap', 'prepay', 'fund'].includes(report);
+  const balances = ['balances', 'ar-ap'].includes(report);
+  const prepayments = ['prepayments', 'prepay'].includes(report);
+  const funds = ['funds', 'fund'].includes(report);
+  const invoices = report === 'invoices';
+  const accounting = report === 'accounting';
   const e = m.esc;
-  const history = '<label class="cf-history">报表主题<select aria-label="报表主题" data-cf-history>' + [['cashflow', '收退转付明细'], ['profit', '历史分析 · 经营损益'], ['ar-ap', '历史分析 · 往来分析'], ['prepay', '历史分析 · 预付分析'], ['fund', '历史分析 · 资金余额']].map(([v, t]) => '<option value="' + v + '"' + (v === (legacy ? report : 'cashflow') ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>';
-  host.innerHTML = '<header class="cf-heading"><h1>' + (legacy ? '历史财务分析' : '收退转付明细') + '</h1>' + history + '</header>';
+  const history = '<label class="cf-history">报表主题<select aria-label="报表主题" data-cf-history>' + [['cashflow', '收退转付明细'], ['balances', '订单收付与往来账龄'], ['prepayments', '四类预款与保证金'], ['funds', '资金收支与安排'], ['invoices', '发票与收付款核对'], ['accounting', '结算与核算核对']].map(([v, t]) => '<option value="' + v + '"' + (v === (balances ? 'balances' : prepayments ? 'prepayments' : funds ? 'funds' : invoices ? 'invoices' : accounting ? 'accounting' : 'cashflow') ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>';
+  host.innerHTML = '<header class="cf-heading"><h1>' + (balances ? '订单收付与往来账龄' : '收退转付明细') + '</h1>' + history + '</header>';
   host.querySelector('[data-cf-history]').addEventListener('change', event => {
     const url = new URL(location.href); url.search = '?report=' + event.target.value; location.href = url.href;
   });
-  if (legacy) {
-    host.insertAdjacentHTML('beforeend', '<p class="cf-notice">历史原型 · 口径待完善 · 不作为正式财务结果</p>'); return;
-  }
+  if (balances) { host.setAttribute('aria-label', '订单收付与往来账龄'); return; }
+  if (prepayments) { host.querySelector('h1').textContent = '四类预款与保证金'; return; }
+  if (funds) { host.querySelector('h1').textContent = '资金收支与安排'; return; }
+  if (invoices) { host.querySelector('h1').textContent = '发票与收付款核对'; return; }
+  if (accounting) { host.querySelector('h1').textContent = '结算与核算核对'; return; }
   const initialType = ['receipt', 'payment'].includes(report) ? report : params.get('type');
   let applied = m.defaults(initialType), result, page = 1, size = 10, sortKey = 'id', direction = 1;
   let extras = new Set();

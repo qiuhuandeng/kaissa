@@ -48,12 +48,12 @@
     { item: "ITEM-1", planned: "2026-05-05", actual: "2026-05-05", amount: 10000, completionType: "回团", completionBasis: "演示回团确认记录", confirmedBy: "计调甲（演示）", confirmedAt: "2026-05-05 18:00", allocationBasis: "本项全部完成·演示分配" },
     { item: "ITEM-2", planned: "2026-05-06", actual: "2026-05-06", amount: 20000, completionType: "回团", completionBasis: "演示外采履约确认记录", confirmedBy: "计调乙（演示）", confirmedAt: "2026-05-06 19:00", allocationBasis: "本项全部完成·演示分配" },
     { item: "ITEM-3", planned: "2026-05-04", actual: "2026-05-04", amount: 2000, completionType: "服务完成", completionBasis: "演示机票服务完成记录", confirmedBy: "票务甲（演示）", confirmedAt: "2026-05-04 16:00", allocationBasis: "机票销售内容·演示分配" },
-    { item: "ITEM-4", planned: "2026-05-09", actual: "", amount: 3000, planBasis: "演示酒店服务安排" },
+    { item: "ITEM-4", planned: "2026-05-09", plannedStart: "2026-05-08", actual: "", amount: 3000, planBasis: "演示酒店服务安排" },
     { item: "ITEM-5", planned: "2026-05-05", actual: "2026-05-05", amount: 5000, completionType: "回团", completionBasis: "演示回团确认记录", confirmedBy: "计调丙（演示）", confirmedAt: "2026-05-05 20:00", allocationBasis: "生效减项后的销售内容·演示分配" },
     { item: "ITEM-7", planned: "2026-05-07", actual: "2026-05-07", amount: 15000, completionType: "项目验收", completionBasis: "演示企业出行验收记录", confirmedBy: "项目负责人甲（演示）", confirmedAt: "2026-05-07 18:00", allocationBasis: "本项全部完成·演示分配" },
-    { item: "ITEM-8", planned: "2027-01-03", actual: "", amount: 9000, planBasis: "演示跨年团期安排" },
+    { item: "ITEM-8", planned: "2027-01-03", plannedStart: "2026-12-29", actual: "", amount: 9000, planBasis: "演示跨年团期安排" },
     { item: "ITEM-10", suffix: "-1", phase: "第一阶段", planned: "2026-05-07", actual: "2026-05-07", amount: 4000, completionType: "阶段验收", completionBasis: "演示会务第一阶段验收记录", confirmedBy: "项目负责人乙（演示）", confirmedAt: "2026-05-07 21:00", allocationBasis: "第一阶段单独分配4,000元·演示" },
-    { item: "ITEM-10", suffix: "-2", phase: "第二阶段", planned: "2026-05-12", actual: "", amount: 6000, planBasis: "演示会务第二阶段安排" }
+    { item: "ITEM-10", suffix: "-2", phase: "第二阶段", planned: "2026-05-12", plannedStart: "2026-05-07", actualStart: "2026-05-07", actual: "", amount: 6000, planBasis: "演示会务第二阶段安排及开始确认" }
   ];
   const completions = completionSamples.map(p => {
     const r = items.find(row => row.id === p.item);
@@ -91,7 +91,8 @@
   function selectCompletions(f, records = completions) {
     return records.filter(r => match(r, f)
       && (f.view === "future" || !f.settlement || r.settlement === f.settlement)
-      && (f.view === "future" ? !r.actual && inRange(r.planned, f.planStart, f.planEnd)
+      && (f.view === "future" ? (!r.actual || r.actual > CUTOFF) && inRange(r.planned, f.planStart, f.planEnd)
+        && (!f.planMonth || String(r.planned).startsWith(f.planMonth)) && (!f.fulfillmentStatus || fulfillmentState(r) === f.fulfillmentStatus)
         : Boolean(r.actual) && r.actual <= CUTOFF && (f.view === "actual" && f.calendar === "management" ? managementMonth(r.actual) === f.month : inRange(r.actual, f.start, f.end))));
   }
   const sum = (rows, key = "amount") => rows.reduce((n, r) => n + (typeof r[key] === "number" ? r[key] : 0), 0);
@@ -161,8 +162,23 @@
   function ownershipMatch(r, f) {
     return orderFilterFields.every(([k]) => !f[k] || (f[k] === "__missing" ? missingFact(r[k]) : r[k] === f[k]));
   }
+  function fulfillmentState(row) {
+    if (row.actual && row.actual <= CUTOFF) return '已完成';
+    if (row.planned && row.planned <= CUTOFF) return '到期未确认';
+    if (row.actualStart && row.actualStart <= CUTOFF) return '履约中';
+    if (row.plannedStart && row.plannedStart > CUTOFF) return '尚未开始';
+    return '开始资料待补';
+  }
+  function pendingMonths(rows) {
+    const groups = new Map();
+    rows.filter(r => !r.actual || r.actual > CUTOFF).forEach(r => {
+      const month = r.planned ? r.planned.slice(0, 7) : '待补充', state = fulfillmentState(r), key = JSON.stringify([r.company, r.productCompany, month, state]);
+      if (!groups.has(key)) groups.set(key, { company: r.company, productCompany: r.productCompany, planMonth: month, fulfillmentStatus: state, members: [] }); groups.get(key).members.push(r);
+    });
+    return [...groups.values()].map(g => ({ ...g, productCompany: names[g.productCompany] || g.productCompany || '待补充', orders: orderCount(g.members), amount: amountCoverage(g.members).value }));
+  }
   function returnFacts(row) {
-    return { ...orderFacts(row), managementMonth: row.actual ? managementMonth(row.actual) : null,
+    return { ...orderFacts(row), planMonth: row.planned ? row.planned.slice(0, 7) : null, fulfillmentStatus: fulfillmentState(row), managementMonth: row.actual ? managementMonth(row.actual) : null,
       incomeStatus: row.incomeStatus || "未提供确认记录", costStatus: row.costStatus || "未提供确认记录"
     };
   }
@@ -265,7 +281,9 @@
       && r.confirmed && r.confirmed <= CUTOFF && r.status === "有效"
       && (!actualBasis || (r.actual && r.actual <= CUTOFF))
       && (!f.orderYear || r.confirmed.startsWith(f.orderYear))
-      && (!f.targetYear || String(actualBasis ? r.actual : r.planned || '').startsWith(f.targetYear)));
+      && (!f.targetYear || String(actualBasis ? r.actual : r.planned || '').startsWith(f.targetYear))
+      && (!f.planMonth || String(actualBasis ? r.actual : r.planned || '').startsWith(f.planMonth))
+      && (!f.fulfillmentStatus || fulfillmentState(r) === f.fulfillmentStatus));
     const buckets = new Map();
     rows.forEach(r => {
       const orderYear = r.confirmed.slice(0, 4), finishYear = (actualBasis ? r.actual : r.planned)?.slice(0, 4) || '待补充';
@@ -295,7 +313,7 @@
   }
   const api = { CUTOFF, VERSION, items, events, completions, query, sum, orderCount, groups, managementMonth, percent, csvCell, summarizeProducts, crossYearRows, productReport,
     orderDateBasis, selectOrders, orderFacts, orderDetailQuery, orderFieldValue, orderIssues, amountCoverage, quantitySummary,
-    selectCompletions, returnFacts, returnDetailQuery, returnFieldValue, productPeriods, productPreset, validProductDate, productShare };
+    selectCompletions, returnFacts, returnDetailQuery, returnFieldValue, productPeriods, productPreset, validProductDate, productShare, fulfillmentState, pendingMonths };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof document === "undefined") return;
   window.CaesarReports = api;
@@ -309,7 +327,7 @@
   const isOrder = page === "orders";
   const isReturn = page === "returns";
   const isDetail = isOrder || isReturn;
-  const titles = { overview: "经营总览", products: "产品经营分析", channels: "渠道经营分析", orders: "订单明细", returns: "回团明细" };
+  const titles = { overview: "经营总览", products: "产品经营分析", channels: "渠道经营分析", orders: "订单明细", returns: "回团与履约明细" };
   const paths = { overview: "performance-reports.html", products: "product-reports.html", channels: "channel-reports.html", orders: "order-report-details.html", returns: "return-report-details.html" };
   const productViews = { organizations: "经营组业绩", structure: "产品结构", channels: "渠道交叉", crossYear: "跨年收客" };
   const iconsBase = new URL("report-icons/", document.currentScript.src).href;
@@ -322,7 +340,7 @@
     unit: "wan", grouping: "company", comparison: "previous", budget: "none", calendar: "actual", month: "2026-05",
     planStart: "2026-05-08", planEnd: "2027-01-03", confirmYear: "", finishYear: "", settlement: "",
     productView: "organizations", productLevel: "productOrg", structureBy: "type", crossBasis: "planned",
-    orderYear: "", targetYear: "", productCompany: "", division: "", ownerState: "",
+    orderYear: "", targetYear: "", productCompany: "", division: "", ownerState: "", planMonth: "", fulfillmentStatus: "",
     ...((isDetail || isOverview || isProduct) ? { dataQuality: "", ...Object.fromEntries(orderFilterFields.map(([k]) => [k, ""])) } : {}),
     ...(isOverview ? { responsibility: "sales" } : {}),
     ...(isOrder ? { dateBasis: "confirmed" } : {}),
@@ -383,7 +401,7 @@
         .map(([title, fields]) => '<fieldset><legend>' + title + '</legend><div class="report-filter-row">' + fields.map(([key, label]) => select(key, label, orderOptions(key), "report-field-wide")).join("") +
           (title === "分类与资料" ? select("dataQuality", "资料情况", [["", "全部"], ["ownership", "经营归属待补充"], ["classification", "分类待确认"]], "report-field-wide") : "") + '</div></fieldset>').join("") + '</div>' : '') + '</details>' +
     (page === "returns" ? '<div class="report-filter-row report-more" data-return-calendar>' + select("calendar", "日期口径", [["actual", "实际完成日期"], ["management", "管理月·演示规则"]]) +
-      input("month", "财务回团管理月", "month") + '</div><div class="report-filter-row report-more" data-plan-dates hidden>' + dateRange("planStart", "planEnd", "计划完成日期") + '</div>' : "") +
+      input("month", "财务回团管理月", "month") + '</div><div class="report-filter-row report-more" data-plan-dates hidden>' + dateRange("planStart", "planEnd", "计划完成日期") + input('planMonth', '计划完成月份', 'month') + select('fulfillmentStatus', '未完成情况', [['', '全部'], ...['尚未开始', '履约中', '到期未确认', '开始资料待补'].map(v => [v, v])]) + '</div>' : "") +
     (isOverview ? '<div class="report-filter-row report-more">' + select("responsibility", "分析责任", [["sales", "销售责任"], ["product", "产品责任"]]) +
       select("grouping", "责任分组", Object.entries(overviewModel.levels).filter(([, v]) => v[1] === 'sales').map(([k, v]) => [k, v[0]])) +
       select("comparison", "比较期间", [["previous", "上一等长期间"], ["year", "上年同期"]]) +
@@ -393,9 +411,9 @@
       '<span data-product-structure hidden>' + select("structureBy", "结构分类", [["type", "产品类型"], ["destination", "主归属目的地"], ["geographyZone", "地理目的地分区"], ["managementZone", "管理目的地分区"], ["management", "经营分类"], ["travel", "旅游范围"], ["business", "业务线"]]) + '</span>' +
       '<span data-product-cross hidden>' + select("crossBasis", "完成年份口径", [["planned", "计划完成年份"], ["actual", "实际完成年份"]]) + '</span>' +
       '<span data-product-cross hidden>' + select("orderYear", "订单确认年份", [["", "全部年份"], ["2025", "2025年"], ["2026", "2026年"]]) + '</span>' +
-      '<span data-product-cross hidden>' + select("targetYear", "目标完成年份", [["", "全部年份"], ["2026", "2026年"], ["2027", "2027年"]]) + '</span></div>' : "") +
+      '<span data-product-cross hidden>' + select("targetYear", "目标完成年份", [["", "全部年份"], ["2026", "2026年"], ["2027", "2027年"]]) + '</span><span data-product-cross hidden>' + input('planMonth', '完成月份（按所选口径）', 'month') + '</span><span data-product-cross hidden>' + select('fulfillmentStatus', '截至日履约情况', [['', '全部'], ...['已完成', '尚未开始', '履约中', '到期未确认', '开始资料待补'].map(v => [v, v])]) + '</span></div>' : "") +
     '<div class="report-query-actions"><button type="submit" class="report-button">查询</button><button type="button" class="report-button" data-reset>重置</button><span class="report-query-status" role="status" data-query-status>已查询</span></div><div class="report-error" role="alert" data-error hidden></div></form>' +
-    '<div class="report-meta" data-meta></div><div data-results></div><section class="report-note" aria-label="数据口径说明"><h2>数据口径说明</h2><div data-notes></div></section>';
+    '<div class="report-meta" data-meta></div><div data-results></div><details class="report-note" aria-label="数据口径说明"><summary>数据口径说明</summary><div data-notes></div></details>';
   const form = root.querySelector("form");
   let financialActive = false, financialView;
   let financialHost;
@@ -510,6 +528,7 @@
   });
   form.addEventListener("input", () => dirty());
   function validate(f) {
+    if (f.planMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(f.planMonth)) return '请填写有效完成月份';
     if (isOverview) return overviewModel.validate(f);
     if (isProduct && f.productView === "crossYear") return "";
     if (isProduct && (![f.start, f.end].every(validProductDate) || f.start < '2000-01-01')) return '请填写2000年以后的有效日期。';
@@ -574,7 +593,7 @@
     ];
     return [
       column("order", "订单号"), column("product", "销售内容／产品", "product"), column("service", "团号／服务单号"), column("planned", "计划完成日"),
-      ...(view === "future" ? [] : [column("actual", "实际完成日"), column("managementMonth", "管理月·演示")]),
+      ...(view === "future" ? [column('planMonth', '计划完成月份'), column('fulfillmentStatus', '未完成情况')] : [column("actual", "实际完成日"), column("managementMonth", "管理月·演示")]),
       ...common, column("quantity", view === "future" ? "未完成数量" : "完成数量", "quantity"),
       column("amount", view === "future" ? "未完成安排额" : "分配成交额", "money"),
       ...(view === "future" ? [] : [column("settlement", "结算状态")]), column("confirmed", "订单确认日期", "", true), ...extras
@@ -835,7 +854,7 @@
   }
   function productSources(result) {
     const columns = [column('order', '订单号'), column('sourceOrder', '来源订单号'), column('record', '销售内容／完成记录号'), column('product', '销售内容', 'product'),
-      column('confirmed', '订单确认日'), column('planned', '计划完成日'), column('actual', '实际完成日'), column('amount', '分配成交额', 'money'),
+      column('confirmed', '订单确认日'), column('planned', '计划完成日'), column('actual', '实际完成日'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '截至日履约情况'), column('amount', '分配成交额', 'money'),
       column('company', '销售公司'), column('salesDepartment', '销售部门'), column('productCompany', '产品经营公司'), column('division', '产品事业部'),
       column('productOrg', '产品经营组'), column('productLeader', '产品部门领导'), column('owner', '产品负责人'), column('supply', '供应关系'),
       column('geographyZone', '地理目的地分区'), column('managementZone', '管理目的地分区'), column('management', '经营分类'), column('channel', '主成交渠道'), column('organizationVersion', '发生时组织版本')];
@@ -886,6 +905,7 @@
       '</span></div>' + menu + tableHTML(rows.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), columns) +
       '<div class="report-total"><span data-total>' + productTotal(result) + '</span>' + pager + '</div></section>' +
       (applied.productView === 'organizations' ? '<section class="report-section"><h2>比较期间与任务依据</h2>' + tableHTML(productPeriodRows(result), productPeriodColumns(), 'periods', false) + '</section>' : '') +
+      (applied.productView === 'crossYear' && applied.crossBasis !== 'actual' ? '<section class="report-section"><h2>未完成月份与状态</h2>' + tableHTML(pendingMonths(result.facts), [column('company', '销售公司'), column('productCompany', '产品公司'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '未完成情况'), column('amount', '未完成安排额', 'money'), column('orders', '订单数', 'number')], 'pending-months', false) + '</section>' : '') +
       '<section class="report-section"><div class="report-section-head"><h2>成交构成</h2><span class="report-muted">金额单位：' + u + ' · 全查询范围</span></div>' +
       '<div class="report-chart-wrap"><canvas class="report-chart" role="img" aria-label="当前查询成交额构成，数值见上方报表"></canvas></div></section>' +
       '<section class="report-section"><details class="report-product-sources"><summary>本次查询来源明细（' + result.facts.length + '条）</summary>' + tableHTML(productSources(result).rows, productSources(result).columns, 'sources', false) + '</details></section>';
@@ -1064,7 +1084,7 @@
       sourceOrder: "来源订单号", status: "订单状态", type: "产品类型", supply: "供应关系", travel: "旅游范围",
       business: "业务线", destination: "主归属目的地", source: "数据来源", unit: "金额单位", grouping: "责任分组",
       comparison: "比较期间", responsibility: "分析责任", budget: "任务版本", calendar: "日期口径", month: "管理月（仅管理月查询适用）",
-      planStart: "计划完成开始日（仅未来安排适用）", planEnd: "计划完成结束日（仅未来安排适用）",
+      planStart: "计划完成开始日（仅未来安排适用）", planEnd: "计划完成结束日（仅未来安排适用）", planMonth: '完成月份（按所选口径）', fulfillmentStatus: '截至日履约情况',
       confirmYear: "订单确认年份", finishYear: "完成／计划年份", settlement: "结算状态",
       productView: "产品分析视图", productLevel: "责任层级", structureBy: "结构分类", crossBasis: "完成年份口径",
       orderYear: "订单确认年份", targetYear: "目标完成年份", productCompany: "产品经营公司", division: "产品事业部", ownerState: "负责人资料",
@@ -1080,11 +1100,11 @@
           if (["start", "end", "period", "view"].includes(k) && applied.productView === "crossYear") return false;
           if (k === "productLevel") return applied.productView === "organizations";
           if (k === "structureBy") return ["structure", "channels"].includes(applied.productView);
-          if (["crossBasis", "orderYear", "targetYear"].includes(k)) return applied.productView === "crossYear";
+          if (["crossBasis", "orderYear", "targetYear", "planMonth", "fulfillmentStatus"].includes(k)) return applied.productView === "crossYear";
         }
         if (k === "status") return applied.view === "orders";
         if (k === "dateBasis") return isOrder && applied.view === "orders";
-        if (k === "planStart" || k === "planEnd") return applied.view === "future";
+        if (["planStart", "planEnd", "planMonth", "fulfillmentStatus"].includes(k)) return applied.view === "future";
         if (k === "start" || k === "end" || k === "period") return applied.view !== "future" && !(isReturn && applied.view === "actual" && applied.calendar === "management");
         if (k === "calendar") return applied.view === "actual";
         if (k === "month") return applied.view === "actual" && applied.calendar === "management";
@@ -1104,6 +1124,7 @@
       const result = productReport(applied), sources = productSources(result);
       const section = (name, rows, cols) => extra.push([], [name], cols.map(c => c.label + (c.kind === 'money' ? '（' + unitLabel() + '）' : '')), ...rows.map(r => cols.map(c => cellValue(r, c, true))));
       if (applied.productView === 'organizations') section('比较期间与任务依据', productPeriodRows(result), productPeriodColumns());
+      if (applied.productView === 'crossYear' && applied.crossBasis !== 'actual') section('未完成月份与状态', pendingMonths(result.facts), [column('company', '销售公司'), column('productCompany', '产品公司'), column('planMonth', '计划完成月份'), column('fulfillmentStatus', '未完成情况'), column('amount', '未完成安排额', 'money'), column('orders', '订单数', 'number')]);
       section('本次查询来源明细', sources.rows, sources.columns);
       if (applied.productView === 'channels') section('同范围全部渠道来源（仅解除主渠道）', productSources({ facts: result.allRows }).rows, sources.columns);
     }

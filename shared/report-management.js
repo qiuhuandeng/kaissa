@@ -100,7 +100,7 @@
     const money = value => value === null ? "待确认" : (value / (applied.unit === 'wan' ? 10000 : 1)).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const unit = () => applied.unit === 'wan' ? '万元' : '元';
     function shell() {
-      root.innerHTML = '<header class="report-head"><h1>报表管理</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') +
+      root.innerHTML = '<header class="report-head"><h1>口径与数据核对</h1><div class="report-actions">' + button(icon('download') + '导出', 'data-export title="导出全查询结果"') +
         (tab === 'checks' ? button('重新检查', 'data-recheck') : button('新建', 'data-new', true)) + '</div></header>' +
         '<div class="rm-tabs report-tabbar" role="tablist" aria-label="报表管理视图">' + Object.entries(labels).map(([key, name]) => '<button type="button" class="report-tab" role="tab" aria-selected="' + (tab === key) + '" data-tab="' + key + '">' + name + '</button>').join('') + '</div>' +
         '<div data-list><form class="report-filters" data-filter><div class="report-filter-row">' + (tab === 'checks'
@@ -110,7 +110,7 @@
           : field('search', '名称／对应结果', 'text', ruleFilter.search) + select('state', '主状态', [['', '全部'], ...['草稿', '待确认', '演示参照', '已作废'].map(v => [v, v])], ruleFilter.state) +
             select('kind', '对应类别', [['', '全部'], ...Array.from(new Set(model.sources.filter(s => s.section === tab).map(s => s.kind))).map(v => [v, v])], ruleFilter.kind) + field('date', '适用日期', 'date', ruleFilter.date)) +
         '<div class="report-query-actions"><button class="report-button" type="submit">查询</button>' + button('重置', 'data-reset') + '</div></div><p class="report-query-status" data-status role="status">已查询 · 演示资料</p><p class="report-error" data-error role="alert" hidden></p></form><div data-result></div></div><section class="rm-editor" data-editor hidden></section>' +
-        '<section class="report-note"><h2>数据口径说明</h2><p>演示资料，非正式批准规则；维护记录仅保留在本页本次会话，刷新后恢复。提交仅演示待确认，不发起正式审批，不改写源单或其他报表。</p><p>核对范围为2026-05-07日终的既有订单销售内容及实际完成样例，按所选日期核对。多项缺口可能涉及同一条业务，涉及成交额按业务去重，不将缺口金额相加；不代表缺失收入或成本金额。</p><p>分类和组织对应需由责任人员确认生效期间；历史发生时归属不随当前对应覆盖。核算主体是独立记账单位，其部门资料未提供，不从销售公司推填。正式来源更新、发布、权限和订阅尚未接入。</p></section>';
+        '<details class="report-note"><summary>数据口径说明</summary><p>演示资料，非正式批准规则；维护记录仅保留在本页本次会话，刷新后恢复。提交仅演示待确认，不发起正式审批，不改写源单或其他报表。</p><p>核对范围为2026-05-07日终的既有订单销售内容及实际完成样例，按所选日期核对。多项缺口可能涉及同一条业务，涉及成交额按业务去重，不将缺口金额相加；不代表缺失收入或成本金额。</p><p>分类和组织对应需由责任人员确认生效期间；历史发生时归属不随当前对应覆盖。核算主体是独立记账单位，其部门资料未提供，不从销售公司推填。正式来源更新、发布、权限和订阅尚未接入。</p></details>';
       render();
     }
     function table(rows, cols, actions = false, sortable = true) {

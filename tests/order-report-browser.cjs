@@ -160,7 +160,7 @@ async function main() {
     results.push("invalid date retains results; no business drilldowns; mobile all-columns stays inside scroll container");
 
     await page.setViewportSize({ width: 1440, height: 1000 });
-    for (const [file, heading] of [["performance-reports.html", "经营总览"], ["product-reports.html", "产品经营分析"], ["return-report-details.html", "回团明细"]]) {
+    for (const [file, heading] of [["performance-reports.html", "经营总览"], ["product-reports.html", "产品经营分析"], ["return-report-details.html", "回团与履约明细"]]) {
       await page.goto(new URL(file, page.url()).href);
       await root.locator('[data-total]').first().waitFor();
       assert.equal(await root.locator('h1').innerText(), heading);

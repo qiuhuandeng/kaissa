@@ -99,8 +99,8 @@ async function main() {
         assert.equal(await host.locator('[data-cf-type=' + type + ']').getAttribute('aria-selected'), 'true');
       }
       await page.goto(url('finance-reports.html', '?report=profit'));
-      assert.match(await host.innerText(), /历史原型/); assert.equal(await page.locator('#report-profit').isVisible(), true);
-      await host.locator('[data-cf-history]').selectOption('cashflow'); await host.locator('[data-cf-main]').waitFor();
+      await page.waitForURL('**/monthly-profit-reports.html'); assert.equal(await page.locator('[data-monthly-profit]').isVisible(), true);
+      await page.goto(url()); await host.locator('[data-cf-main]').waitFor();
       await page.goto(url('finance-account-settings.html'));
       await page.evaluate(() => window.caesarNavigateTo('finance/finance-reports.html?report=cashflow'));
       await host.locator('[data-cf-main]').waitFor(); await scenario('CF01');
@@ -111,7 +111,7 @@ async function main() {
       await host.locator('[data-cf-main]').waitFor(); await scenario('CF01');
       assert.equal(await main.locator('tbody tr').count(), 1);
       assert.equal(await host.locator('a,[data-action],dialog').count(), 0);
-      results.push(protocol + ': old receipt/payment aliases, historical profit, account settings navigation and repeat initialization');
+      results.push(protocol + ': receipt/payment aliases, profit replaced by monthly report, account settings navigation and repeat initialization');
       await page.close();
     }
     assert.deepEqual(errors, []);

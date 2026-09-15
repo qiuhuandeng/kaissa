@@ -8,10 +8,10 @@ const { chromium } = require('playwright');
 const repo = path.resolve(__dirname, '..');
 const output = process.env.REPORT_QA_DIR || '/private/tmp/caesar-report-local-preview-qa';
 const files = ['performance-reports', 'product-reports', 'channel-reports', 'settlement-reports',
-  'order-report-details', 'return-report-details', 'budget-targets', 'supplier-reports', 'report-management'];
+  'order-report-details', 'return-report-details', 'budget-targets', 'supplier-reports', 'monthly-profit-reports', 'report-management'];
 const selectors = ['[data-report-page="overview"]', '[data-report-page="products"]', '[data-channel-report]',
   '[data-settlement-report]', '[data-report-page="orders"]', '[data-report-page="returns"]',
-  '[data-budget-targets]', '[data-supplier-report]', '[data-report-management]'];
+  '[data-budget-targets]', '[data-supplier-report]', '[data-monthly-profit]', '[data-report-management]'];
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
 async function main() {
@@ -44,7 +44,8 @@ async function main() {
     const ready = async page => {
       const file = path.basename(new URL(page.url()).pathname, '.html');
       const root = page.locator('main.finance-report-page' + selectors[files.indexOf(file)]);
-      await root.locator('[data-total]').waitFor();
+      if(file==='monthly-profit-reports') { await root.locator('[data-fr-count]').waitFor(); await root.locator('[name=dataset]').selectOption('demo'); await root.locator('button[type=submit]').click(); }
+      else await root.locator('[data-total]').waitFor();
       assert.equal(await root.locator('h1').count(), 1);
       assert.ok(await root.locator('tbody tr').count() > 0);
       assert.doesNotMatch(await root.innerText(), /加载失败|资料未加载/);
@@ -66,11 +67,12 @@ async function main() {
         const page = await newPage();
         await page.goto(url(file, protocol));
         const root = await ready(page);
-        const before = await root.locator('[data-total]').innerText();
+        const total=root.locator(file==='monthly-profit-reports'?'[data-fr-count]':'[data-total]');
+        const before = await total.innerText();
         await root.locator('form button[type="submit"]').first().click();
-        assert.equal(await root.locator('[data-total]').innerText(), before);
+        assert.equal(await total.innerText(), before);
         const pending = page.waitForEvent('download');
-        await root.locator('[data-export]').click();
+        await root.locator(file==='monthly-profit-reports'?'[data-fr-export]':'[data-export]').click();
         const download = await pending;
         const target = path.join(output, protocol + '-' + file + '.csv');
         await download.saveAs(target);
@@ -119,7 +121,7 @@ async function main() {
       results.push('http: legacy entry to ' + file + ' with delayed dependencies');
     }
 
-    for (const file of ['channel-reports', 'settlement-reports', 'budget-targets', 'report-management']) {
+    for (const file of files) {
       const page = await newPage();
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(url(file, 'file'));

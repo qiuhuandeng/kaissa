@@ -126,7 +126,7 @@
     const select = (name, label, options, value) => '<label class="report-field"><span>' + label + '</span><select name="' + name + '">' + options.map(([v, t]) => '<option value="' + esc(v) + '"' + (value === v ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></label>';
     function shell() {
       const all = [...m.common(), ...m.scenarios];
-      root.innerHTML = '<header class="report-head"><h1>团期毛利与结算分析</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及确认依据"') + '</header>' +
+      root.innerHTML = '<header class="report-head"><h1>业务毛利与结算分析</h1>' + button(icon('download') + '导出', 'data-export title="导出全查询结果及确认依据"') + '</header>' +
         '<div class="report-tabbar sr-tabs" role="tablist" aria-label="结算分析视图">' + Object.entries(m.views).map(([k, t]) => '<button class="report-tab" role="tab" data-view="' + k + '" aria-selected="' + (k === view) + '">' + t + '</button>').join('') + '</div>' +
         '<form class="report-filters"><div class="report-filter-row">' + select('dataset', '资料范围', Object.entries(m.datasets), applied.dataset) + select('basis', '日期依据', [['actual', '实际完成日'], ['settlement', '原结算确认日']], applied.basis) +
         ['start', 'end'].map(k => '<label class="report-field"><span>' + (k === 'start' ? '开始日期' : '结束日期') + '</span><input name="' + k + '" type="date" value="' + applied[k] + '" required></label>').join('') +
@@ -135,7 +135,7 @@
         select('quality', '资料／毛利', [['', '全部'], ['missing', '毛利待确认'], ['cost', '成本未齐'], ['negative', '负毛利']], applied.quality) + '<label class="report-field report-field-wide"><span>团号／名称／结算单号</span><input type="search" name="keyword" value="' + esc(applied.keyword) + '"></label></div></details>' +
         '<div class="report-query-actions"><button type="submit" class="report-button">查询</button>' + button('重置', 'data-reset title="重置筛选" aria-label="重置筛选"') + '</div><p class="report-query-status" data-status role="status">已查询</p><p data-error role="alert" class="report-error" hidden></p></form>' +
         '<div class="report-meta" data-meta></div><div class="report-metrics" data-metrics></div><section class="report-section" data-result></section>' +
-        '<section class="report-note"><h2>数据口径</h2><p>回团共同明细与独立结算算例分开统计。共同明细尚无收入、成本确认记录；算例不计入订单或回团业绩。资料截止2026-05-07，演示工作版V1，未接正式更新及权限。</p><p>业务毛利＝完整确认的业务结算收入－同币种同口径确认成本，不等于会计利润。付款、预付、收票不代替成本，退款支付不再次扣收入。部分确认金额可查，但不据此计算毛利。</p><p>日期条件选择原业务范围，金额含资料截止日前已生效调整，并非历史时点余额。调整视图按生效日期查询已生效记录，待确认按调整日期查询；原业务期间保留，会计期间未确认不推填。</p><p>不含税结果、收入确认政策、正式同期和批准任务尚未提供；未提交准单含义、返点处理及渠道还原毛利规则待财务确认。资料齐全范围毛利不是全范围毛利，跨币种或不同金额口径不合计。</p></section>';
+        '<details class="report-note"><summary>数据口径</summary><p>回团共同明细与独立结算算例分开统计。共同明细尚无收入、成本确认记录；算例不计入订单或回团业绩。资料截止2026-05-07，演示工作版V1，未接正式更新及权限。</p><p>业务毛利＝完整确认的业务结算收入－同币种同口径确认成本，不等于会计利润。付款、预付、收票不代替成本，退款支付不再次扣收入。部分确认金额可查，但不据此计算毛利。</p><p>日期条件选择原业务范围，金额含资料截止日前已生效调整，并非历史时点余额。调整视图按生效日期查询已生效记录，待确认按调整日期查询；原业务期间保留，会计期间未确认不推填。</p><p>不含税结果、收入确认政策、正式同期和批准任务尚未提供；未提交准单含义、返点处理及渠道还原毛利规则待财务确认。资料齐全范围毛利不是全范围毛利，跨币种或不同金额口径不合计。</p></details>';
       setBasis(); render();
     }
     function setBasis() {
@@ -192,7 +192,7 @@
         const isAdjustment = applied.view === 'adjustments';
         const totalKeys = isAdjustment ? ['incomeChange', 'costChange', 'profitChange'] : ['profit', 'knownProfit', 'knownRevenue', 'knownCost', 'knownRate'];
         const lines = [
-          ['团期毛利与结算分析', m.views[applied.view], m.datasets[applied.dataset], '演示资料，非正式财务结果'],
+          ['业务毛利与结算分析', m.views[applied.view], m.datasets[applied.dataset], '演示资料，非正式财务结果'],
           ['资料截止', m.cutoff, 'V1'], ['日期依据', isAdjustment ? '已生效按生效日；待确认按调整日' : applied.basis === 'actual' ? '实际完成日' : '原结算确认日'],
           ['开始日期', applied.start], ['结束日期', applied.end], ['金额单位', applied.unit === 'wan' ? '万元' : '元'],
           ...m.filterKeys.map(k => [m.labels[k], applied[k] || '全部']), ['搜索条件', applied.keyword],
