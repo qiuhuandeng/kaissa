@@ -32,7 +32,7 @@
   const container = q('#finance-cashflow') || q(panels[0]);
   if (!container) throw new Error('报表主入口未加载：' + title);
   const shell = document.createElement('section'); shell.className = 'report-navigation-shell';
-  shell.innerHTML = '<h1>' + title + '</h1><nav class="report-section-switch" role="tablist" aria-label="' + title + '业务视图">' + entries.map(e => '<button type="button" role="tab" data-report-tab="' + e.key + '" id="report-tab-' + e.key + '">' + e.label + '</button>').join('') + '</nav>';
+  shell.innerHTML = '<nav class="report-section-switch" role="tablist" aria-label="' + title + '业务视图">' + entries.map(e => '<button type="button" role="tab" data-report-tab="' + e.key + '" id="report-tab-' + e.key + '">' + e.label + '</button>').join('') + '</nav>';
   container.before(shell); container.classList.add('report-navigation-content');
   panels.forEach(s => q(s)?.classList.add('report-navigation-content'));
   document.title = title + ' - 凯撒旅游';
@@ -60,7 +60,8 @@
     panel.setAttribute('role','tabpanel'); panel.setAttribute('aria-labelledby','report-tab-' + next.key);
     shell.querySelectorAll('[data-report-tab]').forEach(b => { const on = b.dataset.reportTab === next.key; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; if (on) b.setAttribute('aria-controls',panel.id); });
     if (file === 'report-management') {
-      q('[data-gov-update]').parentElement.hidden = next.key !== 'versions';
+      q('[data-gov-update]').parentElement.hidden = false;
+      q('[data-gov-update]').closest('[data-report-governance]').querySelectorAll('[data-gov-update], [data-gov-fail], [data-gov-publish], [data-gov-correct]').forEach(button => { button.hidden = next.key !== 'versions'; });
       q('[data-gov-subscribe]').closest('details').hidden = next.key !== 'subscriptions';
     }
     if (!initial) {
@@ -68,6 +69,7 @@
       history.replaceState(history.state, '', address.href);
     }
     switching = false; persist();
+    window.dispatchEvent(new CustomEvent('caesar:report-view-changed', { detail: { file, key: next.key } }));
   }
   shell.addEventListener('click', event => { const b = event.target.closest('[data-report-tab]'); if (b) activate(b.dataset.reportTab); });
   shell.addEventListener('keydown', event => {

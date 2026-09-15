@@ -42,9 +42,9 @@
           <select id="predepositStatus">
             <option>全部状态</option>
             <option>正常</option>
-            <option>低余额</option>
-            <option>冻结中</option>
-            <option>停用</option>
+            <option>待开户</option>
+            <option>已冻结</option>
+            <option>已关闭</option>
           </select>
         </div>
 
@@ -52,6 +52,7 @@
           <label class="sr-only" for="predepositProcess">待处理项</label>
           <select id="predepositProcess">
             <option>全部事项</option>
+            <option>开户待审核</option><option>开户已退回</option>
             <option>充值待确认</option>
             <option>转留存待确认</option>
             <option>扣款待确认</option>
@@ -168,7 +169,7 @@
 
         <nav class="tab-bar drawer-tab-bar" aria-label="预存账户详情标签">
           <button class="tab-item active" type="button" data-detail-tab="overview">账户总览</button>
-          <button class="tab-item" type="button" data-detail-tab="pending">待处理项</button>
+          <button class="tab-item" type="button" data-detail-tab="pending">申请记录</button>
           <button class="tab-item" type="button" data-detail-tab="deduction">订单扣款</button>
           <button class="tab-item" type="button" data-detail-tab="ledger">流水明细</button>
           <button class="tab-item" type="button" data-detail-tab="adjust">冻结调整</button>
@@ -182,7 +183,7 @@
         </section>
 
         <section class="drawer-section drawer-tab-panel" data-detail-panel="pending" hidden>
-          <div class="drawer-section-head"><h3 class="drawer-section-title">待处理项</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">申请记录</h3></div>
           <section class="table-wrap drawer-table-wrap drawer-table-compact drawer-table-cols-6">
             <table>
               <thead>
@@ -447,6 +448,190 @@
         }
       };
 
+      var operationSequence = 100;
+      var bankFlows = [
+        { no: 'CMBC20260624031', date: '2026-06-24', company: '北京凯撒', currency: 'CNY', payer: '北京王府井旗舰店', bank: '民生银行 · 尾号0068', amount: 35000, remaining: 25000 },
+        { no: 'CMBC20260625032', date: '2026-06-25', company: '北京凯撒', currency: 'CNY', payer: '北京王府井旗舰店', bank: '民生银行 · 尾号0068', amount: 30000, remaining: 30000 },
+        { no: 'CMBC20260625033', date: '2026-06-25', company: '北京凯撒', currency: 'CNY', payer: '北京朝阳门店', bank: '民生银行 · 尾号0068', amount: 5000, remaining: 5000 },
+        { no: 'CMB20260625034', date: '2026-06-25', company: '上海凯撒', currency: 'CNY', payer: '上海徐汇门市', bank: '招商银行 · 尾号8821', amount: 8000, remaining: 8000 }
+      ];
+      Object.keys(accounts).forEach(function (id) {
+        var a = accounts[id];
+        a.currency = 'CNY'; a.purpose = a.type === '门店预存' ? '门店团费预存' : '客户留存款';
+        a.rechargeHistory = []; a.controls = []; a.limits = []; a.dispute = false;
+        if (a.status === '低余额') a.status = '正常';
+        if (a.status === '冻结中') { a.status = '已冻结'; a.limits = ['recharge', 'deduction']; a.limitReason = '争议款项待财务核查'; a.dispute = true; }
+        // 未确认的申请不构成账户入账流水。
+        a.ledger = a.ledger.filter(function (entry) { return !/待确认|待转留存/.test(entry.type); });
+        a.pending.forEach(function (item) {
+          if (item.actionType === 'recharge') { item.requested = amountNumber(item.amount); item.confirmed = 0; item.allocations = []; item.history = []; }
+        });
+      });
+      accounts['acct-store-sh-xh'].pending.unshift({ no: 'CZSQ20260625035', type: '门店充值', source: '充值申请 CZSQ20260625035', amount: '¥10,000', requested: 10000, confirmed: 2000, status: '部分确认', actionType: 'recharge', actionText: '确认充值', allocations: [{ no: 'CMB20260624035', amount: 2000, date: '2026-06-24' }], history: ['2026-06-24 已确认 ¥2,000，剩余 ¥8,000'] });
+      var demoRecharge = accounts['acct-store-bj-wfj'];
+      demoRecharge.rechargeHistory = [
+        { no: 'CZSQ20260618001', type: '门店充值', source: '充值申请 CZSQ20260618001', amount: '¥10,000', requested: 10000, confirmed: 10000, status: '已入账', actionType: 'recharge', allocations: [{ no: 'CMBC20260618001', amount: 10000, date: '2026-06-18' }], history: [] },
+        { no: 'CZSQ20260619002', type: '门店充值', source: '充值申请 CZSQ20260619002', amount: '¥5,000', requested: 5000, confirmed: 0, status: '已退回', actionType: 'recharge', allocations: [], history: ['已退回：付款方资料不完整'] },
+        { no: 'CZSQ20260620003', type: '门店充值', source: '充值申请 CZSQ20260620003', amount: '¥6,000', requested: 6000, confirmed: 0, status: '已撤回', actionType: 'recharge', allocations: [], history: ['门店撤回申请'] }
+      ];
+      [
+        ['acct-opening-gulou', '福州鼓楼门店', '待开户', '待审核', true],
+        ['acct-opening-haicang', '厦门海沧门店', '待开户', '待审核', false],
+        ['acct-opening-taijiang', '福州台江门店', '待开户', '已退回', false],
+        ['acct-store-donghai', '泉州东海门店', '已关闭', '', true],
+        ['acct-store-jimei', '厦门集美门店', '正常', '', true]
+      ].forEach(function (entry, i) {
+        var opening = entry[2] === '待开户';
+        var a = accounts[entry[0]] = { accountNo: opening ? '' : 'MD-FJ-' + (i + 1) + '-2026-0001', objectName: entry[1], type: '门店预存', store: entry[1], company: '福建凯撒', currency: 'CNY', purpose: '门店团费预存', owner: '门店财务：沈悦', available: '¥0', frozen: '¥0', threshold: '¥0', status: entry[2], pending: [], deductions: [], ledger: [], adjustments: [], rechargeHistory: [], controls: [], limits: [], dispute: false, lastChange: opening ? '开户申请 / ' + entry[3] : entry[2] === '已关闭' ? '账户关闭 / 2026-09-14' : '账户开通 / 2026-09-14' };
+        if (opening) a.opening = { no: 'KHSQ20260915' + String(i + 1).padStart(3, '0'), status: entry[3], ready: entry[4], approval: entry[4] ? '财务配置已核准 / APR-20260914-008' : '开户用途及联系人资料待补充', contact: '沈悦 / 13800139911', reason: entry[3] === '已退回' ? '补充开户用途及联系人资料' : '' };
+        var row = document.createElement('tr');
+        Object.assign(row.dataset, { accountId: entry[0], accountNo: a.accountNo, company: a.company, store: a.store, type: a.type });
+        row.innerHTML = '<td></td><td>门店预存</td><td>福建凯撒</td><td></td><td></td><td></td><td></td><td></td><td></td>';
+        document.getElementById('predepositRows').appendChild(row);
+      });
+
+      function allowedAction(account, action) {
+        if (action === 'rechargeView') return true;
+        if (action === 'opening') return account.status === '待开户' && account.opening.status === '待审核';
+        if (account.status === '待开户' || account.status === '已关闭') return false;
+        if (action === 'freezeAccount') return account.status === '正常';
+        if (action === 'restoreAccount') return account.status === '已冻结';
+        return account.limits.indexOf(action) < 0;
+      }
+
+      function limitText(account) {
+        var names = { recharge: '充值', refund: '退款', deduction: '扣款' };
+        return account.limits.length ? '限制' + account.limits.map(function (key) { return names[key]; }).join('、') + '；' + account.limitReason : '无限制';
+      }
+
+      function readField(id, label, value) {
+        return '<div class="form-group"><label class="form-label" for="' + id + '">' + label + '</label><input id="' + id + '" class="form-control" value="' + escapeHtml(value) + '" readonly></div>';
+      }
+
+      function accountControlForm(action) {
+        var a = activeAccount;
+        var common = '<div class="form-row">' + readField('controlCompany', '财务主体', a.company) + readField('controlPurpose', '币种／用途', a.currency + ' / ' + a.purpose) + '</div>';
+        if (action === 'opening') {
+          return common + '<div class="form-row">' + readField('openingNumber', '申请号', a.opening.no) + readField('openingContact', '申请联系人', a.opening.contact) + '</div>' + readField('openingBasis', '核准资料', a.opening.approval) + '<div class="form-row"><div class="form-group"><label class="form-label" for="workResult">处理结论</label><select id="workResult" class="form-control"><option>确认开通</option><option>退回补充</option></select></div>' + readField('openingAccount', '正式账户号', '开通成功时生成') + '</div><div class="form-group hidden" data-work-field="return"><label class="form-label" for="workReturnReason">退回原因 *</label><input id="workReturnReason" class="form-control"></div>';
+        }
+        var fields = '';
+        if (action === 'freezeAccount') {
+          fields = '<div class="form-group"><label class="form-label">限制操作 *</label><div class="checkbox-group">' + [['recharge', '充值'], ['refund', '退款'], ['deduction', '扣款']].map(function (item) { return '<label><input type="checkbox" name="accountLimit" value="' + item[0] + '" checked> ' + item[1] + '</label>'; }).join(' ') + '</div></div>';
+        } else if (action === 'restoreAccount') {
+          fields = readField('controlLimits', '当前限制', limitText(a)) + '<div class="form-group"><label><input id="controlResolved" type="checkbox"> 已核实冻结原因消除，解除本次整户限制</label></div>';
+        } else {
+          fields = '<div class="form-row">' + readField('closeAvailable', '可用余额', a.available) + readField('closeFrozen', '冻结金额', a.frozen) + '</div><div class="form-row">' + readField('closePending', '未完申请', a.pending.length + '笔') + readField('closeDispute', '未结争议', a.dispute ? '有' : '无') + '</div>';
+        }
+        return common + fields + '<div class="form-group"><label class="form-label" for="controlReason">' + (action === 'restoreAccount' ? '解除依据' : '处理原因') + ' *</label><textarea id="controlReason" class="form-control" rows="3"></textarea></div>';
+      }
+
+      function confirmAccountControl(action) {
+        var a = activeAccount;
+        if (!allowedAction(a, action)) return;
+        var result = document.getElementById('workResult');
+        if (action === 'opening') {
+          if (result.value === '退回补充') {
+            var returned = document.getElementById('workReturnReason').value.trim();
+            if (!returned) { notify('请填写退回原因'); return; }
+            a.opening.status = '已退回'; a.opening.reason = returned;
+            a.controls.unshift(todayText() + ' 退回开户：' + returned);
+            a.lastChange = a.opening.no + ' / 开户已退回';
+          } else {
+            if (!a.opening.ready) { notify('开户用途及联系人资料未核准，请退回补充'); return; }
+            var duplicate = Object.keys(accounts).some(function (id) { var other = accounts[id]; return other !== a && other.accountNo && other.status !== '已关闭' && other.store === a.store && other.company === a.company && other.currency === a.currency && other.purpose === a.purpose; });
+            if (duplicate) { notify('该门店已有同公司、币种和用途的有效账户'); return; }
+            a.accountNo = 'MD-FJ-20260915-' + (++operationSequence);
+            a.status = '正常'; a.opening.status = '已开通';
+            a.lastChange = a.accountNo + ' / 账户已开通';
+            a.controls.unshift(todayText() + ' 财务开通；沿用 ' + a.opening.approval);
+          }
+        } else {
+          var reason = document.getElementById('controlReason').value.trim();
+          if (!reason) { notify('请填写处理原因或解除依据'); return; }
+          if (action === 'freezeAccount') {
+            var limits = Array.from(document.querySelectorAll('[name="accountLimit"]:checked')).map(function (node) { return node.value; });
+            if (!limits.length) { notify('请至少选择一项限制操作'); return; }
+            a.status = '已冻结'; a.limits = limits; a.limitReason = reason;
+            a.controls.unshift(todayText() + ' 整户冻结：' + limitText(a));
+          } else if (action === 'restoreAccount') {
+            if (!document.getElementById('controlResolved').checked) { notify('请确认整户冻结原因已消除'); return; }
+            a.status = '正常'; a.limits = []; a.limitReason = ''; a.dispute = false;
+            a.controls.unshift(todayText() + ' 恢复账户：' + reason);
+          } else {
+            if (amountNumber(a.available) !== 0 || amountNumber(a.frozen) !== 0 || a.pending.length || a.dispute || a.adjustments.some(function (item) { return item.status === '审批中'; })) { notify('存在余额、冻结金额、未完申请或争议，不能关闭账户'); return; }
+            a.status = '已关闭'; a.limits = ['recharge', 'refund', 'deduction'];
+            a.limitReason = reason; a.controls.unshift(todayText() + ' 关闭账户：' + reason);
+          }
+          a.lastChange = a.accountNo + ' / ' + ({ freezeAccount: '整户冻结', restoreAccount: '恢复账户', closeAccount: '关闭账户' }[action]);
+        }
+        activeWork = null;
+        window.caesarUI.closeLayer(workDrawer); refreshAccountViews(); notify('处理已完成');
+      }
+
+      function rechargeForm(item, readonly) {
+        var summary = '<div class="form-row">' + readField('rechargeRequested', '申请金额', amountText(item.requested)) + readField('rechargeConfirmed', '已确认金额', amountText(item.confirmed)) + '</div><div class="form-row">' + readField('rechargeRemaining', '未确认金额', amountText(item.requested - item.confirmed)) + readField('rechargeStatus', '申请状态', item.status) + '</div>';
+        var records = (item.allocations || []).map(function (part) { return '<tr><td>' + escapeHtml(part.no) + '</td><td>' + amountText(part.amount) + '</td><td>' + escapeHtml(part.date) + '</td></tr>'; }).join('');
+        var history = (records ? '<section class="table-wrap drawer-table-wrap"><table><thead><tr><th>已确认流水</th><th>分配金额</th><th>入账日期</th></tr></thead><tbody>' + records + '</tbody></table></section>' : '') + (item.history || []).map(function (line) { return '<div class="text-muted">' + escapeHtml(line) + '</div>'; }).join('');
+        if (readonly) return summary + history;
+        var flows = bankFlows.filter(function (flow) { return flow.company === activeAccount.company && flow.currency === activeAccount.currency && flow.remaining > 0; });
+        var rows = flows.map(function (flow) {
+          return '<tr data-flow-no="' + flow.no + '"><td><input type="checkbox" data-select-flow aria-label="选择 ' + flow.no + '"></td><td><div class="table-cell-main"><strong>' + flow.no + '</strong><span>' + flow.date + '</span></div></td><td><div class="table-cell-main"><strong>' + escapeHtml(flow.payer) + '</strong><span>' + escapeHtml(flow.bank) + '</span><span>' + escapeHtml(flow.company + ' / ' + flow.currency) + '</span></div></td><td><div class="table-cell-main"><strong>' + amountText(flow.remaining) + '</strong><span>到账 ' + amountText(flow.amount) + '</span></div></td><td><input class="form-control" type="number" min="0.01" step="0.01" max="' + flow.remaining + '" data-flow-amount aria-label="本次分配 ' + flow.no + '" disabled></td></tr>';
+        }).join('');
+        return summary + '<section class="table-wrap drawer-table-wrap" aria-label="选择到账流水"><table style="width:100%;min-width:600px;table-layout:fixed"><colgroup><col style="width:40px"><col style="width:160px"><col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th></th><th>到账流水</th><th>收付款信息</th><th>剩余可分配</th><th>本次分配</th></tr></thead><tbody id="rechargeFlowRows">' + (rows || emptyRow(5, '无可分配到账流水')) + '</tbody></table></section><div class="form-row">' + readField('workAmount', '本次确认金额', '¥0') + '<div class="form-group"><label class="form-label" for="workDate">入账日期 *</label><input id="workDate" class="form-control" type="date" value="' + todayText() + '"></div></div><div class="form-row"><div class="form-group"><label class="form-label" for="workResult">处理结论</label><select id="workResult" class="form-control"><option>确认入账</option><option>退回补充</option></select></div><div class="form-group"><label class="form-label" for="rechargeOwnership">代付／跨门店分配依据</label><input id="rechargeOwnership" class="form-control"></div></div><div class="form-group hidden" data-work-field="return"><label class="form-label" for="workReturnReason">退回原因 *</label><input id="workReturnReason" class="form-control"></div>' + history;
+      }
+
+      function confirmRecharge(item, result) {
+        if (!item || activeAccount.pending.indexOf(item) < 0 || !allowedAction(activeAccount, 'recharge')) return false;
+        if (result === '退回补充') {
+          var reason = document.getElementById('workReturnReason').value.trim();
+          if (!reason) { notify('请填写退回原因'); return false; }
+          item.status = '已退回'; item.history.push(todayText() + ' 退回未确认部分 ' + amountText(item.requested - item.confirmed) + '：' + reason);
+          removePendingItem(item); activeAccount.rechargeHistory.unshift(item);
+          activeAccount.lastChange = item.no + ' / 充值已退回'; return true;
+        }
+        var selected = Array.from(document.querySelectorAll('#rechargeFlowRows tr')).filter(function (row) { return row.querySelector('[data-select-flow]') && row.querySelector('[data-select-flow]').checked; });
+        if (!selected.length) { notify('请选择真实到账流水并填写分配金额'); return false; }
+        var date = document.getElementById('workDate').value;
+        var ownership = document.getElementById('rechargeOwnership').value.trim();
+        var allocations = [], cents = 0;
+        for (var i = 0; i < selected.length; i++) {
+          var row = selected[i], flow = bankFlows.find(function (entry) { return entry.no === row.dataset.flowNo; });
+          var raw = row.querySelector('[data-flow-amount]').value, amount = Number(raw);
+          if (!/^\d+(\.\d{1,2})?$/.test(raw) || !Number.isFinite(amount) || amount <= 0 || !flow || amount > flow.remaining || flow.company !== activeAccount.company || flow.currency !== activeAccount.currency) { notify('分配金额须大于0且不能超过流水剩余可分配金额，主体和币种须一致'); return false; }
+          if (!date || date < flow.date || date > todayText()) { notify('入账日期不能早于到账日期或晚于今天'); return false; }
+          if (flow.payer !== activeAccount.store && !ownership) { notify('代付或跨门店分配须填写已核实的款项归属依据'); return false; }
+          allocations.push({ flow: flow, amount: amount }); cents += Math.round(amount * 100);
+        }
+        if (cents > Math.round((item.requested - item.confirmed) * 100)) { notify('本次分配总额不能超过申请未确认金额'); return false; }
+        allocations.forEach(function (part) {
+          part.flow.remaining = (Math.round(part.flow.remaining * 100) - Math.round(part.amount * 100)) / 100;
+          item.allocations.push({ no: part.flow.no, amount: part.amount, date: date });
+        });
+        var confirmed = cents / 100;
+        item.confirmed = (Math.round(item.confirmed * 100) + cents) / 100;
+        item.status = item.confirmed === item.requested ? '已入账' : '部分确认';
+        item.history.push(date + ' 确认 ' + amountText(confirmed) + (ownership ? '；归属依据：' + ownership : ''));
+        activeAccount.available = amountText((Math.round(amountNumber(activeAccount.available) * 100) + cents) / 100);
+        activeAccount.ledger.unshift({ time: date, type: '门店充值', doc: item.no + ' / ' + allocations.map(function (part) { return part.flow.no; }).join('、'), amount: '+' + amountText(confirmed), balance: activeAccount.available });
+        activeAccount.lastChange = item.no + ' / 充值确认 ' + amountText(confirmed);
+        if (item.status === '已入账') { removePendingItem(item); activeAccount.rechargeHistory.unshift(item); }
+        return true;
+      }
+
+      document.addEventListener('change', function (event) {
+        if (!event.target.matches('[data-select-flow], [data-flow-amount]')) return;
+        if (event.target.matches('[data-select-flow]')) {
+          var amount = event.target.closest('tr').querySelector('[data-flow-amount]');
+          amount.disabled = !event.target.checked;
+          if (!event.target.checked) amount.value = '';
+        }
+        var total = 0;
+        document.querySelectorAll('#rechargeFlowRows tr').forEach(function (row) {
+          if (row.querySelector('[data-select-flow]') && row.querySelector('[data-select-flow]').checked) total += Number(row.querySelector('[data-flow-amount]').value) || 0;
+        });
+        document.getElementById('workAmount').value = amountText(total);
+      });
+
       function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function (char) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
@@ -471,7 +656,7 @@
       }
 
       function amountText(value) {
-        return '¥' + Math.max(0, value).toLocaleString('zh-CN', { maximumFractionDigits: 0 });
+        return '¥' + Math.max(0, value).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
       }
 
       function todayText() {
@@ -488,30 +673,33 @@
 
       function pendingAmount(account) {
         return account.pending.reduce(function (sum, item) {
-          return sum + amountNumber(item.amount);
+          return sum + (item.actionType === 'recharge' ? item.requested - item.confirmed : amountNumber(item.amount));
         }, 0);
       }
 
       function pendingText(account) {
         return account.pending.map(function (item) {
-          return item.type + item.status;
+          return item.actionType === 'recharge' ? '充值待确认' : item.actionType === 'deduction' ? '扣款待确认' : item.actionType === 'retain' ? '转留存待确认' : item.actionType === 'refund' ? '退款待申请' : '调整待审批';
         }).join(' ');
       }
 
       function pendingCellHtml(account) {
+        if (account.status === '待开户') return escapeHtml('开户' + account.opening.status);
         if (!account.pending.length) return '无待处理';
         var lines = account.pending.slice(0, 2).map(function (item) {
-          return '<span>' + escapeHtml(item.type + ' ' + item.amount) + '</span>';
+          return '<span>' + escapeHtml(item.type + ' ' + (item.actionType === 'recharge' ? amountText(item.requested - item.confirmed) : item.amount)) + '</span>';
         }).join('');
         return '<div class="table-cell-main"><strong>' + account.pending.length + '笔 / ' + amountText(pendingAmount(account)) + '</strong>' + lines + '</div>';
       }
 
       function accountMenuItems(account) {
         var items = [];
+        if (account.status === '待开户') return account.opening.status === '待审核' ? [{ label: '审核开户', actionType: 'opening' }] : [];
+        if (account.status === '已关闭') return [];
         account.pending.forEach(function (item) {
           if (item.status === '审批中') {
             items.push({ label: '审批单', adjust: true });
-          } else {
+          } else if (allowedAction(account, item.actionType)) {
             items.push({ label: item.actionText, itemNo: item.no });
           }
         });
@@ -520,10 +708,14 @@
         var hasRefundPending = account.pending.some(function (item) {
           return item.actionType === 'refund' && item.status !== '审批中';
         });
-        if (available > 0 && !hasRefundPending) items.push({ label: '退款申请', actionType: 'refund' });
+        if (available > 0 && !hasRefundPending && allowedAction(account, 'refund')) items.push({ label: '退款申请', actionType: 'refund' });
         if (available > 0) items.push({ label: '冻结申请', actionType: 'freeze' });
         if (frozen > 0) items.push({ label: '解冻申请', actionType: 'unfreeze' });
         items.push({ label: '余额调整', actionType: 'adjust' });
+        if (account.type === '门店预存') {
+          items.push({ label: account.status === '已冻结' ? '恢复账户' : '整户冻结', actionType: account.status === '已冻结' ? 'restoreAccount' : 'freezeAccount' });
+          items.push({ label: '关闭账户', actionType: 'closeAccount' });
+        }
         return items;
       }
 
@@ -539,6 +731,7 @@
 
       function actionCellHtml(account) {
         var menu = accountMenuItems(account).map(actionMenuItemHtml).join('');
+        if (!menu) return '<div class="table-action"><button class="table-action-primary" type="button" data-open-account>详情</button></div>';
         return '<div class="table-action"><span class="dropdown table-action-more" data-action-menu><button class="table-more-toggle table-action-primary" type="button" data-action-menu-toggle aria-haspopup="menu" aria-expanded="false">处理</button><div class="action-dropdown-menu dropdown-menu" role="menu">' + menu + '</div></span><button type="button" data-open-account data-target-tab="overview">详情</button></div>';
       }
 
@@ -546,12 +739,14 @@
         var account = accounts[row.dataset.accountId];
         if (!account) return;
         row.dataset.status = accountStatus(account);
-        row.dataset.process = pendingText(account);
+        row.dataset.process = account.opening && !account.accountNo ? '开户' + account.opening.status : pendingText(account);
+        row.dataset.accountNo = account.accountNo;
+        if (account.opening || !row.children[0].querySelector('strong')) row.children[0].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(account.objectName) + '</strong><span>' + escapeHtml(account.accountNo ? '账户 ' + account.accountNo : '申请 ' + account.opening.no) + '</span><span>' + escapeHtml(account.store) + '</span></div>';
         row.children[3].innerHTML = '<span class="amount-strong">' + escapeHtml(account.available) + '</span>';
         row.children[4].innerHTML = amountNumber(account.frozen) > 0 ? '<span class="amount-strong">' + escapeHtml(account.frozen) + '</span>' : escapeHtml(account.frozen);
         row.children[5].innerHTML = pendingCellHtml(account);
         row.children[6].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(String(account.lastChange || '-').split(' / ')[0]) + '</strong><span>' + escapeHtml(String(account.lastChange || '-').split(' / ').slice(1).join(' / ') || '-').replace(/^-$/, '-') + '</span></div>';
-        row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(accountStatus(account)) + '<span>' + escapeHtml(account.pending.length ? pendingText(account) : '无待处理') + '</span></div>';
+        row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(accountStatus(account)) + (account.status === '待开户' ? '<span>' + escapeHtml(account.opening.status) + '</span>' : amountNumber(account.available) < amountNumber(account.threshold) ? '<span>低余额</span>' : '') + '</div>';
         row.children[8].innerHTML = actionCellHtml(account);
       }
 
@@ -570,7 +765,7 @@
       }
 
       function statusTag(status) {
-        if (status === '已扣款' || status === '已确认' || status === '已生效') return '<span class="tag tag-green">' + escapeHtml(status) + '</span>';
+        if (status === '已入账' || status === '已扣款' || status === '已确认' || status === '已生效') return '<span class="tag tag-green">' + escapeHtml(status) + '</span>';
         if (status === '审批中' || status === '待申请') return '<span class="tag tag-blue">' + escapeHtml(status) + '</span>';
         if (status === '已关闭' || status === '已退回') return '<span class="tag tag-gray">' + escapeHtml(status) + '</span>';
         return '<span class="tag tag-orange">' + escapeHtml(status || '待确认') + '</span>';
@@ -582,15 +777,18 @@
 
       function renderPendingRows(account) {
         var target = document.getElementById('pendingRows');
-        if (!account.pending.length) {
-          target.innerHTML = emptyRow(6, '无待处理项');
+        var records = account.pending.concat(account.rechargeHistory);
+        if (!records.length) {
+          target.innerHTML = emptyRow(6, '无申请记录');
           return;
         }
-        target.innerHTML = account.pending.map(function (item) {
+        target.innerHTML = records.map(function (item) {
           var action = item.status === '审批中'
             ? '<button class="table-action-primary" type="button" data-open-adjust-tab>详情</button>'
             : '<button class="table-action-primary" type="button" data-open-work data-item-no="' + escapeHtml(item.no) + '">' + escapeHtml(item.actionText) + '</button>';
-          return '<tr data-item-no="' + escapeHtml(item.no) + '"><td>' + escapeHtml(item.no) + '</td><td>' + escapeHtml(item.type) + '</td><td>' + escapeHtml(item.source) + '</td><td class="amount-strong">' + escapeHtml(item.amount) + '</td><td>' + statusTag(item.status) + '</td><td><div class="table-action">' + action + '</div></td></tr>';
+          if (item.actionType === 'recharge' && (account.rechargeHistory.indexOf(item) >= 0 || !allowedAction(account, 'recharge'))) action = '<button type="button" data-view-recharge data-item-no="' + escapeHtml(item.no) + '">查看</button>';
+          else if (!allowedAction(account, item.actionType)) action = '<span class="text-muted">账户限制</span>';
+          return '<tr data-item-no="' + escapeHtml(item.no) + '"><td>' + escapeHtml(item.no) + '</td><td>' + escapeHtml(item.type) + '</td><td>' + escapeHtml(item.source) + '</td><td class="amount-strong">' + escapeHtml(item.amount) + (item.actionType === 'recharge' ? '<div class="text-muted">已确认 ' + amountText(item.confirmed) + '</div>' : '') + '</td><td>' + statusTag(item.status) + '</td><td><div class="table-action">' + action + '</div></td></tr>';
         }).join('');
       }
 
@@ -632,7 +830,7 @@
           { label: '资金池', value: linkHtml('finance-fund-pool.html?accountNo=' + encodeURIComponent(account.accountNo), '查看资金池') },
           { label: '资金流水', value: escapeHtml(account.lastChange || '-') },
           { label: '门店对账', value: account.type === '门店预存' ? linkHtml('finance-store-reconciliation.html?accountNo=' + encodeURIComponent(account.accountNo), '查看对账') : '-' },
-          { label: 'NC状态', value: statusTag(account.pending.length ? '待推送' : '已生效') },
+          { label: 'NC状态', value: '按关联凭证查看' },
           { label: '财务主体', value: escapeHtml(account.company) },
           { label: '账户责任人', value: escapeHtml(account.owner) }
         ]);
@@ -666,30 +864,36 @@
           { label: '待处理项', value: escapeHtml(activeAccount.pending.length ? activeAccount.pending.length + '笔 / ' + amountText(pendingAmount(activeAccount)) : '无待处理') }
         ]);
         renderGrid(document.getElementById('overviewGrid'), [
-          { label: '账户号', value: escapeHtml(activeAccount.accountNo) },
+          { label: '账户号', value: escapeHtml(activeAccount.accountNo || '尚未开通') },
+          { label: '开户申请', value: escapeHtml(activeAccount.opening ? activeAccount.opening.no + ' / ' + activeAccount.opening.status : '—') },
+          { label: '币种／用途', value: escapeHtml(activeAccount.currency + ' / ' + activeAccount.purpose) },
+          { label: '账户限制', value: escapeHtml(limitText(activeAccount)) },
+          { label: '开户依据', value: escapeHtml(activeAccount.opening ? activeAccount.opening.approval + (activeAccount.opening.reason ? ' / ' + activeAccount.opening.reason : '') : '—') },
           { label: '财务主体', value: escapeHtml(activeAccount.company) },
           { label: '账户责任人', value: escapeHtml(activeAccount.owner) },
           { label: '余额阈值', value: escapeHtml(activeAccount.threshold) },
-          { label: '最近变动', value: escapeHtml(activeAccount.lastChange), full: true }
+          { label: '最近变动', value: escapeHtml(activeAccount.lastChange), full: true },
+          { label: '账户操作记录', value: activeAccount.controls.length ? activeAccount.controls.map(function (record) { return '<div>' + escapeHtml(record) + '</div>'; }).join('') : '—', full: true }
         ]);
         renderPendingRows(activeAccount);
         renderDeductionRows(activeAccount);
         renderLedgerRows(activeAccount);
         renderAdjustRows(activeAccount);
         renderFinancial(activeAccount);
+        if (!activeAccount.accountNo) document.getElementById('financialGrid').textContent = '尚未开通账户';
         switchDetailTab(targetTab || 'overview');
         window.caesarUI.openLayer(accountDrawer);
       }
 
       function findPendingItem(no) {
         if (!activeAccount) return null;
-        return activeAccount.pending.find(function (item) { return item.no === no; }) || null;
+        return activeAccount.pending.concat(activeAccount.rechargeHistory).find(function (item) { return item.no === no; }) || null;
       }
 
       function workTitle(actionType, item) {
-        var no = item ? item.no : activeAccount.accountNo;
+        var no = item ? item.no : (activeAccount.accountNo || activeAccount.opening.no);
         var map = {
-          recharge: '确认充值 - ',
+          recharge: '确认充值 - ', rechargeView: '充值记录 - ', opening: '审核开户 - ', freezeAccount: '整户冻结 - ', restoreAccount: '恢复账户 - ', closeAccount: '关闭账户 - ',
           retain: '转留存 - ',
           deduction: '确认扣款 - ',
           refund: '退款申请 - ',
@@ -702,9 +906,8 @@
 
       function formFor(actionType, item) {
         var amount = item ? item.amount : activeAccount.available;
-        if (actionType === 'recharge') {
-          return '<div class="form-row"><div class="form-group"><label class="form-label" for="workSource">来源流水</label><input id="workSource" class="form-control" type="text" value="' + escapeHtml(item.source) + '" readonly></div><div class="form-group"><label class="form-label" for="workAmount">确认金额</label><input id="workAmount" class="form-control" type="text" value="' + escapeHtml(item.amount) + '" readonly></div></div><div class="form-row"><div class="form-group"><label class="form-label" for="workResult">处理结论 <span class="req">*</span></label><select id="workResult" class="form-control"><option>确认入账</option><option>退回补充</option></select></div><div class="form-group"><label class="form-label" for="workDate">入账日期</label><input id="workDate" class="form-control" type="date" value="' + todayText() + '"></div></div><div class="form-row" data-work-field="return" hidden><div class="form-group"><label class="form-label" for="workReturnReason">退回原因 <span class="req">*</span></label><select id="workReturnReason" class="form-control"><option value="">请选择</option><option>付款方不一致</option><option>充值申请不一致</option><option>金额不一致</option><option>流水凭证不清晰</option><option>其他</option></select></div></div><div class="form-group"><label class="form-label" for="workRemark">处理备注</label><textarea id="workRemark" class="form-control" rows="3">付款方、收款账户、充值申请一致。</textarea></div>';
-        }
+        if (actionType === 'recharge' || actionType === 'rechargeView') return rechargeForm(item, actionType === 'rechargeView');
+        if (['opening', 'freezeAccount', 'restoreAccount', 'closeAccount'].indexOf(actionType) >= 0) return accountControlForm(actionType);
         if (actionType === 'retain') {
           return '<div class="form-row"><div class="form-group"><label class="form-label" for="workOrder">来源订单</label><input id="workOrder" class="form-control" type="text" value="' + escapeHtml(item.order) + '" readonly></div><div class="form-group"><label class="form-label" for="workAmount">留存金额</label><input id="workAmount" class="form-control" type="text" value="' + escapeHtml(item.amount) + '" readonly></div></div><div class="form-row"><div class="form-group"><label class="form-label" for="workResult">处理结论 <span class="req">*</span></label><select id="workResult" class="form-control"><option>确认留存</option><option>退回认款</option><option>转退款申请</option></select></div><div class="form-group"><label class="form-label" for="workDate">留存日期</label><input id="workDate" class="form-control" type="date" value="' + todayText() + '"></div></div><div class="form-row" data-work-field="return" hidden><div class="form-group"><label class="form-label" for="workReturnReason">退回原因 <span class="req">*</span></label><select id="workReturnReason" class="form-control"><option value="">请选择</option><option>客户未确认留存</option><option>订单认款有误</option><option>金额不一致</option><option>其他</option></select></div></div><div class="form-row" data-work-field="refund" hidden><div class="form-group"><label class="form-label" for="workRefundReason">退款原因</label><select id="workRefundReason" class="form-control"><option>客户申请退回超收款</option><option>订单取消余额退回</option><option>其他</option></select></div><div class="form-group"><label class="form-label" for="workMethod">退款方式</label><select id="workMethod" class="form-control"><option>原路退回</option><option>银行转账</option></select></div></div><div class="form-group"><label class="form-label" for="workRemark">处理备注</label><textarea id="workRemark" class="form-control" rows="3">客户订单超收金额转入客户预存账户。</textarea></div>';
         }
@@ -730,7 +933,7 @@
         var resultControl = document.getElementById('workResult');
         var result = resultControl ? resultControl.value : '';
         document.querySelectorAll('[data-work-field="return"]').forEach(function (node) {
-          node.hidden = result.indexOf('退回') < 0;
+          node.hidden = result.indexOf('退回') < 0; node.classList.toggle('hidden', node.hidden);
         });
         document.querySelectorAll('[data-work-field="refund"]').forEach(function (node) {
           node.hidden = result.indexOf('退款') < 0;
@@ -741,11 +944,17 @@
         if (result.indexOf('退回') >= 0) buttonText = '退回';
         if (result.indexOf('退款') >= 0) buttonText = '提交退款申请';
         if (result.indexOf('确认') >= 0 || result.indexOf('入账') >= 0 || result.indexOf('留存') >= 0) buttonText = '确认';
+        if (activeWork && activeWork.actionType === 'opening') buttonText = result === '退回补充' ? '退回申请' : '确认开通';
+        if (activeWork && activeWork.actionType === 'freezeAccount') buttonText = '确认冻结';
+        if (activeWork && activeWork.actionType === 'restoreAccount') buttonText = '确认恢复';
+        if (activeWork && activeWork.actionType === 'closeAccount') buttonText = '确认关闭';
         document.getElementById('workConfirmButton').textContent = buttonText;
       }
 
       function openWork(actionType, item) {
         if (!activeAccount) return;
+        if (!allowedAction(activeAccount, actionType)) { notify('当前账户状态或限制不允许此操作'); return; }
+        if (actionType === 'recharge' && (!item || activeAccount.pending.indexOf(item) < 0)) return;
         activeWork = { actionType: actionType, item: item || null };
         document.getElementById('workDrawerTitle').textContent = workTitle(actionType, item);
         document.getElementById('workSectionTitle').textContent = actionType === 'adjust' || actionType === 'freeze' || actionType === 'unfreeze' || actionType === 'refund' ? '本次申请' : '本次处理';
@@ -759,6 +968,7 @@
           { label: '本次金额', value: '<span class="amount-strong">' + escapeHtml(item ? item.amount : activeAccount.available) + '</span>' }
         ]);
         document.getElementById('workFormArea').innerHTML = formFor(actionType, item || null);
+        document.getElementById('workConfirmButton').classList.toggle('hidden', actionType === 'rechargeView');
         var resultControl = document.getElementById('workResult');
         if (resultControl) resultControl.addEventListener('change', syncWorkFields);
         syncWorkFields();
@@ -822,6 +1032,10 @@
 
       function refreshAccountViews() {
         if (activeAccountRow) updateAccountRow(activeAccountRow);
+        if (accountDrawer.classList.contains('show')) {
+          var tab = document.querySelector('[data-detail-tab].active');
+          openAccount(activeAccountRow, tab ? tab.dataset.detailTab : 'overview');
+        }
         renderPendingRows(activeAccount);
         renderDeductionRows(activeAccount);
         renderLedgerRows(activeAccount);
@@ -834,6 +1048,9 @@
         if (!activeAccount || !activeWork) return;
         var item = activeWork.item;
         var actionType = activeWork.actionType;
+        if (!allowedAction(activeAccount, actionType) || actionType === 'rechargeView') return;
+        if (['opening', 'freezeAccount', 'restoreAccount', 'closeAccount'].indexOf(actionType) >= 0) { confirmAccountControl(actionType); return; }
+        if (item && activeAccount.pending.indexOf(item) < 0) return;
         var resultControl = document.getElementById('workResult');
         var result = resultControl ? resultControl.value : '';
         var workAmount = document.getElementById('workAmount');
@@ -843,17 +1060,8 @@
         if (result.indexOf('退回') >= 0 && !requireReturnReason()) return;
 
         if (actionType === 'recharge') {
-          if (result === '退回补充') {
-            removePendingItem(item);
-            activeAccount.lastChange = item.no + ' / 充值已退回';
-            message = '充值已退回补充';
-          } else {
-            activeAccount.available = amountText(amountNumber(activeAccount.available) + amountNumber(item.amount));
-            removePendingItem(item);
-            activeAccount.lastChange = item.no + ' / 充值确认 ' + item.amount;
-            addLedger('门店充值', item.no, '+' + item.amount.replace(/^¥/, '¥'));
-            message = '充值已确认';
-          }
+          if (!confirmRecharge(item, result)) return;
+          message = result === '退回补充' ? '未确认部分已退回，已入账金额保留' : '本次充值已确认';
         } else if (actionType === 'retain') {
           if (result === '退回认款') {
             removePendingItem(item);
@@ -893,17 +1101,19 @@
           }
           if (item) removePendingItem(item);
           activeAccount.lastChange = (item ? item.no : activeAccount.accountNo) + ' / 退款申请 ' + amount;
-          addLedger('退款申请', item ? item.no : activeAccount.accountNo, amount);
+          addAdjustment('余额退款', amount, '审批中');
           message = '退款申请已提交';
         } else if (actionType === 'freeze' || actionType === 'unfreeze' || actionType === 'adjust') {
           var type = document.getElementById('workType').value;
+          var requestedAmount = amountNumber(amount);
+          var limit = actionType === 'unfreeze' ? amountNumber(activeAccount.frozen) : (actionType === 'freeze' || type === '余额调减' ? amountNumber(activeAccount.available) : Infinity);
+          if (requestedAmount <= 0 || requestedAmount > limit) { notify('请填写大于0且不超过可处理余额的金额'); return; }
           addAdjustment(type, amount, '审批中');
           activeAccount.lastChange = type + ' / 审批中 ' + amount;
           message = '处理申请已提交审批';
         }
 
-        if (amountNumber(activeAccount.frozen) <= 0 && activeAccount.status === '冻结中') activeAccount.status = '正常';
-        if (activeAccount.status === '正常' && amountNumber(activeAccount.threshold) > 0 && amountNumber(activeAccount.available) < amountNumber(activeAccount.threshold)) activeAccount.status = '低余额';
+        activeWork = null;
         window.caesarUI.closeLayer(workDrawer);
         refreshAccountViews();
         notify(message);
@@ -936,6 +1146,7 @@
       }
 
       function statusClass(value) {
+        if (value === '已关闭') return 'tag-gray';
         if (/冻结|异常|退回|低/.test(value || '')) return 'tag-red';
         if (/待|中|审批/.test(value || '')) return 'tag-orange';
         if (/正常|已|无/.test(value || '')) return 'tag-green';
@@ -987,6 +1198,8 @@
       }
 
       document.addEventListener('click', function (event) {
+        var historyButton = event.target.closest('[data-view-recharge]');
+        if (historyButton) { openWork('rechargeView', findPendingItem(historyButton.dataset.itemNo)); return; }
         var detailTab = event.target.closest('[data-detail-tab]');
         if (detailTab) {
           switchDetailTab(detailTab.dataset.detailTab);
