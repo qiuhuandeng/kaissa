@@ -21,8 +21,8 @@
     <section class="filter-card filter-card-compact list-surface-filter" aria-label="预存余额筛选">
       <div class="filter-row">
         <div class="filter-item"><label class="sr-only" for="storeKeyword">门店/账户/单据</label><input id="storeKeyword" type="search" placeholder="门店/账户/单据"></div>
-        <div class="filter-item-sm"><label class="sr-only" for="accountStatus">账户状态</label><select id="accountStatus"><option>全部状态</option><option>正常</option><option>冻结</option><option>已关闭</option></select></div>
-        <div class="filter-item-sm"><label class="sr-only" for="settleMode">结算方式</label><select id="settleMode"><option>全部结算方式</option><option>预存</option><option>月结</option><option>单单结</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="accountStatus">账户状态</label><select id="accountStatus"><option>全部状态</option><option>正常</option><option>余额不足</option><option>充值中</option><option>扣款复核中</option><option>冻结/异常</option></select></div>
+        <div class="filter-item-sm"><label class="sr-only" for="settleMode">结算方式</label><select id="settleMode"><option>全部结算方式</option><option>预存</option><option>月结</option><option>单单结</option><option>授信</option></select></div>
         <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="button" data-filter-search>搜索</button><button class="btn btn-secondary" type="button" data-filter-reset>重置</button></div>
       </div>
     </section>
@@ -186,22 +186,57 @@
     </div>
   </div>
 
-  <script src="../../../shared/predeposit-control-model.js"></script>
-  <script src="../../../shared/predeposit-control.js"></script>
-  <script src="../../../shared/predeposit-recharge-model.js"></script>
-  <script src="../../../shared/predeposit-recharge.js"></script>
+  <div id="applyDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-xl" role="dialog" aria-modal="true" aria-labelledby="applyDrawerTitle">
+      <div class="modal-header">
+        <div id="applyDrawerTitle" class="modal-title">充值申请</div>
+        <button class="modal-close" type="button" aria-label="关闭充值申请" data-close-apply>×</button>
+      </div>
+      <div class="modal-body">
+        <section id="applyAccountSummary" class="description-grid"></section>
+        <section class="order-desc-card">
+          <h2 class="detail-section-title">充值信息</h2>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="applyStore">门店 <span class="req">*</span></label><select id="applyStore" class="form-control"><option>软件园门店</option><option>文灶门店</option><option>观音山门店</option><option>泉州丰泽门店</option><option>泉州鲤城门店</option></select></div>
+            <div class="form-group"><label class="form-label" for="applyAccount">预存账户</label><input id="applyAccount" class="form-control" type="text" value="8888-0001-2025-0001" disabled></div>
+            <div class="form-group"><label class="form-label" for="applyAmount">打款金额 <span class="req">*</span></label><input id="applyAmount" class="form-control" type="text" value="¥50,000"></div>
+            <div class="form-group"><label class="form-label" for="applyTime">打款时间 <span class="req">*</span></label><input id="applyTime" class="form-control" type="datetime-local" value="2026-06-24T15:42"></div>
+          </div>
+        </section>
+        <section class="order-desc-card">
+          <h2 class="detail-section-title">打款与收款账户</h2>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="payerName">打款户名 <span class="req">*</span></label><input id="payerName" class="form-control" type="text" value="厦门思明软件园旅行服务有限公司"></div>
+            <div class="form-group"><label class="form-label" for="payerAccount">打款账号</label><input id="payerAccount" class="form-control" type="text" value="6225****0038"></div>
+            <div class="form-group"><label class="form-label" for="companyAccount">公司收款账户 <span class="req">*</span></label><select id="companyAccount" class="form-control"><option>福建凯撒 · 民生银行 6214****0038</option><option>福建凯撒 · 招商银行 6225****1188</option><option>福建凯撒 · 中国银行 6013****9021</option></select></div>
+            <div class="form-group"><label class="form-label" for="voucherFile">上传凭证 <span class="req">*</span></label><input id="voucherFile" class="form-control" type="file"></div>
+            <div class="form-group form-group-full"><label class="form-label" for="applyRemark">备注</label><textarea id="applyRemark" class="form-control" rows="3" placeholder="可填写打款说明、流水摘要或财务核对信息"></textarea></div>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-apply>取消</button>
+        <button class="btn btn-primary" type="button" data-submit-apply>提交申请</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var accountDrawer = document.getElementById('accountDrawer');
       var balanceDrawer = document.getElementById('balanceDrawer');
+      var applyDrawer = document.getElementById('applyDrawer');
       var accountSummaryGrid = document.getElementById('accountSummaryGrid');
       var balanceSummaryGrid = document.getElementById('balanceSummaryGrid');
+      var applyAccountSummary = document.getElementById('applyAccountSummary');
       var balanceDrawerTitle = document.getElementById('balanceDrawerTitle');
       var accountRows = Array.prototype.slice.call(document.querySelectorAll('#accountRows tr'));
       var keywordInput = document.getElementById('storeKeyword');
       var statusSelect = document.getElementById('accountStatus');
       var settleSelect = document.getElementById('settleMode');
       var pagination = document.getElementById('accountPagination');
+      var applyStore = document.getElementById('applyStore');
+      var applyAccount = document.getElementById('applyAccount');
       var accountRechargeRows = document.getElementById('accountRechargeRows');
       var accountDeductRows = document.getElementById('accountDeductRows');
       var accountBalanceFlowRows = document.getElementById('accountBalanceFlowRows');
@@ -247,7 +282,10 @@
       function renderAccountTables(row) {
         var data = row ? row.dataset : {};
         var store = data.store || '软件园门店';
-        accountRechargeRows.innerHTML = recharge.rows(data.pdId);
+        var rechargeAmount = data.status === '充值中' || (data.recharge || '').indexOf('¥') > -1 ? (data.recharge || '').split('¥')[1] : '';
+        accountRechargeRows.innerHTML = data.status === '充值中' || rechargeAmount
+          ? '<tr><td>CZSQ20260624001</td><td class="amount-strong">¥' + escapeHtml(rechargeAmount || '50,000') + '</td><td>2026-06-24 15:42</td><td>待财务匹配</td><td>银行回单</td><td><span class="tag tag-orange">财务确认中</span></td></tr>'
+          : '<tr><td>CZSQ20260618002</td><td class="amount-strong">¥30,000</td><td>2026-06-18 10:30</td><td>CMBC20260618012</td><td>银行回单</td><td><span class="tag tag-green">已入账</span></td></tr>';
         accountDeductRows.innerHTML = data.status === '扣款复核中' || data.status === '冻结/异常'
           ? '<tr><td>DK20260625001</td><td>KS2024061809</td><td>' + escapeHtml(store) + '订单</td><td>订单定金</td><td class="amount-red">-' + escapeHtml(data.frozen || '¥12,800') + '</td><td><span class="tag tag-blue">扣款复核中</span></td></tr>'
           : '<tr><td>DK20260623003</td><td>KS2024061712</td><td>' + escapeHtml(store) + '订单</td><td>订单尾款</td><td class="amount-red">-¥8,600</td><td><span class="tag tag-green">已扣款</span></td></tr>';
@@ -279,6 +317,14 @@
         renderBalanceRows(currentAccountRow);
       }
 
+      function renderApply(row) {
+        currentAccountRow = row || currentAccountRow;
+        var data = currentAccountRow ? currentAccountRow.dataset : {};
+        renderSummary(applyAccountSummary, currentAccountRow);
+        if (data.store) applyStore.value = data.store;
+        if (data.account) applyAccount.value = data.account;
+      }
+
       function rowMatchesFilters(row) {
         var keyword = (keywordInput.value || '').trim().toLowerCase();
         var status = statusSelect.value;
@@ -292,7 +338,7 @@
 
       function applyFilters() {
         var visible = 0;
-        Array.from(document.querySelectorAll('#accountRows tr')).forEach(function (row) {
+        accountRows.forEach(function (row) {
           var matched = rowMatchesFilters(row);
           row.hidden = !matched;
           if (matched) visible += 1;
@@ -301,7 +347,6 @@
       }
 
       document.addEventListener('click', function (event) {
-        if (!accountDrawer.isConnected) return;
         var accountButton = event.target.closest('[data-open-account]');
         if (accountButton) {
           renderAccount(accountButton.closest('tr'));
@@ -316,11 +361,8 @@
         }
         var applyButton = event.target.closest('[data-open-apply]');
         if (applyButton) {
-          var targetRow = applyButton.closest('tr') || currentAccountRow;
-          var accountControl = predepositControl.accounts.find(function(a){return a.accountNo===targetRow.dataset.account;});
-          var block = accountControl && PredepositControlModel.blocked(accountControl,'recharge');
-          if(block){notify(block);return;}
-          recharge.create(accountControl);
+          renderApply(applyButton.closest('tr') || currentAccountRow);
+          window.caesarUI.openLayer(applyDrawer);
           return;
         }
         if (event.target.closest('[data-filter-search]')) {
@@ -334,8 +376,14 @@
           applyFilters();
           return;
         }
+        if (event.target.closest('[data-submit-apply]')) {
+          window.caesarUI.closeLayer(applyDrawer);
+          notify('充值申请已提交，待财务根据到账流水确认入账。');
+          return;
+        }
         if (event.target.closest('[data-close-account]') || event.target === accountDrawer) window.caesarUI.closeLayer(accountDrawer);
         if (event.target.closest('[data-close-balance]') || event.target === balanceDrawer) window.caesarUI.closeLayer(balanceDrawer);
+        if (event.target.closest('[data-close-apply]') || event.target === applyDrawer) window.caesarUI.closeLayer(applyDrawer);
       });
 
       keywordInput.addEventListener('keydown', function (event) {
@@ -346,10 +394,10 @@
         select.addEventListener('change', applyFilters);
       });
 
-      var predepositControl = initPredepositControl({role:'store'});
-      var recharge = initPredepositRecharge({role:'store',control:predepositControl});
-      accountRechargeRows.addEventListener('click',recharge.handle);
-      applyFilters();
+      applyStore.addEventListener('change', function () {
+        var selectedRow = accountRows.find(function (row) { return row.dataset.store === applyStore.value; }) || currentAccountRow;
+        renderApply(selectedRow);
+      });
     })();
   </script>
 </body>

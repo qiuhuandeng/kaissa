@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>订单详情 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <link rel="stylesheet" href="../../shared/store-order-rules.css">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -35,7 +34,6 @@
             <button class="dropdown-item hidden" type="button" data-project-menu="attachment" data-open-drawer="attachmentDrawer">附件</button>
             <span class="dropdown-group-title" data-generic-menu>维护</span>
             <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="confirm" data-open-detail-action="转确认">转确认</button>
-            <button class="dropdown-item" type="button" data-generic-menu data-open-detail-action="增加人数">增加人数</button>
             <button class="dropdown-item hidden" type="button" data-generic-menu data-state-action="release" data-open-detail-action="释放">释放</button>
             <button class="dropdown-item" type="button" data-generic-menu data-project-menu="owner" data-open-detail-action="归属调整">归属调整</button>
             <button class="dropdown-item" type="button" data-generic-menu data-project-menu="sales" data-open-detail-action="修改店员">修改店员</button>
@@ -92,8 +90,6 @@
 
       <section id="tab-overview" class="detail-tab-panel active">
         <div class="product-detail-tab-inner order-overview-tab">
-          <div class="detail-section-title">预订与确认</div>
-          <div id="storeOrderChecks"></div>
           <div class="detail-section-title">产品信息</div>
           <div id="overviewProductGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">订单信息</div>
@@ -498,8 +494,6 @@
     </div>
   </div>
 
-  <script src="../../shared/store-governance-model.js"></script>
-  <script src="../../shared/store-order-rules.js"></script>
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search);
@@ -1306,7 +1300,6 @@
         query.set('type', contractTypeParam());
         query.set('orderNo', config.orderNo);
         query.set('customer', contactParts().name);
-        query.set('store', config.owner.split(' / ')[0]);
         query.set('product', config.productName);
         query.set('scheduleNo', scheduleValue());
         if (isProjectOrder()) {
@@ -1574,46 +1567,6 @@
           ['签署对象', contactParts().name]
         ]);
       }
-      let storeOrderSession = null;
-      function storeOrderContext() {
-        if (storeOrderSession) return storeOrderSession;
-        const R = window.CaesarStoreOrderRules;
-        const saved = storedOrder && storedOrder.storeOrderControl;
-        const c = R.existing(Object.assign({ source: productOverviewMeta().source, storeName: config.owner.split(' / ')[0], productType: config.productType,
-          orderStatus: config.orderStatus[0], paid: moneyNumber(config.amount[1]), receivedConfirmed: moneyNumber(config.amount[1]) > 0,
-          deadline: !storedOrder && productOverviewMeta().reservationDue !== '-' ? productOverviewMeta().reservationDue : '', resourceState: '待确认', contractState: config.contract?.[0]?.[1] || '待生成',
-          historicalConfirmed: ['已确认','处理中','已完成'].includes(config.orderStatus[0]) }, saved || {}));
-        return c;
-      }
-      function renderStoreOrderChecks() {
-        const c = storeOrderContext(), R = window.CaesarStoreOrderRules;
-        const increase = document.querySelector('[data-open-detail-action="增加人数"]'); if (increase) increase.hidden = c.source !== '门店' || !['预留','占位','待确认','已确认'].includes(c.orderStatus);
-        const node = document.getElementById('storeOrderChecks'); node.hidden = c.source !== '门店';
-        if (node.hidden) return;
-        node.innerHTML = R.html(R.summary(c)) + '<p class="store-order-note">已确认订单保留原授权、金额和合同资料。暂停或授权调整不阻断有权限人员补收、补签和售后；增加人数、新增产品需重新检查当前授权。</p><div class="store-order-links"><a href="../tour/schedules.html">资源确认</a><a href="payment-claim.html">收款认领</a><a href="store/index.html">门店授权</a><a href="../system/staff-management.html">工作交接</a></div>';
-      }
-      function storeActionKey(action) { return {'转确认':'confirm','释放':'release','增加人数':'increase'}[action]; }
-      function storeActionChecks(action) {
-        const c = storeOrderContext(), key = storeActionKey(action); if (c.source !== '门店' || !key) return '';
-        const R = window.CaesarStoreOrderRules, gaps = R.check(c,key);
-        return R.html(R.summary(c)) + '<div class="store-order-error" id="storeOrderActionError"' + (gaps.length ? '' : ' hidden') + '>' + escapeHtml(gaps.join('；')) + '</div>';
-      }
-      function applyStoreOrderAction(action) {
-        const c = storeOrderContext(), key = storeActionKey(action); if (c.source !== '门店' || !key) return true;
-        const gaps = window.CaesarStoreOrderRules.check(c,key);
-        const reason = document.querySelector('#detailActionDrawerFields textarea');
-        if (!reason || !reason.value.trim()) gaps.push('请填写处理说明');
-        if (key === 'increase') {
-          const count = Number(document.getElementById('storeIncreaseCount')?.value);
-          if (!Number.isInteger(count) || count <= 0) gaps.push('请填写正整数人数');
-        }
-        if (gaps.length) { const node = document.getElementById('storeOrderActionError'); node.hidden = false; node.textContent = gaps.join('；'); return false; }
-        storeOrderSession = c;
-        if (key === 'confirm') { c.orderStatus = '已确认'; c.historicalConfirmed = true; config.orderStatus = ['已确认','tag tag-green']; }
-        if (key === 'release') { c.occupation = '已释放'; c.orderStatus = '待确认'; c.resourceState = '待重新确认余位'; config.orderStatus = ['待确认','tag tag-orange']; }
-        if (key === 'increase') c.increaseRequest = {status:'待资源确认', reason:reason.value.trim()};
-        render(); return true;
-      }
       function detailActionFields(action) {
         const base = readonlyMiniGrid([
           ['订单号', config.orderNo],
@@ -1629,14 +1582,12 @@
           const salesOptions = isProjectOrder() ? ['李梅', '郑华', '孙丽', '吴芳'] : ['孙丽', '郑华', '李梅', '吴芳', '陈红'];
           return base + selectControl('调整为', salesOptions) + textareaControl('调整原因', '', isProjectOrder() ? '如企业客户交接、项目负责人调整或单团店员变更' : '如店员录入错误、客户归属交接或项目负责人变更');
         }
-        if (action === '增加人数') return base + storeActionChecks(action) + '<label class="form-group"><span class="form-label">增加人数</span><input class="form-control" id="storeIncreaseCount" type="number" min="1" step="1"></label>' + textareaControl('处理说明', '', '说明增人需求；资源和价格重新确认后再生效');
-        if (action === '转确认' || action === '释放') return base + storeActionChecks(action) + textareaControl('处理说明', '', action === '转确认' ? '说明本次订单确认依据' : '说明计调已核对的保留与释放依据');
         const reasons = action === '转确认'
           ? ['客户已确认', '收款已满足', '资源已确认', '主管确认']
           : action === '释放'
             ? ['预留到期', '客户放弃', '重复占位', '资源需释放给其他订单']
             : ['客户放弃', '重复下单', '资料/合同未确认', '资源无法确认', '其他'];
-        return base + storeActionChecks(action) + selectControl(action + '原因', reasons) + selectControl('财务影响', ['无收款，仅关闭订单', '有收款，需发起退款/冲减', '需保留扣损并退款', '待财务复核']) + textareaControl('处理说明', '', '记录客户确认、资源释放和财务承接要求');
+        return base + selectControl(action + '原因', reasons) + selectControl('财务影响', ['无收款，仅关闭订单', '有收款，需发起退款/冲减', '需保留扣损并退款', '待财务复核']) + textareaControl('处理说明', '', '记录客户确认、资源释放和财务承接要求');
       }
       function openDetailActionDrawer(action) {
         setText('detailActionDrawerTitle', action);
@@ -1964,7 +1915,6 @@
         }).join(''));
       }
       function render() {
-        renderStoreOrderChecks();
         renderProjectOrderChrome();
         renderStateActionButtons();
         setText('orderNo', config.orderNo);
@@ -2008,7 +1958,7 @@
           ['确认生效时间', (storedOrder && storedOrder.confirmedAt) || (config.orderStatus[0] === '已确认' ? '2026-07-04 10:35:00' : '尚未生效')],
           ['来源系统', (storedOrder && storedOrder.sourceSystem) || '新系统'],
           ['原订单号', (storedOrder && storedOrder.originalOrderNo) || '不适用'],
-          ['名额保留截止', storeOrderContext().deadline || '待确认'],
+          ['预留到期', meta.reservationDue],
           ['来源', meta.source],
           ['渠道', meta.channel]
         ]));
@@ -2301,11 +2251,10 @@
         }
         const result = event.target.closest('[data-result]');
         if (result) {
-          if (result.closest('#detailActionDrawer') && !applyStoreOrderAction(result.dataset.result)) return;
           if (result.closest('#detailActionDrawer') && result.dataset.result === '归属调整' && !saveOwnershipAdjustment()) return;
           const modal = result.closest('.modal-overlay');
           if (modal) closeLayer(modal);
-          showResult(result.dataset.result === '增加人数' ? '增人申请待资源确认，当前人数和金额未改变' : result.dataset.result);
+          showResult(result.dataset.result);
           return;
         }
         const close = event.target.closest('[data-close-modal]');

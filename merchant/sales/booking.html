@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>新建订单 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <link rel="stylesheet" href="../../shared/store-order-rules.css">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -292,17 +291,14 @@
             </section>
 
             <section id="orderProcessSection" class="booking-section" aria-labelledby="bookingProcessTitle">
-              <div id="storeBookingChecks"></div>
               <h2 id="bookingProcessTitle" class="booking-section-title">订单处理</h2>
               <div class="form-grid">
                 <div class="form-group">
                   <label class="form-label" for="orderProcessMode">处理方式</label>
                   <select id="orderProcessMode" class="form-control">
-                    <option value="draft">草稿：不占名额</option>
-                    <option value="pending">提交待确认：尚未保留名额</option>
-                    <option value="reserve" selected>预留：按有效规则保留名额</option>
-                    <option value="hold">占位：按有效规则保留名额</option>
-                    <option value="confirm">确认：先核对授权、资源及付款条件</option>
+                    <option value="reserve">预留：24小时未收款释放库存</option>
+                    <option value="hold">占位：人工占位，不自动释放</option>
+                    <option value="confirm">直接确认：立即扣库存</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -406,8 +402,6 @@
     </div>
   </div>
 
-  <script src="../../shared/store-governance-model.js"></script>
-  <script src="../../shared/store-order-rules.js"></script>
   <script>
     (function () {
       const products = [
@@ -1216,17 +1210,15 @@
 
       function processProfile() {
         const mode = orderProcessMode.value;
-        if (mode === 'draft') return { status: '草稿', inventory: '不占名额', button: '保存订单草稿', tag: 'tag tag-gray' };
-        if (mode === 'pending') return { status: '待确认', inventory: '尚未保留名额', button: '提交待确认订单', tag: 'tag tag-blue' };
         if (currentProduct.type === 'manual') {
           return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
         }
         if (currentProduct.type === 'single') {
           return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
         }
-        if (mode === 'confirm') return { status: '已确认', inventory: '资源确认后正式占用', button: '确认订单', tag: 'tag tag-green' };
+        if (mode === 'confirm') return { status: '已确认', inventory: '立即扣库存', button: '确认并扣库存', tag: 'tag tag-green' };
         if (mode === 'hold') return { status: '占位', inventory: '人工占位', button: '生成占位订单', tag: 'tag tag-blue' };
-        return { status: '预留', inventory: '按本单截止保留', button: '生成预留订单', tag: 'tag tag-orange' };
+        return { status: '预留', inventory: '24小时预留', button: '生成预留订单', tag: 'tag tag-orange' };
       }
 
       function dateTimeText(date) {
@@ -1942,7 +1934,6 @@
         const ownership = businessOwnershipSnapshot();
         store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
           orderNo: orderNo,
-          storeOrderControl: channelSource.value === '门店' ? Object.assign(storeBookingContext(), { orderStatus: process.status, occupation: ['草稿','待确认'].includes(process.status) ? '未占用' : '保留中' }) : null,
           orderType: typeLabel,
           productName: currentProduct.name,
           productSource: isManualMode() ? '单项服务下单' : '指定产品',
@@ -2124,7 +2115,6 @@
       }
 
       function syncSummary() {
-        refreshStoreBookingChecks();
         if (isManualMode()) {
           refreshManualProduct();
           const process = processProfile();
@@ -2389,26 +2379,8 @@
         distributorMemberField.hidden = source !== '分销';
         otaField.hidden = source !== 'OTA';
         renderBusinessOwnership();
-        refreshStoreBookingChecks();
       }
 
-      function storeBookingContext() {
-        const stock = selectedStock();
-        return window.CaesarStoreOrderRules.existing({ source: channelSource.value, storeName: document.getElementById('storeName').value,
-          productType: currentProduct.type, saleStatus: /停售|未发布/.test(pageParams.get('saleStatus') || pageParams.get('status') || '') ? '停售' : '可售',
-          resourceState: '待确认', capacityAvailable: !!stock && /余[1-9]|可售|紧张/.test(stock.join(' ')),
-          orderStatus: '待确认', paid: 0, receivedConfirmed: false });
-      }
-      function refreshStoreBookingChecks() {
-        const node = document.getElementById('storeBookingChecks'); if (!node) return;
-        const c = storeBookingContext(), R = window.CaesarStoreOrderRules;
-        node.hidden = c.source !== '门店';
-        if (node.hidden) return;
-        const s = R.store(c.storeName);
-        node.innerHTML = R.html([['门店营业与授权', R.authorization(c).join('；') || '当前授权有效', '销售负责人'],
-          ['预留／人工占位', (s?.sales.reserveHours ? s.sales.reserveHours + '小时' : '预留时长待确认') + ' / ' + (s?.sales.holdHours ? s.sales.holdHours + '小时' : '占位时长待确认'), '门店运营、计调'],
-          ['订单确认', '资源确认、付款条件和财务收款结果尚待核对', '计调、公司财务']]) + '<p class="store-order-note">草稿不占名额；待确认订单未取得保留结果不开始计时。选择收款计划不等于款项已收。</p>';
-      }
       function validate() {
         const missing = [];
         if (isManualMode()) {
@@ -2446,10 +2418,6 @@
         if (calcTotal() <= 0) missing.push('人数/份数');
         if ((currentProduct.type === 'cruise' || currentProduct.type === 'train') && countValue('adultOccupancy') + countValue('childOccupancy') + countValue('thirdFourth') <= 0) {
           missing.push(currentProduct.type === 'cruise' ? '占位乘客' : '占位乘客');
-        }
-        if (channelSource.value === '门店') {
-          const mode = orderProcessMode.value;
-          missing.push(...window.CaesarStoreOrderRules.check(storeBookingContext(), mode === 'pending' ? 'new' : mode));
         }
         return missing;
       }
@@ -2519,8 +2487,8 @@
         }
         const createdOrder = saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
-        document.getElementById('createdTitle').textContent = (process.status === '草稿' ? '已保存订单草稿 ' : '已生成销售订单 ') + orderNo;
-        document.getElementById('createdText').textContent = process.status === '草稿' ? '草稿已保存，尚未占用名额或提交资源受理。' : isManualMode()
+        document.getElementById('createdTitle').textContent = '已生成销售订单 ' + orderNo;
+        document.getElementById('createdText').textContent = isManualMode()
           ? process.status + '订单已生成，单项服务已进入服务单受理。'
           : (sourceContext.isSingleGroup ? '客户专属项目订单已生成，合同、阶段收款计划和项目团按来源承接。' : process.status + '订单已生成，客户需收与优惠使用明细已记录。');
         document.getElementById('createdOrderNo').textContent = orderNo;
@@ -2537,7 +2505,7 @@
         document.getElementById('createdConfirmedAt').textContent = createdOrder.confirmedAt || '尚未生效';
         document.getElementById('createdSource').textContent = sourceText();
         document.getElementById('createdOwnership').textContent = createdOrder.businessOwnership.productOrg + ' / ' + createdOrder.businessOwnership.salesBranch + ' / ' + createdOrder.businessOwnership.channelCategory;
-        const financeItems = process.status === '草稿' ? ['草稿不占用名额，不生成服务受理或收款单据', '提交订单时重新核对门店授权、资源和付款条件'] : isManualMode() ? [
+        const financeItems = isManualMode() ? [
           '订单：单项服务订单已生成',
           '客户需收：' + customerPayableText + ' 待收',
           '应收币种：' + receivableCurrencyValue(),
@@ -2555,10 +2523,10 @@
           '应收币种：' + receivableCurrencyValue(),
           '优惠使用明细：' + (discountAmount > 0 ? discountUsageSummary(discounts) : '无优惠减免'),
           currentProduct.type === 'single' ? '服务单：待受理' : '库存占用：' + process.inventory,
-          '合同草稿可先准备；发起签署时核对模板、签约公司与付款条件'
+          '合同/确认单：订单确认后生成'
         ];
         document.getElementById('createdFinanceItems').innerHTML = financeItems.map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
-        const nextSteps = process.status === '草稿' ? [['查看详情', '核对草稿资料，提交时重新检查当前授权']] : isManualMode() ? [
+        const nextSteps = isManualMode() ? [
           ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
           ['补充资料', '进入订单详情补充游客、证件、材料和服务要求'],
           ['查看详情', '查看订单完整信息和后续处理记录']
@@ -2736,7 +2704,7 @@
       });
       ['storeName', 'salesName', 'customerServiceName', 'distributorName', 'distributorMember', 'otaPlatform'].forEach(function (id) {
         const field = document.getElementById(id);
-        if (field) field.addEventListener('change', function () { renderBusinessOwnership(); refreshStoreBookingChecks(); });
+        if (field) field.addEventListener('change', renderBusinessOwnership);
       });
       changePresetSelection.addEventListener('click', function () {
         resetSaleObjectSearch();
