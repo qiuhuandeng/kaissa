@@ -152,7 +152,7 @@
       }
       activeExport = { rows, columns, metadata };
       const pagination = pager(rows.length);
-      root.querySelector('[data-result]').innerHTML = '<section class="report-section">' + summary + table(rows.slice((page - 1) * pageSize, page * pageSize), columns, tab !== 'checks') + '<div class="report-total"><span data-total>' + esc(footer) + '</span>' + pagination + '</div></section>';
+      root.querySelector('[data-result]').innerHTML = '<section class="report-section">' + (tab === 'checks' ? '' : '<div class="report-section-head"><h2>' + (tab === 'organizations' ? '组织对应列表' : '分类规则列表') + '</h2></div>') + summary + table(rows.slice((page - 1) * pageSize, page * pageSize), columns, tab !== 'checks') + '<div class="report-total"><span data-total>' + esc(footer) + '</span>' + pagination + '</div></section>';
     }
     const status = text => { root.querySelector('[data-status]').textContent = text; };
     const error = text => { const el = root.querySelector('[data-error]'); el.textContent = text; el.hidden = !text; };

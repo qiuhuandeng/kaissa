@@ -46,6 +46,18 @@
     const table = (rows, keys, sortable) => '<table><thead><tr>' + keys.map(k => '<th>' + (sortable ? '<button type="button" data-fr-sort="' + k + '">' + esc(name(k)) + (sort === k ? direction === 1 ? ' ↑' : ' ↓' : '') + '</button>' : esc(name(k))) + '</th>').join('') + '</tr></thead><tbody>' + rows.map(r => '<tr>' + keys.map(k => '<td class="' + (config.money.includes(k) ? 'cf-number' : 'cf-value') + '">' + esc(display(r, k)) + '</td>').join('') + '</tr>').join('') + '</tbody></table>' + (rows.length ? '' : '<p class="cf-empty">' + (result.pending ? '资料不足，暂无可核对记录' : '当前条件无记录') + '</p>');
     function fields() { for (const f of config.filters) form.elements.namedItem(f.key).value = applied[f.key] ?? ''; }
     function render() {
+      if (!config.explorer) {
+        let title = host.querySelector('[data-fr-result-title]');
+        if (!title) {
+          const heading = document.createElement('div');
+          heading.className = 'report-section-head';
+          title = document.createElement('h2');
+          title.dataset.frResultTitle = '';
+          heading.append(title);
+          host.querySelector('.cf-columns').before(heading);
+        }
+        title.textContent = config.views[applied.view] || config.title;
+      }
       if(config.explorer) {
         if(content !== 'main' && !result.sections.some(s=>s.key===content))content='main';
         let toolbar=host.querySelector('[data-fr-explorer]');

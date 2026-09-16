@@ -804,7 +804,7 @@
     return '<section class="report-section">' +
       '<p class="report-query-status" data-comparison-period>对比期：' + range(p.previous) + ' · 未提供完整资料</p>' +
       '<p class="report-query-status" data-accumulation-period>本月累计：' + range(p.month) + ' · 年累计：' + range(p.year) + '</p>' +
-      menu + tableHTML(activeTable.rows, cols) +
+      '<div class="report-section-head"><h2>' + (applied.view === 'actual' ? '回团业绩汇总' : '订单业绩汇总') + '</h2></div>' + menu + tableHTML(activeTable.rows, cols) +
       '<div class="report-total"><span data-total>' + totalLabel(result.facts) + '</span><span>' +
       (result.sample ? '集团5月任务算例（非批准）' : '无匹配批准任务，不计算完成率') + '</span></div></section>';
   }
@@ -876,7 +876,8 @@
     const menu = columnMenu(all), columns = all.filter(c => selectedColumns[columnSelectionKey()].has(c.key));
     const rows = sorted(records ? source.rows : result.rows), pager = pagination(rows.length);
     activeTable = { rows, columns };
-    return '<section class="report-section">' + menu +
+    const resultTitle = (applied.productView === 'organizations' ? (applied.view === 'actual' ? '产品回团业绩' : '产品订单业绩') : productViews[applied.productView]) + (records ? '明细' : '汇总');
+    return '<section class="report-section"><div class="report-section-head"><h2>' + esc(resultTitle) + '</h2></div>' + menu +
       tableHTML(rows.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), columns) +
       '<div class="report-total"><span data-total>' + productTotal(result) + '</span>' + pager + '</div></section>';
   }

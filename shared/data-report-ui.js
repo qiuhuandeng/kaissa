@@ -68,14 +68,78 @@
     return marker.textContent;
   }
 
+  const filterOptionNames = new WeakMap();
+  const genericFilterOptions = new Set(['全部', '全部组织', '全部类型', '全部范围', '全部来源', '全部年份', '全部状态', '全部公司', '全部产品组', '全部渠道', '全部单位', '全部指标', '全部层级', '全部字段', '全部员工编号']);
+  const filterBusinessNames = {
+    '负责人资料': '负责人资料情况', '费用资料': '费用资料情况',
+    '资料缺口': '资料情况', '资料／毛利': '毛利及资料情况',
+    '散拼／单团': '组团方式', '收入方式': '收入确认方式',
+    '税务处理': '税务处理方式', '事业部': '产品事业部',
+    '截至日履约情况': '履约情况', '员工编号': '销售人员'
+  };
+  const namedFilterLabels = new Set(['数据版本','资料版本','损益版本','批准预算版本','任务版本','预览版本','版本','统计期间','分析责任','责任分组','比较期间','责任层级','统计层级','结构分类','分析分类','汇总方式','金额列组','产品结构','统计粒度','经营任务指标','任务指标','预算指标','日期依据','日期口径','日期与金额依据','选单日期口径','完成年份口径','查看角色','查看范围示例','公司范围','部门范围','门店范围','预览公司','预览部门','预览门店','集团调整范围','原币','原币（元）','币种','金额单位','地理目的地分区','管理目的地分区','预算区域','主成交渠道','主渠道','获客来源','员工编号','顾问','销售人员','门店／销售组','门店','供应商','合同付款客户','付款客户','任务年度','订单号','来源订单号','核算主体']);
+  function needsFilterLabel(text, control) {
+    return ['date','datetime-local','month','number'].includes(control.type) ||
+      namedFilterLabels.has(text) || /公司|事业部|部门|经营组|销售组|负责人|领导|呼叫中心/.test(text);
+  }
+  function groupFilterDates(form) {
+    form.querySelectorAll('label.data-filter-named').forEach(first => {
+      if (first.closest('.data-filter-date-pair')) return;
+      const a=first.querySelector('input'), second=first.nextElementSibling;
+      if (!a || !['date','month'].includes(a.type) || !second?.matches('label')) return;
+      const b=second.querySelector('input'), at=first.querySelector('.data-filter-label')?.textContent.trim(), bt=second.querySelector('.data-filter-label')?.textContent.trim();
+      if (!b || b.type!==a.type || !at || !bt || !/(开始|自|开始日)$/.test(at) || !/(结束|至|结束日)$/.test(bt)) return;
+      const base=at.replace(/(开始日|开始|自)$/,''), end=bt.replace(/(结束日|结束|至)$/,'');
+      if (base!==end) return;
+      const pair=document.createElement('div');pair.className='data-filter-date-pair';
+      const title=document.createElement('span');title.className='data-filter-pair-title';
+      title.textContent=base + (a.type==='date'&&!/日期|期间|范围/.test(base)?'日期':'');
+      const divider=document.createElement('span');divider.textContent='至';
+      first.before(pair);pair.append(title,first,divider,second);
+    });
+    form.querySelectorAll('.data-filter-date-pair').forEach(pair=>{
+      pair.hidden=[...pair.querySelectorAll('label')].every(l=>l.hidden);
+    });
+  }
   function standardizeLabels(form) {
     form.querySelectorAll('label.report-field, label.cf-field').forEach(label => {
       const text = wrapLabelText(label);
       const control = label.querySelector('input:not([type="checkbox"]), select, textarea');
       if (!control || !text) return;
+      label.classList.toggle('data-filter-named', needsFilterLabel(text, control));
+      if (text==='员工编号') label.querySelector('.data-filter-label').textContent='销售人员';
+      if (control.type==='number' && /天数/.test(text) && !label.querySelector('.data-filter-unit')) {
+        const unit=document.createElement('span');unit.className='data-filter-unit';unit.textContent='天';label.append(unit);
+      }
       if (!control.hasAttribute('aria-label')) control.setAttribute('aria-label', text);
+      if (control.matches('select')) {
+        const businessName = text === '主状态'
+          ? (form.closest('[data-budget-targets]') ? '任务状态' : '规则状态')
+          : filterBusinessNames[text] || text;
+        if (!control.hasAttribute('title')) control.title = text;
+        Array.from(control.options).forEach(option => {
+          if (!filterOptionNames.has(option)) filterOptionNames.set(option, cleanText(option.textContent.trim()));
+          const original=filterOptionNames.get(option);
+          let name = genericFilterOptions.has(original) ? '全部' + businessName : original;
+          if (original==='授权全部') name='全部授权'+(text.includes('部门')?'部门':text.includes('门店')?'门店':'公司');
+          if (original==='全部，分公司') name='全部核算公司（分列）';
+          if (original==='全部，分别列示') name='全部核算主体（分列）';
+          if (text==='集团内外' && ['外部','内部'].includes(original)) name='集团'+original;
+          if (text==='订单状态' && ['有效','已取消','未确认'].includes(original)) name=original+'订单';
+          if (text==='统计粒度' && ['月','周（周一开始）'].includes(original)) name='按'+original;
+          if (text==='统计期间' && original==='7日') name='所选7日区间';
+          if (name===original && !genericFilterOptions.has(original)) return;
+          if (option.textContent !== name) {
+            // Options without a value attribute derive their value from their text.
+            option.value = option.value;
+            option.textContent = name;
+          }
+        });
+      }
       if (control.matches('input[type="text"], input[type="search"]') && !control.placeholder) control.placeholder = text;
+      if (control.matches('input[type="text"], input[type="search"]') && ['确认情况包含','核对结果包含'].includes(text)) control.placeholder='输入'+text.replace('包含','')+'关键词';
     });
+    groupFilterDates(form);
     form.querySelectorAll(':scope details > summary, :scope > details > summary').forEach(summary => {
       if (/更多/.test(summary.textContent)) summary.textContent = '更多筛选';
     });
@@ -258,6 +322,26 @@
     nodes.forEach(item => surface.append(item));
   }
 
+  function positionColumnPickers() {
+    document.querySelectorAll('details.report-columns, details.cf-columns').forEach(picker => {
+      let toolbar = picker.parentElement;
+      if (!toolbar.matches('[data-fr-explorer], .cf-workbar, .data-column-toolbar')) {
+        const heading = picker.previousElementSibling;
+        toolbar = document.createElement('div');
+        toolbar.className = 'data-column-toolbar';
+        picker.before(toolbar);
+        if (heading?.matches('.report-section-head')) toolbar.append(heading);
+        toolbar.append(picker);
+      }
+      toolbar.classList.add('data-column-toolbar');
+    });
+    document.querySelectorAll('[data-fr-explorer], .data-column-toolbar').forEach(toolbar => {
+      toolbar.classList.add('data-column-toolbar');
+      const summary = toolbar.querySelector(':scope > details > summary');
+      toolbar.classList.toggle('data-column-no-picker', !summary?.checkVisibility());
+    });
+  }
+
   function standardize() {
     const unitList = Array.from(document.querySelectorAll(unitSelector));
     const units = new Set(unitList);
@@ -273,6 +357,7 @@
       wrapResults(form);
       cleanPresentation(unit);
     });
+    positionColumnPickers();
   }
 
   let queued = false;
