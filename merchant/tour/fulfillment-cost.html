@@ -544,6 +544,7 @@
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
       </div>
       <div class="modal-body">
+        <section class="drawer-section"><h3 class="drawer-section-title">公司协议与付款责任依据</h3><div id="paymentAgreementBasis"></div></section>
         <div id="paymentApplySummary" class="description-grid"></div>
         <section class="drawer-section payment-detail-section" id="eligibleCostItems">
           <div class="drawer-section-head payment-detail-section-head">
@@ -620,6 +621,7 @@
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-modal>×</button>
       </div>
       <div class="modal-body">
+        <section class="drawer-section"><h3 class="drawer-section-title">公司协议与付款责任依据</h3><div id="paymentRecordAgreementBasis"></div></section>
         <div id="paymentViewSummary" class="description-grid"></div>
         <div class="form-section-title">关联成本明细</div>
         <section class="table-wrap fulfillment-cost-inner-table drawer-table-compact drawer-table-cols-7" aria-label="付款申请关联成本">
@@ -672,6 +674,7 @@
     </div>
   </div>
 
+  <script src="../../shared/supplier-company-agreements.js"></script>
   <script>
     (function () {
       var pageParams = new URLSearchParams(window.location.search);
@@ -761,7 +764,7 @@
             ['国际机票', '中国国际航空', '14人', 8629, 120800, '已确认', '来源交通资源采购，PNR 已回写14人'],
             ['票损', '中国国际航空', '5人', 8720, 43600, '待确认', 'DL后未使用座位，按免损规则计入'],
             ['酒店住宿', '欧洲酒店集团', '11晚×14间', 2964, 41500, '部分确认', '尾房待确认'],
-            ['地接服务费', '欧洲地接ABC', '27人', 320, 8640, '待确认', '地接账单待回传']
+            ['地接服务费', '欧洲联合地接社', '27人', 320, 8640, '待确认', '地接账单待回传']
           ]
         },
         {
@@ -1096,9 +1099,16 @@
         }
       ];
 
+      // 已发生成本保留当时的公司协议，不随续签改用新协议。
+      schedules[0].items[3].purchaseCompany = '福建凯撒';
+      schedules[0].items[3].agreementNo = 'AGR-EU-FJ-015';
+      schedules[0].items[3].agreementUsedOn = '2026-07-02';
       var payableCostGroups = [
         {
           id: 'payable-eu20260818-air',
+          agreementNo: 'AGR-AIR-FJ-001',
+          agreementUsedOn: '2026-06-18',
+          agreementEventDate: '2026-07-25',
           supplier: '中国国际航空',
           account: '中国银行厦门分行 6688',
           currency: 'CNY',
@@ -1149,7 +1159,10 @@
         },
         {
           id: 'payable-eu-ground-prepay',
-          supplier: '欧洲地接ABC',
+          agreementNo: 'AGR-EU-FJ-015',
+          agreementUsedOn: '2026-07-02',
+          agreementEventDate: '2026-07-02',
+          supplier: '欧洲联合地接社',
           account: '招商银行厦门分行 5077',
           currency: 'CNY',
           entity: '福建凯撒',
@@ -2056,6 +2069,9 @@
               entity: group.entity,
               node: group.node,
               contract: group.contract,
+              agreementNo: group.agreementNo || '',
+              agreementUsedOn: group.agreementUsedOn || '',
+              agreementEventDate: group.agreementEventDate || '',
               billNo: group.billNo,
               sourceType: group.sourceType || '',
               subject: paymentSubject(item)
@@ -3020,6 +3036,7 @@
           var attachments = item.attachment ? 1 : (/已确认/.test(item[5] || '') ? 2 : (/部分|差异/.test(item[5] || '') ? 1 : 0));
           return {
             supplier: item[1],
+            agreementBasis: item.agreementNo ? SupplierCompanyAgreements.basisHtml({ agreementNo: item.agreementNo, supplier: item[1], businessCompany: item.purchaseCompany, usedOn: item.agreementUsedOn }) : '',
             item: item[0],
             currency: currency.code,
             rate: currency.rate,
@@ -3288,6 +3305,7 @@
             tag(status, status === '已结算' ? 'tag tag-green' : 'tag tag-gray') +
           '</div>' +
           '<div class="settlement-basis-summary-line">' +
+            '<span>产品提供公司 <strong>' + escapeHtml(schedule.providingCompany || '福建凯撒') + '</strong></span>' +
             '<span>团号 <strong>' + escapeHtml(schedule.id || '-') + '</strong></span>' +
             '<span>确认人数 <strong>' + escapeHtml(settlementInfo(schedule).confirmedPeople || schedule.people || '-') + '</strong></span>' +
             '<span>负责人 <strong>' + escapeHtml(schedule.owner || '-') + '</strong></span>' +
@@ -3373,7 +3391,7 @@
           var rateText = row.currency === 'CNY' ? '本币计价' : ('汇率 ' + row.rate);
           var attachmentHtml = row.attachments ? '<button class="table-action-primary" type="button" data-toast="已打开成本附件">' + row.attachments + '份附件</button>' : '<span class="text-muted">待上传</span>';
           return '<tr>' +
-            '<td><div class="cost-cell-stack"><strong>' + escapeHtml(row.supplier || '-') + '</strong><span class="cost-cell-sub">' + escapeHtml(row.currency || '-') + '</span></div></td>' +
+            '<td><div class="cost-cell-stack"><strong>' + escapeHtml(row.supplier || '-') + '</strong><span class="cost-cell-sub">' + escapeHtml(row.currency || '-') + '</span>' + (row.agreementBasis ? '<details><summary>采购公司与协议</summary>' + row.agreementBasis + '</details>' : '') + '</div></td>' +
             '<td><div class="cost-cell-stack"><strong>' + escapeHtml(row.item || '-') + '</strong><span class="cost-cell-sub">' + escapeHtml(row.note || '-') + '</span></div></td>' +
             '<td><div class="cost-cell-stack"><span>' + escapeHtml(row.unit) + '</span><span class="cost-cell-sub">数量 ' + escapeHtml(row.quantity || '-') + '</span></div></td>' +
             '<td><div class="cost-cell-stack"><strong class="amount-strong">' + money(row.localAmount) + '</strong><span class="cost-cell-sub">' + escapeHtml(row.originalAmount) + ' · ' + escapeHtml(rateText) + '</span></div></td>' +
@@ -3895,7 +3913,9 @@
           originalAmount: '',
           rate: '1.0000',
           localAmount: '',
-          note: ''
+          note: '',
+          company: settlementEntity(),
+          agreementNo: ''
         }, data || {});
       }
 
@@ -3910,6 +3930,7 @@
             '</div>' +
           '</div>' +
           '<div class="settlement-basis-summary-line">' +
+            '<span>产品提供公司 <strong>' + escapeHtml(schedule.providingCompany || '福建凯撒') + '</strong></span>' +
             '<span>团号 <strong>' + escapeHtml(schedule.id || '-') + '</strong></span>' +
             '<span>确认人数 <strong>' + escapeHtml(info.confirmedPeople || schedule.people || '-') + '</strong></span>' +
             '<span>负责人 <strong>' + escapeHtml(schedule.owner || '-') + '</strong></span>' +
@@ -3934,7 +3955,12 @@
             '<td><input class="form-control" type="text" value="' + escapeHtml(localAmount ? money(localAmount) : '') + '" data-group-cost-local readonly></td>' +
             '<td><input class="form-control" type="text" placeholder="成本说明" value="' + escapeHtml(row.note) + '" data-group-cost-field="note"></td>' +
             '<td><button class="table-link danger table-row-delete" type="button" data-delete-group-cost-row>删除</button></td>' +
-          '</tr>';
+          '</tr><tr data-group-cost-index="' + index + '"><td colspan="6">' +
+            '<div class="form-row"><div class="form-group"><label class="form-label" for="costCompany' + index + '">本项采购公司</label><select id="costCompany' + index + '" class="form-control" data-group-cost-field="company">' + ['福建凯撒', '北京凯撒', '上海凯撒'].map(function (company) { return '<option' + (company === row.company ? ' selected' : '') + '>' + company + '</option>'; }).join('') + '</select></div>' +
+            '<div class="form-group"><label class="form-label" for="costAgreement' + index + '">实际供应商合作协议</label><select id="costAgreement' + index + '" class="form-control" data-group-cost-field="agreementNo"' + (row.supplier === '领队/导游个人' ? ' disabled' : '') + '>' + SupplierCompanyAgreements.options(row.supplier, row.company, row.agreementNo) + '</select></div></div>' +
+            '<p class="form-hint" data-cost-agreement-hint>' + escapeHtml(row.supplier === '领队/导游个人' ? '个人服务费用按派团及费用确认依据审核，不套用企业供应商合作协议。' : row.supplier ? SupplierCompanyAgreements.hint(row.supplier, row.company, row.agreementNo) : '先选实际采购供应商；产品提供公司不能代替地接、酒店等实际采购供应商。') + '</p>' +
+            (row.supplier === '欧洲联合地接社' ? '<a class="link-primary" href="../resource/supplier-detail.html?supplier=SUP-GRP-0007&amp;tab=agreements">查看公司合作与协议</a>' : '') +
+          '</td></tr>';
         }).join('');
       }
 
@@ -3957,6 +3983,15 @@
         var field = target.dataset.groupCostField;
         if (!field) return;
         groupCostDrafts[index][field] = target.value;
+        if (field === 'supplier' || field === 'company') {
+          groupCostDrafts[index].agreementNo = '';
+          renderGroupCostRows();
+          return;
+        }
+        if (field === 'agreementNo') {
+          row.querySelector('[data-cost-agreement-hint]').textContent = SupplierCompanyAgreements.hint(groupCostDrafts[index].supplier, groupCostDrafts[index].company, target.value);
+          return;
+        }
         if (field === 'currency') {
           groupCostDrafts[index].rate = groupCostCurrencyRate(target.value).toFixed(4);
           var original = Number(groupCostDrafts[index].originalAmount || 0);
@@ -3987,6 +4022,8 @@
             index: index + 1,
             subject: String(row.subject || '').trim(),
             supplier: String(row.supplier || '').trim(),
+            company: row.company,
+            agreementNo: row.agreementNo,
             quantity: '1项',
             currency: row.currency || 'CNY',
             originalAmount: originalAmount,
@@ -4013,6 +4050,11 @@
           openActionResult('成本明细未完整', '第 ' + invalid.index + ' 行需补齐费用项目、供应商和原币金额。', '未添加成本。');
           return;
         }
+        var missingAgreement = rows.find(function (row) { return row.supplier !== '领队/导游个人' && !SupplierCompanyAgreements.valid(row.agreementNo, row.supplier, row.company); });
+        if (missingAgreement) {
+          openActionResult('请选择采购公司协议', '第 ' + missingAgreement.index + ' 行需选择与实际供应商及采购公司一致、可新引用的协议。', '草稿可保留；未新增成本，不影响已发生成本及原协议。');
+          return;
+        }
         rows.forEach(function (data) {
           var costSource = groupCostAutoSource(activeSchedule);
           var generatedStatus = groupCostAutoStatus(activeSchedule);
@@ -4024,6 +4066,9 @@
             data.currency !== 'CNY' ? (groupCostCurrencyLabel(data.currency) + '成本，汇率 ' + data.rate) : ''
           ].filter(Boolean).join('；') || '成本待确认';
           var row = [data.subject, data.supplier, data.quantity, data.originalAmount, data.localAmount, generatedStatus, note];
+          row.purchaseCompany = data.company;
+          row.agreementNo = data.agreementNo;
+          row.agreementUsedOn = SupplierCompanyAgreements.reviewDate;
           row.currency = data.currency;
           row.rate = data.rate;
           row.originalAmount = data.originalAmount;
@@ -4237,6 +4282,17 @@
         openLayer(paymentApplyDrawer);
       }
 
+      function paymentAgreementsHtml(items, planDate) {
+        var seen = {};
+        return items.filter(function (item) {
+          var key = [item.supplier, item.entity, item.agreementNo, item.contract, item.agreementUsedOn, item.agreementEventDate].join('|');
+          if (seen[key]) return false;
+          seen[key] = true;
+          return true;
+        }).map(function (item) {
+          return '<div class="drawer-section">' + SupplierCompanyAgreements.basisHtml({ agreementNo: item.agreementNo, businessCompany: item.entity, supplier: item.supplier, contract: item.contract, usedOn: item.agreementUsedOn, eventDate: item.agreementEventDate, planDate: planDate }) + '</div>';
+        }).join('') || '<p class="form-hint">请选择付款成本项。</p>';
+      }
       function updateApplyAmount() {
         var amount = 0;
         document.querySelectorAll('[data-apply-line-index]').forEach(function (checkbox) {
@@ -4253,6 +4309,7 @@
           }
         });
         document.getElementById('paymentApplyTotal').textContent = money(amount);
+        document.getElementById('paymentAgreementBasis').innerHTML = paymentAgreementsHtml(activeSelectedItems(), document.getElementById('expectedPayDate').value);
       }
 
       function nextPaymentNo() {
@@ -4494,6 +4551,7 @@
           '<div class="description-item"><div class="description-label">申请金额</div><div class="description-value amount-strong">' + money(requestAmount(request)) + '</div></div>' +
           '<div class="description-item"><div class="description-label">申请状态</div><div class="description-value">' + tag(applyStatus) + '</div></div>' +
           '<div class="description-item"><div class="description-label">当前节点</div><div class="description-value">' + escapeHtml(request.approvalNode) + '</div></div>';
+        document.getElementById('paymentRecordAgreementBasis').innerHTML = paymentAgreementsHtml(request.items.map(function (item) { var group = payableCostGroups.find(function (source) { return source.id === (item.groupId || request.groupId); }) || {}; return Object.assign({}, group, item); }), request.expectedDate);
         renderPaymentRecordItems(request);
         renderPaymentTimeline(request);
         document.getElementById('paymentApprovalLink').href = request.approvalNo ? '../approval/approvals.html?view=mine&approvalNo=' + encodeURIComponent(request.approvalNo) : '../approval/approvals.html?view=mine';
@@ -4761,6 +4819,7 @@
         if (payableSelect) updateBatchPaymentSelection();
       });
 
+      document.getElementById('expectedPayDate').addEventListener('change', updateApplyAmount);
       document.getElementById('addCostItem').addEventListener('click', addDraftCostRow);
       document.getElementById('openBatchCostAction').addEventListener('click', openBatchCostDrawer);
       document.getElementById('batchCostMode').addEventListener('change', renderBatchCostPreview);
