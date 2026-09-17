@@ -584,6 +584,7 @@
     "product/product-destination-config.html": { href: "product/product-destination-config.html", title: "目的地分类" },
     "product/product-departure-config.html": { href: "product/product-departure-config.html", title: "出发地配置" },
     "resource/visa-library.html": { href: "resource/visa-library.html", title: "签证国家" },
+    "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/refund-rules.html": { href: "resource/refund-rules.html", title: "退改规则" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
     "marketing/campaigns.html": { href: "marketing/campaigns.html", title: "活动管理" },
