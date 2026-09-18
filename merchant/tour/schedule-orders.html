@@ -1304,6 +1304,7 @@
         product: '',
         travelDate: '',
         packageName: '',
+        scheduleNo: '',
         servicePending: false
       };
 
@@ -1465,6 +1466,7 @@
         if (routeFilter.product && !looseMatches(row.dataset.productName || row.dataset.search || row.textContent, routeFilter.product)) return false;
         if (routeFilter.travelDate && row.dataset.travelDate !== routeFilter.travelDate) return false;
         if (routeFilter.packageName && !looseMatches(row.dataset.package || row.dataset.search || row.textContent, routeFilter.packageName)) return false;
+        if (routeFilter.scheduleNo && !looseMatches(row.dataset.scheduleNo || row.dataset.search || row.textContent, routeFilter.scheduleNo)) return false;
         if (routeFilter.servicePending && !isFreeServicePending(row)) return false;
         return true;
       }
@@ -1547,8 +1549,10 @@
         routeFilter.product = pageParams.get('product') || '';
         routeFilter.travelDate = pageParams.get('travelDate') || '';
         routeFilter.packageName = pageParams.get('package') || '';
+        routeFilter.scheduleNo = pageParams.get('scheduleNo') || '';
         routeFilter.servicePending = pageParams.get('confirmStatus') === 'pending' || pageParams.get('view') === 'freeConfirm';
         if (routeFilter.product) document.getElementById('quickSearch').value = routeFilter.product;
+        if (pageParams.get('scheduleNo')) document.getElementById('scheduleNoFilter').value = pageParams.get('scheduleNo');
         if (pageParams.get('source') === 'ota') {
           var channelSelect = document.getElementById('channelSource');
           if (channelSelect) channelSelect.value = 'OTA';
@@ -1863,11 +1867,21 @@
         var tagMeta = sourceCell ? Array.from(sourceCell.querySelectorAll('.tag')).map(function (tag) {
           return plainText(tag);
         }).filter(Boolean).join(' · ') : '';
-        var sourceMeta = [secondaryText(sourceCell), tagMeta].filter(Boolean).join(' · ');
-        var advisor = row.dataset.advisor || '';
-        return '<strong>' + escapeHtml(main || '-') + '</strong>' +
+        var channel = row.dataset.channel || (/分销|代理/.test(main) ? '分销' : /携程|飞猪|OTA/.test(main) ? 'OTA' : '门店');
+        var store = row.dataset.store || '';
+        var distributor = row.dataset.distributor || '';
+        var advisor = row.dataset.advisor || '王芳';
+        var occupationNo = row.dataset.occupationNo || ('ZY-' + (rowOrderNo(row) || '待生成'));
+        var type = rowProductType(row);
+        var occupationUnit = row.dataset.occupationUnit || (type === '邮轮' ? '间' : type === '专列' ? '铺' : '人');
+        var occupationQuantity = row.dataset.occupationQuantity || row.dataset.people || (type === '邮轮' ? '1' : type === '专列' ? '3' : '2');
+        var entity = channel === '分销' || channel === '分销商' ? (distributor || main) : channel === 'OTA' ? (row.dataset.otaPlatform || main) : (store || main);
+        var sourceMeta = channel === '分销' || channel === '分销商'
+          ? [store ? '代下单门店 ' + store : '', tagMeta].filter(Boolean).join(' · ')
+          : [secondaryText(sourceCell), tagMeta].filter(Boolean).join(' · ');
+        return '<strong>' + escapeHtml(channel + ' · ' + (entity || '-')) + '</strong>' +
           (sourceMeta ? '<span class="text-muted">' + escapeHtml(sourceMeta) + '</span>' : '') +
-          (advisor ? '<span class="text-muted">' + escapeHtml('店员 ' + advisor) + '</span>' : '');
+          '<span class="text-muted">' + escapeHtml('顾问 ' + advisor + ' · 占用 ' + occupationNo + ' · ' + occupationQuantity + occupationUnit) + '</span>';
       }
 
       function contractDocsHtml(row, docCell) {
@@ -2368,6 +2382,13 @@
           row.dataset.productSource = order.productSource || '';
           row.dataset.productName = order.productName || '';
           row.dataset.store = storeName;
+          row.dataset.channel = order.channel || '门店';
+          row.dataset.distributor = order.distributor && order.distributor !== '不适用' ? order.distributor : '';
+          row.dataset.otaPlatform = order.otaPlatform && order.otaPlatform !== '不适用' ? order.otaPlatform : '';
+          row.dataset.advisor = order.advisor || '';
+          row.dataset.occupationNo = order.occupation && order.occupation.recordNo ? order.occupation.recordNo : '';
+          row.dataset.occupationUnit = order.occupation && order.occupation.unit ? order.occupation.unit : '';
+          row.dataset.occupationQuantity = order.occupation ? String(order.occupation.quantity || 0) : '';
           row.dataset.resourceStatus = resourceStatus;
           row.dataset.purchaseStatus = purchaseStatus;
           row.dataset.docStatus = order.docStatus || '待补资料';
@@ -2386,6 +2407,10 @@
             order.productSource,
             order.routeText,
             order.sourceNo,
+            order.channel,
+            order.distributor,
+            order.advisor,
+            order.occupation && order.occupation.recordNo,
             serviceNo,
             order.receivableNo
           ].join(' ');
@@ -4685,7 +4710,7 @@
       }
 
       document.getElementById('resetOrders').addEventListener('click', function () {
-        routeFilter = { product: '', travelDate: '', packageName: '', servicePending: false };
+        routeFilter = { product: '', travelDate: '', packageName: '', scheduleNo: '', servicePending: false };
         document.querySelectorAll('.orders-filter input').forEach(function (input) {
           if (input.type !== 'checkbox' && input.type !== 'radio') input.value = '';
         });
@@ -4702,6 +4727,10 @@
 
       applyUrlFilters();
       applyOrderFilters();
+      window.setTimeout(applyOrderFilters, 0);
+      window.addEventListener('load', function () {
+        window.setTimeout(applyOrderFilters, 50);
+      });
     })();
   </script>
 </body>

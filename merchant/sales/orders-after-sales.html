@@ -365,6 +365,44 @@
         }
       };
 
+      var afterSalesResultDetails = {
+        'TRF-20260629-003': {
+          resource: [['原占用记录', 'ZY-EU-DEAT-20260815-003'], ['原渠道', '门店 / 软件园门店'], ['原占用', '4人'], ['本次拟释放', '4人'], ['实际释放', '0人，待补差到账后处理', true], ['目标团期占用', 'EU-DEAT-20260905-001 / 已锁定4人'], ['原渠道余额', '暂不变化'], ['处理状态', '待客户补差', true], ['占位到期规则', '目标团期锁位24小时；沿用订单锁定规则']],
+          payment: [['调整前应收', '¥102,400'], ['调整后应收', '¥104,800'], ['本次应补', '¥2,400', true], ['客户已补', '¥0'], ['款项单据', 'SK20260629017'], ['款项状态', '待收款', true]]
+        },
+        'CAN-20260630-006': {
+          resource: [['原占用记录', 'ZY-EU-CLASSIC-20260720-006'], ['原渠道', '代理 / 北京远行国际代理中心'], ['原占用', '2人'], ['本次拟释放', '2人'], ['实际释放', '0人，待计调确认'], ['释放去向', '只归还代理渠道'], ['原渠道余额', '代理可用4人，确认后预计6人'], ['处理状态', '资源确认中', true], ['占位到期规则', '待配置；未配置前不自动释放', true]],
+          payment: [['订单应收', '¥25,600'], ['客户已收', '¥25,600'], ['供应商扣损', '待计调确认', true], ['预计退款', '¥25,600'], ['退款申请', '资源确认后生成'], ['款项状态', '未进入财务执行', true]]
+        },
+        'RFD-20260627-006': {
+          resource: [['原占用记录', 'ZY-CR-MED-20260720-006'], ['原渠道', '门店 / 软件园门店'], ['原占用', '阳台舱1间'], ['实际释放', '阳台舱1间', true], ['释放去向', '原门店渠道'], ['原渠道余额', '可用3间 → 4间'], ['旅客人数', '成人2人，人数另列'], ['处理状态', '已取得船方退舱确认', true], ['占位到期规则', '邮轮Final Payment退舱 v5']],
+          payment: [['可退金额', '¥21,800'], ['船方扣损', '¥3,200'], ['港务税可退', '¥1,600'], ['申请退款', '¥18,600', true], ['退款单', 'TK20260627006'], ['款项状态', '待财务执行', true]]
+        },
+        'RFD-CRU-CHD-20260702-007': {
+          resource: [['原占用记录', 'ZY-CRU-CHD-20260702-007'], ['原渠道', '门店 / 软件园门店'], ['退订对象', '儿童不占位1人'], ['实际释放', '0间'], ['处理依据', '儿童不占舱房库存'], ['原渠道余额', '保持不变'], ['处理状态', '只调整入住结构', true], ['占位到期规则', '订单快照 / 不涉及舱房释放']],
+          payment: [['儿童不占位可退', '¥8,800'], ['扣损金额', '¥0'], ['申请退款', '¥8,800', true], ['退款方式', '原路退回'], ['款项状态', '待财务执行', true]]
+        },
+        'CAN-CRU-EXTRA-20260704-008': {
+          resource: [['原占用记录', 'ZY-CRU-EXTRA-20260704-008'], ['原渠道', '门店 / 软件园门店'], ['退订对象', '同舱第三人1人'], ['实际释放', '0间'], ['处理依据', '第三/第四人不新增舱房'], ['原渠道余额', '保持不变'], ['处理状态', '待船方确认扣损', true], ['占位到期规则', '订单快照 / 不涉及整舱释放']],
+          payment: [['第三人对客价', '¥16,800'], ['船方扣损', '待确认', true], ['预计退款', '待确认'], ['退款申请', '资源确认后生成'], ['款项状态', '未进入财务执行', true]]
+        },
+        'AFT-TR-20260628-009': {
+          resource: [['原占用记录', 'ZY-TR-SILK-20260805-009'], ['原渠道', '门店 / 泉州丰泽门店'], ['原占用', '软卧上铺2铺'], ['本次释放', '0铺'], ['目标占用', '软卧下铺2铺，待确认'], ['处理依据', '改铺确认前保留原上铺'], ['原渠道余额', '保持不变'], ['处理状态', '资源确认中', true], ['占位到期规则', '专列铺位变更规则待配置；不自动释放', true]],
+          payment: [['本次应补', '¥1,360', true], ['客户已补', '¥0'], ['供应商差额', '待确认'], ['款项单据', '资源确认后生成'], ['款项状态', '待确认', true]]
+        }
+      };
+
+      function resultSections(data) {
+        var result = afterSalesResultDetails[data.serviceNo] || {
+          resource: [['原订单', data.orderNo], ['原占用记录', '待从订单占用依据带入'], ['原渠道', '待从订单归属带入'], ['资源处理结果', data.resource || '待确认'], ['实际释放', '待计调确认'], ['释放去向', '确认后只归还原渠道'], ['占位到期规则', '待配置时不自动释放', true]],
+          payment: [['金额影响', data.amount || '-'], ['扣损口径', data.deduction || '-'], ['款项处理结果', data.finance || '待确认'], ['款项状态', data.status === '已通过' ? '待下游执行' : data.status, true]]
+        };
+        return [
+          { title: '资源处理结果', rows: result.resource },
+          { title: '款项处理结果', rows: result.payment }
+        ];
+      }
+
       function detailValue(value, tag) {
         if (tag) return '<span class="tag ' + tagClass(value) + '">' + escapeHtml(value) + '</span>';
         return escapeHtml(value || '-');
@@ -406,7 +444,10 @@
         document.getElementById('afterSalesSummary').innerHTML = detail.summary.map(function (rowItem) {
           return item(rowItem[0], rowItem[1], rowItem[2]);
         }).join('');
-        document.getElementById('afterSalesDetailSections').innerHTML = (detail.sections || []).map(detailSectionHtml).join('');
+        var sections = (detail.sections || []).slice();
+        var timeline = sections.filter(function (section) { return section.type === 'timeline'; });
+        sections = sections.filter(function (section) { return section.type !== 'timeline'; }).concat(resultSections(data), timeline);
+        document.getElementById('afterSalesDetailSections').innerHTML = sections.map(detailSectionHtml).join('');
         openLayer(detailDrawer);
       }
 

@@ -220,7 +220,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="channelSource">具体渠道</label>
-                  <select id="channelSource" class="form-control">
+                  <select id="channelSource" class="form-control" disabled>
                     <option>门店</option>
                     <option>直客</option>
                     <option>分销</option>
@@ -230,7 +230,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="storeName">归属门店</label>
-                  <select id="storeName" class="form-control">
+                  <select id="storeName" class="form-control" disabled>
                     <option>软件园门店</option>
                     <option>文灶门店</option>
                     <option>观音山门店</option>
@@ -239,7 +239,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="salesName">下单销售</label>
-                  <select id="salesName" class="form-control">
+                  <select id="salesName" class="form-control" disabled>
                     <option>王芳</option>
                     <option>李导</option>
                     <option>陈刚</option>
@@ -280,6 +280,7 @@
                   </select>
                 </div>
               </div>
+              <div id="bookingChannelQuota" class="booking-channel-quota" aria-live="polite"></div>
             </section>
 
             <section class="booking-section" aria-labelledby="bookingOwnershipTitle" hidden>
@@ -654,6 +655,11 @@
       const pageParams = new URLSearchParams(window.location.search);
       const sourceContext = buildSourceContext(pageParams);
       const isIntentTransferEntry = pageParams.get('from') === 'intent';
+      const loginOwnership = {
+        channel: sourceContext.isSingleGroup || pageParams.get('from') === 'enterpriseCustomer' ? '企业客户' : (pageParams.get('loginChannel') || '门店'),
+        store: pageParams.get('loginStore') || '软件园门店',
+        advisor: pageParams.get('loginAdvisor') || '王芳'
+      };
       const bookingDrawer = document.getElementById('bookingDrawer');
       const bookingModeButtons = Array.from(document.querySelectorAll('[data-booking-mode]'));
       const bookingModeSwitch = document.querySelector('.booking-mode-switch');
@@ -1923,19 +1929,91 @@
         }, 0);
       }
 
+      function occupancyQuantitySnapshot() {
+        if (!usesCompositionRows()) return salesPeopleCountSnapshot();
+        ensureCompositionRows();
+        return saleCompositionRows.reduce(function (sum, row) {
+          if (currentProduct.type === 'cruise') return sum + Number(row.cabinCount || 0);
+          if (currentProduct.type === 'train') return sum + Number(row.adultOccupancy || 0) + Number(row.childOccupancy || 0);
+          return sum + Number(row.roomCount || 0);
+        }, 0);
+      }
+
+      function occupancyUnitSnapshot() {
+        if (currentProduct.type === 'cruise') return '间';
+        if (currentProduct.type === 'train') return '铺';
+        if (currentProduct.type === 'free') return '间';
+        return '人';
+      }
+
+      function channelQuotaSnapshot() {
+        const samples = {
+          '门店': { allocated: 5, used: 3 },
+          '直客': { allocated: 5, used: 4 },
+          '分销': { allocated: 10, used: 6 },
+          'OTA': { allocated: 8, used: 6 },
+          '企业客户': { allocated: 80, used: 0 }
+        };
+        const sample = samples[channelSource.value] || { allocated: 0, used: 0 };
+        return {
+          channel: channelSource.value,
+          allocated: Number(sample.allocated || 0),
+          used: Number(sample.used || 0),
+          available: Math.max(Number(sample.allocated || 0) - Number(sample.used || 0), 0),
+          quantity: occupancyQuantitySnapshot(),
+          unit: occupancyUnitSnapshot()
+        };
+      }
+
+      function renderChannelQuota() {
+        const target = document.getElementById('bookingChannelQuota');
+        if (!target) return;
+        if (isManualMode()) {
+          target.hidden = true;
+          target.innerHTML = '';
+          return;
+        }
+        const quota = channelQuotaSnapshot();
+        target.hidden = false;
+        target.innerHTML = '<div><span>占用渠道</span><strong>' + escapeHtml(quota.channel) + '</strong></div>' +
+          '<div><span>分配名额</span><strong>' + escapeHtml(quota.allocated + quota.unit) + '</strong></div>' +
+          '<div><span>已占用</span><strong>' + escapeHtml(quota.used + quota.unit) + '</strong></div>' +
+          '<div><span>当前可用</span><strong>' + escapeHtml(quota.available + quota.unit) + '</strong></div>' +
+          '<div><span>本单拟占用</span><strong>' + escapeHtml(quota.quantity + quota.unit) + '</strong></div>';
+      }
+
       function saveCreatedOrderSnapshot(orderNo, stock, totalText, customerPayableText, process, discountUsages) {
         const store = readStored('caesarOrderFinanceEvents');
         if (!store.orders) store.orders = {};
         const typeLabel = orderTypeLabel();
         const customer = document.getElementById('contactName').value.trim();
         const phone = document.getElementById('contactPhone').value.trim();
-        const scheduleNo = stock && stock[1] ? stock[1] : '';
-        const travelDate = stock && stock[0] ? stock[0] : '';
+        const scheduleNo = pageParams.get('scheduleNo') || (stock && stock[1] ? stock[1] : '');
+        const travelDate = pageParams.get('date') || (stock && stock[0] ? stock[0] : '');
         const amountNumber = calcTotal();
         const discountAmount = discountTotal(discountUsages);
         const createdAt = dateTimeText();
         const confirmedAt = process.status === '已确认' ? createdAt : '';
         const ownership = businessOwnershipSnapshot();
+        const quota = channelQuotaSnapshot();
+        const createsOccupation = ['已确认', '占位', '预留'].indexOf(process.status) >= 0 && !isManualMode();
+        const occupation = {
+          recordNo: createsOccupation ? 'ZY-' + orderNo : '',
+          scheduleNo: scheduleNo,
+          channel: ownership.channel,
+          store: ownership.store,
+          distributor: ownership.distributor,
+          advisor: ownership.salesName,
+          specification: usesCompositionRows() ? salesCompositionRowsSnapshot().map(function (row) { return row.spec; }).filter(Boolean).join('、') : selectedPlanName(),
+          quantity: createsOccupation ? quota.quantity : 0,
+          unit: quota.unit,
+          status: createsOccupation ? '占用中' : '未占位',
+          occupiedAt: createsOccupation ? createdAt : '',
+          quotaBefore: quota.available,
+          quotaAfter: createsOccupation ? Math.max(quota.available - quota.quantity, 0) : quota.available,
+          expiryRule: !createsOccupation ? '不适用（未占位）' : (process.status === '占位' || process.status === '预留' ? '待配置' : '订单确认后持续占用'),
+          ruleVersion: !createsOccupation ? '' : (process.status === '占位' || process.status === '预留' ? '待配置' : '2026年渠道占用规则')
+        };
         store.orders[orderNo] = Object.assign({}, store.orders[orderNo] || {}, {
           orderNo: orderNo,
           orderType: typeLabel,
@@ -1966,6 +2044,7 @@
             capturedAt: createdAt,
             confirmedAt: confirmedAt
           }),
+          occupation: occupation,
           amount: totalText,
           amountValue: amountNumber,
           receivableCurrency: receivableCurrencyValue(),
@@ -2007,7 +2086,8 @@
             compositionKind: usesCompositionRows() ? compositionKindLabel() : '',
             stockUnit: usesCompositionRows() ? compositionStockUnit() : '',
             compositionRows: salesCompositionRowsSnapshot(),
-            priceGroups: salesPriceGroupsSnapshot()
+            priceGroups: salesPriceGroupsSnapshot(),
+            occupation: occupation
           },
           createdAt: createdAt,
           confirmedAt: confirmedAt
@@ -2196,6 +2276,7 @@
         syncPresetPanel();
         renderSourceContext();
         renderBusinessOwnership();
+        renderChannelQuota();
       }
 
       function indexByText(list, value) {
@@ -2388,6 +2469,7 @@
         distributorMemberField.hidden = source !== '分销';
         otaField.hidden = source !== 'OTA';
         renderBusinessOwnership();
+        renderChannelQuota();
       }
 
       function validate() {
@@ -2453,31 +2535,37 @@
 
       function submissionIssues() {
         const mode = orderProcessMode.value;
-        if (mode === 'draft' || channelSource.value !== '门店') return [];
-        const store = bookingStores[document.getElementById('storeName').value];
-        if (!store) return ['门店有效档案缺失'];
+        if (mode === 'draft') return [];
         const issues = [];
-        if (store.status !== '正常') issues.push('门店' + store.status + '，不能新增订单');
-        if (!store.qualificationUntil || store.qualificationUntil < dateTimeText().slice(0, 10)) issues.push('门店资质未生效或已到期');
-        if (!store.salesEffective) issues.push('门店销售授权尚未生效');
-        if (store.types.indexOf(detailType()) < 0) issues.push('该产品类型不在门店可售范围内');
-        const regions = bookingRegions[currentProduct.id] || [];
-        if (!regions.some(function (region) { return store.regions.indexOf(region) >= 0; })) issues.push('产品目的地未获门店销售授权');
+        if (channelSource.value !== loginOwnership.channel) issues.push('当前登录人未获' + channelSource.value + '渠道下单授权');
+        const store = bookingStores[document.getElementById('storeName').value];
+        if (channelSource.value === '门店') {
+          if (!store) return issues.concat(['门店有效档案缺失']);
+          if (store.status !== '正常') issues.push('门店' + store.status + '，不能新增订单');
+          if (!store.qualificationUntil || store.qualificationUntil < dateTimeText().slice(0, 10)) issues.push('门店资质未生效或已到期');
+          if (!store.salesEffective) issues.push('门店销售授权尚未生效');
+          if (store.types.indexOf(detailType()) < 0) issues.push('该产品类型不在门店可售范围内');
+          const regions = bookingRegions[currentProduct.id] || [];
+          if (!regions.some(function (region) { return store.regions.indexOf(region) >= 0; })) issues.push('产品目的地未获门店销售授权');
+        }
         const stock = selectedStock();
         if (stock && /停售|未发布|已关闭|不可售/.test(stock[4] || '')) issues.push('所选产品或团期当前不可售');
         if (mode === 'pending') return issues;
         if (mode === 'reserve' || mode === 'hold') {
-          if (!store[mode]) issues.push('门店未开通' + (mode === 'reserve' ? '预留' : '占位') + '权限');
-          if (!(Number(store[mode + 'Hours']) > 0) || !store.releaseMode) issues.push('保留期限及到期处理规则尚未确定，请提交待确认或保存草稿');
+          if (channelSource.value === '门店' && !store[mode]) issues.push('门店未开通' + (mode === 'reserve' ? '预留' : '占位') + '权限');
+          if (channelSource.value === '门店' && (!(Number(store[mode + 'Hours']) > 0) || !store.releaseMode)) issues.push('保留期限及到期处理规则尚未确定，请提交待确认或保存草稿');
         }
+        const quota = channelQuotaSnapshot();
+        if (quota.quantity <= 0) issues.push('本单占用数量必须大于0');
+        else if (quota.quantity > quota.available) issues.push(quota.channel + '渠道可用名额不足，当前可用' + quota.available + quota.unit);
         // 普通团期按人数核对；组合舱房、铺位及房型需取得对应规格余量。
         const remaining = stock && !usesCompositionRows() && /余\s*(\d+)\s*位/.exec(stock[2] || '');
         if (!remaining) issues.push('所选资源余量尚未确认');
         else if (salesPeopleCountSnapshot() > Number(remaining[1])) issues.push('所选团期余位不足');
         if (mode === 'confirm') {
           if (!currentProduct.resourceConfirmed) issues.push('本单资源尚未确认');
-          if (store.paymentRequired === null) issues.push('本单付款条件尚未确定');
-          else if (Number(store.paymentRequired) > 0) issues.push('本单尚无已认款或已成功扣款记录');
+          if (channelSource.value === '门店' && store.paymentRequired === null) issues.push('本单付款条件尚未确定');
+          else if (channelSource.value === '门店' && Number(store.paymentRequired) > 0) issues.push('本单尚无已认款或已成功扣款记录');
         }
         return issues;
       }
@@ -3015,6 +3103,9 @@
         renderManualTripFields();
         applyServiceTypeDefaults(false);
       }
+      if (!sourceContext.isSingleGroup && pageParams.get('from') !== 'enterpriseCustomer') channelSource.value = loginOwnership.channel;
+      setSelectValue(document.getElementById('storeName'), loginOwnership.store);
+      setSelectValue(document.getElementById('salesName'), loginOwnership.advisor);
       updateChannelFields();
       renderAll();
     })();

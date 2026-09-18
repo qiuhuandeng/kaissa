@@ -95,6 +95,8 @@
           <div id="overviewProductGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">订单信息</div>
           <div id="overviewOrderGrid" class="description-grid order-overview-grid"></div>
+          <div class="detail-section-title">销售归属与原占用依据</div>
+          <div id="overviewOwnershipGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">客户信息</div>
           <div id="overviewCustomerGrid" class="description-grid order-overview-grid"></div>
           <div id="bookingSectionTitle" class="detail-section-title">报名信息</div>
@@ -1445,6 +1447,40 @@
           sales: (parts[1] || '-').trim()
         };
       }
+
+      function ownershipOccupationItems() {
+        const order = storedOrder || {};
+        const occupation = order.occupation || (order.salesSnapshot && order.salesSnapshot.occupation) || {};
+        const owner = ownerParts();
+        const channel = order.channel || snapshotValue('订单来源') || '门店';
+        const distributor = order.distributor && order.distributor !== '不适用' ? order.distributor : '-';
+        const platform = order.otaPlatform && order.otaPlatform !== '不适用' ? order.otaPlatform : '-';
+        const scheduleNo = occupation.scheduleNo || snapshotValue(['团期编号', '航次编号', '班期编号', '研学团期', '项目团']) || scheduleValue();
+        let unit = occupation.unit || '人';
+        let quantity = Number(occupation.quantity || 0);
+        if (!quantity) {
+          if (config.productType === '邮轮') { quantity = 1; unit = '间'; }
+          else if (config.productType === '专列') { quantity = 3; unit = '铺'; }
+          else quantity = Math.max(config.travelers && config.travelers.rows ? config.travelers.rows.length : 2, 1);
+        }
+        const activeOccupation = !/未占位|待确认|草稿/.test(occupation.status || '') && !/待确认|草稿/.test(config.orderStatus[0]);
+        const recordNo = occupation.recordNo || (activeOccupation ? 'ZY-' + config.orderNo : '未形成占用记录');
+        const expiryRule = occupation.expiryRule || (/预留|占位/.test(config.orderStatus[0]) ? '待配置（未配置前不自动释放）' : '订单确认后持续占用');
+        return [
+          ['销售渠道', channel],
+          ['销售门店', order.store || owner.store],
+          ['分销商', distributor],
+          ['OTA平台', platform],
+          ['销售顾问', order.advisor || owner.sales],
+          ['团期／航次／班期', scheduleNo],
+          ['原占用记录', recordNo],
+          ['原渠道配额', occupation.channel || channel],
+          ['资源规格', occupation.specification || snapshotValue(['线路', '套餐', '锁定报价'])],
+          ['原占用数量', activeOccupation ? quantity + unit : '0' + unit],
+          ['当前占用状态', occupation.status || (activeOccupation ? '占用中' : '未占位')],
+          ['占位到期规则', expiryRule + (occupation.ruleVersion ? ' / ' + occupation.ruleVersion : '')]
+        ];
+      }
       function contactParts() {
         const parts = String(config.contact || '').split(' ');
         return {
@@ -1964,6 +2000,7 @@
           ['来源', meta.source],
           ['渠道', meta.channel]
         ]));
+        setHtml('overviewOwnershipGrid', descriptionGrid(ownershipOccupationItems()));
         setHtml('overviewCustomerGrid', descriptionGrid([
           ['客户名称', contact.name],
           ['客户类型', meta.source === '门店' ? '门店客户' : meta.source],
