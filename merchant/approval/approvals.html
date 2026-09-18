@@ -406,6 +406,9 @@
           businessNo: "PRICE-20260624-003",
           context: "大阪京都线 / 小程序限时促销",
           impact: "-¥42,000",
+          priceBefore: "¥10,000",
+          priceAfter: "¥9,500",
+          finalReceivable: "¥9,200（早鸟价¥9,500 - 优惠券¥300）",
           risk: "毛利仍高于底线",
           riskLevel: "success",
           node: "产品负责人",
@@ -413,10 +416,14 @@
           appliedAt: "2026-06-24",
           sourceHref: "../product/product-pricing.html",
           detail: [
+            ["调整前／调整后", "标准销售价 ¥10,000 → 早鸟价 ¥9,500"],
+            ["最终应收", "¥9,200（优惠券减 ¥300；优惠承担不再次抵减）"],
+            ["申请理由", "小程序暑期提前预订转化率低，申请限时早鸟价"],
             ["调整范围", "小程序与官网，7月22日至8月5日出发团期"],
             ["调整幅度", "成人价下调4%，儿童不占床价不变"],
             ["毛利测算", "调整后团期毛利率18.6%，高于业务线底线15%"],
-            ["通过后", "回写调价记录，订单新报价按审批后价格生效"]
+            ["当前生效", "审批通过前继续使用原价 ¥10,000"],
+            ["通过后", "批准范围内新报价按 ¥9,500 生效；历史订单不追溯"]
           ],
           flow: [
             ["10:15", "李明提交限时调价"],
@@ -424,6 +431,38 @@
             ["当前", "等待产品负责人审批"]
           ],
           opinion: "同意调价。请保留促销周期和渠道保护价记录。"
+        },
+        {
+          no: "APR-PRICE-20260918-002",
+          matter: "折扣申请",
+          source: "产品中心",
+          scopes: ["mine", "overview"],
+          status: "已退回",
+          applicant: "周琳",
+          applicantRole: "加盟门店店长",
+          businessTitle: "欧洲黄金三角12日",
+          businessNo: "EU20260715001",
+          context: "厦门湖里加盟店 / 指定团期",
+          impact: "¥10,000 → ¥9,600",
+          priceBefore: "¥10,000",
+          priceAfter: "¥9,600",
+          pricingPermission: "加盟自主定价权限：未配置，只允许发起价格申请",
+          risk: "批准前原价继续有效",
+          riskLevel: "warning",
+          node: "申请人修改重提",
+          due: "待修改",
+          appliedAt: "2026-09-18",
+          sourceHref: "../product/product-pricing.html",
+          detail: [
+            ["调整前／调整后", "当前有效价 ¥10,000 → 申请价 ¥9,600"],
+            ["申请理由", "企业客户8人同行，申请团体优惠"],
+            ["适用范围", "仅 EU20260715001、厦门湖里加盟店、8人订单"],
+            ["定价权限", "加盟自主定价权限未配置，只能提交申请，不能直接改价"],
+            ["退回原因", "缺少企业客户名单和折扣承担说明"],
+            ["当前生效", "退回后继续使用原价 ¥10,000"]
+          ],
+          flow: [["09:10", "周琳提交团体折扣申请"], ["10:05", "产品负责人退回补充依据"], ["当前", "等待申请人修改重提"]],
+          opinion: "请补充企业客户名单及门店承担金额。"
         },
         {
           no: "APR-SUP-20260917-003",
@@ -1260,7 +1299,7 @@
         }
         if (currentView === "mine") {
           if (item.status === "已退回") {
-            return "<button type=\"button\" class=\"table-action-primary\" data-approval-action=\"supplement\" data-approval-no=\"" + no + "\">补材料</button><button type=\"button\" data-approval-action=\"withdraw\" data-approval-no=\"" + no + "\">撤回</button><button type=\"button\" data-approval-action=\"detail\" data-approval-no=\"" + no + "\">详情</button>";
+            return "<button type=\"button\" class=\"table-action-primary\" data-approval-action=\"supplement\" data-approval-no=\"" + no + "\">修改重提</button><button type=\"button\" data-approval-action=\"withdraw\" data-approval-no=\"" + no + "\">撤回</button><button type=\"button\" data-approval-action=\"detail\" data-approval-no=\"" + no + "\">详情</button>";
           }
           if (item.status === "审批中" || item.status === "待审批") {
             return "<button type=\"button\" class=\"table-action-primary\" data-approval-action=\"progress\" data-approval-no=\"" + no + "\">进度</button><button type=\"button\" data-approval-action=\"withdraw\" data-approval-no=\"" + no + "\">撤回</button><button type=\"button\" data-approval-action=\"detail\" data-approval-no=\"" + no + "\">详情</button>";
@@ -1311,7 +1350,7 @@
       }
 
       function summaryItems(item) {
-        return [
+        const items = [
           ["审批单号", item.no],
           ["审批事项", item.matter],
           ["来源模块", item.source],
@@ -1323,6 +1362,9 @@
           ["审批状态", item.status],
           ["申请日期", item.appliedAt]
         ];
+        if (item.priceBefore) items.splice(7, 0, ["调整前／调整后", item.priceBefore + " → " + item.priceAfter]);
+        if (item.pricingPermission) items.push(["定价权限", item.pricingPermission]);
+        return items;
       }
 
       function summaryGridHtml(items) {
@@ -1341,7 +1383,7 @@
         if ((item.storeMatter || item.fundMatter) && item.status === "已通过") return item.storeEffect || "审批通过，按批准时间和期望生效日期启用";
         if (item.status === "已通过") return "已通过，来源单据进入下一业务节点";
         if (item.status === "已拒绝") return "已拒绝，来源单据停止当前流转";
-        if (item.status === "已退回") return "已退回，等待申请人补充材料";
+        if (item.status === "已退回") return item.priceBefore ? "已退回，原价 " + item.priceBefore + " 继续有效，等待修改重提" : "已退回，等待申请人补充材料";
         if (item.status === "已撤回") return "已撤回，来源单据回到申请人处理";
         if (item.status === "审批中") return "审批中，当前节点：" + item.node;
         return "待审批，当前节点：" + item.node;
@@ -1376,7 +1418,7 @@
           return "<span class=\"tag tag-red\">撤回申请</span>";
         }
         if (action === "supplement") {
-          return "<span class=\"tag tag-orange\">补充材料</span>";
+          return "<span class=\"tag tag-orange\">修改重提</span>";
         }
         return "";
       }
@@ -1386,7 +1428,7 @@
         if (action === "approve") return "审批";
         if (action === "progress") return "审批流转记录";
         if (action === "withdraw") return "撤回申请";
-        if (action === "supplement") return "补充材料";
+        if (action === "supplement") return item && item.priceBefore ? "修改并重新提交价格申请" : "补充材料";
         return "审批详情";
       }
 
@@ -1405,12 +1447,12 @@
         const canSupplement = currentView === "mine" && action === "supplement" && item.status === "已退回";
         const isOperation = canDecide || canWithdraw || canSupplement;
         decisionPanel.hidden = !isOperation;
-        decisionTitle.textContent = canSupplement ? "补充材料" : canWithdraw ? "撤回申请" : "本次处理";
+        decisionTitle.textContent = canSupplement && item.priceBefore ? "修改重提" : canSupplement ? "补充材料" : canWithdraw ? "撤回申请" : "本次处理";
         decisionControls.innerHTML = decisionControlsHtml(action);
         opinionInput.value = action === "approve" ? (item.opinion || "") : "";
-        opinionInput.placeholder = canSupplement ? "填写补充说明或材料清单" : "填写审批意见，驳回、退回补充或撤回时必填";
+        opinionInput.placeholder = canSupplement && item.priceBefore ? "填写修改内容、补充依据和重新提交说明" : canSupplement ? "填写补充说明或材料清单" : "填写审批意见，驳回、退回补充或撤回时必填";
         cancelBtn.hidden = !isOperation;
-        submitBtn.textContent = canDecide ? "提交审批意见" : canWithdraw ? "确认撤回" : canSupplement ? "提交补充" : "关闭";
+        submitBtn.textContent = canDecide ? "提交审批意见" : canWithdraw ? "确认撤回" : canSupplement && item.priceBefore ? "重新提交" : canSupplement ? "提交补充" : "关闭";
         if (window.caesarUI && window.caesarUI.openLayer) {
           window.caesarUI.openLayer(modal);
         } else {
@@ -1494,6 +1536,9 @@
             }
           }
           updateApprovalStatus(activeApproval, decisionValue === "通过" ? "已通过" : decisionValue === "驳回" ? "已拒绝" : "已退回");
+          if (activeApproval.priceBefore) {
+            activeApproval.detail = activeApproval.detail.concat([[decisionValue === "通过" ? "生效结果" : "当前生效", decisionValue === "通过" ? "批准范围内使用申请价 " + activeApproval.priceAfter + "；原订单不追溯" : "原价 " + activeApproval.priceBefore + " 继续有效"]]);
+          }
           writeApprovalResult(activeApproval, decisionValue);
           renderApprovals();
           toast((activeApproval.storeMatter || activeApproval.fundMatter) ? approvalResultText(activeApproval) : decisionValue === "通过" ? "审批已通过，来源单据进入下一节点" : "审批意见已提交，来源单据等待处理");
@@ -1519,8 +1564,9 @@
           updateApprovalStatus(activeApproval, "审批中");
           activeApproval.node = "原审批节点";
           activeApproval.due = "已重新提交";
+          if (activeApproval.priceBefore) activeApproval.detail = activeApproval.detail.concat([["重提说明", opinionInput.value.trim()], ["当前生效", "重新审批期间继续使用原价 " + activeApproval.priceBefore]]);
           renderApprovals();
-          toast("补充材料已提交，审批继续流转");
+          toast(activeApproval.priceBefore ? "价格申请已重新提交，批准前继续使用原价" : "补充材料已提交，审批继续流转");
           closeModal();
           return;
         }

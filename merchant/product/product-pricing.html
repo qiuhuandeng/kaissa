@@ -97,7 +97,7 @@
         <button class="btn btn-secondary" type="button" data-close-pricing>取消</button>
         <button id="pricingViewToEdit" class="btn btn-secondary" type="button" hidden>编辑</button>
         <button id="savePricingDraft" class="btn btn-secondary" type="button">保存草稿</button>
-        <button id="enablePricingStrategy" class="btn btn-primary" type="button">保存并启用</button>
+        <button id="enablePricingStrategy" class="btn btn-primary" type="button">提交审批</button>
       </div>
     </section>
   </div>
@@ -401,7 +401,7 @@
       }
 
       function statusText(status) {
-        return status === 'active' ? '启用中' : status === 'draft' ? '草稿' : status === 'approving' ? '审批中' : '已停用';
+        return status === 'active' ? '已生效' : status === 'draft' ? '草稿' : status === 'approving' ? '审批中' : '已停用';
       }
 
       function statusClass(status) {
@@ -470,7 +470,7 @@
                 '<button type="button" data-pricing-action="products" data-id="' + strategy.id + '">线路</button>' +
                 '<button type="button" data-pricing-action="groups" data-id="' + strategy.id + '">团期</button>' +
                 '<button type="button" data-pricing-action="history" data-id="' + strategy.id + '">记录</button>' +
-                (strategy.status === 'active' ? '<button type="button" data-pricing-action="inactive" data-id="' + strategy.id + '">停用</button>' : '<button type="button" data-pricing-action="active" data-id="' + strategy.id + '">启用</button>') +
+                (strategy.status === 'active' ? '<button type="button" data-pricing-action="inactive" data-id="' + strategy.id + '">停用</button>' : strategy.status === 'draft' ? '<button type="button" data-pricing-action="active" data-id="' + strategy.id + '">提交审批</button>' : '') +
                 (strategy.status === 'draft' ? '<button type="button" class="danger" data-pricing-action="delete" data-id="' + strategy.id + '">删除</button>' : '') +
               '</span></span>' +
             '</div></td>' +
@@ -497,6 +497,18 @@
           linkedGroups: 0,
           linkedChannels: 0,
           scopeDetail: '按目的地分类匹配产品线路',
+          priceBasis: {
+            standardSale: 10000,
+            suggestedRetail: 10800,
+            supplierQuote: 7600,
+            currency: 'CNY',
+            specification: '成人',
+            validFrom: '2026-07-01',
+            validTo: '2026-12-31',
+            version: 'V1.0',
+            priority: 100,
+            conflictMode: 'block'
+          },
           seasonPricing: {
             enabled: true,
             mode: 'fixed',
@@ -567,7 +579,7 @@
       }
 
       function formFromStrategy(strategy) {
-        var form = defaultForm();
+        var form = strategy.pricingForm ? clone(strategy.pricingForm) : defaultForm();
         form.id = strategy.id;
         form.name = strategy.name;
         form.layer = strategy.layer;
@@ -813,6 +825,15 @@
                 '<option' + selectedAttr(form.category, '单项委托') + '>单项委托</option>' +
               '</select></div>' +
               renderPricingDestinationSelect() +
+              '<div class="form-group"><label class="form-label">标准销售价 <span class="req">*</span></label><input class="form-control" type="number" min="0" data-type="number" data-path="priceBasis.standardSale" value="' + escapeHtml(form.priceBasis.standardSale) + '"' + disabled + '></div>' +
+              '<div class="form-group"><label class="form-label">建议零售价</label><input class="form-control" type="number" min="0" data-type="number" data-path="priceBasis.suggestedRetail" value="' + escapeHtml(form.priceBasis.suggestedRetail) + '"' + disabled + '></div>' +
+              '<div class="form-group"><label class="form-label">供应商结算报价</label><input class="form-control" type="number" min="0" data-type="number" data-path="priceBasis.supplierQuote" value="' + escapeHtml(form.priceBasis.supplierQuote) + '"' + disabled + '></div>' +
+              '<div class="form-group"><label class="form-label">币种</label><select class="form-control" data-path="priceBasis.currency"' + disabled + '><option' + selectedAttr(form.priceBasis.currency, 'CNY') + '>CNY</option><option' + selectedAttr(form.priceBasis.currency, 'USD') + '>USD</option><option' + selectedAttr(form.priceBasis.currency, 'EUR') + '>EUR</option></select></div>' +
+              '<div class="form-group"><label class="form-label">价格规格</label><input class="form-control" type="text" data-path="priceBasis.specification" value="' + escapeHtml(form.priceBasis.specification) + '" placeholder="例如：成人、儿童占床"' + disabled + '></div>' +
+              '<div class="form-group"><label class="form-label">价格有效期</label><div class="pricing-date-range-mini"><input class="form-control" type="date" data-path="priceBasis.validFrom" value="' + escapeHtml(form.priceBasis.validFrom) + '"' + disabled + '><span>至</span><input class="form-control" type="date" data-path="priceBasis.validTo" value="' + escapeHtml(form.priceBasis.validTo) + '"' + disabled + '></div></div>' +
+              '<div class="form-group"><label class="form-label">价格版本</label><input class="form-control" type="text" data-path="priceBasis.version" value="' + escapeHtml(form.priceBasis.version) + '"' + disabled + '></div>' +
+              '<div class="form-group"><label class="form-label">规则优先级</label><input class="form-control" type="number" min="1" data-type="number" data-path="priceBasis.priority" value="' + escapeHtml(form.priceBasis.priority) + '"' + disabled + '></div>' +
+              '<div class="form-group"><label class="form-label">同优先级冲突</label><select class="form-control" data-path="priceBasis.conflictMode"' + disabled + '><option value="block"' + selectedAttr(form.priceBasis.conflictMode, 'block') + '>阻止生效并提示冲突</option><option value="exclusive"' + selectedAttr(form.priceBasis.conflictMode, 'exclusive') + '>明确互斥</option><option value="stack"' + selectedAttr(form.priceBasis.conflictMode, 'stack') + '>允许叠加</option></select></div>' +
               '<div class="form-group form-group-full"><label class="form-label">策略描述</label><textarea class="form-control" rows="2" data-path="description"' + disabled + '>' + escapeHtml(form.description) + '</textarea></div>' +
             '</div></section>';
         }
@@ -1006,11 +1027,14 @@
         if (!form.name.trim()) { toast('请填写策略名称', 'error'); return; }
         if (!form.category) { toast('请选择适用产品大类', 'error'); return; }
         if (!form.objectName.trim()) { toast('请选择目的地分类', 'error'); return; }
-        if (status === 'active' && !Number(form.minPrice.adult || 0)) { toast('请填写成人最低限价', 'error'); return; }
+        if (status === 'approving' && !Number(form.minPrice.adult || 0)) { toast('请填写成人最低限价', 'error'); return; }
+        if (!Number(form.priceBasis.standardSale || 0)) { toast('请填写标准销售价', 'error'); return; }
+        if (form.priceBasis.validFrom > form.priceBasis.validTo) { toast('价格有效期结束日期不能早于开始日期', 'error'); return; }
         form.status = status;
         var existing = strategies.find(function (strategy) { return strategy.id === form.id; });
+        var replaceExisting = existing && existing.status !== 'active';
         var payload = {
-          id: existing ? existing.id : state.nextId++,
+          id: replaceExisting ? existing.id : state.nextId++,
           name: form.name,
           layer: form.layer,
           category: form.category,
@@ -1024,13 +1048,17 @@
           objectName: form.objectName,
           scopeDetail: form.scopeDetail,
           description: form.description,
-          modules: moduleLabels(form)
+          modules: moduleLabels(form),
+          pricingForm: clone(form),
+          parentVersionId: existing && existing.status === 'active' ? existing.id : null
         };
-        if (existing) Object.assign(existing, payload);
+        payload.pricingForm.id = payload.id;
+        payload.pricingForm.status = status;
+        if (replaceExisting) Object.assign(existing, payload);
         else strategies.unshift(payload);
         closeDrawer();
         renderList();
-        toast(status === 'active' ? '定价策略已保存并启用' : '定价策略草稿已保存');
+        toast(status === 'approving' ? (existing && existing.status === 'active' ? '新版本已提交审批，当前在售版本保持不变' : '定价策略已提交审批') : '定价策略草稿已保存');
       }
 
       function handlePricingAction(action, id) {
@@ -1039,10 +1067,10 @@
         if (action === 'view' || action === 'edit') { openDrawer(action, id); return; }
         if (action === 'copy') { openDrawer('copy', id); return; }
         if (action === 'active' || action === 'inactive') {
-          strategy.status = action;
+          strategy.status = action === 'active' ? 'approving' : 'inactive';
           strategy.updatedAt = '2026-07-15';
           renderList();
-          toast(action === 'active' ? '策略已启用' : '策略已停用');
+          toast(action === 'active' ? '策略已提交审批，批准前不影响在售价格' : '策略已停用');
           return;
         }
         if (action === 'delete') {
@@ -1202,7 +1230,7 @@
         renderDrawer();
       });
       els.saveDraft.addEventListener('click', function () { persistForm('draft'); });
-      els.saveEnable.addEventListener('click', function () { persistForm('active'); });
+      els.saveEnable.addEventListener('click', function () { persistForm('approving'); });
 
       els.keyword.value = '';
       els.layer.value = '';

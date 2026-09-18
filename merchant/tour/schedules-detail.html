@@ -297,6 +297,29 @@
           </div>
           <div id="inventoryMatrix" class="schedule-inventory-matrix"></div>
         </section>
+        <section class="schedule-detail-block" aria-labelledby="addonPriceTitle">
+          <div class="schedule-detail-block-head">
+            <h2 id="addonPriceTitle" class="detail-section-title schedule-section-title">附加项目</h2>
+            <button id="openAddAddon" class="btn btn-secondary btn-sm" type="button">新增附加项目</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>项目</th><th>价格状态</th><th>单价／单位</th><th>数量范围</th><th>适用人群</th><th>适用日期</th><th>资源确认</th><th>操作</th></tr></thead>
+              <tbody id="addonPriceRows"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="schedule-detail-block" aria-labelledby="priceCompositionTitle">
+          <div class="schedule-detail-block-head"><h2 id="priceCompositionTitle" class="detail-section-title schedule-section-title">价格构成示例</h2><span class="tag tag-green">最终应收 ¥9,200</span></div>
+          <div class="description-grid" id="schedulePriceComposition">
+            <div class="description-item"><div class="description-label">标准依据</div><div class="description-value">标准销售价 ¥10,000</div></div>
+            <div class="description-item"><div class="description-label">条件定价</div><div class="description-value">早鸟价 ¥9,500</div></div>
+            <div class="description-item"><div class="description-label">营销减免</div><div class="description-value">优惠券 -¥300</div></div>
+            <div class="description-item"><div class="description-label">特批调整</div><div class="description-value">¥0</div></div>
+            <div class="description-item"><div class="description-label">最终应收</div><div class="description-value"><strong>¥9,200</strong></div></div>
+            <div class="description-item"><div class="description-label">优惠承担</div><div class="description-value">平台 ¥210／门店 ¥90，仅解释承担方，不再次抵减应收</div></div>
+          </div>
+        </section>
         <div id="inventoryRecordBlock" class="schedule-detail-block">
           <div class="schedule-detail-block-head">
             <h2 id="inventoryRecordTitle" class="detail-section-title schedule-section-title">占位记录</h2>
@@ -1521,6 +1544,26 @@
     </div>
   </div>
 
+  <div id="addonPriceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md" role="dialog" aria-modal="true" aria-labelledby="addonPriceDrawerTitle">
+      <div class="modal-header"><div id="addonPriceDrawerTitle" class="modal-title">新增附加项目</div><button class="modal-close" type="button" data-close-addon-price>×</button></div>
+      <div class="modal-body">
+        <div class="form-grid form-grid-2">
+          <div class="form-group"><label class="form-label">项目名称 <span class="req">*</span></label><select id="addonName" class="form-control"><option>单房差</option><option>联运</option><option>升舱</option><option>其他</option></select></div>
+          <div class="form-group"><label class="form-label">价格状态 <span class="req">*</span></label><select id="addonStatus" class="form-control"><option>有效销售价</option><option>待报价</option><option>参考价</option></select></div>
+          <div class="form-group"><label class="form-label">单价</label><input id="addonPrice" class="form-control" type="number" min="0" value="1800"></div>
+          <div class="form-group"><label class="form-label">币种／计量单位</label><div class="pricing-date-range-mini"><select id="addonCurrency" class="form-control"><option>CNY</option><option>USD</option><option>EUR</option></select><select id="addonUnit" class="form-control"><option>人</option><option>人/晚</option><option>段</option><option>舱</option></select></div></div>
+          <div class="form-group"><label class="form-label">数量范围</label><div class="pricing-date-range-mini"><input id="addonMin" class="form-control" type="number" min="1" value="1"><span>至</span><input id="addonMax" class="form-control" type="number" min="1" value="1"></div></div>
+          <div class="form-group"><label class="form-label">适用人群</label><input id="addonAudience" class="form-control" value="成人"></div>
+          <div class="form-group"><label class="form-label">适用日期</label><div class="pricing-date-range-mini"><input id="addonStart" class="form-control" type="date" value="2024-07-15"><span>至</span><input id="addonEnd" class="form-control" type="date" value="2024-07-26"></div></div>
+          <div class="form-group"><label class="form-label">资源确认</label><select id="addonResource" class="form-control"><option>无需确认</option><option>下单前确认</option><option>占位后确认</option></select></div>
+          <div class="form-group form-group-full"><div id="addonPriceError" class="form-error" hidden></div></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-addon-price>取消</button><button id="saveAddonPrice" class="btn btn-primary" type="button">保存附加项目</button></div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var tabButtons = Array.from(document.querySelectorAll('.detail-tabs-card .tab-item[data-tab]'));
@@ -1578,6 +1621,14 @@
       var ncRows = document.getElementById('ncRows');
       var financeLinkItems = document.getElementById('financeLinkItems');
       var inventoryMatrix = document.getElementById('inventoryMatrix');
+      var addonPriceRows = document.getElementById('addonPriceRows');
+      var addonPriceDrawer = document.getElementById('addonPriceDrawer');
+      var editingAddonIndex = -1;
+      var addonPrices = [
+        { name: '单房差', status: '有效销售价', price: 1800, currency: 'CNY', unit: '人/晚', min: 1, max: 1, audience: '单人入住成人', start: '2024-07-15', end: '2024-07-26', resource: '无需确认' },
+        { name: '联运', status: '待报价', price: 0, currency: 'CNY', unit: '段', min: 1, max: 2, audience: '上海出发游客', start: '2024-07-15', end: '2024-07-15', resource: '下单前确认' },
+        { name: '升舱', status: '参考价', price: 3200, currency: 'CNY', unit: '人', min: 1, max: 4, audience: '成人及占床儿童', start: '2024-07-15', end: '2024-07-26', resource: '占位后确认' }
+      ];
       var inventoryModeTag = document.getElementById('inventoryModeTag');
       var preparationMilestones = document.getElementById('preparationMilestones');
       var itineraryDays = document.getElementById('itineraryDays');
@@ -1621,6 +1672,55 @@
         status: '开放报名',
         costStatus: '预估成本'
       };
+
+      function addonStatusTag(status) {
+        return status === '有效销售价' ? 'tag tag-green' : status === '待报价' ? 'tag tag-orange' : 'tag tag-blue';
+      }
+
+      function renderAddonPrices() {
+        addonPriceRows.innerHTML = addonPrices.map(function (item, index) {
+          var price = item.status === '待报价' ? '待报价' : item.currency + ' ' + Number(item.price || 0).toLocaleString('zh-CN');
+          return '<tr><td><strong>' + escapeHtml(item.name) + '</strong></td><td><span class="' + addonStatusTag(item.status) + '">' + escapeHtml(item.status) + '</span></td><td>' + escapeHtml(price) + '／' + escapeHtml(item.unit) + '</td><td>' + item.min + '-' + item.max + '</td><td>' + escapeHtml(item.audience) + '</td><td>' + escapeHtml(item.start) + ' 至 ' + escapeHtml(item.end) + '</td><td>' + escapeHtml(item.resource) + '</td><td><button class="table-link" type="button" data-edit-addon="' + index + '">编辑</button></td></tr>';
+        }).join('');
+      }
+
+      function openAddonPrice(index) {
+        editingAddonIndex = typeof index === 'number' ? index : -1;
+        var item = editingAddonIndex > -1 ? addonPrices[editingAddonIndex] : { name: '单房差', status: '有效销售价', price: 1800, currency: 'CNY', unit: '人/晚', min: 1, max: 1, audience: '成人', start: scheduleData.depart, end: scheduleData.back, resource: '无需确认' };
+        document.getElementById('addonPriceDrawerTitle').textContent = editingAddonIndex > -1 ? '编辑附加项目' : '新增附加项目';
+        ['Name', 'Status', 'Price', 'Currency', 'Unit', 'Min', 'Max', 'Audience', 'Start', 'End', 'Resource'].forEach(function (suffix) {
+          var map = { Name: 'name', Status: 'status', Price: 'price', Currency: 'currency', Unit: 'unit', Min: 'min', Max: 'max', Audience: 'audience', Start: 'start', End: 'end', Resource: 'resource' };
+          document.getElementById('addon' + suffix).value = item[map[suffix]];
+        });
+        document.getElementById('addonPriceError').hidden = true;
+        window.caesarUI.openLayer(addonPriceDrawer);
+      }
+
+      function saveAddonPrice() {
+        var item = {
+          name: document.getElementById('addonName').value,
+          status: document.getElementById('addonStatus').value,
+          price: Number(document.getElementById('addonPrice').value || 0),
+          currency: document.getElementById('addonCurrency').value,
+          unit: document.getElementById('addonUnit').value,
+          min: Number(document.getElementById('addonMin').value || 0),
+          max: Number(document.getElementById('addonMax').value || 0),
+          audience: document.getElementById('addonAudience').value.trim(),
+          start: document.getElementById('addonStart').value,
+          end: document.getElementById('addonEnd').value,
+          resource: document.getElementById('addonResource').value
+        };
+        var error = '';
+        if (item.status !== '待报价' && item.price <= 0) error = '参考价或有效销售价必须大于0。';
+        else if (item.min < 1 || item.max < item.min) error = '数量范围必须为正整数，且最大数量不能小于最小数量。';
+        else if (!item.audience || !item.start || !item.end || item.start > item.end) error = '请完整填写适用人群和有效日期。';
+        if (error) { var errorEl = document.getElementById('addonPriceError'); errorEl.textContent = error; errorEl.hidden = false; return; }
+        if (editingAddonIndex > -1) addonPrices[editingAddonIndex] = item; else addonPrices.push(item);
+        renderAddonPrices();
+        closeScheduleLayer(addonPriceDrawer);
+      }
+
+      renderAddonPrices();
       scheduleData.company = pageParams.get('company') || '福建凯撒';
       scheduleData.groupMode = '散拼';
       scheduleData.privateCustomer = '';
@@ -6114,6 +6214,19 @@
         if (event.target.closest('[data-release-seat]') && row) {
           openSeatRelease(row.dataset.inventoryNo || event.target.closest('[data-release-seat]').dataset.inventoryNo);
         }
+      });
+
+      document.getElementById('openAddAddon').addEventListener('click', function () { openAddonPrice(); });
+      addonPriceRows.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-edit-addon]');
+        if (button) openAddonPrice(Number(button.dataset.editAddon));
+      });
+      document.getElementById('saveAddonPrice').addEventListener('click', saveAddonPrice);
+      document.querySelectorAll('[data-close-addon-price]').forEach(function (button) {
+        button.addEventListener('click', function () { closeScheduleLayer(addonPriceDrawer); });
+      });
+      addonPriceDrawer.addEventListener('click', function (event) {
+        if (event.target === addonPriceDrawer) closeScheduleLayer(addonPriceDrawer);
       });
 
       releaseSeatRows.addEventListener('change', function (event) {

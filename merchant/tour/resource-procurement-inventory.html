@@ -5,6 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>机票切位 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .procurement-rule-panel { margin-top: 16px; }
+    .procurement-rule-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .procurement-rule-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #f8fafc; }
+    .procurement-rule-item strong { display: block; font-size: 13px; }
+    .procurement-rule-item span { display: block; margin-top: 2px; color: var(--color-text-muted); font-size: 12px; }
+    .procurement-change-drawer { width: min(1180px, calc(100vw - 32px)); }
+    .procurement-change-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 12px 0 16px; }
+    .procurement-change-summary > div { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #f8fafc; }
+    .procurement-change-summary span { display: block; color: var(--color-text-muted); font-size: 12px; }
+    .procurement-change-summary strong { display: block; margin-top: 2px; font-size: 15px; }
+    .procurement-change-alert { margin-top: 12px; padding: 10px 12px; border: 1px solid #f5d59b; border-radius: var(--radius-md); background: #fff8e8; color: #8a5a00; }
+    .procurement-change-alert.is-ok { border-color: #b9e6cf; background: #effbf5; color: #16794c; }
+    .procurement-inline-error { display: block; margin-top: 4px; color: var(--color-danger); font-size: 12px; }
+    .procurement-rule-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .procurement-table-number { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .procurement-action-pair { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+    .procurement-preview-note { color: var(--color-text-muted); font-size: 12px; }
+    .procurement-payment-record { display: grid; gap: 2px; }
+    .procurement-payment-record a, .procurement-payment-record button { width: fit-content; }
+    .procurement-settings-drawer { width: min(760px, calc(100vw - 32px)); }
+    @media (max-width: 900px) {
+      .procurement-rule-grid, .procurement-change-summary { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -250,19 +275,21 @@
               <h2 class="section-title">库存与价格</h2>
               <button id="detailOpenAllocation" class="btn btn-secondary" type="button">追加分配</button>
             </div>
-          <section class="table-wrap drawer-table-scroll drawer-table-cols-10">
+          <section class="table-wrap drawer-table-scroll drawer-table-cols-12">
             <table>
               <thead>
                 <tr>
                   <th id="detailInventorySubtypeHead">舱位</th>
-                  <th>总量</th>
+                  <th>采购总量</th>
                   <th>已分配</th>
-                  <th>已售</th>
-                  <th>占位结构</th>
+                  <th>未分配</th>
+                  <th>已占用</th>
+                  <th>旅客人数</th>
                   <th>已出票/确认</th>
-                  <th>已还位</th>
-                  <th>可分配</th>
                   <th>成本单价</th>
+                  <th>采购金额</th>
+                  <th>单位换算</th>
+                  <th>规则状态</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -272,7 +299,7 @@
           <div class="resource-procurement-section-head">
             <h2 class="section-title">团期分配记录</h2>
           </div>
-          <section class="table-wrap drawer-table-scroll drawer-table-cols-9">
+          <section class="table-wrap drawer-table-scroll drawer-table-cols-10">
             <table>
               <thead>
                 <tr>
@@ -285,6 +312,7 @@
                   <th>已出票/确认</th>
                   <th>可释放</th>
                   <th>状态</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody id="allocationRows"></tbody>
@@ -328,14 +356,16 @@
             <h2 class="section-title">付款节点</h2>
             <button id="detailOpenChange" class="btn btn-secondary" type="button">发起变更</button>
           </div>
-          <section class="table-wrap drawer-table-fit drawer-table-cols-4">
+          <section class="table-wrap drawer-table-scroll drawer-table-cols-6">
             <table>
               <thead>
                 <tr>
                   <th>节点</th>
-                  <th>到期提醒</th>
+                  <th>计价与条件</th>
+                  <th>截止与免费退量</th>
                   <th>金额口径</th>
-                  <th>申请与承接</th>
+                  <th>申请及实际付款</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody id="paymentRows"></tbody>
@@ -344,7 +374,7 @@
           <div class="resource-procurement-section-head">
             <h2 class="section-title">合同变更</h2>
           </div>
-          <section class="table-wrap drawer-table-fit drawer-table-cols-5">
+          <section class="table-wrap drawer-table-scroll drawer-table-cols-6">
             <table>
               <thead>
                 <tr>
@@ -353,6 +383,7 @@
                   <th>金额影响</th>
                   <th>原因</th>
                   <th>状态</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody id="changeRows"></tbody>
