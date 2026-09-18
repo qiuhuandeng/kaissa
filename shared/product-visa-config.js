@@ -29,6 +29,21 @@
     return '<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + label + '</option>';
   }
 
+  function handlingModesHtml(scope) {
+    if (!selfProductPage) {
+      return '<select class="form-control"><option selected>旅行社代办（包含在团费中）</option><option>旅行社代办（单独收费）</option><option>客人自理</option></select>';
+    }
+    return [
+      '<div class="product-visa-mode-field" data-product-visa-mode-field' + (scope === 'line' ? ' data-product-visa-line-modes' : ' data-product-visa-plan-modes') + '>',
+      '<div class="product-visa-mode-group" role="group" aria-label="允许办理方式">',
+      '<label><input type="checkbox" value="self" checked data-product-visa-mode data-product-visa-persist> 游客自办</label>',
+      '<label><input type="checkbox" value="agency" checked data-product-visa-mode data-product-visa-persist> 随团办理</label>',
+      '</div>',
+      '<div class="form-error product-visa-mode-error" data-product-visa-mode-error hidden>需签证产品至少选择一种允许办理方式</div>',
+      '</div>'
+    ].join('');
+  }
+
   function planHtml(index, code) {
     var profile = profiles[code] || profiles.FR;
     return [
@@ -42,11 +57,11 @@
       '</select></div>',
       '<div class="form-group"><label class="form-label">签证类型 <span class="req">*</span></label><select class="form-control" data-product-visa-type><option>' + escapeHtml(profile.type) + '</option></select></div>',
       '<div class="form-group form-group-full"><label class="form-label">覆盖目的国</label><input class="form-control" type="text" value="' + escapeHtml(profile.coverage) + '" data-product-visa-coverage></div>',
-      '<div class="form-group"><label class="form-label">办理方式 <span class="req">*</span></label><select class="form-control"><option selected>旅行社代办（包含在团费中）</option><option>旅行社代办（单独收费）</option><option>客人自理</option></select></div>',
-      '<div class="form-group"><label class="form-label">费用口径</label><select class="form-control"><option selected>签证费含，签证中心服务费含</option><option>仅含代办服务费</option><option>全部客人自理</option></select></div>',
-      '<div class="form-group"><label class="form-label">材料版本</label><select class="form-control" data-product-visa-version><option>' + escapeHtml(profile.version) + '</option></select></div>',
-      '<div class="form-group"><label class="form-label">最晚提交（出发前N天）</label><input class="form-control" type="number" min="1" value="' + profile.deadline + '" data-product-visa-deadline></div>',
-      '<div class="form-group"><label class="form-label">本人到场</label><input class="form-control" type="text" value="' + escapeHtml(profile.presence) + '" readonly data-product-visa-presence></div>',
+      '<div class="form-group"><label class="form-label">允许办理方式 <span class="req">*</span></label>' + handlingModesHtml('plan') + '</div>',
+      '<div class="form-group"><label class="form-label">费用口径</label><select class="form-control" data-product-visa-fee data-product-visa-persist><option selected>包含在团费中</option><option>单独收费</option><option>客人自理</option></select></div>',
+      '<div class="form-group" data-product-visa-agency-material><label class="form-label">材料版本</label><select class="form-control" data-product-visa-version data-product-visa-persist><option>' + escapeHtml(profile.version) + '</option></select></div>',
+      '<div class="form-group" data-product-visa-agency-material><label class="form-label">最晚提交（出发前N天）</label><input class="form-control" type="number" min="1" value="' + profile.deadline + '" data-product-visa-deadline data-product-visa-persist></div>',
+      '<div class="form-group" data-product-visa-agency-material><label class="form-label">本人到场</label><input class="form-control" type="text" value="' + escapeHtml(profile.presence) + '" readonly data-product-visa-presence data-product-visa-persist></div>',
       '<div class="form-group"><label class="form-label">适用人群</label><select class="form-control"><option selected>全部游客</option><option>团队游客</option><option>个人游客</option><option>家庭游客</option></select></div>',
       '</div>',
       '</article>'
@@ -62,9 +77,9 @@
       '<section class="route-line-form-panel product-visa-line-form' + (active ? ' active' : '') + '" data-line-form-panel="' + escapeHtml(name) + '"' + (active ? '' : ' hidden') + '>',
       '<div class="route-line-form-context"><span>' + escapeHtml(cities) + '</span><strong>' + escapeHtml(primaryProfile.type) + (secondaryCode ? ' + ' + escapeHtml((profiles[secondaryCode] || profiles.GB).type) : '') + '</strong></div>',
       '<div class="form-grid product-visa-policy-grid">',
-      '<div class="form-group"><label class="form-label">签证政策 <span class="req">*</span></label><select class="form-control" data-product-visa-policy><option selected>需提前办理</option><option>电子签</option><option>免签</option><option>落地签</option><option>不涉及出境签证</option></select></div>',
-      '<div class="form-group"><label class="form-label">办理方式 <span class="req">*</span></label><select class="form-control"><option selected>旅行社代办（包含在团费中）</option><option>旅行社代办（单独收费）</option><option>客人自理</option></select></div>',
-      '<div class="form-group"><label class="form-label">费用口径</label><select class="form-control"><option selected>签证费含，签证中心服务费含</option><option>仅含代办服务费</option><option>全部客人自理</option></select></div>',
+      '<div class="form-group"><label class="form-label">签证政策 <span class="req">*</span></label><select class="form-control" data-product-visa-policy data-product-visa-persist><option selected>需提前办理</option><option>电子签</option><option>免签</option><option>落地签</option><option>不涉及出境签证</option></select></div>',
+      '<div class="form-group"><label class="form-label">允许办理方式 <span class="req">*</span></label>' + handlingModesHtml('line') + '</div>',
+      '<div class="form-group"><label class="form-label">费用口径</label><select class="form-control" data-product-visa-fee data-product-visa-persist><option selected>包含在团费中</option><option>单独收费</option><option>客人自理</option></select></div>',
       '<div class="form-group"><label class="form-label">最晚提交口径</label><input class="form-control" type="text" value="按出发前' + escapeHtml(primaryProfile.deadline) + '天计算"></div>',
       '</div>',
       '<div class="product-visa-plan-list" data-product-visa-list>',
@@ -74,7 +89,7 @@
       '<div class="drawer-action-row product-visa-add-row"><button class="btn btn-secondary" type="button" data-add-product-visa>新增签证方案</button></div>',
       '<div class="route-field-grid">',
       '<div class="form-group route-field-full"><label class="form-label">证件要求</label><input class="form-control" type="text" value="中国大陆因私护照，回团后有效期不少于6个月，至少2页空白签证页"></div>',
-      '<div class="form-group route-field-full"><label class="form-label">特殊材料</label><input class="form-control" type="text" value="' + escapeHtml(secondaryCode ? '英国签证需补充英文在职/资产材料，申根材料按主申请国版本' : '按主申请国材料清单提交') + '"></div>',
+      '<div class="form-group route-field-full" data-product-visa-agency-material><label class="form-label">随团办理材料</label><input class="form-control" type="text" value="' + escapeHtml(secondaryCode ? '英国签证需补充英文在职/资产材料，申根材料按主申请国版本' : '按主申请国材料清单提交') + '" data-product-visa-persist></div>',
       '<div class="form-group route-field-full"><label class="form-label">拒签损失规则</label><input class="form-control" type="text" value="签证费及已发生资源损失按本线路退改规则核算"></div>',
       '</div>',
       '</section>'
@@ -172,6 +187,41 @@
   var planList = section.querySelector('[data-product-visa-list]');
   var addButton = section.querySelector('[data-add-product-visa]');
   var readiness = section.querySelector('[data-product-visa-readiness]');
+  var storageKey = 'caesar-product-self-visa-' + pageKind;
+  var savedVisaConfigJson = '';
+  var visaConfigDirty = false;
+
+  function modeHasValue(modeField, value) {
+    return !!modeField && !!modeField.querySelector('[data-product-visa-mode][value="' + value + '"]:checked');
+  }
+
+  function syncModeField(modeField) {
+    if (!selfProductPage || !modeField) return;
+    var plan = modeField.closest('[data-product-visa-plan]');
+    var scope = plan || modeField.closest('[data-line-form-panel]') || section;
+    var agencySelected = modeHasValue(modeField, 'agency');
+    if (plan) {
+      plan.querySelectorAll('[data-product-visa-agency-material]').forEach(function (field) {
+        field.hidden = !agencySelected;
+      });
+      return;
+    }
+    scope.querySelectorAll('.route-field-grid [data-product-visa-agency-material]').forEach(function (field) {
+      field.hidden = !agencySelected;
+    });
+  }
+
+  function syncLineModes(container, needsPlan) {
+    if (!selfProductPage || !container) return;
+    var lineModes = container.querySelector('[data-product-visa-line-modes]');
+    if (lineModes) lineModes.closest('.form-group').hidden = !needsPlan;
+    var agencySelected = needsPlan && modeHasValue(lineModes, 'agency');
+    var currentPlanList = container.querySelector('[data-product-visa-list]');
+    var currentAddButton = container.querySelector('[data-add-product-visa]');
+    if (currentPlanList) currentPlanList.hidden = !agencySelected;
+    if (currentAddButton && currentAddButton.parentElement) currentAddButton.parentElement.hidden = !agencySelected;
+    container.querySelectorAll('[data-product-visa-plan-modes]').forEach(syncModeField);
+  }
 
   function syncPolicyField(policyField) {
     if (!policyField) return;
@@ -180,9 +230,77 @@
     var currentAddButton = container.querySelector('[data-add-product-visa]');
     var currentReadiness = container.querySelector('[data-product-visa-readiness]');
     var needsPlan = !/免签|不涉及/.test(policyField.value);
-    if (currentPlanList) currentPlanList.hidden = !needsPlan;
-    if (currentAddButton && currentAddButton.parentElement) currentAddButton.parentElement.hidden = !needsPlan;
+    if (selfProductPage && container.matches('[data-line-form-panel]')) {
+      syncLineModes(container, needsPlan);
+    } else {
+      if (currentPlanList) currentPlanList.hidden = !needsPlan;
+      if (currentAddButton && currentAddButton.parentElement) currentAddButton.parentElement.hidden = !needsPlan;
+    }
     if (currentReadiness) currentReadiness.textContent = needsPlan ? '配置完整' : policyField.value;
+  }
+
+  function validateModes(options) {
+    if (!selfProductPage) return true;
+    var showFeedback = !options || options.showFeedback !== false;
+    var firstInvalid = null;
+    section.querySelectorAll('[data-line-form-panel]').forEach(function (linePanel) {
+      var policyField = linePanel.querySelector('[data-product-visa-policy]');
+      var needsPlan = !policyField || !/免签|不涉及/.test(policyField.value);
+      var lineModes = linePanel.querySelector('[data-product-visa-line-modes]');
+      var agencyAllowed = needsPlan && modeHasValue(lineModes, 'agency');
+      linePanel.querySelectorAll('[data-product-visa-mode-field]').forEach(function (modeField) {
+        var isPlanModes = modeField.hasAttribute('data-product-visa-plan-modes');
+        var invalid = needsPlan && (!isPlanModes || agencyAllowed) && !modeField.querySelector('[data-product-visa-mode]:checked');
+        modeField.classList.toggle('is-invalid', invalid);
+        modeField.querySelectorAll('[data-product-visa-mode]').forEach(function (field) {
+          field.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+        });
+        var error = modeField.querySelector('[data-product-visa-mode-error]');
+        if (error) error.hidden = !invalid;
+        if (invalid && !firstInvalid) firstInvalid = modeField;
+      });
+    });
+    if (firstInvalid && showFeedback) {
+      var linePanel = firstInvalid.closest('[data-line-form-panel]');
+      var lineName = linePanel && linePanel.getAttribute('data-line-form-panel');
+      var lineButton = lineName && document.querySelector('[data-plan-switch][data-plan-name="' + lineName + '"]');
+      if (lineButton && !lineButton.classList.contains('active')) lineButton.click();
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return !firstInvalid;
+  }
+
+  function collectSavedVisaConfig() {
+    return Array.from(section.querySelectorAll('[data-product-visa-persist]')).map(function (field) {
+      return field.type === 'checkbox' ? { checked: field.checked } : { value: field.value };
+    });
+  }
+
+  function saveVisaConfig() {
+    if (!selfProductPage) return;
+    try {
+      savedVisaConfigJson = JSON.stringify(collectSavedVisaConfig());
+      window.sessionStorage.setItem(storageKey, savedVisaConfigJson);
+      visaConfigDirty = false;
+    } catch (error) {}
+  }
+
+  function restoreVisaConfig() {
+    if (!selfProductPage) return;
+    try {
+      var saved = JSON.parse(window.sessionStorage.getItem(storageKey) || '[]');
+      section.querySelectorAll('[data-product-visa-persist]').forEach(function (field, index) {
+        var value = saved[index];
+        if (!value) return;
+        if (field.type === 'checkbox') field.checked = !!value.checked;
+        else if (Object.prototype.hasOwnProperty.call(value, 'value')) field.value = value.value;
+      });
+    } catch (error) {}
+  }
+
+  function markVisaConfigDirty() {
+    if (!selfProductPage) return;
+    visaConfigDirty = JSON.stringify(collectSavedVisaConfig()) !== savedVisaConfigJson;
   }
 
   function syncPolicy() {
@@ -221,9 +339,24 @@
     if (event.target.matches('[data-product-visa-policy]')) {
       syncPolicyField(event.target);
     }
+    if (event.target.matches('[data-product-visa-mode]')) {
+      var modeField = event.target.closest('[data-product-visa-mode-field]');
+      var linePanel = event.target.closest('[data-line-form-panel]');
+      if (modeField && modeField.hasAttribute('data-product-visa-line-modes')) {
+        var policyField = linePanel && linePanel.querySelector('[data-product-visa-policy]');
+        syncLineModes(linePanel, !policyField || !/免签|不涉及/.test(policyField.value));
+      } else {
+        syncModeField(modeField);
+      }
+      validateModes({ showFeedback: false });
+    }
     if (event.target.matches('[data-line-rule-mode]') && window.syncRouteLineRuleCard) {
       window.syncRouteLineRuleCard(event.target.closest('[data-line-rule-card]'));
     }
+    if (event.target.matches('[data-product-visa-persist]')) markVisaConfigDirty();
+  });
+  section.addEventListener('input', function (event) {
+    if (event.target.matches('[data-product-visa-persist]')) markVisaConfigDirty();
   });
   section.addEventListener('click', function (event) {
     var addVisa = event.target.closest('[data-add-product-visa]');
@@ -234,12 +367,43 @@
       var wrapper = document.createElement('div');
       wrapper.innerHTML = planHtml(currentPlanList.children.length, currentPlanList.children.length === 1 ? 'JP' : 'US');
       currentPlanList.appendChild(wrapper.firstElementChild);
+      syncModeField(currentPlanList.lastElementChild.querySelector('[data-product-visa-plan-modes]'));
       return;
     }
     var remove = event.target.closest('[data-remove-product-visa]');
     if (remove) remove.closest('[data-product-visa-plan]').remove();
   });
+  if (selfProductPage) {
+    routePage.addEventListener('click', function (event) {
+      var action = event.target.closest('[data-route-save], [data-route-submit], [data-route-next]');
+      if (!action) return;
+      var isFinalNext = action.matches('[data-route-next]') && /提交审核/.test(action.textContent || '');
+      if (!action.matches('[data-route-save], [data-route-submit]') && !isFinalNext) return;
+      if (!validateModes()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      saveVisaConfig();
+    }, true);
+    restoreVisaConfig();
+    savedVisaConfigJson = JSON.stringify(collectSavedVisaConfig());
+    var backLink = document.querySelector('[data-confirm-back]');
+    if (backLink) {
+      backLink.addEventListener('click', function (event) {
+        if (!visaConfigDirty || window.confirm('签证与证件配置尚未保存，确认离开吗？')) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+    }
+  }
   syncPolicy();
   section.querySelectorAll('[data-product-visa-policy]').forEach(syncPolicyField);
+  section.querySelectorAll('[data-product-visa-mode-field]').forEach(syncModeField);
+  validateModes({ showFeedback: false });
+  window.ProductVisaConfig = Object.assign(window.ProductVisaConfig || {}, {
+    validateHandlingModes: validateModes,
+    saveHandlingModes: saveVisaConfig
+  });
   if (window.initRouteLineRuleCards) window.initRouteLineRuleCards(section);
 })();
