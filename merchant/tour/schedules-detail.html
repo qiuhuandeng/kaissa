@@ -345,7 +345,7 @@
             <span id="channelQuotaHint" class="schedule-muted">按当前团期维护</span>
           </div>
           <div class="table-wrap schedule-channel-table">
-            <table>
+            <table class="schedule-channel-quota-table schedule-channel-operations-hidden">
               <thead>
                 <tr>
                   <th>渠道</th>
@@ -358,7 +358,7 @@
                   <th>操作</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="channelQuotaRows">
                 <tr><td>门店</td><td><span class="tag tag-green">可售</span></td><td>成人¥12,800 / 儿童¥10,800</td><td>5人</td><td>3/2人</td><td>2024-07-10 18:00</td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-sync-schedule-channel>调整</button></div></td></tr>
                 <tr><td>直客</td><td><span class="tag tag-green">可售</span></td><td>成人¥12,800 / 儿童¥10,800</td><td>5人</td><td>4/1人</td><td>2024-07-10 18:00</td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-sync-schedule-channel>调整</button></div></td></tr>
                 <tr><td>携程</td><td><span class="tag tag-green">可售</span></td><td>成人¥13,200 / 儿童¥11,200</td><td>8人</td><td>6/2人</td><td>2024-07-09 20:00</td><td><span class="tag tag-green">已同步</span></td><td><div class="table-action"><button class="table-action-primary" type="button" data-sync-schedule-channel>调整</button></div></td></tr>
@@ -1091,18 +1091,42 @@
     </div>
   </div>
 
-  <div id="releaseSeatModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="releaseSeatTitle">
+  <div id="releaseSeatModal" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal modal-lg drawer-modal schedule-release-drawer" role="dialog" aria-modal="true" aria-labelledby="releaseSeatTitle">
       <div class="modal-header">
         <div id="releaseSeatTitle" class="modal-title">释放占位</div>
         <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-release>×</button>
       </div>
       <div class="modal-body">
-        <p id="releaseSeatText" class="modal-center-text">确认释放 0 个占位？释放后该名额恢复可售。</p>
+        <div class="readonly-summary schedule-release-summary">
+          <strong id="releaseSeatObject">-</strong>
+          <span id="releaseSeatText">请选择本次需要释放的原占用明细</span>
+        </div>
+        <div id="releaseSeatRule" class="alert alert-blue">释放量只归还原渠道；不会减少采购座位、舱房、铺位或已付款。</div>
+        <div class="table-wrap schedule-release-table-wrap">
+          <table class="schedule-release-table">
+            <thead>
+              <tr>
+                <th class="schedule-release-check-col">选择</th>
+                <th>原订单／占用记录</th>
+                <th>原渠道</th>
+                <th>数量单位</th>
+                <th>原占用</th>
+                <th>已释放</th>
+                <th>剩余占用</th>
+                <th>本次释放量</th>
+                <th>释放原因</th>
+              </tr>
+            </thead>
+            <tbody id="releaseSeatRows"></tbody>
+          </table>
+        </div>
+        <div id="releaseSeatError" class="form-error schedule-release-global-error" hidden></div>
+        <div id="releaseSeatResult" class="schedule-release-result"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-release>取消</button>
-        <button id="confirmReleaseSeat" class="btn btn-primary" type="button">确认释放</button>
+        <button id="confirmReleaseSeat" class="btn btn-primary" type="button">提交释放</button>
       </div>
     </div>
   </div>
@@ -1533,6 +1557,8 @@
       var costRows = document.getElementById('costRows');
       var costDetailRows = document.getElementById('costDetailRows');
       var inventoryRows = document.getElementById('inventoryRows');
+      var channelQuotaRows = document.getElementById('channelQuotaRows');
+      var releaseSeatRows = document.getElementById('releaseSeatRows');
       var orderRows = document.getElementById('orderRows');
       mountDetailSubpanels();
 
@@ -1567,7 +1593,8 @@
       var rosterExportActions = document.getElementById('rosterExportActions');
       var fileRows = document.getElementById('fileRows');
       var pageParams = new URLSearchParams(window.location.search);
-      var currentReleaseRow = null;
+      var currentReleaseBatch = null;
+      var releaseSubmitting = false;
       var currentResourceRow = null;
       var currentTrafficResourceIndex = 0;
       var currentTrafficLossIndex = 0;
@@ -2387,6 +2414,166 @@
         }
       };
 
+      function releaseNumber(value) {
+        var match = String(value == null ? '' : value).match(/-?\d+/);
+        return match ? Number(match[0]) : 0;
+      }
+
+      function releaseUnit(value, fallback) {
+        var match = String(value || '').match(/人|名|位|间|套|铺|项/);
+        return match ? match[0] : (fallback || '人');
+      }
+
+      function releaseChannelName(value) {
+        var text = String(value || '直营');
+        if (/分销|代理/.test(text)) return '代理';
+        if (/直客|C端/.test(text)) return '直营';
+        if (/携程/.test(text)) return '携程';
+        if (/飞猪/.test(text)) return '飞猪';
+        if (/同程/.test(text)) return '同程';
+        if (/学校/.test(text)) return '学校';
+        if (/小程序/.test(text)) return '小程序';
+        if (/门店/.test(text)) return '门店';
+        return text.split(/[：/]/)[0].trim() || '直营';
+      }
+
+      function createReleaseRecord(orderNo, recordNo, channel, unit, original, note, notOccupied) {
+        return {
+          orderNo: orderNo,
+          recordNo: recordNo,
+          channel: channel,
+          unit: unit,
+          original: Number(original || 0),
+          released: 0,
+          note: note || '',
+          notOccupied: !!notOccupied
+        };
+      }
+
+      var seatReleaseSamples = {
+        group: {
+          channelQuotas: [
+            { name: '门店', status: '可售', tag: 'tag tag-green', price: '成人¥12,800 / 儿童¥10,800', allocated: 5, used: 5, available: 0, deadline: '2024-07-10 18:00', sync: '已同步', syncTag: 'tag tag-green' },
+            { name: '直营', status: '可售', tag: 'tag tag-green', price: '成人¥12,800 / 儿童¥10,800', allocated: 5, used: 5, available: 0, deadline: '2024-07-10 18:00', sync: '已同步', syncTag: 'tag tag-green' },
+            { name: '携程', status: '可售', tag: 'tag tag-green', price: '成人¥13,200 / 儿童¥11,200', allocated: 4, used: 4, available: 0, deadline: '2024-07-09 20:00', sync: '已同步', syncTag: 'tag tag-green' },
+            { name: '飞猪', status: '可售', tag: 'tag tag-green', price: '成人¥12,400 / 儿童¥10,600', allocated: 3, used: 3, available: 0, deadline: '2024-07-09 20:00', sync: '待同步', syncTag: 'tag tag-orange' },
+            { name: '同程', status: '预售', tag: 'tag tag-blue', price: '成人¥13,000 / 儿童¥11,000', allocated: 3, used: 3, available: 0, deadline: '2024-07-08 20:00', sync: '未同步', syncTag: 'tag tag-gray' },
+            { name: '代理', status: '停售', tag: 'tag tag-gray', price: '成人¥12,300 / 儿童¥10,300', allocated: 10, used: 6, available: 4, deadline: '2024-07-08 18:00', sync: '已同步', syncTag: 'tag tag-green' }
+          ],
+          batches: {
+            OC20240618002: {
+              name: '分销商原订单占用',
+              rule: '本批原渠道“代理”已停售，释放仍只归还代理配额；渠道间重新分配暂不在本页处理。',
+              records: [
+                createReleaseRecord('KS202406180021', 'ZY-EU20240715-001', '代理', '人', 4, '成人3人、儿童占床1人'),
+                createReleaseRecord('KS202406180022', 'ZY-EU20240715-002', '代理', '人', 2, '成人2人')
+              ]
+            }
+          }
+        },
+        cruise: {
+          batches: {
+            CB20240701001: {
+              name: '阳台舱原订单占用',
+              rule: '按实际占用舱房间数释放；儿童不占舱、同舱第三／第四人不另增释放量。',
+              records: [
+                createReleaseRecord('KS-CRUISE-24070101', 'ZY-CB20240701001-01', '门店', '间', 24, '阳台舱 BA，共24间'),
+                createReleaseRecord('KS-CRUISE-24070102', 'ZY-CB20240701001-02', '门店', '间', 0, '儿童不占舱1人、同舱第三人1人，不额外占舱', true)
+              ]
+            }
+          }
+        },
+        train: {
+          batches: {
+            SB20240705001: {
+              name: '软卧铺位原订单占用',
+              rule: '按实际占用铺位数释放；儿童不占铺不另增释放量。',
+              records: [
+                createReleaseRecord('KS-TRAIN-24070501', 'ZY-SB20240705001-01', '门店', '铺', 32, '软卧上／下铺，共32铺'),
+                createReleaseRecord('KS-TRAIN-24070502', 'ZY-SB20240705001-02', '门店', '铺', 0, '儿童不占铺1人，不额外占铺', true)
+              ]
+            }
+          }
+        }
+      };
+
+      function defaultChannelQuotas(config) {
+        return (config.channelSeats || []).map(function (item) {
+          var allocated = releaseNumber(item);
+          var name = String(item || '').replace(/\d+.*$/, '').trim() || '直营';
+          return {
+            name: name,
+            status: '可售',
+            tag: 'tag tag-green',
+            price: (config.summary && config.summary.price) || '-',
+            allocated: allocated,
+            used: Math.max(allocated - 1, 0),
+            available: allocated ? 1 : 0,
+            deadline: (config.summary && config.summary.deadline) || '-',
+            sync: '已同步',
+            syncTag: 'tag tag-green'
+          };
+        });
+      }
+
+      function prepareSeatReleaseConfig(type, config) {
+        var sample = seatReleaseSamples[type] || {};
+        config.releaseBaseSold = Number(config.summary && config.summary.sold || 0);
+        config.releaseBaseAvailable = Number(config.summary && config.summary.available || 0);
+        config.channelQuotas = (sample.channelQuotas || defaultChannelQuotas(config)).map(function (quota) {
+          var copy = Object.assign({}, quota);
+          copy.baseUsed = Number(copy.used || 0);
+          copy.baseAvailable = Number(copy.available || 0);
+          return copy;
+        });
+        config.releaseBatches = {};
+        (config.inventoryRows || []).forEach(function (row) {
+          if (row[7] !== 'release') return;
+          var batchSample = sample.batches && sample.batches[row[0]];
+          var unit = releaseUnit(row[2], config.summary && config.summary.unit);
+          var channelSource = /cruise|train|free/.test(type) ? row[3] : row[1];
+          var channel = releaseChannelName(channelSource);
+          var batch = batchSample || {
+            name: row[1] + '原占用',
+            rule: '按本记录实际占用的' + unit + '数释放，只归还原渠道。',
+            records: [createReleaseRecord('DD-' + row[0], 'ZY-' + row[0] + '-01', channel, unit, releaseNumber(row[2]), row[1])]
+          };
+          batch = {
+            inventoryNo: row[0],
+            name: batch.name,
+            rule: batch.rule,
+            records: batch.records.map(function (record) {
+              var copy = Object.assign({}, record);
+              copy.released = Number(copy.released || 0);
+              copy.remaining = Math.max(Number(copy.original || 0) - copy.released, 0);
+              return copy;
+            }),
+            transactions: []
+          };
+          config.releaseBatches[row[0]] = batch;
+          if (!config.channelQuotas.some(function (quota) { return quota.name === channel; })) {
+            config.channelQuotas.push({
+              name: channel,
+              status: '可售',
+              tag: 'tag tag-green',
+              price: (config.summary && config.summary.price) || '-',
+              allocated: releaseNumber(row[2]),
+              used: releaseNumber(row[2]),
+              available: 0,
+              baseUsed: releaseNumber(row[2]),
+              baseAvailable: 0,
+              deadline: (config.summary && config.summary.deadline) || '-',
+              sync: '已同步',
+              syncTag: 'tag tag-green'
+            });
+          }
+        });
+      }
+
+      Object.keys(detailConfigs).forEach(function (type) {
+        prepareSeatReleaseConfig(type, detailConfigs[type]);
+      });
+
       var activeDetailConfig = detailConfigs.group;
 
       function stockText(value) {
@@ -2962,12 +3149,34 @@
         });
         renderInventoryMatrix(config);
         inventoryRows.innerHTML = (config.inventoryRows || []).map(function (row, index) {
-          var action = row[7] === 'release'
-            ? '<button type="button" data-release-seat class="table-action-primary">释放</button>'
+          var batch = config.releaseBatches && config.releaseBatches[row[0]];
+          var totals = releaseBatchTotals(batch);
+          var quantity = batch ? (totals.remaining + totals.unit + ' / 原' + totals.original + totals.unit) : row[2];
+          var statusText = batch && totals.remaining === 0 ? '已释放' : batch && totals.released > 0 ? '部分释放' : row[5];
+          var statusTag = batch && totals.remaining === 0 ? 'tag tag-gray' : batch && totals.released > 0 ? 'tag tag-orange' : row[6];
+          var action = batch
+            ? '<button type="button" data-release-seat data-inventory-no="' + escapeHtml(row[0]) + '" class="table-action-primary">' + (totals.remaining > 0 ? '释放' : '查看') + '</button>'
             : '<button type="button" data-view-order data-order-index="' + escapeHtml(row[8] == null ? index : row[8]) + '" class="table-action-primary">详情</button>';
-          return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td>' + escapeHtml(row[3]) + '</td><td>' + escapeHtml(row[4]) + '</td><td>' + tagHtml(row[5], row[6]) + '</td><td><div class="table-action">' + action + '</div></td></tr>';
+          return '<tr data-inventory-no="' + escapeHtml(row[0]) + '"><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(quantity) + '</td><td>' + escapeHtml(row[3]) + '</td><td>' + escapeHtml(row[4]) + '</td><td>' + tagHtml(statusText, statusTag) + '</td><td><div class="table-action">' + action + '</div></td></tr>';
         }).join('');
         setText('inventoryRecordCount', (config.inventoryRows || []).length + '条');
+      }
+
+      function renderChannelQuotas(config) {
+        if (!channelQuotaRows) return;
+        var unit = config.summary && config.summary.unit || '人';
+        channelQuotaRows.innerHTML = (config.channelQuotas || []).map(function (quota) {
+          return '<tr data-channel-quota="' + escapeHtml(quota.name) + '">' +
+            '<td>' + escapeHtml(quota.name) + '</td>' +
+            '<td>' + tagHtml(quota.status, quota.tag) + '</td>' +
+            '<td>' + escapeHtml(quota.price || '-') + '</td>' +
+            '<td>' + escapeHtml(quota.allocated + unit) + '</td>' +
+            '<td><span data-channel-used>' + escapeHtml(quota.used) + '</span>/<span data-channel-available>' + escapeHtml(quota.available) + '</span>' + escapeHtml(unit) + '</td>' +
+            '<td>' + escapeHtml(quota.deadline || '-') + '</td>' +
+            '<td>' + tagHtml(quota.sync || '已同步', quota.syncTag || 'tag tag-green') + '</td>' +
+            '<td><div class="table-action"><button class="table-action-primary" type="button" data-sync-schedule-channel>调整</button></div></td>' +
+            '</tr>';
+        }).join('') || '<tr><td colspan="8">暂无渠道名额</td></tr>';
       }
 
       function renderChannelSeats(config) {
@@ -2975,9 +3184,11 @@
         var channelBlock = document.getElementById('summaryChannelSeatsBlock');
         if (channelBlock) channelBlock.hidden = config.typeKey === 'project';
         if (!seatWrap) return;
-        seatWrap.innerHTML = (config.channelSeats || []).map(function (item, index) {
-          return '<b' + (index >= 2 ? ' class="low"' : '') + '>' + escapeHtml(item) + '</b>';
+        var quotas = config.channelQuotas || [];
+        seatWrap.innerHTML = quotas.map(function (quota, index) {
+          return '<b' + (index >= 2 ? ' class="low"' : '') + ' data-channel-seat="' + escapeHtml(quota.name) + '">' + escapeHtml(quota.name + ' 可用' + quota.available) + '</b>';
         }).join('');
+        renderChannelQuotas(config);
       }
 
       function storedFinanceSummary(config) {
@@ -4525,6 +4736,7 @@
       function applyScheduleConfig(typeValue) {
         activeDetailConfig = detailConfigs[normalizeScheduleType(typeValue)] || detailConfigs.group;
         Object.assign(scheduleData, activeDetailConfig.summary);
+        recomputeSeatReleaseState(activeDetailConfig);
         ensureScheduleStates(scheduleData);
         renderTypeSections(activeDetailConfig);
         refreshScheduleSummary();
@@ -5335,8 +5547,163 @@
         window.caesarUI.openLayer(financeDocDrawer);
       }
 
-      function countFromRow(row) {
-        return Number(row.children[2].textContent.replace(/\D/g, '')) || 0;
+      function releaseBatchTotals(batch) {
+        var totals = { original: 0, released: 0, remaining: 0, unit: scheduleData.unit || '人' };
+        if (!batch) return totals;
+        (batch.records || []).forEach(function (record) {
+          if (record.notOccupied) return;
+          totals.unit = record.unit || totals.unit;
+          totals.original += Number(record.original || 0);
+          totals.released += Number(record.released || 0);
+          totals.remaining += Number(record.remaining || 0);
+        });
+        return totals;
+      }
+
+      function channelQuota(config, name) {
+        return (config.channelQuotas || []).find(function (quota) { return quota.name === name; }) || null;
+      }
+
+      function recomputeSeatReleaseState(config) {
+        var releasedByChannel = {};
+        var totalReleased = 0;
+        Object.keys(config.releaseBatches || {}).forEach(function (inventoryNo) {
+          (config.releaseBatches[inventoryNo].records || []).forEach(function (record) {
+            if (record.notOccupied) return;
+            var released = Number(record.released || 0);
+            totalReleased += released;
+            releasedByChannel[record.channel] = (releasedByChannel[record.channel] || 0) + released;
+          });
+        });
+        (config.channelQuotas || []).forEach(function (quota) {
+          var returned = releasedByChannel[quota.name] || 0;
+          quota.used = Math.max(Number(quota.baseUsed || 0) - returned, 0);
+          quota.available = Number(quota.baseAvailable || 0) + returned;
+        });
+        if (config === activeDetailConfig) {
+          scheduleData.sold = Math.max(Number(config.releaseBaseSold || 0) - totalReleased, 0);
+          scheduleData.available = Number(config.releaseBaseAvailable || 0) + totalReleased;
+        }
+      }
+
+      function releaseRecordChannelHtml(record) {
+        var quota = channelQuota(activeDetailConfig, record.channel);
+        return '<span class="schedule-release-channel"><strong>' + escapeHtml(record.channel) + '</strong>' + (quota ? tagHtml(quota.status, quota.tag) : '') + '</span>';
+      }
+
+      function renderReleaseSeatRows() {
+        if (!currentReleaseBatch) return;
+        var batch = currentReleaseBatch.batch;
+        var totals = releaseBatchTotals(batch);
+        setText('releaseSeatObject', batch.inventoryNo + ' · ' + batch.name);
+        setText('releaseSeatText', scheduleData.code + ' / 原占用明细逐笔释放，处理后仍可查看记录');
+        setText('releaseSeatRule', batch.rule + ' 原采购数量及已付款保持不变。');
+        document.getElementById('releaseSeatError').hidden = true;
+        document.getElementById('releaseSeatError').textContent = '';
+        setText('releaseSeatResult', '原占用 ' + totals.original + totals.unit + ' · 已释放 ' + totals.released + totals.unit + ' · 剩余占用 ' + totals.remaining + totals.unit);
+        releaseSeatRows.innerHTML = batch.records.map(function (record, index) {
+          var canRelease = !record.notOccupied && Number(record.remaining || 0) > 0;
+          var occupancyNote = '<span class="text-muted">' + escapeHtml(record.note || '-') + '</span>' + (record.notOccupied ? tagHtml('不占用库存', 'tag tag-gray') : '');
+          return '<tr data-release-record-index="' + index + '"' + (record.notOccupied ? ' class="schedule-release-nonoccupying"' : '') + '>' +
+            '<td class="schedule-release-check-col"><input type="checkbox" data-release-select' + (canRelease ? '' : ' disabled') + ' aria-label="选择' + escapeHtml(record.orderNo) + '"></td>' +
+            '<td><span class="schedule-release-record"><strong>' + escapeHtml(record.orderNo) + '</strong><span>' + escapeHtml(record.recordNo) + '</span>' + occupancyNote + '</span></td>' +
+            '<td>' + releaseRecordChannelHtml(record) + '</td>' +
+            '<td>' + escapeHtml(record.unit) + '</td>' +
+            '<td data-release-original>' + escapeHtml(record.original) + '</td>' +
+            '<td data-release-released>' + escapeHtml(record.released) + '</td>' +
+            '<td data-release-remaining>' + escapeHtml(record.remaining) + '</td>' +
+            '<td><input class="form-control table-input schedule-release-qty" type="number" min="1" step="1" max="' + escapeHtml(record.remaining) + '" placeholder="数量" data-release-qty disabled></td>' +
+            '<td><input class="form-control table-input schedule-release-reason" type="text" maxlength="80" placeholder="填写原因" data-release-reason disabled><div class="form-error" data-release-row-error hidden></div></td>' +
+            '</tr>';
+        }).join('');
+        document.getElementById('confirmReleaseSeat').hidden = totals.remaining <= 0;
+      }
+
+      function openSeatRelease(inventoryNo) {
+        var batch = activeDetailConfig.releaseBatches && activeDetailConfig.releaseBatches[inventoryNo];
+        if (!batch) return;
+        currentReleaseBatch = { config: activeDetailConfig, batch: batch };
+        releaseSubmitting = false;
+        renderReleaseSeatRows();
+        window.caesarUI.openLayer(releaseModal);
+      }
+
+      function closeSeatRelease() {
+        currentReleaseBatch = null;
+        releaseSubmitting = false;
+        closeScheduleLayer(releaseModal);
+      }
+
+      function validateReleaseRows() {
+        var result = { valid: true, updates: [] };
+        var selectedRows = Array.from(releaseSeatRows.querySelectorAll('tr')).filter(function (row) {
+          var checkbox = row.querySelector('[data-release-select]');
+          return checkbox && checkbox.checked;
+        });
+        var globalError = document.getElementById('releaseSeatError');
+        globalError.hidden = true;
+        globalError.textContent = '';
+        if (!selectedRows.length) {
+          globalError.textContent = '请至少选择一笔仍有占用的原记录。';
+          globalError.hidden = false;
+          result.valid = false;
+          return result;
+        }
+        selectedRows.forEach(function (row) {
+          var index = Number(row.dataset.releaseRecordIndex);
+          var record = currentReleaseBatch.batch.records[index];
+          var qtyField = row.querySelector('[data-release-qty]');
+          var reasonField = row.querySelector('[data-release-reason]');
+          var error = row.querySelector('[data-release-row-error]');
+          var rawQty = String(qtyField.value || '').trim();
+          var qty = Number(rawQty);
+          var messages = [];
+          if (!/^\d+$/.test(rawQty) || !Number.isInteger(qty) || qty <= 0) messages.push('释放量须为正整数');
+          else if (qty > Number(record.remaining || 0)) messages.push('本笔最多可释放' + record.remaining + record.unit);
+          if (!String(reasonField.value || '').trim()) messages.push('请填写释放原因');
+          error.textContent = messages.join('；');
+          error.hidden = !messages.length;
+          qtyField.classList.toggle('is-invalid', messages.length > 0);
+          reasonField.classList.toggle('is-invalid', !String(reasonField.value || '').trim());
+          if (messages.length) result.valid = false;
+          else result.updates.push({ record: record, qty: qty, reason: reasonField.value.trim() });
+        });
+        if (!result.valid) {
+          globalError.textContent = '请修正标出的释放数量和原因后再提交。';
+          globalError.hidden = false;
+        }
+        return result;
+      }
+
+      function submitSeatRelease() {
+        if (!currentReleaseBatch || releaseSubmitting) return;
+        var validation = validateReleaseRows();
+        if (!validation.valid) return;
+        releaseSubmitting = true;
+        var config = currentReleaseBatch.config;
+        var batch = currentReleaseBatch.batch;
+        var total = 0;
+        var channels = [];
+        var transactionNo = 'SF-' + batch.inventoryNo + '-' + String(batch.transactions.length + 1).padStart(2, '0');
+        validation.updates.forEach(function (item) {
+          item.record.released += item.qty;
+          item.record.remaining = Math.max(item.record.original - item.record.released, 0);
+          item.record.lastReason = item.reason;
+          item.record.lastTransactionNo = transactionNo;
+          total += item.qty;
+          if (channels.indexOf(item.record.channel) < 0) channels.push(item.record.channel);
+        });
+        batch.transactions.push({ no: transactionNo, quantity: total, channels: channels.slice() });
+        currentReleaseBatch = null;
+        recomputeSeatReleaseState(config);
+        renderInventory(config);
+        renderChannelSeats(config);
+        refreshScheduleSummary();
+        closeScheduleLayer(releaseModal);
+        releaseSubmitting = false;
+        setText('successTitle', '原渠道名额已归还');
+        setText('successText', transactionNo + ' 已释放 ' + total + (validation.updates[0].record.unit || scheduleData.unit) + '，归还至' + channels.join('、') + '；采购数量及已付款未变。');
+        window.caesarUI.openLayer(successModal);
       }
 
       function updateActualCostVariance(input) {
@@ -5745,23 +6112,32 @@
           return;
         }
         if (event.target.closest('[data-release-seat]') && row) {
-          currentReleaseRow = row;
-          document.getElementById('releaseSeatText').textContent = '确认释放 ' + countFromRow(row) + (scheduleData.unit || '人') + '占位？释放后恢复可售。';
-          window.caesarUI.openLayer(releaseModal);
+          openSeatRelease(row.dataset.inventoryNo || event.target.closest('[data-release-seat]').dataset.inventoryNo);
         }
       });
 
-      document.getElementById('confirmReleaseSeat').addEventListener('click', function () {
-        if (!currentReleaseRow) return;
-        var count = countFromRow(currentReleaseRow);
-        var statusCell = currentReleaseRow.children[5];
-        statusCell.innerHTML = '<span class="tag tag-gray">已释放</span>';
-        currentReleaseRow.children[6].innerHTML = '<div class="table-action"><button type="button" data-view-order data-order-index="0" class="table-action-primary">详情</button></div>';
-        scheduleData.available += count;
-        refreshScheduleSummary();
-        currentReleaseRow = null;
-        closeScheduleLayer(releaseModal);
+      releaseSeatRows.addEventListener('change', function (event) {
+        if (!event.target.matches('[data-release-select]')) return;
+        var row = event.target.closest('tr');
+        var enabled = event.target.checked;
+        row.querySelector('[data-release-qty]').disabled = !enabled;
+        row.querySelector('[data-release-reason]').disabled = !enabled;
+        row.querySelector('[data-release-row-error]').hidden = true;
+        if (!enabled) {
+          row.querySelector('[data-release-qty]').value = '';
+          row.querySelector('[data-release-reason]').value = '';
+        }
       });
+
+      releaseSeatRows.addEventListener('input', function (event) {
+        if (!event.target.matches('[data-release-qty], [data-release-reason]')) return;
+        var row = event.target.closest('tr');
+        row.querySelector('[data-release-row-error]').hidden = true;
+        event.target.classList.remove('is-invalid');
+        document.getElementById('releaseSeatError').hidden = true;
+      });
+
+      document.getElementById('confirmReleaseSeat').addEventListener('click', submitSeatRelease);
 
       function resourceRowAt(index) {
         return resourceRows.children[Number(index)] || null;
@@ -5870,7 +6246,7 @@
         button.addEventListener('click', function () { closeScheduleLayer(cancelModal); });
       });
       document.querySelectorAll('[data-close-release]').forEach(function (button) {
-        button.addEventListener('click', function () { closeScheduleLayer(releaseModal); });
+        button.addEventListener('click', closeSeatRelease);
       });
       document.querySelectorAll('[data-close-traffic-allocation]').forEach(function (button) {
         button.addEventListener('click', function () { closeScheduleLayer(trafficAllocationDrawer); });
@@ -5911,7 +6287,9 @@
 
       [editModal, costModal, addScheduleCostDrawer, sendFileModal, rosterHandleDrawer, changeOperatorModal, cancelModal, releaseModal, trafficAllocationDrawer, trafficOrderDrawer, trafficTicketDrawer, trafficReturnDrawer, trafficLossDrawer, resourceConfirmModal, resourceViewModal, remindResourceModal, orderDetailDrawer, financeDocDrawer, successModal, returnConfirmationDrawer].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
-          if (event.target === modal) closeScheduleLayer(modal);
+          if (event.target !== modal) return;
+          if (modal === releaseModal) closeSeatRelease();
+          else closeScheduleLayer(modal);
         });
       });
       applyScheduleConfig(pageParams.get('type') || pageParams.get('batchType') || pageParams.get('code') || pageParams.get('product') || 'group');
