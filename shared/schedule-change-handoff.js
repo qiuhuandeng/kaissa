@@ -117,9 +117,7 @@
   if (filesTab && handoffBlocks.length) {
     handoffBlocks[0].insertAdjacentHTML('afterend', [
       '<div class="schedule-detail-block" id="specialServiceBlock"><div class="schedule-detail-block-head"><div><h2 class="detail-section-title schedule-section-title">特殊服务确认</h2><span class="schedule-muted">按游客申请逐项确认供给结果</span></div></div>',
-      '<div class="table-wrap"><table><thead><tr><th>游客/订单</th><th>服务项目</th><th>申请内容</th><th>对客价格</th><th>资源要求</th><th>确认结果</th><th>操作</th></tr></thead><tbody id="scheduleSpecialServiceRows"></tbody></table></div></div>',
-      '<div class="schedule-detail-block" id="handoffGapBlock"><div class="schedule-detail-block-head"><div><h2 class="detail-section-title schedule-section-title">出团资料缺口</h2><span class="schedule-muted">定位到具体游客或服务；自办游客不计入送签缺口</span></div><span id="handoffGapCount" class="tag tag-orange">4项</span></div>',
-      '<div id="handoffGapList" class="schedule-gap-list"></div></div>'
+      '<div class="table-wrap"><table><thead><tr><th>游客/订单</th><th>服务项目</th><th>申请内容</th><th>对客价格</th><th>资源要求</th><th>确认结果</th><th>操作</th></tr></thead><tbody id="scheduleSpecialServiceRows"></tbody></table></div></div>'
     ].join(''));
   }
 
@@ -143,23 +141,6 @@
     body.innerHTML = specialServices.map(function (item, index) {
       return '<tr><td>' + escapeHtml(item.person) + '</td><td><strong>' + escapeHtml(item.name) + '</strong></td><td>' + escapeHtml(item.request) + '</td><td>' + escapeHtml(item.price) + '</td><td>' + escapeHtml(item.resource) + '</td><td><span class="' + serviceStatusTag(item.result) + '">' + escapeHtml(item.result) + '</span>' + (item.amount ? '<span class="table-cell-sub">补差¥' + item.amount + '</span>' : '') + '</td><td><button class="table-action-primary" type="button" data-drawer-title="特殊服务确认" data-confirm-special-service="' + index + '">' + (item.result === '待确认' ? '确认' : '查看/更新') + '</button></td></tr>';
     }).join('');
-    renderHandoffGaps();
-  }
-
-  function renderHandoffGaps() {
-    var list = document.getElementById('handoffGapList');
-    if (!list) return;
-    var serviceGaps = specialServices.filter(function (item) { return item.result !== '可供'; }).map(function (item) {
-      return [item.person.split(' / ')[0], item.name, item.result === '待确认' ? '供应结果待确认' : item.result === '待销售确认' ? '补差方案待销售确认' : '不可供，替代方案待处理'];
-    });
-    var gaps = [
-      ['李梅', '证件资料', '护照首页待补'],
-      ['王磊', '交通资料', '去程票号待回填'],
-      ['赵敏（游客自办）', '出行证件核验', '护照有效期待确认；不计入代办送签缺口']
-    ].concat(serviceGaps);
-    list.innerHTML = gaps.map(function (gap) { return '<div><strong>' + escapeHtml(gap[0]) + '</strong><span>' + escapeHtml(gap[1]) + '</span><em>' + escapeHtml(gap[2]) + '</em></div>'; }).join('');
-    var count = document.getElementById('handoffGapCount');
-    if (count) count.textContent = gaps.length + '项';
   }
 
   renderTransferRows();
@@ -263,7 +244,7 @@
     item.note = document.getElementById('specialServiceNote').value.trim();
     renderSpecialServices();
     closeLayer(serviceDrawer);
-    resultMessage('特殊服务结果已保存', result === '需补差' ? '补差方案已交销售确认，客户未确认前继续保留为出团资料缺口。' : '本次供给结果及确认依据已记录。');
+    resultMessage('特殊服务结果已保存', result === '需补差' ? '补差方案待销售确认，客户未确认前不视为完成。' : '本次供给结果及确认依据已记录。');
   });
 
   var cancelSubmit = document.getElementById('confirmCancelSchedule');

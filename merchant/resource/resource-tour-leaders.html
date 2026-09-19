@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>领队资源 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    #leaderEmptyRow[hidden], #leaderFormError[hidden] { display: none !important; }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -61,6 +64,14 @@
             <option>不可用</option>
           </select>
         </div>
+        <div class="filter-item filter-item-sm">
+          <label class="sr-only" for="leaderRolePreview">操作岗位</label>
+          <select id="leaderRolePreview" aria-label="操作岗位演示">
+            <option value="planner">计调（脱敏）</option>
+            <option value="archive">档案管理员</option>
+            <option value="finance">财务专员</option>
+          </select>
+        </div>
         <div class="filter-actions">
           <button class="btn btn-secondary btn-filter-search" type="button">搜索</button>
           <button class="btn btn-secondary" type="button">重置</button>
@@ -79,8 +90,8 @@
           <th>证照状态</th>
           <th>财务账号</th>
           <th>最近带团</th>
-          <th>近12月带团</th>
-          <th>评分</th>
+          <th>实际带团</th>
+          <th>评价</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -142,115 +153,175 @@
   </div>
 
   </section>
-  <div id="leaderDrawer" class="modal-overlay drawer-overlay" hidden>
-    <section class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="leaderDrawerTitle">
+  <div id="leaderDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <section class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true" aria-labelledby="leaderDrawerTitle">
       <div class="modal-header">
-        <h2 id="leaderDrawerTitle">领队档案</h2>
-        <button class="modal-close" type="button" data-close-leader-drawer aria-label="关闭">×</button>
+        <h2 id="leaderDrawerTitle" class="modal-title">新增领队</h2>
+        <button class="modal-close" type="button" data-close-leader-drawer aria-label="关闭领队档案">×</button>
       </div>
       <div class="modal-body">
+        <p id="leaderPermissionNote" class="form-hint"></p>
+        <p id="leaderFormError" class="form-error" role="alert" hidden></p>
         <section class="drawer-section">
           <div class="drawer-section-head"><h3 class="drawer-section-title">基础信息</h3></div>
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">姓名</label><input class="form-control" type="text" value="张建国"></div>
-            <div class="form-group"><label class="form-label">手机号</label><input class="form-control" type="tel" value="138****4521"></div>
-            <div class="form-group"><label class="form-label">语种</label><input class="form-control" type="text" value="英语、法语"></div>
-            <div class="form-group"><label class="form-label">可带区域</label><input class="form-control" type="text" value="欧洲、英国、地中海邮轮、MICE"></div>
-            <div class="form-group"><label class="form-label">领队类型</label><select class="form-control"><option>全职</option><option>外聘</option></select></div>
-            <div class="form-group"><label class="form-label">当前状态</label><select class="form-control"><option selected>空闲</option><option>在途</option><option>不可用</option></select></div>
-            <div class="form-group"><label class="form-label">紧急联系人</label><input class="form-control" type="text" value="张女士 139****7788"></div>
-            <div class="form-group"><label class="form-label">结算规则</label><input class="form-control" type="text" value="全职工资补贴承接"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_name">姓名 <span class="req">*</span></label><input id="leaderField_name" class="form-control" type="text"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_phone">手机号 <span class="req">*</span></label><input id="leaderField_phone" class="form-control" type="tel"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_type">领队类型</label><select id="leaderField_type" class="form-control"><option>全职</option><option>外聘</option></select></div>
+            <div class="form-group"><label class="form-label" for="leaderField_status">当前状态</label><select id="leaderField_status" class="form-control"><option>空闲</option><option>在途</option><option>不可用</option></select></div>
+            <div class="form-group"><label class="form-label" for="leaderField_languages">语种</label><input id="leaderField_languages" class="form-control" type="text"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_destinations">可带区域</label><input id="leaderField_destinations" class="form-control" type="text"></div>
           </div>
         </section>
         <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">证照资料</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">身份与证件</h3></div>
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">导游证号</label><input class="form-control" type="text" value="D-CAISSA-20260312"></div>
-            <div class="form-group"><label class="form-label">导游证有效期</label><input class="form-control" type="date" value="2027-05-31"></div>
-            <div class="form-group"><label class="form-label">护照号</label><input class="form-control" type="text" value="EJ1234567"></div>
-            <div class="form-group"><label class="form-label">护照有效期</label><input class="form-control" type="date" value="2031-08-18"></div>
-            <label class="form-group form-group-full"><span class="form-label">证件附件</span><div class="upload-box">导游证、护照、签证页、领队责任险、外聘协议</div></label>
+            <div class="form-group form-group-full"><label class="form-label" for="leaderField_identity">身份证号／身份依据</label><input id="leaderField_identity" class="form-control" type="text" autocomplete="off"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_guideNo">导游证号</label><input id="leaderField_guideNo" class="form-control" type="text" autocomplete="off"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_guideExpiry">导游证有效期</label><input id="leaderField_guideExpiry" class="form-control" type="date"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_passportNo">护照号</label><input id="leaderField_passportNo" class="form-control" type="text" autocomplete="off"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_passportExpiry">护照有效期</label><input id="leaderField_passportExpiry" class="form-control" type="date"></div>
           </div>
         </section>
         <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">财务账号</h3></div>
+          <div class="drawer-section-head"><h3 class="drawer-section-title">财务收款资料</h3></div>
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">收款人</label><input class="form-control" type="text" value="张建国"></div>
-            <div class="form-group"><label class="form-label">开户行</label><input class="form-control" type="text" value="招商银行北京分行"></div>
-            <div class="form-group"><label class="form-label">银行卡号</label><input class="form-control" type="text" value="6225 **** **** 4521"></div>
-            <div class="form-group"><label class="form-label">账号用途</label><select class="form-control"><option>带团费/备用金/报销返款</option><option>仅带团费</option><option>仅备用金</option><option>仅报销返款</option></select></div>
-            <div class="form-group"><label class="form-label">财务校验</label><select class="form-control"><option>已校验</option><option>待校验</option><option>停用</option></select></div>
-            <div class="form-group form-group-full"><label class="form-label">档案备注</label><textarea class="form-control" rows="3">欧洲线和邮轮线常用领队，最近带团评分4.8，当前无档期占用。</textarea></div>
+            <div class="form-group"><label class="form-label" for="leaderField_bank">开户行</label><input id="leaderField_bank" class="form-control" type="text"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_bankAccount">银行账号</label><input id="leaderField_bankAccount" class="form-control" type="text" autocomplete="off"></div>
+            <div class="form-group"><label class="form-label" for="leaderField_bankStatus">财务校验</label><select id="leaderField_bankStatus" class="form-control"><option>待校验</option><option>已校验</option><option>停用</option></select></div>
           </div>
         </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-leader-drawer>取消</button>
-        <button class="btn btn-primary" type="button" data-close-leader-drawer>保存</button>
+        <button class="btn btn-primary" type="button" data-save-leader>保存档案</button>
       </div>
     </section>
   </div>
 
+  <script src="../../shared/leader-prototype-data.js"></script>
   <script>
     (function () {
-      const drawer = document.getElementById("leaderDrawer");
-      const keywordInput = document.getElementById("leaderKeyword");
-      const destinationSelect = document.getElementById("leaderDestination");
-      const langSelect = document.getElementById("leaderLang");
-      const statusSelect = document.getElementById("leaderStatus");
-      const rows = Array.from(document.querySelectorAll("#leaderRows tr:not(#leaderEmptyRow)"));
-      const emptyRow = document.getElementById("leaderEmptyRow");
-      const pagination = document.getElementById("leaderPagination");
-
-      function normalize(value) {
-        return String(value || "").trim().toLowerCase();
-      }
-
-      function selectValue(select) {
-        const value = select && select.value || "";
-        return /^全部/.test(value) ? "" : value;
-      }
-
-      function applyLeaderFilters() {
-        const keyword = normalize(keywordInput && keywordInput.value);
-        const destination = selectValue(destinationSelect);
-        const lang = selectValue(langSelect);
-        const status = selectValue(statusSelect);
-        let visible = 0;
-        rows.forEach((row) => {
-          const text = normalize((row.dataset.keywords || "") + " " + row.textContent);
-          const matchesKeyword = !keyword || text.indexOf(keyword) >= 0;
-          const matchesDestination = !destination || (row.dataset.destination || "").indexOf(destination) >= 0;
-          const matchesLang = !lang || (row.dataset.lang || "").indexOf(lang) >= 0;
-          const matchesStatus = !status || (row.dataset.status || "") === status;
-          const show = matchesKeyword && matchesDestination && matchesLang && matchesStatus;
-          row.hidden = !show;
-          if (show) visible += 1;
+      var model = window.CaesarLeaderPrototype;
+      var records = model.load();
+      var drawer = document.getElementById('leaderDrawer');
+      var body = document.getElementById('leaderRows');
+      var keywordInput = document.getElementById('leaderKeyword');
+      var destinationSelect = document.getElementById('leaderDestination');
+      var langSelect = document.getElementById('leaderLang');
+      var statusSelect = document.getElementById('leaderStatus');
+      var roleSelect = document.getElementById('leaderRolePreview');
+      var error = document.getElementById('leaderFormError');
+      var editingId = null;
+      var fields = ['name', 'phone', 'identity', 'type', 'status', 'languages', 'destinations', 'guideNo', 'guideExpiry', 'passportNo', 'passportExpiry', 'bank', 'bankAccount', 'bankStatus'];
+      var documentFields = ['identity', 'guideNo', 'guideExpiry', 'passportNo', 'passportExpiry'];
+      var financeFields = ['bank', 'bankAccount', 'bankStatus'];
+      function esc(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
         });
-        if (emptyRow) emptyRow.hidden = visible !== 0;
-        if (pagination) pagination.textContent = visible ? "第1-" + visible + "条/共" + visible + "条" : "第0条/共0条";
       }
-
-      document.querySelectorAll("[data-open-leader-drawer]").forEach((button) => {
-        button.addEventListener("click", function () { window.caesarUI.openLayer(drawer); });
+      function field(name) { return document.getElementById('leaderField_' + name); }
+      function normalize(value) { return String(value || '').trim().toLowerCase(); }
+      function selected(select) { return /^全部/.test(select.value) ? '' : select.value; }
+      function findRecord(id) { return records.find(function (record) { return record.id === id; }); }
+      function scoreText(record) {
+        var scores = (record.reviews || []).filter(function (review) { return review.status === '已复核' && Number(review.score) > 0; });
+        if (!scores.length) return '暂无';
+        return (scores.reduce(function (sum, review) { return sum + Number(review.score); }, 0) / scores.length).toFixed(1);
+      }
+      function renderRows() {
+        body.innerHTML = records.map(function (record) {
+          var actual = (record.history || []).filter(function (item) { return item.result === '实际带团'; }).sort(function (a, b) { return b.depart.localeCompare(a.depart); });
+          var recent = actual[0];
+          var expiry = record.guideExpiry || record.passportExpiry || '';
+          var expired = expiry && expiry < new Date().toLocaleDateString('sv-SE');
+          var statusClass = record.status === '空闲' ? 'tag-green' : record.status === '在途' ? 'tag-blue' : 'tag-orange';
+          var keywords = [record.name, record.phone, record.id, record.destinations, record.languages].concat((record.history || []).map(function (item) { return item.product + ' ' + item.schedule + ' ' + item.destination; })).join(' ');
+          return '<tr data-id="' + esc(record.id) + '" data-keywords="' + esc(keywords) + '"><td><div class="table-cell-main"><strong>' + esc(record.name) + '</strong><span>' + esc(record.id) + '</span></div></td>' +
+            '<td><div class="table-cell-main"><strong>' + esc(record.type) + '</strong><span class="tag ' + statusClass + '">' + esc(record.status) + '</span></div></td>' +
+            '<td>' + esc(model.mask(record.phone)) + '</td><td><div class="table-cell-main"><strong>' + esc(record.destinations || '未维护') + '</strong><span>' + esc(record.languages || '未维护') + '</span></div></td>' +
+            '<td><div class="table-cell-main"><strong>' + (record.guideNo ? '导游证 ' + esc(record.guideExpiry || '有效期未填') : '导游证未维护') + '</strong><span class="' + (expired ? 'tag tag-orange' : '') + '">' + (expired ? '已过期' : '证件版本见详情') + '</span></div></td>' +
+            '<td><div class="table-cell-main"><strong>' + esc(record.bankAccount ? model.mask(record.bankAccount) : '未维护') + '</strong><span class="tag ' + (record.bankStatus === '已校验' ? 'tag-green' : 'tag-orange') + '">' + esc(record.bankStatus || '待校验') + '</span></div></td>' +
+            '<td><div class="table-cell-main"><strong>' + esc(recent ? recent.schedule : '暂无') + '</strong><span>' + esc(recent ? recent.product + ' / ' + recent.back + ' 回团' : '尚无实际带团') + '</span></div></td>' +
+            '<td><strong>' + actual.length + '团</strong></td><td><strong>' + esc(scoreText(record)) + '</strong></td>' +
+            '<td><div class="table-action"><button type="button" class="table-action-primary" data-edit-leader="' + esc(record.id) + '">编辑</button><a href="resource-leader-schedule.html?leaderId=' + encodeURIComponent(record.id) + '">详情</a></div></td></tr>';
+        }).join('') + '<tr id="leaderEmptyRow" hidden><td colspan="10">暂无符合条件的领队</td></tr>';
+        applyFilters();
+      }
+      function applyFilters() {
+        var keyword = normalize(keywordInput.value);
+        var destination = selected(destinationSelect);
+        var lang = selected(langSelect);
+        var status = selected(statusSelect);
+        var visible = 0;
+        body.querySelectorAll('tr[data-id]').forEach(function (row) {
+          var record = findRecord(row.dataset.id);
+          var matches = (!keyword || normalize(row.dataset.keywords).includes(keyword)) && (!destination || (record.destinations || '').includes(destination)) && (!lang || (record.languages || '').includes(lang)) && (!status || record.status === status);
+          row.hidden = !matches;
+          if (matches) visible++;
+        });
+        document.getElementById('leaderEmptyRow').hidden = visible !== 0;
+        document.getElementById('leaderPagination').textContent = visible ? '第1-' + visible + '条/共' + visible + '条' : '第0条/共0条';
+      }
+      function showError(message) { error.textContent = message; error.hidden = false; }
+      function openDrawer(id) {
+        editingId = id || null;
+        var record = findRecord(editingId) || { type: '全职', status: '空闲', bankStatus: '待校验' };
+        var canDocuments = roleSelect.value === 'archive';
+        var canFinance = roleSelect.value === 'finance';
+        document.getElementById('leaderDrawerTitle').textContent = editingId ? '编辑领队档案' : '新增领队';
+        document.getElementById('leaderPermissionNote').textContent = canDocuments ? '可维护身份和证件；证件更换后保留旧版本。' : canFinance ? '可维护财务收款资料；身份和证件仅显示脱敏值。' : '计调岗位默认查看脱敏资料；新增领队需由档案管理员核验证件。';
+        fields.forEach(function (name) {
+          var input = field(name);
+          var restricted = documentFields.includes(name) ? !canDocuments : financeFields.includes(name) ? !canFinance : false;
+          input.disabled = restricted;
+          input.value = restricted && (name === 'identity' || name === 'guideNo' || name === 'passportNo' || name === 'bankAccount') ? (record[name] ? model.mask(record[name]) : '') : (record[name] || '');
+          if (input.tagName === 'SELECT' && !record[name]) input.selectedIndex = 0;
+        });
+        error.hidden = true;
+        window.caesarUI.openLayer(drawer);
+      }
+      function saveLeader() {
+        var previous = findRecord(editingId);
+        var candidate = previous ? JSON.parse(JSON.stringify(previous)) : { id: 'LD-20260919-' + String(records.length + 1).padStart(3, '0'), certificateHistory: [], history: [], reviews: [], bankStatus: '待校验' };
+        fields.forEach(function (name) { if (!field(name).disabled) candidate[name] = field(name).value.trim(); });
+        if (!candidate.name || !candidate.phone) { showError('请填写姓名和手机号。'); return; }
+        if (!candidate.identity && !candidate.guideNo && !candidate.passportNo) { showError('新建领队至少需要一项身份或证件依据，请切换档案管理员岗位维护。'); return; }
+        var duplicate = model.duplicate(records, candidate, editingId);
+        if (duplicate) { showError('证件或身份资料与“' + duplicate.name + '（' + duplicate.id + '）”重复，请打开已有档案，不要重复建人。'); return; }
+        if (previous) {
+          ['identity', 'guideNo', 'passportNo'].forEach(function (name) {
+            var expiryField = name === 'guideNo' ? 'guideExpiry' : name === 'passportNo' ? 'passportExpiry' : '';
+            if (previous[name] && (candidate[name] !== previous[name] || expiryField && candidate[expiryField] !== previous[expiryField])) {
+              candidate.certificateHistory.push({ type: { identity: '身份依据', guideNo: '导游证', passportNo: '护照' }[name], oldNo: previous[name], oldExpiry: expiryField ? previous[expiryField] : '', newNo: candidate[name] || '已停用', newExpiry: expiryField ? candidate[expiryField] : '', changedAt: new Date().toLocaleDateString('sv-SE') });
+            }
+          });
+          records[records.indexOf(previous)] = candidate;
+        } else records.push(candidate);
+        model.save(records);
+        renderRows();
+        window.caesarUI.closeLayer(drawer);
+        if (window.caesarUI.toast) window.caesarUI.toast(previous ? '领队档案已更新，证件旧版本已保留' : '领队档案已创建');
+      }
+      document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-open-leader-drawer]')) { openDrawer(null); return; }
+        var edit = event.target.closest('[data-edit-leader]');
+        if (edit) { openDrawer(edit.dataset.editLeader); return; }
+        if (event.target.closest('[data-save-leader]')) { saveLeader(); return; }
+        if (event.target.closest('[data-close-leader-drawer]') || event.target === drawer) window.caesarUI.closeLayer(drawer);
       });
-      document.querySelectorAll("[data-close-leader-drawer]").forEach((button) => {
-        button.addEventListener("click", function () { window.caesarUI.closeLayer(drawer); });
+      keywordInput.addEventListener('input', applyFilters);
+      [destinationSelect, langSelect, statusSelect].forEach(function (select) { select.addEventListener('change', applyFilters); });
+      roleSelect.addEventListener('change', renderRows);
+      var filterButtons = document.querySelectorAll('.resource-tour-leaders-list-surface .filter-actions button');
+      filterButtons[0].addEventListener('click', applyFilters);
+      filterButtons[1].addEventListener('click', function () {
+        keywordInput.value = '';
+        [destinationSelect, langSelect, statusSelect].forEach(function (select) { select.selectedIndex = 0; });
+        applyFilters();
       });
-      drawer.addEventListener("click", (event) => {
-        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
-      });
-      if (keywordInput) keywordInput.addEventListener("input", applyLeaderFilters);
-      [destinationSelect, langSelect, statusSelect].forEach((select) => {
-        if (select) select.addEventListener("change", applyLeaderFilters);
-      });
-      const filterButtons = document.querySelectorAll(".resource-tour-leaders-list-surface .filter-actions button");
-      if (filterButtons[0]) filterButtons[0].addEventListener("click", applyLeaderFilters);
-      if (filterButtons[1]) filterButtons[1].addEventListener("click", function () {
-        if (keywordInput) keywordInput.value = "";
-        [destinationSelect, langSelect, statusSelect].forEach((select) => { if (select) select.selectedIndex = 0; });
-        applyLeaderFilters();
-      });
+      renderRows();
     })();
   </script>
 </body>

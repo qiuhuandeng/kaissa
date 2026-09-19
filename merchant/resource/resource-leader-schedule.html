@@ -5,269 +5,256 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>领队详情 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .leader-detail-page .leader-filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 0 0 18px; }
+    .leader-detail-page .leader-filter-row .form-group { min-width: 170px; flex: 1 1 170px; margin: 0; }
+    .leader-detail-page .leader-filter-actions { display: flex; gap: 8px; }
+    .leader-detail-page .leader-section + .leader-section { margin-top: 22px; }
+    .leader-detail-page .leader-section .drawer-section-head { margin-bottom: 12px; }
+    .leader-detail-page .leader-empty { padding: 26px; color: var(--color-text-muted); text-align: center; }
+    #addLeaderReview[hidden], #reviewError[hidden] { display: none !important; }
+    @media (min-width: 761px) { .leader-detail-page .supplier-profile-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
 
-  <section class="page-workbar">
-    <div>
+  <main class="leader-detail-page">
+    <section class="page-workbar">
       <div class="page-title-row">
         <a class="page-back-link" href="resource-tour-leaders.html">返回</a>
-        <h1 class="page-title">张建国 - 领队详情</h1>
+        <h1 id="leaderPageTitle" class="page-title">领队详情</h1>
       </div>
-    </div>
-    <div class="page-actions">
-      <button class="btn btn-secondary" type="button" data-open-leader-admission-drawer>编辑资料</button>
-    </div>
-  </section>
+      <div class="page-actions">
+        <label class="sr-only" for="leaderDetailRole">操作岗位</label>
+        <select id="leaderDetailRole" class="form-control" aria-label="操作岗位演示">
+          <option value="planner">计调（脱敏）</option>
+          <option value="archive">档案管理员</option>
+          <option value="finance">财务专员</option>
+        </select>
+      </div>
+    </section>
 
-  <section class="supplier-profile-card" aria-label="领队摘要">
-    <div class="supplier-profile-main">
-      <div>
-        <h2>张建国</h2>
-        <div class="supplier-profile-tags">
-          <span class="tag tag-blue">欧洲</span>
-          <span class="tag tag-purple">邮轮</span>
-          <span class="tag tag-green">空闲</span>
-          <span class="tag tag-gray">全职</span>
+    <section class="supplier-profile-card" aria-label="领队摘要">
+      <div class="supplier-profile-main">
+        <div>
+          <h2 id="leaderName">—</h2>
+          <div id="leaderTags" class="supplier-profile-tags"></div>
+        </div>
+        <div class="supplier-profile-metrics">
+          <article><span>语种</span><strong id="leaderLanguages">—</strong></article>
+          <article><span>导游证有效期</span><strong id="leaderGuideExpiry">—</strong></article>
+          <article><span>实际带团</span><strong id="leaderActualCount">0团</strong></article>
+          <article><span>已复核评价</span><strong id="leaderRating">暂无</strong></article>
         </div>
       </div>
-      <div class="supplier-profile-metrics">
-        <article><span>语种</span><strong>英语 / 法语</strong></article>
-        <article><span>证照有效期</span><strong>2027-05-31</strong></article>
-        <article><span>最近评分</span><strong>4.8</strong></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="card detail-tabs-card">
-    <nav class="tab-bar" aria-label="领队资料标签页">
-      <button class="tab-item active" type="button" data-tab-target="basic">基础信息</button>
-      <button class="tab-item" type="button" data-tab-target="certificate">证照资料</button>
-      <button class="tab-item" type="button" data-tab-target="finance">财务账号</button>
-      <button class="tab-item" type="button" data-tab-target="training">培训资料</button>
-      <button class="tab-item" type="button" data-tab-target="schedule">档期占用</button>
-      <button class="tab-item" type="button" data-tab-target="history">历史带团</button>
-      <button class="tab-item" type="button" data-tab-target="fee">费用反查</button>
-    </nav>
-
-    <section id="tab-basic" class="detail-tab-panel active">
-      <div class="description-grid">
-        <div class="description-item"><div class="description-label">姓名</div><div class="description-value">张建国</div></div>
-        <div class="description-item"><div class="description-label">手机号</div><div class="description-value">138****4521</div></div>
-        <div class="description-item"><div class="description-label">领队类型</div><div class="description-value">全职</div></div>
-        <div class="description-item"><div class="description-label">语种</div><div class="description-value">英语、法语</div></div>
-        <div class="description-item"><div class="description-label">可带区域</div><div class="description-value">欧洲、地中海邮轮、MICE</div></div>
-        <div class="description-item"><div class="description-label">紧急联系人</div><div class="description-value">张女士 139****7788</div></div>
-        <div class="description-item"><div class="description-label">当前状态</div><div class="description-value"><span class="tag tag-green">空闲</span></div></div>
-        <div class="description-item"><div class="description-label">结算规则</div><div class="description-value">工资补贴承接</div></div>
-        <div class="description-item"><div class="description-label">财务账号</div><div class="description-value">招商银行尾号4521 / 已校验</div></div>
-        <div class="description-item"><div class="description-label">英国线经验</div><div class="description-value">3团 / 最近 EU-UKI-20260716-001</div></div>
-      </div>
     </section>
 
-    <section id="tab-certificate" class="detail-tab-panel">
-      <div class="drawer-section-head">
-        <h3 class="drawer-section-title">证件附件</h3>
-        <button class="table-action-primary" type="button" data-open-certificate-upload>上传证件</button>
-      </div>
-      <section class="table-wrap" aria-label="证照资质">
-        <table>
-          <thead><tr><th>资料类型</th><th>资料名称</th><th>证件号/编号</th><th>有效期</th><th>附件</th><th>状态</th><th>影响</th></tr></thead>
-          <tbody>
-            <tr><td>导游证</td><td>国家导游证</td><td>D-CAISSA-20260312</td><td>2027-05-31</td><td><a class="table-link" href="#">查看</a></td><td><span class="tag tag-green">有效</span></td><td>可承接团期配领队</td></tr>
-            <tr><td>护照</td><td>普通护照</td><td>EJ1234567</td><td>2031-08-18</td><td><a class="table-link" href="#">查看</a></td><td><span class="tag tag-green">有效</span></td><td>出团通知、境外材料直接调用</td></tr>
-            <tr><td>签证</td><td>申根多年签</td><td>VISA-SCH-2025-018</td><td>2027-02-18</td><td><a class="table-link" href="#">查看</a></td><td><span class="tag tag-green">有效</span></td><td>欧洲线可派</td></tr>
-            <tr><td>保险</td><td>领队责任险</td><td>INS-LD-2026-001</td><td>2027-12-31</td><td><a class="table-link" href="#">查看</a></td><td><span class="tag tag-green">有效</span></td><td>出团前校验</td></tr>
-            <tr><td>合作协议</td><td>全职劳动关系</td><td>LD-CT-2026-001</td><td>长期</td><td><a class="table-link" href="#">查看</a></td><td><span class="tag tag-green">有效</span></td><td>费用走工资补贴承接</td></tr>
-          </tbody>
-        </table>
+    <section class="card detail-tabs-card">
+      <nav class="tab-bar" aria-label="领队资料标签页">
+        <button class="tab-item active" type="button" data-tab-target="basic">领队档案</button>
+        <button class="tab-item" type="button" data-tab-target="certificate">证照与培训</button>
+        <button class="tab-item" type="button" data-tab-target="history">带团经历</button>
+        <button class="tab-item" type="button" data-tab-target="review">评价记录</button>
+        <button class="tab-item" type="button" data-tab-target="fee">费用反查</button>
+      </nav>
+
+      <section id="tab-basic" class="detail-tab-panel active">
+        <section class="leader-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">基本资料</h3></div>
+          <div id="leaderBasicGrid" class="description-grid"></div>
+        </section>
+        <section class="leader-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">财务收款资料</h3></div>
+          <div id="leaderFinanceGrid" class="description-grid"></div>
+        </section>
+      </section>
+
+      <section id="tab-certificate" class="detail-tab-panel">
+        <section class="leader-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">当前证照</h3></div>
+          <section class="table-wrap" aria-label="当前证照"><table><thead><tr><th>资料类型</th><th>证件号</th><th>有效期</th><th>状态</th></tr></thead><tbody id="leaderCurrentCertificates"></tbody></table></section>
+        </section>
+        <section class="leader-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">证件更换记录</h3></div>
+          <section class="table-wrap" aria-label="证件更换记录"><table><thead><tr><th>资料类型</th><th>原证件</th><th>新证件</th><th>更换日期</th></tr></thead><tbody id="leaderCertificateHistory"></tbody></table></section>
+        </section>
+        <section class="leader-section">
+          <div class="drawer-section-head"><h3 class="drawer-section-title">培训资料</h3></div>
+          <section class="table-wrap" aria-label="培训资料"><table><thead><tr><th>培训项目</th><th>完成日期</th><th>有效期</th><th>状态</th></tr></thead><tbody id="leaderTrainingRows"></tbody></table></section>
+        </section>
+      </section>
+
+      <section id="tab-history" class="detail-tab-panel">
+        <div class="drawer-section-head"><h3 class="drawer-section-title">关联派团与带团经历</h3><button class="btn btn-secondary" type="button" data-export-history>导出当前结果</button></div>
+        <div class="leader-filter-row">
+          <div class="form-group"><label class="form-label" for="historyDestination">目的地</label><input id="historyDestination" class="form-control" type="search" placeholder="输入目的地"></div>
+          <div class="form-group"><label class="form-label" for="historyProduct">产品</label><input id="historyProduct" class="form-control" type="search" placeholder="输入产品名称"></div>
+          <div class="form-group"><label class="form-label" for="historyStart">出发日期从</label><input id="historyStart" class="form-control" type="date"></div>
+          <div class="form-group"><label class="form-label" for="historyEnd">出发日期至</label><input id="historyEnd" class="form-control" type="date"></div>
+          <div class="leader-filter-actions"><button class="btn btn-secondary" type="button" data-reset-history>重置</button></div>
+        </div>
+        <section class="table-wrap" aria-label="带团经历"><table><thead><tr><th>来源团号</th><th>出发/回团</th><th>产品/目的地</th><th>担任角色</th><th>实际结果</th></tr></thead><tbody id="leaderHistoryRows"></tbody></table></section>
+        <p id="historyCount" class="form-hint"></p>
+      </section>
+
+      <section id="tab-review" class="detail-tab-panel">
+        <div class="drawer-section-head"><h3 class="drawer-section-title">评价记录</h3><button id="addLeaderReview" class="btn btn-secondary" type="button" hidden>登记评价</button></div>
+        <section class="table-wrap" aria-label="领队评价"><table><thead><tr><th>实际团期</th><th>评价时间</th><th>来源</th><th>评分</th><th>复核状态</th><th>内容</th></tr></thead><tbody id="leaderReviewRows"></tbody></table></section>
+      </section>
+
+      <section id="tab-fee" class="detail-tab-panel">
+        <section class="table-wrap" aria-label="费用反查"><table><thead><tr><th>费用项目</th><th>关联团期</th><th>确认金额</th><th>成本状态</th><th>财务承接</th></tr></thead><tbody id="leaderFeeRows"></tbody></table></section>
       </section>
     </section>
+  </main>
 
-    <section id="tab-finance" class="detail-tab-panel">
-      <div class="description-grid">
-        <div class="description-item"><div class="description-label">默认收款人</div><div class="description-value">张建国</div></div>
-        <div class="description-item"><div class="description-label">默认账号</div><div class="description-value">招商银行北京分行 / 尾号4521</div></div>
-        <div class="description-item"><div class="description-label">账号用途</div><div class="description-value">带团费、备用金、报销返款</div></div>
-        <div class="description-item"><div class="description-label">财务校验</div><div class="description-value"><span class="tag tag-green">已校验</span></div></div>
-      </div>
-      <section class="table-wrap" aria-label="财务账号">
-        <table>
-          <thead><tr><th>账号用途</th><th>开户行</th><th>账号尾号</th><th>收款人</th><th>校验状态</th><th>默认</th></tr></thead>
-          <tbody>
-            <tr><td>带团费/备用金/报销返款</td><td>招商银行北京分行</td><td>4521</td><td>张建国</td><td><span class="tag tag-green">已校验</span></td><td>是</td></tr>
-            <tr><td>备用账号</td><td>工商银行北京朝阳支行</td><td>8890</td><td>张建国</td><td><span class="tag tag-gray">停用</span></td><td>否</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </section>
-
-    <section id="tab-training" class="detail-tab-panel">
-      <section class="table-wrap" aria-label="培训资料">
-        <table>
-          <thead><tr><th>培训项目</th><th>完成日期</th><th>有效期</th><th>状态</th><th>备注</th></tr></thead>
-          <tbody>
-            <tr><td>欧洲团队操作规范</td><td>2026-03-12</td><td>2028-03-11</td><td><span class="tag tag-green">有效</span></td><td>欧洲线可派</td></tr>
-            <tr><td>邮轮登船服务培训</td><td>2026-04-20</td><td>2028-04-19</td><td><span class="tag tag-green">有效</span></td><td>邮轮线可派</td></tr>
-            <tr><td>MICE接待礼仪</td><td>2026-05-18</td><td>2028-05-17</td><td><span class="tag tag-green">有效</span></td><td>MICE接待可派</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </section>
-
-    <section id="tab-schedule" class="detail-tab-panel">
-      <section class="table-wrap" aria-label="档期占用">
-        <table>
-          <thead><tr><th>关联团期</th><th>产品/线路</th><th>出发/回团</th><th>派团状态</th><th>费用承接</th></tr></thead>
-          <tbody>
-            <tr><td>EU-FRA-20250720-001</td><td>欧洲十国经典游 / 法德意A线</td><td>2026-07-20 / 2026-08-01</td><td><span class="tag tag-green">已配领队</span></td><td>未到回团节点</td></tr>
-            <tr><td>CR-MED-20250618-001</td><td>理想号地中海邮轮 / 地中海东线</td><td>2026-06-18 / 2026-06-25</td><td><span class="tag tag-green">已回团</span></td><td>工资补贴承接</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </section>
-
-    <section id="tab-history" class="detail-tab-panel">
-      <div class="drawer-section-head">
-        <h3 class="drawer-section-title">带团记录</h3>
-        <button class="table-action-primary" type="button" data-export-history>导出带团记录</button>
-      </div>
-      <section class="table-wrap" aria-label="历史带团">
-        <table>
-          <thead><tr><th>出发/回团</th><th>团期</th><th>产品/线路</th><th>目的地</th><th>人数</th><th>角色</th><th>评分</th><th>异常</th></tr></thead>
-          <tbody>
-            <tr><td>2026-07-05 / 2026-07-16</td><td>EU-UKI-20260716-001</td><td>英国爱尔兰12日 / 精选线</td><td>英国、爱尔兰</td><td>26人</td><td>全程领队</td><td><strong>4.8</strong></td><td>无</td></tr>
-            <tr><td>2026-06-18 / 2026-06-25</td><td>CR-MED-20250618-001</td><td>理想号地中海邮轮 / 地中海东线</td><td>地中海邮轮</td><td>76间</td><td>邮轮领队</td><td><strong>4.9</strong></td><td>岸上游改期1次</td></tr>
-            <tr><td>2026-05-16 / 2026-05-28</td><td>EU-SWI-20250516-002</td><td>瑞士意大利13日 / 雪山线</td><td>瑞士、意大利</td><td>28人</td><td>全程领队</td><td><strong>4.8</strong></td><td>无</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </section>
-
-    <section id="tab-fee" class="detail-tab-panel">
-      <section class="table-wrap" aria-label="费用反查">
-        <table>
-          <thead><tr><th>费用项目</th><th>关联团期</th><th>确认金额</th><th>成本状态</th><th>财务承接</th></tr></thead>
-          <tbody>
-            <tr><td>导游/领队</td><td>CR-MED-20250618-001</td><td>¥5,600</td><td><span class="tag tag-green">已确认</span></td><td>工资补贴承接</td></tr>
-            <tr><td>导游/领队</td><td>EU-FRA-20250720-001</td><td>待确认</td><td><span class="tag tag-orange">未到节点</span></td><td>未承接</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </section>
-  </section>
-
-  <div id="leaderAdmissionDrawer" class="modal-overlay drawer-overlay" hidden>
-    <section class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="leaderAdmissionDrawerTitle">
-      <div class="modal-header">
-        <h2 id="leaderAdmissionDrawerTitle">编辑领队档案</h2>
-        <button class="modal-close" type="button" data-close-leader-admission-drawer aria-label="关闭">×</button>
-      </div>
+  <div id="leaderReviewDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <section class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="leaderReviewTitle">
+      <div class="modal-header"><h2 id="leaderReviewTitle" class="modal-title">登记领队评价</h2><button class="modal-close" type="button" data-close-review aria-label="关闭评价">×</button></div>
       <div class="modal-body">
-        <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">基础信息</h3></div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">姓名</label><input class="form-control" type="text" value="张建国"></div>
-            <div class="form-group"><label class="form-label">手机号</label><input class="form-control" type="tel" value="138****4521"></div>
-            <div class="form-group"><label class="form-label">领队类型</label><select class="form-control"><option>全职</option><option>外聘</option></select></div>
-            <div class="form-group"><label class="form-label">紧急联系人</label><input class="form-control" type="text" value="张女士 139****7788"></div>
-            <div class="form-group"><label class="form-label">当前状态</label><select class="form-control"><option selected>空闲</option><option>在途</option><option>不可用</option></select></div>
-            <div class="form-group"><label class="form-label">结算规则</label><input class="form-control" type="text" value="工资补贴承接"></div>
-            <div class="form-group form-group-full"><label class="form-label">可带区域</label><input class="form-control" type="text" value="欧洲、英国、地中海邮轮、MICE"></div>
-          </div>
-        </section>
-        <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">证照资料</h3></div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">导游证号</label><input class="form-control" type="text" value="D-CAISSA-20260312"></div>
-            <div class="form-group"><label class="form-label">导游证有效期</label><input class="form-control" type="date" value="2027-05-31"></div>
-            <div class="form-group"><label class="form-label">护照号</label><input class="form-control" type="text" value="EJ1234567"></div>
-            <div class="form-group"><label class="form-label">护照有效期</label><input class="form-control" type="date" value="2031-08-18"></div>
-            <label class="form-group form-group-full"><span class="form-label">证件附件</span><div class="upload-box">导游证、护照、签证页、领队责任险、外聘协议</div></label>
-          </div>
-        </section>
-        <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">财务账号</h3></div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">收款人</label><input class="form-control" type="text" value="张建国"></div>
-            <div class="form-group"><label class="form-label">开户行</label><input class="form-control" type="text" value="招商银行北京分行"></div>
-            <div class="form-group"><label class="form-label">银行卡号</label><input class="form-control" type="text" value="6225 **** **** 4521"></div>
-            <div class="form-group"><label class="form-label">账号用途</label><select class="form-control"><option>带团费/备用金/报销返款</option><option>仅带团费</option><option>仅备用金</option><option>仅报销返款</option></select></div>
-            <div class="form-group"><label class="form-label">财务校验</label><select class="form-control"><option>已校验</option><option>待校验</option><option>停用</option></select></div>
-            <div class="form-group form-group-full"><label class="form-label">档案备注</label><textarea class="form-control" rows="3">档案只维护可派基础资料，团期配领队和费用确认分别在团期管控和团期成本处理。</textarea></div>
-          </div>
-        </section>
+        <p id="reviewError" class="form-error" role="alert" hidden></p>
+        <div class="form-grid">
+          <div class="form-group form-group-full"><label class="form-label" for="reviewSchedule">实际带团团期 <span class="req">*</span></label><select id="reviewSchedule" class="form-control"></select></div>
+          <div class="form-group"><label class="form-label" for="reviewDate">评价日期 <span class="req">*</span></label><input id="reviewDate" class="form-control" type="date"></div>
+          <div class="form-group"><label class="form-label" for="reviewSource">评价来源 <span class="req">*</span></label><select id="reviewSource" class="form-control"><option>游客回访问卷</option><option>团控复核</option><option>游客投诉</option></select></div>
+          <div class="form-group"><label class="form-label" for="reviewScore">评分（可留空）</label><input id="reviewScore" class="form-control" type="number" min="1" max="5" step="0.1" placeholder="争议待复核可留空"></div>
+          <div class="form-group"><label class="form-label" for="reviewStatus">复核状态</label><select id="reviewStatus" class="form-control"><option>待复核</option><option>已复核</option><option>争议待复核</option></select></div>
+          <div class="form-group form-group-full"><label class="form-label" for="reviewNote">评价内容</label><textarea id="reviewNote" class="form-control" rows="3"></textarea></div>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-leader-admission-drawer>取消</button>
-        <button class="btn btn-primary" type="button" data-close-leader-admission-drawer>保存</button>
-      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-review>取消</button><button class="btn btn-primary" type="button" data-save-review>保存评价</button></div>
     </section>
   </div>
 
-  <div id="leaderCertificateUploadDrawer" class="modal-overlay drawer-overlay" hidden>
-    <section class="modal drawer-modal" role="dialog" aria-modal="true" aria-labelledby="leaderCertificateUploadTitle">
-      <div class="modal-header">
-        <h2 id="leaderCertificateUploadTitle">上传证件资料</h2>
-        <button class="modal-close" type="button" data-close-certificate-upload aria-label="关闭">×</button>
-      </div>
-      <div class="modal-body">
-        <section class="drawer-section">
-          <div class="drawer-section-head"><h3 class="drawer-section-title">证件信息</h3></div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">资料类型</label><select class="form-control"><option>导游证</option><option>护照</option><option>签证/ADS工作牌</option><option>领队责任险</option><option>外聘协议</option><option>其他</option></select></div>
-            <div class="form-group"><label class="form-label">证件号/编号</label><input class="form-control" type="text" placeholder="填写证件号或文件编号"></div>
-            <div class="form-group"><label class="form-label">有效期至</label><input class="form-control" type="date"></div>
-            <div class="form-group"><label class="form-label">影响范围</label><select class="form-control"><option>出团前必须有效</option><option>仅对应目的地可派</option><option>仅财务付款依据</option><option>档案留存</option></select></div>
-            <label class="form-group form-group-full"><span class="form-label">上传附件</span><div class="upload-box">上传图片或PDF，保存后出团通知、签证材料和财务付款可直接调取</div></label>
-          </div>
-        </section>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-close-certificate-upload>取消</button>
-        <button class="btn btn-primary" type="button" data-save-certificate-upload>保存</button>
-      </div>
-    </section>
-  </div>
-
+  <script src="../../shared/leader-prototype-data.js"></script>
   <script>
     (function () {
-      const drawer = document.getElementById("leaderAdmissionDrawer");
-      const certificateDrawer = document.getElementById("leaderCertificateUploadDrawer");
-      document.querySelectorAll("[data-tab-target]").forEach((tab) => {
-        tab.addEventListener("click", () => {
-          document.querySelectorAll("[data-tab-target]").forEach((item) => item.classList.remove("active"));
-          document.querySelectorAll(".detail-tab-panel").forEach((panel) => panel.classList.remove("active"));
-          tab.classList.add("active");
-          document.getElementById("tab-" + tab.dataset.tabTarget).classList.add("active");
+      var model = window.CaesarLeaderPrototype;
+      var records = model.load();
+      var id = new URLSearchParams(window.location.search).get('leaderId') || 'LD-20260312001';
+      var leader = records.find(function (item) { return item.id === id; });
+      var role = document.getElementById('leaderDetailRole');
+      var drawer = document.getElementById('leaderReviewDrawer');
+      var visibleHistory = [];
+      function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]; }); }
+      function item(label, value) { return '<div class="description-item"><div class="description-label">' + esc(label) + '</div><div class="description-value">' + esc(value || '未维护') + '</div></div>'; }
+      function empty(columns, text) { return '<tr><td colspan="' + columns + '" class="leader-empty">' + esc(text) + '</td></tr>'; }
+      function score() {
+        var values = (leader.reviews || []).filter(function (review) { return review.status === '已复核' && Number(review.score) > 0; });
+        return values.length ? (values.reduce(function (sum, review) { return sum + Number(review.score); }, 0) / values.length).toFixed(1) : '暂无';
+      }
+      function renderProfile() {
+        document.title = leader.name + ' - 领队详情 - 凯撒旅游';
+        document.getElementById('leaderPageTitle').textContent = leader.name + ' - 领队详情';
+        document.getElementById('leaderName').textContent = leader.name;
+        document.getElementById('leaderTags').innerHTML = '<span class="tag tag-blue">' + esc(leader.destinations || '区域待维护') + '</span><span class="tag tag-green">' + esc(leader.status) + '</span><span class="tag tag-gray">' + esc(leader.type) + '</span>';
+        document.getElementById('leaderLanguages').textContent = leader.languages || '未维护';
+        document.getElementById('leaderGuideExpiry').textContent = leader.guideExpiry || '未维护';
+        document.getElementById('leaderActualCount').textContent = model.actualCount(leader) + '团';
+        document.getElementById('leaderRating').textContent = score();
+        var canArchive = role.value === 'archive', canFinance = role.value === 'finance';
+        document.getElementById('leaderBasicGrid').innerHTML = [item('姓名', leader.name), item('手机号', model.mask(leader.phone)), item('领队类型', leader.type), item('语种', leader.languages), item('可带区域', leader.destinations), item('当前状态', leader.status), item('身份依据', canArchive ? leader.identity : model.mask(leader.identity))].join('');
+        document.getElementById('leaderFinanceGrid').innerHTML = [item('收款人', leader.name), item('开户行', canFinance ? leader.bank : '按岗位隐藏'), item('银行账号', canFinance ? leader.bankAccount : model.mask(leader.bankAccount)), item('财务校验', leader.bankStatus || '待校验')].join('');
+        document.getElementById('addLeaderReview').hidden = !canArchive;
+      }
+      function renderCertificates() {
+        var canArchive = role.value === 'archive';
+        var current = [
+          ['导游证', leader.guideNo, leader.guideExpiry],
+          ['护照', leader.passportNo, leader.passportExpiry]
+        ];
+        document.getElementById('leaderCurrentCertificates').innerHTML = current.map(function (row) {
+          var status = !row[1] ? '待维护' : row[2] && row[2] < new Date().toLocaleDateString('sv-SE') ? '已过期' : '有效';
+          return '<tr><td>' + esc(row[0]) + '</td><td>' + esc(canArchive ? row[1] || '未维护' : model.mask(row[1])) + '</td><td>' + esc(row[2] || '未维护') + '</td><td><span class="tag ' + (status === '有效' ? 'tag-green' : 'tag-orange') + '">' + status + '</span></td></tr>';
+        }).join('');
+        var versions = leader.certificateHistory || [];
+        document.getElementById('leaderCertificateHistory').innerHTML = versions.length ? versions.map(function (version) {
+          return '<tr><td>' + esc(version.type) + '</td><td>' + esc((canArchive ? version.oldNo : model.mask(version.oldNo)) + (version.oldExpiry ? ' / 至' + version.oldExpiry : '')) + '</td><td>' + esc((canArchive ? version.newNo : model.mask(version.newNo)) + (version.newExpiry ? ' / 至' + version.newExpiry : '')) + '</td><td>' + esc(version.changedAt) + '</td></tr>';
+        }).join('') : empty(4, '暂无证件更换记录');
+        document.getElementById('leaderTrainingRows').innerHTML = leader.id === 'LD-20260312001' ? '<tr><td>欧洲团队操作规范</td><td>2026-03-12</td><td>2028-03-11</td><td><span class="tag tag-green">有效</span></td></tr><tr><td>邮轮登船服务培训</td><td>2026-04-20</td><td>2028-04-19</td><td><span class="tag tag-green">有效</span></td></tr>' : empty(4, '暂无培训记录');
+      }
+      function renderHistory() {
+        visibleHistory = model.filterHistory(leader, {
+          destination: document.getElementById('historyDestination').value,
+          product: document.getElementById('historyProduct').value,
+          start: document.getElementById('historyStart').value,
+          end: document.getElementById('historyEnd').value
+        });
+        document.getElementById('leaderHistoryRows').innerHTML = visibleHistory.length ? visibleHistory.map(function (row) {
+          var cls = row.result === '实际带团' ? 'tag-green' : row.result === '计划派团' ? 'tag-blue' : 'tag-gray';
+          return '<tr><td>' + esc(row.schedule) + '</td><td>' + esc(row.depart + ' / ' + row.back) + '</td><td><strong>' + esc(row.product) + '</strong><br>' + esc(row.destination) + '</td><td>' + esc(row.role) + '</td><td><span class="tag ' + cls + '">' + esc(row.result) + '</span></td></tr>';
+        }).join('') : empty(5, '当前条件下暂无派团或带团记录');
+        document.getElementById('historyCount').textContent = '当前显示 ' + visibleHistory.length + ' 条；实际带团 ' + visibleHistory.filter(function (row) { return row.result === '实际带团'; }).length + ' 团。取消和更换记录不计入实际带团。';
+      }
+      function renderReviews() {
+        var reviews = leader.reviews || [];
+        document.getElementById('leaderReviewRows').innerHTML = reviews.length ? reviews.map(function (row) {
+          var cls = row.status === '已复核' ? 'tag-green' : row.status === '争议待复核' ? 'tag-orange' : 'tag-blue';
+          return '<tr><td>' + esc(row.schedule) + '</td><td>' + esc(row.date) + '</td><td>' + esc(row.source) + '</td><td>' + (Number(row.score) > 0 ? esc(Number(row.score).toFixed(1)) : '—') + '</td><td><span class="tag ' + cls + '">' + esc(row.status) + '</span></td><td>' + esc(row.status === '争议待复核' && role.value !== 'archive' ? '争议内容仅档案管理员查看' : row.note || '—') + '</td></tr>';
+        }).join('') : empty(6, '暂无评价');
+      }
+      function renderFees() {
+        document.getElementById('leaderFeeRows').innerHTML = leader.id === 'LD-20260312001' ? '<tr><td>导游/领队</td><td>CR-MED-20250618-001</td><td>¥5,600</td><td><span class="tag tag-green">已确认</span></td><td>工资补贴承接</td></tr>' : empty(5, '暂无关联费用记录');
+      }
+      function exportHistory() {
+        var csv = model.historyCsv(leader, visibleHistory);
+        var url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        var link = document.createElement('a'); link.href = url; link.download = leader.id + '-带团经历.csv'; document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+      function openReview() {
+        if (role.value !== 'archive') return;
+        var actual = (leader.history || []).filter(function (item) { return item.result === '实际带团'; });
+        var schedule = document.getElementById('reviewSchedule');
+        schedule.innerHTML = '<option value="">请选择</option>' + actual.map(function (item) { return '<option value="' + esc(item.schedule) + '">' + esc(item.schedule + ' / ' + item.product) + '</option>'; }).join('');
+        document.getElementById('reviewDate').value = '';
+        document.getElementById('reviewScore').value = '';
+        document.getElementById('reviewNote').value = '';
+        document.getElementById('reviewSource').selectedIndex = 0;
+        document.getElementById('reviewStatus').selectedIndex = 0;
+        document.getElementById('reviewError').hidden = true;
+        window.caesarUI.openLayer(drawer);
+      }
+      function saveReview() {
+        if (role.value !== 'archive') return;
+        var schedule = document.getElementById('reviewSchedule').value;
+        var date = document.getElementById('reviewDate').value;
+        var scoreField = document.getElementById('reviewScore');
+        var scoreValue = scoreField.value.trim();
+        var status = document.getElementById('reviewStatus').value;
+        var error = document.getElementById('reviewError');
+        if (!schedule || !date || !(leader.history || []).some(function (row) { return row.schedule === schedule && row.result === '实际带团'; })) { error.textContent = '请选择实际带团团期并填写评价日期。'; error.hidden = false; return; }
+        if (scoreValue && (!Number.isFinite(Number(scoreValue)) || Number(scoreValue) < 1 || Number(scoreValue) > 5)) { error.textContent = '评分须在1至5之间，或留空等待复核。'; error.hidden = false; return; }
+        if (status === '已复核' && !scoreValue) { error.textContent = '已复核评价须填写1至5分；无评价无需登记。'; error.hidden = false; return; }
+        leader.reviews = leader.reviews || [];
+        leader.reviews.push({ schedule: schedule, date: date, source: document.getElementById('reviewSource').value, score: scoreValue ? Number(scoreValue) : null, status: status, note: document.getElementById('reviewNote').value.trim() });
+        model.save(records);
+        renderReviews(); renderProfile();
+        window.caesarUI.closeLayer(drawer);
+      }
+      if (!leader) {
+        document.getElementById('leaderPageTitle').textContent = '领队档案未找到';
+        document.querySelector('.detail-tabs-card').hidden = true;
+        document.querySelector('.supplier-profile-card').hidden = true;
+        return;
+      }
+      document.querySelectorAll('[data-tab-target]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          document.querySelectorAll('[data-tab-target]').forEach(function (item) { item.classList.remove('active'); });
+          document.querySelectorAll('.detail-tab-panel').forEach(function (panel) { panel.classList.remove('active'); });
+          tab.classList.add('active'); document.getElementById('tab-' + tab.dataset.tabTarget).classList.add('active');
         });
       });
-      document.querySelector("[data-open-leader-admission-drawer]").addEventListener("click", function () {
-        window.caesarUI.openLayer(drawer);
-      });
-      document.querySelector("[data-open-certificate-upload]").addEventListener("click", function () {
-        window.caesarUI.openLayer(certificateDrawer);
-      });
-      document.querySelectorAll("[data-close-leader-admission-drawer]").forEach((button) => {
-        button.addEventListener("click", function () { window.caesarUI.closeLayer(drawer); });
-      });
-      document.querySelectorAll("[data-close-certificate-upload]").forEach((button) => {
-        button.addEventListener("click", function () { window.caesarUI.closeLayer(certificateDrawer); });
-      });
-      document.querySelector("[data-save-certificate-upload]").addEventListener("click", function () {
-        window.caesarUI.closeLayer(certificateDrawer);
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast("证件资料已保存");
-      });
-      document.querySelector("[data-export-history]").addEventListener("click", function () {
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast("带团记录已导出");
-      });
-      drawer.addEventListener("click", (event) => {
-        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
-      });
-      certificateDrawer.addEventListener("click", (event) => {
-        if (event.target === certificateDrawer) window.caesarUI.closeLayer(certificateDrawer);
-      });
+      role.addEventListener('change', function () { renderProfile(); renderCertificates(); renderReviews(); });
+      ['historyDestination', 'historyProduct', 'historyStart', 'historyEnd'].forEach(function (id) { document.getElementById(id).addEventListener('input', renderHistory); });
+      document.querySelector('[data-reset-history]').addEventListener('click', function () { ['historyDestination', 'historyProduct', 'historyStart', 'historyEnd'].forEach(function (id) { document.getElementById(id).value = ''; }); renderHistory(); });
+      document.querySelector('[data-export-history]').addEventListener('click', exportHistory);
+      document.getElementById('addLeaderReview').addEventListener('click', openReview);
+      document.querySelector('[data-save-review]').addEventListener('click', saveReview);
+      document.querySelectorAll('[data-close-review]').forEach(function (button) { button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); }); });
+      drawer.addEventListener('click', function (event) { if (event.target === drawer) window.caesarUI.closeLayer(drawer); });
+      renderProfile(); renderCertificates(); renderHistory(); renderReviews(); renderFees();
     })();
   </script>
 </body>

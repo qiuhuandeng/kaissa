@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期详情 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    #leaderDispatchFields[hidden], #leaderActualFields[hidden], #leaderDispatchError[hidden] { display: none !important; }
+    #leaderDispatchDrawer .modal-body { display: grid; align-content: start; gap: 18px; }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -723,11 +727,22 @@
               <tbody>
                 <tr><td>名单资料</td><td><span class="tag tag-orange">4人待补</span></td><td>27/30人已收集，2人护照页待补</td><td><div class="table-action"><button class="table-action-primary" type="button" data-tab-jump="roster">处理名单</button></div></td></tr>
                 <tr><td>交通资源</td><td><span class="tag tag-orange">部分确认</span></td><td>票号缺2人，酒店确认号待回传2间</td><td><div class="table-action"><button class="table-action-primary" type="button" data-tab-jump="resource">确认资源</button></div></td></tr>
-                <tr><td>配领队</td><td><span class="tag tag-green">已配领队</span></td><td>张建国 138****4521 / 出发 2024-07-15 / 回团 2024-07-26</td><td><div class="table-action"><a class="table-action-primary" href="schedules.html?stage=出发准备&amp;scheduleNos=EU20240715001">查看团期</a></div></td></tr>
+                <tr id="leaderPreparationRow"><td>配领队</td><td><span class="tag tag-gray">待派团</span></td><td>尚未确认领队</td><td><div class="table-action"><button class="table-action-primary" type="button" data-open-leader-dispatch>派团</button></div></td></tr>
                 <tr><td>游客通知</td><td><span class="tag tag-gray">待生成</span></td><td>集合时间、航班、领队联系方式待合并到通知书</td><td><div class="table-action"><button class="table-action-primary" type="button" data-generate-file data-file-index="0">生成通知书</button></div></td></tr>
                 <tr><td>出团包交接</td><td><span id="handoffStatus" class="tag tag-orange">未交接</span></td><td id="handoffSummary">名单、交通、特殊备注和地接联系人待交接</td><td><div class="table-action"><button class="table-action-primary" type="button" data-register-handoff>登记交接</button></div></td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="schedule-detail-block" id="leaderDispatchSection">
+          <div class="schedule-detail-block-head">
+            <div><h2 class="detail-section-title schedule-section-title">领队派团与实际出行</h2><span class="schedule-muted">本团派团、确认及更换由计调在此处理</span></div>
+            <div class="btn-group"><button class="btn btn-secondary" type="button" data-open-leader-dispatch>派团／更换</button><button class="btn btn-secondary" type="button" data-open-leader-actual>登记实际出行</button><button class="btn btn-secondary" type="button" data-open-leader-cancel>取消派团</button></div>
+          </div>
+          <div id="leaderDispatchSummary" class="description-grid schedule-overview-grid"></div>
+          <div class="table-wrap schedule-file-table">
+            <table><thead><tr><th>记录时间</th><th>领队</th><th>服务范围／时间</th><th>处理结果</th><th>依据</th></tr></thead><tbody id="leaderDispatchHistory"></tbody></table>
           </div>
         </div>
 
@@ -1593,6 +1608,30 @@
     </div>
   </div>
 
+  <div id="leaderDispatchDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
+    <div class="modal drawer-modal drawer-md" role="dialog" aria-modal="true" aria-labelledby="leaderDispatchTitle">
+      <div class="modal-header"><div id="leaderDispatchTitle" class="modal-title">派团领队</div><button class="modal-close" type="button" data-close-leader-dispatch aria-label="关闭派团处理">×</button></div>
+      <div class="modal-body">
+        <div class="description-grid"><div class="description-item"><div class="description-label">本次团期</div><div id="leaderDispatchSchedule" class="description-value">—</div></div><div class="description-item"><div class="description-label">当前领队</div><div id="leaderDispatchCurrent" class="description-value">—</div></div></div>
+        <div id="leaderDispatchFields" class="form-grid">
+          <div class="form-group form-group-full"><label class="form-label" for="leaderDispatchPerson">领队 <span class="req">*</span></label><select id="leaderDispatchPerson" class="form-control"></select></div>
+          <div class="form-group"><label class="form-label" for="leaderDispatchScope">服务范围 <span class="req">*</span></label><select id="leaderDispatchScope" class="form-control"><option>全程领队</option><option>邮轮领队</option><option>随车领队</option><option>研学领队</option><option>项目随团领队</option></select></div>
+          <div class="form-group"><label class="form-label" for="leaderDispatchConfirm">确认结果 <span class="req">*</span></label><select id="leaderDispatchConfirm" class="form-control"><option>待确认</option><option>已确认</option><option>未确认</option></select></div>
+          <div class="form-group"><label class="form-label" for="leaderDispatchStart">服务开始 <span class="req">*</span></label><input id="leaderDispatchStart" class="form-control" type="date"></div>
+          <div class="form-group"><label class="form-label" for="leaderDispatchEnd">服务结束 <span class="req">*</span></label><input id="leaderDispatchEnd" class="form-control" type="date"></div>
+        </div>
+        <div id="leaderActualFields" class="form-grid" hidden>
+          <div class="form-group"><label class="form-label" for="leaderActualDate">实际出行日期 <span class="req">*</span></label><input id="leaderActualDate" class="form-control" type="date"></div>
+          <div class="form-group"><label class="form-label" for="leaderActualResult">实际结果 <span class="req">*</span></label><select id="leaderActualResult" class="form-control"><option>实际出行</option><option>未出行</option></select></div>
+        </div>
+        <div class="form-group"><label id="leaderDispatchBasisLabel" class="form-label" for="leaderDispatchBasis">派团／更换依据</label><textarea id="leaderDispatchBasis" class="form-control" rows="3" placeholder="记录确认或更换依据"></textarea></div>
+        <p id="leaderDispatchError" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-leader-dispatch>取消</button><button id="saveLeaderDispatch" class="btn btn-primary" type="button">保存派团</button></div>
+    </div>
+  </div>
+
+  <script src="../../shared/leader-prototype-data.js"></script>
   <script>
     (function () {
       var tabButtons = Array.from(document.querySelectorAll('.detail-tabs-card .tab-item[data-tab]'));
@@ -1626,6 +1665,10 @@
       var financeDocDrawer = document.getElementById('financeDocDrawer');
       var successModal = document.getElementById('successModal');
       var returnConfirmationDrawer = document.getElementById('returnConfirmationDrawer');
+      var leaderDispatchDrawer = document.getElementById('leaderDispatchDrawer');
+      var leaderDispatchMode = 'assign';
+      var leaderDispatchStates = {};
+      try { leaderDispatchStates = JSON.parse(window.sessionStorage.getItem('caesarScheduleLeaderDispatchV1') || '{}'); } catch (error) { leaderDispatchStates = {}; }
       var returnConfirmationMode = 'confirm';
       var costRows = document.getElementById('costRows');
       var costDetailRows = document.getElementById('costDetailRows');
@@ -4951,6 +4994,145 @@
         document.title = scheduleData.code + ' - 项目团详情 - 凯撒旅游';
       }
 
+      function leaderDispatchState() {
+        var code = scheduleData.code;
+        if (!leaderDispatchStates[code]) {
+          leaderDispatchStates[code] = code === 'EU20240715001' ? {
+            active: { leaderId: 'LD-20260312001', name: '张建国', scope: '全程领队', start: '2024-07-15', end: '2024-07-26', confirm: '已确认', basis: '领队档期确认' },
+            actual: null,
+            events: [{ time: '2024-07-10 10:00', name: '张建国', scope: '全程领队', start: '2024-07-15', end: '2024-07-26', result: '已确认派团', basis: '领队档期确认' }]
+          } : { active: null, actual: null, events: [] };
+        }
+        return leaderDispatchStates[code];
+      }
+
+      function persistLeaderDispatch() {
+        try { window.sessionStorage.setItem('caesarScheduleLeaderDispatchV1', JSON.stringify(leaderDispatchStates)); } catch (error) {}
+      }
+
+      function leaderDispatchItem(label, value) {
+        return '<div class="description-item"><div class="description-label">' + escapeHtml(label) + '</div><div class="description-value">' + escapeHtml(value || '—') + '</div></div>';
+      }
+
+      function renderLeaderDispatch() {
+        var section = document.getElementById('leaderDispatchSection');
+        var checklist = document.getElementById('leaderPreparationRow');
+        var supported = activeDetailConfig.typeKey !== 'free';
+        section.style.display = supported ? '' : 'none';
+        checklist.style.display = supported ? '' : 'none';
+        if (!supported) return;
+        var state = leaderDispatchState();
+        var current = state.active;
+        var actual = state.actual;
+        var name = current ? current.name : '待派团';
+        document.getElementById('leaderDispatchSummary').innerHTML = [
+          leaderDispatchItem('当前领队', name),
+          leaderDispatchItem('服务范围', current && current.scope),
+          leaderDispatchItem('服务时间', current && current.start + ' 至 ' + current.end),
+          leaderDispatchItem('确认结果', current && current.confirm),
+          leaderDispatchItem('实际出行', actual && actual.result + ' / ' + actual.date),
+          leaderDispatchItem('确认依据', actual && actual.basis || current && current.basis)
+        ].join('');
+        document.getElementById('leaderDispatchHistory').innerHTML = state.events.length ? state.events.slice().reverse().map(function (event) {
+          return '<tr><td>' + escapeHtml(event.time) + '</td><td>' + escapeHtml(event.name) + '</td><td>' + escapeHtml((event.scope || '—') + ' / ' + (event.start || '—') + ' 至 ' + (event.end || '—')) + '</td><td>' + escapeHtml(event.result) + '</td><td>' + escapeHtml(event.basis || '—') + '</td></tr>';
+        }).join('') : '<tr><td colspan="5" class="table-empty-cell">暂无派团记录</td></tr>';
+        checklist.children[1].innerHTML = '<span class="tag ' + (current && current.confirm === '已确认' ? 'tag-green' : 'tag-orange') + '">' + escapeHtml(current ? current.confirm : '待派团') + '</span>';
+        checklist.children[2].textContent = current ? current.name + ' / ' + current.scope + ' / ' + current.start + ' 至 ' + current.end + (actual ? ' / ' + actual.result : '') : '尚未确认领队';
+        checklist.children[3].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-leader-dispatch>' + (current ? '查看派团' : '派团') + '</button></div>';
+        document.querySelector('#leaderDispatchSection [data-open-leader-actual]').disabled = !current;
+        document.querySelector('#leaderDispatchSection [data-open-leader-cancel]').disabled = !current || !!(actual && actual.result === '实际出行');
+      }
+
+      function leaderPersonOptions() {
+        return window.CaesarLeaderPrototype.load().map(function (person) {
+          return '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.name + ' / ' + person.status + ' / 导游证至' + (person.guideExpiry || '未维护')) + '</option>';
+        }).join('');
+      }
+
+      function openLeaderDispatch(mode) {
+        var state = leaderDispatchState();
+        if (mode !== 'assign' && !state.active) return;
+        if (mode === 'cancel' && state.actual && state.actual.result === '实际出行') return;
+        leaderDispatchMode = mode;
+        document.getElementById('leaderDispatchTitle').textContent = mode === 'actual' ? '登记实际出行' : mode === 'cancel' ? '取消派团' : state.active ? '更换／确认领队' : '派团领队';
+        document.getElementById('leaderDispatchSchedule').textContent = scheduleData.code + ' / ' + scheduleData.product;
+        document.getElementById('leaderDispatchCurrent').textContent = state.active ? state.active.name + ' / ' + state.active.confirm : '待派团';
+        document.getElementById('leaderDispatchFields').hidden = mode !== 'assign';
+        document.getElementById('leaderActualFields').hidden = mode !== 'actual';
+        var person = document.getElementById('leaderDispatchPerson');
+        person.innerHTML = '<option value="">请选择领队</option>' + leaderPersonOptions();
+        person.value = state.active ? state.active.leaderId : '';
+        document.getElementById('leaderDispatchScope').value = state.active ? state.active.scope : '全程领队';
+        document.getElementById('leaderDispatchConfirm').value = state.active ? state.active.confirm : '待确认';
+        document.getElementById('leaderDispatchStart').value = state.active ? state.active.start : scheduleData.depart;
+        document.getElementById('leaderDispatchEnd').value = state.active ? state.active.end : scheduleData.back;
+        document.getElementById('leaderActualDate').value = state.actual ? state.actual.date : scheduleData.depart;
+        document.getElementById('leaderActualResult').value = state.actual ? state.actual.result : '实际出行';
+        document.getElementById('leaderDispatchBasis').value = '';
+        document.getElementById('leaderDispatchBasisLabel').textContent = mode === 'actual' ? '实际出行依据 *' : mode === 'cancel' ? '取消原因 *' : '派团／更换依据';
+        document.getElementById('saveLeaderDispatch').textContent = mode === 'actual' ? '保存实际结果' : mode === 'cancel' ? '确认取消派团' : '保存派团';
+        document.getElementById('leaderDispatchError').hidden = true;
+        window.caesarUI.openLayer(leaderDispatchDrawer);
+      }
+
+      function syncLeaderHistory(leaderId, result, assignment) {
+        var records = window.CaesarLeaderPrototype.load();
+        var person = records.find(function (item) { return item.id === leaderId; });
+        if (!person) return;
+        person.history = person.history || [];
+        var row = person.history.find(function (item) { return item.schedule === scheduleData.code; });
+        if (!row) { row = { schedule: scheduleData.code }; person.history.push(row); }
+        Object.assign(row, { depart: assignment.start, back: assignment.end, product: scheduleData.product, destination: activeDetailConfig.info && activeDetailConfig.info.destination || '待确认', role: assignment.scope, result: result });
+        window.CaesarLeaderPrototype.save(records);
+      }
+
+      function saveLeaderDispatch() {
+        var state = leaderDispatchState();
+        var current = state.active;
+        var basis = document.getElementById('leaderDispatchBasis').value.trim();
+        var error = document.getElementById('leaderDispatchError');
+        var next = null;
+        var result = '';
+        if (leaderDispatchMode === 'assign') {
+          if (state.actual && state.actual.result === '实际出行') { error.textContent = '本团已登记领队实际出行，不能直接覆盖派团记录。'; error.hidden = false; return; }
+          var id = document.getElementById('leaderDispatchPerson').value;
+          var person = window.CaesarLeaderPrototype.load().find(function (item) { return item.id === id; });
+          var start = document.getElementById('leaderDispatchStart').value;
+          var end = document.getElementById('leaderDispatchEnd').value;
+          if (!person || !start || !end || end < start) { error.textContent = '请选择领队并核对服务起止日期。'; error.hidden = false; return; }
+          if (person.status === '不可用' || !person.guideNo || !person.guideExpiry || person.guideExpiry < end) { error.textContent = '该领队不可用或导游证在服务期间失效，请更换领队。'; error.hidden = false; return; }
+          if (current && current.leaderId !== id && !basis) { error.textContent = '更换领队须填写依据，原派团记录会保留。'; error.hidden = false; return; }
+          next = { leaderId: id, name: person.name, scope: document.getElementById('leaderDispatchScope').value, start: start, end: end, confirm: document.getElementById('leaderDispatchConfirm').value, basis: basis || '计调派团登记' };
+          if (current && current.leaderId === id && current.scope === next.scope && current.start === next.start && current.end === next.end && current.confirm === next.confirm) { error.textContent = '派团内容未变化，无需重复保存。'; error.hidden = false; return; }
+          if (current && current.leaderId !== id) syncLeaderHistory(current.leaderId, '更换领队', current);
+          state.active = next;
+          state.actual = null;
+          result = current && current.leaderId !== id ? '更换领队' : next.confirm === '已确认' ? '已确认派团' : '计划派团';
+          syncLeaderHistory(id, '计划派团', next);
+        } else if (leaderDispatchMode === 'actual') {
+          if (!current) return;
+          var date = document.getElementById('leaderActualDate').value;
+          var actualResult = document.getElementById('leaderActualResult').value;
+          if (!date || !basis) { error.textContent = '请填写实际出行日期和确认依据。'; error.hidden = false; return; }
+          if (state.actual && state.actual.date === date && state.actual.result === actualResult && state.actual.basis === basis) { error.textContent = '实际出行记录未变化。'; error.hidden = false; return; }
+          state.actual = { date: date, result: actualResult, basis: basis };
+          next = current;
+          result = actualResult;
+          syncLeaderHistory(current.leaderId, actualResult === '实际出行' ? '实际带团' : '取消派团', current);
+        } else {
+          if (!current || !basis) { error.textContent = '请填写取消派团原因。'; error.hidden = false; return; }
+          next = current;
+          result = '取消派团';
+          syncLeaderHistory(current.leaderId, '取消派团', current);
+          state.active = null;
+          state.actual = null;
+        }
+        state.events.push({ time: new Date().toLocaleString('zh-CN', { hour12: false }), name: next.name, scope: next.scope, start: next.start, end: next.end, result: result, basis: basis || next.basis });
+        persistLeaderDispatch();
+        renderLeaderDispatch();
+        window.caesarUI.closeLayer(leaderDispatchDrawer);
+      }
+
       function renderTypeSections(config) {
         renderItinerary(config);
         renderInventory(config);
@@ -4963,6 +5145,7 @@
         renderResources(config);
         renderRoster(config);
         renderFiles(config);
+        renderLeaderDispatch();
         renderProjectModeChrome(config);
       }
 
@@ -6249,6 +6432,9 @@
       });
 
       document.getElementById('tab-files').addEventListener('click', function (event) {
+        if (event.target.closest('[data-open-leader-dispatch]')) { openLeaderDispatch('assign'); return; }
+        if (event.target.closest('[data-open-leader-actual]')) { openLeaderDispatch('actual'); return; }
+        if (event.target.closest('[data-open-leader-cancel]')) { openLeaderDispatch('cancel'); return; }
         var handoffButton = event.target.closest('[data-register-handoff]');
         var sendButton = event.target.closest('[data-send-file]');
         var generateButton = event.target.closest('[data-generate-file]');
@@ -6531,7 +6717,12 @@
         button.addEventListener('click', function () { closeScheduleLayer(returnConfirmationDrawer); });
       });
 
-      [editModal, costModal, addScheduleCostDrawer, sendFileModal, rosterHandleDrawer, changeOperatorModal, cancelModal, releaseModal, channelQuotaAdjustDrawer, trafficAllocationDrawer, trafficOrderDrawer, trafficTicketDrawer, trafficReturnDrawer, trafficLossDrawer, resourceConfirmModal, resourceViewModal, remindResourceModal, orderDetailDrawer, financeDocDrawer, successModal, returnConfirmationDrawer].forEach(function (modal) {
+      document.getElementById('saveLeaderDispatch').addEventListener('click', saveLeaderDispatch);
+      document.querySelectorAll('[data-close-leader-dispatch]').forEach(function (button) {
+        button.addEventListener('click', function () { closeScheduleLayer(leaderDispatchDrawer); });
+      });
+
+      [editModal, costModal, addScheduleCostDrawer, sendFileModal, rosterHandleDrawer, changeOperatorModal, cancelModal, releaseModal, channelQuotaAdjustDrawer, trafficAllocationDrawer, trafficOrderDrawer, trafficTicketDrawer, trafficReturnDrawer, trafficLossDrawer, resourceConfirmModal, resourceViewModal, remindResourceModal, orderDetailDrawer, financeDocDrawer, successModal, returnConfirmationDrawer, leaderDispatchDrawer].forEach(function (modal) {
         modal.addEventListener('click', function (event) {
           if (event.target !== modal) return;
           if (modal === releaseModal) closeSeatRelease();
@@ -6543,6 +6734,7 @@
       applyInboundOrderContext();
       applyInboundScheduleFacts();
       refreshScheduleSummary();
+      renderLeaderDispatch();
       if (pageParams.get('tab')) activateDetailTab(pageParams.get('tab'));
       else activateInboundFocus();
     })();
