@@ -12,9 +12,9 @@
   function closeLayer(layer) { if (window.caesarUI && window.caesarUI.closeLayer) window.caesarUI.closeLayer(layer); else { layer.classList.remove('show'); layer.hidden = true; } }
 
   document.body.insertAdjacentHTML('beforeend', [
-    '<div id="contractVersionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true" hidden><section class="modal drawer-modal drawer-lg contracts-view-modal" role="dialog" aria-modal="true" aria-labelledby="contractVersionTitle">',
+    '<div id="contractVersionDrawer" class="modal-overlay drawer-overlay" aria-hidden="true" hidden><section class="modal drawer-modal drawer-xl aftersales-drawer contract-operation-drawer contract-version-drawer" role="dialog" aria-modal="true" aria-labelledby="contractVersionTitle">',
     '<div class="modal-header"><div id="contractVersionTitle" class="modal-title">合同变更处理</div><button class="modal-close" type="button" data-close-contract-version aria-label="关闭">×</button></div>',
-    '<div class="modal-body"><section class="drawer-object-summary"><div class="drawer-summary-grid">',
+    '<div class="modal-body aftersales-drawer-body"><section class="drawer-object-summary"><div class="drawer-summary-grid">',
     '<div class="drawer-summary-item"><span class="drawer-summary-label">原合同</span><strong id="contractVersionOriginal">-</strong></div>',
     '<div class="drawer-summary-item"><span class="drawer-summary-label">原合同状态</span><strong>已生效 / 已备案</strong></div>',
     '<div class="drawer-summary-item"><span class="drawer-summary-label">原团期</span><strong id="contractVersionTrip">-</strong></div>',

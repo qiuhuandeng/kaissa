@@ -1,0 +1,39 @@
+(function () {
+  'use strict';
+
+  var handover = document.getElementById('handoverList');
+  if (!handover || document.getElementById('projectEnterpriseContract')) return;
+  function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
+  function openLayer(layer) { if (window.caesarUI && window.caesarUI.openLayer) window.caesarUI.openLayer(layer); else { layer.hidden = false; layer.classList.add('show'); layer.setAttribute('aria-hidden', 'false'); } }
+  function closeLayer(layer) { if (window.caesarUI && window.caesarUI.closeLayer) window.caesarUI.closeLayer(layer); else { layer.hidden = true; layer.classList.remove('show'); layer.setAttribute('aria-hidden', 'true'); } }
+  var state = { versions: [], current: { version: 'V1', file: '', ourSeal: false, clientSeal: false, authorization: false, audit: '待提交审核', archive: '未归档', reason: '' } };
+
+  handover.insertAdjacentHTML('afterend', '<section id="projectEnterpriseContract" class="detail-section project-enterprise-contract"><div class="detail-section-header"><div><div class="detail-section-title">企业合同归档</div><div class="detail-section-desc">未配置有效企业电子模板，当前项目使用线下文件、双方盖章检查、审核和归档流程。</div></div><span id="projectEnterpriseState" class="tag tag-orange">待提交审核</span></div><div class="project-enterprise-summary"><div><span>合同方式</span><strong>线下企业合同</strong></div><div><span>当前版本</span><strong id="projectEnterpriseVersion">V1</strong></div><div><span>双方盖章</span><strong id="projectEnterpriseSeal">待核对</strong></div><div><span>归档结果</span><strong id="projectEnterpriseArchive">未归档</strong></div></div><div class="detail-section-actions"><button id="openProjectEnterpriseContract" class="btn btn-primary" type="button">维护线下合同</button><a class="btn btn-secondary" href="../sales/contracts.html?source=customProject">进入合同管理审核归档</a></div></section>');
+
+  document.body.insertAdjacentHTML('beforeend', '<div id="projectEnterpriseDrawer" class="modal-overlay drawer-overlay" aria-hidden="true" hidden><section class="modal drawer-modal drawer-lg" role="dialog" aria-modal="true"><div class="modal-header"><div class="modal-title">企业线下合同</div><button class="modal-close" type="button" data-close-project-contract>×</button></div><div class="modal-body"><section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">文件、盖章与授权核对</h3><span class="tag tag-gray">电子模板未配置</span></div><div class="form-grid"><label class="form-group form-group-full"><span class="form-label">线下合同文件 <i class="req">*</i></span><div class="contract-file-input-row"><input id="projectEnterpriseFile" class="form-control" type="text" placeholder="选择双方盖章文件"><button id="projectEnterpriseSample" class="btn btn-secondary" type="button">选择示例文件</button></div></label><label class="form-group checkbox-row"><input id="projectOurSeal" type="checkbox"> 我方盖章完整</label><label class="form-group checkbox-row"><input id="projectClientSeal" type="checkbox"> 客户盖章完整</label><label class="form-group checkbox-row"><input id="projectAuthorization" type="checkbox"> 企业授权代表资料已核对</label><label class="form-group"><span class="form-label">当前版本</span><input id="projectContractVersion" class="form-control" readonly></label><label class="form-group form-group-full"><span class="form-label">替换原因</span><textarea id="projectContractReason" class="form-control" rows="3" placeholder="替换已归档版本时必填"></textarea></label></div><p id="projectEnterpriseError" class="form-error" hidden></p></section><section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">版本记录</h3></div><div class="table-wrap drawer-table-wrap"><table><thead><tr><th>版本</th><th>文件</th><th>双方盖章</th><th>审核</th><th>归档</th><th>替换原因</th></tr></thead><tbody id="projectEnterpriseRows"></tbody></table></div></section></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-project-contract>取消</button><button id="projectReplaceVersion" class="btn btn-secondary" type="button">替换版本</button><button id="projectApproveArchive" class="btn btn-secondary" type="button">审核通过并归档</button><button id="projectSubmitReview" class="btn btn-primary" type="button">提交合同审核</button></div></section></div>');
+  var drawer = document.getElementById('projectEnterpriseDrawer');
+
+  function read() { var c = state.current; c.file = document.getElementById('projectEnterpriseFile').value.trim(); c.ourSeal = document.getElementById('projectOurSeal').checked; c.clientSeal = document.getElementById('projectClientSeal').checked; c.authorization = document.getElementById('projectAuthorization').checked; c.reason = document.getElementById('projectContractReason').value.trim(); }
+  function error(message) { var node = document.getElementById('projectEnterpriseError'); node.textContent = message; node.hidden = !message; }
+  function valid() { var c = state.current, gaps = []; if (!c.file) gaps.push('请选择线下合同文件'); if (!c.ourSeal) gaps.push('我方盖章未确认'); if (!c.clientSeal) gaps.push('客户盖章未确认'); if (!c.authorization) gaps.push('企业授权代表资料未核对'); error(gaps.join('；')); return !gaps.length; }
+  function render() {
+    var c = state.current, list = state.versions.concat([c]);
+    document.getElementById('projectEnterpriseVersion').textContent = c.version;
+    document.getElementById('projectEnterpriseSeal').textContent = c.ourSeal && c.clientSeal ? '双方完整' : '待核对';
+    document.getElementById('projectEnterpriseArchive').textContent = c.archive;
+    var tag = document.getElementById('projectEnterpriseState'); tag.textContent = c.audit; tag.className = c.audit === '已提交审核' ? 'tag tag-blue' : 'tag tag-orange';
+    document.getElementById('projectEnterpriseRows').innerHTML = list.map(function (item) { return '<tr><td><strong>' + esc(item.version) + '</strong></td><td>' + esc(item.file || '待选择') + '</td><td>' + esc(item.ourSeal && item.clientSeal ? '双方完整' : '待补') + '</td><td>' + esc(item.audit) + '</td><td>' + esc(item.archive) + '</td><td>' + esc(item.reason || '-') + '</td></tr>'; }).join('');
+  }
+  function fill() { var c = state.current; document.getElementById('projectEnterpriseFile').value = c.file; document.getElementById('projectOurSeal').checked = c.ourSeal; document.getElementById('projectClientSeal').checked = c.clientSeal; document.getElementById('projectAuthorization').checked = c.authorization; document.getElementById('projectContractVersion').value = c.version; document.getElementById('projectContractReason').value = c.reason; render(); }
+
+  document.addEventListener('click', function (event) {
+    if (event.target.closest('#openProjectEnterpriseContract')) { fill(); openLayer(drawer); return; }
+    if (event.target.closest('[data-close-project-contract]')) { closeLayer(drawer); return; }
+    if (event.target.closest('#projectEnterpriseSample')) { document.getElementById('projectEnterpriseFile').value = '某科技公司欧洲项目合同_双方盖章版.pdf'; return; }
+    if (event.target.closest('#projectSubmitReview')) { read(); if (!valid()) return; state.current.audit = '已提交审核'; error(''); render(); return; }
+    if (event.target.closest('#projectApproveArchive')) { read(); if (!valid()) return; if (state.current.audit !== '已提交审核') { error('请先提交合同审核。'); return; } state.current.audit = '审核通过'; state.current.archive = '已归档'; error(''); render(); return; }
+    if (event.target.closest('#projectReplaceVersion')) { read(); if (state.current.archive !== '已归档') { error('只能替换已归档版本；当前版本请先完成审核归档。'); return; } if (!state.current.reason) { error('替换已归档版本必须填写原因。'); return; } state.versions.push(Object.assign({}, state.current, { archive: '历史版本' })); state.current = { version: 'V' + (state.versions.length + 1), file: '', ourSeal: false, clientSeal: false, authorization: false, audit: '待提交审核', archive: '未归档', reason: '' }; fill(); error(''); return; }
+  });
+  render();
+  window.ProjectEnterpriseContractTest = { state: state, render: render };
+})();
