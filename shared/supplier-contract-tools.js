@@ -47,7 +47,15 @@
       '签章栏':a.bodies.map(b=>b.company+'（盖章）：____________').join('\n')+'\n'+s.name+'（盖章）：____________\n签署日期：____________'};
     return {name:a.name+'-'+t.version+'-生成稿.html',generated:true,templateId:t.id,templateName:t.name,templateVersion:t.version,date:today,facts:facts(s,a),text:t.text.replace(/\{\{([^{}]+)\}\}/g,(_,key)=>values[key])};
   }
-  function current(file,s,a){return !file||!file.generated||file.facts===facts(s,a);}
+  function current(file,s,a){return !file||!file.generated||(file.facts===facts(s,a)&&(!a.templateId||file.templateId===a.templateId)&&templates.some(t=>t.id===file.templateId&&t.version===file.templateVersion&&matches(t,s,a)));}
+  function prepareForSubmission(s,a,today){
+    if(!a||a.contractMode!=='template')return;
+    if(!a.templateId)throw Error('请选择协议模板。');
+    if(a.contract&&a.contract.generated&&current(a.contract,s,a))return;
+    const file=generate(templates.find(t=>t.id===a.templateId),s,a,today);
+    if(a.contract){a.contractHistory=a.contractHistory||[];a.contractHistory.push(copy(a.contract));}
+    a.contract=file;
+  }
   const escape=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function html(file){return '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>'+escape(file.name)+'</title><body><p>合同生成稿 · '+escape(file.templateName)+' '+escape(file.templateVersion)+' · '+escape(file.date)+'</p><pre>'+escape(file.text)+'</pre></body></html>';}
   function day(date){if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return NaN;const n=Date.parse(date+'T00:00:00Z');return Number.isFinite(n)&&new Date(n).toISOString().slice(0,10)===date?n/86400000:NaN;}
@@ -72,5 +80,5 @@
       return {key,company,due,channel,state,recipients:r.recipients,content:notice.text.replace(/\{\{([^{}]+)\}\}/g,(_,k)=>values[k]),delivery:channel==='企业微信'?'通道未接通，未发送':'仅预览，未发送',date:today,templateVersion:notice.version};
     }));
   }
-  root.SupplierContractTools={categories,companies,templates,notice,variables,requiredVariables,noticeVariables,defaultText,copy,validateText,validateTemplate,matches,facts,generate,current,html,day,offsets,validateReminder,plans};
+  root.SupplierContractTools={categories,companies,templates,notice,variables,requiredVariables,noticeVariables,defaultText,copy,validateText,validateTemplate,matches,facts,generate,current,prepareForSubmission,html,day,offsets,validateReminder,plans};
 })(typeof window==='undefined'?globalThis:window);

@@ -2,6 +2,11 @@
   const bootScript = document.currentScript;
   const menu = [
     { title: "工作台", icon: "chart", href: "dashboard.html" },
+    { title: "供应商管理", icon: "handshake", children: [
+      { title: "供应商档案", href: "suppliers.html" },
+      { title: "合作申请", href: "supplier-requests.html" },
+      { title: "协议模板", href: "supplier-contract-templates.html" }
+    ] },
     {
       title: "部门组织",
       icon: "users",
@@ -152,6 +157,8 @@
   }
 
   const pageOwners = {
+    "supplier-detail.html": { href: "suppliers.html", title: "供应商详情" },
+    "supplier-contract-template-edit.html": { href: "supplier-contract-templates.html", title: "协议模板编辑" },
     "org_company_modal.html": { href: "org.html", title: "编辑主体公司" },
   };
 

@@ -14,6 +14,29 @@
     ['港澳台', '中国香港', '香港'], ['美洲', '美国', '洛杉矶'], ['大洋洲', '澳大利亚', '悉尼'], ['非洲', '埃及', '开罗']
   ];
   const copy = v => JSON.parse(JSON.stringify(v));
+  const placeLabel = p => p[1]==='全区域' ? p[0]+' / 全区域' : p[0]+' / '+p[1]+' / '+(p[2]||'全国／全地区');
+  const cooperationText = s => [s.service,(s.places||[]).map(placeLabel).join('；')].filter(Boolean).join('；');
+  function validatePlace(p) {
+    const [region,country,city]=p;
+    if(!regions.includes(region)||!country)return '请选择业务区域，并填写国家／地区或选择全区域。';
+    if(country==='全区域')return city?'全区域不能同时指定城市。':'';
+    const countries=destinations.filter(x=>x[1]===country),cities=destinations.filter(x=>x[2]===city);
+    if(countries.length&&!countries.some(x=>x[0]===region))return '国家／地区与业务区域不一致，请核对。';
+    if(city&&cities.length&&!cities.some(x=>x[0]===region&&x[1]===country))return '城市与国家／地区不一致，请核对。';
+    return '';
+  }
+  function placeMatches(p,f) {
+    if(f.region&&p[0]!==f.region)return false;
+    if(p[1]==='全区域')return (!f.country&&!f.city)||destinations.some(x=>x[0]===p[0]&&(!f.country||normalize(x[1]).includes(normalize(f.country)))&&(!f.city||normalize(x[2]).includes(normalize(f.city))));
+    if(f.country&&!normalize(p[1]).includes(normalize(f.country)))return false;
+    if(!f.city)return true;
+    return p[2]?normalize(p[2]).includes(normalize(f.city)):destinations.some(x=>x[0]===p[0]&&x[1]===p[1]&&normalize(x[2]).includes(normalize(f.city)));
+  }
+  function addPlace(places,p) {
+    const problem=validatePlace(p);if(problem)throw Error(problem);
+    if(places.some(x=>x[0]===p[0]&&(x[1]==='全区域'||x[1]===p[1]&&(!x[2]||x[2]===p[2]))))throw Error('已添加的服务地区已包含此范围。');
+    return places.filter(x=>!(x[0]===p[0]&&(p[1]==='全区域'||p[1]===x[1]&&!p[2]))).concat([p]);
+  }
   const normalize = v => String(v || '').normalize('NFKC').replace(/[\s（）()·.,，。-]/g, '').toLowerCase();
   const localDay = () => { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-'); };
   const file = name => ({ name, sample: true, date: '2026-09-17' });
@@ -30,6 +53,7 @@
     let sequence = 0;
     const suppliers = [];
     const applications = [];
+    const profileChanges = {};
     function next(prefix) {
       let id;
       do { sequence++; if(sequence>9999)throw Error('当日演示编号已用完。'); id=prefix+today.replace(/-/g,'')+String(sequence).padStart(4,'0'); }
@@ -54,13 +78,13 @@
     suppliers[0].accounts=[{id:'ACC-001',name:suppliers[0].name,bank:'中国银行北京朝阳支行',address:'北京市朝阳区',number:'62220000000000002601',swift:'',currencies:['CNY'],status:'财务已审核'}];
     euro.accounts=[{id:'ACC-007',name:'Europe United DMC',bank:'BNP Paribas',address:'Paris, France',number:'FR7600000000000000000000007',swift:'BNPAFRPP',currencies:['EUR','USD'],status:'财务已审核'}];
     suppliers.forEach(s=>{
-      if(s.application) applications.push({no:s.application,supplier:s.id,matter:s.temporary?'临时供应商合作':'供应商准入',status:s.status,companies:s.companies,subject:s.name,date:'2026-09-17',external:'未发送',reason:s.returnReason||''});
-      s.agreements.forEach(a=>{if(a.application) applications.push({no:a.application,supplier:s.id,agreement:a.no,matter:'供应商合作与协议',status:a.status==='待归档'?'已通过':a.status,companies:a.bodies.map(b=>b.company),subject:a.name,date:a.application.replace(/^.*?(\d{4})(\d{2})(\d{2})-.*$/, '$1-$2-$3'),external:'未发送',reason:a.reason});});
+      if(s.application) applications.push({no:s.application,supplier:s.id,matter:s.temporary?'临时供应商合作':'供应商准入',status:s.status,companies:s.companies,subject:s.name,date:'2026-09-17',external:'历史回执样例（未接真实系统）',reason:s.returnReason||''});
+      s.agreements.forEach(a=>{if(a.application) applications.push({no:a.application,supplier:s.id,agreement:a.no,matter:'供应商合作与协议',status:a.status==='待归档'?'已通过':a.status,companies:a.bodies.map(b=>b.company),subject:a.name,date:a.application.replace(/^.*?(\d{4})(\d{2})(\d{2})-.*$/, '$1-$2-$3'),external:'历史回执样例（未接真实系统）',reason:a.reason});});
     });
     function find(id) { return suppliers.find(s=>s.id===id); }
     function duplicate(d, exclude) { return suppliers.find(s=>s.id!==exclude && (normalize(s.name)===normalize(d.name) || (d.registration && normalize(s.registration)===normalize(d.registration)))); }
     function visible(s, company) { return !company || s.companies.includes(company) || s.agreements.some(a=>a.bodies.some(b=>b.company===company)); }
-    function filtered(f={}) { return suppliers.filter(s=>visible(s,f.company) && (!f.category||s.categories.includes(f.category)) && (!f.status||s.status===f.status) && ((!f.region&&!f.country&&!f.city)||s.places.some(p=>(!f.region||p[0]===f.region)&&(!f.country||normalize(p[1]).includes(normalize(f.country)))&&(!f.city||normalize(p[2]).includes(normalize(f.city))))) && (!f.keyword||normalize([s.name,s.brand,s.english,s.owner,s.service,s.places.flat().join(' ')].join(' ')).includes(normalize(f.keyword)))); }
+    function filtered(f={}) { return suppliers.filter(s=>visible(s,f.company) && (!f.category||s.categories.includes(f.category)) && (!f.status||s.status===f.status) && ((!f.region&&!f.country&&!f.city)||s.places.some(p=>placeMatches(p,f))) && (!f.keyword||normalize([s.name,s.brand,s.english,s.owner,s.service,s.places.flat().join(' ')].join(' ')).includes(normalize(f.keyword)))); }
     function materials(s) { const travel=!s.temporary&&s.categories.some(c=>['境外地接','国内旅行社','出境批发商'].includes(c)); return [{key:'business',label:'营业执照／境外注册证明',required:!s.temporary},{key:'license',label:'经营许可证',required:travel,pending:!travel},{key:'insurance',label:'旅责险',required:false},{key:'quote',label:'报价单',required:!s.temporary&&s.categories.includes('综合类供应商')}].concat(s.temporary?[{key:'accountProof',label:'收款账户证明',required:false}]:[]); }
     function validateProfile(d, submit) {
       if(!d.name.trim()) return '请填写供应商全称。';
@@ -68,8 +92,10 @@
       if(!d.categories.length) return '请选择供应商分类。';
       if(!d.companies.length) return '请选择本次申请公司。';
       if(!d.contact.trim()||!d.phone.trim()||!d.owner.trim()) return '请填写业务联系人、电话和我方负责人。';
+      if(d.temporary&&d.useStart&&d.useEnd&&d.useEnd<d.useStart)return '合作结束日期不能早于开始日期。';
       if(d.temporary && (!d.reason.trim()||!d.business.trim())) return '请填写临时合作原因和本次团期／业务。';
-      if(!d.temporary && (!d.service.trim()||!d.places.length)) return '请填写拟合作内容和国家／城市。';
+      if(!d.temporary && (!d.service.trim()||!d.places.length)) return '请填写主要服务内容并添加服务地区。';
+      if(!d.temporary){const invalid=d.places.map(validatePlace).find(Boolean);if(invalid)return invalid;}
       const missing=materials(d).find(m=>m.required&&!d.documents[m.key]);
       return missing?'请上传'+missing.label+'。':'';
     }
@@ -77,8 +103,10 @@
       if(!a.name.trim()) return '请填写协议名称。';
       if(!submit) return '';
       if(!a.start||!a.end||a.end<a.start) return '请填写正确的协议有效期，截止日不能早于开始日。';
-      if(!a.service.trim()) return '请填写合作内容及地区。';
-      if(!a.contract) return '请上传待审批合同。';
+      if(!a.service.trim()) return '请填写本次合作内容及地区。';
+      if(!a.contract) return a.contractMode==='template'?'请预览协议并使用生成稿。':'请上传待审批合同。';
+      if(a.contractMode==='template'&&(!a.templateId||!a.contract.generated||a.contract.templateId!==a.templateId))return '请使用当前所选模板重新生成协议。';
+      if(a.contractMode==='upload'&&a.contract.generated)return '请上传已有协议。';
       if(!a.bodies.length) return '请至少添加一个我方签约主体。';
       if(new Set(a.bodies.map(b=>b.company)).size!==a.bodies.length) return '同一份协议的签约主体不能重复。';
       for(const b of a.bodies) {
@@ -93,9 +121,16 @@
       const old=id&&find(id);
       if(id&&!old) throw Error('供应商不存在。');
       if(old&&['审批中','已停用'].includes(old.status)) throw Error('当前状态不可编辑档案。');
+      if(!d.temporary)d.regions=[...new Set(d.places.map(p=>p[0]))];
       const dup=duplicate(d,id); if(dup) return {duplicate:dup};
       const error=validateProfile(d,submit); if(error) throw Error(error);
       if(submit&&!d.temporary&&(!old||old.status!=='已准入')){if(!d.initialAgreement)throw Error('请填写首份合作协议。');if(root.SupplierContractTools&&!root.SupplierContractTools.current(d.initialAgreement.contract,d,d.initialAgreement))throw Error('协议资料已变化，请重新生成合同或上传核对后的合同。');const aError=validateAgreement(d.initialAgreement,true);if(aError)throw Error(aError);}
+      if(old&&old.status==='已准入') {
+        if(profileChanges[id]&&profileChanges[id].status==='待发送致远')throw Error('本次变更已建立送审申请，请先撤回送审申请再修改。');
+        profileChanges[id]={data:copy(d),status:submit?'待发送致远':'草稿'};
+        if(submit){const no=next('APR-CHG-');profileChanges[id].application=no;applications.unshift({no,supplier:id,matter:'供应商资料变更',status:'待发送致远',companies:copy(old.companies),subject:old.name,date:today,external:'未发送',reason:'',proposed:copy(d)});}
+        return {supplier:old,proposed:true};
+      }
       const saved=copy(d); saved.id=id||next(d.temporary?'临':'SUP-'); saved.agreements=old?old.agreements:[]; saved.accounts=old?old.accounts:[];
       saved.status=old&&old.status==='已准入'?'已准入':submit?'审批中':'草稿';
       if(submit&&saved.status==='审批中') {
@@ -133,7 +168,7 @@
       a.stamps.push({file:copy(upload),date:today,uploader:'王珊'});a.status='已归档'; // 归档不替代生效确认。
     }
     function usage(a, date=today) { if(a.status!=='已归档')return '协议未归档，不可新使用'; if(a.end&&a.end<date)return '已到期，不可新使用'; if(a.start>date)return '未到开始日'; if(a.effective!=='已确认')return '生效条件待确认'; return '可新使用'; }
-    return {suppliers,applications,today,next,find,duplicate,visible,filtered,materials,validateProfile,validateAgreement,saveProfile,saveAgreement,withdraw,archive,usage};
+    return {suppliers,applications,profileChanges,today,next,find,duplicate,visible,filtered,materials,validateProfile,validateAgreement,saveProfile,saveAgreement,withdraw,archive,usage};
   }
-  root.SupplierManagementData={categories,regions,groupTypes,companies,destinations,copy,body,term,createSession};
+  root.SupplierManagementData={categories,regions,groupTypes,companies,destinations,copy,placeLabel,cooperationText,validatePlace,addPlace,placeMatches,body,term,createSession};
 })(typeof window==='undefined'?globalThis:window);
