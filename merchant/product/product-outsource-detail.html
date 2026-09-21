@@ -271,8 +271,10 @@
     </div>
   </div>
 
+  <script src="../../shared/product-supplier-contacts.js"></script>
   <script>
     (function () {
+      var contacts = window.ProductSupplierContacts;
       var products = {
         group: {
           source: 'OUT-EU-0001',
@@ -443,6 +445,29 @@
         }
       };
 
+      var query = new URLSearchParams(location.search);
+      var source = query.get('source');
+      var known = { 'OUT-EU-0001':'group', 'OUT-CR-0006':'cruise', 'OUT-FT-0008':'free' };
+      var summaries = {
+        'OUT-JP-0005': { name:'日本本州经典8日', supplier:'樱花旅游地接', type:'参团游', destination:'东京 / 大阪 / 京都', status:'待开售' },
+        'OUT-EU-0012': { name:'西葡经典10日散拼', supplier:'布拉格优选旅游', type:'参团游', destination:'西班牙 / 葡萄牙', status:'已停售' }
+      };
+      var selectedKey = source ? known[source] : (query.has('type') ? query.get('type') : 'group');
+      var selected = source && summaries[source] || products[selectedKey];
+      var page = document.querySelector('.product-detail-page');
+      contacts.mountContext(page.querySelector('.page-workbar > div'));
+      document.querySelector('.page-back-link').href = contacts.href('product-outsource-list.html');
+      if (!selected || !contacts.visible(selected.supplier)) {
+        page.innerHTML = '<div class="page-workbar"><div class="page-title-row"><a class="page-back-link" href="'+contacts.href('product-outsource-list.html')+'">返回</a><h1 class="page-title">代理产品详情</h1></div></div><p class="product-supplier-empty">产品不存在或当前公司无查看权限。</p>';
+        return;
+      }
+      // 两条旧列表记录没有完整详情资料；只展示该产品已存在的摘要，不套用其他产品团期。
+      if (source && summaries[source]) {
+        page.innerHTML = '<div class="page-workbar"><div class="page-title-row"><a class="page-back-link" href="'+contacts.href('product-outsource-list.html')+'">返回</a><h1 class="page-title">代理产品详情</h1></div></div><section class="card"><h2>'+escapeHtml(selected.name)+'</h2><div class="description-grid">'+description([['来源供应商',contacts.nameHtml(selected.supplier)],['产品类型',selected.type],['目的地',selected.destination],['开售状态',selected.status]])+'</div></section>';
+        contacts.mountContext(page.querySelector('.page-workbar'));
+        return;
+      }
+
       function toast(message) {
         if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(message);
       }
@@ -462,8 +487,7 @@
       }
 
       function typeParam() {
-        var type = new URLSearchParams(window.location.search).get('type');
-        return products[type] ? type : 'group';
+        return selectedKey;
       }
 
       function tagClass(status) {
@@ -592,7 +616,7 @@
         document.getElementById('heroTitle').textContent = data.name;
         document.getElementById('heroSubtitle').textContent = data.type + ' · 代理产品';
         document.getElementById('coverImage').src = data.cover;
-        document.getElementById('supplierValue').textContent = data.supplier;
+        document.getElementById('supplierValue').innerHTML = contacts.nameHtml(data.supplier);
         document.getElementById('typeValue').textContent = data.type;
         document.getElementById('departureValue').textContent = data.departure;
         document.getElementById('destinationValue').textContent = data.destination;
@@ -617,7 +641,7 @@
           ['供应商原始产品', data.name],
           ['我方代理商品', data.packageName],
           ['产品类型', data.type],
-          ['来源供应商', data.supplier],
+          ['来源供应商', contacts.nameHtml(data.supplier)],
           ['出发地', data.departure],
           ['目的地', data.destination],
           ['可代理团期', data.schedules],

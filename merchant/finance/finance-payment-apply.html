@@ -419,6 +419,30 @@
   <script src="../../shared/supplier-company-agreements.js"></script>
   <script>
     (function () {
+      // 独立付款样例：沿用申请单字段及原复核流程，不生成真实应付或付款。
+      SupplierCompanyAgreements.paymentExamples().forEach(function(example) {
+        var row = document.querySelector('#applyRows tr').cloneNode(true);
+        var amount = '¥' + example.amount.toLocaleString('en-US');
+        Object.assign(row.dataset, {
+          applyNo:example.applyNo, applyType:'普通付款', basisType:'供应商账单', basisNo:'BN-ABC-'+example.key,
+          basisName:example.node, payee:example.supplier, payeeType:'地接', company:example.company,
+          businessCompany:example.company, payableNo:'AP-ABC-'+example.key, billNo:'BN-ABC-'+example.key,
+          business:'欧洲地接服务', businessNo:'EU-ABC-202607-'+example.key, payableAmount:amount, paid:'¥0',
+          pendingPay:amount, available:amount, currentApply:amount, currentLimit:amount, originalAmount:amount,
+          currency:'CNY', rate:'1.0000', localAmount:amount, node:example.node, planDate:example.planDate,
+          applicant:'计调王珊', applyDate:'2026-07-30', approvalNo:'-', approvalStatus:'待提交审批', returnReason:'-',
+          paymentStatus:'未生成付款单', paymentNo:'-', paymentAccount:'-', remittance:'未生成', nc:'未生成',
+          contractNo:example.contract, costSource:'供应商地接账单', prepayBalance:'¥0', prepayOffset:'¥0',
+          prepayAction:'无需预付冲抵', prepayResult:'按批准的应付核销', afterOffset:amount,
+          attachment:'地接账单、公司合作协议', status:'待复核', note:'核对本公司协议及本期付款日期。',
+          agreementNo:example.agreementNo, agreementUsedOn:example.usedOn, agreementEventDate:example.eventDate,
+          agreementEventName:example.eventName, statementMonth:example.statementMonth || ''
+        });
+        row.originalAgreement = example.originalAgreement;
+        var cells = [[example.applyNo,'普通付款 / 供应商账单'],[example.supplier,example.company],['BN-ABC-'+example.key,example.node],['欧洲地接服务',row.dataset.businessNo],['计调王珊','申请 2026-07-30 / 计划 '+example.planDate],[amount,'待付 '+amount],[amount,'CNY / 本币 '+amount],['无预付','实付 '+amount]];
+        cells.forEach(function(values,index) { row.children[index].innerHTML = '<div class="table-cell-main"><strong>'+escapeHtml(values[0])+'</strong><span>'+escapeHtml(values[1])+'</span></div>'; });
+        document.getElementById('applyRows').appendChild(row);
+      });
       var rows = Array.from(document.querySelectorAll('#applyRows tr'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
@@ -641,7 +665,7 @@
 
       function companyAgreementBasis(row) {
         if (['渠道', '领队'].indexOf(row.dataset.payeeType) >= 0) return '<p class="form-hint">本单按渠道协议或领队费用依据复核，不套用企业供应商合作协议。</p>';
-        return SupplierCompanyAgreements.basisHtml({ agreementNo: row.dataset.agreementNo, businessCompany: row.dataset.businessCompany || (row.dataset.company === '总部财务' ? '待核实（当前办理部门：总部财务）' : row.dataset.company), paymentCompany: row.dataset.company, supplier: row.dataset.payee, contract: row.dataset.contractNo, usedOn: row.dataset.agreementUsedOn, eventDate: row.dataset.agreementEventDate, planDate: row.dataset.planDate });
+        return SupplierCompanyAgreements.basisHtml({ agreementNo: row.dataset.agreementNo, businessCompany: row.dataset.businessCompany || (row.dataset.company === '总部财务' ? '待核实（当前办理部门：总部财务）' : row.dataset.company), paymentCompany: row.dataset.company === '总部财务' ? '' : row.dataset.company, supplier: row.dataset.payee, contract: row.dataset.contractNo, usedOn: row.dataset.agreementUsedOn, eventDate: row.dataset.agreementEventDate, eventName:row.dataset.agreementEventName, statementMonth:row.dataset.statementMonth, originalAgreement:row.originalAgreement, planDate: row.dataset.planDate });
       }
       function renderBasis(row) {
         document.getElementById('financeAgreementBasis').innerHTML = companyAgreementBasis(row);
@@ -711,7 +735,7 @@
         renderSummary(row, 'workSummaryGrid');
         document.getElementById('workAgreementBasis').innerHTML = companyAgreementBasis(row);
         document.getElementById('workCheckRows').innerHTML = [
-          ['付款口径', row.dataset.applyType, row.dataset.applyType === '普通付款' ? '按应付单付款' : '按合同节点付款'],
+          ['付款口径', row.dataset.applyType, row.dataset.applyType === '普通付款' ? '按' + row.dataset.basisType + '核对付款' : '按合同节点付款'],
           ['付款依据', row.dataset.basisNo, row.dataset.basisType],
           ['可申请金额', row.dataset.available, '可申请'],
           ['本次申请', row.dataset.originalAmount, row.dataset.afterOffset],
@@ -869,6 +893,9 @@
         if (target) openDetail(target);
       }
 
+      rows.forEach(function(row) {
+        if (!row.originalAgreement) row.originalAgreement = SupplierCompanyAgreements.capture({agreementNo:row.dataset.agreementNo,businessCompany:row.dataset.businessCompany || row.dataset.company,supplier:row.dataset.payee});
+      });
       rows.forEach(updateRowVisual);
       updateCounts();
       applyFilters();

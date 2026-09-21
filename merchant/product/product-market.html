@@ -49,7 +49,7 @@
           <div class="filter-item">
             <label class="sr-only" for="marketSupplier">来源方</label>
             <select id="marketSupplier">
-              <option>全部来源方</option>
+              <option value="">全部来源方</option>
               <option>北京国旅地接部</option>
               <option>欧洲联合地接社</option>
               <option>巴厘岛阳光地接</option>
@@ -236,9 +236,7 @@
       <span>共 186 条线路 / 每页20个 / 当前第1页</span>
       <div class="pager" aria-label="分页">
         <button class="pager-btn active" type="button">1</button>
-        <button class="pager-btn" type="button">2</button>
-        <button class="pager-btn" type="button">3</button>
-        <button class="pager-btn" type="button">下一页</button>
+
       </div>
     </div>
   </section>
@@ -519,8 +517,10 @@
   </div>
 
   <script src="../../shared/supplier-company-agreements.js"></script>
+  <script src="../../shared/product-supplier-contacts.js"></script>
   <script>
     (function () {
+      var contacts = window.ProductSupplierContacts;
       var detailModal = document.getElementById('marketDetailModal');
       var agencyModal = document.getElementById('agencyConfirmModal');
       var stopSaleManagerModal = document.getElementById('stopSaleManagerModal');
@@ -528,6 +528,18 @@
       var advancedMarketFilterDrawer = document.getElementById('advancedMarketFilterDrawer');
       var stopSaleRows = document.getElementById('marketStopRows');
       var productCards = Array.prototype.slice.call(document.querySelectorAll('.market-product-card'));
+      productCards = productCards.filter(function (card) {
+        if (!contacts.visible(card.dataset.supplier, contacts.current, card.dataset.providerKind)) { card.remove(); return false; }
+        card.querySelector('.market-product-body > p').innerHTML = contacts.nameHtml(card.dataset.supplier, card.dataset.providerKind);
+        return true;
+      });
+      Array.from(document.getElementById('marketSupplier').options).forEach(function(option) {
+        if (option.index > 0 && !productCards.some(function(card) { return card.dataset.supplier === option.value; })) option.remove();
+      });
+      contacts.mountContext(document.querySelector('.product-market-pagination'));
+      var companyField = document.getElementById('agencyBusinessCompany');
+      companyField.innerHTML = '<option>' + escapeHtml(contacts.current.company) + '</option>';
+      companyField.disabled = true;
       var originalProductCards = productCards.slice();
       var productGrid = document.querySelector('.product-market-grid');
       var productTable = document.querySelector('.product-market-table');
@@ -761,7 +773,7 @@
 
       function detailRowsHtml(items) {
         return items.map(function (item) {
-          return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + escapeHtml(item[1]) + '</div></div>';
+          return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + (item[0] === '来源方' ? contacts.nameHtml(item[1], currentCard && currentCard.dataset.providerKind) : escapeHtml(item[1])) + '</div></div>';
         }).join('');
       }
 
@@ -1091,7 +1103,8 @@
           var body = card.querySelector('.market-product-body');
           if (!body) return;
           card.setAttribute('tabindex', '0');
-          card.setAttribute('role', 'button');
+          card.setAttribute('role', 'group');
+          card.setAttribute('aria-label', card.dataset.product);
 
           var info = card.querySelector('.market-product-info');
           var schedule = card.querySelector('.market-product-schedule');
@@ -1176,7 +1189,9 @@
       function buildProductSummaryCell(card) {
         var result = createStackCell('market-product-table-name');
         appendLine(result.stack, 'strong', card.dataset.product);
-        appendLine(result.stack, 'span', sourceOriginText(card) + ' · ' + (card.dataset.supplier || '来源方待确认'));
+        var supplierLine = document.createElement('span');
+        supplierLine.innerHTML = escapeHtml(sourceOriginText(card)) + ' · ' + contacts.nameHtml(card.dataset.supplier, card.dataset.providerKind);
+        result.stack.appendChild(supplierLine);
         var tagRow = document.createElement('div');
         tagRow.className = 'market-table-tag-row';
         tagRow.appendChild(cloneTagFromCard(card, 0));
@@ -1236,7 +1251,6 @@
           var row = document.createElement('tr');
           row.dataset.productIndex = String(index);
           row.setAttribute('tabindex', '0');
-          row.setAttribute('role', 'button');
 
           row.appendChild(buildProductSummaryCell(card));
           row.appendChild(buildAvailabilityCell(card));
@@ -1328,6 +1342,11 @@
           card.hidden = !cardMatchesMarketFilters(card);
         });
         buildProductTable();
+        var count = productCards.filter(function(card) { return !card.hidden; }).length;
+        document.querySelector('.product-market-pagination > span').textContent = '共 ' + count + ' 条产品';
+        var empty = document.getElementById('marketSupplierEmpty');
+        if (!empty) { empty = document.createElement('p'); empty.id = 'marketSupplierEmpty'; empty.className = 'product-supplier-empty'; empty.dataset.listEmpty = 'true'; productGrid.before(empty); }
+        empty.textContent = '暂无符合条件且当前公司可查看的产品'; empty.hidden = count > 0;
       }
 
       function scheduleRank(card) {
@@ -1368,7 +1387,7 @@
           ? '<p>' + escapeHtml('经营公司：' + (card.dataset.businessCompany || '待选') + '；产品提供公司：' + card.dataset.supplier + '；内部合作依据：' + (card.dataset.businessCompany === '福建凯撒' ? card.dataset.internalReference : '待确认')) + '</p><p>' + escapeHtml('销售使用条件：' + (card.dataset.supplyResult || '待明确')) + '</p>'
           : '<p>' + escapeHtml('经营公司：' + (card.dataset.businessCompany || '待选') + '；产品提供方：' + card.dataset.supplier) + '</p><p>' + escapeHtml('合作协议：' + (card.dataset.agreementNo || '待选')) + '</p><p>' + escapeHtml(SupplierCompanyAgreements.hint(card.dataset.supplier, card.dataset.businessCompany, card.dataset.agreementNo)) + '</p><p>' + escapeHtml('销售使用条件：' + (card.dataset.supplyResult || '待明确')) + '</p>';
         document.getElementById('marketDetailTitle').textContent = '详情';
-        document.getElementById('marketDetailSupplier').textContent = currentCard.dataset.supplier;
+        document.getElementById('marketDetailSupplier').innerHTML = contacts.nameHtml(currentCard.dataset.supplier, currentCard.dataset.providerKind);
 	        document.getElementById('marketDetailType').textContent = currentCard.dataset.type;
         document.getElementById('marketDetailSource').textContent = sourceOriginText(currentCard);
         document.getElementById('marketDetailSource').className = modelTagClass(currentCard.dataset.model || '代理');
@@ -1593,7 +1612,7 @@
         setCurrentCard(card);
         var info = cardInfo(currentCard);
         var config = detailConfig(currentCard);
-        document.getElementById('agencyBusinessCompany').value = currentCard.dataset.businessCompany || '福建凯撒';
+        document.getElementById('agencyBusinessCompany').value = currentCard.dataset.businessCompany || contacts.current.company;
         refreshAgencyAgreement(currentCard.dataset.agreementNo || '');
         document.getElementById('agencyProductName').textContent = currentCard.dataset.product;
         document.getElementById('agencySupplierName').textContent = currentCard.dataset.supplier;
@@ -1651,7 +1670,7 @@
         document.getElementById('agencyInternalBasis').hidden = !internal;
         document.getElementById('agencyCompanyAgreement').innerHTML = SupplierCompanyAgreements.options(currentCard.dataset.supplier, company, selected);
         document.getElementById('agencyAgreementHint').textContent = SupplierCompanyAgreements.hint(currentCard.dataset.supplier, company, selected);
-        document.getElementById('agencyAgreementSource').hidden = currentCard.dataset.supplier !== '欧洲联合地接社';
+        document.getElementById('agencyAgreementSource').hidden = true;
         var approvedInternal = internal && company === '福建凯撒' && currentCard.dataset.supplier === '北京凯撒';
         document.getElementById('agencyInternalText').textContent = approvedInternal
           ? '产品提供公司：北京凯撒；经营公司：福建凯撒；内部合作单 INT-BJ-FJ-2026-007（已批准）。实际地接、酒店等采购供应商及协议由采购公司在成本维护时分别引用。'

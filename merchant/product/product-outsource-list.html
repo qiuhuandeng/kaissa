@@ -127,8 +127,10 @@
     </div>
   </div>
 
+  <script src="../../shared/product-supplier-contacts.js"></script>
   <script>
     (function () {
+      var contacts = window.ProductSupplierContacts;
       var rows = document.getElementById('outsourceRows');
       var ownerDrawer = document.getElementById('ownerDrawer');
       var stopProductModal = document.getElementById('stopProductModal');
@@ -257,6 +259,10 @@
         }
       ];
 
+      products = products.filter(function(item) { return contacts.visible(item.supplier); });
+      products.forEach(function(item) { item.detailHref = contacts.href(item.detailHref); });
+      contacts.mountContext(document.querySelector('.list-surface-pagination'));
+
       function escapeHtml(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
@@ -363,7 +369,7 @@
           return [
             '<tr data-key="' + escapeHtml(item.key) + '" data-status="' + escapeHtml(item.workStatus) + '">',
             '<td><div class="table-cell-main"><strong><a class="link-primary table-main-link" href="' + escapeHtml(item.detailHref) + '">' + escapeHtml(item.name) + '</a></strong><span>' + escapeHtml(item.type + ' · ' + item.departure + '/' + item.destination) + '</span><span class="' + tagClass(item.workStatus) + '">' + escapeHtml(item.workStatus) + '</span></div></td>',
-            '<td><div class="table-cell-main"><strong>' + escapeHtml(item.supplier) + '</strong><span>' + escapeHtml(item.sourceType) + '</span></div></td>',
+            '<td><div class="table-cell-main"><strong>' + contacts.nameHtml(item.supplier) + '</strong><span>' + escapeHtml(item.sourceType) + '</span></div></td>',
             '<td><div class="table-cell-main"><strong><span class="' + tagClass(item.packageStatus) + '">' + escapeHtml(item.packageStatus) + '</span></strong><span>' + escapeHtml(item.packageSub) + '</span></div></td>',
             '<td><div class="table-cell-main"><strong>' + escapeHtml(item.pricingProgress) + '</strong><span>' + escapeHtml(item.pricingSub) + '</span></div></td>',
             '<td><div class="table-cell-main"><strong><span class="count-link-line"><a class="count-link-number" href="' + escapeHtml(scheduleHref(item)) + '">' + escapeHtml(item.arrangements) + '</a>' + escapeHtml('个' + item.scheduleObject) + '</span></strong><span>' + escapeHtml(item.arrangementStatus + ' · ' + item.quota) + '</span></div></td>',
@@ -376,7 +382,7 @@
         if (!list.length) {
           rows.innerHTML = '<tr><td colspan="8" class="text-muted">暂无符合条件的代理产品</td></tr>';
         }
-        document.getElementById('outsourcePagination').textContent = '第1-' + list.length + '条/共' + products.length + '条';
+        document.getElementById('outsourcePagination').textContent = list.length ? '第1-' + list.length + '条/共' + list.length + '条' : '共0条';
       }
 
       function setActiveStatus(status) {

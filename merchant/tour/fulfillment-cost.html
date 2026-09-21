@@ -521,6 +521,7 @@
             <tbody id="batchPaymentRows"></tbody>
           </table>
         </section>
+        <section class="drawer-section"><h3 class="drawer-section-title">公司协议与账期</h3><div id="batchPaymentAgreementBasis"></div></section>
         <section id="batchPaymentResult" class="finance-link-card receipt-result" hidden>
           <div class="finance-link-title">已生成批量付款申请，状态：审批中。</div>
           <div class="finance-link-items">
@@ -1335,6 +1336,19 @@
         }
       ];
 
+      SupplierCompanyAgreements.paymentExamples().forEach(function(example) {
+        payableCostGroups.push({
+          id:'payable-abc-'+example.key, supplier:example.supplier, account:'供应商已核验收款账户（样例）', currency:'CNY',
+          entity:example.company, contract:example.contract, billNo:'BN-ABC-'+example.key, node:example.node,
+          expectedDate:example.planDate, status:'待申请', approvalPath:'计调负责人 → 财务主管',
+          agreementNo:example.agreementNo, agreementUsedOn:example.usedOn, agreementEventDate:example.eventDate,
+          agreementEventName:example.eventName, statementMonth:example.statementMonth || '', originalAgreement:example.originalAgreement,
+          items:[{scheduleNo:'EU-ABC-202607-'+example.key,route:'欧洲地接服务',plan:'地接费用',fee:example.node,amount:example.amount,applied:0,paid:0}]
+        });
+      });
+      payableCostGroups.forEach(function(group) {
+        if (!group.originalAgreement) group.originalAgreement=SupplierCompanyAgreements.capture({agreementNo:group.agreementNo,businessCompany:group.entity,supplier:group.supplier});
+      });
       var paymentRequests = [
         {
           id: 'PAY-TRF-20260818001',
@@ -2068,10 +2082,14 @@
               currency: group.currency,
               entity: group.entity,
               node: group.node,
+              expectedDate:group.expectedDate,
               contract: group.contract,
               agreementNo: group.agreementNo || '',
               agreementUsedOn: group.agreementUsedOn || '',
               agreementEventDate: group.agreementEventDate || '',
+              agreementEventName: group.agreementEventName || '',
+              statementMonth: group.statementMonth || '',
+              originalAgreement: group.originalAgreement ? JSON.parse(JSON.stringify(group.originalAgreement)) : null,
               billNo: group.billNo,
               sourceType: group.sourceType || '',
               subject: paymentSubject(item)
@@ -2216,7 +2234,7 @@
             return {
               key: group.id,
               label: group.supplier,
-              subLabel: group.sourceType === 'project' ? (group.customer + ' / ' + group.projectNo) : group.account,
+              subLabel: group.entity + (group.sourceType === 'project' ? ' / ' + group.projectNo : ''),
               groupIds: [group.id],
               groups: [group],
               node: group.node,
@@ -2363,7 +2381,7 @@
             return Object.assign({}, item, { groupId: group.id });
           });
         }
-        return group.items.map(function (item) {
+        return paymentContextRows([group]).map(function (item) {
           return Object.assign({}, item, {
             groupId: group.id,
             requestAmount: groupItemAvailable(group, item)
@@ -2432,6 +2450,7 @@
             '<td>付款对象/账户/币种/主体一致</td>' +
             '</tr>';
         }).join('');
+        document.getElementById('batchPaymentAgreementBasis').innerHTML = paymentAgreementsHtml(activeBatchSplits.reduce(function(items,split) { return items.concat(split.items); },[]));
         document.getElementById('batchPaymentResult').hidden = true;
         openLayer(batchPaymentDrawer);
       }
@@ -4285,12 +4304,12 @@
       function paymentAgreementsHtml(items, planDate) {
         var seen = {};
         return items.filter(function (item) {
-          var key = [item.supplier, item.entity, item.agreementNo, item.contract, item.agreementUsedOn, item.agreementEventDate].join('|');
+          var key = [item.supplier, item.entity, item.agreementNo, item.contract, item.agreementUsedOn, item.agreementEventDate, item.agreementEventName, item.statementMonth, JSON.stringify(item.originalAgreement)].join('|');
           if (seen[key]) return false;
           seen[key] = true;
           return true;
         }).map(function (item) {
-          return '<div class="drawer-section">' + SupplierCompanyAgreements.basisHtml({ agreementNo: item.agreementNo, businessCompany: item.entity, supplier: item.supplier, contract: item.contract, usedOn: item.agreementUsedOn, eventDate: item.agreementEventDate, planDate: planDate }) + '</div>';
+          return '<div class="drawer-section">' + SupplierCompanyAgreements.basisHtml({ agreementNo: item.agreementNo, businessCompany: item.entity, supplier: item.supplier, contract: item.contract, usedOn: item.agreementUsedOn, eventDate: item.agreementEventDate, eventName:item.agreementEventName, statementMonth:item.statementMonth, originalAgreement:item.originalAgreement, planDate: planDate === undefined ? item.expectedDate : planDate }) + '</div>';
         }).join('') || '<p class="form-hint">请选择付款成本项。</p>';
       }
       function updateApplyAmount() {
@@ -4370,7 +4389,7 @@
         request.paymentMethod = document.getElementById('applyPaymentMethod').value;
         request.expectedDate = document.getElementById('expectedPayDate').value;
         request.remark = document.getElementById('applyReason').value;
-        request.items = items;
+        request.items = JSON.parse(JSON.stringify(items));
         request.amount = requestAmount(request);
         request.status = status;
         request.approvalStatus = status;
@@ -4436,7 +4455,7 @@
         request.projectOrder = firstGroup.projectOrder || '';
         request.projectGroup = firstGroup.projectGroup || '';
         request.customer = firstGroup.customer || '';
-        request.items = split.items.slice();
+        request.items = JSON.parse(JSON.stringify(split.items));
         request.amount = split.amount;
         request.status = status;
         request.approvalStatus = status;
@@ -4490,6 +4509,7 @@
           risk: request.sourceType === 'project' ? '项目付款需复核客户合同、供应商账单和项目成本确认' : (request.node === '预付款' ? '预付款需复核合同节点' : '供应商尾款待复核'),
           node: request.approvalNode,
           applicant: '计调/团控',
+          paymentBases: request.items.map(function(item) { return {agreementNo:item.agreementNo,businessCompany:item.entity,supplier:item.supplier,contract:item.contract,usedOn:item.agreementUsedOn,eventDate:item.agreementEventDate,eventName:item.agreementEventName,statementMonth:item.statementMonth,originalAgreement:item.originalAgreement,planDate:request.expectedDate}; }),
           title: '付款申请审批',
           subtitle: request.supplier + request.node + '付款',
           detail: [
