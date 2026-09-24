@@ -1,0 +1,30 @@
+const assert=require('node:assert/strict');
+const D=require('../shared/contract-settings-data.js');
+const day='2026-09-24';
+let count=0;
+function test(name,fn){fn();console.log('PASS '+name);count++;}
+function state(){return D.newState();}
+test('公司授权与用章齐备的演示条件',()=>assert.deepEqual(D.companyIssues(state().companies[0],day),[]));
+test('公司未开通和缺证照不会成为可用',()=>{const x=D.companyIssues(state().companies[1],day);assert.ok(x.includes('旅行社许可证待补'));assert.ok(x.includes('平台企业未关联'));});
+test('同名印章文字不能覆盖公司身份不匹配',()=>{const c=state().companies[0];c.sealCompany='bj';assert.ok(D.companyIssues(c,day).includes('用章公司与签约公司不一致'));});
+test('授权到期日含当天，次日不可用',()=>{const c=state().companies[0];assert.deepEqual(D.companyIssues(c,c.end),[]);assert.ok(D.companyIssues(c,'2027-01-01').includes('授权不在有效期'));});
+test('非法年月日返回缺项而不是脚本异常',()=>{for(const date of ['2026-99-01','2026-02-30','abc',''])assert.equal(D.dateOK(date),false);});
+test('授权已核对但无依据仍不通过',()=>{const c=state().companies[0];c.evidence='';assert.ok(D.companyIssues(c,day).includes('公司授权待核实'));});
+test('有效模板可用，旧模板不能用于新合同',()=>{const s=state();assert.deepEqual(D.templateIssues(s.templates[0],s.companies,day),[]);assert.ok(D.templateIssues(s.templates[3],s.companies,day).includes('模板未启用'));});
+test('邮轮自定义支持未核实不能提交发布',()=>{const s=state();assert.ok(D.templateIssues(s.templates[1],s.companies,day,true).includes('平台模板及支持方式待核实'));});
+test('企业合同不能缺授权书或用个人签署方式',()=>{const s=state(),t=s.templates[0];t.customer='企业';const x=D.templateIssues(t,s.companies,day,true);assert.ok(x.includes('企业合同需代表签署并提供企业授权书'));});
+test('模板包含未授权公司不得整体判可用',()=>{const s=state();s.templates[0].companies.push('bj');assert.ok(D.templateIssues(s.templates[0],s.companies,day).some(x=>x.includes('北京凯撒')));});
+test('模板人工标已核对仍须符合公司已核实的平台能力',()=>{const s=state();s.templates[0].mode='企业代表签署';assert.ok(D.templateIssues(s.templates[0],s.companies,day).some(x=>x.includes('未确认支持')));});
+test('核心内容对应不能遗漏金额',()=>{const s=state();s.templates[0].mapping.amount='';assert.ok(D.templateIssues(s.templates[0],s.companies,day).some(x=>x.includes('字段对应')));});
+test('规则引用同公司同业务有效模板',()=>{const s=state();assert.deepEqual(D.ruleIssues(s.rules[0],s,day),[]);s.rules[0].company='bj';assert.ok(D.ruleIssues(s.rules[0],s,day).some(x=>x.includes('不匹配')));});
+test('业务政策未确认不得启用',()=>{const s=state();s.rules[0].confirmed=false;assert.ok(D.ruleIssues(s.rules[0],s,day,true).includes('业务政策尚未确认'));});
+test('按付款节点必须明确节点',()=>{const s=state();s.rules[0].payment='按付款节点';assert.ok(D.ruleIssues(s.rules[0],s,day,true).some(x=>x.includes('付款节点')));s.rules[0].paymentNode='订单约定首款';assert.deepEqual(D.ruleIssues(s.rules[0],s,day,true),[]);});
+test('需要审核不能缺审批流程',()=>{const s=state();s.rules[0].flow='';assert.ok(D.ruleIssues(s.rules[0],s,day,true).some(x=>x.includes('审批流程')));});
+test('同公司重叠规则不能静默择一',()=>{const s=state();const r={...D.copy(s.rules[0]),id:'R-NEW'};assert.ok(D.ruleIssues(r,s,day,true).some(x=>x.includes('重叠')));});
+test('指定门店与公司通用冲突明确提示',()=>{const s=state();const r={...D.copy(s.rules[0]),id:'R-NEW',scope:'指定门店',store:'软件园门店'};assert.ok(D.ruleIssues(r,s,day,true).some(x=>x.includes('重叠')));});
+test('不同门店规则可独立配置',()=>{const s=state();s.rules[0].scope='指定门店';s.rules[0].store='文灶门店';const r={...D.copy(s.rules[0]),id:'R-NEW',store:'软件园门店'};assert.deepEqual(D.ruleIssues(r,s,day,true),[]);});
+test('门店公司、模板、规则必须一致',()=>{const s=state(),c={company:'fj',template:'T-GROUP-2026',rule:'R-FJ-01',allow:true,store:'软件园门店'};assert.deepEqual(D.storeIssues(c,s,day),[]);assert.ok(D.storeIssues({...c,company:'bj'},s,day).length);assert.ok(D.storeIssues({...c,template:'T-MICE-2026'},s,day).length);});
+test('门店不发起签约可以保留未完成配置',()=>assert.deepEqual(D.storeIssues({allow:false},state(),day),[]));
+test('特定门店规则不能供另一个门店选用',()=>{const s=state();s.rules[0].scope='指定门店';s.rules[0].store='文灶门店';assert.ok(D.storeIssues({company:'fj',template:'T-GROUP-2026',rule:'R-FJ-01',allow:true,store:'软件园门店'},s,day).length);});
+test('修订复制不覆盖旧版正文和金额对应',()=>{const s=state(),t=D.copy(s.templates[0]);t.clauses='新条款';t.mapping.amount='另一个字段';assert.notEqual(t.clauses,s.templates[0].clauses);assert.equal(s.templates[0].mapping.amount,'示例-amount');});
+console.log('完成 '+count+' 组12301配置业务规则检查');

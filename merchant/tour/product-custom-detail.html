@@ -517,9 +517,11 @@
         var generated = isFormedStatus(project.status) && quote;
         var amount = generated ? money(quoteDisplayAmount(quote)) : '未生成';
         var firstPayment = generated ? ((quote.paymentNodes || [])[0] || {}) : {};
+        window.ProjectContractContext={projectNo:project.projectNo,orderNo:generated?project.orderNo:'',customer:project.customer,product:project.name,amount:generated?quoteDisplayAmount(quote):null,start:project.travelStart,end:project.travelEnd,company:params.get('company')||'签约公司待核对',representative:project.contact,business:project.businessType};
+        window.dispatchEvent(new Event('project-contract-context'));
         var items = [
           ['项目订单', '订单号', generated ? project.orderNo : '未生成', '金额', amount, generated ? '已生成' : '未生成', generated ? '进入订单' : '', generated ? '../sales/orders-detail.html?type=customProject&source=customProject&projectNo=' + encodeURIComponent(project.projectNo) + '&orderNo=' + encodeURIComponent(project.orderNo) : ''],
-          ['项目合同', '合同号', generated ? project.contractNo : '未生成', '签署状态', generated ? '待签署' : '未生成', generated ? '待签署' : '未生成', generated ? '进入合同' : '', generated ? '../sales/contracts.html?source=customProject&projectNo=' + encodeURIComponent(project.projectNo) + '&contractNo=' + encodeURIComponent(project.contractNo) : ''],
+
           ['项目团', '项目团号', generated ? project.scheduleNo : '未生成', '出行日期', generated ? project.travelStart + ' 至 ' + project.travelEnd : '未生成', generated ? '已生成' : '未生成', generated ? '进入项目团' : '', generated ? 'schedules-detail.html?source=customProject&groupMode=project&projectNo=' + encodeURIComponent(project.projectNo) + '&scheduleNo=' + encodeURIComponent(project.scheduleNo) : ''],
           ['阶段收款', '应收计划号', generated ? project.receivableNo : '未生成', '首款状态', generated ? (firstPayment.name || '首款') + ' / ' + (firstPayment.ratio ? firstPayment.ratio + '%' : '待收款') : '未生成', generated ? '待财务承接' : '未生成', generated ? '进入应收管理' : '', generated ? '../finance/finance-receivable.html?source=customProject&projectNo=' + encodeURIComponent(project.projectNo) + '&orderNo=' + encodeURIComponent(project.orderNo) : '']
         ];
@@ -772,6 +774,6 @@
       switchTab(activeTab);
     })();
   </script>
-  <script src="../../shared/project-enterprise-contract.js"></script>
+  <script src="../../shared/contract-settings-data.js"></script><script src="../../shared/project-enterprise-contract.js"></script>
 </body>
 </html>

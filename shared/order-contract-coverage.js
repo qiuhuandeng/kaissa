@@ -1,68 +1,19 @@
-(function () {
-  'use strict';
-
-  var panel = document.getElementById('tab-contract');
-  var rows = document.getElementById('contractRows');
-  if (!panel || !rows || panel.dataset.coverageReady === 'true') return;
-  panel.dataset.coverageReady = 'true';
-
-  function esc(value) {
-    return String(value == null ? '' : value).replace(/[&<>'"]/g, function (char) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char];
-    });
-  }
-  function number(value) { return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0; }
-  function money(value) { return '¥' + Number(value || 0).toLocaleString('zh-CN', { maximumFractionDigits: 2 }); }
-  function orderNo() { return new URLSearchParams(location.search).get('orderNo') || document.getElementById('orderNo').textContent.trim(); }
-  function orderAmount() { return orderNo() === 'ORD-CONTRACT-30000' ? 30000 : number(document.getElementById('orderHeroTotal').textContent); }
-
-  var example = [
-    { no: 'HT-P-20260919-001', traveler: '张建国', amount: 10000, version: 'V1', status: '已签署', time: '2026-09-18 14:01' },
-    { no: 'HT-P-20260919-002', traveler: '李梅', amount: 10000, version: 'V1', status: '已签署', time: '2026-09-18 14:02' },
-    { no: 'HT-P-20260919-003', traveler: '王磊', amount: 10000, version: 'V1', status: '待签署', time: '-' }
-  ];
-
-  panel.querySelector('.product-detail-tab-inner').insertAdjacentHTML('afterbegin', [
-    '<section class="detail-section order-contract-coverage-section">',
-    '<div class="detail-section-header"><div><div class="detail-section-title">合同覆盖情况</div><div class="detail-section-desc">按游客和金额核对当前有效合同；必要签署人未全部完成时，整单不显示签约完成。</div></div><span id="orderContractCoverageStatus" class="tag tag-orange">覆盖未完成</span></div>',
-    '<div id="orderContractCoverageSummary" class="contract-allocation-summary"></div>',
-    '<div class="table-wrap"><table><thead><tr><th>合同编号</th><th>覆盖游客</th><th>分配金额</th><th>版本</th><th>必要签署</th><th>签署时间</th></tr></thead><tbody id="orderContractCoverageRows"></tbody></table></div>',
-    '<div class="order-contract-change-entry"><div><strong>订单变更后的合同承接</strong><span>金额、游客或行程变化时，保留原签署文件和原覆盖范围，从合同管理生成补充协议或新版本。</span></div><div class="table-action"><button type="button" data-contract-change="supplement">补充协议</button><button type="button" data-contract-change="version">新版本</button></div></div>',
-    '</section>'
-  ].join(''));
-
-  function currentContracts() {
-    if (orderNo() === 'ORD-CONTRACT-30000') return example;
-    var source = Array.from(rows.querySelectorAll('tr'));
-    if (!source.length) return [];
-    return source.map(function (row, index) {
-      var cells = row.querySelectorAll('td');
-      return { no: 'HT-' + orderNo() + '-' + (index + 1), traveler: '当前订单游客', amount: index === 0 ? orderAmount() : 0, version: 'V1', status: /\u5df2\u7b7e|\u5df2\u751f效/.test(row.textContent) ? '已签署' : '待签署', time: '-' };
-    });
-  }
-
-  function render() {
-    var contracts = currentContracts();
-    var total = contracts.reduce(function (sum, item) { return sum + item.amount; }, 0);
-    var signed = contracts.filter(function (item) { return item.status === '已签署'; }).length;
-    var complete = contracts.length > 0 && total === orderAmount() && signed === contracts.length;
-    var status = document.getElementById('orderContractCoverageStatus');
-    status.textContent = complete ? '整单签约完成' : '覆盖未完成';
-    status.className = complete ? 'tag tag-green' : 'tag tag-orange';
-    document.getElementById('orderContractCoverageSummary').innerHTML = '<div><span>订单金额</span><strong>' + money(orderAmount()) + '</strong></div><div><span>有效合同</span><strong>' + contracts.length + '份</strong></div><div><span>覆盖游客</span><strong>' + contracts.length + '人</strong></div><div><span>已分配／剩余</span><strong>' + money(total) + ' / ' + money(Math.max(0, orderAmount() - total)) + '</strong></div><div><span>必要签署</span><strong>' + signed + '/' + contracts.length + '人</strong></div>';
-    document.getElementById('orderContractCoverageRows').innerHTML = contracts.length ? contracts.map(function (item) {
-      return '<tr><td><strong>' + esc(item.no) + '</strong></td><td>' + esc(item.traveler) + '</td><td>' + money(item.amount) + '</td><td>' + esc(item.version) + '</td><td><span class="tag ' + (item.status === '已签署' ? 'tag-green' : 'tag-orange') + '">' + esc(item.status) + '</span></td><td>' + esc(item.time) + '</td></tr>';
-    }).join('') : '<tr><td colspan="6" class="table-empty-cell">尚未生成合同，请进入合同管理选择覆盖方式。</td></tr>';
-    return { orderNo: orderNo(), orderAmount: orderAmount(), count: contracts.length, allocated: total, signed: signed, complete: complete };
-  }
-
-  document.addEventListener('click', function (event) {
-    var button = event.target.closest('[data-contract-change]');
-    if (!button) return;
-    var query = new URLSearchParams({ orderNo: orderNo(), action: button.dataset.contractChange, changeType: '订单金额、游客或行程变更' });
-    location.href = 'contracts.html?' + query.toString();
-  });
-
-  var result = render();
-  window.OrderContractCoverageTest = { inspect: render, initial: result };
+(function(){
+ 'use strict';
+ const M=window.ContractWorkflow,panel=document.getElementById('tab-contract');if(!M||!panel)return;
+ const S=M.createState(),ctx=window.OrderContractContext,no=ctx?.id||new URLSearchParams(location.search).get('orderNo')||document.getElementById('orderNo')?.textContent.trim();
+ const known=S.orders.find(o=>o.id===no),o=known||ctx;if(!o)return;
+ const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const money=v=>v===null||!Number.isFinite(Number(v))?'待确认':'¥'+Number(v).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const all=known?S.contracts.filter(c=>c.orderId===no):[],cov=M.coverage(o,all);
+ const href=(c)=>'contracts.html?'+new URLSearchParams({orderNo:no,type:({参团游:'group',邮轮:'cruise',专列:'train',MICE:'project',单团项目:'project',自由行:'free',单项服务:'single'})[o.business]||'group',customer:o.customer,product:o.product,scheduleNo:o.trip,amount:o.amount??'',company:o.companyName||'',travelStart:o.start||'',travelEnd:o.end||'',...(c?{contractNo:c.id}:{})});
+ const grid=items=>'<dl class="cw-grid">'+items.map(([k,v])=>'<div><dt>'+e(k)+'</dt><dd>'+e(v)+'</dd></div>').join('')+'</dl>';
+ const inner=panel.querySelector('.product-detail-tab-inner'),old=document.getElementById('contractRows')?.closest('.order-tab-section');if(old)old.remove();
+ const prep=[['签约公司',o.companyName||'待核对'],['适用模板',o.templateReady?o.template+' '+(o.templateVersion||''): '有效模板待核对'],['游客资料',o.people.filter(p=>p.ready).length+' / '+o.people.length+' 人齐备'],['签约付款条件',o.paymentReady?o.payment:'待公司规则确认'],['订单确认',o.status],['合同附件',known?all.some(c=>c.attachments.some(f=>!f.ready))?'必要附件待补':'在合同草稿逐项核对':'行程、费用及适用授权材料待核对']];
+ const scope=[['订单确认金额',money(o.amount)],['当前主合同',cov.count+'份'],['覆盖游客',cov.covered+' / '+cov.total+'人'],['必要游客签署',cov.signed+' / '+cov.required],['我方盖章',cov.seals+' / '+cov.count+'份'],['已签当前约定金额',money(cov.agreed)]];
+ function list(title,items){return '<section class="order-tab-section"><h3 class="detail-section-title">'+title+'</h3><div class="table-wrap cw-table"><table style="--cw-width:1010px"><colgroup><col><col style="width:170px"><col style="width:135px"><col style="width:135px"><col style="width:150px"><col style="width:160px"></colgroup><thead><tr><th>合同／版本</th><th>覆盖游客</th><th>本份金额</th><th>合同状态</th><th>签署／备案</th><th class="cw-action">操作</th></tr></thead><tbody>'+items.map(c=>'<tr><td><strong>'+e(c.id)+'</strong><span class="cw-sub">'+e(c.doc+' '+c.version)+'</span></td><td>'+e(c.people.map(id=>o.people.find(p=>p.id===id)?.name||id).join('、'))+'</td><td class="cw-short">'+money(c.amount)+'</td><td>'+e(c.status)+'</td><td>'+e(c.signers.filter(p=>p.status==='已签署').length+'/'+c.signers.length+'；'+c.filing)+'</td><td class="cw-action"><div><a href="'+e(href(c))+'">查看合同</a></div></td></tr>').join('')+'</tbody></table></div></section>';}
+ const block=document.createElement('section');block.className='cw-order';block.innerHTML='<div class="cw-head"><h3>签约准备</h3><a class="btn btn-primary" href="'+e(href())+'">'+(all.length?'查看本单合同':'准备合同')+'</a></div>'+grid(prep)+'<div class="cw-actions"><button class="btn btn-secondary" type="button" data-open-drawer="travelerDrawer">补充游客资料</button><a href="contract-templates.html">查看合同模板</a></div><section class="order-tab-section"><div class="cw-head"><h3>合同覆盖情况</h3><span class="tag '+(cov.complete?'tag-green':'tag-orange')+'" id="orderContractCoverageStatus">'+(cov.complete?'整单签约完成':'签约未完成')+'</span></div>'+grid(scope)+'</section>'+(all.length?list('主合同',all.filter(c=>c.current&&c.doc==='主合同'))+(all.some(c=>c.current&&c.doc!=='主合同')?list('补充及解除文书',all.filter(c=>c.current&&c.doc!=='主合同')):'')+(all.some(c=>!c.current)?list('历史版本',all.filter(c=>!c.current)):''):'<p class="cw-muted">暂无可核对的合同记录，请从本订单准备合同。</p>')+'<p class="cw-muted">原型订单合同样例；按游客身份核对覆盖，未签变更及历史版本不计入已签当前约定金额。</p>';
+ inner.prepend(block);
+ if(new URLSearchParams(location.search).get('tab')==='contract') document.querySelector('.detail-tabs-card [data-tab="contract"]')?.click();
+ window.OrderContractCoverageTest={inspect:()=>({orderNo:no,orderAmount:o.amount,...cov}),initial:cov};
 })();

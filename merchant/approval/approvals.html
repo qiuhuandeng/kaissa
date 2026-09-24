@@ -159,6 +159,7 @@
 
   <div id="approvalToast" class="toast" role="status" aria-live="polite" hidden></div>
 
+  <link rel="stylesheet" href="../../shared/contract-workflow.css"><script src="../../shared/contract-workflow-model.js"></script><script src="../../shared/contract-approval.js"></script>
   <script src="../../shared/supplier-company-agreements.js"></script>
   <script>
     (function () {
@@ -798,7 +799,7 @@
             ["原团期", "德捷奥深度游 / 2026年7月20日出发"],
             ["新团期", "德捷奥深度游 / 2026年9月5日出发"],
             ["名额校验", "新团期余位8个，可承接4人"],
-            ["通过后", "同步名单、合同补充协议与应收差额"]
+            ["通过后", "提供名单、合同变更及应收差额处理依据，后续分别确认"]
           ],
           flow: [
             ["10:15", "当前用户提交转团申请"],
@@ -828,8 +829,8 @@
           detail: [
             ["作废原因", "游客姓名拼写错误，需重新签署电子合同"],
             ["收款状态", "订单已收款¥25,600，无退款动作"],
-            ["控制规则", "作废后原合同不可下载，新合同继承订单收款"],
-            ["通过后", "触发合同重签待办并保留审计日志"]
+            ["控制规则", "历史文件按权限保留查询下载；新版本重新审核签署，收款保持在订单"],
+            ["通过后", "待核对平台办理结果，保留原文件及审计记录"]
           ],
           flow: [
             ["09:55", "当前用户提交合同作废"],
@@ -1121,7 +1122,10 @@
       baseApprovals.forEach(function(item) {
         (item.paymentBases || []).forEach(function(basis) { if (!basis.originalAgreement) basis.originalAgreement=SupplierCompanyAgreements.capture(basis); });
       });
-      let approvals = collectApprovals();
+      let approvals = collectApprovals().filter(item=>item.matter!=="合同作废");
+      approvals.unshift(...ContractApproval.records());
+      matterOptions.push(...ContractApproval.matters);
+      configItems.unshift(...ContractApproval.configRows());
 
       function optionHtml(values, allText) {
         return ["<option value=\"\">" + escapeHtml(allText) + "</option>"].concat(values.map((value) => {
@@ -1208,6 +1212,7 @@
       }
 
       function actionHtml(item) {
+        if(item.contractMatter&&currentView==='mine'&&['已退回','已拒绝'].includes(item.status))return '<a href="'+escapeHtml(item.sourceHref)+'">修改申请</a><button type="button" data-approval-action="detail" data-approval-no="'+escapeHtml(item.no)+'">详情</button>';
         const no = escapeHtml(item.no);
         if (currentView === "todo") {
           if (item.status === "待审批") {
@@ -1298,6 +1303,7 @@
       }
 
       function approvalResultText(item) {
+        if (item.contractMatter && item.status === "已通过") return item.contractEffect;
         if ((item.storeMatter || item.fundMatter) && item.status === "已通过") return item.storeEffect || "审批通过，按批准时间和期望生效日期启用";
         if (item.status === "已通过") return "已通过，来源单据进入下一业务节点";
         if (item.status === "已拒绝") return "已拒绝，来源单据停止当前流转";
@@ -1356,7 +1362,7 @@
         modalTitle.textContent = modalTitleFor(action, item, actionTitle);
         detailSectionTitle.textContent = action === "approve" ? "判断依据" : "申请内容";
         summaryGrid.innerHTML = summaryGridHtml(summaryItems(item));
-        detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action));
+        detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action)) + (item.contractMatter ? ContractApproval.render(item) : "");
         var paymentPanel = document.getElementById('approvalPaymentBasis');
         paymentPanel.hidden = !['付款申请','交通资源付款'].includes(item.matter);
         var bases = item.paymentBases || [];
@@ -1407,7 +1413,7 @@
       }
 
       function writeApprovalResult(item, decision) {
-        if (item.storeMatter || item.fundMatter || item.supplierMatter) return; // 门店本批仅演示审批结果，不跨页回写。
+        if (item.contractMatter || item.storeMatter || item.fundMatter || item.supplierMatter) return; // 门店本批仅演示审批结果，不跨页回写。
         const results = readStored("caesarApprovalResults");
         results[item.no] = {
           status: decision === "通过" ? "approved" : "rejected",
@@ -1447,6 +1453,7 @@
             opinionInput.focus();
             return;
           }
+          if(activeApproval.contractMatter){const error=ContractApproval.approve(activeApproval,decisionValue,opinionInput.value);if(error){toast(error);return;}}
           if (decisionValue === "通过" && activeApproval.fundBlock) { toast(activeApproval.fundBlock); return; }
           if (activeApproval.storeMatter || activeApproval.fundMatter) {
             const now = new Date();
@@ -1465,7 +1472,7 @@
           }
           writeApprovalResult(activeApproval, decisionValue);
           renderApprovals();
-          toast((activeApproval.storeMatter || activeApproval.fundMatter) ? approvalResultText(activeApproval) : decisionValue === "通过" ? "审批已通过，来源单据进入下一节点" : "审批意见已提交，来源单据等待处理");
+          toast((activeApproval.contractMatter || activeApproval.storeMatter || activeApproval.fundMatter) ? approvalResultText(activeApproval) : decisionValue === "通过" ? "审批已通过，来源单据进入下一节点" : "审批意见已提交，来源单据等待处理");
           closeModal();
           return;
         }
@@ -1502,6 +1509,7 @@
       }
 
       function openConfigModal(matter, action, actionTitle) {
+        if(ContractApproval.config(matter,action==='log',rows=>{rows.forEach(row=>{const i=configItems.findIndex(x=>x[0]===row[0]);if(i>=0)configItems[i]=row;});renderConfig();}))return;
         const row = configItems.find((item) => item[0] === matter) || configItems[0];
         activeApproval = null;
         activeAction = "config";
@@ -1572,6 +1580,8 @@
       }
 
       setupFilters();
+      if(params.get('contractNo')) keywordInput.value=params.get('contractNo');
+      else if(params.get('type')==='contract') keywordInput.value='合同';
       setupPageByView();
       focusDirectApproval();
 

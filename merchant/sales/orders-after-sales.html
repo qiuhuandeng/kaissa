@@ -179,8 +179,11 @@
     </section>
   </div>
 
+  <script src="../../shared/contract-workflow-model.js"></script>
   <script>
     (function () {
+      var contractExamples=ContractWorkflow.createState();
+      contractExamples.sources.forEach(function(src){var o=contractExamples.orders.find(x=>x.id===src.orderId),row=document.createElement('tr');Object.assign(row.dataset,{productType:o.business,type:'转团/改期',status:src.status==='已确认'?'已通过':'审批中',node:src.status==='已确认'?'变更已确认':'主管审批',date:'2026-09-24',serviceNo:src.id,orderNo:o.id,customer:o.customer,passengers:o.people.length+'人',product:o.product,schedule:o.trip,reason:src.after,amount:'金额变化 ¥'+src.delta,deduction:'以确认依据为准',resource:'无名额变化',contract:'待合同办理',finance:'按售后单另行处理',owner:o.owner,contractConfirmed:src.status});row.innerHTML='<td><strong>'+src.id+'</strong><span class="text-muted">'+o.id+'</span></td><td><strong>'+o.customer+'</strong><span class="text-muted">'+o.people.length+'人</span></td><td><strong>'+o.product+'</strong><span class="text-muted">'+o.trip+'</span></td><td>¥'+src.delta+'</td><td><span class="tag">'+row.dataset.status+'</span></td><td><div class="table-action"><button class="table-action-primary" data-open-after-detail>详情</button></div></td>';document.getElementById('afterSalesRows').appendChild(row);});
       var rows = Array.prototype.slice.call(document.querySelectorAll('#afterSalesRows tr'));
       var keywordInput = document.getElementById('afterSalesKeyword');
       var statusSelect = document.getElementById('afterSalesStatus');
@@ -393,6 +396,7 @@
       };
 
       function resultSections(data) {
+        if(contractExamples.sources.some(x=>x.id===data.serviceNo))return [{title:'资源与款项处理',rows:[['名额变化','本次服务调整不涉及名额释放'],['金额变化',data.amount],['款项办理',data.contractConfirmed==='已确认'?'按已确认售后依据另行处理':'依据尚未确认，不进入款项执行']]}];
         var result = afterSalesResultDetails[data.serviceNo] || {
           resource: [['原订单', data.orderNo], ['原占用记录', '待从订单占用依据带入'], ['原渠道', '待从订单归属带入'], ['资源处理结果', data.resource || '待确认'], ['实际释放', '待计调确认'], ['释放去向', '确认后只归还原渠道'], ['占位到期规则', '待配置时不自动释放', true]],
           payment: [['金额影响', data.amount || '-'], ['扣损口径', data.deduction || '-'], ['款项处理结果', data.finance || '待确认'], ['款项状态', data.status === '已通过' ? '待下游执行' : data.status, true]]
@@ -448,6 +452,9 @@
         var timeline = sections.filter(function (section) { return section.type === 'timeline'; });
         sections = sections.filter(function (section) { return section.type !== 'timeline'; }).concat(resultSections(data), timeline);
         document.getElementById('afterSalesDetailSections').innerHTML = sections.map(detailSectionHtml).join('');
+        var src=contractExamples.sources.find(x=>x.id===data.serviceNo),original=contractExamples.contracts.find(c=>c.orderId===data.orderNo&&c.doc==='主合同'&&c.current),query=new URLSearchParams({orderNo:data.orderNo,source:'afterSales',sourceNo:data.serviceNo});
+        if(original)query.set('contractNo',original.id);
+        document.getElementById('afterSalesDetailSections').insertAdjacentHTML('beforeend','<article class="aftersales-detail-card"><h3>合同处理</h3><div class="aftersales-summary-grid">'+item('关联原合同',original?original.id:'按订单查询，合同编号待核对')+item('变更依据确认',src?src.status:'以订单资料、资源及费用确认记录为准')+item('游客范围',data.passengers)+item('出行及服务变化',src?src.before+' → '+src.after:data.schedule+' / '+data.reason)+item('金额调整',src?'¥'+src.beforeAmount+' → ¥'+src.afterAmount:data.amount)+item('建议办理',data.type==='退团/退订'?'解除申请':'补充协议或新版本')+'</div><p>售后审批通过后仍需核对变更资料；合同解除与退款分别办理，原文件保留。</p><a href="contracts.html?'+escapeHtml(query.toString())+'">查看合同并办理</a></article>');
         openLayer(detailDrawer);
       }
 
@@ -530,6 +537,7 @@
         if (matchedInitialType) activeTab = initialType;
         else document.querySelector('.aftersales-tabs .tab-item[data-filter-value="全部类型"]').classList.add('active');
       }
+      keywordInput.value=new URLSearchParams(location.search).get('orderNo')||'';
       applyFilters();
     })();
   </script>

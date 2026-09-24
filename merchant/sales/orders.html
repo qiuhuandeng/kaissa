@@ -170,7 +170,7 @@
           <td><strong>¥1,906,000</strong><br><span class="text-muted">阶段应收按锁定报价节点</span></td>
           <td><span class="tag tag-orange">资源确认中</span><br><span class="text-muted">名单待导入，成本待确认</span></td>
           <td>07-04 10:30</td>
-          <td><div class="table-action"><a href="orders-detail.html?type=customProject&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=project&amp;quoteVersion=A&amp;amount=1906000&amp;people=80" class="table-action-primary">详情</a><a href="contracts.html?source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8">合同</a><button type="button" data-order-quick-action="收款">收款</button></div></td>
+          <td><div class="table-action"><a href="orders-detail.html?type=customProject&amp;orderNo=KSMICE20260704001&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&amp;product=%E6%9F%90%E7%A7%91%E6%8A%80%E5%85%AC%E5%8F%B82025%E5%B9%B4%E4%BC%9A%E6%AC%A7%E6%B4%B2%E8%A1%8C&amp;scheduleNo=MICE20250915001&amp;groupMode=project&amp;quoteVersion=A&amp;amount=1906000&amp;people=80" class="table-action-primary">详情</a><a href="contracts.html?orderNo=KSMICE20260704001&amp;type=project&amp;source=customProject&amp;projectNo=MICE-20250623-001&amp;customer=%E5%8C%97%E4%BA%AC%E6%9F%90%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8">合同</a><button type="button" data-order-quick-action="收款">收款</button></div></td>
         </tr>
         <tr data-tab-status="待确认 未收款" data-product-type="单项服务" data-product-source="单项服务下单" data-product-name="日本签证代办" data-channel="门店" data-store="软件园门店" data-travel-date="2026-09-01" data-package="签证 / 个人旅游签证" data-resource-status="服务待受理" data-purchase-status="材料待收" data-doc-status="材料待补" data-order-status="待确认" data-payment-status="未收款" data-service-no="SV-JP-20260711001" data-search="KSSV20260711001 李娜 日本签证代办 单项服务下单 签证 个人旅游签证 材料待收 软件园门店">
           <td><input type="checkbox" aria-label="选择订单KSSV20260711001"></td>
@@ -2179,6 +2179,13 @@
         return [row.dataset.contractStatus || '', row.dataset.projectStage || '', rowStateText(row)].join(' ');
       }
 
+      function contractEntryLabel(row) {
+        const status = row.dataset.contractStatus || row.querySelector('.orders-docs-cell strong')?.textContent || '';
+        if (/草稿|待生成|未生成/.test(status)) return '准备合同';
+        if (/待签署|待发送/.test(status)) return '办理合同';
+        return '查看合同';
+      }
+
       function docStatusText(row) {
         return [row.dataset.docStatus || '', rowStateText(row)].join(' ');
       }
@@ -2219,7 +2226,7 @@
         if (isOrderClosed(row) || isOrderCompleted(row)) return null;
         if (shouldShowSettlement(row)) return { label: '结算', kind: 'quick' };
         if (row.dataset.productType === '单团项目' && todo && todo.label === '收款') return { label: '收款', kind: 'quick' };
-        if (/待签署|待生成合同|合同待/.test(contractStatusText(row))) return { label: '合同', kind: 'quick' };
+        if (/待签署|待生成合同|合同待/.test(contractStatusText(row))) return { label: contractEntryLabel(row), kind: 'quick' };
         if (todo && todo.label === '认款') return { label: '认款', href: todo.href };
         if (/待确认|未确认/.test(stateText) && !/已确认/.test(stateText)) return { label: '转确认', kind: 'quick' };
         if (todo && todo.label === '收款') return { label: '收款', kind: 'quick' };
@@ -2274,7 +2281,7 @@
         if (active && /预留|占位|待确认|未确认/.test(stateText)) addMenuItem(items, '转确认', 'quick', primaryLabel);
         if (!/已退款/.test(stateText) && (hasReceivedMoney(row) || /待认款/.test(stateText) || completed || closed) && primaryLabel !== '收款') addMenuItem(items, '收款记录', 'quick', primaryLabel);
         if (/退款中|已退款/.test(stateText)) addMenuItem(items, '退款记录', 'quick', primaryLabel);
-        if ((active || completed) && !closed) addMenuItem(items, '合同', 'quick', primaryLabel);
+        if ((active || completed) && !closed) addMenuItem(items, contractEntryLabel(row), 'quick', primaryLabel);
         if (active) addMenuItem(items, '资料', 'quick', primaryLabel);
         if (active && !/待签署/.test(contractStatusText(row)) && !/未收款|部分收款|待认款/.test(stateText) && /已确认|执行中|服务中|资料待补|名单待导入|待船票|资料已齐/.test(stateText)) addMenuItem(items, '执行', 'quick', primaryLabel);
         if (active) addMenuItem(items, '售后', 'aftersales', primaryLabel);
@@ -4241,8 +4248,8 @@
 
       function openLightAction(action, row) {
         var data = readOrder(row);
-        if (action === '合同') {
-          const query = new URLSearchParams({orderNo:data.orderNo, type:detailType(data.type), customer:data.customer, product:data.product, store:row.dataset.store || ''});
+        if (/^(合同|准备合同|办理合同|查看合同)$/.test(action)) {
+          const query = new URLSearchParams({orderNo:data.orderNo, type:detailType(data.type), customer:data.customer, product:data.product, amount:moneyNumber(data.receivable), store:row.dataset.store || ''});
           window.caesarNavigateTo('contracts.html?' + query.toString()); return;
         }
         currentLightAction = action;
@@ -4702,7 +4709,7 @@
             openDetailTab(row, 'fulfillment');
             return;
           }
-          if (/^(合同|资料|结算|转确认|释放|取消订单|作废订单)$/.test(button.dataset.orderQuickAction)) {
+          if (/^(合同|准备合同|办理合同|查看合同|资料|结算|转确认|释放|取消订单|作废订单)$/.test(button.dataset.orderQuickAction)) {
             openLightAction(button.dataset.orderQuickAction, row);
             return;
           }

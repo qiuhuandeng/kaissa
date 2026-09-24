@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>门店管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../../shared/style.css">
+  <link rel="stylesheet" href="../../../shared/contract-settings.css">
 </head>
 <body>
   <script src="../../../shared/nav-merchant.js"></script>
@@ -169,7 +170,7 @@
             <div class="store-config-summary-label">门店</div><div id="salesConfigStoreName" class="store-config-summary-value">软件园门店</div>
             <div class="store-config-summary-label">门店类型</div><div id="salesConfigStoreType" class="store-config-summary-value">自营门店</div>
             <div class="store-config-summary-label">档案状态</div><div class="store-config-summary-value">已通过</div>
-            <div class="store-config-summary-label">规则来源</div><div id="salesConfigRuleSource" class="store-config-summary-value">继承公司规则，可设置门店例外</div>
+            <div class="store-config-summary-label">规则来源</div><div id="salesConfigRuleSource" class="store-config-summary-value">引用公司已批准规则</div>
           </div>
         </section>
         <div data-config-scope-source hidden>
@@ -315,13 +316,7 @@
           </div>
         </div>
 
-        <section class="order-desc-card">
-          <div class="drawer-section-head"><h2 class="detail-section-title">销售政策</h2></div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label" for="configDefaultContractSubject">默认签约主体</label><select id="configDefaultContractSubject" class="form-control"><option selected>福建凯撒</option></select></div>
-            <div class="form-group"><label class="form-label" for="configContractTemplate">合同模板</label><select id="configContractTemplate" class="form-control"><option>标准国内/出境旅游合同</option><option>邮轮旅游合同</option><option>单项服务确认单</option><option>MICE项目合同</option></select></div>
-          </div>
-        </section>
+        <section class="order-desc-card" data-cs-page="store"></section>
 
         <section class="order-desc-card">
           <div class="drawer-section-head"><h2 class="detail-section-title">订单与合同控制</h2></div>
@@ -343,19 +338,6 @@
                   <label><input type="checkbox" data-order-capability="submit" checked> 允许提交订单</label>
                   <label><input type="checkbox" data-order-capability="reserve" checked> 允许预留订单 <span class="store-sales-rule-hours">保留 <input id="permissionReserveHours" class="form-control" type="number" min="1" step="1" value="24" data-order-hours="reserve"> 小时</span></label>
                   <label><input type="checkbox" data-order-capability="occupy" checked> 允许手动占位 <span class="store-sales-rule-hours">有效 <input id="permissionOccupyHours" class="form-control" type="number" min="1" step="1" value="48" data-order-hours="occupy"> 小时</span></label>
-                </div>
-              </div>
-            </div>
-            <div class="store-rule-group" data-store-rule-group="contract">
-              <div class="store-rule-group-main">
-                <div><strong>合同控制</strong><span data-rule-summary="contract">可生成合同 / 发合同前需先交团费</span></div>
-                <button class="table-link" type="button" data-toggle-store-rule>调整</button>
-              </div>
-              <div class="store-rule-group-detail" hidden>
-                <div class="checkbox-row">
-                  <label><input type="checkbox" data-rule-summary-text="可生成合同" checked> 允许生成合同</label>
-                  <label><input type="checkbox" data-rule-summary-text="发合同前需先交团费" checked> 发合同前需先交团费</label>
-                  <label><input type="checkbox" data-rule-summary-text="允许未收款确认"> 允许未收款确认</label>
                 </div>
               </div>
             </div>
@@ -1474,6 +1456,7 @@
 
       function openPermissionDrawer(row) {
         activePermissionRow = row;
+        if (window.ContractStoreConfig) window.ContractStoreConfig.reset();
         mountConfigScopeRule();
         restoreConfigForm(permissionModal, configDefaults.sales);
         syncConfigScopeFromRow(row);
@@ -1483,8 +1466,9 @@
         syncProductScopeRanges(permissionModal);
         setSummaryText('salesConfigStoreName', storeNameFromRow(row));
         setSummaryText('salesConfigStoreType', row && row.dataset.type ? row.dataset.type : '自营门店');
-        setSummaryText('salesConfigRuleSource', row && row.dataset.type === '加盟门店' ? '加盟授权规则，需审批后生效' : '继承公司规则，可设置门店例外');
+        setSummaryText('salesConfigRuleSource', row && row.dataset.type === '加盟门店' ? '加盟门店引用获准规则，调整需审批' : '引用公司已批准规则');
         openConfigApplication('sales', permissionModal);
+        if (window.ContractStoreConfig) window.ContractStoreConfig.refresh();
         window.caesarUI.openLayer(permissionModal);
       }
 
@@ -1618,6 +1602,7 @@
             notify('请补齐保证金约定金额、应缴日期和退还条件', 'warning'); return;
           }
           if (kind === 'sales') {
+            if (window.ContractStoreConfig) { var contractGaps=window.ContractStoreConfig.validate(); if(contractGaps.length){notify(contractGaps.join('；'), 'warning');return;} }
             var invalidHours = Array.from(modal.querySelectorAll('[data-order-hours]')).some(function (field) {
               var enabled = modal.querySelector('[data-order-capability="' + field.dataset.orderHours + '"]');
               return enabled.checked && (!Number.isInteger(Number(field.value)) || Number(field.value) < 1);
@@ -2027,6 +2012,9 @@
       mountConfigScopeRule();
       syncStoreTypePanels();
       configDefaults.sales = captureConfigForm(permissionModal);
+      window.addEventListener('contract-settings-ready', function () {
+        configDefaults.sales = captureConfigForm(permissionModal);
+      });
       configDefaults.finance = captureConfigForm(financeConfigModal);
       syncSettlementFields();
       syncPaymentMultis();
@@ -2041,5 +2029,7 @@
       applyFilters();
     })();
   </script>
+  <script src="../../../shared/contract-settings-data.js"></script>
+  <script src="../../../shared/contract-settings-ui.js"></script>
 </body>
 </html>
