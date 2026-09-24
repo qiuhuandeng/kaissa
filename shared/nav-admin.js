@@ -1113,9 +1113,11 @@
   }
 
   function isPjaxLink(link) {
+    if (document.documentElement.dataset.fullPageNavigation === "true") return false;
     if (!link || link.target === "_blank" || link.hasAttribute("download")) return false;
 
     const url = new URL(link.getAttribute("href"), currentRouteUrl || window.location.href);
+    if (url.pathname.endsWith("/approval-template-edit.html")) return false;
     const isSameAppOrigin = window.location.protocol === "file:"
       ? url.protocol === "file:"
       : url.origin === window.location.origin;
@@ -1139,7 +1141,7 @@
 
   function navigateTo(href) {
     const target = resolveNavigationTarget(href);
-    if (target.protocol === "file:") {
+    if (target.protocol === "file:" || document.documentElement.dataset.fullPageNavigation === "true" || target.pathname.endsWith("/approval-template-edit.html")) {
       window.location.href = target.href;
       return;
     }

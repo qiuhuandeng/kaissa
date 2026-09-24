@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const {page,click,layer,close}=require('./check-approval-config-dom.cjs');
+(async()=>{let p=await page('admin/approval-template-edit.html?id=template-0');
+assert(!p.d.querySelector('[data-ac=node-more],.ac-fork-more'));
+let cards=p.d.querySelectorAll('.ac-node-approval');const count=cards.length,original=cards[0].dataset.nodeId;
+click(p,'[data-ac=node-copy]',cards[0]);cards=p.d.querySelectorAll('.ac-node-approval');assert.equal(cards.length,count+1);assert.notEqual(cards[1].dataset.nodeId,original);assert(cards[1].textContent.includes('副本'));
+click(p,'[data-ac=edit-node]',cards[1]);assert(layer(p).querySelector('[name=source]'));close(p);
+click(p,'[data-ac=node-delete]',cards[1]);close(p);assert.equal(p.d.querySelectorAll('.ac-node-approval').length,count+1);
+click(p,'[data-ac=node-delete]',p.d.querySelectorAll('.ac-node-approval')[1]);click(p,'[data-ac-confirm]',layer(p));assert.equal(p.d.querySelectorAll('.ac-node-approval').length,count);
+click(p,'[data-ac=copy-condition]');click(p,'[data-condition-save]',layer(p));assert.equal(p.d.querySelectorAll('.ac-branch').length,3);
+click(p,'[data-ac=delete-condition]');click(p,'[data-ac-confirm]',layer(p));assert.equal(p.d.querySelectorAll('.ac-branch').length,2);
+assert(!p.d.querySelector('.ac-default-card .ac-node-actions'));
+click(p,'[data-ac=delete-condition]');assert(layer(p).textContent.includes('整个分支组'));click(p,'[data-ac-confirm]',layer(p));assert.equal(p.d.querySelectorAll('.ac-branch').length,0);assert.deepEqual(p.errors,[]);p.w.close();
+p=await page('admin/approval-template-edit.html?id=template-0&mode=view&version=1');assert(!p.d.querySelector('.ac-node-actions'));assert.deepEqual(p.errors,[]);p.w.close();console.log('PASS 节点编辑、独立复制、删除确认及取消、分支复制删除、兜底保护和只读；悬停视觉未验');
+})().catch(e=>{console.error(e);process.exitCode=1;});
