@@ -325,7 +325,6 @@
         { title: "我发起的", href: "approval/approvals.html?view=mine" },
         { title: "抄送我", href: "approval/approvals.html?view=cc" },
         { title: "审批总览", href: "approval/approvals.html?view=overview" },
-        { title: "审批配置", href: "approval/approvals.html?view=config" },
       ],
     },
     {

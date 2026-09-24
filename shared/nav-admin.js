@@ -15,6 +15,7 @@
         { title: "业务角色", href: "merchant-roles.html" },
         { title: "岗位管理", href: "positions.html" },
         { title: "员工账号", href: "employees.html" },
+        { title: "审批配置", href: "approval-config.html" },
       ],
     },
     {
@@ -157,6 +158,7 @@
   }
 
   const pageOwners = {
+    "approval-template-edit.html": { href: "approval-config.html", title: "审批模板编辑" },
     "supplier-detail.html": { href: "suppliers.html", title: "供应商详情" },
     "supplier-contract-template-edit.html": { href: "supplier-contract-templates.html", title: "协议模板编辑" },
     "org_company_modal.html": { href: "org.html", title: "编辑主体公司" },

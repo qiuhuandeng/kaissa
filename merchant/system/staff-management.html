@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>员工任职 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/approval-org-data.js"></script>
+  <script src="../../shared/approval-org-workflow.js"></script>
+  <script src="../../shared/org-admin-ui.js"></script>
+  <script src="../../shared/approval-org-workflow-ui.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -97,7 +101,7 @@
               <td><strong>澳洲部</strong><span class="text-muted">长线中心 / 产品运营</span></td>
               <td><strong>运营专员</strong><span class="text-muted">资源、产品中心、单项服务、审批</span></td>
               <td><strong>当前部门</strong><span class="text-muted">产品资料和单项服务协同</span></td>
-              <td><span class="tag tag-orange">待开通</span></td>
+              <td><span class="tag tag-green">启用</span></td>
               <td><div class="table-action"><button class="table-action-primary" type="button" data-open-staff-view>详情</button></div></td>
             </tr>
             <tr data-employee="陈红" data-org="福建凯撒 / 厦门分公司 / 厦门思明区门市部 / 观音山门店" data-store="观音山门店" data-store-role="销售顾问" data-store-link="../sales/store/detail.html?org=store-xiamen-c" data-position="销售顾问" data-role="门店店员" data-scope="本人销售数据，不查看门店资金明细" data-modules="销售中心、客户、合同" data-business-impact="本人客户、本人订单、合同发送、售后发起">
@@ -360,6 +364,7 @@
     </div>
   </div>
 
+  <script src="../../shared/approval-staff-bridge.js"></script>
   <script>
     (function () {
       var onboard = document.querySelector("[data-onboard-drawer]");
@@ -416,7 +421,7 @@
         var adjustScope = document.getElementById("adjustScope");
         var roleAuthEmployee = document.getElementById("roleAuthEmployee");
         var roleAuthRole = document.getElementById("roleAuthRole");
-        if (employee) employee.value = row.dataset.employee || "";
+        if (employee) { employee.value = row.dataset.employee || ""; employee.dataset.personId = row.dataset.personId || ""; employee.dataset.jobId = row.dataset.jobId || ""; }
         if (fromOrg) fromOrg.value = row.dataset.org || "";
         if (currentRole) currentRole.value = row.dataset.position || "";
         setSelectValue(adjustToOrg, row.dataset.store || "");
@@ -463,14 +468,16 @@
       });
       document.querySelectorAll("[data-submit-onboard]").forEach(function (button) {
         button.addEventListener("click", function () {
+          if (!window.ApprovalOrgMaintenance.submitAppointment("onboard")) return;
           window.caesarUI.closeLayer(onboard);
-          notify("新增任职已提交，生效后同步门店成员与权限");
+          notify("新增任职已提交，审批通过后生效");
         });
       });
       document.querySelectorAll("[data-submit-staff-adjust]").forEach(function (button) {
         button.addEventListener("click", function () {
+          if (!window.ApprovalOrgMaintenance.submitAppointment("adjust")) return;
           window.caesarUI.closeLayer(adjust);
-          notify("任职调整已提交，生效后同步门店成员与权限");
+          notify("任职调整已提交，审批通过后生效");
         });
       });
       document.querySelectorAll("[data-submit-role-auth]").forEach(function (button) {
@@ -489,5 +496,6 @@
       document.getElementById('onboardPhone').value = person.phone;
     });
   </script>
+  <script src="../../shared/approval-org-maintenance.js"></script>
 </body>
 </html>

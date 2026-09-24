@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>组织架构 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/approval-org-data.js"></script>
+  <script src="../../shared/approval-org-workflow.js"></script>
+  <script src="../../shared/org-admin-ui.js"></script>
+  <script src="../../shared/approval-org-workflow-ui.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -65,11 +69,11 @@
           <div class="org-admin-data-card">
             <div class="org-admin-table-head">
               <div class="org-admin-table-context"><strong data-current-name-copy>福建凯撒</strong><span>成员任职</span></div>
-              <button class="btn btn-secondary" type="button" data-open-staff-drawer>绑定员工</button>
+              <a class="btn btn-secondary" href="staff-management.html">员工任职</a>
             </div>
             <div class="table-wrap list-surface-table list-table-with-pagination">
               <table>
-                <thead><tr><th>员工</th><th>岗位</th><th>角色</th><th>数据范围</th><th>状态</th><th>操作</th></tr></thead>
+                <thead><tr><th>员工</th><th>任职类型</th><th>直属上级</th><th>任职部门</th><th>账号状态</th></tr></thead>
                 <tbody data-members-body>
                   <tr><td>周伟</td><td>产品经理</td><td>产品经理</td><td>当前部门</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>
                   <tr><td>吴芳</td><td>签证运营</td><td>运营专员</td><td>当前中心</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>
@@ -130,7 +134,8 @@
           <div class="form-group"><label class="form-label" for="orgRequestTarget">目标上级组织</label><select class="form-control" id="orgRequestTarget"><option>福建凯撒</option><option>厦门分公司</option><option>产品中心</option><option>长线中心</option></select></div>
           <div class="form-group"><label class="form-label" for="orgRequestOwner">负责人</label><input class="form-control" id="orgRequestOwner" type="search" value="周伟"></div>
           <div class="form-group"><label class="form-label" for="orgRequestDate">生效日期</label><input class="form-control" id="orgRequestDate" type="date" value="2026-07-05"></div>
-          <div class="form-group"><label class="form-label" for="orgRequestFlow">审批流程</label><input class="form-control" id="orgRequestFlow" type="text" value="部门负责人 → 主体负责人 → 租户管理员" readonly></div>
+          <div class="form-group"><label class="form-label" for="orgRequestFlow">审批流程</label><input class="form-control" id="orgRequestFlow" type="text" value="组织变更核准" readonly></div>
+          <div class="form-group"><label class="form-label" for="orgRequestOrgType">组织类型</label><select class="form-control" id="orgRequestOrgType"><option value="department">部门</option><option value="storeDepartment">门市部</option></select></div>
           <div class="form-group form-group-full"><label class="form-label" for="orgRequestName">新组织名称</label><input class="form-control" id="orgRequestName" type="text" value="欧洲产品运营部"></div>
           <div class="form-group form-group-full"><label class="form-label" for="orgRequestReason">调整原因 <span class="req">*</span></label><textarea class="form-control" id="orgRequestReason" rows="4" placeholder="请输入业务背景、影响范围和期望生效时间"></textarea></div>
           <div class="form-group form-group-full"><label class="form-label" for="orgRequestAttachment">附件说明</label><input class="form-control" id="orgRequestAttachment" type="text" placeholder="可填写组织调整邮件、批复编号或会议纪要编号"></div>
@@ -170,73 +175,14 @@
       var tree = document.querySelector("[data-org-tree]");
       if (!tree) return;
 
-      var orgTreeData = [{
-        name: "福建凯撒",
-        type: "主体",
-        path: "福建凯撒",
-        owner: "张建国",
-        status: "启用",
-        scope: "本主体合同、财务、行政和数据边界",
-        open: true,
-        active: true,
-        children: [{
-          name: "厦门分公司",
-          type: "公司",
-          path: "福建凯撒 > 厦门分公司",
-          owner: "刘洋",
-          status: "启用",
-          scope: "无独立主体资质，责任由福建主体承担，承接厦门区域门店",
-          open: true,
-          children: [{
-            name: "厦门思明区门市部",
-            type: "门市部",
-            path: "福建凯撒 > 厦门分公司 > 厦门思明区门市部",
-            owner: "孙丽",
-            status: "启用",
-            scope: "公司内设门店管理部门",
-            open: true,
-            children: [
-              { name: "软件园门店", type: "门店", path: "福建凯撒 > 厦门分公司 > 厦门思明区门市部 > 软件园门店", owner: "孙丽", status: "营业中", scope: "店长可见门店合同主体、结算价规则和全店数据；店员仅看本人销售数据", storeOrgId: "store-xiamen-a", storeName: "软件园门店", storeSubject: "福建凯撒", storeContract: "福建凯撒", storePayment: "福建主体聚合支付商户", storePricePolicy: "店长可见门店结算价规则；店员不可见结算价", storeSalesRule: "参团游/邮轮 · 可预留 · 可发合同", storeFinance: "本主体收款 / 门店订单归属" },
-              { name: "文灶门店", type: "门店", path: "福建凯撒 > 厦门分公司 > 厦门思明区门市部 > 文灶门店", owner: "郑华", status: "营业中", scope: "本门店订单、客户和销售数据", storeOrgId: "store-xiamen-b", storeName: "文灶门店", storeSubject: "福建凯撒", storeContract: "福建凯撒", storePayment: "福建主体聚合支付商户", storePricePolicy: "店长可见门店结算价规则；店员不可见结算价", storeSalesRule: "参团游/短线 · 可预留 · 可发合同", storeFinance: "本主体收款 / 门店订单归属" },
-              { name: "观音山门店", type: "门店", path: "福建凯撒 > 厦门分公司 > 厦门思明区门市部 > 观音山门店", owner: "陈红", status: "营业中", scope: "本门店订单、客户和销售数据", storeOrgId: "store-xiamen-c", storeName: "观音山门店", storeSubject: "福建凯撒", storeContract: "福建凯撒", storePayment: "福建主体聚合支付商户", storePricePolicy: "店长可见门店结算价规则；店员不可见结算价", storeSalesRule: "参团游/自由行 · 可预留 · 可发合同", storeFinance: "本主体收款 / 门店订单归属" }
-            ]
-          }]
-        }, {
-          name: "泉州分公司",
-          type: "公司",
-          path: "福建凯撒 > 泉州分公司",
-          owner: "陈刚",
-          status: "启用",
-          scope: "无独立主体资质，责任由福建主体承担，承接泉州区域门店",
-          open: true,
-          children: [{
-            name: "门市部",
-            type: "门市部",
-            path: "福建凯撒 > 泉州分公司 > 门市部",
-            owner: "陈刚",
-            status: "启用",
-            scope: "公司内设门店管理部门",
-            open: true,
-            children: [
-              { name: "泉州丰泽门店", type: "门店", path: "福建凯撒 > 泉州分公司 > 门市部 > 泉州丰泽门店", owner: "李梅", status: "营业中", scope: "本门店订单、客户和销售数据", storeOrgId: "store-quanzhou-a", storeName: "泉州丰泽门店", storeSubject: "福建凯撒", storeContract: "福建凯撒", storePayment: "福建主体聚合支付商户", storePricePolicy: "店长可见门店结算价规则；店员不可见结算价", storeSalesRule: "参团游/邮轮 · 可预留 · 可发合同", storeFinance: "本主体收款 / 门店订单归属" },
-              { name: "泉州鲤城门店", type: "门店", path: "福建凯撒 > 泉州分公司 > 门市部 > 泉州鲤城门店", owner: "吴芳", status: "营业中", scope: "本门店订单、客户和销售数据", storeOrgId: "store-quanzhou-b", storeName: "泉州鲤城门店", storeSubject: "福建凯撒", storeContract: "福建凯撒", storePayment: "福建主体聚合支付商户", storePricePolicy: "店长可见门店结算价规则；店员不可见结算价", storeSalesRule: "参团游/自由行 · 可预留", storeFinance: "本主体收款 / 门店订单归属" },
-              { name: "泉州东海门店", type: "门店", path: "福建凯撒 > 泉州分公司 > 门市部 > 泉州东海门店", owner: "周伟", status: "营业中", scope: "本门店订单、客户和销售数据", storeOrgId: "store-quanzhou-c", storeName: "泉州东海门店", storeSubject: "福建凯撒", storeContract: "福建凯撒", storePayment: "福建主体聚合支付商户", storePricePolicy: "店长可见门店结算价规则；店员不可见结算价", storeSalesRule: "参团游/单项服务 · 可预留", storeFinance: "本主体收款 / 门店订单归属" }
-            ]
-          }]
-        },
-        { name: "福州分公司", type: "公司", path: "福建凯撒 > 福州分公司", owner: "待配置", status: "待完善", scope: "无独立主体资质，责任由福建主体承担" },
-        { name: "漳州分公司", type: "公司", path: "福建凯撒 > 漳州分公司", owner: "待配置", status: "待完善", scope: "无独立主体资质，责任由福建主体承担" },
-        { name: "产品中心", type: "中心", path: "福建凯撒 > 产品中心", owner: "待配置", status: "待完善", scope: "产品线、方案和外采包装统筹" },
-        { name: "长线中心", type: "中心", path: "福建凯撒 > 长线中心", owner: "陈琳", status: "启用", scope: "产品职能部门，非分公司性质", open: true, children: [
-          { name: "欧洲部", type: "部门", path: "福建凯撒 > 长线中心 > 欧洲部", owner: "周伟", status: "启用", scope: "欧洲产品和线路" },
-          { name: "澳洲部", type: "部门", path: "福建凯撒 > 长线中心 > 澳洲部", owner: "吴芳", status: "启用", scope: "澳洲产品和线路" },
-          { name: "美洲部", type: "部门", path: "福建凯撒 > 长线中心 > 美洲部", owner: "赵明", status: "启用", scope: "美洲产品和线路" }
-        ] },
-        { name: "短线中心 / 销售中心", type: "中心", path: "福建凯撒 > 短线中心 / 销售中心", owner: "黄敏", status: "启用", scope: "短线产品与销售协同" }
-        ]
-      }];
+      var sharedOrg = window.ApprovalOrgData.read();
+      var orgTreeData = [window.ApprovalOrgWorkflow.companyTree(sharedOrg, "fj")];
+      var storeDetails = {"fj-store": {"storeOrgId": "store-xiamen-a", "storeName": "软件园门店", "storeSubject": "福建凯撒", "storeContract": "福建凯撒", "storePayment": "福建主体聚合支付商户", "storePricePolicy": "店长可见门店结算价规则；店员不可见结算价", "storeSalesRule": "参团游/邮轮 · 可预留 · 可发合同", "storeFinance": "本主体收款 / 门店订单归属"}, "fj-org-3": {"storeOrgId": "store-xiamen-b", "storeName": "文灶门店", "storeSubject": "福建凯撒", "storeContract": "福建凯撒", "storePayment": "福建主体聚合支付商户", "storePricePolicy": "店长可见门店结算价规则；店员不可见结算价", "storeSalesRule": "参团游/短线 · 可预留 · 可发合同", "storeFinance": "本主体收款 / 门店订单归属"}, "fj-org-4": {"storeOrgId": "store-xiamen-c", "storeName": "观音山门店", "storeSubject": "福建凯撒", "storeContract": "福建凯撒", "storePayment": "福建主体聚合支付商户", "storePricePolicy": "店长可见门店结算价规则；店员不可见结算价", "storeSalesRule": "参团游/自由行 · 可预留 · 可发合同", "storeFinance": "本主体收款 / 门店订单归属"}, "fj-org-7": {"storeOrgId": "store-quanzhou-a", "storeName": "泉州丰泽门店", "storeSubject": "福建凯撒", "storeContract": "福建凯撒", "storePayment": "福建主体聚合支付商户", "storePricePolicy": "店长可见门店结算价规则；店员不可见结算价", "storeSalesRule": "参团游/邮轮 · 可预留 · 可发合同", "storeFinance": "本主体收款 / 门店订单归属"}, "fj-org-8": {"storeOrgId": "store-quanzhou-b", "storeName": "泉州鲤城门店", "storeSubject": "福建凯撒", "storeContract": "福建凯撒", "storePayment": "福建主体聚合支付商户", "storePricePolicy": "店长可见门店结算价规则；店员不可见结算价", "storeSalesRule": "参团游/自由行 · 可预留", "storeFinance": "本主体收款 / 门店订单归属"}, "fj-org-9": {"storeOrgId": "store-quanzhou-c", "storeName": "泉州东海门店", "storeSubject": "福建凯撒", "storeContract": "福建凯撒", "storePayment": "福建主体聚合支付商户", "storePricePolicy": "店长可见门店结算价规则；店员不可见结算价", "storeSalesRule": "参团游/单项服务 · 可预留", "storeFinance": "本主体收款 / 门店订单归属"}};
+      function labels(nodes) { nodes.forEach(function(n) { if(storeDetails[n.id]) Object.assign(n,storeDetails[n.id]); n.type = n.type === "company" ? "主体" : n.label; if(n.children) labels(n.children); }); }
+      labels(orgTreeData); orgTreeData[0].active = true;
 
       function setDataset(element, node) {
+        element.dataset.approvalOrgId = node.id || "";
         element.dataset.nodeName = node.name || "";
         element.dataset.nodeType = node.type || "";
         element.dataset.nodePath = node.path || "";
@@ -336,33 +282,16 @@
       }
 
       function renderMembers(node, type) {
-        if (type === "门店") {
-          var owner = node.dataset.nodeOwner || "门店负责人";
-          renderRows(membersBody,
-            '<tr><td>' + escapeHtml(owner) + '</td><td>店长</td><td>门店店长</td><td>本门店全量数据、合同主体、结算价规则</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>' +
-            '<tr><td>销售顾问</td><td>销售顾问</td><td>门店店员</td><td>本人客户和订单，不可见结算价</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>' +
-            '<tr><td>门店财务</td><td>财务联系人</td><td>门店财务</td><td>本门店收款、预存和对账</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>'
-          );
-          return;
-        }
-        if (type === "公司" || type === "门市部") {
-          renderRows(membersBody,
-            '<tr><td>' + escapeHtml(node.dataset.nodeOwner || "组织负责人") + '</td><td>组织负责人</td><td>区域/门店管理</td><td>当前组织及下级门店</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>' +
-            '<tr><td>运营专员</td><td>运营专员</td><td>门店运营</td><td>当前组织经营数据</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>'
-          );
-          return;
-        }
-        if (type === "中心") {
-          renderRows(membersBody,
-            '<tr><td>' + escapeHtml(node.dataset.nodeOwner || "中心负责人") + '</td><td>中心负责人</td><td>中心管理员</td><td>当前中心及下级组织</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>' +
-            '<tr><td>运营专员</td><td>运营专员</td><td>运营专员</td><td>当前中心业务对象</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>'
-          );
-          return;
-        }
-        renderRows(membersBody,
-          '<tr><td>周伟</td><td>产品经理</td><td>产品经理</td><td>当前部门</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>' +
-          '<tr><td>吴芳</td><td>签证运营</td><td>运营专员</td><td>当前中心</td><td><span class="tag tag-green">启用</span></td><td><div class="table-action"><a class="table-action-primary" href="staff-management.html">详情</a></div></td></tr>'
-        );
+        var O = window.ApprovalOrgData, org = O.read(), department = node.dataset.approvalOrgId;
+        var jobs = O.appointmentsAt(org).filter(function (a) { return a.company === "fj" && O.effective(a, O.today()) && (!department || a.department === department); });
+        renderRows(membersBody, jobs.length ? jobs.map(function (a) {
+          var p = org.people.find(function (p) { return p.id === a.person; });
+          var manager = O.appointmentsAt(org).find(function (j) { return j.id === a.manager; });
+          var supervisor = org.people.find(function (p) { return p.id === (manager && manager.person); });
+          return '<tr data-member-person="' + escapeHtml(a.person) + '"><td>' + escapeHtml(p ? p.name : "未找到员工") + '</td><td>' + (a.primary ? "主任职" : "兼任") + '</td><td>' + escapeHtml(supervisor ? supervisor.name : "未设置") + '</td><td>' + escapeHtml(O.departmentPath(org, a.department)) + '</td><td><span class="tag ' + (p && p.active ? 'tag-green' : 'tag-gray') + '">' + (p && p.active ? '启用' : '停用') + '</span></td></tr>';
+        }).join("") : '<tr><td colspan="5">当前组织暂无有效任职</td></tr>');
+        var count = document.querySelector('[data-org-panel="members"] .pagination');
+        if (count) count.textContent = "共 " + jobs.length + " 项有效任职";
       }
 
       function renderScope(node, type) {
@@ -431,7 +360,7 @@
       function syncRequestCurrent() {
         var current = document.getElementById("orgRequestCurrent");
         var owner = document.getElementById("orgRequestOwner");
-        if (current && activeNode) current.value = activeNode.dataset.nodeName || current.value;
+        if (current && activeNode) current.value = activeNode.dataset.approvalOrgId || current.value;
         if (owner && activeNode) owner.value = activeNode.dataset.nodeOwner || owner.value;
       }
 
@@ -461,8 +390,9 @@
       });
 
       document.querySelector("[data-submit-org-request]").addEventListener("click", function () {
+        if (!window.ApprovalOrgMaintenance.submitOwnerRequest()) return;
         window.caesarUI.closeLayer(orgRequestDrawer);
-        notify("组织调整申请已提交，审批通过后自动生效");
+        notify("组织调整申请已提交，审批通过后生效");
       });
 
       document.querySelector("[data-submit-staff]").addEventListener("click", function () {
@@ -507,5 +437,6 @@
       applyNode(activeNode);
     })();
   </script>
+  <script src="../../shared/approval-org-maintenance.js"></script>
 </body>
 </html>

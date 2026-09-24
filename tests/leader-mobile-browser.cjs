@@ -1,0 +1,52 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+// 启动本地静态服务与独立 Chrome 调试实例后运行；只使用演示数据。
+const browserBase = process.env.LEADER_BROWSER_URL || 'http://127.0.0.1:19324';
+const siteBase = process.env.LEADER_SITE_URL || 'http://127.0.0.1:8765';
+(async () => {
+const target = await (await fetch(browserBase + '/json/new?about:blank', {method:'PUT'})).json();
+const ws = new WebSocket(target.webSocketDebuggerUrl); const pending = new Map(); let seq = 0; const errors=[];
+await new Promise(r=>ws.onopen=r);
+ws.onmessage=e=>{const m=JSON.parse(e.data); if(m.method==='Runtime.exceptionThrown') errors.push(m.params.exceptionDetails); if(m.id){const p=pending.get(m.id);pending.delete(m.id); m.error?p.reject(m.error):p.resolve(m.result);}};
+const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++seq;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});
+const run=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.text);return r.result.value;};
+const wait=()=>run('new Promise(r=>setTimeout(r,100))');
+const click=async s=>{assert.ok(await run(`!!document.querySelector(${JSON.stringify(s)})`),s); await run(`document.querySelector(${JSON.stringify(s)}).click()`); await wait();};
+const fill=async(s,v)=>run(`document.querySelector(${JSON.stringify(s)}).value=${JSON.stringify(v)}; document.querySelector(${JSON.stringify(s)}).dispatchEvent(new Event('input',{bubbles:true}))`);
+const text=()=>run('document.getElementById("leaderApp").innerText');
+const navigate=async hash=>{await run('location.hash='+JSON.stringify(hash));await wait();};
+const screen=async name=>{await run('document.getElementById("leaderToast").classList.remove("show")'); await run('new Promise(r=>setTimeout(r,180))'); const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('/tmp/leader-mobile-'+name+'.png',Buffer.from(shot.data,'base64'));};
+const overflow=async()=>assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'), 'no horizontal overflow');
+await send('Runtime.enable');await send('Page.enable');await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+await send('Page.navigate',{url:siteBase + '/leader/index.html'});
+await run('new Promise(r=>{const f=()=>document.getElementById("loginForm")?r():setTimeout(f,20);f()})');
+await screen('login');
+await click('#loginForm button[type=submit]');assert.match(await text(),/11位手机号/);
+await fill('#phone','13811111111');await fill('#code','123456');await click('#loginForm button[type=submit]');assert.match(await text(),/未关联领队档案/);
+await click('[data-account="0"]');await fill('#code','000000');await click('#loginForm button[type=submit]');assert.match(await text(),/验证码不正确/);
+await fill('#code','123456');await click('#loginForm button[type=submit]');assert.match(await text(),/2项排团待确认/);assert.equal(await run('document.querySelectorAll(".lm-group-card").length'),2);await overflow();await screen('home');
+for(const [status,count] of [['已确认',1],['出团中',1],['全部',6],['待确认',2]]){await click('[data-filter="'+status+'"]');assert.equal(await run('document.querySelectorAll(".lm-group-card").length'),count);}
+await fill('#groupSearch','没有这个团');assert.match(await text(),/未找到相关团组/);await fill('#groupSearch','欧洲');assert.equal(await run('document.querySelectorAll(".lm-group-card").length'),1);
+await click('.lm-group-card');await click('[data-action=confirm]');await click('[data-action=close-dialog]');assert.match(await text(),/待确认/);await click('[data-action=confirm]');await click('[data-action=dialog-submit]');assert.equal(await run('document.querySelectorAll("[data-action=confirm]").length'),0);assert.match(await text(),/领队确认排团/);
+await navigate('group/EU-FRA-20260720-001/itinerary');assert.equal(await run('document.querySelectorAll(".lm-day").length'),13);await click('.lm-day:nth-child(2) summary');assert.equal(await run('document.querySelectorAll(".lm-day[open]").length'),2);
+await navigate('group/EU-FRA-20260720-001/people');assert.equal(await run('document.querySelectorAll(".lm-person").length'),6);await click('#peopleFilter');assert.equal(await run('document.querySelectorAll(".lm-person").length'),3);await fill('#peopleSearch','孙丽');assert.equal(await run('document.querySelectorAll(".lm-person").length'),1);await click('[data-person="孙丽"]');assert.match(await run('document.querySelector("dialog").innerText'),/13800001003/);await click('[data-action=close-dialog]');await screen('people');
+await navigate('group/EU-FRA-20260720-001/resources');assert.match(await text(),/部分确认/);assert.match(await text(),/司机姓名、车牌待回传/);
+await navigate('group/EU-FRA-20260720-001/documents');assert.ok(await run('document.querySelector("[data-doc=hotel]").disabled'));await click('[data-doc=notice]');assert.match(await run('document.querySelector("dialog").innerText'),/2026-10-20 07:00/);await click('[data-action=close-dialog]');await click('[data-doc=itinerary]');assert.equal(await run('document.querySelectorAll(".lm-document-day").length'),13);await click('[data-action=close-dialog]');
+await navigate('group/JP-KIX-20261012-001/overview');assert.match(await text(),/调整前/);assert.match(await text(),/07:00/);assert.match(await text(),/08:30/);await screen('adjusted');await click('[data-action=confirm]');await click('[data-action=dialog-submit]');assert.match(await text(),/已确认调整/);assert.match(await text(),/领队确认调整/);
+await navigate('group/EU-DE-20260930-002/people');assert.match(await text(),/本次派团已取消/);assert.equal(await run('document.querySelectorAll("[data-action=confirm],.lm-person,.lm-detail-tabs").length'),0);await screen('canceled');
+await navigate('group/CR-MED-20261110-001/overview');assert.match(await text(),/更换领队为王强/);assert.equal(await run('document.querySelectorAll("[data-action=confirm]").length'),0);
+await navigate('group/not-owned/overview');assert.match(await text(),/未找到可查看的排团/);
+await navigate('messages');assert.equal(await run('document.querySelectorAll(".lm-message").length'),6);await click('[data-action=read-all]');assert.equal(await run('document.querySelectorAll(".lm-unread").length'),0);
+await navigate('profile');await click('[data-action=logout]');await click('[data-action=dialog-submit]');await click('[data-account="1"]');await click('#loginForm button[type=submit]');assert.match(await text(),/暂无待确认排团/);await navigate('group/EU-FRA-20260720-001/overview');assert.match(await text(),/未找到可查看的排团/);await navigate('messages');assert.match(await text(),/暂无排团消息/);
+await navigate('profile');await click('[data-action=logout]');await click('[data-action=dialog-submit]');await click('[data-account="0"]');await click('#loginForm button[type=submit]');assert.match(await text(),/0项排团待确认/);
+await send('Page.reload');await wait();assert.match(await text(),/0项排团待确认/);await navigate('profile');await click('[data-action=reset]');await click('[data-action=dialog-submit]');await navigate('groups');assert.match(await text(),/2项排团待确认/);
+for(const width of [320,375,390,768]){await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});await overflow();await navigate('group/JP-KIX-20261012-001/overview');await overflow();await click('[data-action=confirm]');assert.ok(await run('document.querySelector("dialog").getBoundingClientRect().width<=innerWidth'));await click('[data-action=close-dialog]');await navigate('groups');}
+await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await screen('home');
+await send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+await send('Page.navigate',{url:siteBase+'/index.html'});await run(`new Promise(r=>{const f=()=>document.querySelector('a[href="leader/index.html"]')?r():setTimeout(f,20);f()})`);
+assert.equal(await run(`document.querySelectorAll('a[href="leader/index.html"]').length`),1);await overflow();
+await click('a[href="leader/index.html"]');assert.match(await text(),/我的排团/);
+assert.equal(errors.length,0,JSON.stringify(errors));
+console.log('PASS: login validation; search/filter; confirmation/cancel; adjustment; itinerary; people; resources; document preview; canceled/replaced guards; account isolation; read-all; refresh/reset; 320/375/390/768px layouts; no runtime exceptions.');
+ws.close();await fetch(browserBase + '/json/close/'+target.id);
+})().catch(e=>{console.error(e);process.exit(1)});

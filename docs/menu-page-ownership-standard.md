@@ -1,5 +1,19 @@
 # 菜单和页面归属校准清单
 
+## 2026-09-24 审批配置迁至集团端部门组织（用户明确）
+
+本步范围：集团审批管理员维护跨公司审批模板、流程、规则和审批职责人员，上游引用组织架构及员工任职，下游供业务申请采用；商户审批中心仅保留日常办理。菜单为集团端“部门组织 → 审批配置”，主页面 `admin/approval-config.html`，二级编辑页 `admin/approval-template-edit.html`。沿用既有会话数据及取人逻辑，不新增真实权限服务或跨端回写。
+
+| 要求 | 原缺口 | 修改 | 验收 |
+| --- | --- | --- | --- |
+| 集团统一配置 | 配置混在商户审批列表 | 集团独立列表和编辑页，admin导航及菜单归属 | 菜单选中、新建／编辑／历史查看通过 |
+| 配置与办理分开 | 商户导航与员工页提供配置入口 | 移除商户配置菜单及员工配置按钮，办理四视图保留 | 待审、发起、抄送、总览回归通过 |
+| 页面内入口正确 | 返回及员工任职跳转仍指商户 | 返回／发布回集团列表，员工入口指集团员工账号；配置权限项移入后台角色的部门组织 | 配置与规则交互通过 |
+| 旧链接可继续使用 | 历史入口带模板ID及版本 | 旧配置和编辑地址跳转集团页，保留查询参数及hash | 旧配置人员Tab、旧编辑版本参数检查通过 |
+
+证据：26组配置、13组层级、18组规则、20组字段／分支DOM检查共77组通过；另菜单归属及两类旧链接目标检查通过（脚本模拟，非浏览器实际导航）；JS语法、差异检查通过。遗留：浏览器排版及实际跳转待复核，权限项仅原型表达。下一步复核集团端列表、编辑及返回；原审批工作线的逐节点办理断点保持，不因迁移宣称后端权限或流程闭环已实现。
+
+
 更新时间：2026-07-17
 
 关联文档：
@@ -169,6 +183,7 @@
 | customer/enterprise-list.html、customer/enterprise-detail.html | 客户 / 企业客户 | 企业客户、联系人 | 企业客户不等同供应商或分销商 |
 | customer/member-rules.html、customer/member-rule-config.html | 客户 / 会员规则 | 会员规则、权益配置 | 规则不直接生成财务单据 |
 | approval/approvals.html、approval/approval-product-review.html | 审批 | 审批单、审批详情 | 审批不替代业务单据 |
+| approval/approval-template-edit.html | 审批 / 审批配置 | 审批模板新建、编辑、版本查看 | 从配置列表进入，返回保留筛选；原型配置不自动改变来源业务 |
 | ai/route_parser.html、ai/competitor.html、ai/visa_checker.html、ai/travel_assistant.html | AI | AI 能力入口 | AI 不替代业务对象 |
 | ai/ai-assistant.html | 工作 / 首页工作台 | 工作台助手 | 助手作为工作台入口 |
 | system/my-org.html、system/role-assignment.html、system/staff-management.html、system/business-params.html、system/notice-templates.html | 系统设置 | 组织、角色、员工、参数、通知 | 系统配置 |
