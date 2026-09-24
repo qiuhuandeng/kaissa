@@ -35,16 +35,49 @@
     return {orders,contracts,sources,serial:20,day:DAY};
   }
   const amountCents=v=>Number.isFinite(Number(v))?Math.round(Number(v)*100):NaN;
-  function fingerprint(c){return JSON.stringify([c.orderId,c.company,c.template,c.templateVersion,c.version,c.mode,c.people,c.amount,c.deadline,c.note,c.attachments]);}
+  function fingerprint(c){return JSON.stringify([c.orderId,c.company,c.template,c.templateVersion,c.version,c.mode,c.people,c.amount,c.deadline,c.note,c.attachments,c.signingPeople]);}
+  function signingPeople(c,o){return o.people.map(p=>({...p,signerIdentity:p.relation==='本人'?p.identity:(p.ready?'签署人证件已核对（样例）':''),...(c.signingPeople||[]).find(x=>x.id===p.id)}));}
+  function setSigningPeople(c,o,values){
+    if(!['草稿','审核退回'].includes(c.status)||!['未提交','未受理'].includes(c.platform)||c.signers.some(x=>x.status==='已签署'))return ['已提交或签署的合同不能直接修改签署人'];
+    const before=signingPeople(c,o),next=[];
+    for(const v of values){const person=o.people.find(p=>p.id===v.id);if(!person||!c.people.includes(v.id))return ['签署人不属于本份合同'];
+      const relations=o.business==='MICE'?['企业代表']:['本人','监护人','代理人'];if(!relations.includes(v.relation))return ['签署关系不适用本合同'];
+      const n={id:v.id,relation:v.relation,signer:v.relation==='本人'?person.name:String(v.signer||'').trim(),signerIdentity:v.relation==='本人'?person.identity:String(v.signerIdentity||'').trim(),phone:String(v.phone||'').trim()};next.push(n);
+    }
+    for(const n of next){const old=before.find(x=>x.id===n.id),key='auth-'+n.id,person=o.people.find(p=>p.id===n.id);const changed=['relation','signer','signerIdentity'].some(k=>old[k]!==n[k]);
+      if(n.relation==='本人')c.attachments=c.attachments.filter(f=>f.id!==key);
+      else if(changed||!c.attachments.some(f=>f.id===key)){c.attachments=c.attachments.filter(f=>f.id!==key);c.attachments.push({id:key,name:n.relation==='监护人'?'监护人同意书':n.relation==='企业代表'?'企业授权书':'签署授权书',file:'',ready:false,scope:person.name});}
+    }
+    c.signingPeople=next;return [];
+  }
+  function canReopen(c){return c.status==='待签署'&&c.platform==='未受理'&&!c.signers.some(x=>x.status==='已签署')&&c.seal!=='已盖章'&&!c.ending;}
+  function reopen(c){
+    if(!canReopen(c))return ['只有已明确未受理且无签署的合同可以修改重提；未知结果请先核对'];
+    c.submissionHistory=c.submissionHistory||[];c.submissionHistory.push({version:c.version,approval:c.approval,platform:c.platform,platformNo:c.platformNo,reason:c.platformReason||'明确未受理',content:fingerprint(c)});
+    c.status='草稿';c.approval='未提交';c.approvalReason='';c.platform='未提交';c.platformNo='';c.regulatorNo='';c.entry='未取得';c.preview='';c.needsCorrection=false;
+    event(c,'修改重提',c.platformReason||'原申请已明确未受理；本次修改须重新预览并按规则审核');return [];
+  }
+  function replacementParts(s,o){
+    const all=s.contracts.filter(c=>c.orderId===o.id),live=all.filter(c=>c.current&&!['已撤销','已解除'].includes(c.status)),bases=live.filter(c=>c.doc==='主合同'),covered=new Set(bases.flatMap(c=>c.people)),missing=o.people.filter(p=>!covered.has(p.id));
+    const errors=[];if(o.status!=='已确认'||!o.canServe||!o.allow)errors.push('订单确认或办理权限尚未满足');
+    if(!missing.length)errors.push('本订单已有合同，请继续原合同办理，无需重复生成');
+    if(live.some(c=>c.doc!=='主合同'||c.replaces||c.ending&&!['已退回','已撤回'].includes(c.ending.status))||all.some(c=>c.replaces&&!['已签署','已归档','已撤销'].includes(c.status)))errors.push('请先处理合同变更或撤销／解除申请');
+    const previous=missing.map(p=>all.find(c=>c.doc==='主合同'&&c.mode==='按人分签'&&c.status==='已撤销'&&c.people.length===1&&c.people[0]===p.id));
+    if(previous.some(c=>!c)||bases.some(c=>c.mode!=='按人分签'))errors.push('仅支持为已撤销分签合同的原游客补签，人员或订单变更请先核对依据');
+    const amounts=missing.map(p=>amountCents(o.allocations?.[p.id]));
+    if(amounts.some(n=>!Number.isFinite(n)||n<=0)||amounts.reduce((n,v)=>n+v,0)+bases.reduce((n,c)=>n+amountCents(c.amount),0)!==amountCents(o.amount)||previous.some((c,i)=>c&&amountCents(c.amount)!==amounts[i]))errors.push('补签金额与订单确认分配不一致，请先核对订单及售后依据');
+    if(errors.length)return {errors:[...new Set(errors)],contracts:[]};
+    const contracts=missing.map((p,i)=>{const old=previous[i],c=draft(o,'HT-RESIGN-'+String(++s.serial).padStart(3,'0'),{mode:'按人分签',people:[p.id],amount:amounts[i]/100,signers:[{id:p.id,auth:'待核验',status:'未签署',time:''}],attachments:attachments(o,[p.id]),resignOf:old.id});old.current=false;event(c,'准备缺口补签','原合同 '+old.id+' 已撤销；仅覆盖 '+p.name+'，其余合同和签名保持');return c;});s.contracts.unshift(...contracts);return {errors:[],contracts};
+  }
   function issues(s,o,c,phase='submit'){
     const a=[];if(!o||o.status!=='已确认')a.push('订单尚未确认，请回订单核对');if(!o?.canServe)a.push('本单办理权限未获准');if(!o?.allow)a.push('门店未获准发起合同');
     if(c.company!==o?.company||c.company!=='fj')a.push('签约公司或用章未获准');if(!o?.templateReady)a.push('本业务有效模板待配置');if(c.template!==o?.template)a.push('模板不适用本订单');if(!o?.paymentReady)a.push('签约付款条件尚未满足或待确认');
     if(!c.people.length||new Set(c.people).size!==c.people.length)a.push('请选择不重复的合同覆盖游客');
-    if(c.people.some(id=>!o.people.some(p=>p.id===id&&p.ready&&p.signer&&p.phone)))a.push('游客证件、签署人或联系资料待补');
+    const signing=signingPeople(c,o);if(c.people.some(id=>!signing.some(p=>p.id===id&&(o.business==='MICE'||p.ready)&&p.signer&&p.phone&&p.signerIdentity)))a.push('游客证件、签署人或联系资料待补');
     if(c.changeSource){const src=s.sources.find(x=>x.id===c.changeSource);if(!src||src.status!=='已确认')a.push('变更依据尚未确认');else if(amountCents(c.amount)!==amountCents(c.replaces?src.afterAmount:src.delta))a.push('变更金额与确认依据不符');}
     else if(!Number.isFinite(Number(c.amount))||amountCents(c.amount)<=0||amountCents(c.amount)>amountCents(o?.amount))a.push('本份金额必须大于0且不超过订单金额');
     if(!/^\d{4}-\d{2}-\d{2}$/.test(c.deadline)||!Number.isFinite(Date.parse(c.deadline))||new Date(c.deadline).toISOString().slice(0,10)!==c.deadline||c.deadline<s.day)a.push('签署截止日期无效或已过期');
-    const required=['trip','fee',...o.people.filter(p=>c.people.includes(p.id)&&p.relation!=='本人').map(p=>'auth-'+p.id)];if(required.some(id=>!c.attachments.some(f=>f.id===id)))a.push('必要行程、费用或代签授权附件缺失');
+    const required=['trip','fee',...signing.filter(p=>c.people.includes(p.id)&&p.relation!=='本人').map(p=>'auth-'+p.id)];if(required.some(id=>!c.attachments.some(f=>f.id===id)))a.push('必要行程、费用或代签授权附件缺失');
     c.attachments.filter(f=>!f.ready||!f.file).forEach(f=>a.push(f.name+'（'+f.scope+'）待补'));
     if(c.doc==='主合同'){
       const siblings=s.contracts.filter(x=>x.id!==c.id&&x.id!==c.replaces&&x.orderId===o.id&&x.doc==='主合同'&&x.current&&!['已撤销','已解除'].includes(x.status));
@@ -61,9 +94,9 @@
     const duplicates=bases.flatMap(c=>c.people).length!==ids.size;const complete=!pendingChange&&o.people.length>0&&ids.size===o.people.length&&o.people.every(p=>ids.has(p.id))&&!duplicates&&bases.length>0&&bases.every(c=>c.channel==='线下归档'?c.status==='已归档'&&c.archive?.ourSeal&&c.archive?.clientSeal&&c.archive?.authorization&&c.fileReady:c.status==='已签署'&&c.seal==='已盖章'&&c.signers.every(p=>p.status==='已签署'))&&amountCents(agreed)===amountCents(o.amount)&&!current.some(c=>c.doc!=='主合同'&&!['已签署','已归档'].includes(c.status));
     return {count:bases.length,covered:ids.size,total:o.people.length,allocated,agreed,remaining:Math.max(0,o.amount-allocated),signed:signers.filter(x=>x.status==='已签署').length,required:signers.length,seals:bases.filter(c=>c.seal==='已盖章').length,complete,duplicates};
   }
-  function send(s,c,outcome){const o=s.orders.find(o=>o.id===c.orderId);const errs=issues(s,o,c,'send');if(c.status!=='待签署'||!['未提交','未受理'].includes(c.platform))errs.push('本合同已提交或结果待核对，不能重复发起');if(errs.length)return errs;c.attempts++;c.status='签署中';if(outcome==='超时'){c.platform='结果待核对';event(c,'发起结果待核对','提交超时，需核对原申请');}else if(outcome==='失败'){c.platform='未受理';c.status='待签署';event(c,'发起失败','授权校验未通过，原申请未受理（演示）');}else{c.platform=outcome==='平台审核'?'平台待审核':'已受理';c.platformNo='演示平台-'+c.id;if(c.platform==='已受理'){c.regulatorNo='演示监管-'+c.id;c.entry='可用';c.entryVersion++;c.notifications++;}event(c,'平台受理结果',c.platform+'（演示）');}return [];}
+  function send(s,c,outcome){const o=s.orders.find(o=>o.id===c.orderId);const errs=issues(s,o,c,'send');if(c.needsCorrection)errs.push('平台已退回，请先修改重提并重新审核');if(c.status!=='待签署'||!['未提交','未受理'].includes(c.platform))errs.push('本合同已提交或结果待核对，不能重复发起');if(errs.length)return errs;c.attempts++;c.status='签署中';if(outcome==='超时'){c.platform='结果待核对';event(c,'发起结果待核对','提交超时，需核对原申请');}else if(outcome==='失败'){c.platform='未受理';c.status='待签署';event(c,'发起失败','授权校验未通过，原申请未受理（演示）');}else{c.platform=outcome==='平台审核'?'平台待审核':'已受理';c.platformNo='演示平台-'+c.id;if(c.platform==='已受理'){c.regulatorNo='演示监管-'+c.id;c.entry='可用';c.entryVersion++;c.notifications++;}event(c,'平台受理结果',c.platform+'（演示）');}return [];}
   function receive(c,outcome){if(c.status!=='签署中')return ['当前不在签署阶段'];if(c.platform==='结果待核对'){if(outcome==='仍待核对'){event(c,'核对原申请','结果仍待核对');return [];}if(outcome==='未受理'){c.platform='未受理';c.status='待签署';event(c,'核对原申请','确认未受理，可修正后重新发起');return [];}if(outcome!=='已受理')return ['请先核对原申请是否受理'];c.platform='已受理';c.platformNo='演示平台-'+c.id;c.regulatorNo='演示监管-'+c.id;c.entry='可用';c.entryVersion++;event(c,'核对原申请','原申请已受理，沿用原合同');return [];}
-    if(c.platform==='平台待审核'){if(outcome==='平台退回'){c.platform='未受理';c.status='待签署';event(c,'平台审核退回','附件格式不符（演示）');return [];}if(outcome!=='平台通过')return ['平台审核尚未通过'];c.platform='已受理';c.regulatorNo='演示监管-'+c.id;c.entry='可用';c.entryVersion++;event(c,'平台审核通过','取得签署入口（演示）');return [];}
+    if(c.platform==='平台待审核'){if(outcome==='平台退回'){c.platform='未受理';c.status='待签署';c.platformReason='附件格式不符';c.needsCorrection=true;event(c,'平台审核退回','附件格式不符（演示）');return [];}if(outcome!=='平台通过')return ['平台审核尚未通过'];c.platform='已受理';c.regulatorNo='演示监管-'+c.id;c.entry='可用';c.entryVersion++;event(c,'平台审核通过','取得签署入口（演示）');return [];}
     if(c.platform!=='已受理')return ['平台尚未受理'];
     if(outcome==='身份失败'){const p=c.signers.find(p=>p.status!=='已签署');if(p)p.auth='核验失败';}
     else if(outcome==='部分完成'){const p=c.signers.find(p=>p.status!=='已签署');if(p){p.auth='核验通过';p.status='已签署';p.time='2026-09-24 15:00';}}
@@ -87,7 +120,8 @@
     if(s.contracts.some(c=>c.parent===base.id&&!['已签署','已归档','已撤销'].includes(c.status)))errors.push('已有变更待办，请继续办理或撤销原申请');
     if(src&&s.contracts.some(c=>c.changeSource===src.id&&c.status!=='已撤销'))errors.push('该变更依据已生成合同，不可重复生成');
     if(errors.length)return {errors};
-    const c=draft(o,'HT-CHANGE-'+String(++s.serial).padStart(3,'0'),{parent:base.id,version:'V'+(Number(base.version.replace('V',''))+1),doc:kind==='补充协议'?'补充协议':'主合同',amount:offline?base.amount:kind==='补充协议'?src.delta:src.afterAmount,current:kind==='补充协议',replaces:kind==='补充协议'?'':base.id,changeSource:offline?'':src.id,changeBasis:offline?'原归档文件替换：'+reason:src.id+' / '+src.after,changeReason:reason,change:offline?null:copy(src)});
+    const c=draft(o,'HT-CHANGE-'+String(++s.serial).padStart(3,'0'),{signingPeople:copy(base.signingPeople||[]),parent:base.id,version:'V'+(Number(base.version.replace('V',''))+1),doc:kind==='补充协议'?'补充协议':'主合同',amount:offline?base.amount:kind==='补充协议'?src.delta:src.afterAmount,current:kind==='补充协议',replaces:kind==='补充协议'?'':base.id,changeSource:offline?'':src.id,changeBasis:offline?'原归档文件替换：'+reason:src.id+' / '+src.after,changeReason:reason,change:offline?null:copy(src)});
+    if(!offline&&c.signingPeople.length)c.attachments=c.attachments.filter(f=>!f.id.startsWith('auth-')).concat(copy(base.attachments.filter(f=>f.id.startsWith('auth-')&&c.people.includes(f.id.slice(5)))));
     if(offline){c.channel='线下归档';c.mode='企业代表签署';c.archive={file:'',ourSeal:false,clientSeal:false,authorization:false,reason};}
     event(c,'建立变更草稿','原合同 '+base.id+' 继续保留；本版本重新审核及签署／归档');s.contracts.unshift(c);return {errors:[],contract:c};
   }
@@ -131,6 +165,6 @@
     else if(no==='APR-CONTRACT-005'){c=find('HT-MICE-001');c.status='待审核';c.approval='待审核';c.archive={file:'企业合同_双方盖章_样例.html',ourSeal:true,clientSeal:true,authorization:true,reason:'首次线下归档'};}
     return c||null;
   }
-  const api={copy,DAY,people,order,draft,attachments,createState,issues,fingerprint,coverage,send,receive,renew,filing,event,amountCents,createChange,review,activate,archiveComplete,requestEnding,reviewEnding,finishEnding,approvalExample};
+  const api={signingPeople,setSigningPeople,canReopen,reopen,replacementParts,copy,DAY,people,order,draft,attachments,createState,issues,fingerprint,coverage,send,receive,renew,filing,event,amountCents,createChange,review,activate,archiveComplete,requestEnding,reviewEnding,finishEnding,approvalExample};
   if(typeof module!=='undefined')module.exports=api;root.ContractWorkflow=api;
 })(typeof window!=='undefined'?window:globalThis);
