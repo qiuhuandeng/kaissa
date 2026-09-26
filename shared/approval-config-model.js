@@ -28,12 +28,12 @@
   }
   const groups = {
     '产品与履约':['产品发布','代理入库','代理上线','团期开排','团期调整','价格调整','成本差异','交通资源付款','超DL还位','损耗确认'],
-    '销售与渠道':['渠道授权','佣金规则','渠道账户','渠道对账','改期转团'],
-    '财务':['供应商账户变更','付款申请','退款申请','认款/应收调整','坏账处理','结算确认','发票红冲','NC异常处理','预存账户开户','收付款配置变更','收付款资料停用'],
+    '销售与渠道':['渠道授权','佣金规则','渠道账户','渠道对账','改期转团','订单应收变更'],
+    '财务':['供应商账户变更','付款申请','退款申请','认款调整／复核','坏账处理','结算确认','发票红冲','NC异常处理','预存账户开户','收付款配置变更','收付款资料停用'],
     '合同':['合同首次签约','合同变更','合同撤销','合同解除','企业合同归档','合同模板发布'],
     '组织与门店':['组织人事','门店档案准入','门店销售授权','门店财务配置','门店恢复营业','员工组织调整']
   };
-  const moneyScenes = ['付款申请','退款申请','交通资源付款','成本差异','认款/应收调整','坏账处理','结算确认','发票红冲'];
+  const moneyScenes = ['订单应收变更','付款申请','退款申请','交通资源付款','成本差异','认款调整／复核','坏账处理','结算确认','发票红冲'];
   // Only offer document owners where the source business page has an owner field.
   const businessOwnerFields = {'产品发布':'产品负责人','价格调整':'产品负责人','代理入库':'产品负责人','代理上线':'产品负责人','团期开排':'团期负责人','团期调整':'团期负责人'};
   const scenes = Object.entries(groups).flatMap(([group,names]) => names.map(name => ({
@@ -48,6 +48,9 @@
   const contentField = (id,label,group,required,sampleValue,extra={}) => ({id,label,group,required,sample:sampleValue,...extra});
   function contentCatalog(name) {
     const f=contentField, s=scene(name);
+    if(name==='订单应收变更')return [
+      f('orderNo','原订单','业务依据',true,'KS20260926001'),f('productType','产品类型','业务依据',true,'参团游'),f('before','原项目数量、单价及金额','调整内容',true,'单房差 1 × 1800 = 1800'),f('after','调整后数量、单价及金额','调整内容',true,'单房差 1 × 1500 = 1500'),f('delta','应收差额','调整内容',true,'-300.00'),f('reason','调整原因及客户确认依据','业务依据',true,'客户确认调整报价'),f('resource','计调确认结果','业务依据',true,'已确认'),f('received','实收及多收款影响','业务依据',true,'实收保持不变；多收款另走退转流程')
+    ];
     if(name==='付款申请')return [
       f('sourceNo','申请单号','付款申请',false,'FK20260924001',{input:'自动带入',selected:true}),
       f('applyType','申请类型','付款申请',true,'应付付款',{source:'data-apply-type'}),
@@ -157,11 +160,18 @@
   function createState() {
     const arrangements = companies.flatMap(c=>duties.map(d=>({id:c.id+'-'+d,company:c.id,duty:d,members:[d==='合同审核'?'wangjie':d==='法务审核'?'limin':c.id==='fj'?(d==='财务审核'?'liu':d==='组织审核'?'sun':'chentao'):(d==='财务审核'?'wufang':d==='组织审核'?'zhoumin':'zheng')]})));
     const initial=['付款申请','价格调整',...groups['合同']];
-    const legacy=['预存账户开户','收付款配置变更','收付款资料停用','产品发布','团期开排','团期调整','供应商账户变更','成本差异','退款申请','认款/应收调整','结算确认','NC异常处理','门店档案准入','门店销售授权','门店财务配置','门店恢复营业','员工组织调整'];
+    const legacy=['预存账户开户','收付款配置变更','收付款资料停用','产品发布','团期开排','团期调整','供应商账户变更','成本差异','退款申请','认款调整／复核','结算确认','NC异常处理','门店档案准入','门店销售授权','门店财务配置','门店恢复营业','员工组织调整','订单应收变更'];
     return {schema:1,org:clone(organization),people:clone(people),arrangements,delegations:[],templates:[...initial,...legacy].map((name,i)=>{
       const t=sample(name),pub=i<initial.length;
       return {id:'template-'+i,published:pub?clone(t):null,draft:pub?null:t,disabled:false,versions:pub?[{number:1,at:'2026-09-24',by:'审批管理员',template:clone(t)}]:[]};
     })};
+  }
+  function ensureReceivableScenes(state){
+    ['订单应收变更','认款调整／复核'].forEach(name=>{
+      if(state.templates.some(r=>(r.draft||r.published)?.scene===name))return;
+      state.templates.push({id:uid(),published:null,draft:sample(name),disabled:false,versions:[]});
+    });
+    return state;
   }
   function activeDepartments(t) {
     return departments.filter(d=>t.companies.includes(d.company)&&((t.departmentMode!=='selected'&&!t.departments.length)||t.departments.some(id=>id===d.id||(t.includeChildren&&ancestor(d,id)))));
@@ -296,6 +306,6 @@
     state.delegations.filter(b=>b.id!==a.id&&overlaps(b)).forEach(b=>{if(b.original===a.original)errors.push('该人员已有重叠期间及事项的代办');if(b.original===a.delegate||b.delegate===a.original)errors.push('暂不支持连续转交或循环代办，请直接指定最终代办人');});
     if(errors.length)return [...new Set(errors)];const i=state.delegations.findIndex(b=>b.id===a.id);const value={...clone(a),id:a.id||uid()};if(i<0)state.delegations.push(value);else state.delegations[i]=value;return [];
   }
-  const api={organization,orgData:O,rulesFor,validateRules,repeatModes,eligible,contentCatalog,defaultContent,getContent,validateContent,previewContent,moveNode,reorderBranches,cloneConditionBranch,clone,uid,companies,departments,duties,sources,modes,scenes,scene,personName,companyName,node,sample,createState,activeDepartments,accepts,walk,getNode,getList,approvers,conditionText,validate,trial,saveDraft,publish,saveArrangement,saveDelegation};
+  const api={ensureReceivableScenes,organization,orgData:O,rulesFor,validateRules,repeatModes,eligible,contentCatalog,defaultContent,getContent,validateContent,previewContent,moveNode,reorderBranches,cloneConditionBranch,clone,uid,companies,departments,duties,sources,modes,scenes,scene,personName,companyName,node,sample,createState,activeDepartments,accepts,walk,getNode,getList,approvers,conditionText,validate,trial,saveDraft,publish,saveArrangement,saveDelegation};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.ApprovalConfigModel=api;
 })(typeof window==='object'?window:globalThis);

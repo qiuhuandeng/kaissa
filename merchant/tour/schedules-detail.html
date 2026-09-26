@@ -9,6 +9,8 @@
     #leaderDispatchFields[hidden], #leaderActualFields[hidden], #leaderDispatchError[hidden] { display: none !important; }
     #leaderDispatchDrawer .modal-body { display: grid; align-content: start; gap: 18px; }
   </style>
+  <link rel="stylesheet" href="../../shared/order-amendment.css">
+  <script src="../../shared/order-amendment-model.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -1594,7 +1596,7 @@
       <div class="modal-body">
         <div class="form-grid form-grid-2">
           <div class="form-group"><label class="form-label">项目名称 <span class="req">*</span></label><select id="addonName" class="form-control"><option>单房差</option><option>联运</option><option>升舱</option><option>其他</option></select></div>
-          <div class="form-group"><label class="form-label">价格状态 <span class="req">*</span></label><select id="addonStatus" class="form-control"><option>有效销售价</option><option>待报价</option><option>参考价</option></select></div>
+          <div class="form-group"><label class="form-label">价格状态 <span class="req">*</span></label><select id="addonStatus" class="form-control"><option>有效销售价</option><option>免费</option><option>待报价</option><option>参考价</option></select></div>
           <div class="form-group"><label class="form-label">单价</label><input id="addonPrice" class="form-control" type="number" min="0" value="1800"></div>
           <div class="form-group"><label class="form-label">币种／计量单位</label><div class="pricing-date-range-mini"><select id="addonCurrency" class="form-control"><option>CNY</option><option>USD</option><option>EUR</option></select><select id="addonUnit" class="form-control"><option>人</option><option>人/晚</option><option>段</option><option>舱</option></select></div></div>
           <div class="form-group"><label class="form-label">数量范围</label><div class="pricing-date-range-mini"><input id="addonMin" class="form-control" type="number" min="1" value="1"><span>至</span><input id="addonMax" class="form-control" type="number" min="1" value="1"></div></div>
@@ -1766,9 +1768,22 @@
           var map = { Name: 'name', Status: 'status', Price: 'price', Currency: 'currency', Unit: 'unit', Min: 'min', Max: 'max', Audience: 'audience', Start: 'start', End: 'end', Resource: 'resource' };
           document.getElementById('addon' + suffix).value = item[map[suffix]];
         });
+        syncAddonCharge();
         document.getElementById('addonPriceError').hidden = true;
         window.caesarUI.openLayer(addonPriceDrawer);
       }
+
+      function syncAddonCharge() {
+        var free = document.getElementById('addonStatus').value === '免费';
+        var pending = document.getElementById('addonStatus').value === '待报价';
+        var price = document.getElementById('addonPrice');
+        price.disabled = free || pending;
+        if (free || pending) price.value = '0';
+        document.getElementById('addonResource').disabled = free;
+        if (free) document.getElementById('addonResource').value = '占位后确认';
+      }
+      document.getElementById('addonStatus').addEventListener('change', syncAddonCharge);
+      document.getElementById('addonName').addEventListener('change', function(){document.getElementById('addonUnit').value=this.value==='联运'?'段':this.value==='单房差'?'人/晚':'人';});
 
       function saveAddonPrice() {
         var item = {
@@ -1785,8 +1800,9 @@
           resource: document.getElementById('addonResource').value
         };
         var error = '';
-        if (item.status !== '待报价' && item.price <= 0) error = '参考价或有效销售价必须大于0。';
-        else if (item.min < 1 || item.max < item.min) error = '数量范围必须为正整数，且最大数量不能小于最小数量。';
+        if (item.status === '免费') { item.price = 0; item.resource = '占位后确认'; }
+        if (item.status !== '待报价' && item.status !== '免费' && (!Number.isFinite(item.price) || item.price <= 0)) error = '参考价或有效销售价必须大于0；免费项目请选择免费。';
+        else if (!Number.isInteger(item.min) || !Number.isInteger(item.max) || item.min < 1 || item.max < item.min) error = '数量范围必须为正整数，且最大数量不能小于最小数量。';
         else if (!item.audience || !item.start || !item.end || item.start > item.end) error = '请完整填写适用人群和有效日期。';
         if (error) { var errorEl = document.getElementById('addonPriceError'); errorEl.textContent = error; errorEl.hidden = false; return; }
         if (editingAddonIndex > -1) addonPrices[editingAddonIndex] = item; else addonPrices.push(item);
@@ -6740,6 +6756,7 @@
     })();
   </script>
   <script src="../../shared/schedule-visa-detail.js"></script>
+  <script src="../../shared/schedule-whole-transfer.js"></script>
   <script src="../../shared/schedule-change-handoff.js"></script>
 </body>
 </html>

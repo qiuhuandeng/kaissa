@@ -6,6 +6,9 @@
   <title>订单管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
   <link rel="stylesheet" href="../../shared/store-order-rules.css">
+  <link rel="stylesheet" href="../../shared/order-amendment.css">
+  <script src="../../shared/order-amendment-model.js"></script>
+  <script src="../../shared/order-amendment-ui.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -1070,66 +1073,12 @@
           </section>
         </section>
 
-        <section class="order-desc-card">
-          <h2 id="receivableAdjustSectionTitle" class="detail-section-title">新增/调整应收</h2>
-          <section class="form-stack">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="receivableAdjustType">调整类型</label>
-                <select id="receivableAdjustType" class="form-control">
-                  <option>新增应收</option>
-                  <option>人工特批折扣</option>
-                  <option>补差</option>
-                  <option>人数变化</option>
-                  <option>订单外款项</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label id="receivableProjectTypeLabel" class="form-label" for="receivableProjectType">业务款项</label>
-                <select id="receivableProjectType" class="form-control">
-                  <option>团费</option>
-                  <option>保险</option>
-                  <option>签证</option>
-                  <option>单房差</option>
-                  <option>服务费</option>
-                  <option>升舱差价</option>
-                  <option>铺位差价</option>
-                  <option>项目款</option>
-                  <option>套餐款</option>
-                  <option>营费</option>
-                  <option>其他</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="receivableAdjustAmount">调整金额 <span class="req">*</span></label>
-                <input id="receivableAdjustAmount" class="form-control" type="number" step="0.01" value="0">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="receivableAdjustFile">附件</label>
-                <input id="receivableAdjustFile" class="form-control" type="file">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group form-group-full">
-                <label class="form-label" for="receivableAdjustRemark">调整说明</label>
-                <textarea id="receivableAdjustRemark" class="form-control" rows="3" placeholder="填写客户确认、产品差价、人数变化、售后依据或人工特批说明"></textarea>
-              </div>
-            </div>
-          </section>
-        </section>
+        <section id="orderAmendmentForm" class="order-desc-card"></section>
 
-        <section id="receivableAdjustResult" class="finance-link-card" hidden>
-          <div class="finance-link-title">应收调整已提交</div>
-          <div class="finance-link-items">
-            <span id="receivableAdjustResultText" class="finance-link-item">状态：待财务审核。</span>
-          </div>
-        </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-receivable>关闭</button>
-        <button id="submitReceivableAdjust" class="btn btn-primary" type="button">提交财务审核</button>
+        <button id="submitReceivableAdjust" class="btn btn-primary" type="button">提交业务审批</button>
       </div>
     </div>
   </div>
@@ -1153,7 +1102,7 @@
             <span>订单应收合计 <strong id="batchReceivableSelectedAmount">¥0</strong></span>
             <span>客户已收合计 <strong id="batchReceivableReceivedAmount">¥0</strong></span>
             <span>本次新增应收 <strong id="batchReceivablePreviewTotal" class="amount-red">¥0</strong></span>
-            <span>财务状态 <strong id="batchReceivableFinanceStatus">待财务审核</strong></span>
+            <span>业务审批 <strong id="batchReceivableFinanceStatus">待配置业务审批</strong></span>
           </div>
         </section>
 
@@ -1238,11 +1187,11 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="batchReceivableFile">附件</label>
-                <input id="batchReceivableFile" class="form-control" type="file">
+                <label class="form-label" for="batchReceivableOperator">负责计调（服务项目必选）</label>
+                <select id="batchReceivableOperator" class="form-control"><option value="">请选择</option><option>计调张敏</option><option>计调李强</option></select>
               </div>
               <div class="form-group">
-                <label class="form-label" for="batchReceivableRemark">备注</label>
+                <label class="form-label" for="batchReceivableRemark">服务安排及应收依据 <span class="req">*</span></label>
                 <input id="batchReceivableRemark" class="form-control" type="text" placeholder="填写本次应收依据">
               </div>
             </div>
@@ -1252,13 +1201,13 @@
         <section id="batchReceivableResult" class="finance-link-card" hidden>
           <div class="finance-link-title">批量应收已提交</div>
           <div class="finance-link-items">
-            <span id="batchReceivableResultText" class="finance-link-item">状态：待财务审核。</span>
+            <span id="batchReceivableResultText" class="finance-link-item">状态：待配置业务审批。</span>
           </div>
         </section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-batch-receivable>取消</button>
-        <button id="submitBatchReceivable" class="btn btn-primary" type="button">提交财务审核</button>
+        <button id="submitBatchReceivable" class="btn btn-primary" type="button">提交业务审批</button>
       </div>
     </div>
   </div>
@@ -2327,6 +2276,8 @@
         orderRows.querySelectorAll('tr').forEach(function (row) {
           var cell = orderAmountCell(row);
           if (!cell || cell.querySelector('[data-open-receivable-drawer]')) return;
+          var effective=OrderAmendmentModel.isEffective(readOrder(row).orderStatus);
+          if(!effective)cell.innerHTML=cell.innerHTML.replace(/应收/g,'预计应收').replace(/待收/g,'预计待收');
           cell.innerHTML = '<button class="table-link order-receivable-trigger" type="button" data-open-receivable-drawer>' + cell.innerHTML + '</button>';
         });
       }
@@ -3351,57 +3302,7 @@
       }
 
       function receivableItemsFor(data, receivableAmount) {
-        var snapshot = data && data.salesSnapshot;
-        if (snapshot && snapshot.priceGroups && snapshot.priceGroups.length) {
-          var snapshotRows = [];
-          snapshot.priceGroups.forEach(function (group) {
-            (group.lines || []).forEach(function (line) {
-              if (!Number(line.amount || 0)) return;
-              snapshotRows.push([
-                String(snapshotRows.length + 1),
-                [group.title, line.label, line.quantity + '×' + moneyText(line.price)].filter(Boolean).join(' / '),
-                Number(line.amount || 0)
-              ]);
-            });
-          });
-          if (snapshotRows.length) return snapshotRows;
-        }
-        var secondary = Math.min(Math.max(Math.round(receivableAmount * 0.02), 0), 1200);
-        if (data.type === '单团项目') {
-          return [
-            ['1', '项目首款 / 锁定报价节点', receivableAmount],
-            ['2', '项目进度款 / 锁定报价节点', 0],
-            ['3', '项目尾款 / 锁定报价节点', 0]
-          ];
-        }
-        if (data.type === '单项服务') {
-          return [
-            ['1', '服务费', Math.max(receivableAmount - secondary, 0)],
-            ['2', '代办/材料费', secondary]
-          ];
-        }
-        if (data.type === '邮轮') {
-          return [
-            ['1', '船票款', Math.max(receivableAmount - secondary, 0)],
-            ['2', '港务费/保险', secondary]
-          ];
-        }
-        if (data.type === '专列') {
-          return [
-            ['1', '铺位价', Math.max(receivableAmount - secondary, 0)],
-            ['2', '保险/服务费', secondary]
-          ];
-        }
-        if (data.type === '自由行') {
-          return [
-            ['1', '套餐费', Math.max(receivableAmount - secondary, 0)],
-            ['2', '当地服务/保险', secondary]
-          ];
-        }
-        return [
-          ['1', '成人价', Math.max(receivableAmount - secondary, 0)],
-          ['2', '保险', secondary]
-        ];
+        return OrderAmendmentModel.originalItems(data.type,receivableAmount,data.salesSnapshot&&data.salesSnapshot.priceGroups).map(function(item,index){return [String(index+1),item.label+' / '+item.quantity+'×'+moneyText(item.price),item.amount];});
       }
 
       function setSelectValue(selectId, value) {
@@ -3766,77 +3667,6 @@
         return ['待收款', 'tag tag-orange'];
       }
 
-      function receivableAdjustProfileFor(type) {
-        if (type === '单团项目') {
-          return {
-            title: '项目应收调整申请',
-            adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '项目变更'],
-            projectLabel: '业务款项',
-            projectOptions: ['项目团费', '会务服务费', '交通差价', '住宿差价', '活动增项', '其他'],
-            projectDefault: '项目团费',
-            remarkPlaceholder: '填写人数、日期、服务标准或会议活动变化，以及是否影响项目团成本'
-          };
-        }
-        if (type === '邮轮') {
-          return {
-            title: '新增/调整邮轮应收',
-            adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'],
-            projectLabel: '业务款项',
-            projectOptions: ['船票款', '港务费', '升舱差价', '岸上项目', '保险'],
-            projectDefault: '升舱差价',
-            remarkPlaceholder: '填写船方确认、舱型变化或港务费调整说明'
-          };
-        }
-        if (type === '专列') {
-          return {
-            title: '新增/调整专列应收',
-            adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'],
-            projectLabel: '业务款项',
-            projectOptions: ['铺位款', '包厢差价', '保险/服务费', '补差'],
-            projectDefault: '铺位差价',
-            remarkPlaceholder: '填写铺位、包厢或运营方确认说明'
-          };
-        }
-        if (type === '自由行') {
-          return {
-            title: '新增/调整自由行应收',
-            adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'],
-            projectLabel: '业务款项',
-            projectOptions: ['套餐款', '酒店', '机票', '接送机', '当地玩乐', '补差'],
-            projectDefault: '套餐款',
-            remarkPlaceholder: '填写套餐、服务项或供应商确认说明'
-          };
-        }
-        if (type === '单项服务') {
-          return {
-            title: '新增/调整服务应收',
-            adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'],
-            projectLabel: '业务款项',
-            projectOptions: ['服务费', '代垫费', '材料费', '快递费', '补差'],
-            projectDefault: '服务费',
-            remarkPlaceholder: '填写办理材料、代垫或服务变更说明'
-          };
-        }
-        if (type === '研学') {
-          return {
-            title: '新增/调整研学应收',
-            adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'],
-            projectLabel: '业务款项',
-            projectOptions: ['营费', '材料费', '保险费', '补差'],
-            projectDefault: '营费',
-            remarkPlaceholder: '填写学员、监护人确认或材料费调整说明'
-          };
-        }
-        return {
-          title: '新增/调整应收',
-          adjustOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '订单外款项'],
-          projectLabel: '业务款项',
-          projectOptions: ['团费', '保险', '签证', '单房差', '补差'],
-          projectDefault: '团费',
-          remarkPlaceholder: '填写调整说明'
-        };
-      }
-
       function openReceivableDrawer(row) {
         if (!row) return;
         currentReceivableRow = row;
@@ -3848,8 +3678,7 @@
         var approvedAdjust = approvedAdjustmentFor(data);
         var docs = docIds(data.orderNo);
         var status = orderReceivableStatus(data, pendingAmount);
-        var adjustProfile = receivableAdjustProfileFor(data.type);
-        document.getElementById('orderReceivableTitle').textContent = '订单应收';
+        document.getElementById('orderReceivableTitle').textContent = OrderAmendmentModel.isEffective(data.orderStatus)?'订单应收':'订单报价（确认后生成应收）';
         document.getElementById('receivableBasicInfo').innerHTML = [
           ['订单号', data.orderNo],
           ['下单日期', data.time || '-'],
@@ -3873,7 +3702,7 @@
         document.getElementById('receivableBalanceStatus').innerHTML = Math.abs(balanceGap) < 1
           ? tagHtml('已平', 'tag tag-green')
           : tagHtml('差异 ' + signedMoneyText(balanceGap), 'tag tag-orange');
-        document.getElementById('receivableFinanceStatus').innerHTML = tagHtml(status[0], status[1]);
+        document.getElementById('receivableFinanceStatus').innerHTML = tagHtml(OrderAmendmentModel.isEffective(data.orderStatus)?status[0]:'应收未生成', status[1]);
         var leftReceived = receivedAmount;
         document.getElementById('receivableItemRows').innerHTML = receivableItemsFor(data, receivableAmount).map(function (item) {
           var itemAmount = item[2];
@@ -3881,17 +3710,11 @@
           leftReceived = Math.max(leftReceived - matched, 0);
           var pending = Math.max(itemAmount - matched, 0);
           var itemStatus = pending <= 0 && matched > 0 ? ['已收款', 'tag tag-green'] : matched > 0 ? ['部分收款', 'tag tag-orange'] : ['待收款', 'tag tag-blue'];
-          return '<tr><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(financeItemName(data.type)) + '</td><td class="amount-strong">' + moneyText(itemAmount) + '</td><td>' + moneyText(matched) + '</td><td>' + moneyText(pending) + '</td><td>' + tagHtml(itemStatus[0], itemStatus[1]) + '</td></tr>';
+          return '<tr><td>' + escapeHtml(item[1]) + '</td><td>' + escapeHtml(financeItemName(data.type)) + '</td><td class="amount-strong">' + moneyText(itemAmount) + '</td><td>' + moneyText(matched) + '</td><td>' + moneyText(pending) + '</td><td>' + tagHtml(OrderAmendmentModel.isEffective(data.orderStatus)?itemStatus[0]:'报价明细', itemStatus[1]) + '</td></tr>';
         }).join('');
-        document.getElementById('receivableAdjustSectionTitle').textContent = adjustProfile.title;
-        document.getElementById('receivableProjectTypeLabel').textContent = adjustProfile.projectLabel;
-        setSelectOptions('receivableAdjustType', adjustProfile.adjustOptions, adjustProfile.adjustOptions[0]);
-        setSelectOptions('receivableProjectType', adjustProfile.projectOptions, adjustProfile.projectDefault);
-        document.getElementById('receivableAdjustAmount').value = '0';
-        document.getElementById('receivableAdjustRemark').value = '';
-        document.getElementById('receivableAdjustRemark').setAttribute('placeholder', adjustProfile.remarkPlaceholder);
-        document.getElementById('receivableAdjustResult').hidden = true;
-        document.getElementById('receivableAdjustResultText').textContent = '应收单 ' + docs.receivable + ' 调整后进入财务审核。';
+        window.OrderAmendmentUI.mount(document.getElementById('orderAmendmentForm'), {
+          orderNo: data.orderNo, type: data.type, orderStatus:data.orderStatus, received:receivedAmount, originalItems:OrderAmendmentModel.originalItems(data.type,receivableAmount,data.salesSnapshot&&data.salesSnapshot.priceGroups), originalAmount: receivableAmount, scheduleNo: data.serviceNo
+        }, document.getElementById('submitReceivableAdjust'));
         window.caesarUI.openLayer(orderReceivableDrawer);
       }
 
@@ -3919,16 +3742,7 @@
       }
 
       function batchReceivableProjectOptions(orders) {
-        var types = uniqueValues(orders.map(function (item) { return item.type; }));
-        if (types.length === 1) {
-        if (types[0] === '单团项目') return ['项目阶段款', '人数变化补差', '服务范围调整', '会议活动增项', '人工特批折扣', '其他'];
-          if (types[0] === '邮轮') return ['船票款', '港务费', '升舱差价', '岸上项目', '保险', '其他'];
-          if (types[0] === '专列') return ['铺位款', '包厢差价', '保险/服务费', '补差', '其他'];
-          if (types[0] === '自由行') return ['套餐款', '酒店差价', '机票差价', '接送机', '当地玩乐', '其他'];
-          if (types[0] === '单项服务') return ['服务费', '代垫费', '材料费', '快递费', '其他'];
-          if (types[0] === '研学') return ['营费', '材料费', '保险费', '活动增项', '其他'];
-        }
-        return ['补差', '单房差', '升舱/铺位差价', '签证/保险', '单项服务加购', '订单外款项', '其他'];
+        return window.OrderAmendmentModel.commonItems(orders.map(function(item){ return item.type; }));
       }
 
       function batchReceivableNodeOptions(orders) {
@@ -3949,12 +3763,11 @@
         var receivableTotal = orders.reduce(function (sum, item) {
           return sum + moneyNumber(item.receivable);
         }, 0);
-        return orders.map(function (item) {
-          if (mode === '按订单金额占比分摊') {
-            return receivableTotal > 0 ? amount * moneyNumber(item.receivable) / receivableTotal : 0;
-          }
-          return amount;
-        });
+        if (mode === '按订单金额占比分摊') {
+          if (amount <= 0 || receivableTotal <= 0) return orders.map(function(){ return 0; });
+          return window.OrderAmendmentModel.allocate(amount, orders.map(function(item){return moneyNumber(item.receivable);}));
+        }
+        return orders.map(function(){return amount;});
       }
 
       function renderBatchReceivablePreview() {
@@ -4002,31 +3815,34 @@
         document.getElementById('batchReceivableResult').hidden = true;
         document.getElementById('batchReceivableSummaryStatus').className = 'tag tag-blue';
         document.getElementById('batchReceivableSummaryStatus').textContent = '待提交';
-        document.getElementById('batchReceivableFinanceStatus').textContent = '待财务审核';
+        document.getElementById('batchReceivableFinanceStatus').textContent = '待配置业务审批';
         renderBatchReceivablePreview();
         window.caesarUI.openLayer(batchReceivableDrawer);
       }
 
       function submitBatchReceivable() {
         var orders = currentBatchReceivableRows.map(readOrder);
-        if (!orders.length) {
-          notifyOrder('请先勾选需要添加应收的订单。', 'warning');
-          return;
+        var amountText = document.getElementById('batchReceivableAmount').value;
+        var amount = Number(amountText);
+        var reason = document.getElementById('batchReceivableRemark').value.trim();
+        var item = document.getElementById('batchReceivableProjectType').value;
+        if (!orders.length || !Number.isFinite(amount) || amount <= 0 || Math.abs(amount*100-Math.round(amount*100))>0.00001 || !reason) {
+          notifyOrder('请选择订单，并填写大于0、最多两位小数的金额及应收依据。', 'warning'); return;
         }
-        var amount = moneyNumber(document.getElementById('batchReceivableAmount').value);
-        if (amount <= 0) {
-          notifyOrder('请填写本次新增应收金额。', 'warning');
-          document.getElementById('batchReceivableAmount').focus();
-          return;
-        }
-        var distributions = batchReceivableDistributions(orders);
-        var previewTotal = distributions.reduce(function (sum, value) { return sum + value; }, 0);
-        var docNo = 'TZ-BATCH-' + String(Date.now()).slice(-8);
-        document.getElementById('batchReceivableSummaryStatus').className = 'tag tag-green';
-        document.getElementById('batchReceivableSummaryStatus').textContent = '已提交';
-        document.getElementById('batchReceivableFinanceStatus').textContent = '财务审核中';
-        document.getElementById('batchReceivableResult').hidden = false;
-        document.getElementById('batchReceivableResultText').textContent = '调整批次 ' + docNo + '，' + orders.length + '笔订单，新增应收合计 ' + moneyText(previewTotal) + '，状态：待财务审核。';
+        var values = batchReceivableDistributions(orders);
+        var inputs = orders.map(function(order,index){return {
+          orderNo:order.orderNo, type:order.type, orderStatus:order.orderStatus, originalAmount:moneyNumber(order.receivable), scheduleNo:order.serviceNo,
+          item:item, direction:'新增项目', priceMode:'收费', quantity:1, price:values[index], unit:'项',
+          reason:reason, traveler:'本订单全体游客', request:reason, operator:document.getElementById('batchReceivableOperator').value
+        };});
+        try {
+          inputs.forEach(function(input){window.OrderAmendmentModel.create(input,window.OrderAmendmentUI.list(input.orderNo));});
+          var created=inputs.map(function(input){return window.OrderAmendmentUI.add(input);});
+          document.getElementById('batchReceivableSummaryStatus').textContent='已提交';
+          document.getElementById('batchReceivableFinanceStatus').textContent=created.some(function(r){return r.resource;})?'待资源确认':'待配置业务审批';
+          document.getElementById('batchReceivableResult').hidden=false;
+          document.getElementById('batchReceivableResultText').textContent=created.map(function(r){return r.orderNo+' / '+r.no+' / '+moneyText(r.delta)+' / '+r.status;}).join('；')+'。可在各订单应收中查看申请记录，原应收暂不改变。';
+        } catch(error) {notifyOrder(error.message,'warning');}
       }
 
       function openPurchaseBatch(row) {
@@ -4532,17 +4348,6 @@
               : method + '收款登记';
         window.caesarUI.closeLayer(orderCollectionDrawer);
         showOrderAction(actionName, currentCollectionRow);
-      });
-
-      document.getElementById('submitReceivableAdjust').addEventListener('click', function () {
-        if (!currentReceivableRow) return;
-        var data = readOrder(currentReceivableRow);
-        var adjustType = document.getElementById('receivableAdjustType').value;
-        var projectType = document.getElementById('receivableProjectType').value;
-        var amount = Number(document.getElementById('receivableAdjustAmount').value || 0);
-        var docNo = 'TZ' + data.orderNo.replace(/\D/g, '').slice(-10);
-        document.getElementById('receivableAdjustResult').hidden = false;
-        document.getElementById('receivableAdjustResultText').textContent = '调整单 ' + docNo + ' 已提交，' + adjustType + ' / ' + projectType + ' / ' + signedMoneyText(amount) + '，状态：待财务审核。';
       });
 
       document.getElementById('submitBatchReceivable').addEventListener('click', submitBatchReceivable);

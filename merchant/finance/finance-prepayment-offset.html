@@ -5,57 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>预付冲抵 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <style>
-    .finance-prepayment-table table {
-      min-width: 1540px;
-    }
-    .finance-prepayment-table col:nth-child(1) { width: 250px; }
-    .finance-prepayment-table col:nth-child(2) { width: 140px; }
-    .finance-prepayment-table col:nth-child(3) { width: 260px; }
-    .finance-prepayment-table col:nth-child(4) { width: 220px; }
-    .finance-prepayment-table col:nth-child(5) { width: 190px; }
-    .finance-prepayment-table col:nth-child(6) { width: 230px; }
-    .finance-prepayment-table col:nth-child(7) { width: 200px; }
-    .finance-prepayment-table col:nth-child(8) { width: 150px; }
-    .finance-prepayment-table th.sticky-action,
-    .finance-prepayment-table td.sticky-action {
-      width: 150px;
-      min-width: 150px;
-      max-width: 150px;
-      position: sticky;
-      right: 0;
-      z-index: 2;
-      background: var(--surface, #fff);
-    }
-    .prepayment-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .prepayment-summary-item {
-      padding: 12px;
-      border: 1px solid var(--border-color, #e5e7eb);
-      border-radius: 10px;
-      background: var(--surface-soft, #f8fafc);
-    }
-    .prepayment-summary-label {
-      font-size: 12px;
-      color: var(--text-muted, #64748b);
-    }
-    .prepayment-summary-value {
-      margin-top: 4px;
-      font-weight: 600;
-      color: var(--text-primary, #0f172a);
-    }
-    .prepayment-tab-panels .drawer-section[hidden] {
-      display: none;
-    }
-    .work-mode-section[hidden],
-    .conditional-field[hidden] {
-      display: none;
-    }
-  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -585,6 +534,8 @@
     </div>
   </div>
 
+  <script src="../../shared/supplier-finance-model.js"></script>
+  <script src="../../shared/supplier-finance-ui.js"></script>
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#prepaymentRows tr'));
@@ -897,6 +848,7 @@
       }
 
       function updateRowCells(row) {
+        if (window.SupplierFinanceUI.renderRow(row)) return;
         row.children[4].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.offset) + '</strong><span>余额 ' + escapeHtml(row.dataset.balance) + '</span></div>';
         row.children[5].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.status) + '<span>' + escapeHtml(row.dataset.currentAction) + '</span></div>';
         row.children[6].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.nc) + '<span>' + escapeHtml(ncHint(row)) + '</span></div>';
@@ -1011,6 +963,7 @@
       }
 
       function openDetail(row, tabName) {
+        if (window.SupplierFinanceUI.open(row)) return;
         if (!row) return;
         activeRow = row;
         activeAction = 'detail';
@@ -1021,6 +974,7 @@
       }
 
       function openWork(row, action) {
+        if (window.SupplierFinanceUI.open(row)) return;
         if (!row) return;
         activeRow = row;
         activeAction = action || actionForRow(row);
@@ -1160,7 +1114,10 @@
         notify(result + '已记录');
       }
 
+      window.SupplierFinanceUI.onChange = function () { updateCounts(); applyFilters(); };
+
       function openFromParams() {
+        if (window.SupplierFinanceUI.openFromParams()) return;
         var params = new URLSearchParams(window.location.search);
         var query = params.get('prepayNo') || params.get('paymentNo') || params.get('payableNo') || params.get('supplier');
         if (!query) return;

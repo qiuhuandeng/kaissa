@@ -5,56 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>付款执行 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <style>
-    .payment-execute-table table {
-      min-width: 2090px;
-    }
-    .payment-execute-table col:nth-child(1) { width: 220px; }
-    .payment-execute-table col:nth-child(2) { width: 180px; }
-    .payment-execute-table col:nth-child(3) { width: 230px; }
-    .payment-execute-table col:nth-child(4) { width: 240px; }
-    .payment-execute-table col:nth-child(5) { width: 170px; }
-    .payment-execute-table col:nth-child(6) { width: 170px; }
-    .payment-execute-table col:nth-child(7) { width: 220px; }
-    .payment-execute-table col:nth-child(8) { width: 220px; }
-    .payment-execute-table col:nth-child(9) { width: 180px; }
-    .payment-execute-table col:nth-child(10) { width: 170px; }
-    .payment-execute-table col:nth-child(11) { width: 180px; }
-    .payment-execute-table th.sticky-action,
-    .payment-execute-table td.sticky-action {
-      width: 180px;
-      min-width: 180px;
-      max-width: 180px;
-      position: sticky;
-      right: 0;
-      z-index: 2;
-      background: var(--surface, #fff);
-    }
-    .payment-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .payment-summary-item {
-      padding: 12px;
-      border: 1px solid var(--border-color, #e5e7eb);
-      border-radius: 10px;
-      background: var(--surface-soft, #f8fafc);
-    }
-    .payment-summary-label {
-      font-size: 12px;
-      color: var(--text-muted, #64748b);
-    }
-    .payment-summary-value {
-      margin-top: 4px;
-      font-weight: 600;
-      color: var(--text-primary, #0f172a);
-    }
-    .payment-tab-panels .drawer-section[hidden] {
-      display: none;
-    }
-  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -409,6 +359,8 @@
     </div>
   </div>
 
+  <script src="../../shared/supplier-finance-model.js"></script>
+  <script src="../../shared/supplier-finance-ui.js"></script>
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#paymentRows tr'));
@@ -690,6 +642,7 @@
       }
 
       function openDetail(row, tabName) {
+        if (window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         document.getElementById('paymentDetailTitle').textContent = '付款详情';
         renderObject(row, 'detail');
@@ -709,6 +662,7 @@
       }
 
       function openWork(row, action) {
+        if (window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         activeAction = action;
         var actionText = action === 'account' ? '确认账户' : (action === 'failed' ? '处理失败' : (action === 'remittance' ? '上传回单' : '执行付款'));
@@ -738,6 +692,7 @@
       }
 
       function updateRowVisual(row) {
+        if (window.SupplierFinanceUI.renderRow(row)) return;
         var statusCell = row.children[8];
         var ncCell = row.children[9];
         var actionCell = row.children[10];
@@ -917,7 +872,10 @@
         });
       });
 
+      window.SupplierFinanceUI.onChange = function () { updateCounts(); applyFilters(); };
+
       function openFromParams() {
+        if (window.SupplierFinanceUI.openFromParams()) return;
         var params = new URLSearchParams(window.location.search);
         var keyword = params.get('paymentNo') || params.get('payableNo') || params.get('applyNo');
         if (!keyword) return;

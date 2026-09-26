@@ -1,0 +1,26 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const M=require('../shared/order-amendment-model.js'),C=require('../shared/approval-config-model.js');let count=0;
+function check(name,fn){fn();count++;console.log('PASS '+name);}
+const base={orderNo:'AR-TEST',type:'参团游',orderStatus:'已确认',originalAmount:10000,item:'补差',direction:'新增项目',priceMode:'收费',quantity:1,price:1200,reason:'客户书面确认',unit:'项'};
+check('订单确认前不可调整正式应收',()=>{for(const orderStatus of ['草稿','预留','占位','待确认'])assert.throws(()=>M.create({...base,orderStatus}),/尚未确认/);assert(M.create(base));assert.throws(()=>M.create({...base,orderStatus:'已取消',priceMode:'免费'}));});
+check('确认前允许正式登记免费服务',()=>assert.equal(M.create({...base,orderStatus:'预留',item:'联运费',priceMode:'免费',traveler:'全体',operator:'计调张敏',request:'免费接站'}).delta,0));
+check('新申请不默认财务节点',()=>{const r=M.create(base);assert.equal(r.approvalStatus,'待配置业务审批');assert.equal(r.finance,'未生效');assert.equal(r.originalAmount,10000);});
+const lines=[{id:'room',item:'单房差',label:'单房差',quantity:1,price:1800,amount:1800}];
+const edit={...base,direction:'修改原项目',originalItems:lines,originalItemId:'room',price:1500,traveler:'张建国',request:'房型不变，调整单房差',operator:'计调张敏'};
+check('原单房差1800改单价1500差额负300',()=>{const r=M.create(edit);assert.equal(r.delta,-300);assert.equal(r.before.amount,1800);assert.equal(lines[0].price,1800);});
+check('修改数量计算差额不覆盖原值',()=>assert.equal(M.create({...edit,quantity:2,price:1800}).delta,1800));
+check('修改项目必选原明细，零差额不假造应收变更',()=>{assert.throws(()=>M.create({...edit,originalItemId:'missing'}));assert.throws(()=>M.create({...edit,price:1800}),/未变化/);});
+check('服务供给确认不等于价格批准',()=>{const r=M.create(edit);assert.equal(r.approvalStatus,'待资源确认');assert.throws(()=>M.decide({...r,approvalStatus:'待业务审批'},'通过',{amount:10000,received:8000}),/计调确认/);});
+const ready={...M.create(base),approvalStatus:'待业务审批'};
+check('批准后应收自动增加，实收不动',()=>{const t=M.decide(ready,'通过',{amount:10000,received:8000},'同意');assert.equal(t.account.amount,11200);assert.equal(t.account.received,8000);assert.equal(t.account.pending,3200);assert.equal(t.record.status,'已生效');});
+check('减价出现多收款而不自动退款',()=>{const t=M.decide({...ready,delta:-3000},'通过',{amount:10000,received:8000});assert.deepEqual(t.account,{amount:7000,received:8000,pending:0,overpaid:1000});});
+check('批准不可重复生效',()=>{const t=M.decide(ready,'通过',{amount:10000,received:0});assert.throws(()=>M.decide(t.record,'通过',t.account),/不在可审批/);});
+check('退回和驳回有原因且金额不动',()=>{for(const d of ['退回','驳回']){assert.throws(()=>M.decide(ready,d,{amount:10000,received:8000},''));const t=M.decide(ready,d,{amount:10000,received:8000},'请补客户确认');assert.equal(t.account.amount,10000);assert.equal(t.account.received,8000);assert.equal(t.record.finance,'未生效');}});
+check('应收版本变化须退回重核',()=>assert.throws(()=>M.decide(ready,'通过',{amount:11000,received:8000}),/发生变化/));
+check('未配置审批禁止批准',()=>assert.throws(()=>M.decide(M.create(base),'通过',{amount:10000,received:8000})));
+check('业务与财务审批事项独立',()=>{assert.equal(C.scene('订单应收变更').group,'销售与渠道');assert.equal(C.scene('认款调整／复核').group,'财务');assert(!C.scene('认款/应收调整'));const t=C.createState().templates.find(t=>(t.draft||t.published).scene==='订单应收变更');assert(!t.published);assert.equal(t.draft.nodes.length,0);assert(C.validate(C.createState(),t.draft,t.id).length);});
+check('已有合并模板及历史版本不被新事项覆盖',()=>{const old={id:'old',published:{scene:'认款/应收调整'},draft:null,versions:[{number:1}]};const state={templates:[old]};const before=JSON.stringify(old);C.ensureReceivableScenes(state);assert.equal(JSON.stringify(old),before);assert.equal(state.templates.length,3);C.ensureReceivableScenes(state);assert.equal(state.templates.length,3);});
+check('审批必填内容含原值拟值差额',()=>{const x=C.contentCatalog('订单应收变更');for(const id of ['before','after','delta','reason'])assert(x.find(f=>f.id===id).required);});
+check('财务普通应收无金额复核入口',()=>{const s=fs.readFileSync('merchant/finance/finance-receivable.html','utf8');assert(!s.includes('确认应收'));assert(!s.includes('补差调整复核'));for(const row of s.matchAll(/<tr data-no=.*?<\/tr>/gs))if(!row[0].includes('data-source="优惠减免"'))assert(!row[0].includes('data-open-review'));});
+check('修改页面内联脚本可解析',()=>{for(const file of ['merchant/sales/booking.html','merchant/sales/orders.html','merchant/sales/orders-detail.html','merchant/approval/approvals.html','merchant/finance/finance-receivable.html']){const s=fs.readFileSync(file,'utf8');for(const m of s.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g))if(m[1].trim())new vm.Script(m[1],{filename:file});}});
+console.log('完成 '+count+' 组应收职责规则检查');

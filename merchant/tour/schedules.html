@@ -4776,6 +4776,7 @@
         var execution = executionStage(item);
         var items = [];
         var leaderAction = leaderQuickAction(item);
+        if (mainStage === '销售中' || mainStage === '出发准备') items.push(dropdownItem('整团转移', 'data-open-whole-transfer'));
         if (mainStage === '待发布') {
           items.push(dropdownItem('编辑' + objectName, 'data-edit-schedule'));
           items.push(dropdownItem('确认价格', 'data-open-schedule-price'));
@@ -6829,6 +6830,28 @@
           moreButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
           return;
         }
+        if (event.target.closest('[data-open-whole-transfer]') && item) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeMenus();
+          if (['销售中', '出发准备'].indexOf(scheduleMainStage(item)) < 0) return;
+          window.caesarWholeGroupTransfer.open({
+            code: item.code, product: item.product, depart: item.depart,
+            orders: orderRowsForSchedule(item).map(function (order) {
+              return { no: order.no, customer: order.customer, people: parseInt(order.qty, 10) || 0, quantity: order.qty,
+                occupation: order.resource || order.qty, contract: order.pay, decision: '待客户确认', status: '待处理', processed: false };
+            }),
+            targets: schedules.filter(function (target) {
+              return target.code !== item.code && target.product === item.product && target.batchType === item.batchType && target.unit === item.unit &&
+                target.approvalStatus !== '待审批' && ['销售中', '出发准备'].indexOf(scheduleMainStage(target)) >= 0;
+            }).map(function (target) {
+              return { code: target.code, available: Math.max(0, stockNumber(target.left)),
+                label: target.code + ' / ' + target.depart + ' / 可用' + stockText(target.left, target.unit),
+                supply: (target.route || target.product) + '；' + (target.resourceStatus || '资源待核对') };
+            })
+          });
+          return;
+        }
         if (editButton && item) {
           currentSchedule = item;
           closeMenus();
@@ -7518,5 +7541,6 @@
       }
     })();
   </script>
+  <script src="../../shared/schedule-whole-transfer.js"></script>
 </body>
 </html>

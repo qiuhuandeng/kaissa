@@ -5,55 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>付款申请单 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <style>
-    .payment-apply-table table {
-      min-width: 1960px;
-    }
-    .payment-apply-table col:nth-child(1) { width: 220px; }
-    .payment-apply-table col:nth-child(2) { width: 180px; }
-    .payment-apply-table col:nth-child(3) { width: 230px; }
-    .payment-apply-table col:nth-child(4) { width: 240px; }
-    .payment-apply-table col:nth-child(5) { width: 220px; }
-    .payment-apply-table col:nth-child(6) { width: 170px; }
-    .payment-apply-table col:nth-child(7) { width: 190px; }
-    .payment-apply-table col:nth-child(8) { width: 190px; }
-    .payment-apply-table col:nth-child(9) { width: 170px; }
-    .payment-apply-table col:nth-child(10) { width: 150px; }
-    .payment-apply-table th.sticky-action,
-    .payment-apply-table td.sticky-action {
-      width: 150px;
-      min-width: 150px;
-      max-width: 150px;
-      position: sticky;
-      right: 0;
-      z-index: 2;
-      background: var(--surface, #fff);
-    }
-    .payment-apply-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .payment-apply-summary-item {
-      padding: 12px;
-      border: 1px solid var(--border-color, #e5e7eb);
-      border-radius: 10px;
-      background: var(--surface-soft, #f8fafc);
-    }
-    .payment-apply-summary-label {
-      font-size: 12px;
-      color: var(--text-muted, #64748b);
-    }
-    .payment-apply-summary-value {
-      margin-top: 4px;
-      font-weight: 600;
-      color: var(--text-primary, #0f172a);
-    }
-    .payment-apply-tab-panels .drawer-section[hidden] {
-      display: none;
-    }
-  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -417,6 +368,8 @@
   </div>
 
   <script src="../../shared/supplier-company-agreements.js"></script>
+  <script src="../../shared/supplier-finance-model.js"></script>
+  <script src="../../shared/supplier-finance-ui.js"></script>
   <script>
     (function () {
       // 独立付款样例：沿用申请单字段及原复核流程，不生成真实应付或付款。
@@ -707,6 +660,7 @@
       }
 
       function openDetail(row, tabName) {
+        if (window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         document.getElementById('applyDetailTitle').textContent = '付款申请单详情';
         renderObject(row, 'detail');
@@ -725,6 +679,7 @@
       }
 
       function openWork(row, action) {
+        if (window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         if (action !== 'review') {
           openDetail(row);
@@ -760,6 +715,7 @@
       }
 
       function updateRowVisual(row) {
+        if (window.SupplierFinanceUI.renderRow(row)) return;
         var statusCell = row.children[8];
         var actionCell = row.children[9];
         if (statusCell) {
@@ -883,7 +839,10 @@
         });
       });
 
+      window.SupplierFinanceUI.onChange = function () { updateCounts(); applyFilters(); };
+
       function openFromParams() {
+        if (window.SupplierFinanceUI.openFromParams()) return;
         var params = new URLSearchParams(window.location.search);
         var keyword = params.get('applyNo') || params.get('keyword');
         if (!keyword) return;

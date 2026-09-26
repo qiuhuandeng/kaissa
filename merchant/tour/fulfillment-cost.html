@@ -5,20 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期结算 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <style>
-    .group-cost-table-wrap table {
-      min-width: 900px;
-    }
-    .group-cost-col-item { width: 150px; }
-    .group-cost-col-supplier { width: 210px; }
-    .group-cost-col-original { width: 240px; }
-    .group-cost-col-local { width: 150px; }
-    .group-cost-col-note { width: 260px; }
-    .group-cost-col-action { width: 90px; }
-    #paymentWorkTabs[hidden] {
-      display: none !important;
-    }
-  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -32,6 +18,11 @@
   </section>
 
   <section class="list-surface fulfillment-cost-list-surface" data-list-surface>
+    <nav id="settlementWorkTabs" class="tab-bar list-surface-tabs list-filter-tabs" aria-label="团期结算工作区">
+      <button class="tab-item active" type="button" data-settlement-work-tab="cost">团期结算</button>
+      <button class="tab-item" type="button" data-settlement-work-tab="reconciliation">供应商对账</button>
+    </nav>
+    <section id="supplierReconciliationPanel" data-cost-panel="reconciliation" hidden><div data-reconciliation-app="merchant"></div></section>
     <nav id="paymentWorkTabs" class="tab-bar list-surface-tabs list-filter-tabs" aria-label="付款申请工作区" hidden>
       <button class="tab-item active" type="button" data-payment-work-tab="payment">待申请付款</button>
       <button class="tab-item" type="button" data-payment-work-tab="records">申请记录</button>
@@ -4586,7 +4577,11 @@
       }
 
       function setTab(tab) {
-        var next = pageMode === 'payment' && ['payment', 'records'].indexOf(tab) >= 0 ? tab : 'cost';
+        var next = pageMode === 'payment' ? (['payment', 'records'].indexOf(tab) >= 0 ? tab : 'payment') : (tab === 'reconciliation' ? 'reconciliation' : 'cost');
+        document.querySelectorAll('[data-settlement-work-tab]').forEach(function (button) {
+          button.classList.toggle('active', button.dataset.settlementWorkTab === next);
+          button.setAttribute('aria-pressed', String(button.dataset.settlementWorkTab === next));
+        });
         document.querySelectorAll('[data-payment-work-tab]').forEach(function (button) {
           button.classList.toggle('active', button.dataset.paymentWorkTab === next);
         });
@@ -4606,8 +4601,11 @@
         document.title = paymentMode ? '付款申请 - 凯撒旅游' : '团期结算 - 凯撒旅游';
         document.getElementById('fulfillmentCostPageTitle').textContent = paymentMode ? '付款申请' : '团期结算';
         document.getElementById('paymentWorkTabs').hidden = !paymentMode;
-        setTab(paymentMode ? initialPaymentTab() : 'cost');
+        document.getElementById('settlementWorkTabs').hidden = paymentMode;
+        setTab(paymentMode ? initialPaymentTab() : (pageParams.get('tab') === 'reconciliation' ? 'reconciliation' : 'cost'));
       }
+
+      window.SupplierPaymentWorkbench={show:function(tab){pageMode='payment';applyPageMode();setTab(tab||'payment');},back:function(){pageMode='settlement';applyPageMode();setTab('reconciliation');}};
 
       function setPayableGroupMode(mode) {
         payableGroupMode = ['supplier', 'schedule', 'subject'].indexOf(mode) >= 0 ? mode : 'supplier';
@@ -4703,7 +4701,7 @@
       }
 
       document.addEventListener('click', function (event) {
-        var tab = event.target.closest('[data-payment-work-tab], [data-cost-tab]');
+        var tab = event.target.closest('[data-payment-work-tab], [data-cost-tab], [data-settlement-work-tab]');
         var settlementMainTab = event.target.closest('[data-settlement-main-tab]');
         var settlementDocTab = event.target.closest('[data-settlement-doc-tab]');
         var openCost = event.target.closest('[data-open-cost]');
@@ -4722,7 +4720,7 @@
         var toastButton = event.target.closest('[data-toast]');
 
         if (tab) {
-          setTab(tab.dataset.paymentWorkTab || tab.dataset.costTab);
+          setTab(tab.dataset.paymentWorkTab || tab.dataset.costTab || tab.dataset.settlementWorkTab);
           return;
         }
         if (settlementMainTab) {
@@ -4990,5 +4988,12 @@
       if (pageParams.get('scheduleNo') && pageMode !== 'payment') openCostDrawer(pageParams.get('scheduleNo'));
     })();
   </script>
+  <script src="../../shared/supplier-reconciliation-model.js"></script>
+  <script src="../../shared/supplier-purchase.js"></script>
+<script src="../../shared/supplier-payment-request-model.js"></script>
+<script src="../../shared/supplier-payment-request.js"></script>
+<script src="../../shared/supplier-adjustment-model.js"></script>
+<script src="../../shared/supplier-adjustment-ui.js"></script>
+<script src="../../shared/supplier-reconciliation.js"></script>
 </body>
 </html>

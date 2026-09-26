@@ -5,55 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>发票管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <style>
-    .finance-invoice-table table {
-      min-width: 1760px;
-    }
-    .finance-invoice-table col:nth-child(1) { width: 230px; }
-    .finance-invoice-table col:nth-child(2) { width: 130px; }
-    .finance-invoice-table col:nth-child(3) { width: 240px; }
-    .finance-invoice-table col:nth-child(4) { width: 210px; }
-    .finance-invoice-table col:nth-child(5) { width: 230px; }
-    .finance-invoice-table col:nth-child(6) { width: 230px; }
-    .finance-invoice-table col:nth-child(7) { width: 210px; }
-    .finance-invoice-table col:nth-child(8) { width: 200px; }
-    .finance-invoice-table col:nth-child(9) { width: 180px; }
-    .finance-invoice-table col:nth-child(10) { width: 150px; }
-    .finance-invoice-table th.sticky-action,
-    .finance-invoice-table td.sticky-action {
-      width: 150px;
-      min-width: 150px;
-      max-width: 150px;
-      position: sticky;
-      right: 0;
-      z-index: 2;
-      background: var(--surface, #fff);
-    }
-    .invoice-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .invoice-summary-item {
-      padding: 12px;
-      border: 1px solid var(--border-color, #e5e7eb);
-      border-radius: 10px;
-      background: var(--surface-soft, #f8fafc);
-    }
-    .invoice-summary-label {
-      font-size: 12px;
-      color: var(--text-muted, #64748b);
-    }
-    .invoice-summary-value {
-      margin-top: 4px;
-      font-weight: 600;
-      color: var(--text-primary, #0f172a);
-    }
-    .invoice-tab-panels .drawer-section[hidden] {
-      display: none;
-    }
-  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -335,6 +286,8 @@
     </div>
   </div>
 
+  <script src="../../shared/supplier-finance-model.js"></script>
+  <script src="../../shared/supplier-finance-ui.js"></script>
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#invoiceRows tr'));
@@ -855,6 +808,7 @@
       }
 
       function openDetail(row, tabName) {
+        if (window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         activeAction = 'detail';
         document.getElementById('invoiceDetailTitle').textContent = '发票详情';
@@ -868,6 +822,7 @@
       }
 
       function openProcess(row, action) {
+        if (window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         activeAction = action || actionForStatus(row.dataset.status);
         document.getElementById('invoiceProcessTitle').textContent = actionTitle(activeAction, row);
@@ -881,6 +836,7 @@
       }
 
       function updateRowStatusCells(row) {
+        if (window.SupplierFinanceUI.renderRow(row)) return;
         row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.status) + '<span>' + escapeHtml(row.dataset.redResult + ' / ' + row.dataset.risk) + '</span></div>';
         row.children[8].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.ncStatus) + '<span>' + escapeHtml(row.dataset.voucherNo) + '</span></div>';
         row.children[9].innerHTML = rowActionHtml(row);
@@ -996,7 +952,10 @@
         notify(result + '已记录');
       }
 
+      window.SupplierFinanceUI.onChange = function () { updateCounts(); applyFilters(); };
+
       function openFromParams() {
+        if (window.SupplierFinanceUI.openFromParams()) return;
         var params = new URLSearchParams(window.location.search);
         var query = params.get('taskNo') || params.get('source') || params.get('settlementNo') || params.get('period');
         if (!query) return;

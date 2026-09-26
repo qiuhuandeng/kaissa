@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="../../shared/style.css">
   <link rel="stylesheet" href="../../shared/contract-workflow.css">
   <script src="../../shared/contract-workflow-model.js"></script>
+  <link rel="stylesheet" href="../../shared/order-amendment.css">
+  <script src="../../shared/order-amendment-model.js"></script>
+  <script src="../../shared/order-amendment-ui.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -375,13 +378,13 @@
           <label class="form-group"><span class="form-label">调整类型</span><select class="form-control"><option>新增应收项</option><option>补收差价</option><option>人数变化调整</option><option>售后减免</option><option>人工特批折扣</option><option>项目变更</option></select></label>
           <label class="form-group"><span class="form-label">业务款项</span><select class="form-control"><option>团费</option><option>机票</option><option>签证</option><option>房差</option><option>保险</option><option>服务费</option></select></label>
           <label class="form-group"><span class="form-label">调整金额</span><input class="form-control" type="text" placeholder="增加填正数，减免或折扣填负数"></label>
-          <label class="form-group"><span class="form-label">审批流</span><select class="form-control"><option>店长 → 财务应收</option><option>财务应收直接复核</option></select></label>
+          <label class="form-group"><span class="form-label">审批流</span><select class="form-control"><option>业务审批岗位待配置</option><option>业务审批岗位待配置</option></select></label>
           <label class="form-group form-group-full"><span class="form-label">调整说明</span><textarea class="form-control" rows="4" placeholder="填写客户确认、补差原因、售后依据或人工特批说明"></textarea></label>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button" data-result="提交应收调整">提交审批</button>
+        <button class="btn btn-primary" type="button" id="submitDetailReceivable">提交审批</button>
       </div>
     </div>
   </div>
@@ -715,13 +718,13 @@
           meta: '标准办理 / SV-JP-20250701-001 / 服务单履约',
           contact: '孙倩 136****1100',
           owner: '软件园门店 / 孙丽',
-          orderStatus: ['处理中', 'tag tag-blue'],
+          orderStatus: ['已确认', 'tag tag-blue'],
           paymentStatus: ['已收款', 'tag tag-green'],
           amount: ['¥1,960', '¥1,960', '¥0'],
           todos: [['待补材料', '1人资产证明待补'], ['待送签', '材料齐全后送签'], ['待交付结果', '出签后通知客户']],
           snapshot: [['订单来源', '门店'], ['归属门店', '软件园门店'], ['下单店员', '孙丽'], ['服务单号', 'SV-JP-20250701-001'], ['服务项目', '日本签证代办'], ['办理时效', '8-10个工作日']],
           money: [['应收', '¥1,960', 'amount-red'], ['已收', '¥1,960', 'amount-green'], ['待收', '¥0', ''], ['退款中', '¥0', '']],
-          downstream: [['服务单处理', '材料状态、送签、出签由服务单承接'], ['应收管理', '服务费应收已确认'], ['退款执行', '取消委托后进入售后退款']],
+          downstream: [['服务单处理', '材料状态、送签、出签由服务单承接'], ['应收管理', '订单确认后自动生成服务费应收'], ['退款执行', '取消委托后进入售后退款']],
           travelers: {
             summary: '2人，1人资产证明待补',
             statuses: [['材料完整度', '75%', 'tag tag-orange'], ['服务进度', '待送签', 'tag tag-orange'], ['AI审查', '材料待补', 'tag tag-orange']],
@@ -905,7 +908,7 @@
         return Math.max(moneyNumber(config.amount[0]) - moneyNumber(config.amount[1]) - discountCarryAmount(), 0);
       }
       function normalizedMoneyLabel(label) {
-        if (label === '应收') return '订单应收';
+        if (label === '应收') return OrderAmendmentModel.isEffective(config.orderStatus[0])?'订单应收':'预计应收';
         if (label === '已收') return '客户已收';
         if (label === '待收') return '客户待收';
         return label;
@@ -1090,7 +1093,7 @@
           ['成本承接方向', profile.purchaseEntity + ' / 履约成本确认'],
           ['优惠承担', basis.discount > 0 ? moneyText(basis.discount) : '无优惠减免'],
           ['客户待收', moneyText(basis.pending)],
-          ['后续处理', '收款、应收、成本、结算和发票分别由对应模块确认']
+          ['后续处理', '订单确认自动生成应收，变更走业务审批；财务复核到账与认款']
         ];
       }
       function financeAmountItems() {
@@ -1640,7 +1643,7 @@
             title: '项目应收调整申请',
             typeOptions: ['新增应收项', '补收差价', '人数变化调整', '售后减免', '人工特批折扣', '项目变更'],
             subjectLabel: '业务款项',
-            subjectOptions: ['项目团费', '会务服务费', '交通差价', '住宿差价', '活动增项', '其他'],
+            subjectOptions: window.OrderAmendmentModel.items('单团项目'),
             changeLabel: '关联变更',
             changeOptions: ['BG-MICE-20260704-001 人数调整', '无，先提交应收调整'],
             reason: '填写人数、日期、服务标准、售后依据或人工特批说明，以及是否影响项目团成本'
@@ -1658,7 +1661,7 @@
           title: '应收调整申请',
           typeOptions: profile[0],
           subjectLabel: '业务款项',
-          subjectOptions: profile[1],
+          subjectOptions: window.OrderAmendmentModel.items(config.productType),
           reason: '填写客户确认、补差原因、售后依据或人工特批说明'
         };
       }
@@ -1669,7 +1672,7 @@
           selectControl(profile.subjectLabel, profile.subjectOptions),
           profile.changeOptions ? selectControl(profile.changeLabel, profile.changeOptions) : '',
           inputControl('调整金额', '', false, 'placeholder="增加填正数，减免或折扣填负数"'),
-          selectControl('审批流', ['店长 → 财务应收', '财务应收直接复核']),
+          selectControl('审批流', ['业务审批岗位待配置', '业务审批岗位待配置']),
           uploadControl(isProjectOrder() ? '客户确认依据' : '关联附件/依据', isProjectOrder() ? '上传客户邮件、盖章确认单、变更报价或补充协议' : '上传客户确认、价格依据或补充服务说明'),
           textareaControl('调整说明', '', profile.reason)
         ].join('');
@@ -2009,7 +2012,7 @@
         setText('receiptDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name + '。提交后进入销售中心收款认领和财务复核。');
         setHtml('receiptDrawerFields', projectReceiptFieldsHtml());
         setText('receivableDrawerTitle', '项目应收调整申请');
-        setText('receivableDrawerSummary', '项目订单应收 ' + config.amount[0] + '，调整必须关联客户确认或项目变更，审批通过后由财务应收承接。');
+        setText('receivableDrawerSummary', '项目订单应收 ' + config.amount[0] + '，调整必须关联客户确认或项目变更，业务审批通过后自动更新应收，财务查询承接。');
         setHtml('receivableDrawerFields', projectReceivableFieldsHtml());
         setText('projectContractDrawerTitle', '合同管理承接');
         setText('projectContractDrawerSummary', config.orderNo + ' / ' + snapshotValue('单团项目') + ' / ' + contactParts().name);
@@ -2040,6 +2043,7 @@
         }).join(''));
       }
       function render() {
+        window.OrderAmendmentContext=amendmentContext();
         renderProjectOrderChrome();
         renderStateActionButtons();
         setText('orderNo', config.orderNo);
@@ -2147,6 +2151,7 @@
           ['应收调整', '补差/售后减免/人工特批', '¥0', '无调整', '未生效', '-', '如需补差、人数变化、售后减免或人工特批折扣，从右上角“应收调整”发起']
         ]);
         setHtml('receivableRows', receivableItems.map(function (row) {
+          row=row.slice();if(!OrderAmendmentModel.isEffective(config.orderStatus[0])){row[1]='订单报价';row[3]='订单待确认';row[4]='应收未生成';row[5]='—';}
           return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td class="amount-strong">' + escapeHtml(row[2]) + '</td><td>' + tagHtml([row[3], statusClass(row[3])]) + '</td><td>' + tagHtml([row[4], statusClass(row[4])]) + '</td><td>' + escapeHtml(row[5]) + '</td><td>' + escapeHtml(row[6]) + '</td></tr>';
         }).join(''));
         const receiptItems = config.amount[1] === '¥0' ? [] : [
@@ -2189,7 +2194,7 @@
         setText('receiptSettleUnit', isProjectOrder() ? contactParts().name : config.owner);
         setText('receiptCurrency', currencyLabel(receivableCurrencyCode()));
         setText('receivableDrawerTitle', receivableProfileFor().title);
-        setText('receivableDrawerSummary', '订单应收 ' + config.amount[0] + '，调整提交后进入审批和财务应收审核。');
+        setText('receivableDrawerSummary', '订单应收 ' + config.amount[0] + '，应收变更须业务审批，通过后自动生效；财务复核到账及认款。');
         setHtml('receivableDrawerFields', receivableFieldsHtml());
         setText('projectContractDrawerTitle', '合同管理承接');
         setText('projectContractDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + contactParts().name);
@@ -2277,7 +2282,11 @@
         }
         return base + inputControl(changeTargetLabel(), '', false, 'placeholder="搜索可变更的履约对象"') + selectControl('价差处理', ['补差', '退差', '平价变更', '待重新核价']) + uploadControl('客户确认附件', '上传客户邮件、确认单或补充协议') + textareaControl('变更原因', '', '填写客户原因、资源确认要求和履约影响');
       }
+      function amendmentContext() {
+        return {orderNo:config.orderNo, type:config.productType, orderStatus:config.orderStatus[0], received:moneyNumber(config.amount[1]), originalItems:OrderAmendmentModel.originalItems(config.productType,moneyNumber(config.amount[0]),storedOrder&&storedOrder.salesSnapshot&&storedOrder.salesSnapshot.priceGroups), originalAmount:moneyNumber(config.amount[0]), scheduleNo:scheduleValue()};
+      }
       function openLayer(id) {
+        if (id === 'receivableDrawer') window.OrderAmendmentUI.mount(document.getElementById('receivableDrawerFields'), amendmentContext(), document.getElementById('submitDetailReceivable'));
         const modal = document.getElementById(id);
         if (!modal) return;
         if (window.caesarUI && window.caesarUI.openLayer) window.caesarUI.openLayer(modal);
@@ -2394,6 +2403,7 @@
       });
 
       render();
+      window.OrderAmendmentContext = amendmentContext();
       window.OrderContractContext = {
         id: config.orderNo, customer: contactParts().name, business: config.productType,
         product: config.productName, trip: scheduleValue(), amount: moneyNumber(config.amount[0]),

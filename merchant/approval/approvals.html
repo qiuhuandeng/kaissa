@@ -137,6 +137,7 @@
   <script src="../../shared/org-admin-ui.js"></script>
   <script src="../../shared/approval-org-workflow-ui.js"></script>
   <script src="../../shared/approval-config-model.js"></script>
+  <script src="../../shared/order-amendment-model.js"></script>
   <script>
     (function () {
       if (new URLSearchParams(location.search).get('view') === 'config') {
@@ -203,6 +204,8 @@
         "损耗确认",
         "付款申请",
         "退款申请",
+        "订单应收变更",
+        "认款调整／复核",
         "认款/应收调整",
         "坏账处理",
         "结算确认",
@@ -630,35 +633,17 @@
           opinion: "同意退款申请。财务执行前再次核对供应商不可退费用。"
         },
         {
-          no: "APR-20260704-081",
-          matter: "认款/应收调整",
-          source: "财务",
-          scopes: ["todo", "overview"],
-          status: "待审批",
-          applicant: "财务专员",
-          applicantRole: "应收核对",
-          businessTitle: "欧洲十国经典游应收减免",
-          businessNo: "AR-ADJ-20260704-001",
-          context: "订单 KS202607040018",
-          impact: "-¥1,200",
-          risk: "应收减免需复核",
-          riskLevel: "danger",
-          node: "财务主管",
-          due: "30分钟后",
-          appliedAt: "2026-07-04",
-          sourceHref: "../finance/finance-receivable.html",
-          detail: [
-            ["调整原因", "客户取消接送服务后，应收金额需减免"],
-            ["认款口径", "原流水拆分至订单团费与服务费，剩余¥1,200冲减应收"],
-            ["影响范围", "影响订单应收、收款计划和客户欠款状态"],
-            ["通过后", "回写应收调整记录，收款计划由财务模块承接"]
-          ],
-          flow: [
-            ["10:00", "财务专员提交认款调整"],
-            ["10:02", "系统校验订单收款与应收差额"],
-            ["当前", "等待财务主管审批"]
-          ],
-          opinion: "同意调整。保留流水拆分依据并同步订单应收记录。"
+          no:'APR-AR-DEMO-001', matter:'订单应收变更', source:'销售中心',scopes:['todo','overview'],status:'待审批',
+          applicant:'销售王芳',applicantRole:'销售顾问',businessTitle:'应收减价审批演示',businessNo:'TZ-AR-DEMO-001',context:'订单 KS20260926001 / 参团游',
+          impact:'-¥3,000',risk:'演示审批；正式岗位待配置',riskLevel:'warning',node:'业务审批演示',due:'演示',appliedAt:'2026-09-26',sourceHref:'../sales/orders.html?orderNo=KS20260926001',
+          arDemo:true,arAccount:{amount:10000,received:8000},arRecord:{originalAmount:10000,delta:-3000,approvalStatus:'待业务审批',resource:false},
+          detail:[['调整前','团费 1 × ¥10,000 = ¥10,000'],['调整后','团费 1 × ¥7,000 = ¥7,000；差额 -¥3,000'],['依据','客户确认减价，销售提交申请'],['实收影响','实收 ¥8,000 保持不变，批准后多收 ¥1,000 另办退转'],['审批职责','此例用于演示通过、退回和驳回；正式审批岗位及金额分流待配置'],['通过后','应收自动更新为 ¥7,000，保留差额单；无需财务再次审核金额']],
+          flow:[['提交','销售发起应收变更'],['当前','等待业务审批演示']],opinion:''
+        },
+        {
+          no:'APR-MATCH-DEMO-001',matter:'认款调整／复核',source:'财务',scopes:['todo','overview'],status:'待审批',applicant:'认款专员',applicantRole:'收款认领',
+          businessTitle:'到账流水认款归属复核',businessNo:'RK-DEMO-001',context:'到账流水 LS-DEMO-001',impact:'¥1,200',risk:'核对到账及订单归属',riskLevel:'normal',node:'财务复核',due:'今日',appliedAt:'2026-09-26',sourceHref:'../finance/finance-matching.html?matchNo=RK-DEMO-001',
+          detail:[['资金依据','银行到账流水 ¥1,200，需核对付款方及收款账户'],['认款内容','核对关联订单、认款金额和是否重复认领'],['应收影响','不修改业务确定的应收金额'],['通过后','确认认款及实收；差错退回认款人处理']],flow:[['提交','认款人提交复核'],['当前','等待财务复核到账与认款']],opinion:''
         },
         {
           no: "APR-20260624-025",
@@ -1358,7 +1343,7 @@
       }
 
       function writeApprovalResult(item, decision) {
-        if (item.contractMatter || item.storeMatter || item.fundMatter || item.supplierMatter) return; // 门店本批仅演示审批结果，不跨页回写。
+        if (item.arDemo || item.contractMatter || item.storeMatter || item.fundMatter || item.supplierMatter) return; // 门店本批仅演示审批结果，不跨页回写。
         const results = readStored("caesarApprovalResults");
         results[item.no] = {
           status: decision === "通过" ? "approved" : "rejected",
@@ -1397,6 +1382,11 @@
           if (decisionValue !== "通过" && !opinionInput.value.trim()) {
             opinionInput.focus();
             return;
+          }
+          if(activeApproval.arDemo){
+            try{const result=OrderAmendmentModel.decide(activeApproval.arRecord,decisionValue,activeApproval.arAccount,opinionInput.value);activeApproval.arRecord=result.record;activeApproval.arAccount=result.account;
+              activeApproval.detail=activeApproval.detail.concat([['处理结果',decisionValue==='通过'?'应收 '+OrderAmendmentModel.money(result.account.amount)+'；实收 '+OrderAmendmentModel.money(result.account.received)+'；多收待处理 '+OrderAmendmentModel.money(result.account.overpaid)+'。未自动退款或转款。':'原应收和实收保持不变；'+opinionInput.value]]);
+            }catch(error){toast(error.message);return;}
           }
           if(activeApproval.contractMatter){const error=ContractApproval.approve(activeApproval,decisionValue,opinionInput.value);if(error){toast(error);return;}}
           if (decisionValue === "通过" && activeApproval.fundBlock) { toast(activeApproval.fundBlock); return; }

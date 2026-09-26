@@ -6,6 +6,7 @@
   let state,storageError='';
   try{const raw=sessionStorage.getItem(KEY);state=raw?JSON.parse(raw):M.createState();if(state.schema!==1||!Array.isArray(state.templates)||!Array.isArray(state.arrangements))throw Error('invalid');}
   catch(_){state=M.createState();storageError='无法读取本次配置，请检查浏览器是否允许保存会话数据。';}
+  M.ensureReceivableScenes(state); // Add separate drafts; preserve historical mixed templates and versions.
   function refreshOrganization(){state.org=M.orgData.read();state.people=M.clone(state.org.people);}
   refreshOrganization();
   function persist(next=state){try{sessionStorage.setItem(KEY,JSON.stringify(next));state=next;storageError='';return true;}catch(_){toast('浏览器未能保存，请保留当前页面并检查存储设置。');return false;}}

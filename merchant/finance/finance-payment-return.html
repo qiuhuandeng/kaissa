@@ -5,60 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>付款退回 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
-  <style>
-    .finance-payment-return-table table {
-      min-width: 1960px;
-    }
-    .finance-payment-return-table col:nth-child(1) { width: 220px; }
-    .finance-payment-return-table col:nth-child(2) { width: 170px; }
-    .finance-payment-return-table col:nth-child(3) { width: 210px; }
-    .finance-payment-return-table col:nth-child(4) { width: 240px; }
-    .finance-payment-return-table col:nth-child(5) { width: 140px; }
-    .finance-payment-return-table col:nth-child(6) { width: 170px; }
-    .finance-payment-return-table col:nth-child(7) { width: 170px; }
-    .finance-payment-return-table col:nth-child(8) { width: 200px; }
-    .finance-payment-return-table col:nth-child(9) { width: 230px; }
-    .finance-payment-return-table col:nth-child(10) { width: 190px; }
-    .finance-payment-return-table col:nth-child(11) { width: 150px; }
-    .finance-payment-return-table th.sticky-action,
-    .finance-payment-return-table td.sticky-action {
-      width: 150px;
-      min-width: 150px;
-      max-width: 150px;
-      position: sticky;
-      right: 0;
-      z-index: 2;
-      background: var(--surface, #fff);
-    }
-    .payment-return-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .payment-return-summary-item {
-      padding: 12px;
-      border: 1px solid var(--border-color, #e5e7eb);
-      border-radius: 10px;
-      background: var(--surface-soft, #f8fafc);
-    }
-    .payment-return-summary-label {
-      font-size: 12px;
-      color: var(--text-muted, #64748b);
-    }
-    .payment-return-summary-value {
-      margin-top: 4px;
-      font-weight: 600;
-      color: var(--text-primary, #0f172a);
-    }
-    .payment-return-tab-panels .drawer-section[hidden] {
-      display: none;
-    }
-    .work-field[hidden],
-    .work-dynamic-section[hidden] {
-      display: none;
-    }
-  </style>
+
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -80,6 +27,9 @@
           <label class="sr-only" for="statusFilter">主状态</label>
           <select id="statusFilter">
             <option value="全部">全部状态</option>
+            <option>待到账</option>
+            <option>部分到账</option>
+            <option>已到账</option>
             <option>待匹配</option>
             <option>待确认</option>
             <option>差异待处理</option>
@@ -463,6 +413,8 @@
     </div>
   </div>
 
+  <script src="../../shared/supplier-finance-model.js"></script>
+  <script src="../../shared/supplier-finance-ui.js"></script>
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#paymentReturnRows tr'));
@@ -817,6 +769,7 @@
       }
 
       function openDetail(row, tabName) {
+        if(window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         document.getElementById('paymentReturnDetailTitle').textContent = '退回详情';
         renderObject(row, 'detail');
@@ -835,6 +788,7 @@
       }
 
       function openWork(row, action) {
+        if(window.SupplierFinanceUI.open(row)) return;
         activeRow = row;
         var titleMap = { match: '匹配', confirm: '确认', diff: '处理', reverse: '冲销' };
         document.getElementById('paymentReturnWorkTitle').textContent = titleMap[action] || actionByStatus(row.dataset.status);
@@ -894,6 +848,7 @@
       }
 
       function updateRowVisual(row) {
+        if(window.SupplierFinanceUI.renderRow(row)) return;
         var paymentCell = row.children[2];
         var impactCell = row.children[8];
         var ncCell = row.children[9];
@@ -1034,6 +989,8 @@
 
       updateCounts();
       applyFilters();
+      window.SupplierFinanceUI.onChange=function(){updateCounts();applyFilters();};
+      window.SupplierFinanceUI.openFromParams();
     })();
   </script>
 </body>

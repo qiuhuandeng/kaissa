@@ -3,7 +3,7 @@ const M=require('../shared/approval-config-model.js');
 let count=0;const test=(name,fn)=>{fn();console.log('PASS '+name);count++;};
 const setup=(name='付款申请')=>{const s=M.createState(),r=s.templates.find(r=>(r.published||r.draft).scene===name);return {s,r,t:M.clone(r.published||r.draft)};};
 const context={company:'fj',department:'fj-europe',applicant:'chenhong',businessOwner:'zhou',amount:60000,currency:'CNY',rate:5,date:'2026-09-24'};
-test('保留六类合同及旧配置，未配置事项为草稿',()=>{const s=M.createState();assert.equal(s.templates.length,25);assert.equal(s.templates.filter(r=>r.published).length,8);assert.equal(s.templates.filter(r=>r.published&&M.scene(r.published.scene).group==='合同').length,6);assert(s.templates.filter(r=>!r.published).every(r=>r.draft.nodes.length===0));});
+test('保留六类合同及旧配置，未配置事项为草稿',()=>{const s=M.createState();assert.equal(s.templates.length,26);assert.equal(s.templates.filter(r=>r.published).length,8);assert.equal(s.templates.filter(r=>r.published&&M.scene(r.published.scene).group==='合同').length,6);assert(s.templates.filter(r=>!r.published).every(r=>r.draft.nodes.length===0));});
 test('八个代表流程均可通过结构及人员检查',()=>{const s=M.createState();for(const r of s.templates.filter(r=>r.published))assert.deepEqual(M.validate(s,r.published,r.id),[]);});
 test('同一流程两家公司找不同实际审核人',()=>{const {s,t}=setup();const fj=M.trial(s,t,context),bj=M.trial(s,t,{...context,company:'bj',department:'bj-team',applicant:'chenxiao',businessOwner:'zhoumin'});assert.deepEqual(fj.errors,[]);assert.deepEqual(bj.errors,[]);assert(fj.steps.some(x=>x.detail.includes('刘洋')));assert(bj.steps.some(x=>x.detail.includes('吴芳')));});
 test('金额边界：五万元两节点，超过五万元三节点',()=>{const {s,t}=setup();assert.equal(M.trial(s,t,{...context,amount:50000}).steps.filter(x=>x.type==='approval').length,2);assert.equal(M.trial(s,t,{...context,amount:50000.01}).steps.filter(x=>x.type==='approval').length,3);});
@@ -11,7 +11,7 @@ test('币种未配置不能落入其他情况绕过金额规则',()=>{const {s,t
 test('金额缺失不是零，不能静默通过',()=>{const {s,t}=setup();assert(M.trial(s,t,{...context,amount:''}).errors.length);});
 test('部门不属于公司及申请人越权被拦截',()=>{const {s,t}=setup();assert(M.trial(s,t,{...context,department:'bj-team'}).errors.length);assert(M.trial(s,t,{...context,applicant:'wufang'}).errors.length);});
 test('部门指定与包含下级范围明确',()=>{const {t}=setup();t.departments=['fj-center'];t.departmentMode='selected';assert(M.accepts(t,context));t.includeChildren=false;assert(!M.accepts(t,context));t.departments=[];assert(!M.accepts(t,context));});
-test('适用范围冲突阻止发布，不暗中选择',()=>{const {s,t}=setup();assert(M.publish(s,'new',t).errors.some(x=>x.includes('重叠')));assert.equal(s.templates.length,25);});
+test('适用范围冲突阻止发布，不暗中选择',()=>{const {s,t}=setup();assert(M.publish(s,'new',t).errors.some(x=>x.includes('重叠')));assert.equal(s.templates.length,26);});
 test('停用模板不再占用新的适用范围',()=>{const {s,r,t}=setup();r.disabled=true;assert.deepEqual(M.validate(s,t,'new'),[]);});
 test('无人、离职及跨公司指定审批人均拦截',()=>{const {s,r,t}=setup();s.arrangements.find(a=>a.company==='fj'&&a.duty==='财务审核').members=[];assert(M.validate(s,t,r.id).some(x=>x.includes('未找到')));t.nodes=[M.node('专人','member')];t.nodes[0].members=['wufang'];assert(M.validate(s,t,r.id).some(x=>x.includes('无本公司')));t.companies=['bj'];s.people.find(p=>p.id==='wufang').active=false;assert(M.validate(s,t,r.id).some(x=>x.includes('离职')));});
 test('申请人自审被拦截，抄送本人允许',()=>{const {s,t}=setup();assert(M.trial(s,t,{...context,applicant:'zhou'}).errors.some(x=>x.includes('本人')));t.nodes.push({...M.node('抄送','member'),type:'cc',members:['chenhong']});assert.deepEqual(M.trial(s,t,context).errors,[]);});

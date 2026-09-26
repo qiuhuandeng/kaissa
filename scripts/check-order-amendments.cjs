@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const M=require('../shared/order-amendment-model.js');let count=0;
+function check(name,fn){fn();count++;console.log('PASS '+name);}
+const base={orderNo:'KS2024061801',type:'参团游',item:'补差',direction:'新增项目',quantity:1,price:1200,priceMode:'收费',unit:'项',reason:'客户确认加购',originalAmount:25600};
+check('邮轮和参团分别取适用款项',()=>{assert(M.items('邮轮').includes('港务费'));assert(!M.items('参团游').includes('港务费'));for(const n of ['单房差','升舱差价','签证VIP','联运费'])assert(M.items('参团游').includes(n));});
+check('混合批量只允许共同款项',()=>{const a=M.commonItems(['邮轮','参团游']);assert(a.includes('联运费'));assert(!a.includes('单房差'));assert(!a.includes('船票款'));});
+check('非法产品款项拒绝',()=>assert.throws(()=>M.create({...base,item:'船票款'}),/不适用/));
+check('正向差额与待审批且原额保留',()=>{const r=M.create(base);assert.equal(r.delta,1200);assert.equal(r.status,'待配置业务审批');assert.equal(r.originalAmount,25600);});
+check('减免只产生负差额',()=>assert.equal(M.create({...base,direction:'减免应收'}).delta,-1200));
+check('减免超过原应收被拒绝',()=>assert.throws(()=>M.create({...base,price:30000,direction:'减免应收'}),/超过原订单应收/));
+check('同订单两次不同申请单号不重复',()=>assert.notEqual(M.create(base).no,M.create({...base,reason:'第二次确认'}).no));
+check('相同申请重复阻断，撤回后允许重提',()=>{const r=M.create(base);assert.throws(()=>M.create(base,[r]),/相同申请/);r.status='已撤回';assert(M.create(base,[r]));});
+check('空原因、负价、非法小数和非整数数量拒绝',()=>{for(const patch of [{reason:''},{price:-1},{price:1.234},{quantity:1.5},{price:'Infinity'},{price:''}])assert.throws(()=>M.create({...base,...patch}));});
+const free={...base,item:'联运费',priceMode:'免费',price:0,traveler:'张建国',request:'免费接站',operator:'计调张敏'};
+check('免费服务留单且无虚增应收单',()=>{const r=M.create(free);assert.equal(r.delta,0);assert.equal(r.adjustmentNo,'—');assert.equal(r.status,'待计调确认');assert.equal(r.resource,true);assert.equal(r.finance,'无需调整应收');});
+check('免费服务缺负责计调或安排不能提交',()=>{assert.throws(()=>M.create({...free,operator:''}));assert.throws(()=>M.create({...free,request:''}));});
+check('待报价不同于免费',()=>{const r=M.create({...free,priceMode:'待报价'});assert.equal(r.delta,null);assert.equal(r.finance,'待报价');});
+check('收费服务与应收调整关联',()=>{const r=M.create({...free,priceMode:'收费',price:600});assert(r.no.startsWith('FW'));assert(r.adjustmentNo.startsWith('TZ'));assert.equal(r.approvalStatus,'待资源确认');assert.equal(r.finance,'未生效');});
+check('计调0元可供需依据并留确认人时间',()=>{assert.throws(()=>M.confirmService({result:'待确认'},'可供',0,''));const r=M.confirmService({result:'待确认'},'可供',0,'车队确认LY01','');assert.equal(r.amount,0);assert(r.confirmedBy&&r.confirmedAt);assert.throws(()=>M.confirmService(r,'可供',0,'LY02',''),/已处理/);});
+check('不可供说明和补差校验',()=>{assert.throws(()=>M.confirmService({result:'待确认'},'不可供',0,'车队无车',''));assert.throws(()=>M.confirmService({result:'待确认'},'需补差',0,'车队回复',''));const r=M.confirmService({result:'待确认'},'需补差',200,'车队回复','改用商务车');assert.equal(r.result,'待销售确认');});
+check('金额分摊合计精确到分',()=>{assert.deepEqual(M.allocate(100,[1,1,1]),[33.33,33.33,33.34]);assert.throws(()=>M.allocate(100,[0,0]));});
+check('参团单房差配置存在，人数计算不包含房差',()=>{const s=fs.readFileSync(require('node:path').join(__dirname,'../merchant/sales/booking.html'),'utf8');const part=s.slice(s.indexOf("id: 'EU2024'"),s.indexOf("id: 'CR2025'"));assert(part.includes("id: 'singleRoom'"));const f=s.slice(s.indexOf('function salesPeopleCountSnapshot()'),s.indexOf('function salesPeopleCountSnapshot()')+800);assert(!f.includes('|单房差'));assert(s.includes('单房差人数不能超过出行人数'));});
+console.log('完成 '+count+' 组规则检查');

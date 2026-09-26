@@ -327,7 +327,7 @@
               </div>
               <div id="feeLines" class="booking-fee-lines"></div>
               <div class="booking-money-summary" aria-label="订单金额摘要">
-                <div><span>订单应收</span><strong id="orderReceivableTotal">¥25,600</strong></div>
+                <div><span>预计应收</span><strong id="orderReceivableTotal">¥25,600</strong></div>
                 <div><span>本次优惠</span><strong id="orderDiscountTotal">¥0</strong></div>
                 <div><span>客户需收</span><strong id="customerPayableTotal">¥25,600</strong></div>
               </div>
@@ -349,7 +349,7 @@
       <div id="bookingResultView" class="modal-body booking-result-body" hidden>
         <div class="alert alert-green">
           <strong id="createdTitle">已生成销售订单</strong>
-          <p id="createdText">订单已生成，应收单已进入待审核。</p>
+          <p id="createdText">订单确认后自动生成应收。</p>
         </div>
         <div class="description-grid">
           <div class="description-item"><div class="description-label">订单号</div><div id="createdOrderNo" class="description-value">-</div></div>
@@ -430,7 +430,8 @@
           counts: [
             { id: 'adult', label: '成人', price: 12800, value: 2, min: 1 },
             { id: 'childBed', label: '儿童占床', price: 12800, value: 0, min: 0 },
-            { id: 'childNoBed', label: '儿童不占床', price: 9800, value: 0, min: 0 }
+            { id: 'childNoBed', label: '儿童不占床', price: 9800, value: 0, min: 0 },
+            { id: 'singleRoom', label: '单房差', price: 1800, value: 0, min: 0, hint: '元/人·全程；0为无需' }
           ],
           after: ['补充出行人资料', '收款或认款', '生成合同', '进入团队执行']
         },
@@ -1829,7 +1830,9 @@
           document.getElementById('afterCreateList').innerHTML = '';
           return;
         }
-        document.getElementById('afterCreateList').innerHTML = currentProduct.after.map(function (item) {
+        const actions = currentProduct.after.slice();
+        if (currentProduct.type === 'group' && countValue('singleRoom') > 0) actions.push('单房差 '+countValue('singleRoom')+'人，房型待计调确认');
+        document.getElementById('afterCreateList').innerHTML = actions.map(function (item) {
           return '<span>' + escapeHtml(item) + '</span>';
         }).join('');
       }
@@ -2083,6 +2086,7 @@
             customerPayable: priceNumber(customerPayableText),
             discountUsages: discountUsages || [],
             peopleCount: salesPeopleCountSnapshot(),
+            singleRoom: currentProduct.type === 'group' ? { quantity:countValue('singleRoom'), unit:'人·全程', price:1800, resourceStatus:countValue('singleRoom')>0?'待计调确认':'无需单房差' } : null,
             compositionKind: usesCompositionRows() ? compositionKindLabel() : '',
             stockUnit: usesCompositionRows() ? compositionStockUnit() : '',
             compositionRows: salesCompositionRowsSnapshot(),
@@ -2090,7 +2094,8 @@
             occupation: occupation
           },
           createdAt: createdAt,
-          confirmedAt: confirmedAt
+          confirmedAt: confirmedAt,
+          receivableStatus:confirmedAt?'已生效':'未生成',receivableNo:confirmedAt?'YS-'+orderNo:''
         });
         writeStored('caesarOrderFinanceEvents', store);
         return store.orders[orderNo];
@@ -2121,7 +2126,7 @@
           }).join('') + '</div>'
           : '';
         const totalRows = '<div class="booking-price-popover-total">' +
-          '<div><span>订单应收</span><strong>' + money(orderTotal) + '</strong></div>' +
+          '<div><span>预计应收</span><strong>' + money(orderTotal) + '</strong></div>' +
           (discountAmount > 0 ? '<div class="is-discount"><span>优惠减免</span><strong>-' + money(discountAmount) + '</strong></div>' : '') +
           '<div class="is-payable"><span>客户需收</span><strong>' + money(customerPayable) + '</strong></div>' +
         '</div>';
@@ -2505,6 +2510,7 @@
           });
           if (hasEmptyLine) missing.push(compositionKindLabel() + '人数');
         }
+        if (currentProduct.type === 'group' && countValue('singleRoom') > salesPeopleCountSnapshot()) missing.push('单房差人数不能超过出行人数');
         if (!document.getElementById('contactName').value.trim()) missing.push('联系人');
         if (!document.getElementById('contactPhone').value.trim()) missing.push('手机号');
         if (calcTotal() <= 0) missing.push('人数/份数');
@@ -2655,6 +2661,7 @@
           : currentProduct.stockLabel + ' ' + stock[1];
         document.getElementById('createdContact').textContent = document.getElementById('contactName').value.trim() + ' / ' + document.getElementById('contactPhone').value.trim();
         document.getElementById('createdAmount').textContent = total;
+        document.getElementById('createdAmount').previousElementSibling.textContent=createdOrder.confirmedAt?'订单应收':'预计应收';
         document.getElementById('createdDiscount').textContent = discountText;
         document.getElementById('createdCustomerPayable').textContent = customerPayableText;
         document.getElementById('createdOrderStatus').innerHTML = '<span class="' + process.tag + '">' + process.status + '</span>';
@@ -2684,6 +2691,8 @@
           currentProduct.type === 'single' ? '服务单：待受理' : '库存占用：' + process.inventory,
           '合同/确认单：订单确认后生成'
         ];
+        financeItems.unshift(createdOrder.confirmedAt?'应收：订单确认后自动生成，无需财务审核金额':'应收：尚未生成，确认订单后生效；可登记真实预收款');
+        if(!createdOrder.confirmedAt)financeItems.forEach(function(v,i){financeItems[i]=v.replace('客户需收：','预计需收：').replace(' 待收','');});
         document.getElementById('createdFinanceItems').innerHTML = financeItems.map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
         const nextSteps = isManualMode() ? [
           ['收款', '打开订单收款抽屉，支持预存账户扣款或登记付款信息'],
@@ -2781,6 +2790,7 @@
         if (isManualMode()) renderCounts();
         renderFee();
         renderOccupancySummary();
+        renderAfterCreate();
       });
 
       countRows.addEventListener('change', function (event) {
