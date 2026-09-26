@@ -9,6 +9,7 @@
 <body>
   <script src="../shared/nav-supplier.js"></script>
   <script src="../shared/schedule-route-catalog.js"></script>
+  <script src="../shared/supplier-quote-validation.js"></script>
   <script src="../shared/supplier-schedule-drawer.js"></script>
 
   <main class="product-schedule-page supplier-supply-page">
@@ -371,6 +372,10 @@
       }
       var productNameParam = params.get("productName") || params.get("product") || "欧洲十国经典游";
       var typeParam = params.get("type") || "";
+      if (!params.get('productName') && !params.get('product') && typeParam) {
+        var typeProduct = catalog.find(function (route) { return route.typeKey === typeParam || route.type === typeParam; });
+        if (typeProduct) productNameParam = typeProduct.product;
+      }
       var routeParam = params.get("route") || params.get("routeName") || "";
       var activeRoute = routeParam || "__all";
 
@@ -833,8 +838,8 @@
           return [
             '<tr>',
             '<td><strong>' + escapeHtml(priceItem.name) + '</strong></td>',
-            '<td><input class="table-input" type="number" min="0" value="' + escapeHtml(priceItem.settlement || 0) + '" data-supply-price-index="' + index + '" data-supply-price-field="settlement"></td>',
-            '<td><input class="table-input" type="number" min="0" value="' + escapeHtml(priceItem.public || 0) + '" data-supply-price-index="' + index + '" data-supply-price-field="public"></td>',
+            '<td><input class="table-input" type="number" min="0" value="' + escapeHtml(priceItem.settlement == null ? "" : priceItem.settlement) + '" data-supply-price-index="' + index + '" data-supply-price-field="settlement"></td>',
+            '<td><input class="table-input" type="number" min="0" value="' + escapeHtml(priceItem.public == null ? "" : priceItem.public) + '" data-supply-price-index="' + index + '" data-supply-price-field="public"></td>',
             '</tr>'
           ].join("");
         }).join("");
@@ -847,7 +852,7 @@
         document.getElementById("supplyPriceValidInput").value = item.priceValidUntil || "2026-08-31";
         document.getElementById("supplyPriceImpactInput").value = item.priceImpact || "不影响";
         document.getElementById("supplyPriceReason").value = "";
-        renderPriceRows(item);
+        renderPriceRows(item.priceDraft ? Object.assign({}, item, { priceItems: item.priceDraft }) : item);
         openLayer(priceDrawer);
       }
 
@@ -860,13 +865,12 @@
           var index = Number(input.dataset.supplyPriceIndex);
           var field = input.dataset.supplyPriceField;
           if (!nextItems[index]) return;
-          nextItems[index][field] = Number(input.value || 0);
+          nextItems[index][field] = window.SupplierQuoteValidation.price(input.value);
         });
-        var missing = nextItems.some(function (row) { return row.settlement == null || row.public == null; });
-        if (missing) {
-          toast("请补齐供应商结算价和公开价", "warning");
-          return false;
-        }
+        if (!submit) { item.priceDraft = nextItems; closeLayer(priceDrawer); toast('报价草稿已保存，尚未提交'); return true; }
+        var errors = window.SupplierQuoteValidation.errors(nextItems);
+        if (errors.length) { toast(errors[0], 'warning'); return false; }
+        delete item.priceDraft;
         item.priceItems = nextItems;
         item.settlementPrice = formattedPrice(nextItems[0] && nextItems[0].settlement || 0);
         item.publicPrice = formattedPrice(nextItems[0] && nextItems[0].public || 0);
@@ -945,6 +949,7 @@
       renderSummary();
       renderRoutes();
       renderRows();
+      if (new URLSearchParams(location.search).get("openQuote") === "1") openScheduleDrawer(activeRoute);
     })();
   </script>
 </body>

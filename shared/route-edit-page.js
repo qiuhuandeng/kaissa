@@ -209,9 +209,21 @@
 
   function openSubmitModal() {
     var modal = $('.route-submit-modal');
-    persistResourceTemplates();
-    if (modal) modal.classList.add('show');
-    formDirty = false;
+    function finish() { persistResourceTemplates(); if (modal) modal.classList.add('show'); formDirty = false; }
+    if (isSupplierRoute) {
+      var confirmed = document.getElementById('supplierCopyrightConfirmed');
+      var owner = document.getElementById('imageOwner');
+      if (!confirmed || !confirmed.checked || !owner.value.trim()) {
+        showStep(panels.length - 1);
+        document.getElementById('supplierSubmitError').textContent = '请填写素材权利人，并主动勾选本次图片版权承诺';
+        if (confirmed) confirmed.focus();
+        return;
+      }
+      document.getElementById('supplierSubmitError').textContent = '';
+      window.caesarSupplierProductSubmit({ kind: currentKind, product: document.getElementById('lineName').value, route: document.getElementById('planName').value }, finish);
+      return;
+    }
+    finish();
   }
 
   function closeSubmitModal() {
@@ -1289,7 +1301,7 @@
     if (modalItems[0]) modalItems[0].innerHTML = '<span>产品类型</span><strong>' + htmlEscape(preset.tagText) + '</strong>';
     if (modalItems[1]) modalItems[1].innerHTML = isSupplierRoute ? '<span>确认方式</span><strong>凯撒外采计调采用确认</strong>' : '<span>审核重点</span><strong>' + htmlEscape(preset.modalFocus) + '</strong>';
     if (modalItems[2]) modalItems[2].innerHTML = '<span>产品线路</span><strong>' + htmlEscape(String(preset.plans.length)) + '条</strong>';
-    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>凯撒采用后可维护团期</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在产品团期页查看团期') + '</strong>';
+    if (modalItems[3]) modalItems[3].innerHTML = isSupplierRoute ? '<span>后续动作</span><strong>产品及本次日期报价待凯撒确认</strong>' : '<span>后续动作</span><strong>' + htmlEscape(preset.modalNext || '通过后在产品团期页查看团期') + '</strong>';
 
     initDestinationTreeSelects();
     page.querySelectorAll('input, textarea').forEach(updateCounter);

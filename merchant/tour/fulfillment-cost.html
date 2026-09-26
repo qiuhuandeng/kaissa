@@ -367,7 +367,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">收入明细</h3></div>
             <section class="table-wrap fulfillment-cost-inner-table settlement-income-table drawer-table-scroll drawer-table-cols-12">
               <table>
-                <thead><tr><th>订单号</th><th>客户/渠道</th><th>类型</th><th>财务科目</th><th>订单应收</th><th>客户已收</th><th>优惠减免</th><th>退款</th><th>客户待收</th><th>应收平衡</th><th>结算状态</th><th>结算次数</th></tr></thead>
+                <thead><tr><th>订单号</th><th>客户/渠道</th><th>类型</th><th>费用项目</th><th>订单应收</th><th>客户已收</th><th>已含优惠</th><th>退款</th><th>客户待收</th><th>应收平衡</th><th>结算状态</th><th>结算次数</th></tr></thead>
                 <tbody id="settlementIncomeRows"></tbody>
               </table>
             </section>
@@ -377,7 +377,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">优惠减免明细</h3></div>
             <section class="table-wrap fulfillment-cost-inner-table settlement-discount-table drawer-table-scroll drawer-table-cols-9">
               <table>
-                <thead><tr><th>订单/客户</th><th>优惠来源</th><th>优惠减免</th><th>总部营销</th><th>销售门店</th><th>合作分销商</th><th>供应商</th><th>状态</th><th>下游单据</th></tr></thead>
+                <thead><tr><th>订单/客户</th><th>优惠来源</th><th>已含优惠</th><th>总部营销</th><th>销售门店</th><th>合作分销商</th><th>供应商</th><th>状态</th><th>下游单据</th></tr></thead>
                 <tbody id="settlementDiscountRows"></tbody>
               </table>
             </section>
@@ -405,7 +405,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">订单明细</h3></div>
             <section class="table-wrap fulfillment-cost-inner-table drawer-table-scroll drawer-table-cols-9">
               <table>
-                <thead><tr><th>订单号</th><th>客户/渠道</th><th>订单类型</th><th>人数/间夜</th><th>订单应收</th><th>客户已收</th><th>优惠减免</th><th>退款/扣减</th><th>订单状态</th></tr></thead>
+                <thead><tr><th>订单号</th><th>客户/渠道</th><th>订单类型</th><th>人数/间夜</th><th>订单应收</th><th>客户已收</th><th>已含优惠</th><th>已退款</th><th>订单状态</th></tr></thead>
                 <tbody id="settlementOrderRows"></tbody>
               </table>
             </section>
@@ -415,7 +415,7 @@
             <div class="drawer-section-head"><h3 class="drawer-section-title">收款预收</h3></div>
             <section class="table-wrap fulfillment-cost-inner-table drawer-table-compact drawer-table-cols-7">
               <table>
-                <thead><tr><th>收款对象</th><th>收款单/预收单</th><th>订单应收</th><th>客户已收</th><th>预收/转款</th><th>客户待收</th><th>状态</th></tr></thead>
+                <thead><tr><th>客户／渠道</th><th>收退记录</th><th>订单应收</th><th>累计已收</th><th>已退款</th><th>净收款</th><th>待收</th><th>待退</th><th>状态</th></tr></thead>
                 <tbody id="settlementReceiptRows"></tbody>
               </table>
             </section>
@@ -667,6 +667,7 @@
   </div>
 
   <script src="../../shared/supplier-company-agreements.js"></script>
+  <script src="../../shared/settlement-income-basis.js"></script>
   <script>
     (function () {
       var pageParams = new URLSearchParams(window.location.search);
@@ -1090,6 +1091,11 @@
           items: []
         }
       ];
+
+      schedules.forEach(function (schedule) {
+        schedule.settlement.incomeRows = window.SettlementIncomeBasis.examples[schedule.id] || [];
+        schedule.settlement.orders = schedule.settlement.incomeRows.length + '单';
+      });
 
       // 已发生成本保留当时的公司协议，不随续签改用新协议。
       schedules[0].items[3].purchaseCompany = '福建凯撒';
@@ -1762,8 +1768,7 @@
       }
 
       function receivedNet(item) {
-        var info = settlementInfo(item);
-        return Number(info.receivedNet || item.income || 0);
+        return window.SettlementIncomeBasis.totals(settlementInfo(item).incomeRows).netReceived;
       }
 
       function peopleOrderText(item) {
@@ -1796,7 +1801,7 @@
       }
 
       function costTotal(item) {
-        return Number(item.actual || item.estimated || 0);
+        return Number(item.actual != null ? item.actual : (item.estimated || 0));
       }
 
       function progressBucket(value, total) {
@@ -1821,19 +1826,15 @@
       }
 
       function receivableReceivedCell(item) {
-        var info = settlementInfo(item);
-        var receivable = Number(item.income || info.receivable || 0);
-        var received = receivedNet(item);
-        var refund = Number(info.refundAmount || info.deductionAmount || 0);
-        var unpaid = Math.max(receivable - received - refund, 0);
-        var progress = progressBucket(received, receivable);
-        var detail = '客户已收 ' + money(received) + ' · 客户待收 ' + money(unpaid);
-        if (refund) detail += ' · 扣减 ' + money(refund);
-        return settlementMetricCell('订单应收 ' + money(receivable), progress, detail);
+        var totals = settlementTotals(item);
+        if (!totals.ready) return '<span class="text-muted">订单收退依据待补</span>';
+        var detail = '净收款 ' + money(totals.netReceived) + ' · 待收 ' + money(totals.unreceived);
+        if (totals.refundable) detail += ' · 待退 ' + money(totals.refundable);
+        return settlementMetricCell('订单应收 ' + money(totals.receivable), progressBucket(totals.netReceived, totals.receivable), detail);
       }
 
       function profitCell(item) {
-        var income = receivedNet(item);
+        var income = settlementTotals(item).settlementIncome;
         var cost = costTotal(item);
         var profit = income - cost;
         var rate = income ? Math.round((profit / income) * 1000) / 10 : 0;
@@ -2852,19 +2853,19 @@
       function projectSettlementRows(schedule) {
         var info = projectSettlementInfo(schedule);
         var totals = payableTotalsForSchedule(schedule);
-        var actualIncome = Number(info.actualIncome || receivedNet(schedule));
+        var actualIncome = settlementTotals(schedule).receivable;
         var actualCost = Number(info.actualCost || schedule.actual || schedule.estimated || 0);
-        var refundAmount = Number(info.refundAmount || 0);
-        var profit = actualIncome - refundAmount - actualCost;
+        var refundAmount = settlementTotals(schedule).refund;
+        var profit = actualIncome - actualCost;
         return [
           ['客户验收单', info.acceptanceNo || '待上传', projectAcceptanceReady(schedule) ? '已上传' : '待上传', projectAcceptanceReady(schedule) ? '客户验收材料已归档，可作为结算依据。' : '未上传时不能提交项目结算。'],
           ['实际人数', info.actualPeople || info.confirmedPeople || schedule.people || '-', '已核对', '以项目名单和客户验收口径为准。'],
-          ['实际收入', money(actualIncome), actualIncome ? '已核对' : '待核对', '来自项目订单阶段应收和收款净额。'],
+          ['实际收入', money(actualIncome), settlementTotals(schedule).ready ? '已核对' : '待核对', '来自项目订单阶段应收和收款净额。'],
           ['退款/扣减', money(refundAmount), refundAmount ? '有扣减' : '无扣减', '项目售后、退款或客户扣款在这里汇总。'],
           ['实际成本', money(actualCost), projectActualCostReady(schedule) ? '已确认' : '待确认', projectActualCostReady(schedule) ? '项目成本已完成业务确认。' : '仍有成本项待确认，不能提交结算。'],
           ['应付', money(totals.amount), totals.amount ? '已拆分' : '待拆分', '来自项目供应商应付拆分。'],
           ['已付', money(totals.paid), totals.paid ? '已有付款' : '未付款', '财务付款执行结果只做展示。'],
-          ['毛利', money(profit), profit < 0 ? '毛利异常' : '已计算', '实际收入 - 退款/扣减 - 实际成本。'],
+          ['毛利', money(profit), profit < 0 ? '毛利异常' : '已计算', '有效订单应收减实际成本；已批准退订调整已计入应收。'],
           ['结算申请', projectSettlementNo(schedule) || '未生成', projectSettlementNo(schedule) ? settlementStatus(schedule) : '待提交', info.financeStatus || '提交后进入财务 > 业务结算承接。']
         ];
       }
@@ -2921,93 +2922,21 @@
       }
 
       function settlementTotals(schedule) {
-        var info = settlementInfo(schedule);
-        var receivable = Number(info.actualIncome || schedule.income || 0);
-        var received = Number(info.receivedNet || schedule.income || 0);
-        var discount = settlementDiscountTotal(schedule);
-        var refund = Number(info.refundAmount || info.deductionAmount || 0);
+        var totals = window.SettlementIncomeBasis.totals(settlementInfo(schedule).incomeRows);
         var cost = costTotal(schedule);
-        var payableTotals = isProjectSchedule(schedule) ? payableTotalsForSchedule(schedule) : trafficPayableTotals(schedule);
-        var paid = isProjectSchedule(schedule) ? Number(payableTotals.paid || 0) : Number(payableTotals.prepaid || 0);
-        var payableAmount = isProjectSchedule(schedule) ? Number(payableTotals.amount || 0) : Number(payableTotals.total || 0);
-        if (!payableAmount) payableAmount = cost;
-        var pending = Math.max(cost - paid, 0);
-        var settlementIncome = Math.max(receivable - refund, 0);
-        var unreceived = Math.max(receivable - received - discount - refund, 0);
-        var balanceGap = receivable - received - discount - refund - unreceived;
-        var profit = settlementIncome - cost;
-        return {
-          receivable: receivable,
-          received: received,
-          discount: discount,
-          refund: refund,
-          unreceived: unreceived,
-          balanceGap: balanceGap,
-          settlementIncome: settlementIncome,
-          cost: cost,
-          payableAmount: payableAmount,
-          paid: paid,
-          pending: pending,
-          profit: profit,
-          profitRate: settlementIncome ? Math.round(profit / settlementIncome * 1000) / 10 : 0
-        };
-      }
-
-      function ratioAmount(value, ratio, lastValue) {
-        return lastValue == null ? Math.round(Number(value || 0) * ratio) : lastValue;
+        var payable = isProjectSchedule(schedule) ? payableTotalsForSchedule(schedule) : trafficPayableTotals(schedule);
+        var paid = Number(isProjectSchedule(schedule) ? (payable.paid || 0) : (payable.prepaid || 0));
+        var payableAmount = Number(isProjectSchedule(schedule) ? (payable.amount || 0) : (payable.total || 0));
+        return Object.assign(totals, {
+          cost: cost, paid: paid, payableAmount: payableAmount,
+          pending: Math.max(cost - paid, 0), settlementIncome: totals.receivable,
+          profit: totals.receivable - cost,
+          profitRate: totals.receivable ? Math.round((totals.receivable - cost) / totals.receivable * 1000) / 10 : 0
+        });
       }
 
       function settlementIncomeRows(schedule) {
-        var totals = settlementTotals(schedule);
-        var rows = [];
-        var firstReceivable = ratioAmount(totals.receivable, isProjectSchedule(schedule) ? 1 : 0.62);
-        var firstReceived = ratioAmount(totals.received, isProjectSchedule(schedule) ? 1 : 0.62);
-        var firstDiscount = ratioAmount(totals.discount, isProjectSchedule(schedule) ? 1 : 0.62);
-        var secondReceivable = Math.max(totals.receivable - firstReceivable, 0);
-        var secondReceived = Math.max(totals.received - firstReceived, 0);
-        var secondDiscount = Math.max(totals.discount - firstDiscount, 0);
-        var baseNo = String(schedule.id || '').replace(/\D/g, '').slice(-8) || '20260720';
-        rows.push({
-          no: isProjectSchedule(schedule) ? (schedule.projectOrder || 'KSMICE' + baseNo) : 'ORD' + baseNo + '01',
-          customer: isProjectSchedule(schedule) ? (schedule.customer || '项目客户') : '门店/小程序散客',
-          type: '收款',
-          subject: '团费',
-          receivable: firstReceivable,
-          received: firstReceived,
-          discount: firstDiscount,
-          refund: 0,
-          unreceived: Math.max(firstReceivable - firstReceived - firstDiscount, 0)
-        });
-        if (!isProjectSchedule(schedule) && secondReceivable) {
-          rows.push({
-            no: 'ORD' + baseNo + '02',
-            customer: /邮轮/.test(schedule.type || '') ? '邮轮同业渠道' : '同业渠道',
-            type: '收款',
-            subject: '团费',
-            receivable: secondReceivable,
-            received: secondReceived,
-            discount: secondDiscount,
-            refund: 0,
-            unreceived: Math.max(secondReceivable - secondReceived - secondDiscount, 0)
-          });
-        }
-        if (totals.refund) {
-          rows.push({
-            no: 'RFD' + baseNo,
-            customer: isProjectSchedule(schedule) ? (schedule.customer || '项目客户') : '退款订单',
-            type: '退款',
-            subject: '退款/扣减',
-            receivable: 0,
-            received: 0,
-            discount: 0,
-            refund: totals.refund,
-            unreceived: 0
-          });
-        }
-        rows.forEach(function (row) {
-          row.balanceGap = Number(row.receivable || 0) - Number(row.received || 0) - Number(row.discount || 0) - Number(row.refund || 0) - Number(row.unreceived || 0);
-        });
-        return rows;
+        return window.SettlementIncomeBasis.rows(settlementInfo(schedule).incomeRows);
       }
 
       function costCurrencyMeta(schedule, item) {
@@ -3086,7 +3015,7 @@
         var costRequired = Math.max(costRows.length, 1);
         var costUploaded = costRows.filter(function (row) { return row.attachments > 0; }).length;
         var returned = /已回|已上传|已补齐|已保存/.test((info.returnStatus || '') + (info.basisStatus || ''));
-        var incomeReady = receivedNet(schedule) > 0;
+        var incomeReady = settlementTotals(schedule).ready;
         var paymentReady = settlementTotals(schedule).paid > 0;
         var items = [
           { type: '回团资料', required: 2, uploaded: returned ? 2 : 1, latest: returned ? '回团报告.pdf' : '实际名单.xlsx', owner: schedule.owner + ' / 2026-07-06 18:20', action: '上传' },
@@ -3182,7 +3111,7 @@
           var projectTotals = settlementTotals(schedule);
           return [
             ['客户验收单', projectAcceptanceReady(schedule) ? '已上传' : '待上传', schedule.owner, projectInfo.acceptanceNo || '客户验收单待上传'],
-            ['项目订单收款', projectInfo.receivedNet ? '已核对' : '待核对', '业务/财务', '客户已收 ' + money(projectTotals.received) + ' / 优惠减免 ' + money(projectTotals.discount) + ' / 客户待收 ' + money(projectTotals.unreceived)],
+            ['项目订单收款', projectTotals.ready ? '已核对' : '待核对', '业务/财务', '客户已收 ' + money(projectTotals.received) + ' / 优惠减免 ' + money(projectTotals.discount) + ' / 客户待收 ' + money(projectTotals.unreceived)],
             ['实际成本', projectActualCostReady(schedule) ? '已确认' : '待复核', schedule.owner, schedule.items.length ? schedule.items.length + '项成本，合计' + money(schedule.actual || schedule.estimated) : '暂无成本项'],
             ['项目应付拆分', paymentGroups.length ? '已拆分' : '待拆分', schedule.owner, paymentGroups.length ? paymentGroups.length + '个付款对象可承接' : '需先维护供应商应付'],
             ['项目资料归档', projectInfo.returnStatus || '未回团', schedule.owner, '名单、合同、供应商账单和客户确认资料归档后提交结算']
@@ -3194,7 +3123,7 @@
         var trafficReady = !incompletePayableItems(schedule).length;
         var rows = [
           ['回团资料', info.returnStatus || '未回团', schedule.owner, info.basisStatus || '待补充'],
-          ['实际收退款', info.receivedNet ? '已核对' : '待核对', '业务/财务', '客户已收 ' + money(totals.received) + ' / 优惠减免 ' + money(totals.discount) + ' / 客户待收 ' + money(totals.unreceived)],
+          ['实际收退款', totals.ready ? '已核对' : '待核对', '业务/财务', '客户已收 ' + money(totals.received) + ' / 优惠减免 ' + money(totals.discount) + ' / 客户待收 ' + money(totals.unreceived)],
           ['实际成本', costReady ? '已确认' : '待复核', schedule.owner, schedule.items.length ? schedule.items.length + '项成本，合计' + money(schedule.actual || schedule.estimated) : '暂无成本项'],
           ['交通预付分摊', trafficReady ? '已确认' : '待确认', schedule.owner, schedule.traffic ? schedule.traffic.source : '无交通采购'],
           ['损耗确认', /损/.test(schedule.traffic && schedule.traffic.loss || '') ? (lossHtml(schedule).indexOf('待确认') >= 0 ? '待确认' : '已确认') : '无损耗', schedule.owner, schedule.traffic && schedule.traffic.loss ? schedule.traffic.loss : '无票损/舱损/铺损']
@@ -3219,7 +3148,7 @@
             ['客户验收单已上传', projectAcceptanceReady(schedule) ? '通过' : '待处理', '上传客户验收单'],
             ['实际成本已确认', projectActualCostReady(schedule) ? '通过' : '待处理', '查看实际成本'],
             ['项目应付已拆分', paymentReady ? '通过' : '待处理', '应付拆分'],
-            ['项目订单收款已核对', receivedNet(schedule) ? '通过' : '待处理', '项目订单'],
+            ['项目订单收款已核对', settlementTotals(schedule).ready ? '通过' : '待处理', '项目订单'],
             ['外币汇率已确认', foreignReady ? '通过' : '待处理', '成本明细'],
             ['结算附件已上传', attachmentReady ? '通过' : '待处理', '附件依据']
           ];
@@ -3358,7 +3287,7 @@
             '<td>' + money(row.discount || 0) + '</td>' +
             '<td>' + money(row.refund || 0) + '</td>' +
             '<td>' + money(row.unreceived) + '</td>' +
-            '<td>' + receivableBalanceTag(row.balanceGap) + '</td>' +
+            '<td>' + (row.ready ? (row.refundable ? '待退 ' + money(row.refundable) : receivableBalanceTag(row.balanceGap)) : '依据待补') + '</td>' +
             '<td>' + tag(mainStatus) + '</td>' +
             '<td>' + (settlementRoundCount(schedule) || '-') + '</td>' +
           '</tr>';
@@ -3429,24 +3358,33 @@
       }
 
       function renderSettlementSummaryRows(schedule, totals) {
-        document.getElementById('settlementSummaryRows').innerHTML =
-          '<tr><th>订单应收</th><td class="amount-green">' + money(totals.receivable) + '</td><th>客户已收</th><td class="amount-green">' + money(totals.received) + '</td><th>优惠减免</th><td>' + money(totals.discount) + '</td></tr>' +
-          '<tr><th>退款</th><td>' + money(totals.refund) + '</td><th>客户待收</th><td class="' + (totals.unreceived ? 'amount-red' : 'amount-green') + '">' + money(totals.unreceived) + '</td><th>应收平衡</th><td>' + receivableBalanceTag(totals.balanceGap) + '</td></tr>' +
-          '<tr><th>成本总额</th><td class="amount-red">' + money(totals.cost) + '</td><th>已付金额</th><td>' + money(totals.paid) + '</td><th>未付金额</th><td class="' + (totals.pending ? 'amount-red' : 'amount-green') + '">' + money(totals.pending) + '</td></tr>' +
-          '<tr><th>结算毛利</th><td class="' + (totals.profit < 0 ? 'amount-red' : 'amount-strong') + '">' + money(totals.profit) + '</td><th>毛利率</th><td class="' + (totals.profitRate < 15 ? 'amount-red' : 'amount-green') + '">' + totals.profitRate + '%</td><th>结算收入</th><td>' + money(totals.settlementIncome) + '</td></tr>' +
-          '<tr><th>外币成本折算</th><td colspan="5">' + escapeHtml(foreignCostSummary(schedule)) + '</td></tr>';
+        var values = [
+          ['订单应收', money(totals.receivable)], ['客户已收', money(totals.received)],
+          ['已退款', money(totals.refund)], ['净收款', money(totals.netReceived)],
+          ['客户待收', money(totals.unreceived)], ['客户待退', money(totals.refundable)],
+          ['已含优惠', money(totals.discount)], ['收退依据', totals.ready ? '已核对' : '待补'],
+          ['成本总额', money(totals.cost)], ['已付金额', money(totals.paid)],
+          ['未付金额', money(totals.pending)], ['结算收入', money(totals.settlementIncome)],
+          ['结算毛利', money(totals.profit)], ['毛利率', totals.profitRate + '%']
+        ];
+        document.getElementById('settlementSummaryRows').innerHTML = values.map(function (entry) {
+          return '<tr><th>' + entry[0] + '</th><td>' + escapeHtml(entry[1]) + '</td></tr>';
+        }).join('');
       }
 
       function renderSettlementRecordRows(schedule, totals) {
         var info = settlementInfo(schedule);
         var status = settlementStatus(schedule);
+        var settled = (info.secondSettlementRecords || []).filter(function (r) { return r.status === '已结算'; });
+        var firstIncome = totals.settlementIncome - settled.reduce(function (sum, r) { return sum + Number(r.incomeAdjust || 0); }, 0);
+        var firstCost = totals.cost - settled.reduce(function (sum, r) { return sum + Number(r.costAdjust || 0); }, 0);
         var rows = [{
           round: '第1次',
           no: settlementNumber(schedule, 1),
           reason: status === '未开始' ? '待回团后生成' : '首次结算',
-          incomeAdjust: money(totals.settlementIncome),
-          costAdjust: money(totals.cost),
-          profitImpact: money(totals.profit),
+          incomeAdjust: money(firstIncome),
+          costAdjust: money(firstCost),
+          profitImpact: money(firstIncome - firstCost),
           attachment: settlementAttachmentItems(schedule).filter(function (item) { return item.uploaded > 0; }).length + '类附件',
           status: status === '已结算' ? '完结' : status
         }];
@@ -3525,12 +3463,12 @@
         var people = settlementInfo(schedule).confirmedPeople || schedule.people || '-';
         document.getElementById('settlementOrderRows').innerHTML = settlementIncomeRows(schedule).map(function (row) {
           var refund = Number(row.refund || 0);
-          var status = row.unreceived > 0 ? '待收款' : (/退款/.test(row.type) ? '已退款' : '已收清');
+          var status = !row.ready ? '依据待补' : row.refundable ? '有待退款' : row.unreceived > 0 ? '待收款' : '已收清';
           return '<tr>' +
             '<td>' + escapeHtml(row.no) + '</td>' +
             '<td>' + escapeHtml(row.customer) + '</td>' +
             '<td>' + tag(row.type, /退款/.test(row.type) ? 'tag tag-red' : 'tag tag-green') + '</td>' +
-            '<td>' + escapeHtml(people) + '</td>' +
+            '<td>' + escapeHtml(row.people || '-') + '</td>' +
             '<td class="amount-strong">' + signedMoney(row.receivable) + '</td>' +
             '<td>' + signedMoney(row.received) + '</td>' +
             '<td>' + money(row.discount || 0) + '</td>' +
@@ -3541,25 +3479,15 @@
       }
 
       function renderSettlementReceiptRows(schedule) {
-        var info = settlementInfo(schedule);
-        var baseNo = String(schedule.id || '').replace(/[^A-Z0-9]/g, '').slice(-12) || 'GROUP';
-        document.getElementById('settlementReceiptRows').innerHTML = settlementIncomeRows(schedule).map(function (row, index) {
-          var retain = index === 0 && Number(info.preReceived || 0) ? Number(info.preReceived || 0) : 0;
-          var transfer = index === 0 && schedule.traffic && schedule.traffic.prepayAdjustments && schedule.traffic.prepayAdjustments.length
-            ? schedule.traffic.prepayAdjustments.reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0)
-            : 0;
-          var retainText = retain ? money(retain) : (transfer ? '转款 ' + money(transfer) : '-');
-          var status = row.unreceived > 0 ? '待收款' : '已收清';
-          return '<tr>' +
-            '<td>' + escapeHtml(row.customer) + '</td>' +
-            '<td>' + escapeHtml('REC-' + baseNo + '-' + (index + 1)) + '</td>' +
-            '<td class="amount-strong">' + signedMoney(row.receivable) + '</td>' +
-            '<td>' + signedMoney(row.received) + '</td>' +
-            '<td>' + escapeHtml(retainText) + '</td>' +
-            '<td>' + money(row.unreceived) + '</td>' +
-            '<td>' + tag(status) + '</td>' +
-          '</tr>';
-        }).join('');
+        document.getElementById('settlementReceiptRows').innerHTML = settlementIncomeRows(schedule).map(function (row) {
+          var status = !row.ready ? '依据待补' : row.refundable ? '有待退款' : row.unreceived ? '待收款' : '已收清';
+          return '<tr><td>' + escapeHtml(row.customer) + '</td>' +
+            '<td><span class="table-cell-main">' + escapeHtml(row.receiptNo || '暂无收款记录') + '</span>' +
+            (row.refundNo ? '<span class="text-muted">退款 ' + escapeHtml(row.refundNo) + '</span>' : '') + '</td>' +
+            '<td>' + money(row.receivable) + '</td><td>' + money(row.received) + '</td>' +
+            '<td>' + money(row.refund) + '</td><td>' + money(row.netReceived) + '</td>' +
+            '<td>' + money(row.unreceived) + '</td><td>' + money(row.refundable) + '</td><td>' + tag(status) + '</td></tr>';
+        }).join('') || '<tr><td colspan="9" class="text-muted">订单收退依据待补</td></tr>';
       }
 
       function renderSettlementPrepayRows(schedule) {

@@ -243,6 +243,7 @@
     </div>
   </div>
 
+  <script src="../shared/supplier-quote-validation.js"></script>
   <script src="../shared/supplier-schedule-drawer.js"></script>
   <script>
     (function () {
@@ -261,7 +262,15 @@
       var scheduleDrawer = window.caesarSupplierScheduleDrawer && window.caesarSupplierScheduleDrawer.init({
         mount: document.body,
         onSubmitted: function (items) {
-          toast("已提交 " + items.length + " 个供给安排给凯撒确认");
+          items.slice().reverse().forEach(function (item) {
+            var source = scheduleRows().find(function (r) { return r.dataset.type === item.typeKey; }) || scheduleRows()[0];
+            var row = source.cloneNode(true);
+            Object.assign(row.dataset, { code: nextCopyCode(item.code), product: item.product, route: item.route, type: item.typeKey, object: item.batchType, schedule: item.depart, back: item.back, total: String(item.stock), left: String(item.stock), used: '0', pending: '0', settlement: String(item.priceItems[0].settlement), public: String(item.priceItems[0].public), priceItems: JSON.stringify(item.priceItems), status: '需确认', caesar: '待凯撒确认', deadline: item.deadline, priceValid: item.priceValidUntil, confirmMode: item.confirmMode, priceImpact: '不影响' });
+            updateArrangementCell(row);
+            row.cells[1].textContent = item.depart + ' / 回团 ' + item.back;
+            document.getElementById('supplierScheduleRows').prepend(row); renderRow(row);
+          });
+          applyFilters(); toast("已提交 " + items.length + " 个供给安排给凯撒确认");
         }
       });
 
@@ -560,6 +569,7 @@
         document.getElementById("supplyPriceImpactInput").value = row.dataset.priceImpact || "不影响";
         document.getElementById("supplyPriceReason").value = "";
         renderPriceRows(row);
+        if (row.quoteDraft) document.querySelectorAll("[data-supply-price-index]").forEach(function (el) { var item = row.quoteDraft[Number(el.dataset.supplyPriceIndex)]; el.value = item && item[el.dataset.supplyPriceField] != null ? item[el.dataset.supplyPriceField] : ""; });
         openLayer(priceDrawer);
       }
 
@@ -572,13 +582,13 @@
           var field = input.dataset.supplyPriceField;
           if (!nextItems[index]) nextItems[index] = { name: input.dataset.supplyPriceName };
           if (!input.value.trim()) missing = true;
-          nextItems[index][field] = numberValue(input.value);
+          nextItems[index][field] = window.SupplierQuoteValidation.price(input.value);
         });
-        if (missing) {
-          toast("请补齐供应商结算价和公开价", "warning");
-          return false;
-        }
-        var primary = nextItems.find(function (item) { return item && (item.settlement || item.public); }) || nextItems[0] || { settlement: 0, public: 0 };
+        if (!submit) { activeSupplyRow.quoteDraft = nextItems; closeLayer(priceDrawer); toast('报价草稿已保存，尚未提交'); return true; }
+        var errors = window.SupplierQuoteValidation.errors(nextItems);
+        if (errors.length) { toast(errors[0], 'warning'); return false; }
+        delete activeSupplyRow.quoteDraft;
+        var primary = nextItems[0];
         activeSupplyRow.dataset.priceItems = JSON.stringify(nextItems);
         activeSupplyRow.dataset.settlement = String(primary.settlement || 0);
         activeSupplyRow.dataset.public = String(primary.public || 0);

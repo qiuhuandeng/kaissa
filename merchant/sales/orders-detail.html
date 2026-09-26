@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../../shared/order-amendment.css">
   <script src="../../shared/order-amendment-model.js"></script>
   <script src="../../shared/order-amendment-ui.js"></script>
+  <script src="../../shared/outsource-order-handoff.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -96,6 +97,7 @@
 
       <section id="tab-overview" class="detail-tab-panel active">
         <div class="product-detail-tab-inner order-overview-tab">
+          <section id="outsourceHandoff" class="p0-outsource-handoff" hidden aria-label="外采确认"></section>
           <div class="detail-section-title">产品信息</div>
           <div id="overviewProductGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">订单信息</div>
@@ -826,6 +828,7 @@
       };
       const config = configs[type] || configs.group;
       if (params.get('orderNo')) config.orderNo = params.get('orderNo');
+      const externalOrder = window.OutsourceOrderHandoff.find(config.orderNo);
       // Known contract examples use their own order facts, never the default order amount or traveler names.
       const contractExample = window.ContractWorkflow.createState().orders.find(o => o.id === config.orderNo);
       if (contractExample && config.orderNo !== 'KS20260704001') {
@@ -1288,6 +1291,15 @@
         ];
       }
       applyStoredOrder(storedOrder);
+      if (externalOrder) {
+        config.productName = externalOrder.product;
+        config.meta = '经济款 法德意经典12天 / ' + externalOrder.schedule + ' / ' + externalOrder.date + ' 出发';
+        config.owner = externalOrder.advisor ? '软件园门店 / ' + externalOrder.advisor : '官网直客 / 未分配顾问';
+        config.orderStatus = [(externalOrder.reply === '已确认' || externalOrder.supplement) ? '已确认' : externalOrder.reply === '暂时保留' ? '预留' : '待确认', 'tag tag-orange'];
+        config.amount = [moneyText(externalOrder.amount), '¥0', moneyText(externalOrder.amount)];
+        config.discountCarry = '¥0'; config.discountUsages = []; config.aftersales = [];
+        config.snapshot = [['订单来源', externalOrder.advisor ? '门店' : '官网直客'], ['归属门店', externalOrder.advisor ? '软件园门店' : '官网直客'], ['下单店员', externalOrder.advisor || '未分配'], ['团期编号', externalOrder.schedule], ['线路', '经济款 法德意经典12天'], ['出发/回团', externalOrder.date + ' / ' + externalOrder.back]];
+      }
       config.receivableCurrency = config.receivableCurrency || params.get('currency') || 'CNY';
       function isProjectOrder() {
         return config.productType === '单团项目';
@@ -1428,6 +1440,12 @@
         contractState: (config.contract || []).map(function (item) { return item[1]; }).join(' / '),
         ticketed: /已出票/.test(JSON.stringify(config.services || {}))
       }, (storedOrder && storedOrder.confirmationConditions) || {});
+      if (externalOrder) {
+        orderConditions.resourceConfirmed = externalOrder.reply === '已确认';
+        orderConditions.occupation = externalOrder.reply === '已确认' ? '已确认' : externalOrder.reply === '暂时保留' ? '保留中' : '未占位';
+        orderConditions.holdUntil = externalOrder.holdUntil;
+        orderConditions.expiryAction = '到期由计调重新确认，不自动取消订单';
+      }
       const orderActionLogs = [];
       let increasePending = false;
       let confirmedAtInPage = '';
@@ -1462,6 +1480,7 @@
         }
         if (authorizationIssue()) issues.push(authorizationIssue());
         if (action === '转确认') {
+          if (externalOrder && window.OutsourceOrderHandoff.block(externalOrder)) issues.push(window.OutsourceOrderHandoff.block(externalOrder));
           if (!/^(预留|占位|待确认)$/.test(state)) issues.push('当前订单状态不能转确认');
           if (!orderConditions.resourceConfirmed) issues.push('本单资源尚未由计调确认');
           if (orderConditions.occupation === '已释放') issues.push('原名额已释放，需计调重新确认余位');
@@ -1767,6 +1786,7 @@
         };
       }
       function productOverviewMeta() {
+        if (externalOrder) return { source: externalOrder.advisor ? '门店' : '官网直客', channel: externalOrder.advisor ? 'PC后台' : '官网', service: externalOrder.advisor || '未分配，计调承接', department: '外采计调部', departure: '北京', destination: '法国 / 德国等', reservationDue: externalOrder.holdUntil || '-' };
         const typeMeta = {
           '参团游': { source: '门店', channel: 'PC后台', service: '孙丽', department: '参团游事业部', departure: '北京', destination: '法国 / 德国等', reservationDue: '2026-07-05 00:55:57' },
           '邮轮': { source: '门店', channel: 'PC后台', service: '郑华', department: '邮轮事业部', departure: '巴塞罗那', destination: '地中海', reservationDue: '-' },
@@ -1799,6 +1819,7 @@
         return [['成人人数', String(config.travelers.rows.length)], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['单房差数量', '0'], ['出行人数', String(config.travelers.rows.length)]];
       }
       function trafficOccupancyData() {
+        if (externalOrder) return [];
         const scheduleNo = params.get('scheduleNo') || scheduleValue();
         const byOrder = {
           KS202607010018: [['EU20260818001', 'CA937去程 / CA938返程', '张建国', '经济舱G舱座位', '已锁位', '已出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊 ¥6,666 · 转团调整 ¥666']],
@@ -2042,7 +2063,43 @@
           return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + tagHtml([row[1], statusClass(row[1])]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><button class="table-action-primary" type="button"' + action + '>' + escapeHtml(row[3]) + '</button></td></tr>';
         }).join(''));
       }
+      function renderOutsourceHandoff() {
+        const host = document.getElementById('outsourceHandoff');
+        if (!externalOrder) return;
+        host.hidden = false;
+        const row = externalOrder;
+        let actions = '';
+        if (!row.planner) actions += '<button type="button" class="btn btn-primary" data-outsource-action="claim">接手订单</button>';
+        if (row.expired || row.reply === '无法承接') actions += '<button type="button" class="btn btn-secondary" data-outsource-action="retry">发起重新确认</button>';
+        if (row.reply === '补差待我方确认') actions += '<button type="button" class="btn btn-secondary" data-outsource-action="adjust">应收调整申请</button>';
+        if (row.reply === '无法承接') actions += '<button type="button" class="btn btn-secondary" data-open-drawer="aftersalesDrawer" data-aftersales-type="退款">取消与退款</button>';
+        host.innerHTML = '<div class="p0-handoff-head"><h3 class="detail-section-title">外采确认</h3><span class="tag tag-orange">' + escapeHtml(row.reply) + '</span></div><div class="description-grid order-overview-grid">' + descriptionGrid([
+          ['供应商', row.supplier], ['责任计调', row.planner || '未分配 · 外采计调组'], ['销售顾问', row.advisor || '未分配'],
+          ['确认件编号', row.confirmation || '未收到'], ['保留截止', row.holdUntil ? row.holdUntil + (row.expired ? ' · 已超时' : '') : '无暂保'], ['本单客户应收', config.amount[0]]
+        ]) + '</div><p class="p0-handoff-basis">' + escapeHtml(row.basis) + '</p><p class="p0-handoff-next">下一办理：' + escapeHtml(window.OutsourceOrderHandoff.next(row)) + '</p>' + (row.supplement ? '<p class="p0-handoff-basis">供应商申报补差 ¥1,200；客户应收尚未调整。</p>' : '') + '<div class="btn-group">' + actions + '</div>' + (row.history.length ? '<p class="p0-handoff-record" role="status">' + escapeHtml(row.history.join('；')) + '</p>' : '');
+      }
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-outsource-action]');
+        if (!button || !externalOrder) return;
+        const action = button.dataset.outsourceAction;
+        if (action === 'claim') {
+          externalOrder.planner = '王芳';
+          externalOrder.history.push('王芳已接手，供应商回复由责任计调承接');
+          renderOutsourceHandoff();
+        } else if (action === 'retry') {
+          externalOrder.history.push('原回复：' + externalOrder.reply + '；王芳发起重新确认，当前待供应商回复');
+          externalOrder.reply = '待供应商确认'; externalOrder.expired = false; externalOrder.holdUntil = '';
+          externalOrder.confirmation = ''; externalOrder.basis = '重新确认申请已提交，原无位或暂保结果保留在处理记录中';
+          orderConditions.resourceConfirmed = false; orderConditions.occupation = '未占位'; orderConditions.holdUntil = '';
+          config.orderStatus = ['待确认', 'tag tag-orange']; render();
+        } else if (action === 'adjust') {
+          openLayer('receivableDrawer');
+          window.OrderAmendmentUI.mount(document.getElementById('receivableDrawerFields'), amendmentContext(), document.getElementById('submitDetailReceivable'), { item: '补差', reason: '供应商回复 ' + externalOrder.confirmation + '：酒店加住申报1200元。客户费用约定待补充。' });
+        }
+      });
+
       function render() {
+        renderOutsourceHandoff();
         window.OrderAmendmentContext=amendmentContext();
         renderProjectOrderChrome();
         renderStateActionButtons();

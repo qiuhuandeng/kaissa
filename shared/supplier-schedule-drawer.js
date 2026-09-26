@@ -178,9 +178,9 @@
       '        <section class="batch-flow-card"><div class="batch-flow-head"><span class="batch-flow-index">3</span><div><h2>名额与价格</h2></div></div><div class="form-grid schedule-quota-price-grid"><div class="form-group"><label id="batchCapacityLabel" class="form-label" for="batchCapacityLimit">供应商可接库存</label><input id="batchCapacityLimit" class="form-control" type="number" min="0" value="0"></div><div class="form-group"><label id="batchMinGroupLabel" class="form-label" for="batchMinGroupSize">最低成行人数</label><input id="batchMinGroupSize" class="form-control" type="number" min="1" value="12"></div><div class="form-group"><label class="form-label" for="batchDepartureCity">出发地</label><select id="batchDepartureCity" class="form-control"><option>北京</option><option>上海</option><option>广州</option><option>成都</option><option>全国</option><option>巴塞罗那</option></select></div><div class="form-group"><label class="form-label" for="batchMeetingPlace">集合地点</label><input id="batchMeetingPlace" class="form-control" type="text" value="以供应商确认件为准"></div><div class="form-group"><label class="form-label" for="batchConfirmMode">库存确认方式</label><select id="batchConfirmMode" class="form-control"><option selected>二次确认后开售</option><option>实时库存可下单</option><option>虚拟库存可下单</option></select></div><div class="form-group"><label class="form-label" for="batchAllowOversell">是否允许超售</label><select id="batchAllowOversell" class="form-control"><option selected>不允许超售</option><option>允许超售，需二次确认</option></select></div><div class="form-group"><label class="form-label" for="batchValidUntil">报价有效期</label><input id="batchValidUntil" class="form-control" type="date" value="2026-08-31"></div><div class="form-group"><label class="form-label" for="batchReserveHours">确认保留时效</label><select id="batchReserveHours" class="form-control"><option value="2">2小时</option><option value="4" selected>4小时</option><option value="24">24小时</option><option value="48">48小时</option></select></div></div><section id="batchTypeSpecificPanel" class="batch-type-panel" aria-label="价格结构"><div class="batch-section-subhead"><h3 id="batchTypeSpecificTitle">价格结构</h3><span id="batchInventoryModeTag" class="tag tag-blue">按人售卖</span></div><div id="batchTypeSpecificGrid" class="batch-type-grid"></div></section></section>',
       '        <section class="batch-flow-card"><div class="batch-flow-head"><span class="batch-flow-index">4</span><div><h2>提交给凯撒</h2></div><span class="tag tag-blue">待凯撒确认</span></div><div class="form-grid"><div class="form-group"><label class="form-label" for="batchPlannerSelect">凯撒对接</label><select id="batchPlannerSelect" class="form-control"><option>外采计调部</option><option>长线中心 / 欧洲部</option><option>邮轮中心</option><option>自由行中心</option></select></div><div class="form-group"><label class="form-label" for="batchSubmitContact">供应商联系人</label><input id="batchSubmitContact" class="form-control" type="text" value="张敏"></div><div class="form-group form-group-full"><label class="form-label" for="batchRemark">备注</label><textarea id="batchRemark" class="form-control" rows="3" placeholder="填写本次团期、余量、价格、确认方式的补充说明"></textarea></div></div></section>',
       '      </section>',
-      '      <section id="batchPreviewPage" class="batch-preview-page" aria-label="新建团期预览确认" hidden><div class="batch-preview-title"><div><h2>预览确认</h2></div><span id="batchCreateCountText">将提交 0 个团期</span></div><section class="batch-preview-summary" aria-label="新建团期摘要"><div class="batch-preview-summary-main"><span>产品/线路</span><strong id="batchPreviewRouteText">-</strong></div><div><span>供应商可接库存</span><strong id="batchPreviewCapacityText">-</strong></div><div><span>供应商公开售价</span><strong id="batchPreviewPublicPriceText">-</strong></div><div><span>供应商结算价</span><strong id="batchPreviewSettlementPriceText">-</strong></div><div><span>确认方式</span><strong id="batchPreviewPolicyText">-</strong></div></section><section class="table-wrap batch-preview-table drawer-table-fit drawer-table-cols-6" aria-label="即将提交的团期预览"><table><thead><tr><th>出发日期</th><th>可接库存</th><th>公开售价</th><th>结算价</th><th>确认方式</th><th>操作</th></tr></thead><tbody id="batchPreviewRows"></tbody></table></section></section>',
+      '      <section id="batchPreviewPage" class="batch-preview-page" aria-label="新建团期预览确认" hidden><div class="batch-preview-title"><div><h2>预览确认</h2></div><span id="batchCreateCountText">将提交 0 个团期</span></div><section class="batch-preview-summary" aria-label="新建团期摘要"><div class="batch-preview-summary-main"><span>产品/线路</span><strong id="batchPreviewRouteText">-</strong></div><div><span>供应商可接库存</span><strong id="batchPreviewCapacityText">-</strong></div><div><span>供应商公开售价</span><strong id="batchPreviewPublicPriceText">-</strong></div><div><span>供应商结算价</span><strong id="batchPreviewSettlementPriceText">-</strong></div><div><span>确认方式</span><strong id="batchPreviewPolicyText">-</strong></div></section><div id="batchPreviewPrices" class="p0-quote-prices"></div><section class="table-wrap batch-preview-table drawer-table-fit drawer-table-cols-6" aria-label="即将提交的团期预览"><table><thead><tr><th>出发日期</th><th>可接库存</th><th>公开售价</th><th>结算价</th><th>确认方式</th><th>操作</th></tr></thead><tbody id="batchPreviewRows"></tbody></table></section></section>',
       '    </div>',
-      '    <div class="modal-footer batch-drawer-footer"><button class="btn btn-secondary" type="button" data-close-batch>取消</button><button id="batchPrevStep" class="btn btn-secondary" type="button" hidden>返回</button><button id="batchNextStep" class="btn btn-primary" type="button">确认</button></div>',
+      '    <p id="batchQuoteMessage" class="p0-form-message" role="status"></p><div class="modal-footer batch-drawer-footer"><button id="batchSaveDraft" class="btn btn-secondary" type="button">保存草稿</button><button class="btn btn-secondary" type="button" data-close-batch>取消</button><button id="batchPrevStep" class="btn btn-secondary" type="button" hidden>返回</button><button id="batchNextStep" class="btn btn-primary" type="button">确认</button></div>',
       '  </div>',
       '</div>'
     ].join("");
@@ -214,7 +214,7 @@
     var previewPage = document.getElementById("batchPreviewPage");
     var generatedDates = [];
     var excludedDates = new Set();
-    var manualDates = new Set(["2026-08-07", "2026-08-21", "2026-09-04"]);
+    var manualDates = new Set();
     var previewMode = false;
 
     function cards() {
@@ -464,7 +464,7 @@
         return item.dataset.batchMatrixRow === rowName;
       });
       var input = row && row.querySelector("[data-batch-matrix-field]");
-      return input && input.value.trim() || "¥0";
+      return input && input.value.trim() || "待补";
     }
 
     function firstPublicPrice() {
@@ -485,6 +485,34 @@
       });
     }
 
+    function priceItems() {
+      var rows = quoteItems();
+      return Object.keys(rows[0] || {}).filter(function (key) { return key !== 'name'; }).map(function (key) {
+        return { name: key, public: rows[0][key], settlement: rows[1] && rows[1][key] };
+      });
+    }
+    function validateQuote() {
+      var errors = window.SupplierQuoteValidation.errors(priceItems());
+      if (selectedPanel.hidden) errors.unshift('请选择产品线路');
+      if (!generatedDates.filter(function (date) { return !excludedDates.has(date); }).length) errors.unshift('请至少选择一个出发日期');
+      var capacity = document.getElementById('batchCapacityLimit').value;
+      if (!/^\d+$/.test(capacity)) errors.push('可接库存须为0或正整数');
+      document.getElementById('batchQuoteMessage').textContent = errors.join('；');
+      var firstInvalid;
+      drawer.querySelectorAll('[data-batch-matrix-field]').forEach(function (el) {
+        var invalid = window.SupplierQuoteValidation.price(el.value) == null;
+        el.setAttribute('aria-invalid', String(invalid));
+        if (invalid && !firstInvalid) firstInvalid = el;
+      });
+      if (firstInvalid && !formPage.hidden) { firstInvalid.focus(); firstInvalid.scrollIntoView({ block: 'center' }); }
+      return !errors.length;
+    }
+    var draft = null;
+    function captureDraft() {
+      draft = { product: activeProduct(), typeKey: activeProduct().typeKey, productName: activeProduct().product, route: currentPlan(), excluded: Array.from(excludedDates), manual: Array.from(manualDates), fields: Array.from(drawer.querySelectorAll('input, select, textarea')).map(function (el) { return { value: el.value, checked: el.checked }; }) };
+      document.getElementById('batchQuoteMessage').textContent = '报价草稿已保存，尚未提交凯撒确认';
+    }
+
     function renderPreview() {
       var product = activeProduct();
       var dates = generatedDates.filter(function (date) { return !excludedDates.has(date); });
@@ -494,6 +522,7 @@
       document.getElementById("batchPreviewPublicPriceText").textContent = firstPublicPrice();
       document.getElementById("batchPreviewSettlementPriceText").textContent = firstSettlementPrice();
       document.getElementById("batchPreviewPolicyText").textContent = document.getElementById("batchConfirmMode").value;
+      document.getElementById('batchPreviewPrices').innerHTML = '<div class="table-wrap"><table><thead><tr><th>本次适用规格</th><th>公开售价</th><th>结算价</th></tr></thead><tbody>' + priceItems().map(function (item) { return '<tr><td>' + escapeHtml(item.name) + '</td><td>' + formattedPrice(window.SupplierQuoteValidation.price(item.public)) + '</td><td>' + formattedPrice(window.SupplierQuoteValidation.price(item.settlement)) + '</td></tr>'; }).join('') + '</tbody></table></div>';
       document.getElementById("batchPreviewRows").innerHTML = dates.map(function (date) {
         return '<tr data-preview-date="' + escapeHtml(date) + '"><td>' + escapeHtml(date) + '</td><td>' + escapeHtml(document.getElementById("batchCapacityLimit").value + product.unit) + '</td><td>' + escapeHtml(firstPublicPrice()) + '</td><td>' + escapeHtml(firstSettlementPrice()) + '</td><td>' + escapeHtml(document.getElementById("batchConfirmMode").value) + '</td><td><button class="table-action-primary" type="button" data-remove-preview-date="' + escapeHtml(date) + '">移除</button></td></tr>';
       }).join("") || '<tr><td colspan="6">暂无可提交日期</td></tr>';
@@ -511,12 +540,13 @@
           depart: date,
           back: formatDate(new Date(new Date(date + "T00:00:00").getTime() + (product.days - 1) * 86400000)),
           deadline: formatDate(new Date(new Date(date + "T00:00:00").getTime() - 10 * 86400000)),
-          stock: Number(document.getElementById("batchCapacityLimit").value || product.capacity),
+          stock: Number(document.getElementById("batchCapacityLimit").value),
           sold: 0,
           publicPrice: firstPublicPrice(),
           settlementPrice: firstSettlementPrice(),
           price: firstSettlementPrice(),
           quoteItems: quoteItems(),
+          priceItems: priceItems().map(function (item) { return { name: item.name, public: window.SupplierQuoteValidation.price(item.public), settlement: window.SupplierQuoteValidation.price(item.settlement) }; }),
           confirmMode: document.getElementById("batchConfirmMode").value,
           allowOversell: document.getElementById("batchAllowOversell").value,
           priceValidUntil: document.getElementById("batchValidUntil").value,
@@ -529,6 +559,7 @@
 
     function showPreview() {
       renderDates();
+      if (!validateQuote()) return;
       renderPreview();
       formPage.hidden = true;
       previewPage.hidden = false;
@@ -538,6 +569,8 @@
     }
 
     function submitConfirm() {
+      if (!validateQuote()) return;
+      draft = null;
       var items = previewItems();
       if (typeof options.onSubmitted === "function") options.onSubmitted(items, activeProduct());
       if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(objectNameByType(activeProduct().type) + "已提交凯撒确认");
@@ -568,9 +601,17 @@
         setTitle(product, false, request.title || "新建" + objectNameByType(product.type));
         resetSelection(false);
       }
+      document.getElementById('batchQuoteMessage').textContent = '';
+      if (draft && product === draft.product && product.typeKey === draft.typeKey && product.product === draft.productName && (!request.route || request.route === draft.route)) {
+        applyProduct(draft.product, false, draft.route, request.title);
+        Array.from(drawer.querySelectorAll('input, select, textarea')).forEach(function (el, i) { if (draft.fields[i]) { el.value = draft.fields[i].value; el.checked = draft.fields[i].checked; } });
+        excludedDates = new Set(draft.excluded); manualDates = new Set(draft.manual); renderDates();
+        document.getElementById('batchQuoteMessage').textContent = '已恢复本页报价草稿，尚未提交';
+      }
       openLayer();
     }
 
+    document.getElementById('batchSaveDraft').addEventListener('click', captureDraft);
     document.addEventListener("click", function (event) {
       var card = event.target.closest("#batchProductList .batch-product-card");
       if (card) {

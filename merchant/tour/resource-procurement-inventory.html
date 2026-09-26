@@ -354,7 +354,7 @@
           </section>
           <div class="resource-procurement-section-head">
             <h2 class="section-title">付款节点</h2>
-            <button id="detailOpenChange" class="btn btn-secondary" type="button">发起变更</button>
+            <button id="detailOpenChange" class="btn btn-secondary" type="button">调整数量</button>
           </div>
           <section class="table-wrap drawer-table-scroll drawer-table-cols-6">
             <table>
@@ -638,7 +638,7 @@
   <div id="changeDrawer" class="modal-overlay drawer-overlay" aria-hidden="true">
     <div class="modal drawer-modal resource-procurement-action-drawer" role="dialog" aria-modal="true" aria-labelledby="changeTitle">
       <div class="modal-header">
-        <div id="changeTitle" class="modal-title">发起合同变更</div>
+        <div id="changeTitle" class="modal-title">调整采购数量</div>
         <button class="modal-close" type="button" aria-label="关闭抽屉" data-close-drawer>×</button>
       </div>
       <div class="modal-body">
@@ -646,37 +646,17 @@
           <strong id="changeContractText">-</strong>
           <span id="changeMetaText">-</span>
         </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="changeTypeSelect">变更类型</label>
-            <select id="changeTypeSelect" class="form-control">
-              <option>数量调整</option>
-              <option>金额调整</option>
-              <option>DL调整</option>
-              <option>资源调整</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="changeBeforeQty">当前有效数量</label>
-            <input id="changeBeforeQty" class="form-control" type="number" readonly>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="changeAfterQty">变更后数量</label>
-            <input id="changeAfterQty" class="form-control" type="number" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="changeDeductionNode">抵扣节点</label>
-            <select id="changeDeductionNode" class="form-control"></select>
-          </div>
-          <div class="form-group form-group-full">
-            <label class="form-label" for="changeReasonInput">变更原因</label>
-            <input id="changeReasonInput" class="form-control" type="text" value="销售预测调整，双方协商变更采购数量">
-          </div>
-        </div>
+        <section class="drawer-section-head"><h3 class="drawer-section-title">采购规格</h3></section>
+        <div class="table-wrap drawer-table-fit drawer-table-cols-5"><table><thead><tr><th>规格／单价</th><th>当前量</th><th>已分配</th><th>调整后</th><th>金额</th></tr></thead><tbody id="changeQuantityRows"></tbody></table></div>
+        <section class="drawer-section-head"><h3 class="drawer-section-title">付款节点</h3></section>
+        <div id="changePaymentRows" class="form-grid"></div>
+        <div class="form-group"><label class="form-label" for="changeReasonInput">变更依据</label><input id="changeReasonInput" class="form-control" type="text" value=""></div>
+        <div id="changePreviewText" class="readonly-summary" aria-live="polite"></div>
+        <p id="changeError" class="amount-red" role="alert" hidden></p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-drawer>取消</button>
-        <button id="saveChangeOrder" class="btn btn-primary" type="button">提交变更</button>
+        <button id="saveChangeOrder" class="btn btn-primary" type="button">确认调整</button>
       </div>
     </div>
   </div>
@@ -808,6 +788,7 @@
     </div>
   </div>
 
+  <script src="../../shared/procurement-quantity-change.js"></script>
   <script>
     (function () {
       var currentDate = new Date('2026-07-06T00:00:00');
@@ -967,8 +948,8 @@
           agreementGroup: 'AG-EU-PAR-20260818',
           linkedContractNo: 'AIR-RET-20260618-002',
           originalQty: 30,
-          effectiveQty: 20,
-          version: 'V2',
+          effectiveQty: 30,
+          version: 'V1',
           supplier: '中国国际航空',
           resourceName: 'CA937 北京-巴黎去程',
           route: '北京首都T3 → 巴黎戴高乐T1',
@@ -988,8 +969,8 @@
           ],
           payments: [
             { node: '一压', dueDate: '2026-06-20', amount: 38700, applyNo: 'FK20260620012', payableNo: 'AP-AIR-20260618001', paymentNo: 'PAYEX-AIR-20260620012', approvalStatus: '已通过', paymentStatus: '已付款', receiptStatus: '已回单', ncStatus: '已推送', reminder: '已人工发起' },
-            { node: '二压', dueDate: '2026-07-13', amount: 21500, originalAmount: 51600, recalculatedAmount: 34400, deduction: 12900, applyNo: '', payableNo: 'AP-AIR-20260713002', paymentNo: '', approvalStatus: '待申请', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '7天提醒' },
-            { node: '三压/尾款', dueDate: '2026-08-05', amount: 25800, applyNo: '', payableNo: 'AP-TRF-20260818001', paymentNo: 'PAY-TRF-20260818001', approvalStatus: '未到期', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '未到期' }
+            { node: '二压', dueDate: '2026-07-13', amount: 51600, originalAmount: 51600, ratio: 40, applyNo: '', payableNo: 'AP-AIR-20260713002', paymentNo: '', approvalStatus: '待申请', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '7天提醒' },
+            { node: '三压/尾款', dueDate: '2026-08-05', amount: 38700, ratio: 30, applyNo: '', payableNo: 'AP-TRF-20260818001', paymentNo: 'PAY-TRF-20260818001', approvalStatus: '未到期', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '未到期' }
           ],
           allocations: [
             { scheduleNo: 'EU20260818001', scheduleName: '欧洲十国经典游 / A线 法德意12天', subtype: '经济舱G舱座位', allocated: 18, sold: 14, issued: 10, returned: 0, status: '开放报名' },
@@ -1003,7 +984,7 @@
             { type: '票损', subtype: '经济舱G舱座位', guarantee: 26, actual: 18, freeLoss: 4, returned: 0, lossQty: 4, amount: 17200, scheduleNo: 'EU20260818002', status: '待确认', costNo: '' }
           ],
           changeOrders: [
-            { no: 'CHG-AIR-20260710-001', type: '数量调整', beforeQty: 30, afterQty: 20, beforeAmount: 129000, afterAmount: 86000, overpaid: 12900, deductionNode: '二压', reason: '销售预测调整，双方协商缩减位置', status: '已生效' }
+            { no: 'CHG-AIR-20260710-001', type: '数量调整', beforeQty: 30, afterQty: 20, beforeAmount: 129000, afterAmount: 86000, overpaid: 0, deductionNode: '待核对', reason: '拟减至20座，低于已分配24座，尚未生效', status: '待确认' }
           ],
           prepayAllocations: [
             { scheduleNo: 'EU20260818001', node: '一压', allocatedQty: 10, totalQty: 30, paidAmount: 10000, allocatedAmount: 3333, adjustAmount: 0, status: '已分摊' },
@@ -1023,8 +1004,8 @@
           agreementGroup: 'AG-EU-PAR-20260818',
           linkedContractNo: 'AIR-BLK-20260618-001',
           originalQty: 30,
-          effectiveQty: 20,
-          version: 'V2',
+          effectiveQty: 30,
+          version: 'V1',
           supplier: '中国国际航空',
           resourceName: 'CA938 巴黎-北京返程',
           route: '巴黎戴高乐T1 → 北京首都T3',
@@ -1044,8 +1025,8 @@
           ],
           payments: [
             { node: '一压', dueDate: '2026-06-20', amount: 38700, applyNo: 'FK20260620013', payableNo: 'AP-AIR-20260618002', paymentNo: 'PAYEX-AIR-20260620013', approvalStatus: '已通过', paymentStatus: '已付款', receiptStatus: '已回单', ncStatus: '已推送', reminder: '已人工发起' },
-            { node: '二压', dueDate: '2026-07-13', amount: 21500, originalAmount: 51600, recalculatedAmount: 34400, deduction: 12900, applyNo: '', payableNo: 'AP-AIR-20260713003', paymentNo: '', approvalStatus: '待申请', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '7天提醒' },
-            { node: '三压/尾款', dueDate: '2026-08-05', amount: 25800, applyNo: '', payableNo: 'AP-TRF-20260818002', paymentNo: 'PAY-TRF-20260818002', approvalStatus: '未到期', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '未到期' }
+            { node: '二压', dueDate: '2026-07-13', amount: 51600, originalAmount: 51600, ratio: 40, applyNo: '', payableNo: 'AP-AIR-20260713003', paymentNo: '', approvalStatus: '待申请', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '7天提醒' },
+            { node: '三压/尾款', dueDate: '2026-08-05', amount: 38700, ratio: 30, applyNo: '', payableNo: 'AP-TRF-20260818002', paymentNo: 'PAY-TRF-20260818002', approvalStatus: '未到期', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成', reminder: '未到期' }
           ],
           allocations: [
             { scheduleNo: 'EU20260818001', scheduleName: '欧洲十国经典游 / A线 法德意12天', subtype: '经济舱G舱座位', allocated: 18, sold: 14, issued: 10, returned: 0, status: '开放报名' },
@@ -1059,7 +1040,7 @@
             { type: '票损', subtype: '经济舱G舱座位', guarantee: 26, actual: 18, freeLoss: 4, returned: 0, lossQty: 4, amount: 17200, scheduleNo: 'EU20260818002', status: '待确认', costNo: '' }
           ],
           changeOrders: [
-            { no: 'CHG-AIR-20260710-002', type: '数量调整', beforeQty: 30, afterQty: 20, beforeAmount: 129000, afterAmount: 86000, overpaid: 12900, deductionNode: '二压', reason: '随去程协议同步缩减返程位置', status: '已生效' }
+            { no: 'CHG-AIR-20260710-002', type: '数量调整', beforeQty: 30, afterQty: 20, beforeAmount: 129000, afterAmount: 86000, overpaid: 0, deductionNode: '待核对', reason: '拟减至20座，低于已分配24座，尚未生效', status: '待确认' }
           ],
           prepayAllocations: [
             { scheduleNo: 'EU20260818001', node: '一压', allocatedQty: 10, totalQty: 30, paidAmount: 10000, allocatedAmount: 3333, adjustAmount: 0, status: '已分摊' },
@@ -1175,6 +1156,17 @@
           ]
         }
       ];
+
+      contracts.push({
+        contractNo: 'AIR-BLK-20260926-001', type: '机票', mode: '切位/系列位', direction: '去程',
+        originalQty: 100, effectiveQty: 100, version: 'V1', supplier: '厦门航空', resourceName: 'MF8354 厦门—杭州',
+        route: '厦门高崎 → 杭州萧山', departDate: '2026-10-15', returnDate: '2026-10-15', dlDate: '2026-10-01',
+        status: '待一压', owner: '航服周伟', guaranteeQty: 0, freeLossQty: 100,
+        subtypes: [{name:'经济舱', unit:'座', total:100, allocated:0, sold:0, issued:0, returned:0, unitPrice:1000}],
+        batches: [{batchNo:'CG-AIR-20260926-001',status:'待一压',subtype:'经济舱',spec:'经济舱',available:100}],
+        payments: [{node:'一压',dueDate:'2026-10-01',amount:50000,ratio:50,applyNo:'',approvalStatus:'待申请',paymentStatus:'未付款',receiptStatus:'-',ncStatus:'待生成'}],
+        allocations: [], tickets: [], losses: [], changeOrders: [], feeAdjustments: [], returns: []
+      });
 
       function $(selector, root) {
         return (root || document).querySelector(selector);
@@ -1333,7 +1325,7 @@
 
       function effectiveContractQty(contract) {
         if (!contract) return 0;
-        return Number(contract.effectiveQty || contract.originalQty || contractStats(contract).total || 0);
+        return contract.effectiveQty != null ? Number(contract.effectiveQty) : Number(contractStats(contract).total || 0);
       }
 
       function primaryUnitPrice(contract) {
@@ -1348,7 +1340,7 @@
 
       function paymentRatio(contract, row) {
         if (!contract || !row) return 0;
-        if (row.ratio) return Number(row.ratio || 0) / 100;
+        if (row.ratio != null) return Number(row.ratio) / 100;
         var baseQty = Number(contract.originalQty || contractStats(contract).total || 0);
         var base = baseQty * primaryUnitPrice(contract);
         return base ? Number(row.originalAmount || row.amount || 0) / base : 0;
@@ -1981,12 +1973,12 @@
         }).join('') : '<tr><td colspan="9">暂无出票记录</td></tr>';
         $('#paymentRows').innerHTML = contract.payments.map(function (row, index) {
           var nodeStatus = paymentNodeStatus(row);
-          var baseText = '<span class="resource-procurement-main">' + escapeHtml(money(row.originalAmount || row.amount)) + '</span>';
+          var baseText = '<span class="resource-procurement-main">' + escapeHtml(money(row.amount)) + '</span>';
           if (row.deduction) baseText += '<span class="resource-procurement-meta">' + escapeHtml('重算' + money(row.recalculatedAmount || row.amount) + ' · 抵扣' + money(row.deduction)) + '</span>';
           return '<tr><td><span class="resource-procurement-main">' + escapeHtml(row.node) + '</span><span class="' + tagClass(nodeStatus) + '">' + escapeHtml(nodeStatus) + '</span></td><td><span class="resource-procurement-main">' + escapeHtml(row.dueDate) + '</span><span class="resource-procurement-meta">' + escapeHtml(row.reminder || '到期提醒') + '</span></td><td>' + baseText + '<span class="amount-strong">' + escapeHtml('本次建议 ' + money(row.amount)) + '</span></td><td><span class="resource-procurement-main">' + escapeHtml(row.applyNo || '未发起') + '</span><span class="' + tagClass(row.approvalStatus) + '">' + escapeHtml(row.approvalStatus) + '</span>' + paymentFinanceHandoff(contract, row) + '</td></tr>';
         }).join('');
         $('#changeRows').innerHTML = (contract.changeOrders || []).length ? contract.changeOrders.map(function (row) {
-          return '<tr><td><span class="resource-procurement-main">' + escapeHtml(row.no) + '</span><span class="resource-procurement-meta">' + escapeHtml(row.type) + '</span></td><td>' + escapeHtml(row.beforeQty + ' → ' + row.afterQty) + '</td><td><span class="resource-procurement-main">' + escapeHtml(money(row.beforeAmount) + ' → ' + money(row.afterAmount)) + '</span><span class="resource-procurement-meta">' + escapeHtml('抵扣' + row.deductionNode + ' ' + money(row.overpaid)) + '</span></td><td>' + escapeHtml(row.reason) + '</td><td><span class="' + tagClass(row.status) + '">' + escapeHtml(row.status) + '</span></td></tr>';
+          return '<tr><td><span class="resource-procurement-main">' + escapeHtml(row.no) + '</span><span class="resource-procurement-meta">' + escapeHtml(row.type) + '</span></td><td>' + escapeHtml((row.beforeText || row.beforeQty) + ' → ' + (row.afterText || row.afterQty)) + '</td><td><span class="resource-procurement-main">' + escapeHtml(money(row.beforeAmount) + ' → ' + money(row.afterAmount)) + '</span><span class="resource-procurement-meta">' + escapeHtml('多付待处理 ' + money(row.overpaid)) + '</span></td><td>' + escapeHtml(row.reason) + '</td><td><span class="' + tagClass(row.status) + '">' + escapeHtml(row.status) + '</span></td></tr>';
         }).join('') : '<tr><td colspan="5">暂无变更单</td></tr>';
         $('#prepayRows').innerHTML = (contract.prepayAllocations || []).length ? contract.prepayAllocations.map(function (row) {
           return '<tr><td>' + escapeHtml(row.scheduleNo) + '</td><td><span class="resource-procurement-main">' + escapeHtml(row.node + ' · ' + row.allocatedQty + '/' + row.totalQty) + '</span><span class="resource-procurement-meta">' + escapeHtml('节点已付 ' + money(row.paidAmount)) + '</span></td><td class="amount-strong">' + escapeHtml(money(row.allocatedAmount)) + '</td><td>' + escapeHtml(row.adjustAmount ? money(row.adjustAmount) : '-') + '</td><td><span class="' + tagClass(row.status) + '">' + escapeHtml(row.status) + '</span></td></tr>';
@@ -2672,6 +2664,10 @@
         var contract = selectedContract();
         if (!contract) return;
         var row = contract.payments[Number($('#paymentNodeSelect').value || 0)];
+        if (!row || window.ProcurementQuantityChange.locked(row) || Number(row.amount) <= 0) { toast('本节点已申请、已付款或无可申请金额', 'warning'); return; }
+        var purchaseAmount = contract.subtypes.reduce(function (sum, spec) { return sum + Number(spec.total) * Number(spec.unitPrice); }, 0);
+        var committed = contract.payments.reduce(function (sum, node) { return sum + (window.ProcurementQuantityChange.locked(node) ? Number(node.amount) : 0); }, 0);
+        if ((contract.changeOrders || []).length && committed + Number(row.amount) > purchaseAmount) { toast('数量已调整，已付及在途申请须先复核，当前不能新增请款', 'warning'); return; }
         var digits = String(Date.now()).slice(-8);
         row.applyNo = 'FK' + digits;
         row.payableNo = 'AP' + digits;
@@ -2687,72 +2683,38 @@
         renderContracts();
       }
 
+      function changePreview() {
+        var contract = selectedContract(), quantities = Array.from(document.querySelectorAll('[data-change-qty]')).map(function (el) { return el.value; }), ratios = {};
+        document.querySelectorAll('[data-change-ratio]').forEach(function (el) { ratios[el.dataset.changeRatio] = el.value; });
+        var result = window.ProcurementQuantityChange.preview(contract, quantities, ratios);
+        result.lines.forEach(function (line, i) { document.querySelector('[data-change-amount="' + i + '"]').textContent = Number.isFinite(line.after * line.price) ? money(line.after * line.price) : '待填写'; });
+        $('#changePreviewText').textContent = '采购金额 ' + money(result.beforeAmount) + ' → ' + (Number.isFinite(result.afterAmount) ? money(result.afterAmount) : '待填写') + ' · 已付 ' + money(contractPaidAmount(contract)) + (result.overpaid ? ' · 多付待处理 ' + money(result.overpaid) : '') + (result.overcommitted ? ' · 已付及在途超出新采购金额 ' + money(result.overcommitted) + '，暂停新增请款' : '');
+        return result;
+      }
+
       function openChangeOrder() {
-        var contract = selectedContract();
-        if (!contract) return;
-        var currentQty = effectiveContractQty(contract);
+        var contract = selectedContract(); if (!contract) return;
         $('#changeContractText').textContent = contract.contractNo + ' / ' + contract.resourceName;
-        $('#changeMetaText').textContent = '原始' + (contract.originalQty || currentQty) + contractUnitText(contract) + '，当前有效' + currentQty + contractUnitText(contract) + '，变更需审批后生效';
-        $('#changeTypeSelect').value = '数量调整';
-        $('#changeBeforeQty').value = currentQty;
-        $('#changeAfterQty').value = currentQty;
-        var paymentOptions = contract.payments.map(function (row, index) {
-          return '<option value="' + index + '">' + escapeHtml(row.node + ' · ' + row.dueDate + ' · ' + money(row.amount)) + '</option>';
+        $('#changeMetaText').textContent = contract.supplier + ' · ' + contract.subtypes.map(function (r) { return r.name + ' ' + r.total + r.unit; }).join(' / ');
+        $('#changeQuantityRows').innerHTML = contract.subtypes.map(function (r, i) {
+          return '<tr><td><span class="resource-procurement-main">' + escapeHtml(r.name) + '</span><span class="resource-procurement-meta">' + money(r.unitPrice) + '/' + escapeHtml(r.unit) + '</span></td><td>' + r.total + '</td><td>' + r.allocated + '</td><td><input class="form-control" type="number" min="0" step="1" data-change-qty="' + i + '" aria-label="' + escapeHtml(r.name) + '调整后数量" value="' + r.total + '"></td><td data-change-amount="' + i + '"></td></tr>';
         }).join('');
-        $('#changeDeductionNode').innerHTML = paymentOptions;
-        var firstUnpaid = contract.payments.findIndex(function (row) { return row.paymentStatus !== '已付款'; });
-        $('#changeDeductionNode').value = String(Math.max(firstUnpaid, 0));
-        $('#changeReasonInput').value = '销售预测调整，双方协商变更采购数量';
-        openLayer($('#changeDrawer'));
+        $('#changePaymentRows').innerHTML = contract.payments.map(function (r, i) {
+          return '<div class="form-group"><label class="form-label">' + escapeHtml(r.node) + ' · ' + money(r.amount) + '</label>' + (window.ProcurementQuantityChange.locked(r) ? '<span>' + escapeHtml(r.paymentStatus + ' · ' + (r.applyNo || r.paymentNo || '原付款记录')) + '</span>' : '<label class="form-label">合同付款比例（%）<input class="form-control" type="number" min="0" max="100" step="0.01" data-change-ratio="' + i + '" value="' + (r.ratio == null ? '' : r.ratio) + '" aria-label="' + escapeHtml(r.node) + '付款比例"></label>') + '</div>';
+        }).join('');
+        $('#changeReasonInput').value = ''; $('#changeError').hidden = true;
+        changePreview(); openLayer($('#changeDrawer'));
       }
 
       function saveChangeOrder() {
-        var contract = selectedContract();
-        if (!contract) return;
-        var beforeQty = Number($('#changeBeforeQty').value || 0);
-        var afterQty = Number($('#changeAfterQty').value || 0);
-        if (afterQty < 0 || afterQty === beforeQty) {
-          toast('请填写有效的变更后数量', 'warning');
-          return;
-        }
-        var price = primaryUnitPrice(contract);
-        var beforeAmount = Math.round(beforeQty * price);
-        var afterAmount = Math.round(afterQty * price);
-        var paidNode = contract.payments.find(function (row) { return row.paymentStatus === '已付款' || row.receiptStatus === '已回单'; });
-        var overpaid = Math.max(0, Math.round((beforeQty - afterQty) * price * paymentRatio(contract, paidNode)));
-        var targetIndex = Number($('#changeDeductionNode').value || 0);
-        var targetPayment = contract.payments[targetIndex];
-        if (targetPayment) {
-          var originalAmount = Number(targetPayment.originalAmount || targetPayment.amount || 0);
-          var recalculated = Math.round(afterQty * price * paymentRatio(contract, targetPayment));
-          targetPayment.originalAmount = originalAmount;
-          targetPayment.recalculatedAmount = recalculated || originalAmount;
-          targetPayment.deduction = overpaid;
-          targetPayment.amount = Math.max(0, (recalculated || originalAmount) - overpaid);
-          targetPayment.effectiveQty = afterQty;
-          targetPayment.reminder = '变更后人工核实';
-        }
-        contract.changeOrders = contract.changeOrders || [];
-        contract.changeOrders.unshift({
-          no: 'CHG-' + contract.contractNo.replace(/[^A-Z0-9]/g, '').slice(0, 12) + '-' + String(Date.now()).slice(-5),
-          type: $('#changeTypeSelect').value,
-          beforeQty: beforeQty,
-          afterQty: afterQty,
-          beforeAmount: beforeAmount,
-          afterAmount: afterAmount,
-          overpaid: overpaid,
-          deductionNode: targetPayment ? targetPayment.node : '-',
-          reason: $('#changeReasonInput').value.trim(),
-          status: '已生效'
-        });
-        contract.effectiveQty = afterQty;
+        var contract = selectedContract(); if (!contract) return;
+        var result = changePreview(), reason = $('#changeReasonInput').value.trim();
+        if (!reason) result.errors.push('请填写本次数量变更的确认依据');
+        if (result.errors.length) { $('#changeError').textContent = result.errors.join('；'); $('#changeError').hidden = false; return; }
+        window.ProcurementQuantityChange.apply(contract, result, reason);
         contract.version = nextVersion(contract.version);
-        if (contract.subtypes.length === 1) contract.subtypes[0].total = afterQty;
-        closeLayer($('#changeDrawer'));
-        fillDetail(contract);
-        activateDetailTab('payment');
-        renderContracts();
-        toast('变更单已生效，付款节点已按当前数量重算');
+        closeLayer($('#changeDrawer')); fillDetail(contract); activateDetailTab('payment'); renderContracts();
+        toast('采购数量已调整，已付及在途申请保留原记录');
       }
 
       function openFeeAdjustment() {
@@ -3073,6 +3035,7 @@
       $('#paymentNodeSelect').addEventListener('change', syncPaymentApplyAmount);
       $('#savePaymentApply').addEventListener('click', savePaymentApply);
       $('#saveChangeOrder').addEventListener('click', saveChangeOrder);
+      $('#changeDrawer').addEventListener('input', function (e) { if (e.target.matches('[data-change-qty], [data-change-ratio]')) { $('#changeError').textContent = ''; changePreview(); } });
       $('#saveFeeAdjustment').addEventListener('click', saveFeeAdjustment);
       $('#saveReturn').addEventListener('click', saveReturn);
       $('#saveTicket').addEventListener('click', saveTicket);
