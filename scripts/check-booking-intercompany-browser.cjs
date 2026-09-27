@@ -1,0 +1,71 @@
+// 对独立调试浏览器运行；默认端口9238，可用 BOOKING_QA_PORT 修改。无第三方依赖。
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {pathToFileURL}=require('node:url');
+(async()=>{
+const tabs=await (await fetch('http://127.0.0.1:'+(process.env.BOOKING_QA_PORT||9238)+'/json/list')).json();
+const tab=tabs.find(t=>t.type==='page');assert.ok(tab,'需要独立验收浏览器页面');
+const ws=new WebSocket(tab.webSocketDebuggerUrl);await new Promise((r,j)=>{ws.onopen=r;ws.onerror=j;});
+let id=0,n=0;const pending=new Map(),errors=[];
+ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id){const p=pending.get(m.id);pending.delete(m.id);if(m.error)p.reject(m.error);else p.resolve(m.result);}else if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails.text);};
+const send=(method,params={})=>new Promise((resolve,reject)=>{const key=++id;pending.set(key,{resolve,reject});ws.send(JSON.stringify({id:key,method,params}));});
+const run=async expression=>{const r=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)throw new Error(JSON.stringify(r.exceptionDetails));return r.result.value;};
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+const check=async(name,expr)=>{assert.ok(await run(expr),name);console.log('PASS '+name);n++;};
+const reset=async(query='')=>{
+ await send('Page.navigate',{url:pathToFileURL(path.resolve(__dirname,'../merchant/sales/booking.html')).href+query});
+ for(let i=0;i<80;i++){await pause(100);if(await run("document.readyState==='complete' && !!document.querySelector('[data-count-input]')")){await run("window.__alerts=[];window.alert=m=>window.__alerts.push(m)");return;}}
+ throw Error('页面未就绪 '+JSON.stringify(errors));
+};
+const click=s=>run('document.querySelector('+JSON.stringify(s)+').click()');
+const textOf=s=>run('document.querySelector('+JSON.stringify(s)+').innerText');
+const choose=async(name,index=0)=>{await run(`document.querySelector('#objectKeyword').value=${JSON.stringify(name)};document.querySelector('#objectKeyword').dispatchEvent(new Event('input',{bubbles:true}))`);await click('[data-route-product-id]');await click('[data-select-stock="'+index+'"]');};
+const shot=async(file)=>{await pause(350);const r=await send('Page.captureScreenshot',{format:'png'});fs.writeFileSync('/private/tmp/'+file,Buffer.from(r.data,'base64'));};
+try{
+await send('Runtime.enable');await send('Page.enable');await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+await reset();
+await check('默认自营不显示关系与额外草稿按钮',"document.querySelector('#crossCompanySection').hidden && document.querySelector('#saveCrossCompanyDraft').hidden && !document.querySelector('#orderProcessMode').closest('.form-group').hidden");
+await choose('西藏深度探索');
+await check('搜索选择跨主体产品后显示关系及稳定按钮',"!document.querySelector('#crossCompanySection').hidden && ['福建凯撒','北京凯撒','履约方','签约主体','收款主体','实时余位可下单'].every(x=>document.querySelector('#crossCompanyFields').innerText.includes(x)) && document.querySelector('#createOrder').innerText==='提交订单' && !document.querySelector('#saveCrossCompanyDraft').hidden");
+await check('普通销售不显示内部结算价，不能手选确认状态',"!document.querySelector('#crossCompanyFields').textContent.includes('内部结算价') && document.querySelector('#orderProcessMode').closest('.form-group').hidden");
+await run("document.querySelector('#crossCompanySection').scrollIntoView({block:'center'})");await shot('booking-intercompany-sales.png');
+await click('#createOrder');
+await check('实时余位正常提交已确认',"!document.querySelector('#bookingResultView').hidden && document.querySelector('#createdOrderStatus').innerText==='已确认' && window.__alerts.length===0");
+await check('结果不携带内部采购价、不模拟内部财务单据',"!document.querySelector('#bookingResultView').innerText.includes('9,600') && !document.querySelector('#createdFinanceItems').innerText.includes('自动生成')");
+await reset('?crossProduct=IC-BJ-XZ&bookingActor=fj-product');
+await check('本公司授权岗位显示当前人数合计',"document.querySelector('#crossCompanyFields').innerText.includes('9,600') && document.querySelector('#crossCompanyFields').innerText.includes('内部结算价')");
+await click('[data-count-id="adult"] + [data-step="1"]');
+await check('人数变化更新内部结算合计，客户售价单独计算',"document.querySelector('#crossCompanyFields').innerText.includes('14,400') && document.querySelector('#orderReceivableTotal').innerText.includes('17,040')");
+await run("document.querySelector('#crossCompanySection').scrollIntoView({block:'center'})");await shot('booking-intercompany-authorized.png');
+await click('#saveCrossCompanyDraft');
+await check('保存草稿不占位、不生效',"document.querySelector('#createdOrderStatus').innerText==='草稿' && document.querySelector('#createdText').innerText.includes('未占用') && document.querySelector('#createdConfirmedAt').innerText==='尚未生效'");
+await click('[data-edit-booking-draft]');await run("document.querySelector('[data-count-id=adult]').closest('[data-stepper]').querySelector('[data-step=\"-1\"]').click()");await click('#createOrder');
+await check('草稿继续编辑后仍按资源模式提交',"document.querySelector('#createdOrderStatus').innerText==='已确认'");
+await reset('?crossProduct=IC-BJ-XZ&crossDate=request');
+await run("document.querySelector('#orderProcessMode').value='confirm';document.querySelector('#orderProcessMode').dispatchEvent(new Event('change'))");await click('#createOrder');
+await check('二次确认不能用旧控件绕过，提交待确认不占位',"document.querySelector('#createdOrderStatus').innerText==='待确认' && document.querySelector('#createdText').innerText.includes('未占用名额') && document.querySelector('#createdConfirmedAt').innerText==='尚未生效'");
+await reset('?entry=product-booking&product='+encodeURIComponent('西藏深度探索7日')+'&date=2026-10-22');await click('#createOrder');
+await check('标准产品入口按所带出行日期确认，不误用首团期',"document.querySelector('#createdOrderStatus').innerText==='待确认' && document.querySelector('#createdStock').innerText.includes('20261022')");
+await reset('?crossProduct=IC-BJ-XZ');await click('#changePresetSelection');
+await check('更换产品立即清空关系并恢复原流程',"document.querySelector('#crossCompanySection').hidden && document.querySelector('#crossCompanyFields').innerHTML==='' && !document.querySelector('#orderProcessMode').closest('.form-group').hidden");
+await choose('法德意');await run("document.querySelector('#orderProcessMode').value='pending';document.querySelector('#orderProcessMode').dispatchEvent(new Event('change'))");await click('#createOrder');
+await check('自营待确认原流程可提交',"document.querySelector('#createdOrderStatus').innerText==='待确认' && window.__alerts.length===0");
+await reset();await click('[data-booking-mode="manual"]');
+await check('手工外采保持原表单，不出现集团关系',"document.querySelector('#crossCompanySection').hidden && !document.querySelector('#manualProductPanel').hidden");
+await reset('?crossProduct=IC-FJ-MN&bookingActor=bj-product');
+await check('反向关系按实际公司、门店和产品呈现',"document.querySelector('#crossCompanyFields').children[0].innerText.includes('北京凯撒') && document.querySelector('#crossCompanyFields').children[1].innerText.includes('福建凯撒') && document.querySelector('#storeName').value==='北京朝阳门店' && document.querySelector('#businessOwnershipGrid').textContent.includes('北京销售中心')");await click('#createOrder');
+await check('反向场景可直接确认',"document.querySelector('#createdOrderStatus').innerText==='已确认' && window.__alerts.length===0");
+await reset('?crossProduct=IC-FJ-MN&bookingActor=fj-product');await click('#createOrder');
+await check('跨公司岗位不显示价，未获销售授权不能提交',"!document.querySelector('#crossCompanyFields').textContent.includes('内部结算价') && document.querySelector('#bookingResultView').hidden && window.__alerts.join('').includes('销售授权')");
+await reset('?crossProduct=IC-BJ-XZ&bookingActor=unknown');await click('#createOrder');
+await check('未知岗位默认不展示价格并阻止提交',"!document.querySelector('#crossCompanyFields').textContent.includes('内部结算价') && document.querySelector('#bookingResultView').hidden && window.__alerts.length>0");
+await reset('?crossProduct=IC-BJ-XZ&price=1&status=待确认&internalPrice=true');
+await check('外来价格、状态及查看参数不覆盖团期条件或岗位授权',"document.querySelector('#orderReceivableTotal').innerText.includes('11,360') && document.querySelector('#crossCompanyFields').textContent.includes('实时余位可下单') && !document.querySelector('#crossCompanyFields').textContent.includes('内部结算价')");
+await run("for(let i=0;i<25;i++)document.querySelector('[data-count-id=adult] + [data-step=\"1\"]').click()");await click('#createOrder');
+await check('实时库存不足仍阻止提交',"document.querySelector('#bookingResultView').hidden && window.__alerts.join('').includes('不足')");
+await reset('?crossProduct=IC-BJ-XZ');await run("document.querySelector('#contactName').value=''");await click('#createOrder');
+await check('必填信息仍校验，可暂存草稿',"document.querySelector('#bookingResultView').hidden && window.__alerts.join('').includes('联系人')");await click('#saveCrossCompanyDraft');await check('缺联系人可存草稿',"document.querySelector('#createdOrderStatus').innerText==='草稿'");
+await reset('?crossProduct=IC-BJ-XZ&bookingActor=fj-product');await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,screenWidth:390,screenHeight:844,deviceScaleFactor:1,mobile:false});await pause(500);await run("document.querySelector('#crossCompanySection').scrollIntoView({block:'center'})");
+await check('窄屏关系区与提交按钮边界正常',"(()=>{const nodes=[document.querySelector('#crossCompanyFields'),document.querySelector('#createOrder'),document.querySelector('#saveCrossCompanyDraft')];return nodes.every(x=>{const r=x.getBoundingClientRect();return r.left>=0 && r.right<=innerWidth+1})})()");await shot('booking-intercompany-narrow.png');
+assert.deepEqual(errors,[]);console.log('PASS 无页面运行异常');console.log('通过 '+(n+1)+' 项浏览器检查');
+}finally{ws.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

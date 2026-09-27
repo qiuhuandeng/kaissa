@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期订单 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="../../shared/schedule-order-intercompany.css">
+  <script src="../../shared/schedule-order-intercompany.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -1536,8 +1538,15 @@
             rowMatchesDateRange(row) &&
             rowMatchesRouteFilter(row) &&
             (!keyword || searchText.indexOf(keyword) >= 0);
-          row.hidden = !matched;
+          row.hidden = !matched || !window.ScheduleOrderIntercompany.relatedRow(row);
+          if (row.hasAttribute('data-intercompany')) row.dataset.icFilterMatched = String(matched);
         });
+        // 共享状态页签随后会更新可见行；跨主体记录仍需同时满足本页组合条件及公司范围。
+        window.setTimeout(function () {
+          orderRows.querySelectorAll('[data-intercompany]').forEach(function (row) {
+            row.hidden = row.dataset.icFilterMatched !== 'true' || !window.ScheduleOrderIntercompany.relatedRow(row);
+          });
+        }, 0);
       }
 
       function applyUrlFilters() {
@@ -1926,6 +1935,7 @@
 
       function normalizeOrderColumns() {
         orderRows.querySelectorAll('tr').forEach(function (row) {
+          if (row.hasAttribute('data-intercompany')) return;
           if (row.classList.contains('orders-normalized-row')) {
             var currentPaymentStatus = row.dataset.paymentStatus || inferPaymentStatus(row);
             var amountCell = orderAmountCell(row);
@@ -2272,6 +2282,7 @@
 
       function normalizeOrderActions() {
         orderRows.querySelectorAll('tr').forEach(function (row) {
+          if (row.hasAttribute('data-intercompany')) return;
           var cell = orderOperationCell(row);
           if (cell) cell.innerHTML = unifiedOrderActionHtml(row);
         });
@@ -2279,6 +2290,7 @@
 
       function enhanceReceivableCells() {
         orderRows.querySelectorAll('tr').forEach(function (row) {
+          if (row.hasAttribute('data-intercompany')) return;
           var cell = orderAmountCell(row);
           if (!cell || cell.querySelector('[data-open-receivable-drawer]')) return;
           cell.innerHTML = '<button class="table-link order-receivable-trigger" type="button" data-open-receivable-drawer>' + cell.innerHTML + '</button>';
@@ -3852,7 +3864,7 @@
       function selectedOrderRows() {
         return Array.from(orderRows.querySelectorAll('tr')).filter(function (row) {
           var checkbox = row.querySelector('td:first-child input[type="checkbox"]');
-          return checkbox && checkbox.checked && !row.hidden;
+          return !row.hasAttribute('data-intercompany') && checkbox && checkbox.checked && !row.hidden;
         });
       }
 
@@ -4216,6 +4228,8 @@
       hydrateOrderLinks();
       normalizeOrderActions();
       enhanceReceivableCells();
+      window.ScheduleOrderIntercompany.appendRows(orderRows);
+      window.addEventListener('caesar-company-change', applyOrderFilters);
 
       document.getElementById('openExportModal').addEventListener('click', function () {
         window.caesarUI.openLayer(exportModal);
@@ -4704,7 +4718,7 @@
       if (checkAll) {
         checkAll.addEventListener('change', function () {
           orderRows.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
-            checkbox.checked = checkAll.checked;
+            checkbox.checked = !checkbox.disabled && checkAll.checked;
           });
         });
       }

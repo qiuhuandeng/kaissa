@@ -259,6 +259,7 @@
             { title: "业务结算", href: "finance/finance-settlement.html" },
             { title: "渠道结算", href: "finance/finance-channel-settlement.html" },
             { title: "门店对账", href: "finance/finance-store-reconciliation.html" },
+            { title: "公司间对账", href: "finance/finance-intercompany-reconciliation.html" },
             { title: "期间关账", href: "finance/finance-period-close.html" },
           ],
         },

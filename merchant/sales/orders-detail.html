@@ -11,6 +11,13 @@
   <script src="../../shared/order-amendment-model.js"></script>
   <script src="../../shared/order-amendment-ui.js"></script>
   <script src="../../shared/outsource-order-handoff.js"></script>
+  <style>
+    #intercompanySection[hidden] { display: none !important; }
+    #intercompanySection .order-tab-section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    #intercompanySection .detail-section-title { margin: 0; }
+    #intercompanySection .description-value { overflow-wrap: anywhere; }
+    #intercompanySection .btn { flex-shrink: 0; }
+  </style>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -98,6 +105,13 @@
       <section id="tab-overview" class="detail-tab-panel active">
         <div class="product-detail-tab-inner order-overview-tab">
           <section id="outsourceHandoff" class="p0-outsource-handoff" hidden aria-label="外采确认"></section>
+          <section id="intercompanySection" class="order-tab-section" hidden aria-labelledby="intercompanyTitle">
+            <div class="order-tab-section-head">
+              <h2 id="intercompanyTitle" class="detail-section-title">跨主体业务关系</h2>
+              <button id="openIntercompanyReconciliation" class="btn btn-secondary" type="button">公司间对账</button>
+            </div>
+            <div id="intercompanyRelationGrid" class="description-grid order-overview-grid" aria-live="polite"></div>
+          </section>
           <div class="detail-section-title">产品信息</div>
           <div id="overviewProductGrid" class="description-grid order-overview-grid"></div>
           <div class="detail-section-title">订单信息</div>
@@ -826,7 +840,20 @@
           ['SH-MICE-20260704001', '人数变更', '2026-07-04 16:40', '企业预估人数由78调整为80', '不影响单价', '待确认', '进入项目变更记录']
         ]
       };
-      const config = configs[type] || configs.group;
+      // 与订单列表对应的独立原型记录；不按产品名、城市或销售渠道猜测跨主体关系。
+      const intercompanyCompanies = { fj: '福建凯撒旅游有限公司', bj: '北京凯撒旅游有限公司' };
+      const intercompanyExamples = {
+        KSIC260901: { sales: 'fj', product: 'bj', fulfillment: 'bj', contract: 'fj', collection: 'fj', payer: 'fj', payee: 'bj',
+          productName: '西藏深度探索7日', customer: '林晓', owner: '软件园门店 / 王芳', source: '门店',
+          schedule: 'BJ-XZ-20261015', start: '2026-10-15', end: '2026-10-21', departure: '厦门', destination: '西藏',
+          orderStatus: '已确认', contractStatus: '已签署', settlementStatus: '待结算', reconciliationNo: '' },
+        KSIC260902: { sales: 'bj', product: 'fj', fulfillment: 'fj', contract: 'bj', collection: 'bj', payer: 'bj', payee: 'fj',
+          productName: '福建闽南文化5日', customer: '陈悦', owner: '呼叫中心 / 陈刚', source: '电销',
+          schedule: 'FJ-MN-20261022', start: '2026-10-22', end: '2026-10-26', departure: '北京', destination: '福建',
+          orderStatus: '待确认', contractStatus: '待生成', settlementStatus: '未形成结算（资源待确认）', reconciliationNo: '' }
+      };
+      const intercompanyOrder = intercompanyExamples[params.get('orderNo')] || null;
+      const config = configs[intercompanyOrder ? 'group' : type] || configs.group;
       if (params.get('orderNo')) config.orderNo = params.get('orderNo');
       const externalOrder = window.OutsourceOrderHandoff.find(config.orderNo);
       // Known contract examples use their own order facts, never the default order amount or traveler names.
@@ -947,6 +974,16 @@
         return '<tr><td>' + escapeHtml(item.source || '-') + '</td><td>' + escapeHtml(item.code || '-') + '</td><td>' + escapeHtml(item.name || '-') + '</td><td class="amount-strong">' + moneyText(moneyNumber(item.amount || 0)) + '</td><td>' + escapeHtml(item.share || '-') + '</td><td>' + tagHtml([item.status || '待财务确认', statusClass(item.status || '待财务确认')]) + '</td><td>' + escapeHtml(item.downstream || '-') + '</td></tr>';
       }
       function financeProfileFor() {
+        if (intercompanyOrder) {
+          const r = intercompanyOrder, company = key => intercompanyCompanies[r[key]];
+          return { contractEntity: company('contract'), fulfillmentEntity: company('fulfillment'),
+            revenueEntity: company('sales'), purchaseEntity: company('payer'), collectionUnit: company('collection'),
+            invoiceEntity: '按合同及开票规则确认', refundEntity: company('contract'), channelSettleParty: ownerParts().store,
+            channelMode: '客户款由' + company('collection') + '收取', revenueMode: '收入确认规则待财务确认',
+            priceBasis: '客户订单成交金额；内部结算另行核对', collectPath: '客户收款与公司间结算分别核对',
+            internalMode: '集团内采购', costProfiles: [['集团内产品采购', company('payee'), r.settlementStatus, '双方财务核对结算依据后承接应付；不重复计入产品方的外部供应商成本']] };
+        }
+
         const base = {
           contractEntity: contractExample?.companyName || '福建凯撒旅游有限公司',
           fulfillmentEntity: '福建凯撒旅游有限公司',
@@ -1129,6 +1166,12 @@
         ];
       }
       function financeInternalItems() {
+        if (intercompanyOrder) {
+          const r = intercompanyOrder;
+          return [[intercompanyCompanies[r.payer], intercompanyCompanies[r.payee], config.orderNo + ' / ' + r.schedule,
+            r.settlementStatus, '从订单概览的“公司间对账”查看关联；结算金额和双方确认由财务办理']];
+        }
+
         const profile = financeProfileFor();
         if (profile.internalMode === '无跨法人内部结算') {
           return [[profile.contractEntity, '-', '本订单销售、履约和采购责任当前均在同一法人或同一核算链路内', '无内部结算', '如后续改为集团内采购，需生成双方可核对的内部结算关系']];
@@ -1196,6 +1239,16 @@
       const storedOrder = storedOrderFor(config.orderNo);
       function detailOwnership() {
         const latest = storedOrderFor(config.orderNo) || storedOrder || {};
+        if (intercompanyOrder) {
+          const r = intercompanyOrder;
+          return { contractCompany: intercompanyCompanies[r.contract], productCompany: intercompanyCompanies[r.product],
+            productOrg: '国内产品部', productOwner: '待确认', travelScope: '境内游', productType: '参团游', productSubtype: '多日跟团',
+            supplyMode: '集团内采购', businessLine: '跟团游', departureCity: r.departure, destination: r.destination,
+            salesBranch: intercompanyCompanies[r.sales], salesDepartment: r.owner.split(' / ')[0], salesGroup: r.source,
+            salesName: r.owner.split(' / ')[1], customerService: '待分配', store: r.source === '门店' ? r.owner.split(' / ')[0] : '不适用',
+            channelCategory: r.source, channel: r.source, distributor: '不适用', platformStore: '不适用', budgetRegion: '待确认',
+            productRuleVersion: '待确认', organizationRuleVersion: '待确认', channelRuleVersion: '待确认' };
+        }
         if (latest.businessOwnership) return latest.businessOwnership;
         const owner = ownerParts();
         const meta = productOverviewMeta();
@@ -1299,6 +1352,21 @@
         config.amount = [moneyText(externalOrder.amount), '¥0', moneyText(externalOrder.amount)];
         config.discountCarry = '¥0'; config.discountUsages = []; config.aftersales = [];
         config.snapshot = [['订单来源', externalOrder.advisor ? '门店' : '官网直客'], ['归属门店', externalOrder.advisor ? '软件园门店' : '官网直客'], ['下单店员', externalOrder.advisor || '未分配'], ['团期编号', externalOrder.schedule], ['线路', '经济款 法德意经典12天'], ['出发/回团', externalOrder.date + ' / ' + externalOrder.back]];
+      }
+      if (intercompanyOrder) {
+        const r = intercompanyOrder;
+        Object.assign(config, { productType: '参团游', productTag: 'tag tag-blue', productName: r.productName,
+          contact: r.customer + ' / 电话待补充', owner: r.owner, meta: '标准线路 / ' + r.schedule + ' / ' + r.start + ' 出发',
+          orderStatus: [r.orderStatus, r.orderStatus === '已确认' ? 'tag tag-green' : 'tag tag-orange'],
+          paymentStatus: ['未收款', 'tag tag-gray'], amount: ['¥11,360', '¥0', '¥11,360'], discountCarry: '¥0', discountUsages: [],
+          money: [['应收','¥11,360','amount-red'],['已收','¥0',''],['待收','¥11,360','amount-red'],['退款中','¥0','']],
+          snapshot: [['订单来源',r.source],['归属门店',r.owner.split(' / ')[0]],['下单店员',r.owner.split(' / ')[1]],
+            ['团期编号',r.schedule],['线路','标准线路'],['出发/回团',r.start + ' / ' + r.end]],
+          contract: [['旅游合同',r.contractStatus,'合同']], aftersales: [], rules: ['按本团期退改规则办理'],
+          travelers: { summary: '2人，游客资料待补充', statuses: [], head: ['姓名','人群','证件','资料','联系电话','状态'], rows: [],
+            drawer: [['游客资料','姓名、证件、联系电话'],['同行要求','房型、餐饮及特殊需求']], ai: [] },
+          services: { summary: intercompanyCompanies[r.fulfillment] + '承接团期履约', feature: [], rows: [], drawer: [] }
+        });
       }
       config.receivableCurrency = config.receivableCurrency || params.get('currency') || 'CNY';
       function isProjectOrder() {
@@ -1445,6 +1513,11 @@
         orderConditions.occupation = externalOrder.reply === '已确认' ? '已确认' : externalOrder.reply === '暂时保留' ? '保留中' : '未占位';
         orderConditions.holdUntil = externalOrder.holdUntil;
         orderConditions.expiryAction = '到期由计调重新确认，不自动取消订单';
+      }
+      if (intercompanyOrder) {
+        orderConditions.resourceConfirmed = intercompanyOrder.orderStatus === '已确认';
+        orderConditions.occupation = orderConditions.resourceConfirmed ? '已确认' : '未占位';
+        orderConditions.holdUntil = '';
       }
       const orderActionLogs = [];
       let increasePending = false;
@@ -1786,6 +1859,8 @@
         };
       }
       function productOverviewMeta() {
+        if (intercompanyOrder) { const r = intercompanyOrder; return { source: r.source, channel: 'PC后台', service: '待分配', department: intercompanyCompanies[r.sales], departure: r.departure, destination: r.destination, reservationDue: '-' }; }
+
         if (externalOrder) return { source: externalOrder.advisor ? '门店' : '官网直客', channel: externalOrder.advisor ? 'PC后台' : '官网', service: externalOrder.advisor || '未分配，计调承接', department: '外采计调部', departure: '北京', destination: '法国 / 德国等', reservationDue: externalOrder.holdUntil || '-' };
         const typeMeta = {
           '参团游': { source: '门店', channel: 'PC后台', service: '孙丽', department: '参团游事业部', departure: '北京', destination: '法国 / 德国等', reservationDue: '2026-07-05 00:55:57' },
@@ -1799,6 +1874,7 @@
         return typeMeta[config.productType] || typeMeta['参团游'];
       }
       function bookingStructure() {
+        if (intercompanyOrder) return [['成人人数','2'],['儿童人数','0'],['出行人数','2'],['名单资料','待补充'],['库存状态',orderConditions.resourceConfirmed ? '已确认2个名额' : '资源待确认，尚未占用名额']];
         const snapshot = storedOrder && storedOrder.salesSnapshot;
         if (snapshot && snapshot.compositionRows && snapshot.compositionRows.length) {
           return [
@@ -1819,7 +1895,7 @@
         return [['成人人数', String(config.travelers.rows.length)], ['儿童人数', '0'], ['老人人数', '0'], ['房间数量', '1'], ['单房差数量', '0'], ['出行人数', String(config.travelers.rows.length)]];
       }
       function trafficOccupancyData() {
-        if (externalOrder) return [];
+        if (externalOrder || intercompanyOrder) return [];
         const scheduleNo = params.get('scheduleNo') || scheduleValue();
         const byOrder = {
           KS202607010018: [['EU20260818001', 'CA937去程 / CA938返程', '张建国', '经济舱G舱座位', '已锁位', '已出票', '去程 AIR-BLK-20260618-001 / 返程 AIR-RET-20260618-002', '预付分摊 ¥6,666 · 转团调整 ¥666']],
@@ -2098,7 +2174,43 @@
         }
       });
 
+      function intercompanyNodeContext() {
+        const context = typeof window.caesarCompanyContext === 'function' ? window.caesarCompanyContext() : {};
+        const id = Object.keys(intercompanyCompanies).find(key => context.company === intercompanyCompanies[key] || context.company === intercompanyCompanies[key].replace('旅游有限公司', '')) || '';
+        const r = intercompanyOrder;
+        const roles = r ? [['sales','销售方'],['product','产品方'],['fulfillment','履约方'],['contract','签约方'],['collection','收款方']].filter(item => r[item[0]] === id).map(item => item[1]) : [];
+        const other = r && id === r.payer ? r.payee : r && id === r.payee ? r.payer : '';
+        return { label: [context.company,context.department].filter(Boolean).join(' / ') || '当前节点未明确',
+          roles: roles, other: other, party: r && (id === r.payer || id === r.payee), company: id ? intercompanyCompanies[id] : context.company || '未明确' };
+      }
+      function renderIntercompanyRelation() {
+        const host = document.getElementById('intercompanySection'), grid = document.getElementById('intercompanyRelationGrid');
+        const r = intercompanyOrder;
+        host.hidden = !r || r.sales === r.product;
+        grid.innerHTML = '';
+        if (host.hidden) return;
+        const node = intercompanyNodeContext();
+        grid.innerHTML = descriptionGrid([
+          ['销售方',intercompanyCompanies[r.sales]],['产品方',intercompanyCompanies[r.product]],
+          ['履约方',intercompanyCompanies[r.fulfillment]],['签约方',intercompanyCompanies[r.contract]],
+          ['收款方',intercompanyCompanies[r.collection]],['当前节点',node.label],
+          ['当前节点在本单中的角色',node.roles.join('、') || '本单无参与角色'],
+          ['交易对手',node.other ? intercompanyCompanies[node.other] : '当前节点不参与本单公司间结算'],
+          ['内部结算状态',r.settlementStatus]
+        ]);
+        const entry = document.getElementById('openIntercompanyReconciliation');
+        entry.disabled = !node.party;
+        entry.title = node.party ? '查看本单的公司间对账关联' : '当前节点不是本单结算双方';
+
+      }
+      window.addEventListener('caesar-company-change', renderIntercompanyRelation);
+      document.getElementById('openIntercompanyReconciliation').addEventListener('click', function () {
+        if (!intercompanyOrder || !intercompanyNodeContext().party) return;
+        window.location.href = '../finance/finance-intercompany-reconciliation.html?orderNo=' + encodeURIComponent(config.orderNo) + '&from=order';
+      });
+
       function render() {
+        renderIntercompanyRelation();
         renderOutsourceHandoff();
         window.OrderAmendmentContext=amendmentContext();
         renderProjectOrderChrome();
@@ -2140,8 +2252,8 @@
           ['订单类型', config.productType],
           ['订单状态', tagHtml(config.orderStatus), 'html'],
           ['收款状态', tagHtml(config.paymentStatus), 'html'],
-          ['创建时间', (storedOrder && storedOrder.createdAt) || '2026-07-04 10:30:00'],
-          ['确认生效时间', confirmedAtInPage || (storedOrder && storedOrder.confirmedAt) || (config.orderStatus[0] === '已确认' ? '2026-07-04 10:35:00' : '尚未生效')],
+          ['创建时间', (intercompanyOrder ? '2026-09-27 10:00:00' : (storedOrder && storedOrder.createdAt)) || '2026-07-04 10:30:00'],
+          ['确认生效时间', confirmedAtInPage || (storedOrder && storedOrder.confirmedAt) || (config.orderStatus[0] === '已确认' ? (intercompanyOrder ? '2026-09-27 10:00:00' : '2026-07-04 10:35:00') : '尚未生效')],
           ['来源系统', (storedOrder && storedOrder.sourceSystem) || '新系统'],
           ['原订单号', (storedOrder && storedOrder.originalOrderNo) || '不适用'],
           ['来源', meta.source],
@@ -2229,7 +2341,7 @@
           const financeStatus = row[6] || (/退款|退/.test(type) ? '待财务退款' : /转款/.test(type) ? '待财务核对' : '不涉及');
           return '<tr><td>' + escapeHtml(no) + '</td><td>' + escapeHtml(type) + '</td><td>' + escapeHtml(applyTime) + '</td><td>' + escapeHtml(target) + '</td><td>' + escapeHtml(amountImpact) + '</td><td>' + tagHtml([approveStatus, statusClass(approveStatus)]) + '</td><td>' + tagHtml([financeStatus, statusClass(financeStatus)]) + '</td></tr>';
         }).join('') : '<tr><td class="table-empty-cell" colspan="7">暂无售后记录。</td></tr>');
-        setHtml('logList', orderActionLogs.concat([
+        setHtml('logList', orderActionLogs.concat(intercompanyOrder ? [['2026-09-27 10:00', ownerParts().sales, '提交订单：' + config.productName + '；' + (orderConditions.resourceConfirmed ? '实时资源已确认' : '资源待确认')]] : [
           ['2026-07-04 10:42', '孙丽', '补充联系人和归属门店信息'],
           ['2026-07-04 10:35', '系统', '生成应收记录，等待收款或认款'],
           ['2026-07-04 10:30', '孙丽', '创建订单并锁定可售对象：' + config.productName],

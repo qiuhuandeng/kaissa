@@ -129,7 +129,7 @@
                     <strong id="presetProductName">欧洲十国经典游·12天</strong>
                     <em id="presetProductMeta">线路 / 团期已从产品预订带入</em>
                   </div>
-                  <button id="changePresetSelection" class="table-link" type="button">更换</button>
+                  <button id="changePresetSelection" class="table-link" type="button" style="white-space: nowrap; flex-shrink: 0">更换</button>
                 </div>
 
                 <section id="bookingSourceContext" class="booking-object-summary" hidden>
@@ -185,6 +185,12 @@
                 </div>
                 <div id="manualTypeFields" class="form-grid booking-manual-grid booking-manual-type-fields"></div>
               </div>
+            </section>
+
+            <section id="crossCompanySection" class="booking-section" aria-labelledby="crossCompanyTitle" hidden>
+              <h2 id="crossCompanyTitle" class="booking-section-title">跨主体业务关系</h2>
+              <div id="crossCompanyFields" class="description-grid"></div>
+              <p id="crossCompanyConfirmation" class="form-hint" role="status" aria-live="polite"></p>
             </section>
 
             <section id="manualTripBlock" class="booking-section booking-manual-block" aria-labelledby="manualTravelTitle" hidden>
@@ -398,6 +404,7 @@
         <div id="footerPricePopover" class="booking-price-popover" hidden></div>
         <div id="formActions" class="booking-actions">
           <button class="btn btn-secondary" type="button" data-close-booking>取消</button>
+          <button id="saveCrossCompanyDraft" class="btn btn-secondary" type="button" hidden>保存草稿</button>
           <button id="createOrder" class="btn btn-primary" type="button">生成预留订单</button>
         </div>
         <div id="resultActions" class="booking-actions" hidden></div>
@@ -653,12 +660,39 @@
         }
       ];
 
+      // 独立原型样例；岗位场景不代表生产鉴权，不复用“门店结算价”权限。
+      const bookingActors = {
+        'fj-sales': { company: '福建凯撒旅游有限公司', role: '销售顾问', internalPrice: false },
+        'fj-product': { company: '福建凯撒旅游有限公司', role: '产品经办', internalPrice: true },
+        'bj-sales': { company: '北京凯撒旅游有限公司', role: '销售顾问', internalPrice: false },
+        'bj-product': { company: '北京凯撒旅游有限公司', role: '产品经办', internalPrice: true }
+      };
+      const bookingActor = bookingActors[new URLSearchParams(location.search).get('bookingActor') || 'fj-sales'] ||
+        { company: '', role: '', internalPrice: false };
+      [
+        { id: 'IC-BJ-XZ', name: '西藏深度探索7日', sales: '福建凯撒旅游有限公司', provider: '北京凯撒旅游有限公司', schedule: 'BJ-XZ' },
+        { id: 'IC-FJ-MN', name: '福建闽南文化5日', sales: '北京凯撒旅游有限公司', provider: '福建凯撒旅游有限公司', schedule: 'FJ-MN' }
+      ].forEach(function (sample) {
+        const item = JSON.parse(JSON.stringify(products[0]));
+        Object.assign(item, { id: sample.id, name: sample.name, meta: '国内出发 / 境内 / 深度游',
+          core: [{ id: 'plan', label: '线路', type: 'select', options: [sample.name] }],
+          counts: [{ id: 'adult', label: '成人', price: 5680, value: 2, min: 1 }, { id: 'childBed', label: '儿童占床', price: 4680, value: 0, min: 0 }, { id: 'childNoBed', label: '儿童不占床', price: 3680, value: 0, min: 0 }, { id: 'singleRoom', label: '单房差', price: 1800, value: 0, min: 0 }],
+          stocks: [ ['2026-10-15', sample.schedule + '-20261015', '余18位', 5680, '实时可售', 'tag tag-green'],
+                    ['2026-10-22', sample.schedule + '-20261022', '余12位', 5680, '需二次确认', 'tag tag-orange'] ],
+          crossCompany: { sales: sample.sales, provider: sample.provider, fulfillment: sample.provider,
+            contract: sample.sales, collection: sample.sales, authorized: true,
+            arrangements: [ { confirmation: 'instant', paymentRequired: 0 }, { confirmation: 'request', paymentRequired: 0 } ],
+            prices: { adult: 4800, childBed: 3900, childNoBed: 3000, singleRoom: 1800 } }
+        });
+        products.push(item);
+      });
+
       const pageParams = new URLSearchParams(window.location.search);
       const sourceContext = buildSourceContext(pageParams);
       const isIntentTransferEntry = pageParams.get('from') === 'intent';
       const loginOwnership = {
         channel: sourceContext.isSingleGroup || pageParams.get('from') === 'enterpriseCustomer' ? '企业客户' : (pageParams.get('loginChannel') || '门店'),
-        store: pageParams.get('loginStore') || '软件园门店',
+        store: pageParams.get('loginStore') || (bookingActor.company === '北京凯撒旅游有限公司' ? '北京朝阳门店' : '软件园门店'),
         advisor: pageParams.get('loginAdvisor') || '王芳'
       };
       const bookingDrawer = document.getElementById('bookingDrawer');
@@ -1217,9 +1251,50 @@
         return 'group';
       }
 
+      let crossDraftAction = false;
+      function crossCompanyRelation() {
+        const relation = !isManualMode() && currentProduct.crossCompany;
+        return relation && relation.sales !== relation.provider ? relation : null;
+      }
+      function crossArrangement() {
+        const relation = crossCompanyRelation();
+        return relation && hasSaleObject ? relation.arrangements[selectedStockIndex] : null;
+      }
+      function processingMode() {
+        if (!crossCompanyRelation()) return orderProcessMode.value;
+        if (crossDraftAction) return 'draft';
+        return crossArrangement() && crossArrangement().confirmation === 'instant' ? 'confirm' : 'pending';
+      }
+      function renderCrossCompany() {
+        const relation = crossCompanyRelation();
+        const visible = !!relation && hasSaleObject;
+        document.getElementById('crossCompanySection').hidden = !visible;
+        document.getElementById('crossCompanyFields').innerHTML = '';
+        document.getElementById('crossCompanyConfirmation').textContent = '';
+        document.getElementById('saveCrossCompanyDraft').hidden = !visible;
+        orderProcessMode.closest('.form-group').hidden = !!relation;
+        if (!visible) return;
+        const fields = [['当前销售公司', bookingActor.company || '当前公司未明确'], ['产品提供公司', relation.provider],
+          ['履约方', relation.fulfillment], ['签约主体', relation.contract], ['收款主体', relation.collection]];
+        if (bookingActor.internalPrice && bookingActor.company === relation.sales) {
+          const total = currentProduct.counts.reduce(function (sum, item) { return sum + countValue(item.id) * relation.prices[item.id]; }, 0);
+          const lines = currentProduct.counts.filter(function (item) { return countValue(item.id) > 0; }).map(function (item) { return item.label + ' ' + money(relation.prices[item.id]) + ' × ' + countValue(item.id); });
+          fields.push(['内部结算价', Number.isFinite(total) ? lines.join('；') + '；合计 ' + money(total) : '待确认']);
+        }
+        const arrangement = crossArrangement();
+        fields.push(['资源确认方式', arrangement && arrangement.confirmation === 'instant' ? '实时余位可下单' : arrangement && arrangement.confirmation === 'request' ? '下单后二次确认' : '待明确']);
+        document.getElementById('crossCompanyFields').innerHTML = fields.map(function (field) {
+          return '<div class="description-item"><div class="description-label">' + escapeHtml(field[0]) + '</div><div class="description-value">' + escapeHtml(field[1]) + '</div></div>';
+        }).join('');
+        document.getElementById('crossCompanyConfirmation').textContent = arrangement && arrangement.confirmation === 'instant'
+          ? '本团期按确认余位提交；约定先确认订单、后办理客户收款。'
+          : '提交后待' + relation.fulfillment + '确认资源；待确认期间不占用名额。';
+      }
+
       function processProfile() {
-        const mode = orderProcessMode.value;
+        const mode = processingMode();
         if (mode === 'draft') return { status: '草稿', inventory: '未占位', button: '保存草稿', tag: 'tag tag-gray' };
+        if (crossCompanyRelation() && mode !== 'draft') return { status: mode === 'confirm' ? '已确认' : '待确认', inventory: mode === 'confirm' ? '立即扣库存' : '未占位', button: '提交订单', tag: mode === 'confirm' ? 'tag tag-green' : 'tag tag-blue' };
         if (mode === 'pending') return { status: '待确认', inventory: '未占位', button: '提交待确认', tag: 'tag tag-blue' };
         if (currentProduct.type === 'manual') {
           return { status: '待受理', inventory: '生成服务单', button: '生成服务订单', tag: 'tag tag-blue' };
@@ -1264,6 +1339,7 @@
 
       function businessOwnershipSnapshot() {
         const profile = ownershipProfile();
+        const relation = crossCompanyRelation();
         const source = channelSource.value;
         const store = document.getElementById('storeName').value || '未分配门店';
         const sales = document.getElementById('salesName').value || '';
@@ -1271,21 +1347,21 @@
         const branch = /(软件园|文灶|观音山)/.test(store) ? '厦门分公司' : (/泉州/.test(store) ? '泉州分公司' : '福建销售中心');
         const budgetRegion = /泉州/.test(store) ? '闽南区域' : '厦门区域';
         return {
-          contractCompany: '福建凯撒旅游有限公司',
-          productCompany: '福建凯撒旅游有限公司',
-          productOrg: pageParams.get('productOrg') || profile.org,
+          contractCompany: relation ? relation.contract : '福建凯撒旅游有限公司',
+          productCompany: relation ? relation.provider : '福建凯撒旅游有限公司',
+          productOrg: relation ? relation.provider + ' / 国内产品部' : pageParams.get('productOrg') || profile.org,
           productOwner: pageParams.get('productOwner') || profile.owner,
           productType: orderTypeLabel(),
           productSubtype: pageParams.get('productSubtype') || profile.subtype,
-          travelScope: pageParams.get('travelScope') || profile.scope,
-          supplyMode: pageParams.get('supplyMode') || profile.mode,
+          travelScope: relation ? '境内游' : pageParams.get('travelScope') || profile.scope,
+          supplyMode: relation ? '集团内采购' : pageParams.get('supplyMode') || profile.mode,
           businessLine: pageParams.get('businessLine') || profile.line,
           supplier: currentProduct.manualSupplier || pageParams.get('supplier') || '待履约确认',
           departureCity: pageParams.get('departureCity') || (currentProduct.meta || '').split('/')[0].trim() || '待确认',
           destination: currentProduct.manualDestination || pageParams.get('destination') || (currentProduct.meta || '').split('/')[1] || '待确认',
           destinationZone: pageParams.get('destinationZone') || pageParams.get('destination') || '待确认',
-          salesCompany: '福建凯撒旅游有限公司',
-          salesBranch: branch,
+          salesCompany: relation ? relation.sales : '福建凯撒旅游有限公司',
+          salesBranch: relation && relation.sales === '北京凯撒旅游有限公司' ? '北京销售中心' : branch,
           salesDepartment: source === '企业客户' ? '大客户部' : '零售销售部',
           salesGroup: source === 'OTA' ? '平台运营组' : (source === '分销' ? '渠道销售组' : '门店销售组'),
           salesId: salesIds[sales] || 'XS-待确认',
@@ -1297,7 +1373,7 @@
           distributor: source === '分销' ? document.getElementById('distributorName').value : '不适用',
           distributorMember: source === '分销' ? document.getElementById('distributorMember').value : '不适用',
           platformStore: source === 'OTA' ? document.getElementById('otaPlatform').value : '不适用',
-          budgetRegion: budgetRegion,
+          budgetRegion: relation && relation.sales === '北京凯撒旅游有限公司' ? '北京区域' : budgetRegion,
           productRuleVersion: pageParams.get('quoteVersion') || '2026-07发布版',
           organizationRuleVersion: '2026-07任职版',
           channelRuleVersion: '2026年渠道规则'
@@ -1322,8 +1398,8 @@
         document.getElementById('businessOwnershipGrid').innerHTML = items.map(function (item) {
           return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + escapeHtml(item[1] || '-') + '</div></div>';
         }).join('');
-        document.getElementById('businessOwnershipStatus').textContent = orderProcessMode.value === 'confirm' ? '确认后留存' : '待订单确认';
-        document.getElementById('businessOwnershipStatus').className = orderProcessMode.value === 'confirm' ? 'tag tag-green' : 'tag tag-blue';
+        document.getElementById('businessOwnershipStatus').textContent = processingMode() === 'confirm' ? '确认后留存' : '待订单确认';
+        document.getElementById('businessOwnershipStatus').className = processingMode() === 'confirm' ? 'tag tag-green' : 'tag tag-blue';
       }
 
       function selectedStock() {
@@ -2204,7 +2280,8 @@
       }
 
       function syncSummary() {
-        if (orderProcessMode.value === 'draft') {
+        renderCrossCompany();
+        if (processingMode() === 'draft') {
           document.getElementById('createOrder').disabled = false;
           document.getElementById('createOrder').textContent = '保存草稿';
           return;
@@ -2478,7 +2555,7 @@
       }
 
       function validate() {
-        if (orderProcessMode.value === 'draft') return [];
+        if (processingMode() === 'draft') return [];
         const missing = [];
         if (isManualMode()) {
           refreshManualProduct();
@@ -2523,6 +2600,7 @@
       // 当前页演示资料按门店列表的有效可售范围设置，不模拟跨页审批回写。
       // 保留时长、释放方式及付款条件尚待业务确定，空值不得当作已批准。
       const bookingStores = {
+        '北京朝阳门店': { types: ['group'], regions: ['境内'], reserve: false, hold: false },
         '软件园门店': { types: ['group', 'cruise'], regions: ['欧洲', '境内'], reserve: false, hold: true },
         '文灶门店': { types: ['group', 'free'], regions: ['国内短线'], reserve: true, hold: false },
         '观音山门店': { types: ['group', 'free'], regions: ['福建', '厦门'], reserve: false, hold: false },
@@ -2537,12 +2615,16 @@
         store.releaseMode = '';
         store.paymentRequired = null;
       });
-      const bookingRegions = { EU2024: ['欧洲'], CR2025: ['欧洲'], FREE2026: ['境内', '国内短线'] };
+      const bookingRegions = { EU2024: ['欧洲'], CR2025: ['欧洲'], FREE2026: ['境内', '国内短线'], 'IC-BJ-XZ': ['境内'], 'IC-FJ-MN': ['境内'] };
 
       function submissionIssues() {
-        const mode = orderProcessMode.value;
+        const mode = processingMode();
         if (mode === 'draft') return [];
         const issues = [];
+        const relation = crossCompanyRelation();
+        const arrangement = crossArrangement();
+        if (relation && (!relation.authorized || relation.sales !== bookingActor.company)) issues.push('当前公司未获本产品销售授权');
+        if (relation && (!arrangement || !['instant', 'request'].includes(arrangement.confirmation))) issues.push('资源确认方式尚未明确');
         if (channelSource.value !== loginOwnership.channel) issues.push('当前登录人未获' + channelSource.value + '渠道下单授权');
         const store = bookingStores[document.getElementById('storeName').value];
         if (channelSource.value === '门店') {
@@ -2569,9 +2651,10 @@
         if (!remaining) issues.push('所选资源余量尚未确认');
         else if (salesPeopleCountSnapshot() > Number(remaining[1])) issues.push('所选团期余位不足');
         if (mode === 'confirm') {
-          if (!currentProduct.resourceConfirmed) issues.push('本单资源尚未确认');
-          if (channelSource.value === '门店' && store.paymentRequired === null) issues.push('本单付款条件尚未确定');
-          else if (channelSource.value === '门店' && Number(store.paymentRequired) > 0) issues.push('本单尚无已认款或已成功扣款记录');
+          if (!(relation ? arrangement && arrangement.confirmation === 'instant' : currentProduct.resourceConfirmed)) issues.push('本单资源尚未确认');
+          const requiredPayment = relation && arrangement ? arrangement.paymentRequired : store && store.paymentRequired;
+          if (channelSource.value === '门店' && requiredPayment == null) issues.push('本单付款条件尚未确定');
+          else if (channelSource.value === '门店' && Number(requiredPayment) > 0) issues.push('本单尚无已认款或已成功扣款记录');
         }
         return issues;
       }
@@ -2606,8 +2689,8 @@
           window.alert('暂不能提交：' + issues.join('；'));
           return;
         }
-        const isDraft = orderProcessMode.value === 'draft';
-        const isPending = orderProcessMode.value === 'pending';
+        const isDraft = processingMode() === 'draft';
+        const isPending = processingMode() === 'pending';
         const orderNo = (isDraft ? 'DRAFT-' : '') + generatedOrderNo();
         const process = processProfile();
         const stock = selectedStock();
@@ -2646,8 +2729,8 @@
           if (sourceContext.amount) detailParams.set('amount', sourceContext.amount);
           if (sourceContext.people) detailParams.set('people', sourceContext.people);
         }
-        const createdOrder = isDraft
-          ? { createdAt: dateTimeText(), confirmedAt: '', businessOwnership: businessOwnershipSnapshot() }
+        const createdOrder = isDraft || crossCompanyRelation()
+          ? { createdAt: dateTimeText(), confirmedAt: !isDraft && process.status === '已确认' ? dateTimeText() : '', businessOwnership: businessOwnershipSnapshot() }
           : saveCreatedOrderSnapshot(orderNo, stock, total, customerPayableText, process, discounts);
         createdDetailHref = 'orders-detail.html?' + detailParams.toString();
         document.getElementById('createdTitle').textContent = (isDraft ? '已保存草稿 ' : '已生成销售订单 ') + orderNo;
@@ -2691,7 +2774,7 @@
           currentProduct.type === 'single' ? '服务单：待受理' : '库存占用：' + process.inventory,
           '合同/确认单：订单确认后生成'
         ];
-        financeItems.unshift(createdOrder.confirmedAt?'应收：订单确认后自动生成，无需财务审核金额':'应收：尚未生成，确认订单后生效；可登记真实预收款');
+        financeItems.unshift(crossCompanyRelation() ? (createdOrder.confirmedAt ? '后续办理：客户收款、合同签署；内部结算由财务办理' : '资源待确认，确认后承接收款与合同办理') : createdOrder.confirmedAt?'应收：订单确认后自动生成，无需财务审核金额':'应收：尚未生成，确认订单后生效；可登记真实预收款');
         if(!createdOrder.confirmedAt)financeItems.forEach(function(v,i){financeItems[i]=v.replace('客户需收：','预计需收：').replace(' 待收','');});
         document.getElementById('createdFinanceItems').innerHTML = financeItems.map(function (item) { return '<span class="finance-link-item">' + item + '</span>'; }).join('');
         const nextSteps = isManualMode() ? [
@@ -2791,6 +2874,8 @@
         renderFee();
         renderOccupancySummary();
         renderAfterCreate();
+        renderCrossCompany();
+        if (crossCompanyRelation()) renderChannelQuota();
       });
 
       countRows.addEventListener('change', function (event) {
@@ -2935,6 +3020,10 @@
       }
 
       document.getElementById('createOrder').addEventListener('click', showResult);
+      document.getElementById('saveCrossCompanyDraft').addEventListener('click', function () {
+        crossDraftAction = true;
+        try { showResult(); } finally { crossDraftAction = false; }
+      });
       document.getElementById('createdNextSteps').addEventListener('click', function (event) {
         const button = event.target.closest('[data-next-action]');
         if (!button) return;
@@ -3018,12 +3107,13 @@
         params.get('entry') === 'product-booking' ||
         (!!productFromUrl && (params.has('plan') || params.has('date') || params.has('stock') || params.has('scheduleNo') || params.has('price') || params.has('amount')));
       const isSingleServiceBookingEntry = typeMap[typeFromUrl] === 'single' && isProductBookingEntry;
-      const productByName = products.find(function (item) {
+      const crossProductEntry = products.find(function (item) { return item.crossCompany && item.id === params.get('crossProduct'); });
+      const productByName = crossProductEntry || products.find(function (item) {
         if (!productFromUrl) return false;
         return item.name === productFromUrl || item.name.indexOf(productFromUrl) >= 0 || productFromUrl.indexOf(item.name) >= 0;
       });
       currentProduct = cloneProduct((sourceContext.isCustomProject ? products[0] : productByName) || products.find(function (item) { return item.type === typeMap[typeFromUrl]; }) || products[0]);
-      presetMode = isProductBookingEntry && (!!productFromUrl || sourceContext.isSingleGroup);
+      presetMode = !!crossProductEntry || isProductBookingEntry && (!!productFromUrl || sourceContext.isSingleGroup);
       hasSaleObject = presetMode;
       objectStep = isSingleServiceBookingEntry ? 'manual' : (presetMode ? 'selected' : 'search');
       if (isSingleServiceBookingEntry) bookingMode = 'manual';
@@ -3062,7 +3152,7 @@
       }
       presetPlanOverride = presetMode && !isSingleServiceBookingEntry ? (sourceContext.isCustomProject ? currentProduct.core[0].options[0] : params.get('plan') || '') : '';
       if (presetMode && !isSingleServiceBookingEntry) {
-        applyPresetPrice(sourceContext.amount || params.get('price'));
+        if (!currentProduct.crossCompany) applyPresetPrice(sourceContext.amount || params.get('price'));
         const presetDate = params.get('date');
         const presetStock = params.get('stock') || params.get('scheduleNo');
         const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || presetStock || '可售';
@@ -3080,6 +3170,13 @@
       }
       selectedPlanIndex = indexByText(planOptions(), presetPlanOverride || params.get('plan'));
       selectedStockIndex = stockIndexFromParams(params.get('date'), params.get('stock') || params.get('scheduleNo'));
+      if (currentProduct.crossCompany) {
+        presetStockOverride = null;
+        presetPlanOverride = '';
+        if (params.get('crossDate') === 'request') selectedStockIndex = 1;
+        else if (params.get('crossDate') === 'instant') selectedStockIndex = 0;
+        changePresetSelection.hidden = false;
+      }
       if (isSingleServiceBookingEntry) {
         bookingMode = 'manual';
         bookingModeButtons.forEach(function (button) {
@@ -3114,6 +3211,7 @@
         applyServiceTypeDefaults(false);
       }
       if (!sourceContext.isSingleGroup && pageParams.get('from') !== 'enterpriseCustomer') channelSource.value = loginOwnership.channel;
+      if (bookingActor.company === '北京凯撒旅游有限公司') document.getElementById('storeName').add(new Option('北京朝阳门店', '北京朝阳门店'));
       setSelectValue(document.getElementById('storeName'), loginOwnership.store);
       setSelectValue(document.getElementById('salesName'), loginOwnership.advisor);
       updateChannelFields();
