@@ -7,6 +7,10 @@
       { title: "合作申请", href: "supplier-requests.html" },
       { title: "协议模板", href: "supplier-contract-templates.html" }
     ] },
+    { title: "合同管理", icon: "clipboard", children: [
+      { title: "合同模板", href: "contract-templates.html" },
+      { title: "合同规则", href: "contract-rules.html" }
+    ] },
     {
       title: "部门组织",
       icon: "users",
@@ -69,6 +73,7 @@
     工作台: "工作",
     AI模型: "AI",
     部门组织: "组织",
+    合同管理: "合同",
     系统配置: "配置",
   };
 
@@ -76,6 +81,7 @@
     工作台: "租户工作台",
     AI模型: "AI模型",
     部门组织: "部门组织",
+    合同管理: "合同管理",
     系统配置: "系统配置",
   };
 
@@ -158,6 +164,7 @@
   }
 
   const pageOwners = {
+    "contract-template-edit.html": { href: "contract-templates.html", title: "合同模板" },
     "approval-template-edit.html": { href: "approval-config.html", title: "审批模板编辑" },
     "supplier-detail.html": { href: "suppliers.html", title: "供应商详情" },
     "supplier-contract-template-edit.html": { href: "supplier-contract-templates.html", title: "协议模板编辑" },

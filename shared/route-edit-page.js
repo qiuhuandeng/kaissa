@@ -208,6 +208,7 @@
   }
 
   function openSubmitModal() {
+    if (window.ProductContractConfig && !window.ProductContractConfig.validate()) { showToast("请核对合同模板选择及产品服务资料"); return; }
     var modal = $('.route-submit-modal');
     function finish() { persistResourceTemplates(); if (modal) modal.classList.add('show'); formDirty = false; }
     if (isSupplierRoute) {

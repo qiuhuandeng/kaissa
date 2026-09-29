@@ -1,0 +1,37 @@
+const assert=require('node:assert/strict');
+const P=require('../shared/contract-prepare-model.js'),W=require('../shared/contract-workflow-model.js');let checks=0;
+function test(name,fn){fn();checks++;console.log('✓ '+name);}
+function ready(profile='domestic') {const o=P.demoOrder('ORD-PREP-'+profile.toUpperCase()),s=P.source(o),c=W.draft(o,'HT-CHECK'),d=P.create(o,c);d.signers=[{key:'S1',name:'张建国',identity:'证件1201',phone:'138****8001',relation:'监护人',covers:profile==='study'?['T001','T002','T003']:['T001','T003'],required:true,authorization:'监护关系核对材料.pdf'},...(profile==='study'?[]:[{key:'S2',name:'李梅',identity:'证件2202',phone:'139****2202',relation:'本人',covers:['T002'],required:true,authorization:''}])];Object.assign(d.decisions,{insurance:'自行购买',cruiseInsurance:'不购买',transfer:'不同意',delay:'同意',reroute:'不同意',terminate:'同意',pooling:'本团无拼团',shopping:'确认无安排',dispute:'诉讼',institution:'厦门市有管辖权的人民法院',confirmation:'2026-09-28客户书面选择确认.pdf'});d.values['zjInsurance-1']='3人，每人100元，总保费300元，已计入本单费用';return {o,s,c,d};}
+const errs=x=>P.issues(x.o,x.s,x.d);
+for(const c of P.cases)test(c[0]+'可完整准备且正文包含适用条款',()=>{const x=ready(c[0]);assert.deepEqual(errs(x),[]);const text=P.documentText(x.o,x.s,x.d);assert(text.includes('争议解决'));assert(text.includes(x.o.product));assert(text.includes('必要签署人'));});
+test('3人覆盖2人必签',()=>{const x=ready();assert.equal(x.d.covered.length,3);assert.equal(x.d.signers.length,2);assert.deepEqual(errs(x),[]);});
+test('不默认同意',()=>{const x=ready();x.d=P.create(x.o,x.c);assert(errs(x).some(e=>e.text.includes('待客户确认')));});
+test('未参团代表不增人数金额',()=>{const x=ready();x.d.representative='王芳';x.d.representativeTravels='不参团';assert.deepEqual(errs(x),[]);assert.equal(x.o.amount,9000);assert.equal(x.d.covered.length,3);});
+test('参团代表须属于游客',()=>{const x=ready();x.d.representative='王芳';assert(errs(x).some(e=>e.text.includes('参团代表')));});
+test('监护材料缺失阻断',()=>{const x=ready();x.d.signers[0].authorization='';assert(errs(x).some(e=>e.text.includes('授权材料')));});
+test('同一人不能重复作为两个签署任务',()=>{const x=ready();x.d.signers[1].identity=x.d.signers[0].identity;assert(errs(x).some(e=>e.text.includes('合并')));});
+test('必要签署可独立取消但不得遗漏覆盖',()=>{const x=ready();x.d.signers[1].required=false;assert(errs(x).some(e=>e.text.includes('遗漏')));});
+test('重复代表阻断',()=>{const x=ready();x.d.signers[1].covers.push('T003');assert(errs(x).some(e=>e.text.includes('重复代表')));});
+test('未成年人不能本人签署',()=>{const x=ready();x.d.signers[0]={...x.d.signers[0],name:'张小雨',relation:'本人',covers:['T003']};assert(errs(x).some(e=>e.text.includes('未成年人')));});
+test('公司无出境资格不能选出境合同',()=>{const x=ready('outbound');x.o.company='bj';assert(errs(x).some(e=>e.text.includes('不匹配')));});
+test('门店旧单模板限制不再阻断适用合同',()=>{const x=ready();x.o.storeTemplates=[];assert.deepEqual(errs(x),[]);});
+test('地区模板不跨省套用',()=>{const x=ready('zhejiang');x.s.province='上海';assert(errs(x).some(e=>e.text.includes('省份')));});
+test('一日游不用于多日',()=>{const x=ready('day');x.s.days=3;assert(errs(x).some(e=>e.text.includes('一天')));});
+test('未知订单不补造源资料',()=>{const o=W.order('UNKNOWN'),s=P.source(o);assert.equal(s.verified,false);assert.equal(s.itinerary.length,0);assert(s.sourceIssues.length);});
+test('金额不符回订单',()=>{const x=ready();x.s.fees[0].amount++;assert(errs(x).some(e=>e.text.includes('费用明细')));});
+test('付款待确认不可送审',()=>{const x=ready();x.o.paymentReady=false;assert(errs(x).some(e=>e.text.includes('付款条件')));});
+test('邮轮两类险独立确认',()=>{const x=ready('cruise');x.d.decisions.cruiseInsurance='待确认';assert(errs(x).some(e=>e.text.includes('邮轮保险')));});
+test('委托投保需人员及保费',()=>{const x=ready();x.d.decisions.insurance='委托购买';assert(errs(x).some(e=>e.text.includes('被保险人')));});
+test('转社同意需具体旅行社',()=>{const x=ready();x.d.decisions.transfer='同意';assert(errs(x).some(e=>e.text.includes('接收旅行社')));});
+test('代订无成团必填',()=>{const x=ready('agency');x.d.decisions.delay='待确认';assert.deepEqual(errs(x),[]);assert(!P.documentText(x.o,x.s,x.d).includes('不成团'));});
+test('争议方式用名称并要求机构',()=>{const x=ready();x.d.decisions.institution='';assert(errs(x).some(e=>e.text.includes('法院')));});
+test('已确认内容修改使预览失效',()=>{const x=ready();x.d.previewKey=P.fingerprint(x.d);x.d.decisions.institution='其他法院';assert.notEqual(x.d.previewKey,P.fingerprint(x.d));});
+test('附件变更使预览失效',()=>{const x=ready();x.d.previewKey=P.fingerprint(x.d);x.d.attachments.push({name:'补充.pdf'});assert.notEqual(x.d.previewKey,P.fingerprint(x.d));});
+test('重复游客合同阻断',()=>{const x=ready();assert(P.issues(x.o,x.s,x.d,[{...x.c,id:'OTHER'}]).some(e=>e.text.includes('已有')));});
+test('分签金额不平均补造',()=>{const x=ready();x.d.mode='按人分签';x.d.allocations={};assert(errs(x).some(e=>e.text.includes('分配')));});
+test('分签确认金额须守恒',()=>{const x=ready();x.d.mode='按人分签';x.d.allocations.T001=1;assert(errs(x).some(e=>e.text.includes('合计')));});
+test('部分覆盖使用确认分配',()=>{const x=ready();x.d.covered=['T002'];x.d.signers=[x.d.signers[1]];x.d.representative='李梅';assert.deepEqual(errs(x),[]);assert(P.documentText(x.o,x.s,x.d).includes('合同金额：¥3,000.00'));});
+test('无确认依据不可提交',()=>{const x=ready();x.d.decisions.confirmation='';assert(errs(x).some(e=>e.text.includes('确认依据')));});
+test('未签预览不包含平台签署成功',()=>{const x=ready();assert(!P.documentText(x.o,x.s,x.d).includes('已签署'));});
+test('其他订单的合同不阻断本单',()=>{const x=ready();assert.deepEqual(P.issues(x.o,x.s,x.d,W.createState().contracts),[]);});
+console.log(JSON.stringify({passed:checks}));

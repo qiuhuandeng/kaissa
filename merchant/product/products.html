@@ -735,7 +735,8 @@
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group"><label class="form-label" for="serviceProductName">服务名称 <span class="req">*</span></label><input id="serviceProductName" class="form-control" type="text"></div>
-          <div class="form-group"><label class="form-label" for="serviceProductType">服务类型 <span class="req">*</span></label><select id="serviceProductType" class="form-control"><option>签证</option><option>票务</option><option>酒店</option><option>用车</option><option>保险</option><option>其他</option></select></div>
+          <div class="form-group"><label class="form-label" for="serviceProductType">服务类型 <span class="req">*</span></label><select id="serviceProductType" class="form-control"><option>签证</option><option>票务</option><option>酒店</option><option>用车</option><option>保险</option><option>导游</option><option>其他</option></select></div>
+          <div class="form-group"><label class="form-label" for="serviceTravelRange">旅游范围</label><select id="serviceTravelRange" class="form-control"><option>境内</option><option selected>出境</option><option>赴台</option></select></div>
           <div class="form-group"><label class="form-label" for="serviceProductFee">服务费</label><input id="serviceProductFee" class="form-control" type="text"></div>
           <div class="form-group"><label class="form-label" for="serviceProductSla">办理时效</label><input id="serviceProductSla" class="form-control" type="text"></div>
           <div class="form-group"><label class="form-label" for="serviceProductOwner">默认处理角色</label><select id="serviceProductOwner" class="form-control"><option>签证专员</option><option>票务专员</option><option>自由行运营</option><option>客服专员</option></select></div>
@@ -751,6 +752,8 @@
             </div>
           </div>
         </div>
+        <div class="form-grid" data-service-details></div>
+        <section data-service-contract></section>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-service-product>取消</button>
@@ -1216,6 +1219,7 @@
         document.getElementById('serviceProductOwner').value = data.owner;
         document.getElementById('serviceProductStatus').value = data.status;
         setServiceChannels(data.channels);
+        window.ProductContractConfig?.openService(row);
         openLayer(layers.serviceProduct);
       }
 
@@ -1540,16 +1544,24 @@
       });
 
       document.getElementById('saveServiceProduct').addEventListener('click', function () {
+        if (window.ProductContractConfig && !window.ProductContractConfig.serviceValid()) return;
         var name = document.getElementById('serviceProductName').value.trim();
         if (!name) {
           showNotice('请填写服务名称');
           return;
+        }
+        if (!currentServiceRow) {
+          var body = document.querySelector('[data-product-list-panel="service"] tbody');
+          currentServiceRow = body.querySelector('tr[data-service-name]').cloneNode(true);
+          body.appendChild(currentServiceRow);
         }
         if (currentServiceRow) {
           currentServiceRow.dataset.serviceName = name;
           currentServiceRow.dataset.serviceType = document.getElementById('serviceProductType').value;
           currentServiceRow.dataset.status = document.getElementById('serviceProductStatus').value;
           currentServiceRow.children[0].querySelector('strong').textContent = name;
+          var subtitle=currentServiceRow.children[0].querySelector('span');if(subtitle)subtitle.textContent=document.getElementById('serviceProductType').value+'服务';
+          currentServiceRow.children[6].textContent=Array.from(document.querySelectorAll('.service-product-channel:checked')).map(n=>n.value).join(' / ');
           currentServiceRow.children[1].innerHTML = '<span class="tag tag-purple">' + document.getElementById('serviceProductType').value + '</span>';
           currentServiceRow.children[2].textContent = document.getElementById('serviceProductFee').value || '-';
           currentServiceRow.children[3].textContent = document.getElementById('serviceProductMaterials').value || '-';
@@ -1557,6 +1569,9 @@
           currentServiceRow.children[5].textContent = document.getElementById('serviceProductOwner').value || '-';
           currentServiceRow.children[7].innerHTML = '<span class="tag tag-green">' + document.getElementById('serviceProductStatus').value + '</span>';
         }
+        var serviceCount=document.querySelectorAll('[data-product-list-panel="service"] tr[data-service-name]').length;
+        document.querySelector('.pagination[data-product-list-panel="service"] span').textContent='第1-'+serviceCount+'条/共'+serviceCount+'条';
+        window.ProductContractConfig?.saveService(currentServiceRow);
         closeLayer(layers.serviceProduct);
         toast('服务项目已保存');
       });
@@ -1685,5 +1700,8 @@
       applyFilters();
     })();
   </script>
+  <script src="../../shared/contract-template-catalog.js"></script>
+  <script src="../../shared/contract-settings-data.js"></script>
+  <script src="../../shared/product-contract-settings.js"></script>
 </body>
 </html>

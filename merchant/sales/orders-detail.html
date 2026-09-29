@@ -6,7 +6,10 @@
   <title>订单详情 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
   <link rel="stylesheet" href="../../shared/contract-workflow.css">
-  <script src="../../shared/contract-workflow-model.js"></script>
+  <script src="../../shared/contract-channel.js"></script><script src="../../shared/contract-workflow-model.js"></script>
+  <script src="../../shared/contract-template-catalog.js"></script>
+  <script src="../../shared/contract-settings-data.js"></script>
+  <script src="../../shared/contract-template-text.js"></script><script src="../../shared/contract-template-fields.js"></script><script src="../../shared/contract-template-bridge.js"></script><script src="../../shared/contract-prepare-model.js"></script>
   <link rel="stylesheet" href="../../shared/order-amendment.css">
   <script src="../../shared/order-amendment-model.js"></script>
   <script src="../../shared/order-amendment-ui.js"></script>
@@ -857,7 +860,7 @@
       if (params.get('orderNo')) config.orderNo = params.get('orderNo');
       const externalOrder = window.OutsourceOrderHandoff.find(config.orderNo);
       // Known contract examples use their own order facts, never the default order amount or traveler names.
-      const contractExample = window.ContractWorkflow.createState().orders.find(o => o.id === config.orderNo);
+      const contractExample = window.ContractWorkflow.createState().orders.find(o => o.id === config.orderNo) || window.ContractPrepare.demoOrder(config.orderNo);
       if (contractExample && config.orderNo !== 'KS20260704001') {
         const ex = contractExample, amountText = '¥' + Number(ex.amount).toLocaleString('zh-CN');
         config.productName = ex.product; config.productType = ex.business; config.contact = ex.customer + ' 138****8001';
@@ -865,7 +868,8 @@
         config.discountCarry = '¥0'; config.discountUsages = []; config.owner = ex.store + ' / ' + ex.owner;
         config.orderStatus = [ex.status, 'tag tag-blue'];
         config.snapshot = config.snapshot.map(item => /团期编号|航次编号|班期编号/.test(item[0]) ? [item[0], ex.trip] : /出发\/回团/.test(item[0]) ? [item[0], ex.start + ' / ' + ex.end] : item);
-        config.travelers.rows = ex.people.map(p => [p.name, p.relation === '监护人' ? '未成年人' : '成人', p.identity, p.ready ? '资料齐备' : '资料待补', p.phone, [p.ready ? '已核对' : '待补', 'tag tag-gray']]);
+        config.travelers.head=['游客','年龄类别','证件','资料状态','联系电话','状态'];
+        config.travelers.rows = ex.people.map(p => [p.name, p.adult===false || p.relation === '监护人' ? '未成年人' : '成人', p.identity, p.ready ? '资料齐备' : '资料待补', p.phone, [p.ready ? '已核对' : '待补', 'tag tag-gray']]);
         config.travelers.summary = ex.people.length + '人，按本订单合同样例核对';
       }
 

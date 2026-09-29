@@ -10,6 +10,7 @@ function apply(){
  const node=tree.querySelector('.org-admin-tree-row.active').closest('.org-admin-tree-node'),n=node.dataset,org=O.read(),d=org.departments.find(d=>d.id===n.approvalOrgId),c=O.companies.find(c=>c.id===n.nodeCompany);
  document.querySelector('[data-member-heading]').textContent=n.nodeName+' · 员工列表';
  actions.replaceChildren();
+ if(!d){const contractButton=document.createElement("button");contractButton.type="button";contractButton.className="btn btn-secondary";contractButton.textContent="签约资料";contractButton.onclick=()=>window.ContractCompanyProfile?.open(c.id);actions.append(contractButton);}
  const head=document.querySelector('[data-org-primary-action]');head.textContent='+';head.disabled=!!d&&(!d.active||d.type==='store');head.onclick=()=>V.editor({direct:true,company:c.id,parent:d?.id||''});
  window.AdminOrgMembers?.render();
 }
