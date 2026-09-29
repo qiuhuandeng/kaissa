@@ -1,0 +1,91 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { chromium } = require(process.env.CAESAR_PLAYWRIGHT_PATH || '/private/tmp/commerce-mobile-qa/node_modules/playwright-core');
+
+(async () => {
+  const browser = await chromium.launch({ executablePath: process.env.CAESAR_CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--allow-file-access-from-files'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = []; page.on('pageerror', error => errors.push(error.message)); page.setDefaultTimeout(10000);
+  let count = 0;
+  const go = async (file, query = '') => { await page.goto(pathToFileURL(path.resolve(__dirname, '..', file)).href + query); await page.waitForTimeout(500); };
+  const check = async (name, fn) => { assert.ok(await fn(), name); count += 1; console.log('PASS ' + name); };
+  const click = async selector => { await page.locator(selector).first().click(); await page.waitForTimeout(240); };
+  const text = selector => page.locator(selector).innerText();
+  try {
+    await go('merchant/finance/finance-prepayment-offset.html');
+    await check('预付管理列表提供明确的预付款退回入口', async () => await page.locator('[data-spr-prepay] [data-spr-merchant]').innerText() === '申请退回');
+    await check('列表保持预付余额53000并显示可退53000', async () => { const value = await text('[data-spr-prepay]'); return value.includes('余额 ¥53,000.00') && value.includes('可退 ¥53,000.00'); });
+    await click('[data-spr-merchant]');
+    await check('抽屉逐原付款明细展示已付冲抵已退处理中和可退', async () => { const value = await text('.spr-body'); return ['PAY-PP-20260918001', 'PAY-PP-20260922002', '¥30,000.00', '¥23,000.00', '付款中'].every(item => value.includes(item)); });
+    await check('申请展示原银行交易号及核准退款收款账户',async()=>{const t=await text('.spr-body');return t.includes('BANK-PP-20260918001')&&t.includes('福建凯撒 / 工商银行 · 0888')&&await page.locator('#sprApplyFiles').count()===1;});
+    await check('新申请不预填退款金额', async () => await page.locator('[data-spr-apply="PAY-PP-20260918001"]').inputValue() === '');
+    await page.locator('[data-spr-apply="PAY-PP-20260918001"]').fill('5000');
+    await page.locator('[data-spr-apply="PAY-PP-20260922002"]').fill('8000');
+    await page.locator('#sprReason').fill('对账后多付，按原付款明细退回');
+    await check('未付款、已全冲抵和已全退明细不可填写', async () => await page.locator('[data-spr-apply="PAY-PP-20260926003"]').isDisabled() && await page.locator('[data-spr-apply="PAY-PP-20260912004"]').isDisabled() && await page.locator('[data-spr-apply="PAY-PP-20260910005"]').isDisabled());
+    await page.locator('[data-spr-apply="PAY-PP-20260918001"]').fill('30001');
+    await click('[data-spr-submit]');
+    await check('超额申请不生成退回也不清空输入',async()=> (await text('.spr-error')).includes('超过可退')&&(await page.locator('[data-spr-apply="PAY-PP-20260918001"]').inputValue())==='30001');
+    await click('.spr-footer [data-spr-close]');
+    await check('未保存关闭有放弃确认',async()=>await page.locator('.spr-discard').isVisible());await click('[data-spr-keep]');
+    await page.locator('[data-spr-apply="PAY-PP-20260918001"]').fill('5000');
+    await page.screenshot({path:'/private/tmp/supplier-prepayment-return-input.png',fullPage:true});
+    await click('[data-spr-submit]');
+    await check('提交后形成13000退回申请并占用可退余额', async () => { const value = await text('.spr-body'); return value.includes('RET-PP-20260929001') && value.includes('¥13,000.00') && value.includes('待供应商退款'); });
+    await check('提交申请后预付余额仍为53000', async () => (await text('.spr-body')).includes('预付余额\n¥53,000.00'));
+    await page.screenshot({ path: '/private/tmp/supplier-prepayment-return-merchant.png', fullPage: true });
+    await click('.spr-footer [data-spr-close]');
+    await click('[data-spr-tab="returns"]');
+    await check('退回页签包含外采、同行及旧备用金全部记录',async()=>{const t=await text('#sprReturnRows');return ['RET-PP-20260929001','RET-PP-20260924001','RET-DZ-003','RET-PRE-20260713002'].every(v=>t.includes(v));});
+    await page.locator('#sprReturnSearch').fill('RET-PP-20260924001');await click('[data-spr-search]');
+    await check('退回搜索仅保留命中历史',async()=>await page.locator('#sprReturnRows tr').count()===1 && (await text('#sprReturnRows')).includes('¥2,000.00'));
+    await click('[data-spr-history="RET-PP-20260924001"]');
+    await check('历史退回保留逐笔到账及原付款金额',async()=>{const t=await text('.spr-body');return t.includes('CMB-IN-20260924001')&&t.includes('PAY-PP-20260922002')&&t.includes('¥30,000.00');});
+    await click('.spr-footer [data-spr-close]');await click('[data-spr-reset]');await click('[data-spr-tab="prepay"]');await click('[data-spr-merchant]');
+    await page.locator('[data-spr-apply="PAY-PP-20260918001"]').fill('1000');await page.locator('#sprReason').fill('第二次申请');await click('[data-spr-submit]');
+    await check('同一预付单可第二次申请且原申请不覆盖',async()=> (await text('.spr-body')).includes('RET-PP-20260929001-02'));
+    await page.locator('#sprCancelReason').fill('采购继续履行');await click('[data-spr-cancel]');
+    await check('撤销申请释放占用并保留撤销记录',async()=>{const t=await text('.spr-body');return t.includes('已撤销')&&t.includes('采购继续履行')&&t.includes('¥40,000.00');});
+    await click('.spr-footer [data-spr-close]');
+    await click('[data-prepay-no="PP-LEADER-20260625001"] [data-open-work="return"]');
+    await check('旧备用金退回也使用原付款明细抽屉',async()=> (await text('.spr-body')).includes('PAYEX-LD-20260625001') && await page.locator('[data-spr-apply="PAYEX-LD-20260625001"]').isDisabled());
+    await click('.spr-footer [data-spr-close]');
+    await check('旧退回未到账余额不减少也未生成凭证',async()=>await page.locator('[data-prepay-no="PP-LEADER-20260625001"]').evaluate(n=>n.dataset.balance==='¥11,400'&&n.dataset.nc==='未生成'&&n.dataset.voucher==='未生成'));
+    await click('[data-spr-tab="returns"]');await check('退回号和预付号完整显示、固定操作列宽120',async()=>page.locator('.spr-return-table').evaluate(n=>Array.from(n.querySelectorAll('td:nth-child(-n+2) strong')).every(v=>v.scrollWidth<=v.clientWidth+1)&&Math.abs(n.querySelector('td.sticky-action').getBoundingClientRect().width-120)<2));await check('桌面首屏同时看到退回状态和操作',async()=>page.locator('.spr-return-table').evaluate(n=>n.querySelector('td:nth-child(6)').getBoundingClientRect().right<=n.querySelector('td.sticky-action').getBoundingClientRect().left+1));await page.screenshot({path:'/private/tmp/supplier-prepayment-return-tab.png',fullPage:true});
+
+
+    await go('supplier/settlements.html', '?view=prepayment-return');
+    await check('供应商端复用对账页并切到独立预付款退回视图', async () => await page.locator('.spr-supplier-panel').isVisible() && await page.locator('[data-spr-view="return"]').evaluate(node => node.classList.contains('active')));
+    await check('供应商列表只显示申请金额到账和主状态', async () => { const value = await text('.spr-supplier-panel'); return value.includes('¥13,000.00') && value.includes('¥0.00') && value.includes('待供应商退款'); });
+    await click('[data-spr-supplier]');
+    await click('[data-spr-proof]');
+    await check('缺退款凭据文件被拦截', async () => (await text('.spr-error')).includes('上传退款凭据'));
+    await page.locator('#sprProofFile').setInputFiles({ name: '供应商退款回单.pdf', mimeType: 'application/pdf', buffer: Buffer.from('prototype') });
+    await click('[data-spr-proof]');
+    await check('提交凭据后状态待核对且实际到账仍为零', async () => { const value = await text('.spr-body'); return value.includes('退款凭据待核对') && value.includes('财务已核对到账\n¥0.00') && value.includes('凭据只是供应商已操作的证明'); });
+    await page.screenshot({ path: '/private/tmp/supplier-prepayment-return-supplier.png', fullPage: true });
+
+    await go('merchant/finance/finance-payment-return.html', '?returnNo=RET-PP-20260929001');
+    await check('付款退回页自动定位预付款退回并展示供应商凭据', async () => await page.locator('.spr-overlay').isVisible() && (await text('.spr-proof')).includes('SUP-REF-20260929-001') && (await text('.spr-proof')).includes('凭据不等于到账'));
+    await check('首笔6000流水默认分配5000和1000', async () => (await page.locator('#sprFlow').inputValue()) === 'CMB-IN-20260929001' && (await page.locator('[data-spr-receipt="PAY-PP-20260918001"]').inputValue()) === '5000' && (await page.locator('[data-spr-receipt="PAY-PP-20260922002"]').inputValue()) === '1000');
+    await click('[data-spr-receive]');
+    await check('首笔到账后状态部分到账余额仅减6000', async () => { const value = await text('.spr-body'); return value.includes('部分到账') && value.includes('已核对到账\n¥6,000.00') && value.includes('预付余额\n¥47,000.00'); });
+    await check('第二笔流水自动只分配剩余7000', async () => (await page.locator('#sprFlow').inputValue()) === 'CMB-IN-20260930002' && (await page.locator('[data-spr-receipt="PAY-PP-20260922002"]').inputValue()) === '7000');
+    await click('[data-spr-receive]');
+    await check('第二笔到账后已到账且预付余额为40000', async () => { const value = await text('.spr-body'); return value.includes('已到账') && value.includes('已核对到账\n¥13,000.00') && value.includes('预付余额\n¥40,000.00'); });
+    await check('全部到账仍保留原付款98000并显示净支付77000', async () => { const value = await text('.spr-body'); return value.includes('原付款仍按 ¥98,000.00 保留') && value.includes('实际净支付为 ¥77,000.00'); });
+    await page.screenshot({ path: '/private/tmp/supplier-prepayment-return-finance.png', fullPage: true });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await go('merchant/finance/finance-prepayment-offset.html');
+    await page.locator('.finance-prepayment-table').evaluate(node => { node.scrollLeft = node.scrollWidth; });
+    await check('窄屏预付列表操作列可达', async () => page.locator('[data-spr-merchant]').evaluate(node => { const rect = node.getBoundingClientRect(); return rect.left >= 0 && rect.right <= innerWidth + 1; }));
+    await click('[data-spr-merchant]');
+    await check('窄屏退回抽屉正文无横向溢出', async () => page.locator('.spr-body').evaluate(node => node.scrollWidth <= node.clientWidth + 1));
+    await page.screenshot({ path: '/private/tmp/supplier-prepayment-return-narrow.png' });
+    if (errors.length) console.error('PAGE ERRORS:', errors);
+    await check('页面无脚本错误', async () => errors.length === 0);
+    console.log('供应商预付款退回浏览器验收通过：' + count + '项');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exit(1); });

@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>预付冲抵 - 凯撒旅游</title>
+  <title>预付管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="../../shared/supplier-prepayment-return.css">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -118,7 +119,7 @@
             <td><div class="table-cell-main"><strong>¥18,600</strong><span>余额 ¥11,400</span></div></td>
             <td><div class="table-cell-main"><span class="tag tag-orange">余额待处理</span><span>退回 ¥11,400</span></div></td>
             <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>退回确认后生成</span></div></td>
-            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="return">退回</button><button type="button" data-open-detail>详情</button></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="return">申请退回</button><button type="button" data-open-detail>详情</button></div></td>
           </tr>
           <tr data-prepay-no="PP-KR-HOTEL-20260709001" data-payment-no="PAYEX-KR-20260709001" data-remittance-no="BOC20260709018" data-payable-no="AP-KR-20260709001" data-bill-no="BN-KR-20260709001" data-settlement-no="JS-KR-20260709001" data-supplier="首尔酒店联盟" data-supplier-type="酒店" data-prepay-type="采购定金" data-business-type="标准团期" data-company="总部财务" data-business="韩国首尔济州双城游 / 暑期亲子线" data-business-no="KR-SEL-20250806-001" data-source="酒店订房定金" data-contract-no="HOTEL-SEL-2026-009" data-currency="CNY" data-original-amount="¥60,000" data-rate="1.0000" data-local-amount="¥60,000" data-offset="¥20,000" data-balance="¥40,000" data-current-action="金额差异 ¥1,280" data-current-amount="¥18,720" data-after-balance="¥21,280" data-balance-status="有余额" data-transfer-no="-" data-transfer-target="-" data-transfer-amount="¥0" data-return-no="-" data-return-amount="¥0" data-diff="¥1,280" data-basis="BN-KR-20260709001 / 房差账单金额不一致" data-settlement="需确认差异后才能减少应付余额" data-nc="未生成" data-voucher="未生成" data-attachments="酒店合同、付款回单、酒店账单" data-prepay-date="2026-07-09" data-owner="应付会计王珊" data-status="差异待处理">
             <td><div class="table-cell-main"><strong>PP-KR-HOTEL-20260709001</strong><span>首尔酒店联盟 / BOC20260709018</span></div></td>
@@ -353,7 +354,6 @@
                   <option>保留余额</option>
                   <option>继续冲抵</option>
                   <option>转入其他团期/项目</option>
-                  <option>余额退回</option>
                 </select>
               </div>
             </div>
@@ -431,7 +431,6 @@
                 <select id="workBalanceMethod" class="form-control">
                   <option>继续冲抵</option>
                   <option>转入其他团期/项目</option>
-                  <option>余额退回</option>
                   <option>关闭余额</option>
                 </select>
               </div>
@@ -536,6 +535,8 @@
 
   <script src="../../shared/supplier-finance-model.js"></script>
   <script src="../../shared/supplier-finance-ui.js"></script>
+  <script src="../../shared/supplier-prepayment-return-model.js"></script>
+  <script src="../../shared/supplier-prepayment-return.js"></script>
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#prepaymentRows tr'));
@@ -590,7 +591,7 @@
       }
 
       function formatCny(value) {
-        return '¥' + Math.max(0, Math.round(value)).toLocaleString('zh-CN');
+        return '¥' + Math.max(0, Math.round(value * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       }
 
       function isZeroMoney(value) {
@@ -709,7 +710,7 @@
         var items = [[data.prepayDate, '预付付款', data.localAmount, data.localAmount, data.paymentNo]];
         if (!isZeroMoney(data.offset)) items.push(['2026-07-01', '已冲抵', '-' + data.offset, data.balance, data.payableNo]);
         if (!isZeroMoney(data.transferAmount)) items.push(['2026-07-13', '预付转款', '-' + data.transferAmount, data.afterBalance, data.transferNo]);
-        if (!isZeroMoney(data.returnAmount)) items.push(['2026-07-13', '余额退回', '-' + data.returnAmount, data.afterBalance, data.returnNo]);
+        if (!isZeroMoney(data.returnAmount)) items.push(['2026-07-13', '退回申请', data.returnAmount, data.balance, data.returnNo]);
         if (!isZeroMoney(data.currentAmount) && isZeroMoney(data.transferAmount) && isZeroMoney(data.returnAmount) && data.status !== '已关闭') {
           items.push(['2026-07-13', data.status === '差异待处理' ? '差异待处理' : '本次冲抵', '-' + data.currentAmount, data.afterBalance, data.basis]);
         }
@@ -821,7 +822,7 @@
         if (action === 'offset') return '冲抵';
         if (action === 'confirm') return '确认';
         if (action === 'transfer') return '转款';
-        if (action === 'return') return '退回';
+        if (action === 'return') return '申请退回';
         if (action === 'diff') return '处理';
         return '详情';
       }
@@ -832,7 +833,10 @@
           return '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
         }
         if (action === 'balance') {
-          return '<div class="table-action"><span class="dropdown table-action-more" data-action-menu><button class="table-more-toggle table-action-primary" type="button" data-action-menu-toggle aria-haspopup="menu" aria-expanded="false">处理</button><span class="dropdown-menu action-dropdown-menu" role="menu"><button class="dropdown-item" type="button" data-open-work="offset">继续冲抵</button><button class="dropdown-item" type="button" data-open-work="transfer">转款</button><button class="dropdown-item" type="button" data-open-work="return">退回</button><button class="dropdown-item" type="button" data-open-work="balance">关闭余额</button></span></span><button type="button" data-open-detail>详情</button></div>';
+          return '<div class="table-action"><span class="dropdown table-action-more" data-action-menu><button class="table-more-toggle table-action-primary" type="button" data-action-menu-toggle aria-haspopup="menu" aria-expanded="false">处理</button><span class="dropdown-menu action-dropdown-menu" role="menu"><button class="dropdown-item" type="button" data-open-work="offset">继续冲抵</button><button class="dropdown-item" type="button" data-open-work="transfer">转款</button><button class="dropdown-item" type="button" data-open-work="return">申请退回</button><button class="dropdown-item" type="button" data-open-work="balance">关闭余额</button></span></span><button type="button" data-open-detail>详情</button></div>';
+        }
+        if (action !== 'return' && !isZeroMoney(row.dataset.balance)) {
+          return '<div class="table-action"><span class="dropdown table-action-more" data-action-menu><button class="table-more-toggle table-action-primary" type="button" data-action-menu-toggle aria-haspopup="menu" aria-expanded="false">处理</button><span class="dropdown-menu action-dropdown-menu" role="menu"><button class="dropdown-item" type="button" data-open-work="' + action + '">' + actionText(action) + '</button><button class="dropdown-item" type="button" data-open-work="return">申请退回</button></span></span><button type="button" data-open-detail>详情</button></div>';
         }
         return '<div class="table-action"><button class="table-action-primary" type="button" data-open-work="' + action + '">' + actionText(action) + '</button><button type="button" data-open-detail>详情</button></div>';
       }
@@ -841,13 +845,14 @@
         if (row.dataset.voucher && row.dataset.voucher !== '未生成') return row.dataset.voucher;
         if (row.dataset.status === '待分摊') return '分摊后生成';
         if (row.dataset.status === '差异待处理') return '差异未确认';
-        if (/退回/.test(row.dataset.currentAction || '')) return '退回确认后生成';
+        if (/退回/.test(row.dataset.currentAction || '')) return '待核对到账';
         if (/转款/.test(row.dataset.currentAction || '')) return '转款后生成';
         if (row.dataset.status === '待冲抵' || row.dataset.status === '待确认') return '冲抵后生成';
         return '-';
       }
 
       function updateRowCells(row) {
+        if (window.SupplierPrepaymentReturnUI && window.SupplierPrepaymentReturnUI.renderRow(row)) return;
         if (window.SupplierFinanceUI.renderRow(row)) return;
         row.children[4].innerHTML = '<div class="table-cell-main"><strong>' + escapeHtml(row.dataset.offset) + '</strong><span>余额 ' + escapeHtml(row.dataset.balance) + '</span></div>';
         row.children[5].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.status) + '<span>' + escapeHtml(row.dataset.currentAction) + '</span></div>';
@@ -974,6 +979,7 @@
       }
 
       function openWork(row, action) {
+        if (action === 'return') { window.SupplierPrepaymentReturnUI.open(row, 'apply'); return; }
         if (window.SupplierFinanceUI.open(row)) return;
         if (!row) return;
         activeRow = row;
@@ -1017,6 +1023,7 @@
       }
 
       function applyBalanceResult(row, method, amount) {
+        if (method === '余额退回') throw Error('请从申请退回入口按原付款明细办理');
         row.dataset.currentAmount = amount;
         refreshAfterBalance(row, amount);
         if (method === '转入其他团期/项目') {
@@ -1024,12 +1031,6 @@
           row.dataset.transferTarget = document.getElementById('workBalanceTransferTarget').value || row.dataset.transferTarget || '-';
           row.dataset.currentAction = isZeroMoney(row.dataset.afterBalance) ? '余额 ¥0' : '余额 ' + row.dataset.afterBalance;
           setGeneratedVoucher(row, 'PP-ZK-');
-          row.dataset.nc = '待推送';
-        } else if (method === '余额退回') {
-          row.dataset.returnAmount = amount;
-          row.dataset.returnNo = document.getElementById('workBalanceReturnNo').value || ('RET-PRE-' + row.dataset.prepayNo.replace(/[^0-9]/g, '').slice(-8));
-          row.dataset.currentAction = isZeroMoney(row.dataset.afterBalance) ? '余额 ¥0' : '余额 ' + row.dataset.afterBalance;
-          setGeneratedVoucher(row, 'PP-RET-');
           row.dataset.nc = '待推送';
         } else if (method === '关闭余额') {
           row.dataset.status = '已关闭';
@@ -1048,6 +1049,10 @@
 
       function confirmWork() {
         if (!activeRow) return;
+        try {
+          var guardedAmount = activeAction === 'confirm' ? activeRow.dataset.currentAmount : activeAction === 'offset' ? document.getElementById('workOffsetAmount').value : document.getElementById('workBalanceAmount').value;
+          if (['offset', 'confirm', 'transfer', 'balance'].indexOf(activeAction) >= 0) window.SupplierPrepaymentReturnUI.guardUse(activeRow, guardedAmount);
+        } catch (error) { notify(error.message, 'error'); return; }
         var result = actionTitle(activeAction);
         if (activeAction === 'allocate') {
           activeRow.dataset.currentAmount = document.getElementById('workAllocateAmount').value;
@@ -1107,6 +1112,7 @@
             activeRow.dataset.currentAction = method;
           }
         }
+        window.SupplierPrepaymentReturnUI.syncUsage(activeRow);
         closeLayer(workDrawer);
         updateRowCells(activeRow);
         updateCounts();

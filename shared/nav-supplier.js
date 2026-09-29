@@ -3,7 +3,7 @@
     { title: "产品管理", shortTitle: "产品", href: "products.html", icon: "box" },
     { title: "团期管理", shortTitle: "团期", href: "schedules.html", icon: "calendar" },
     { title: "订单确认", shortTitle: "订单", href: "orders.html", icon: "clipboard" },
-    { title: "对账结算", shortTitle: "对账", href: "settlements.html", icon: "wallet" }
+    { title: "供应商对账", shortTitle: "对账", href: "settlements.html", icon: "wallet" }
   ];
 
   const PAGE_ACTIVE_MAP = {

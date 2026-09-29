@@ -45,6 +45,7 @@
     statements[0].lines[0].claim = 82000;
     statements[0].lines[0].claimReason = '临时加住费用2,000元，服务确认单ZB01';
     statements[2].payment = { offset:30000, paid:50000, inTransit:10000, reference:'预付冲抵记录HX03；付款记录FK03' };
+    statements[2].sealAttachment={name:'DZ20260926003-第1版盖章对账单.pdf',version:1,uploadedBy:supplier+'管理员',uploadedAt:'2026-09-26 09:00',note:'双方确认金额101,000元'};
     statements[2].invoice={task:'INV-DZ-003',version:1,no:'FJ20260925003',amount:101000,file:'国旅九月地接发票.pdf',status:'待补正',reason:'购方名称缺字，请补充清晰完整的原票材料',buyer:'福建凯撒',seller:supplier,currency:'CNY'};
     statements[2].invoiceHistory=[{...clone(statements[2].invoice),actor:'福建凯撒发票岗',time:'2026-09-26 09:00',action:'退回补正'}];
     statements[2].refund={id:'RET-DZ-003',amount:5000,received:0,status:'待供应商退款',prepay:'PP-DZ-003',payment:'PAY-PP-003',basis:'双方同意退还未冲抵预付5,000元，确认单TH-0926-03',submissions:[]};
@@ -55,16 +56,6 @@
         if(s.state==='disputed'||s.state==='confirmed') s.history.push({revision:1,lines:clone(s.lines),time:s.updated,action:s.state==='disputed'?'供应商异议':'供应商确认',actor:s.supplier});
       }
       s.events.push({ time:s.updated, action:s.state==='disputed'?'提出差异':s.state==='confirmed'?'确认对账':s.state==='void'?'作废草稿':'创建对账', actor:s.state==='disputed'||s.state==='confirmed'?s.supplier:s.company });
-    });
-    // 两端独立演示同一份供应商来单，体现计调接收和供应商补充入口。
-    [['DZ20260925001',['C12','C13'],'reviewing',[62000,20000]],['DZ20260925002',['C14'],'returned',[13000]]].forEach(([id,ids,state,amounts])=>{
-      const s=record(0,ids,state);s.id=id;s.initiatedBy='supplier';
-      s.lines.forEach((l,i)=>{l.claim=amounts[i];l.claimReason=l.claim===l.amount?'':'加住服务，供应商服务明细表';});
-      s.bills=[{no:state==='reviewing'?'GL-202609-101':'GL-202609-102',date:'2026-09-25',total:amounts.reduce((a,b)=>a+b,0),files:[{name:'国旅九月账单.pdf',size:12000}],lines:s.lines.map(l=>({id:l.id,amount:l.claim,reason:l.claimReason})),submittedAt:'2026-09-25 10:00',version:1}];
-      s.history.push({revision:1,lines:clone(s.lines),time:'2026-09-25 10:00',action:'供应商提交账单',actor:s.supplier});
-      s.events.push({time:'2026-09-25 10:00',action:'提交账单 → '+s.company+'计调',actor:s.supplier});
-      if(state==='returned') {s.returnReason='请补充加住500元对应的订单服务明细及确认材料';s.events.push({time:'2026-09-25 15:00',action:'退回补充：'+s.returnReason,actor:s.company+'计调'});}
-      statements.push(s);
     });
     // 每条采购服务有自己的确认记录；计调实际服务确认与供应商报价分开保存。
     const purchases=sources.map(l=>({id:'CG-'+l.id,sourceId:l.id,company:l.company,supplier:l.supplier,order:l.order,tour:l.tour,name:l.name,currency:l.currency,date:l.date,agreement:l.agreement,qty:l.qty,price:l.price,increase:Math.max(l.adjustment,0),decrease:Math.max(-l.adjustment,0),amount:l.amount,state:'已确认',version:1,confirmation:l.confirmation,actual:l.ready?{qty:l.qty,price:l.price,increase:Math.max(l.adjustment,0),decrease:Math.max(-l.adjustment,0),amount:l.amount,date:l.date,basis:l.basis,actor:l.company+'计调'}:null,history:[]}));
@@ -241,7 +232,7 @@
       if(submit) s.history.push({revision:s.revision,lines:clone(s.lines),time:s.updated,action:'提交对账',actor:s.company});
       return clone(s);
     }
-    function respond(id, revision, answers) {
+    function respond(id, revision, answers, seal) {
       const s=get(id); requireState(s,['pending'],'supplier',revision);
       if(answers.length!==s.lines.length || new Set(answers.map(a=>a.id)).size!==answers.length) throw Error('请逐项确认全部费用明细');
       const next=s.lines.map(l=>{
@@ -250,9 +241,18 @@
         if(a.result==='dispute') { if(cents(a.amount)===cents(l.amount)) throw Error('异议金额与本次对账金额一致，请核对'); if(!String(a.reason||'').trim()) throw Error('请填写异议原因和依据'); row.claim=Number(a.amount); row.claimReason=a.reason.trim(); }
         return row;
       });
-      s.lines=next; s.state=next.some(l=>l.claim!==undefined)?'disputed':'confirmed';
+      const hasDispute=next.some(l=>l.claim!==undefined);
+      if(!hasDispute) {
+        if(!seal?.confirmed) throw Error('请确认盖章件与当前对账版本和金额一致');
+        if(!String(seal.file||'').trim()) throw Error('请上传当前版本的盖章对账单');
+        if(!/\.(pdf|jpe?g|png)$/i.test(seal.file)) throw Error('盖章件仅支持PDF或图片');
+        s.sealAttachment={name:seal.file.trim(),version:s.revision,uploadedBy:s.supplier+'管理员',uploadedAt:new Date().toLocaleString('sv-SE').slice(0,16),note:String(seal.note||'').trim()};
+      } else {
+        delete s.sealAttachment;
+      }
+      s.lines=next; s.state=hasDispute?'disputed':'confirmed';
       event(s,s.state==='confirmed'?'确认对账':'提出差异');
-      s.history.push({revision:s.revision,lines:clone(s.lines),time:s.updated,action:s.state==='confirmed'?'供应商确认':'供应商异议',actor:s.supplier});
+      s.history.push({revision:s.revision,lines:clone(s.lines),time:s.updated,action:s.state==='confirmed'?'供应商盖章确认':'供应商异议',actor:s.supplier,sealAttachment:clone(s.sealAttachment||null)});
       return clone(s);
     }
     function resolve(id, revision, decisions, resubmit) {
@@ -271,7 +271,7 @@
       if(resubmit) {
         s.history.push({revision:s.revision,lines:clone(next),time:new Date().toLocaleString('sv-SE').slice(0,16),action:'我方差异处理',actor:s.company});
         next.forEach(l=>{ if(l.decision) { l.amount=l.decision.amount; l.resolution=l.decision.reason; } delete l.claim; delete l.claimReason; delete l.decision; });
-        s.revision++; s.state='pending';
+        s.revision++; s.state='pending'; delete s.sealAttachment;
       }
       s.lines=next; event(s,resubmit?'重新提交对账':'保存差异处理');
       if(resubmit) s.history.push({revision:s.revision,lines:clone(next),time:s.updated,action:'重新提交对账',actor:s.company});

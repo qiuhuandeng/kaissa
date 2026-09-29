@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>付款执行 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="../../shared/payment-workspace.css">
+  <script src="../../shared/payment-workspace.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -361,6 +363,8 @@
 
   <script src="../../shared/supplier-finance-model.js"></script>
   <script src="../../shared/supplier-finance-ui.js"></script>
+  <script src="../../shared/payment-return-workbench-model.js"></script>
+  <script src="../../shared/payment-return-workbench.js"></script>
   <script>
     (function () {
       var rows = Array.from(document.querySelectorAll('#paymentRows tr'));
@@ -632,7 +636,7 @@
       function renderException(row) {
         var type = row.dataset.status === '校验异常' ? '账户校验异常' : (row.dataset.status === '付款失败' ? '付款失败' : row.dataset.check);
         var handle = row.dataset.status === '待付款' || row.dataset.status === '待回单' || row.dataset.status === '已付款' || row.dataset.status === '付款中' ? '无异常' : (row.dataset.status === '校验异常' ? '待确认账户' : (row.dataset.status === '付款失败' ? '待处理失败' : '待确认异常'));
-        var policy = row.dataset.status === '校验异常' ? '确认收款账户要素后再付款' : (row.dataset.status === '付款失败' ? '处理银行退回原因后重新付款或关闭付款单' : '无需处理');
+        var policy = row.dataset.status === '校验异常' ? '确认收款账户要素后再付款' : (row.dataset.status === '付款失败' ? '处理银行拒付原因后重新付款或关闭付款单' : '无需处理');
         document.getElementById('exceptionRows').innerHTML = '<tr><td>' + escapeHtml(type) + '</td><td>' + escapeHtml(row.dataset.exception || '-') + '</td><td>' + tagHtml(handle) + '</td><td>' + escapeHtml(policy) + '</td></tr>';
       }
 
@@ -657,6 +661,7 @@
         renderException(row);
         renderNc(row);
         switchDetailTab(tabName || 'overview');
+        window.PaymentReturnEntry.render(row, detailDrawer.querySelector('.modal-body'));
         document.querySelector('[data-detail-primary]').textContent = actionByStatus(row.dataset.status);
         openLayer(detailDrawer);
       }
@@ -687,7 +692,7 @@
         document.getElementById('workBankFlow').value = row.dataset.bankFlow === '-' || row.dataset.bankFlow === '待银行回单' ? '' : row.dataset.bankFlow;
         setSelectOptions(document.getElementById('workResult'), resultOptionsByAction(action));
         updateWorkConfirmButton();
-        document.getElementById('workRemark').value = row.dataset.status === '校验异常' ? '确认收款账户、Swift和收款银行地址后重新校验。' : (row.dataset.status === '付款失败' ? '处理银行退回原因后重新付款。' : '付款后进入回单上传。');
+        document.getElementById('workRemark').value = row.dataset.status === '校验异常' ? '确认收款账户、Swift和收款银行地址后重新校验。' : (row.dataset.status === '付款失败' ? '处理银行拒付原因后重新付款。' : '付款后进入回单上传。');
         openLayer(workDrawer);
       }
 
@@ -718,6 +723,7 @@
         if (!activeRow) return;
         var result = document.getElementById('workResult').value;
         var bankFlow = document.getElementById('workBankFlow').value.trim();
+        if (/登记已付款/.test(result) && (!bankFlow || /待|未知/.test(bankFlow))) { notify('请填写成功付款的银行交易号'); return; }
         if (activeAction === 'account') {
           activeRow.dataset.receiveAccount = document.getElementById('workPayAccount').value;
         } else {
@@ -727,7 +733,7 @@
           activeRow.dataset.status = '付款中';
           activeRow.dataset.remittance = '待回单';
           activeRow.dataset.bankFlow = bankFlow || '待银行回单';
-          activeRow.dataset.voucher = activeRow.dataset.voucher === '未生成' ? 'PAY-VCH-' + activeRow.dataset.paymentNo.replace(/[^\d]/g, '') : activeRow.dataset.voucher;
+          activeRow.dataset.voucher = '未生成';
           activeRow.dataset.nc = '未生成';
           activeRow.dataset.check = '已校验';
           activeRow.dataset.risk = '已提交银行，等待银行受理';
@@ -776,9 +782,9 @@
         } else if (/付款失败/.test(result)) {
           activeRow.dataset.status = '付款失败';
           activeRow.dataset.check = '付款失败';
-          activeRow.dataset.risk = '银行退回，待处理失败原因';
+          activeRow.dataset.risk = '银行拒付，待处理失败原因';
           activeRow.dataset.remittance = '未生成';
-          activeRow.dataset.bankFlow = bankFlow || '银行退回';
+          activeRow.dataset.bankFlow = bankFlow || '银行拒付';
           activeRow.dataset.voucher = '未生成';
           notify(activeRow.dataset.paymentNo + '付款失败已记录');
         } else {
