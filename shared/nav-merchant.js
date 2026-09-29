@@ -123,9 +123,9 @@
         { title: "团期管控", href: "tour/schedules.html" },
         { title: "团期订单", href: "tour/schedule-orders.html" },
         { title: "团期结算", href: "tour/fulfillment-cost.html" },
-        { title: "供应商对账", href: "tour/supplier-reconciliation.html" },
         { title: "付款申请", href: "tour/fulfillment-payment-apply.html" },
         { title: "签证办理", href: "tour/visa-processing.html" },
+        { title: "供应商对账", href: "tour/supplier-reconciliation.html" },
         {
           title: "交通采购",
           children: [

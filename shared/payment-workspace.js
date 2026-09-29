@@ -4,7 +4,7 @@
   const params=new URLSearchParams(location.search), file=location.pathname.split('/').pop(), embedded=params.get('embedded')==='payment';
   if(embedded) document.documentElement.dataset.paymentEmbedded='true';
   const current=file==='finance-payment-return.html'?'returns':'payments';
-  const tabs=()=>'<div class="tab-bar pm-tabs" role="tablist" aria-label="付款管理"><button class="tab-item" role="tab" data-pm-tab="payments" type="button">付款执行</button><button class="tab-item" role="tab" data-pm-tab="returns" type="button">付款退回</button></div>';
+  const tabs=()=>'<div class="list-surface-tabs list-function-tabs pm-tabs" role="tablist" aria-label="付款管理"><button class="tab-item" role="tab" data-pm-tab="payments" type="button"><span class="list-tab-label">付款执行</span></button><button class="tab-item" role="tab" data-pm-tab="returns" type="button"><span class="list-tab-label">付款退回</span></button></div>';
   function init(){
     if(file==='finance-payment-management.html'){
       const host=document.querySelector('[data-payment-workspace]');if(!host)return;
