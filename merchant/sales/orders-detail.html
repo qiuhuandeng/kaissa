@@ -162,22 +162,7 @@
               <tbody id="travelerTableRows"></tbody>
             </table>
           </div>
-          <section id="orderVisaSection" class="order-visa-section" hidden>
-            <div class="order-tab-section-head">
-              <div>
-                <div class="detail-section-title">游客签证</div>
-                <p id="orderVisaContext" class="order-visa-context"></p>
-              </div>
-              <a id="orderVisaWorkbenchLink" class="btn btn-outline btn-sm" href="../tour/visa-processing.html">进入签证办理</a>
-            </div>
-            <div id="orderVisaSummary" class="order-visa-summary"></div>
-            <div class="table-wrap order-detail-table order-visa-table-wrap">
-              <table>
-                <thead><tr><th>游客</th><th>常住地 / 匹配领区</th><th>签证方案</th><th>材料进度</th><th>最晚提交日</th><th>办理状态</th><th>操作</th></tr></thead>
-                <tbody id="orderVisaRows"></tbody>
-              </table>
-            </div>
-          </section>
+
         </div>
       </section>
 
@@ -324,13 +309,13 @@
         <button class="modal-close" type="button" aria-label="关闭" data-close-modal>×</button>
       </div>
       <div class="modal-body">
-        <section id="travelerDrawerSummary" class="readonly-summary"></section>
-        <div id="travelerDrawerGaps" class="order-traveler-gap-list"></div>
-        <div id="travelerDrawerList" class="order-traveler-edit-list"></div>
+        <div id="travelerDrawerSummary" class="ot-person-summary"></div>
+        <form id="travelerDetailForm" novalidate></form>
+        <p id="travelerFormError" class="form-error" role="alert" hidden></p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" data-close-modal>取消</button>
-        <button class="btn btn-primary" type="button" data-result="保存资料">保存资料</button>
+        <button id="saveTravelerDetail" class="btn btn-primary" type="button">保存资料</button>
       </div>
     </div>
   </div>
@@ -2011,21 +1996,6 @@
         const downloadAction = canDownload ? '<button type="button" data-result="下载' + escapeHtml(item[0]) + '">下载</button>' : '';
         return '<tr><td>' + escapeHtml(item[0]) + '</td><td>' + escapeHtml(item[2]) + '</td><td>' + tagHtml([status, statusClass(status)]) + '</td><td>' + tagHtml([sendStatus, statusClass(sendStatus)]) + '</td><td><div class="table-action">' + mainAction + downloadAction + '</div></td></tr>';
       }
-      function travelerGapItems() {
-        const names = config.travelers.rows.map(function (row) { return row[0]; }).join('、');
-        return config.travelers.drawer.map(function (item, index) {
-          const state = index === 0 ? '待补' : index === 1 ? '待确认' : '待复核';
-          return [item[0], item[1], state, names];
-        });
-      }
-      function travelerGapCard(item) {
-        return '<div class="order-traveler-gap-card"><div><strong>' + escapeHtml(item[0]) + '</strong><span>' + escapeHtml(item[1]) + '</span></div><div><em>' + escapeHtml(item[3]) + '</em>' + tagHtml([item[2], statusClass(item[2])]) + '</div></div>';
-      }
-      function travelerEditCard(row) {
-        const travelerName = row[0];
-        const status = Array.isArray(row[row.length - 1]) ? row[row.length - 1] : ['待维护', 'tag tag-orange'];
-        return '<section class="order-traveler-edit-card"><div class="order-traveler-edit-head"><div><strong>' + escapeHtml(travelerName) + '</strong><span>' + escapeHtml(row.slice(1, -1).join(' / ')) + '</span></div>' + tagHtml(status) + '</div><div class="order-traveler-field-grid">' + config.travelers.drawer.map(function (item) { return '<label class="form-group"><span class="form-label">' + escapeHtml(item[0]) + '</span><input class="form-control" type="text" placeholder="' + escapeHtml(item[1]) + '"></label>'; }).join('') + '</div><div class="order-traveler-material-strip"><span>材料上传</span><button class="table-action-primary" type="button" data-result="上传' + escapeHtml(travelerName) + '材料">上传材料</button><button class="table-action-primary" type="button" data-result="查看' + escapeHtml(travelerName) + '预检">查看预检</button></div></section>';
-      }
       function attachmentStatusClass(status) {
         if (/已/.test(status)) return 'tag tag-green';
         if (/待|补/.test(status)) return 'tag tag-orange';
@@ -2308,15 +2278,12 @@
         setText('aiDrawerText', config.travelers.ai.join(' '));
         setHtml('aiCheckItems', config.travelers.ai.map(function (text, index) { return taskItem(['预检项' + (index + 1), text]); }).join(''));
 
-        setHtml('travelerTableHead', '<tr>' + config.travelers.head.map(function (item) { return '<th>' + escapeHtml(item) + '</th>'; }).join('') + '<th>操作</th></tr>');
-        setHtml('travelerTableRows', config.travelers.rows.map(function (row) {
-          const editLabel = isProjectOrder() ? '项目名单编辑' : '编辑';
-          const materialLabel = isProjectOrder() ? '材料维护' : '材料';
-          return '<tr>' + row.map(function (cell, index) {
-            if (Array.isArray(cell)) return '<td>' + tagHtml(cell) + '</td>';
-            return '<td>' + escapeHtml(cell) + '</td>';
-          }).join('') + '<td><div class="table-action"><button class="table-action-primary" type="button" data-open-drawer="travelerDrawer" data-traveler-name="' + escapeHtml(row[0]) + '" data-traveler-mode="edit">' + editLabel + '</button><button class="table-action-primary" type="button" data-open-drawer="travelerDrawer" data-traveler-name="' + escapeHtml(row[0]) + '" data-traveler-mode="material">' + materialLabel + '</button></div></td></tr>';
-        }).join(''));
+        window.OrderTravelerContext = {
+          config: config, project: isProjectOrder(),
+          start: snapshotValue('出发/回团').split(' / ')[0] || snapshotValue('出行日期'),
+          people: contractExample && config.orderNo !== 'KS20260704001' ? contractExample.people : null
+        };
+        if (window.OrderTravelers) window.OrderTravelers.render();
 
         const snapshotReceivableItems = salesSnapshotReceivableItems();
         const receivableItems = snapshotReceivableItems || (isProjectOrder() ? projectReceivableItems() : [
@@ -2355,9 +2322,6 @@
           return '<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-time"><span>' + escapeHtml(item[0]) + '</span><span>' + escapeHtml(item[1]) + '</span></div><div class="timeline-text">' + escapeHtml(item[2]) + '</div></div></div>';
         }).join(''));
 
-        setText('travelerDrawerSummary', config.travelers.summary + (isProjectOrder() ? '。按客户分组维护项目名单、证件资料、房型和交通分组，保存后同步用于项目团执行。' : '。按游客维护证件、材料和产品类型资料，保存后同步用于资料预检、合同资料和后续执行。'));
-        setHtml('travelerDrawerGaps', travelerGapItems().map(travelerGapCard).join(''));
-        setHtml('travelerDrawerList', config.travelers.rows.map(travelerEditCard).join(''));
         setText('receiptDrawerTitle', receiptProfileFor().title);
         setHtml('receiptDrawerFields', receiptFieldsHtml());
         setText('receiptDrawerSummary', config.orderNo + ' / ' + config.productName + ' / ' + config.contact);
@@ -2541,10 +2505,8 @@
         if (drawerButton) {
           const drawerActionTitle = drawerButton.textContent.trim();
           if (drawerButton.dataset.openDrawer === 'travelerDrawer') {
-            const travelerName = drawerButton.dataset.travelerName;
-            const mode = drawerButton.dataset.travelerMode;
-            setText('travelerDrawerTitle', drawerActionTitle || (travelerName ? (isProjectOrder() ? '名单维护' : (mode === 'material' ? '材料维护' : '资料维护')) : (isProjectOrder() ? '项目名单维护' : '游客信息维护')));
-            setText('travelerDrawerSummary', travelerName ? '当前维护：' + travelerName + (isProjectOrder() ? '。可在下方维护名单导入、资料状态、房型和交通分组。' : '。可在下方补齐证件、材料和当前产品类型所需资料。') : config.travelers.summary + (isProjectOrder() ? '。按客户分组维护项目名单、证件资料、房型和交通分组。' : '。按游客维护证件、材料和产品类型资料，保存后同步用于资料预检、合同资料和后续执行。'));
+            if (window.OrderTravelers) window.OrderTravelers.openPicker();
+            return;
           }
           if (drawerButton.dataset.openDrawer === 'aftersalesDrawer') setAfterSalesDrawer(drawerButton.dataset.aftersalesType || '退款', drawerActionTitle);
           if (drawerButton.dataset.openDrawer === 'attachmentDrawer') {
@@ -2587,7 +2549,7 @@
     })();
   </script>
   <script src="../../shared/order-change-service.js"></script>
-  <script src="../../shared/order-visa-detail.js"></script>
+  <script src="../../shared/order-traveler-detail.js"></script>
   <script src="../../shared/order-contract-coverage.js"></script>
 </body>
 </html>

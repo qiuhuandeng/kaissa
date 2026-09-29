@@ -1,10 +1,10 @@
 (function(){
   'use strict';
-  var travelers=document.querySelector('#tab-travelers .product-detail-tab-inner'),receivable=document.querySelector('#tab-receivable .product-detail-tab-inner'),ctx=window.OrderAmendmentContext;
+  var travelers=document.querySelector('#tab-aftersales .product-detail-tab-inner'),receivable=document.querySelector('#tab-receivable .product-detail-tab-inner'),ctx=window.OrderAmendmentContext;
   if(!travelers||!receivable||!ctx)return;
   function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   var section=document.createElement('section');section.className='order-visa-section order-special-service-section amend-records';section.id='orderSpecialServiceSection';
-  section.innerHTML='<div class="order-tab-section-head"><h3 class="detail-section-title">独立服务项目</h3><button id="addOrderSpecialService" class="btn btn-secondary btn-sm" type="button">新增服务项</button></div><div class="table-wrap"><table><thead><tr><th>服务申请</th><th>涉及游客</th><th>服务安排</th><th>应收差额</th><th>负责计调</th><th>状态</th><th class="amend-action">操作</th></tr></thead><tbody id="orderSpecialServiceRows"></tbody></table></div>';
+  section.innerHTML='<div class="order-tab-section-head"><h3 class="detail-section-title">服务变更</h3><button id="addOrderSpecialService" class="btn btn-secondary btn-sm" type="button">申请变更</button></div><div class="table-wrap"><table><thead><tr><th>服务申请</th><th>涉及游客</th><th>服务安排</th><th>应收差额</th><th>负责计调</th><th>状态</th><th class="amend-action">操作</th></tr></thead><tbody id="orderSpecialServiceRows"></tbody></table></div>';
   travelers.appendChild(section);
   var records=document.createElement('section');receivable.appendChild(records);window.OrderAmendmentUI.watch(records,ctx);
   document.body.insertAdjacentHTML('beforeend','<div id="orderSpecialServiceDrawer" class="modal-overlay drawer-overlay" aria-hidden="true"><section class="modal drawer-modal drawer-md" role="dialog" aria-modal="true" aria-labelledby="orderSpecialServiceTitle"><div class="modal-header"><h2 id="orderSpecialServiceTitle" class="modal-title">服务变更申请</h2><button type="button" class="modal-close" data-close-service-application aria-label="关闭">×</button></div><div class="modal-body"><div id="orderSpecialServiceForm"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-close-service-application>取消</button><button id="saveOrderSpecialService" class="btn btn-primary" type="button">提交申请</button></div></section></div>');
