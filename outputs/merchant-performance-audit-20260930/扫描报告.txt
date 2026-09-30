@@ -1,0 +1,510 @@
+merchant 端代码性能与加载可靠性扫描报告
+日期：2026-09-30
+
+本次步骤：全量扫描与复现。没有修改 merchant 页面、共享 JS/CSS、功能、样式或交互。
+交付：194 页逐页记录、190 个共享导航入口检查、问题位置与浏览器复现证据。
+本次为代码性能和加载稳定性检查，不调整业务规则、菜单或页面设计。
+
+一、覆盖与方法
+- merchant 共 194 个 HTML；共享导航适用页面 190 个；其余为登录、工作范围选择、工作范围过渡页和审批模板旧跳转入口。
+- 检查 163 段内嵌 JS、153 个引用的共享 JS；未发现 JS 语法错误或静态 JS/CSS 引用缺失。
+- Chrome 无头浏览器，1440×1000，独立临时浏览器上下文，本机 HTTP 静态服务；不使用用户日常浏览器会话。
+- 194 页直接访问：等待 load 后再观察 350ms；未捕获初始化 JS 异常或超过 50ms 的单次主线程长任务。
+- 190 个入口：从工作台调用与菜单点击相同的共享导航函数进入目标页，观察初始化异常。这不表示全部页面都直接配置在菜单上。
+- 18 个报表默认视图分别静置 1.5 秒；另做 8 次往返切换和代表性抽屉点击复现。
+- 历史地址重定向时，直接访问指标属于落地页。关闭测试页导致的请求取消不计为源文件缺失。
+- 时间受本机、网络、缓存和其他程序影响，不是线上性能承诺。未穷举每页所有 Tab、查询参数和弹窗操作。
+
+二、优先处理的已复现问题
+P0-1：共享导航依赖遗漏与执行顺序错误
+位置：shared/nav-merchant.js:1221 仅采集 body/content 直属脚本，遗漏 head 依赖；:1295 动态插入外部脚本后立即执行内嵌脚本。async=false 只保证外部脚本之间的顺序，不使后续内嵌脚本等待依赖。
+19 页导航进入出现初始化异常；另有订单管理 1 页点击应收入口后报错，共 20 个页面已复现。
+影响：后续渲染或事件绑定中断，可能表现为空白、数据缺失、按钮无响应、抽屉打不开。
+建议：保持现有跳转体验，正确收集依赖并按原顺序等待执行完成，不统一粗暴添加 async/defer。
+受影响页面：
+- 待我审批 | merchant/approval/approvals.html | ReferenceError: SupplierCompanyAgreements is not defined
+- 发票管理 | merchant/finance/finance-invoice.html | TypeError: Cannot set properties of undefined (setting 'onChange')
+- 付款复核 | merchant/finance/finance-payment-apply.html | ReferenceError: SupplierCompanyAgreements is not defined
+- 付款执行 | merchant/finance/finance-payment.html | TypeError: Cannot set properties of undefined (setting 'onChange')
+- 预付管理 | merchant/finance/finance-prepayment-offset.html | TypeError: Cannot set properties of undefined (setting 'onChange')
+- 到账流水 | merchant/finance/receipts.html | ReferenceError: PredepositRechargeModel is not defined
+- 产品市场 | merchant/product/product-market.html | TypeError: Cannot read properties of undefined (reading 'visible')
+- 代理产品详情 | merchant/product/product-outsource-detail.html | TypeError: Cannot read properties of undefined (reading 'mountContext')
+- 代理产品工作台 | merchant/product/product-outsource-list.html | TypeError: Cannot read properties of undefined (reading 'visible')
+- 领队详情 | merchant/resource/resource-leader-schedule.html | TypeError: Cannot read properties of undefined (reading 'load')
+- 领队资源 | merchant/resource/resource-tour-leaders.html | TypeError: Cannot read properties of undefined (reading 'load')
+- 售后处理 | merchant/sales/orders-after-sales.html | ReferenceError: ContractWorkflow is not defined
+- 订单详情 | merchant/sales/orders-detail.html | TypeError: Cannot read properties of undefined (reading 'createState')
+- 门店成员 | merchant/sales/store/members.html | TypeError: Cannot read properties of undefined (reading 'employees')
+- 组织架构 | merchant/system/my-org.html | TypeError: Cannot read properties of undefined (reading 'read')
+- 员工任职 | merchant/system/staff-management.html | TypeError: Cannot read properties of undefined (reading 'read')
+- 团期结算 | merchant/tour/fulfillment-cost.html | TypeError: Cannot read properties of undefined (reading 'examples')
+- 团期订单详情 | merchant/tour/schedule-orders-detail.html | TypeError: Cannot read properties of undefined (reading 'renderDetail')
+- 团期订单 | merchant/tour/schedule-orders.html | TypeError: Cannot read properties of undefined (reading 'appendRows')
+- 订单管理 | merchant/sales/orders.html | 点击应收金额：OrderAmendmentModel is not defined；直接打开正常显示抽屉，菜单进入后 display:none。
+
+P0-2：报表空闲重复更新与旧监听残留
+位置：shared/data-report-ui.js:143-144 不判断内容是否变化即重写“更多筛选”；:365-375 用 requestAnimationFrame 和监听整个 body 的 MutationObserver 再次调用同一处理，形成循环。
+18 页中 17 页默认视图复现：1.5 秒内 90–91 次 DOM 更新。任务预算本次为 0 次，不算已复现循环。
+往来账龄与资金分析交替进入 8 次：0.5 秒采样内脚本耗时从约 154ms 升至约 489ms，主线程任务耗时约 501ms；主动垃圾回收后仍持续。
+共享脚本每次进入重新监听 body 和 window，没有旧页销毁；旧处理持续扫描当前页面，造成越切换越卡。
+建议：相同内容不写入；缩小观察范围；合并有效变更；离开页面清理旧监听与待执行回调。保留全部现有文案和显示效果。
+受影响页面：
+- 核算核对 | merchant/data/accounting-reports.html | 1.5秒更新 90 次
+- 往来账龄 | merchant/data/balance-reports.html | 1.5秒更新 91 次
+- 收付明细 | merchant/data/cashflow-reports.html | 1.5秒更新 91 次
+- 渠道分析 | merchant/data/channel-reports.html | 1.5秒更新 90 次
+- 资金分析 | merchant/data/fund-reports.html | 1.5秒更新 91 次
+- 票款核对 | merchant/data/invoice-reports.html | 1.5秒更新 90 次
+- 月度损益 | merchant/data/monthly-profit-reports.html | 1.5秒更新 91 次
+- 订单明细 | merchant/data/order-report-details.html | 1.5秒更新 91 次
+- 经营总览 | merchant/data/performance-reports.html | 1.5秒更新 90 次
+- 预款余额 | merchant/data/prepayment-reports.html | 1.5秒更新 91 次
+- 产品分析 | merchant/data/product-reports.html | 1.5秒更新 91 次
+- 数据管理 | merchant/data/report-management.html | 1.5秒更新 91 次
+- 报表业务场景验收 | merchant/data/report-scenarios.html | 1.5秒更新 91 次
+- 回团明细 | merchant/data/return-report-details.html | 1.5秒更新 90 次
+- 业务毛利 | merchant/data/settlement-reports.html | 1.5秒更新 91 次
+- 门店分润 | merchant/data/store-profit-reports.html | 1.5秒更新 90 次
+- 供应商分析 | merchant/data/supplier-reports.html | 1.5秒更新 90 次
+
+P1-1：新建团期抽屉慢加载自动关闭
+位置：merchant/product/product-schedules.html:383-398。
+点击后用 iframe 加载完整 tour/schedules.html，并加入时间戳；5 秒仍处于 loading 就关闭抽屉并清空 iframe。
+复现：正常网络打开成功；只将内嵌响应延迟 5.5 秒，6.2 秒检查时抽屉 hidden=true、src=null。未保存或提交业务操作。
+建议：保持原抽屉内容和操作体验，优化内嵌页面启动和资源复用。更改超时提示、失败显示或关闭规则属于交互变化，不能在本次边界内直接改。
+
+P1-2：8 个页面外链图片拖长 load 完成
+图片请求出现约 0.6–1.5 秒等待，HTML/JS 本身多数已在几十毫秒内解析。load 延迟不等同于按钮不可点击。
+建议：保留相同图片与裁切效果，检查首屏优先级、隐藏区域加载、重复请求和可控缓存；不换图、不降视觉质量、不改布局。
+页面：
+- 产品市场 | merchant/product/product-market.html | load=1509ms，DOMContentLoaded=27ms
+- 代理产品详情 | merchant/product/product-outsource-detail.html | load=882ms，DOMContentLoaded=20ms
+- 代理产品包装 | merchant/product/product-outsource-package.html | load=1014ms，DOMContentLoaded=47ms
+- 产品团期 | merchant/product/product-schedules.html | load=1483ms，DOMContentLoaded=39ms
+- 自营产品编辑 | merchant/product/product-self-edit.html | load=1154ms，DOMContentLoaded=57ms
+- 自营产品详情 | merchant/product/products-detail.html | load=1055ms，DOMContentLoaded=38ms
+- 产品预订 | merchant/sales/sales-product-quote.html | load=1518ms，DOMContentLoaded=19ms
+- 单团项目详情 | merchant/tour/product-custom-detail.html | load=649ms，DOMContentLoaded=48ms
+
+三、优化候选：不能仅凭文件体积认定卡顿
+- 193 个源页面引用 shared/style.css。该文件 1,535,444 字节，顶部再引入 16 份 CSS，基础合计约 1.68MB（未压缩）。多个模块样式也在无关页面加载。
+- 拆分前必须覆盖全部动态弹层、抽屉、隐藏 Tab，保证样式和层叠顺序完全不变，不能按首屏未使用率删规则。
+- 以下大页面适合在明确故障修复后检查初始化分段和按需准备。本轮直接打开未见长任务，不因文件大而全面重写：
+- 团期管控 | merchant/tour/schedules.html | HTML 426.5KiB，内嵌 JS 311.4KiB，首轮 DOM 2666 个节点
+- 团期详情 | merchant/tour/schedules-detail.html | HTML 414.3KiB，内嵌 JS 314.7KiB，首轮 DOM 3234 个节点
+- 订单管理 | merchant/sales/orders.html | HTML 300.5KiB，内嵌 JS 200.8KiB，首轮 DOM 2062 个节点
+- 团期订单 | merchant/tour/schedule-orders.html | HTML 297.9KiB，内嵌 JS 203.8KiB，首轮 DOM 1989 个节点
+- 团期结算 | merchant/tour/fulfillment-cost.html | HTML 276.5KiB，内嵌 JS 236.1KiB，首轮 DOM 1924 个节点
+- 订单详情 | merchant/sales/orders-detail.html | HTML 185.2KiB，内嵌 JS 154.2KiB，首轮 DOM 1663 个节点
+- 新建订单 | merchant/sales/booking.html | HTML 176.2KiB，内嵌 JS 153.3KiB，首轮 DOM 835 个节点
+- 机票切位 | merchant/tour/resource-procurement-inventory.html | HTML 170.5KiB，内嵌 JS 131.2KiB，首轮 DOM 1084 个节点
+- 团期订单详情 | merchant/tour/schedule-orders-detail.html | HTML 164.9KiB，内嵌 JS 133.7KiB，首轮 DOM 1708 个节点
+
+四、194 页逐页检查明细
+“暂未复现专属异常”只表示本轮覆盖的加载和有限交互范围，不代表全部功能验收通过。共享样式负担与已复现故障分开标记。
+
+001. AI助手 | merchant/ai/ai-assistant.html
+     暂未复现专属异常；共用大样式。直接加载 112.1ms，DOM就绪 91ms；导航检查：已做
+002. 竞品分析 | merchant/ai/competitor.html
+     暂未复现专属异常；共用大样式。直接加载 54.2ms，DOM就绪 41.4ms；导航检查：已做
+003. 线路拆解 | merchant/ai/route_parser.html
+     暂未复现专属异常；共用大样式。直接加载 45.3ms，DOM就绪 38.9ms；导航检查：已做
+004. 出行助理 | merchant/ai/travel_assistant.html
+     暂未复现专属异常；共用大样式。直接加载 43.6ms，DOM就绪 23.6ms；导航检查：已做
+005. 签证审查 | merchant/ai/visa_checker.html
+     暂未复现专属异常；共用大样式。直接加载 42.6ms，DOM就绪 35.4ms；导航检查：已做
+006. 审批详情 | merchant/approval/approval-product-review.html
+     暂未复现专属异常；共用大样式。直接加载 43.3ms，DOM就绪 20.7ms；导航检查：已做
+007. 审批模板编辑 | merchant/approval/approval-template-edit.html
+     暂未复现专属异常。直接加载 31.5ms，DOM就绪 30.8ms；导航检查：不适用；重定向至 /admin/approval-template-edit.html
+008. 待我审批 | merchant/approval/approvals.html
+     已复现导航初始化报错；共用大样式。直接加载 69ms，DOM就绪 61.4ms；导航检查：已做
+009. 分销渠道 | merchant/channel/agents.html
+     暂未复现专属异常；共用大样式。直接加载 39.6ms，DOM就绪 27ms；导航检查：已做；重定向至 /merchant/channel/distributors.html
+010. 佣金政策 | merchant/channel/commission_rules.html
+     暂未复现专属异常；共用大样式。直接加载 56.7ms，DOM就绪 48.2ms；导航检查：已做
+011. 分销记录 | merchant/channel/distribution-orders.html
+     暂未复现专属异常；共用大样式。直接加载 49ms，DOM就绪 26.6ms；导航检查：已做
+012. 分销对账 | merchant/channel/distribution-reconciliation.html
+     暂未复现专属异常；共用大样式。直接加载 41.5ms，DOM就绪 22.8ms；导航检查：已做
+013. 分销渠道 | merchant/channel/distributors.html
+     暂未复现专属异常；共用大样式。直接加载 60.3ms，DOM就绪 28ms；导航检查：已做
+014. 异常日志 | merchant/channel/ota_exceptions.html
+     暂未复现专属异常；共用大样式。直接加载 46.1ms，DOM就绪 39.9ms；导航检查：已做
+015. 订单管理 | merchant/channel/ota_orders.html
+     暂未复现专属异常；共用大样式。直接加载 44.1ms，DOM就绪 24.6ms；导航检查：已做
+016. 商品映射 | merchant/channel/ota_products.html
+     暂未复现专属异常；共用大样式。直接加载 46.6ms，DOM就绪 21.9ms；导航检查：已做
+017. 平台对账 | merchant/channel/ota_reconcile.html
+     暂未复现专属异常；共用大样式。直接加载 47.8ms，DOM就绪 22.1ms；导航检查：已做
+018. 售后处理 | merchant/channel/ota_refunds.html
+     暂未复现专属异常；共用大样式。直接加载 39.2ms，DOM就绪 21.7ms；导航检查：已做
+019. 店铺配置 | merchant/channel/ota_shops.html
+     暂未复现专属异常；共用大样式。直接加载 49.7ms，DOM就绪 27.6ms；导航检查：已做
+020. 渠道来源 | merchant/channel/sources.html
+     暂未复现专属异常；共用大样式。直接加载 39.5ms，DOM就绪 19.9ms；导航检查：已做
+021. 异常日志 | merchant/channel/sync_logs.html
+     暂未复现专属异常；共用大样式。直接加载 47.3ms，DOM就绪 26.3ms；导航检查：已做
+022. 会员详情 | merchant/customer/customers-detail.html
+     暂未复现专属异常；共用大样式。直接加载 49.6ms，DOM就绪 43.5ms；导航检查：已做
+023. 会员详情 | merchant/customer/detail.html
+     暂未复现专属异常；共用大样式。直接加载 43.1ms，DOM就绪 18.6ms；导航检查：已做
+024. 企业客户详情 | merchant/customer/enterprise-detail.html
+     暂未复现专属异常；共用大样式。直接加载 47.2ms，DOM就绪 36.8ms；导航检查：已做
+025. 企业客户 | merchant/customer/enterprise-list.html
+     暂未复现专属异常；共用大样式。直接加载 41.3ms，DOM就绪 18.8ms；导航检查：已做
+026. 散客会员 | merchant/customer/list.html
+     暂未复现专属异常；共用大样式。直接加载 50.9ms，DOM就绪 25.2ms；导航检查：已做
+027. 会员制度配置 | merchant/customer/member-rule-config.html
+     暂未复现专属异常；共用大样式。直接加载 42.8ms，DOM就绪 19ms；导航检查：已做
+028. 会员规则 | merchant/customer/member-rules.html
+     暂未复现专属异常；共用大样式。直接加载 40.7ms，DOM就绪 17.6ms；导航检查：已做
+029. 多角色工作台 | merchant/dashboard-group.html
+     暂未复现专属异常；共用大样式。直接加载 54ms，DOM就绪 22.1ms；导航检查：已做
+030. 门店店长工作台 | merchant/dashboard-store.html
+     暂未复现专属异常；共用大样式。直接加载 47.3ms，DOM就绪 41.7ms；导航检查：已做
+031. 工作台 | merchant/dashboard.html
+     暂未复现专属异常；共用大样式。直接加载 41.7ms，DOM就绪 19.1ms；导航检查：已做
+032. 核算核对 | merchant/data/accounting-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 78ms，DOM就绪 72.4ms；导航检查：已做
+033. 往来账龄 | merchant/data/balance-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 109.7ms，DOM就绪 101.4ms；导航检查：已做
+034. 任务预算 | merchant/data/budget-targets.html
+     暂未复现专属异常；共用大样式。直接加载 63.6ms，DOM就绪 59.5ms；导航检查：已做
+035. 收付明细 | merchant/data/cashflow-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 69ms，DOM就绪 58.8ms；导航检查：已做
+036. 渠道分析 | merchant/data/channel-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 62.6ms，DOM就绪 57.5ms；导航检查：已做
+037. 经营数据中心 · 方案二 | merchant/data/finance-dashboard-v2.html
+     暂未复现专属异常；共用大样式。直接加载 70.4ms，DOM就绪 37ms；导航检查：已做
+038. 财务数据看板 · 方案三 | merchant/data/finance-dashboard-v3.html
+     暂未复现专属异常；共用大样式。直接加载 58.8ms，DOM就绪 19.5ms；导航检查：已做
+039. 资金分析 | merchant/data/fund-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 88.2ms，DOM就绪 73.9ms；导航检查：已做
+040. 票款核对 | merchant/data/invoice-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 74.6ms，DOM就绪 68.6ms；导航检查：已做
+041. 月度损益 | merchant/data/monthly-profit-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 58ms，DOM就绪 54ms；导航检查：已做
+042. 订单明细 | merchant/data/order-report-details.html
+     已复现报表空闲重复更新；共用大样式。直接加载 69ms，DOM就绪 56.3ms；导航检查：已做
+043. 业绩与经营分析 | merchant/data/performance-reports-legacy.html
+     暂未复现专属异常；共用大样式。直接加载 67.2ms，DOM就绪 28.4ms；导航检查：已做
+044. 经营总览 | merchant/data/performance-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 64.7ms，DOM就绪 57ms；导航检查：已做
+045. 预款余额 | merchant/data/prepayment-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 76.9ms，DOM就绪 70ms；导航检查：已做
+046. 产品分析 | merchant/data/product-analysis.html
+     暂未复现专属异常；共用大样式。直接加载 56.5ms，DOM就绪 22.8ms；导航检查：已做
+047. 产品分析 | merchant/data/product-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 72.3ms，DOM就绪 59.3ms；导航检查：已做
+048. 数据管理 | merchant/data/report-management.html
+     已复现报表空闲重复更新；共用大样式。直接加载 62.8ms，DOM就绪 58.1ms；导航检查：已做
+049. 报表业务场景验收 | merchant/data/report-scenarios.html
+     已复现报表空闲重复更新；共用大样式。直接加载 50.4ms，DOM就绪 28.4ms；导航检查：已做
+050. 回团明细 | merchant/data/return-report-details.html
+     已复现报表空闲重复更新；共用大样式。直接加载 61.9ms，DOM就绪 56.1ms；导航检查：已做
+051. 业务毛利 | merchant/data/settlement-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 67.3ms，DOM就绪 60.4ms；导航检查：已做
+052. 门店分润 | merchant/data/store-profit-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 62.3ms，DOM就绪 57.9ms；导航检查：已做
+053. 供应商分析 | merchant/data/supplier-reports.html
+     已复现报表空闲重复更新；共用大样式。直接加载 72.7ms，DOM就绪 60.8ms；导航检查：已做
+054. 收付款配置 | merchant/finance/finance-account-settings.html
+     暂未复现专属异常；共用大样式。直接加载 43.5ms，DOM就绪 37.9ms；导航检查：已做
+055. 预收管理 | merchant/finance/finance-advance-receipts.html
+     暂未复现专属异常；共用大样式。直接加载 41.9ms，DOM就绪 17.3ms；导航检查：已做
+056. 渠道结算 | merchant/finance/finance-channel-settlement.html
+     暂未复现专属异常；共用大样式。直接加载 41.6ms，DOM就绪 18ms；导航检查：已做
+057. 资金调拨 | merchant/finance/finance-control.html
+     暂未复现专属异常；共用大样式。直接加载 41.1ms，DOM就绪 17.7ms；导航检查：已做
+058. 财务设置 | merchant/finance/finance-currency.html
+     暂未复现专属异常；共用大样式。直接加载 40.4ms，DOM就绪 18.2ms；导航检查：已做
+059. 资金池 | merchant/finance/finance-fund-pool.html
+     暂未复现专属异常；共用大样式。直接加载 39.1ms，DOM就绪 21ms；导航检查：已做
+060. 公司间对账 | merchant/finance/finance-intercompany-reconciliation.html
+     暂未复现专属异常；共用大样式。直接加载 43.7ms，DOM就绪 23.9ms；导航检查：已做
+061. 发票管理 | merchant/finance/finance-invoice.html
+     已复现导航初始化报错；共用大样式。直接加载 56.3ms，DOM就绪 25.5ms；导航检查：已做
+062. 认款复核 | merchant/finance/finance-matching.html
+     暂未复现专属异常；共用大样式。直接加载 40.1ms，DOM就绪 17.6ms；导航检查：已做
+063. NC推送 | merchant/finance/finance-nc.html
+     暂未复现专属异常；共用大样式。直接加载 52.4ms，DOM就绪 21.3ms；导航检查：已做
+064. 应付管理 | merchant/finance/finance-payable.html
+     暂未复现专属异常；共用大样式。直接加载 54.5ms，DOM就绪 24.1ms；导航检查：已做
+065. 付款复核 | merchant/finance/finance-payment-apply.html
+     已复现导航初始化报错；共用大样式。直接加载 67.6ms，DOM就绪 49.9ms；导航检查：已做
+066. 付款管理 | merchant/finance/finance-payment-management.html
+     暂未复现专属异常；共用大样式。直接加载 107ms，DOM就绪 25.3ms；导航检查：已做
+067. 付款退回 | merchant/finance/finance-payment-return.html
+     暂未复现专属异常；共用大样式。直接加载 56.4ms，DOM就绪 49ms；导航检查：已做
+068. 付款执行 | merchant/finance/finance-payment.html
+     已复现导航初始化报错；共用大样式。直接加载 55.4ms，DOM就绪 22.7ms；导航检查：已做
+069. 期间关账 | merchant/finance/finance-period-close.html
+     暂未复现专属异常；共用大样式。直接加载 41.3ms，DOM就绪 18ms；导航检查：已做
+070. 预收预存 | merchant/finance/finance-pre-receipts.html
+     暂未复现专属异常；共用大样式。直接加载 38ms，DOM就绪 17.6ms；导航检查：已做
+071. 预存账户 | merchant/finance/finance-predeposit.html
+     暂未复现专属异常；共用大样式。直接加载 44.9ms，DOM就绪 23.7ms；导航检查：已做
+072. 预付管理 | merchant/finance/finance-prepayment-offset.html
+     已复现导航初始化报错；共用大样式。直接加载 53ms，DOM就绪 46.3ms；导航检查：已做
+073. 应收管理 | merchant/finance/finance-receivable.html
+     暂未复现专属异常；共用大样式。直接加载 40.6ms，DOM就绪 18.5ms；导航检查：已做
+074. 退款执行 | merchant/finance/finance-refund-execute.html
+     暂未复现专属异常；共用大样式。直接加载 52.1ms，DOM就绪 19.6ms；导航检查：已做
+075. 退款转款 | merchant/finance/finance-refund-transfer.html
+     暂未复现专属异常；共用大样式。直接加载 42.8ms，DOM就绪 35.9ms；导航检查：已做
+076. 回单核销 | merchant/finance/finance-remittance.html
+     暂未复现专属异常；共用大样式。直接加载 43.5ms，DOM就绪 17.7ms；导航检查：已做
+077. 财务报表 | merchant/finance/finance-reports.html
+     暂未复现专属异常；共用大样式。直接加载 64.5ms，DOM就绪 60.4ms；导航检查：已做；重定向至 /merchant/data/cashflow-reports.html
+078. 结算调整 | merchant/finance/finance-settlement-adjustment.html
+     暂未复现专属异常；共用大样式。直接加载 63.2ms，DOM就绪 27.9ms；导航检查：已做
+079. 业务结算详情 | merchant/finance/finance-settlement-detail.html
+     暂未复现专属异常；共用大样式。直接加载 49.4ms，DOM就绪 34.6ms；导航检查：已做
+080. 业务结算 | merchant/finance/finance-settlement.html
+     暂未复现专属异常；共用大样式。直接加载 48.6ms，DOM就绪 20.6ms；导航检查：已做
+081. 门店对账 | merchant/finance/finance-store-reconciliation.html
+     暂未复现专属异常；共用大样式。直接加载 48.7ms，DOM就绪 23.9ms；导航检查：已做
+082. 账单核验 | merchant/finance/finance-supplier-bills.html
+     暂未复现专属异常；共用大样式。直接加载 50.4ms，DOM就绪 43.5ms；导航检查：已做
+083. 转款核销 | merchant/finance/finance-transfer-records.html
+     暂未复现专属异常；共用大样式。直接加载 48.4ms，DOM就绪 21.5ms；导航检查：已做
+084. 到账流水 | merchant/finance/receipts.html
+     已复现导航初始化报错；共用大样式。直接加载 56.3ms，DOM就绪 24.6ms；导航检查：已做
+085. 商户端登录 | merchant/login.html
+     暂未复现专属异常；共用大样式。直接加载 41.4ms，DOM就绪 39.4ms；导航检查：不适用
+086. 营销活动 | merchant/marketing/campaign-edit.html
+     暂未复现专属异常；共用大样式。直接加载 50.4ms，DOM就绪 20.8ms；导航检查：已做
+087. 活动管理 | merchant/marketing/campaigns.html
+     暂未复现专属异常；共用大样式。直接加载 47ms，DOM就绪 24.5ms；导航检查：已做
+088. 优惠券配置 | merchant/marketing/coupon-edit.html
+     暂未复现专属异常；共用大样式。直接加载 42.3ms，DOM就绪 18.9ms；导航检查：已做
+089. 优惠券 | merchant/marketing/coupons.html
+     暂未复现专属异常；共用大样式。直接加载 49.8ms，DOM就绪 18.6ms；导航检查：已做
+090. 发券中心 | merchant/marketing/issue-center.html
+     暂未复现专属异常；共用大样式。直接加载 43.2ms，DOM就绪 18.6ms；导航检查：已做
+091. 发券任务 | merchant/marketing/issue-create.html
+     暂未复现专属异常；共用大样式。直接加载 39.9ms，DOM就绪 18.8ms；导航检查：已做
+092. 发券结果 | merchant/marketing/issue-detail.html
+     暂未复现专属异常；共用大样式。直接加载 46.1ms，DOM就绪 41.2ms；导航检查：已做
+093. 营销分析 | merchant/marketing/marketing-analysis.html
+     暂未复现专属异常；共用大样式。直接加载 63.9ms，DOM就绪 48.2ms；导航检查：已做
+094. 素材中心 | merchant/marketing/miniapp-assets.html
+     暂未复现专属异常；共用大样式。直接加载 47.9ms，DOM就绪 21ms；导航检查：已做
+095. 页面配置 | merchant/marketing/miniapp-editor.html
+     暂未复现专属异常；共用大样式。直接加载 62.1ms，DOM就绪 21.2ms；导航检查：已做
+096. 网店装修 | merchant/marketing/miniapp-pages.html
+     暂未复现专属异常；共用大样式。直接加载 54.9ms，DOM就绪 21.2ms；导航检查：已做
+097. 专题活动 | merchant/marketing/miniapp-templates.html
+     暂未复现专属异常；共用大样式。直接加载 40.8ms，DOM就绪 20.7ms；导航检查：已做
+098. 渠道授权 | merchant/product/product-channel-auth.html
+     暂未复现专属异常；共用大样式。直接加载 46.4ms，DOM就绪 39.3ms；导航检查：已做
+099. 竞品价格 | merchant/product/product-competitor-price.html
+     暂未复现专属异常；共用大样式。直接加载 46.2ms，DOM就绪 22.9ms；导航检查：已做
+100. 自营产品编辑 | merchant/product/product-cruise-edit.html
+     暂未复现专属异常；共用大样式。直接加载 50.8ms，DOM就绪 45ms；导航检查：已做
+101. 邮轮产品航线 | merchant/product/product-cruise-routes.html
+     暂未复现专属异常；共用大样式。直接加载 51.2ms，DOM就绪 37.5ms；导航检查：已做
+102. 出发地配置 | merchant/product/product-departure-config.html
+     暂未复现专属异常；共用大样式。直接加载 57.2ms，DOM就绪 27.2ms；导航检查：已做
+103. 目的地分类 | merchant/product/product-destination-config.html
+     暂未复现专属异常；共用大样式。直接加载 45.7ms，DOM就绪 37.8ms；导航检查：已做
+104. 自由行出行日期 | merchant/product/product-free-travel-list.html
+     暂未复现专属异常；共用大样式。直接加载 56.8ms，DOM就绪 27.9ms；导航检查：已做
+105. 产品市场 | merchant/product/product-market.html
+     已复现导航初始化报错；已观测外链图片等待；共用大样式。直接加载 1509.3ms，DOM就绪 26.8ms；导航检查：已做
+106. 代理产品详情 | merchant/product/product-outsource-detail.html
+     已复现导航初始化报错；已观测外链图片等待；共用大样式。直接加载 882.1ms，DOM就绪 20.2ms；导航检查：已做
+107. 代理产品工作台 | merchant/product/product-outsource-list.html
+     已复现导航初始化报错；共用大样式。直接加载 49.3ms，DOM就绪 22.8ms；导航检查：已做
+108. 代理产品包装 | merchant/product/product-outsource-package.html
+     已观测外链图片等待；共用大样式。直接加载 1013.8ms，DOM就绪 47.3ms；导航检查：已做
+109. 可代理团期 | merchant/product/product-outsource-quota.html
+     暂未复现专属异常；共用大样式。直接加载 50ms，DOM就绪 25.9ms；导航检查：已做
+110. 代理安排定价 | merchant/product/product-outsource-schedules.html
+     暂未复现专属异常；共用大样式。直接加载 51.8ms，DOM就绪 30.2ms；导航检查：已做
+111. 定价策略 | merchant/product/product-pricing.html
+     暂未复现专属异常；共用大样式。直接加载 46.9ms，DOM就绪 24.7ms；导航检查：已做
+112. 产品团期 | merchant/product/product-schedules.html
+     已复现内嵌响应超过5秒抽屉关闭；已观测外链图片等待；共用大样式。直接加载 1482.9ms，DOM就绪 38.6ms；导航检查：已做
+113. 自营产品编辑 | merchant/product/product-self-edit.html
+     已观测外链图片等待；共用大样式。直接加载 1154.4ms，DOM就绪 57.3ms；导航检查：已做
+114. 研学产品编辑 | merchant/product/product-study-edit.html
+     暂未复现专属异常；共用大样式。直接加载 50.3ms，DOM就绪 28.6ms；导航检查：已做
+115. 自营产品编辑 | merchant/product/product-train-edit.html
+     暂未复现专属异常；共用大样式。直接加载 46.1ms，DOM就绪 39.9ms；导航检查：已做
+116. 专列产品线路 | merchant/product/product-train-routes.html
+     暂未复现专属异常；共用大样式。直接加载 45.7ms，DOM就绪 27.6ms；导航检查：已做
+117. 自营产品详情 | merchant/product/products-detail.html
+     已观测外链图片等待；共用大样式。直接加载 1055.3ms，DOM就绪 37.7ms；导航检查：已做
+118. 产品管理 | merchant/product/products.html
+     暂未复现专属异常；共用大样式。直接加载 53.6ms，DOM就绪 22ms；导航检查：已做
+119. 退改规则 | merchant/resource/refund-rules.html
+     暂未复现专属异常；共用大样式。直接加载 42ms，DOM就绪 19.9ms；导航检查：已做
+120. 航空公司 | merchant/resource/resource-airlines.html
+     暂未复现专属异常；共用大样式。直接加载 37.8ms，DOM就绪 21.8ms；导航检查：已做
+121. 船公司 | merchant/resource/resource-cruise-companies.html
+     暂未复现专属异常；共用大样式。直接加载 39.1ms，DOM就绪 19.2ms；导航检查：已做
+122. 邮轮模板 | merchant/resource/resource-cruise-routes.html
+     暂未复现专属异常；共用大样式。直接加载 39.3ms，DOM就绪 18.5ms；导航检查：已做
+123. 船只档案 | merchant/resource/resource-cruise-ships.html
+     暂未复现专属异常；共用大样式。直接加载 37.4ms，DOM就绪 17.4ms；导航检查：已做
+124. 航司协议 | merchant/resource/resource-flight-block.html
+     暂未复现专属异常；共用大样式。直接加载 40ms，DOM就绪 18.8ms；导航检查：已做
+125. 航线库 | merchant/resource/resource-flight-routes.html
+     暂未复现专属异常；共用大样式。直接加载 39ms，DOM就绪 21.2ms；导航检查：已做
+126. 领队详情 | merchant/resource/resource-leader-schedule.html
+     已复现导航初始化报错；共用大样式。直接加载 51.6ms，DOM就绪 25.4ms；导航检查：已做
+127. 景点库 | merchant/resource/resource-masterdata.html
+     暂未复现专属异常；共用大样式。直接加载 38.7ms，DOM就绪 18.3ms；导航检查：已做
+128. 领队资源 | merchant/resource/resource-tour-leaders.html
+     已复现导航初始化报错；共用大样式。直接加载 44.8ms，DOM就绪 23.2ms；导航检查：已做
+129. 运营商 | merchant/resource/resource-train-operators.html
+     暂未复现专属异常；共用大样式。直接加载 37.4ms，DOM就绪 21.2ms；导航检查：已做
+130. 专列模板 | merchant/resource/resource-train-routes.html
+     暂未复现专属异常；共用大样式。直接加载 38.3ms，DOM就绪 17.9ms；导航检查：已做
+131. 车次库 | merchant/resource/resource-train-trips.html
+     暂未复现专属异常；共用大样式。直接加载 37.6ms，DOM就绪 17.9ms；导航检查：已做
+132. 供应商详情 | merchant/resource/supplier-detail.html
+     暂未复现专属异常；共用大样式。直接加载 38ms，DOM就绪 24.9ms；导航检查：已做
+133. 合作申请 | merchant/resource/supplier-requests.html
+     暂未复现专属异常；共用大样式。直接加载 39.8ms，DOM就绪 19.8ms；导航检查：已做
+134. 供应商 | merchant/resource/suppliers.html
+     暂未复现专属异常；共用大样式。直接加载 49ms，DOM就绪 24.7ms；导航检查：已做
+135. 签证国家 | merchant/resource/visa-library.html
+     暂未复现专属异常；共用大样式。直接加载 53ms，DOM就绪 19.7ms；导航检查：已做
+136. 新建订单 | merchant/sales/booking.html
+     体积较大候选，未以此认定卡顿；共用大样式。直接加载 69.1ms，DOM就绪 33.5ms；导航检查：已做
+137. 电销顾问 | merchant/sales/call-center/consultants.html
+     暂未复现专属异常；共用大样式。直接加载 41.7ms，DOM就绪 19.6ms；导航检查：已做
+138. 电销意向 | merchant/sales/call-center/intents.html
+     暂未复现专属异常；共用大样式。直接加载 42ms，DOM就绪 18.4ms；导航检查：已做
+139. 电销业绩 | merchant/sales/call-center/performance.html
+     暂未复现专属异常；共用大样式。直接加载 49.3ms，DOM就绪 22.2ms；导航检查：已做
+140. 顾问详情 | merchant/sales/consultant/detail.html
+     暂未复现专属异常；共用大样式。直接加载 25.7ms，DOM就绪 18.1ms；导航检查：已做
+141. 门店成员 | merchant/sales/consultant/index.html
+     暂未复现专属异常；共用大样式。直接加载 41.2ms，DOM就绪 24.1ms；导航检查：已做；重定向至 /merchant/sales/store/members.html
+142. 合同准备 | merchant/sales/contract-prepare.html
+     暂未复现专属异常；共用大样式。直接加载 28.8ms，DOM就绪 23.5ms；导航检查：已做
+143. 合同模板查看 | merchant/sales/contract-template-edit.html
+     暂未复现专属异常；共用大样式。直接加载 25.9ms，DOM就绪 20.7ms；导航检查：已做
+144. 合同模板 | merchant/sales/contract-templates.html
+     暂未复现专属异常；共用大样式。直接加载 38.1ms，DOM就绪 20.4ms；导航检查：已做
+145. 合同管理 | merchant/sales/contracts.html
+     暂未复现专属异常；共用大样式。直接加载 54.9ms，DOM就绪 27.4ms；导航检查：已做
+146. 售后处理 | merchant/sales/orders-after-sales.html
+     已复现导航初始化报错；共用大样式。直接加载 45.7ms，DOM就绪 25ms；导航检查：已做
+147. 退团退订 | merchant/sales/orders-cancel.html
+     暂未复现专属异常；共用大样式。直接加载 44.1ms，DOM就绪 26.1ms；导航检查：已做；重定向至 /merchant/sales/orders-after-sales.html
+148. 订单详情 | merchant/sales/orders-detail.html
+     已复现导航初始化报错；体积较大候选，未以此认定卡顿；共用大样式。直接加载 68.7ms，DOM就绪 58ms；导航检查：已做
+149. 意向订单 | merchant/sales/orders-intent.html
+     暂未复现专属异常；共用大样式。直接加载 58.6ms，DOM就绪 21.6ms；导航检查：已做
+150. 转单申请 | merchant/sales/orders-payment-transfer.html
+     暂未复现专属异常；共用大样式。直接加载 39.4ms，DOM就绪 18ms；导航检查：已做；重定向至 /merchant/sales/orders-after-sales.html
+151. 退款申请 | merchant/sales/orders-refund.html
+     暂未复现专属异常；共用大样式。直接加载 42ms，DOM就绪 23.7ms；导航检查：已做；重定向至 /merchant/sales/orders-after-sales.html
+152. 转团/改期 | merchant/sales/orders-transfer.html
+     暂未复现专属异常；共用大样式。直接加载 40.6ms，DOM就绪 22.8ms；导航检查：已做；重定向至 /merchant/sales/orders-after-sales.html
+153. 订单管理 | merchant/sales/orders.html
+     已复现应收抽屉打不开；体积较大候选，未以此认定卡顿；共用大样式。直接加载 63.8ms，DOM就绪 55.9ms；导航检查：已做
+154. 收款认领 | merchant/sales/payment-claim.html
+     暂未复现专属异常；共用大样式。直接加载 61ms，DOM就绪 26.2ms；导航检查：已做
+155. 产品预订 | merchant/sales/sales-product-quote.html
+     已观测外链图片等待；共用大样式。直接加载 1517.6ms，DOM就绪 19.3ms；导航检查：已做
+156. 门店详情 | merchant/sales/store/detail.html
+     暂未复现专属异常；共用大样式。直接加载 48.6ms，DOM就绪 24.9ms；导航检查：已做
+157. 门店管理 | merchant/sales/store/index.html
+     暂未复现专属异常；共用大样式。直接加载 57.3ms，DOM就绪 25.5ms；导航检查：已做
+158. 门店成员 | merchant/sales/store/members.html
+     已复现导航初始化报错；共用大样式。直接加载 39.8ms，DOM就绪 19ms；导航检查：已做
+159. 预存余额 | merchant/sales/store/predeposit.html
+     暂未复现专属异常；共用大样式。直接加载 49.6ms，DOM就绪 27.9ms；导航检查：已做
+160. 门店对账 | merchant/sales/store/reconciliation.html
+     暂未复现专属异常；共用大样式。直接加载 48ms，DOM就绪 21.6ms；导航检查：已做
+161. 选择公司主体 | merchant/select-workspace.html
+     暂未复现专属异常；共用大样式。直接加载 27.2ms，DOM就绪 24.1ms；导航检查：不适用
+162. 基础参数 | merchant/system/business-params.html
+     暂未复现专属异常；共用大样式。直接加载 36.8ms，DOM就绪 21.1ms；导航检查：已做
+163. 员工任职 | merchant/system/data-scope.html
+     暂未复现专属异常；共用大样式。直接加载 43.8ms，DOM就绪 37ms；导航检查：已做；重定向至 /merchant/system/staff-management.html
+164. 审批中心入口 | merchant/system/hr-requests.html
+     暂未复现专属异常；共用大样式。直接加载 24.6ms，DOM就绪 21.3ms；导航检查：已做
+165. 组织架构 | merchant/system/my-org.html
+     已复现导航初始化报错；共用大样式。直接加载 50.1ms，DOM就绪 36.8ms；导航检查：已做
+166. 通知模板 | merchant/system/notice-templates.html
+     暂未复现专属异常；共用大样式。直接加载 36.4ms，DOM就绪 18.3ms；导航检查：已做
+167. 员工任职 | merchant/system/role-assignment.html
+     暂未复现专属异常；共用大样式。直接加载 53.2ms，DOM就绪 46ms；导航检查：已做；重定向至 /merchant/system/staff-management.html
+168. 员工任职 | merchant/system/staff-management.html
+     已复现导航初始化报错；共用大样式。直接加载 51.9ms，DOM就绪 23ms；导航检查：已做
+169. 团期结算 | merchant/tour/fulfillment-cost.html
+     已复现导航初始化报错；体积较大候选，未以此认定卡顿；共用大样式。直接加载 72.8ms，DOM就绪 32.9ms；导航检查：已做
+170. 出团通知 | merchant/tour/fulfillment-notice.html
+     暂未复现专属异常；共用大样式。直接加载 49.4ms，DOM就绪 41.5ms；导航检查：已做
+171. 付款申请 | merchant/tour/fulfillment-payment-apply.html
+     暂未复现专属异常；共用大样式。直接加载 68.1ms，DOM就绪 37.2ms；导航检查：已做；重定向至 /merchant/tour/fulfillment-cost.html
+172. 名单管理 | merchant/tour/fulfillment-roster.html
+     暂未复现专属异常；共用大样式。直接加载 50.5ms，DOM就绪 42.8ms；导航检查：已做
+173. 团期成本 | merchant/tour/fulfillment-supplier-fees.html
+     暂未复现专属异常；共用大样式。直接加载 79.3ms，DOM就绪 56.2ms；导航检查：已做；重定向至 /merchant/tour/fulfillment-cost.html
+174. 单团项目详情 | merchant/tour/product-custom-detail.html
+     已观测外链图片等待；共用大样式。直接加载 649.3ms，DOM就绪 48.5ms；导航检查：已做
+175. 发起单团询价 | merchant/tour/product-custom-inquiry-create.html
+     暂未复现专属异常；共用大样式。直接加载 41.9ms，DOM就绪 19ms；导航检查：已做
+176. 单团项目 | merchant/tour/product-custom-list.html
+     暂未复现专属异常；共用大样式。直接加载 52.3ms，DOM就绪 20.3ms；导航检查：已做
+177. 单团项目详情 | merchant/tour/projects-detail.html
+     暂未复现专属异常；共用大样式。直接加载 50.4ms，DOM就绪 38.2ms；导航检查：已做
+178. 单团项目 | merchant/tour/projects.html
+     暂未复现专属异常；共用大样式。直接加载 30.2ms，DOM就绪 25.9ms；导航检查：已做
+179. 机票切位 | merchant/tour/resource-procurement-inventory.html
+     体积较大候选，未以此认定卡顿；共用大样式。直接加载 53.6ms，DOM就绪 47.5ms；导航检查：已做
+180. 新建团期订单 | merchant/tour/schedule-order-booking.html
+     暂未复现专属异常；共用大样式。直接加载 59.6ms，DOM就绪 27.2ms；导航检查：已做
+181. 团期订单售后处理 | merchant/tour/schedule-orders-after-sales.html
+     暂未复现专属异常；共用大样式。直接加载 54.8ms，DOM就绪 21ms；导航检查：已做
+182. 退团退订 | merchant/tour/schedule-orders-cancel.html
+     暂未复现专属异常；共用大样式。直接加载 40.2ms，DOM就绪 21.9ms；导航检查：已做；重定向至 /merchant/tour/schedule-orders-after-sales.html
+183. 团期订单详情 | merchant/tour/schedule-orders-detail.html
+     已复现导航初始化报错；体积较大候选，未以此认定卡顿；共用大样式。直接加载 63.7ms，DOM就绪 27.1ms；导航检查：已做
+184. 转单申请 | merchant/tour/schedule-orders-payment-transfer.html
+     暂未复现专属异常；共用大样式。直接加载 40.5ms，DOM就绪 23.5ms；导航检查：已做；重定向至 /merchant/tour/schedule-orders-after-sales.html
+185. 退款申请 | merchant/tour/schedule-orders-refund.html
+     暂未复现专属异常；共用大样式。直接加载 41.8ms，DOM就绪 23.1ms；导航检查：已做；重定向至 /merchant/tour/schedule-orders-after-sales.html
+186. 转团/改期 | merchant/tour/schedule-orders-transfer.html
+     暂未复现专属异常；共用大样式。直接加载 40.7ms，DOM就绪 23.2ms；导航检查：已做；重定向至 /merchant/tour/schedule-orders-after-sales.html
+187. 团期订单 | merchant/tour/schedule-orders.html
+     已复现导航初始化报错；体积较大候选，未以此认定卡顿；共用大样式。直接加载 72.1ms，DOM就绪 63.8ms；导航检查：已做
+188. 团期日历 | merchant/tour/schedules-calendar.html
+     暂未复现专属异常；共用大样式。直接加载 45.2ms，DOM就绪 40.6ms；导航检查：已做
+189. 团期详情 | merchant/tour/schedules-detail.html
+     体积较大候选，未以此认定卡顿；共用大样式。直接加载 101ms，DOM就绪 71.3ms；导航检查：已做
+190. 团期管控 | merchant/tour/schedules.html
+     体积较大候选，未以此认定卡顿；共用大样式。直接加载 72.7ms，DOM就绪 51.9ms；导航检查：已做
+191. 供应商对账 | merchant/tour/supplier-reconciliation.html
+     暂未复现专属异常；共用大样式。直接加载 50.8ms，DOM就绪 44.1ms；导航检查：已做
+192. 新建团期 | merchant/tour/team-create.html
+     暂未复现专属异常；共用大样式。直接加载 44.6ms，DOM就绪 22.1ms；导航检查：已做
+193. 签证办理 | merchant/tour/visa-processing.html
+     暂未复现专属异常；共用大样式。直接加载 52ms，DOM就绪 25.2ms；导航检查：已做
+194. 选择公司主体 | merchant/workspace.html
+     暂未复现专属异常；共用大样式。直接加载 19.7ms，DOM就绪 16.7ms；导航检查：不适用
+
+五、本轮断点与唯一下一步
+已完成：全量静态检查、194 页直接访问、190 个共享导航入口检查、18 页空闲测量、订单应收抽屉直接/导航对照、8 次报表往返、团期抽屉慢响应复现。
+未做：没有优化或修改产品源代码；没有穷举全部交互状态；没有线上、真实数据量和低性能设备全面基准。
+唯一下一步：先处理共享导航依赖收集和执行顺序，消除 20 个已复现页面的初始化/抽屉故障；回归直接打开、菜单进入、重复进入和抽屉正常/异常场景，确认功能、样式、交互完全一致。随后处理报表空闲循环与重复监听。
+不得删除字段、按钮、弹层、业务逻辑或历史入口，不通过改交互规避性能问题。
+
+六、证据文件
+static.json：每页资源、体积、脚本与静态引用检查。
+syntax.json：内嵌与共享 JS 语法检查。
+direct.json：194 页直接访问的运行错误、导航时间、资源时间与主线程指标。
+pjax.json：190 个共享导航入口的错误堆栈和运行结果。其中 navigation 字段属于起始工作台，不能用于目标页耗时结论。
+idle.json / idle-all-reports.json：空闲对照和18页逐页测量。
+interactions.json：应收抽屉对照、重复导航指标、内嵌页面慢响应复现。
+page-inventory.json：194 页结论汇总。
+*.cjs：审计脚本，依赖本机 /private/tmp/commerce-mobile-qa/node_modules/playwright；从项目根目录运行，临时输出路径在脚本内。
