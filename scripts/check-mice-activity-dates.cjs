@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const M=require('../shared/mice-activity-dates.js');
+const base={kind:'rule',start:'2026-11-01',end:'2026-11-30',days:1,cycle:'weekly',weekdays:[0],monthDay:1,excluded:[],manual:[]};
+let checks=0;const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
+test('每周日包含边界日期',()=>assert.deepEqual(M.calculate(base).dates,['2026-11-01','2026-11-08','2026-11-15','2026-11-22','2026-11-29']));
+test('隔周以开始日起每14天为周期',()=>assert.deepEqual(M.calculate({...base,cycle:'biweekly'}).dates,['2026-11-01','2026-11-15','2026-11-29']));
+test('31日跳过没有该日的月份',()=>assert.deepEqual(M.calculate({...base,start:'2026-01-01',end:'2026-04-30',cycle:'monthly',monthDay:31}).dates,['2026-01-31','2026-03-31']));
+test('闰年二月和UTC跨年日期正确',()=>{assert.equal(M.add('2028-02-28',1),'2028-02-29');assert.equal(M.add('2026-12-31',1),'2027-01-01');assert.equal(M.valid('2026-02-29'),false);});
+test('排除只改变选中日期不改变规则候选',()=>{const r=M.calculate({...base,excluded:['2026-11-08']});assert.equal(r.base.length,5);assert.equal(r.dates.length,4);assert(!r.dates.includes('2026-11-08'));});
+test('手动选择去重排序且不受周期规则影响',()=>assert.deepEqual(M.calculate({...base,kind:'manual',manual:['2026-11-05','2026-11-03','2026-11-05'],excluded:['2026-11-03']}).dates,['2026-11-03','2026-11-05']));
+test('跨日结束超项目期间拦截',()=>assert.match(M.calculate({...base,kind:'manual',days:2,manual:['2026-11-30']},{end:'2026-11-30'}).error,/超出/));
+test('未选星期、倒置日期和非法天数拦截',()=>{assert(M.calculate({...base,weekdays:[]}).error);assert(M.calculate({...base,end:'2026-10-01'}).error);assert(M.calculate({...base,days:0}).error);});
+test('200场上限和超过三年保护',()=>{assert.match(M.calculate({...base,start:'2026-01-01',end:'2026-12-31',cycle:'daily'}).error,/200/);assert.match(M.calculate({...base,start:'2026-01-01',end:'2030-01-01'}).error,/3年/);});
+test('手动清空及无效范围不能生成',()=>{assert(M.calculate({...base,kind:'manual',manual:[]}).error);assert(M.calculate({...base,kind:'manual',start:''}).error);});
+console.log('PASS '+checks+' date scenarios');

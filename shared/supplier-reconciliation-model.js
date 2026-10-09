@@ -33,7 +33,9 @@
       source('C14','福建凯撒',supplier,'AGR-GL-FJ-013','CNY','2026-09-19','KS20260912014','JP20260912014','日本东京富士山6日 · 地接费',5,2500,0,'采购确认5人，实际服务5人')
     ];
   }
-  function createSession(role, agreements) {
+  function createSession(role, agreements, context) {
+    const supplier=context?.supplier||'北京国旅地接部';
+    const companies=context?.companies||['北京凯撒','福建凯撒','上海凯撒'];
     if (!['merchant','supplier'].includes(role)) throw Error('无效的办理角色');
     const sources = seedSources();
     sources.forEach(l => { l.payment = {offset:0,paid:0,reference:'无已冲抵或尾款付款记录'}; });
@@ -64,6 +66,8 @@
       l.payment={offset:0,paid:0,reference:'无已冲抵或尾款付款记录'};sources.push(l);
       purchases.unshift({id:'CG-'+id,sourceId:id,company:l.company,supplier:l.supplier,order:l.order,tour:l.tour,name:l.name,currency:l.currency,date:l.date,agreement:l.agreement,qty:2,price:5000,increase:0,decrease:0,amount:10000,state,version:1,confirmation:'',actual:null,holdUntil:state==='暂时保留'?'2026-09-27':'',cancelRequest:state.includes('取消')?'采购公司计调申请取消本项地接服务，取消申请QX-'+id:'',proposal:state==='补差待我方确认'?{qty:2,price:5000,increase:1200,decrease:0,amount:11200,basis:'加住一晚，补差确认单ZB-C18',confirmation:'GL-C18'}:state==='取消损失待我方确认'?{qty:0,price:0,increase:0,decrease:0,amount:600,loss:600,basis:'酒店不可退费用600元，酒店确认QX-C19'}:null,history:[]});
     });
+    // 原型项目来源复用双方对账规则；普通订单仍使用原样例。
+    if(context){sources.splice(0,sources.length,...clone(context.sources||[]));statements.splice(0,statements.length,...clone(context.statements||[]));purchases.splice(0,purchases.length);serial=context.serial||1000;}
     const purchaseVisible=p=>role==='merchant'?companies.includes(p.company):p.supplier===supplier;
     function purchase(id){const p=purchases.find(x=>x.id===id);if(!p||!purchaseVisible(p))throw Error('无权办理该采购单');return p;}
     function purchaseGuard(p,version,expected,states){if(role!==expected)throw Error('当前岗位不能办理');if(p.version!==version)throw Error('采购确认版本已更新，请重新打开');if(!states.includes(p.state))throw Error('当前状态不能办理此操作');}
@@ -209,7 +213,7 @@
     function validateDraft(data, id) {
       if(!companies.includes(data.company)) throw Error('请选择有权限的采购公司');
       if(!agreements.valid(data.agreement,data.supplier,data.company)) throw Error('请选择本公司与该供应商的有效合作协议');
-      if(!['CNY','EUR','JPY'].includes(data.currency)) throw Error('请选择结算币种');
+      if(!['CNY','EUR','JPY','USD'].includes(data.currency)) throw Error('请选择结算币种');
       if(!agreements.validDate(data.start)||!agreements.validDate(data.end)||data.start>data.end) throw Error('请填写有效的对账期间');
       if(!data.ids.length) throw Error('请至少选择一条订单费用明细');
       if(new Set(data.ids).size!==data.ids.length) throw Error('同一费用明细不能重复选择');

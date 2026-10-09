@@ -1,0 +1,4 @@
+const {spawn}=require('child_process'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..'),stages=['M02','M03','M04','M05','M06','M07','M08','M09','M10','M11'];let results=[];
+async function run(stage){return new Promise(resolve=>{const p=spawn(process.execPath,['scripts/check-mice-prototype-browser.cjs',stage],{cwd:root});let stdout='',stderr='';p.stdout.on('data',b=>stdout+=b);p.stderr.on('data',b=>stderr+=b);p.on('close',code=>{results.push({stage,code,stdout,stderr});console.log(stage+': '+(code===0?'PASS':'FAIL '+stderr.slice(0,200)));resolve();});});}
+(async()=>{for(let i=0;i<stages.length;i+=2)await Promise.all(stages.slice(i,i+2).map(run));fs.writeFileSync(path.join(root,'docs/evidence/mice-prototype/regression.json'),JSON.stringify(results,null,2));if(results.some(r=>r.code))process.exitCode=1;})();

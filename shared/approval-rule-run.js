@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const M=typeof module==='object'&&module.exports?require('./approval-config-model.js'):root.ApprovalConfigModel;
-  const terminal=['approved','rejected','returned','withdrawn'];
+  const terminal=['not_required','supplier_pending','approved','rejected','returned','withdrawn'];
   function validSignature(value){
     if(!Array.isArray(value)||value.length>100)return false;
     let length=0,count=0;
@@ -19,7 +19,7 @@
     const result=M.trial(state,template,context);if(result.errors.length)return {errors:result.errors};
     const run={template:M.clone(template),context:{...M.clone(context),scene:template.scene},version,round:1,status:'running',index:0,history:[],steps:[],issue:[]};
     run.steps=result.steps.filter(s=>s.type==='approval').map(s=>({node:M.clone(s.executionNode||M.getNode(template,s.nodeId)),members:null,approved:[],available:[]}));
-    refresh(state,run);return {errors:[],run};
+    if(result.outcome){run.status=result.outcome;run.outcome=result.steps[0]?.detail;}else refresh(state,run);return {errors:[],run};
   }
   const current=run=>run.steps[run.index];
   const pending=run=>{const s=current(run);if(!s||run.status!=='running')return [];const ids=(s.members||[]).filter(id=>!s.approved.some(a=>a.person===id));return s.node.mode==='sequential'?ids.slice(0,1):ids;};
@@ -33,7 +33,7 @@
       if(complete(s)){run.index++;continue;}
       const unresolved=s.members?s.members.filter(id=>!s.approved.some(a=>a.person===id)):null;
       const node=unresolved?{...s.node,source:'member',members:unresolved}:s.node;
-      const result=M.approvers(state,node,run.context,true,rules);s.available=result.ids;
+      const result=M.approvers(state,node,run.context,true,rules);s.available=result.ids;if(result.basis)s.basis=result.basis;
       if(result.errors.length){run.status='paused';run.issue=result.errors;return;}
       s.members=[...new Set([...s.approved.map(a=>a.person),...result.ids])];
       for(const notice of result.notices||[])if(!s.notices?.includes(notice)){s.notices=[...(s.notices||[]),notice];log(run,{nodeId:s.node.id,title:s.node.title,decision:'handover',opinion:notice});}
@@ -64,7 +64,7 @@
     if((decision!=='approve'||r.approveOpinionRequired)&&!opinion.trim())errors.push('请填写审批意见');
     if(decision==='approve'&&r.signatureRequired&&!validSignature(signature))errors.push('请完成手写签名');
     if(errors.length)return errors;
-    const record=log(run,{nodeId:s.node.id,title:s.node.title,person,decision,opinion:opinion.trim(),signature:decision==='approve'&&r.signatureRequired?M.clone(signature):[]});
+    const record=log(run,{nodeId:s.node.id,title:s.node.title,person,decision,basis:s.basis||'',opinion:opinion.trim(),signature:decision==='approve'&&r.signatureRequired?M.clone(signature):[]});
     if(decision==='approve'){s.approved.push(record);refresh(state,run);}else run.status=decision==='return'?'returned':'rejected';
     return [];
   }
@@ -91,7 +91,7 @@
   function resubmit(state,run,context){
     if(run.status!=='returned')return ['只有退回的申请可以重新提交'];
     const next=start(state,run.template,context,run.version);if(next.errors.length)return next.errors;
-    run.round++;run.context=next.run.context;run.steps=next.run.steps;run.index=0;run.status='running';run.issue=[];
+    run.round++;run.context=next.run.context;run.steps=next.run.steps;run.index=0;run.status=next.run.status;run.outcome=next.run.outcome;run.issue=[];
     log(run,{person:run.context.applicant,decision:'resubmit',opinion:context.reason?.trim()||'修改后重新提交，重新核对审批结果'});refresh(state,run);return [];
   }
   const api={start,current,pending,refresh,decide,handover,withdraw,resubmit,validSignature};

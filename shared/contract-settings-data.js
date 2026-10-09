@@ -134,7 +134,35 @@
   }
   function eligibleRuleTemplate(r,t,state){return t.status==='启用'&&t.business===r.business&&t.range===r.range&&t.customer===r.customer&&ruleCompanies(r).length>0&&ruleCompanies(r).every(id=>t.companies.includes(id)&&state.companies.some(c=>c.id===id))&&(t.category!=='省级示范'||!!condition(r,'province')&&r.province===t.province)&&(!['day','zhejiang'].includes(t.profile)||String(r.days)==='1')&&(!r.serviceMode||r.serviceMode===t.serviceMode);}
   function policy(state,company,business){return state.signingPolicies?.find(p=>p.company===company&&p.business===business)||state.signingPolicies?.find(p=>p.company===company&&!p.business);}
-  function policyIssues(p){const out=[];if(!p||!p.confirmed||!p.evidence)out.push('签约政策待确认');if(!p||p.payment==='待确认'||p.payment==='按付款节点'&&!['订单约定首款','订单约定全款'].includes(p.paymentNode))out.push('签约付款条件待确认');if(!p?.review||p.review==='需要审核'&&!p.flow)out.push('合同审批流程未配置');return out;}
+  function policyIssues(p){const out=[];if(!p||!p.confirmed||!p.evidence?.trim())out.push('签约政策待确认');
+    if(!p||!['先签后收','不限制收款','按付款节点','按收款比例'].includes(p.payment)||p.payment==='按付款节点'&&!['订单约定首款','订单约定全款'].includes(p.paymentNode))out.push('签约付款条件待确认');
+    if(p?.payment==='按收款比例'&&(!Number.isFinite(Number(p.ratio))||Number(p.ratio)<=0||Number(p.ratio)>100||!['订单应收金额','合同金额'].includes(p.denominator)))out.push('请确认收款比例（大于0且不超过100%）及计算依据');
+    if(p?.stage&&!['生成正式合同','发起签署'].includes(p.stage))out.push('请确认检查环节');
+    if(p?.failure&&!['阻止办理','申请收款例外审批'].includes(p.failure))out.push('请确认未达到条件时的处理');
+    if(p?.failure==='申请收款例外审批'&&p.exceptionFlow!=='合同收款例外')out.push('请关联合同收款例外审批');
+    if((p?.start&&!dateOK(p.start))||(p?.end&&!dateOK(p.end))||(p?.start&&p?.end&&p.start>p.end))out.push('政策有效期不正确');
+    if(!p?.review||p.review==='需要审核'&&!p.flow)out.push('合同审批流程未配置');return out;
+  }
+  function signingPolicyConflicts(p,state){return (state.signingPolicies||[]).filter(x=>x.id!==p.id&&x.company===p.company&&(x.start||'0000')<=(p.end||'9999')&&(p.start||'0000')<=(x.end||'9999')).filter(x=>{
+    const overlaps=(!x.business||!p.business||x.business===p.business)&&(!x.channel||!p.channel||x.channel===p.channel);
+    const narrower=(a,b)=>(!b.business||a.business===b.business)&&(!b.channel||a.channel===b.channel)&&!!((a.business&&!b.business)||(a.channel&&!b.channel));
+    return overlaps&&!narrower(p,x)&&!narrower(x,p);
+  }).map(x=>'与同公司现有政策范围和有效期重叠：'+(x.business||'全部产品')+' / '+(x.channel||'全部渠道'));}
+  function trialSigningPolicy(state,c){const issues=[],date=c.date||today();if(!dateOK(date))issues.push('请选择有效试算日期');
+    if(!state.companies?.some(x=>x.id===c.company)&&state.companies)issues.push('请选择有效签约公司');if(!['参团游','邮轮','专列','自由行','研学','单项服务','MICE'].includes(c.business)||!['门店','呼叫中心','电商','分销'].includes(c.channel)||!['生成正式合同','发起签署'].includes(c.stage))issues.push('请提供有效的产品、渠道及办理环节');
+    const hits=(state.signingPolicies||[]).filter(p=>p.company===c.company&&(!p.business||p.business===c.business)&&(!p.channel||p.channel===c.channel)&&(!p.start||p.start<=date)&&(!p.end||p.end>=date));
+    const best=hits.filter(p=>!hits.some(x=>x!==p&&(!p.business||x.business===p.business)&&(!p.channel||x.channel===p.channel)&&!!((x.business&&!p.business)||(x.channel&&!p.channel))));
+    if(best.length!==1)return {issues:[...issues,best.length?'命中多条政策，请处理范围冲突':'未找到有效的销售签约条件']};
+    const p=best[0];issues.push(...policyIssues(p));if(issues.length)return {issues,policy:p};
+    if((p.stage||'发起签署')!==c.stage)return {issues:[],policy:p,result:'本政策在“'+(p.stage||'发起签署')+'”环节检查收款；合同内部审批仍按原流程办理'};
+    let required=0;
+    if(p.payment==='按收款比例'){const base=c[p.denominator==='合同金额'?'contractAmount':'orderAmount'];if(base===''||base===undefined||!Number.isFinite(Number(base))||Number(base)<=0)issues.push('请提供有效的'+p.denominator);else required=Math.round(Number(base)*Number(p.ratio))/100;}
+    if(p.payment==='按付款节点'){const amount=c[p.paymentNode==='订单约定首款'?'firstPayment':'orderAmount'];if(amount===''||amount===undefined||!Number.isFinite(Number(amount))||Number(amount)<=0)issues.push('请提供有效的'+p.paymentNode);else required=Number(amount);}
+    if(!['先签后收','不限制收款'].includes(p.payment)&&(c.received===''||c.received===undefined||!Number.isFinite(Number(c.received))||Number(c.received)<0))issues.push('请提供有效的实收金额');
+    if(issues.length)return {issues,policy:p};
+    const passed=Number(c.received||0)>=required;
+    return {issues:[],policy:p,required,passed,result:passed?'收款条件已满足，继续合同内部审批及后续办理':p.failure==='申请收款例外审批'?'收款不足，须发起合同收款例外审批；目前尚未获批':'收款不足，阻止'+(p.stage||'发起签署')};
+  }
   function newState() {
     const state={companies:copy(companies),templates:copy(templates),rules:copy(rules),connections:{},logs:[],history:[],signingPolicies:[],regulatoryRules:[]};
     providers.forEach(p=>state.connections[p.id]={environment:'待平台提供',url:'',appId:'',contact:'',state:'未配置',checkedAt:'未核对',capabilities:Object.fromEntries(capabilities.map(k=>[k,'待核实']))});
@@ -151,6 +179,6 @@
     for(const profile of ['study','cruise']){const t=state.templates.find(t=>t.id==='T-CUSTOM-'+profile.toUpperCase());state.rules.push({id:'R-CUSTOM-'+profile,name:'福建'+t.business+'定制合同',companies:['fj'],company:'fj',business:t.business,range:t.range,customer:t.customer,province:'',template:t.id,start:'2026-01-01',end:'2026-12-31',status:'启用'});}
     return state;
   }
-  root.ContractSettings = {copy,today,dateOK,dates,companyIssues,templateIssues,ruleIssues,storeIssues,newState,providers,providerName,generationNames,capabilities,account,accountIssues,profileFor,defaultSigning,reconcileSigning,signingIssues,ruleCompanies,overlap,moreSpecific,matches,selectRule,eligibleRuleTemplate,policy,policyIssues};
+  root.ContractSettings = {copy,today,dateOK,dates,companyIssues,templateIssues,ruleIssues,storeIssues,newState,providers,providerName,generationNames,capabilities,account,accountIssues,profileFor,defaultSigning,reconcileSigning,signingIssues,ruleCompanies,overlap,moreSpecific,matches,selectRule,eligibleRuleTemplate,policy,policyIssues,signingPolicyConflicts,trialSigningPolicy};
   if (typeof module!=='undefined') module.exports=root.ContractSettings;
 })(typeof window==='undefined'?globalThis:window);

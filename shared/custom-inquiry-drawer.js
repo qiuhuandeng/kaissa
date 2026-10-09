@@ -432,12 +432,11 @@
   }
 
   function open(context, options) {
-    currentContext = Object.assign({}, context || {});
-    var layer = ensureDrawer();
-    var title = normalizeTitle((options && options.title) || currentContext.actionTitle || '发起单团询价');
-    input('customInquiryDrawerTitle').textContent = title;
-    applyContext(currentContext);
-    openLayer(layer);
+    var script = document.querySelector('script[src*="custom-inquiry-drawer.js"]');
+    var target = new URL('../merchant/tour/product-custom-list.html', script.src);
+    target.searchParams.set('create', '1');
+    target.searchParams.set('source', JSON.stringify(Object.assign({}, context || {}, {returnUrl: location.href})));
+    location.href = target.href;
   }
 
   document.addEventListener('click', function (event) {

@@ -8,8 +8,9 @@
   const O=typeof module==='object'&&module.exports?require('./approval-org-data.js'):root.ApprovalOrgData;
   const organization=O.read(),people=organization.people;
   const departments=organization.departments.filter(d=>d.active).map(d=>({...d,owner:O.owners(organization,d)[0]}));
-  const duties = ['财务审核','财务负责人','合同审核','法务审核','公司负责人','业务审核','组织审核'];
-  const sources = {manager:'申请人上级',department:'部门负责人',superior:'上级部门负责人',duty:'公司审批人员',business:'单据负责人',member:'指定成员'};
+  const legacyDuties = ['财务审核','财务负责人','合同审核','法务审核','公司负责人','业务审核','组织审核'];
+  const duties = ['渠道负责人','渠道总监','产品总监','供应商管理审核','核算会计','财务BP','财务经理','总经理','开票审核人员',...legacyDuties];
+  const sources = {manager:'申请人上级',department:'部门负责人',superior:'上级部门负责人',duty:'按审批职责',business:'单据负责人',member:'指定成员'};
   const modes = {all:'全部同意',any:'一人同意',sequential:'依次审批'};
   const repeatModes = {every:'每个节点都需要审批',consecutive:'仅连续重复审批时免重复审批',once:'同一申请首次同意后免重复审批'};
   function rulesFor(t){return {returnAllowed:true,withdrawAllowed:true,transferAllowed:false,hours:24,reasonRequired:true,self:'block',empty:'block',departed:'block',emptyMembers:{},departedMembers:{},repeat:'every',approveOpinionRequired:false,signatureRequired:false,...clone(t.rules||{})};}
@@ -28,9 +29,9 @@
   }
   const groups = {
     '产品与履约':['产品发布','代理入库','代理上线','团期开排','团期调整','价格调整','成本差异','交通资源付款','超DL还位','损耗确认'],
-    '销售与渠道':['渠道授权','佣金规则','渠道账户','渠道对账','改期转团','订单应收变更'],
-    '财务':['供应商账户变更','付款申请','退款申请','认款调整／复核','坏账处理','结算确认','发票红冲','NC异常处理','预存账户开户','收付款配置变更','收付款资料停用'],
-    '合同':['合同首次签约','合同变更','合同撤销','合同解除','企业合同归档','合同模板发布'],
+    '销售与渠道':['渠道授权','佣金规则','渠道账户','渠道对账','改期转团','订单应收变更','订单结算价变更','订单优惠','订单转款'],
+    '财务':['供应商账户变更','付款申请','退款申请','认款调整／复核','坏账处理','结算确认','发票红冲','NC异常处理','预存账户开户','收付款配置变更','收付款资料停用','付款退回','预付款退回','领队费用申请','开票申请','预付转款'],
+    '合同':['合同首次签约','合同变更','合同撤销','合同解除','企业合同归档','合同模板发布','合同收款例外','单团合同审核'],
     '组织与门店':['组织人事','门店档案准入','门店销售授权','门店财务配置','门店恢复营业','员工组织调整']
   };
   const moneyScenes = ['订单应收变更','付款申请','退款申请','交通资源付款','成本差异','认款调整／复核','坏账处理','结算确认','发票红冲'];
@@ -44,6 +45,105 @@
     businessLabel:businessOwnerFields[name]||(group==='产品与履约'?'团期负责人':'业务负责人')
   })));
   const scene = name => scenes.find(s => s.name===name);
+  const conditionFields={
+    amount:{label:'申请金额',type:'number'},rate:{label:'调价幅度绝对值（%）',type:'number'},
+    channel:{label:'销售渠道',values:['门店','呼叫中心','电商','分销']},
+    paymentType:{label:'付款申请类型',values:['预付款','应付付款']},
+    refundRoute:{label:'退款方式',values:['线上原路退回','线下退款']},
+    returned:{label:'实际回团状态',values:['回团前','已回团']},
+    settlementChanged:{label:'是否修改供应商结算价',values:['是','否']},
+    settlementStage:{label:'结算次数',values:['首次结算','二次结算']},
+    expenseType:{label:'领队费用类型',values:['借款','付款','报销']},
+    invoiceType:{label:'开票类型',values:['预开票','开票']},
+    receiptPassed:{label:'是否达到渠道收款要求',values:['是','否']},
+    discountAmount:{label:'优惠金额',type:'number'},discountRate:{label:'优惠比例（%）',type:'number'}
+  };
+  const scopeTypes={company:'公司通用',businessDepartment:'业务责任部门',productDepartment:'产品责任部门',channel:'销售渠道'};
+  // Prototype product organizations from the existing organization tree and product ownership selector.
+  // Branches and stores are not product departments. Formal assignments remain to be maintained.
+  const productDepartmentIds=['fj-center','fj-europe','fj-org-15','fj-org-16','fj-org-17'];
+  function scopeDepartments(type,company){return departments.filter(d=>d.company===company&&(type!=='productDepartment'||productDepartmentIds.includes(d.id)||d.productBusiness===true));}
+  const scopeChoices={company:'本公司全部业务',businessDepartment:'指定业务部门的业务',productDepartment:'指定产品部门的产品',channel:'指定销售渠道的订单'};
+  const companyBases={company:'单据业务责任公司',productCompany:'产品责任公司',salesCompany:'销售责任公司'};
+  const extraFields={
+    '付款申请':['paymentType'], '退款申请':['refundRoute','channel'], '结算确认':['settlementStage'],
+    '订单结算价变更':['settlementChanged','returned'], '订单优惠':['amount','discountAmount','discountRate','channel'],
+    '订单转款':['amount'], '预付转款':['amount'], '付款退回':['amount'], '预付款退回':['amount'],
+    '领队费用申请':['amount','expenseType'], '开票申请':['amount','invoiceType'],
+    '合同收款例外':['receiptPassed','channel'], '单团合同审核':['amount']
+  };
+  for(const s of scenes){s.fields=[...s.fields,...(extraFields[s.name]||[]).filter(k=>!['amount','rate'].includes(k)).map(k=>conditionFields[k].label)];s.conditions=[...new Set([...s.conditions,...(extraFields[s.name]||[])])];
+    if(['退款申请','单团合同审核','订单优惠'].includes(s.name)){s.businessOwnerAvailable=true;s.businessLabel='订单计调';}
+  }
+  function conditionErrors(c,name){const f=conditionFields[c.field],errors=[];
+    if(!f||!scene(name)?.conditions.includes(c.field))return ['该业务不支持此条件字段'];
+    if(f.type==='number'){
+      if(!['gt','gte','lt','lte','eq'].includes(c.op)||c.value===''||!Number.isFinite(Number(c.value))||Number(c.value)<0)errors.push('请填写有效的非负条件数值');
+      if(c.field==='discountRate'&&Number(c.value)>100)errors.push('比例不能超过100%');
+      if(['amount','discountAmount'].includes(c.field)&&!['CNY','USD','EUR'].includes(c.currency))errors.push('请选择金额币种');
+    }else if(!['eq','neq','in','notin'].includes(c.op)||(Array.isArray(c.value)?!c.value.length||c.value.some(v=>!f.values.includes(v)):!f.values.includes(c.value)))errors.push('请选择有效的业务条件及比较方式');
+    return errors;
+  }
+  function conditionContextErrors(conditions,c){const errors=[];for(const x of conditions){const f=conditionFields[x.field],v=c[x.field];
+    if(!f)errors.push('不支持的条件字段');
+    else if(v===''||v===undefined||v===null||(f.type==='number'?(!Number.isFinite(Number(v))||Number(v)<0||(x.field==='discountRate'&&Number(v)>100)):!f.values.includes(v)))errors.push('请提供有效的'+f.label+'，缺失或未知不能按其他情况处理');
+  }return errors;}
+  function arrangementStatus(a,date=O.today()){return a.disabled?'已停用':a.start&&a.start>date?'未生效':a.end&&a.end<date?'已到期':'有效';}
+  function arrangementScope(a){return (a.scopeType&&a.scopeType!=='company')?(scopeTypes[a.scopeType]+'：'+(a.scopes||[]).map(id=>departments.find(d=>d.id===id)?.name||id).join('、')+(a.includeChildren&&a.scopeType!=='channel'?'（含下级）':'')):'公司通用';}
+  function covers(a,id){return (a.scopes||[]).some(x=>x===id||(a.includeChildren&&a.scopeType!=='channel'&&ancestor(departments.find(d=>d.id===id)||{},x)));}
+  function resolveDuty(state,n,c){const errors=[],scope=n.scopeBasis||'company',basis=n.companyBasis||'company',company=c[basis];
+    if(!company)return {ids:[],errors:['缺少'+companyBases[basis]],notices:[]};
+    if(company!==c.company)return {ids:[],errors:['跨公司审批授权待确认，请由审批管理员核实'],notices:[]};
+    const key={businessDepartment:'department',productDepartment:'productDepartment',channel:'channel'}[scope];
+    if(key&&(!c[key]||(scope==='channel'?!conditionFields.channel.values.includes(c[key]):!scopeDepartments(scope,company).some(d=>d.id===c[key]))))return {ids:[],errors:['缺少有效的'+scopeTypes[scope]],notices:[]};
+    const records=state.arrangements.filter(a=>a.company===company&&a.duty===n.duty&&arrangementStatus(a,c.date||O.today())==='有效');
+    let matches=records.filter(a=>(a.scopeType||'company')===scope&&(scope==='company'||covers(a,c[key]))),fallback=false;
+    if(!matches.length&&scope!=='company'&&n.allowCompanyFallback){matches=records.filter(a=>(a.scopeType||'company')==='company');fallback=matches.length>0;}
+    if(matches.length>1)errors.push('同一职责命中多条人员安排，请消除负责范围和有效期重叠');
+    return {ids:matches.length===1?matches[0].members:[],errors,basis:matches.length===1?companyName(company)+' / '+n.duty+' / '+(fallback||scope==='company'?'公司通用':scopeTypes[scope]+'：'+(departments.find(d=>d.id===c[key])?.name||c[key]))+(fallback?'（本节点允许公司通用安排）':''):''};
+  }
+  function businessSample(name){const t=sample(name);t.name=name+'（公司场景草稿）';t.demo=true;
+    const duty=(name,scope='company')=>({...node(name,'duty',name),companyBasis:'company',scopeBasis:scope,allowCompanyFallback:false});
+    const department=()=>({...node('部门经理','department'),hierarchy:{mode:'single',origin:'bottom',level:1,base:'applicant',empty:'block',within:'all'}}),coordinator=()=>node('订单计调','business');
+    const accountant=()=>duty('核算会计','businessDepartment'),bp=()=>duty('财务BP','businessDepartment'),product=()=>duty('产品总监','productDepartment'),channel=()=>duty('渠道总监','channel'),gm=()=>duty('总经理');
+    const flows={
+      '付款申请':[duty('供应商管理审核'),product(),accountant(),bp(),duty('财务经理'),gm()],
+      '退款申请':[coordinator(),channel(),product(),bp(),{id:uid(),type:'branch',title:'退款方式',branches:[{id:uid(),title:'线下退款',match:'all',conditions:[{field:'refundRoute',op:'eq',value:'线下退款'}],nodes:[gm()]},{id:uid(),title:'线上原路退回',fallback:true,conditions:[],nodes:[]}]}],
+      '结算确认':[product(),accountant(),bp(),gm()],
+      '订单结算价变更':[product()], '订单优惠':[department(),coordinator(),product()],
+      '合同收款例外':[duty('渠道负责人','channel')], '单团合同审核':[department(),coordinator(),accountant()],
+      '付款退回':[bp()], '预付款退回':[bp()], '领队费用申请':[accountant(),bp(),gm()],
+      '开票申请':[accountant(),duty('开票审核人员')], '订单转款':[accountant()], '预付转款':[accountant()]
+    };t.nodes=flows[name]||t.nodes;
+    if(name==='订单结算价变更')t.trigger={mode:'conditional',match:'all',conditions:[{field:'settlementChanged',op:'eq',value:'是'},{field:'returned',op:'eq',value:'已回团'}],confirmed:true,evidence:'用户确认：结算价变更回团后增加产品总监审批；外部供应商另行确认，销售优惠仍走优惠审批。'};
+    if(name==='合同收款例外')t.trigger={mode:'conditional',match:'all',conditions:[{field:'receiptPassed',op:'eq',value:'否'}],confirmed:false,evidence:''};
+    return t;
+  }
+  function demoPersonnel(state){const copy=clone(state);let i=0;
+    for(const company of companies){const ids=company.id==='fj'?['sun','wangjie','liu','limin','chentao','zhou']:['zhoumin','wangjie','wufang','limin','zheng'];
+      for(const duty of duties.slice(0,9))for(const scopeType of Object.keys(scopeTypes)){
+        copy.arrangements=copy.arrangements.filter(a=>!(a.company===company.id&&a.duty===duty&&(a.scopeType||'company')===scopeType));
+        copy.arrangements.push({id:'demo-'+i++,company:company.id,duty,scopeType,scopes:scopeType==='channel'?conditionFields.channel.values:departments.filter(d=>d.company===company.id).map(d=>d.id),members:[ids[duties.indexOf(duty)%ids.length]]});
+      }
+    }return copy;
+  }
+  function conditionSetsOverlap(a,b){
+    const clauses=x=>x.match==='any'?x.conditions.map(c=>[c]):[x.conditions];
+    return clauses(a).some(ca=>clauses(b).some(cb=>{
+      const all=[...ca,...cb],currencies=[...new Set(all.filter(c=>c.currency).map(c=>c.currency))];if(currencies.length>1)return false;
+      return [...new Set(all.map(c=>c.field))].every(key=>{
+        const f=conditionFields[key],cs=all.filter(c=>c.field===key);if(!f)return true;
+        if(f.type!=='number')return f.values.some(value=>cs.every(c=>matchCondition(c,{[key]:value})));
+        let low=0,high=Infinity,lowClosed=true,highClosed=false;
+        for(const c of cs){const v=Number(c.value);if(['gt','gte','eq'].includes(c.op)){if(v>low){low=v;lowClosed=c.op!=='gt';}else if(v===low&&c.op==='gt')lowClosed=false;}if(['lt','lte','eq'].includes(c.op)){if(v<high){high=v;highClosed=c.op!=='lt';}else if(v===high&&c.op==='lt')highClosed=false;}}
+        return low<high||(low===high&&lowClosed&&highClosed);
+      });
+    }));
+  }
+  function ensureBusinessScenes(state){if(state.businessConfigVersion===1)return state;
+    const names=Object.keys(extraFields);for(const name of names){state.templates.push({id:'business-'+name,published:null,draft:businessSample(name),disabled:false,versions:[]});}
+    state.businessConfigVersion=1;return state;
+  }
   // Display configuration references existing business fields; it never changes their input requirements.
   const contentField = (id,label,group,required,sampleValue,extra={}) => ({id,label,group,required,sample:sampleValue,...extra});
   function contentCatalog(name) {
@@ -158,8 +258,8 @@
     return {name:name+'流程',scene:name,companies:['fj','bj'],departments:[],departmentMode:'all',includeChildren:true,fields:{note:true,noteRequired:false,attachments:true,attachmentRequired:false},content:defaultContent(name),nodes,rules:rulesFor({}),demo:true};
   }
   function createState() {
-    const arrangements = companies.flatMap(c=>duties.map(d=>({id:c.id+'-'+d,company:c.id,duty:d,members:[d==='合同审核'?'wangjie':d==='法务审核'?'limin':c.id==='fj'?(d==='财务审核'?'liu':d==='组织审核'?'sun':'chentao'):(d==='财务审核'?'wufang':d==='组织审核'?'zhoumin':'zheng')]})));
-    const initial=['付款申请','价格调整',...groups['合同']];
+    const arrangements = companies.flatMap(c=>legacyDuties.map(d=>({id:c.id+'-'+d,company:c.id,duty:d,members:[d==='合同审核'?'wangjie':d==='法务审核'?'limin':c.id==='fj'?(d==='财务审核'?'liu':d==='组织审核'?'sun':'chentao'):(d==='财务审核'?'wufang':d==='组织审核'?'zhoumin':'zheng')]})));
+    const initial=['付款申请','价格调整',...groups['合同'].slice(0,6)];
     const legacy=['预存账户开户','收付款配置变更','收付款资料停用','产品发布','团期开排','团期调整','供应商账户变更','成本差异','退款申请','认款调整／复核','结算确认','NC异常处理','门店档案准入','门店销售授权','门店财务配置','门店恢复营业','员工组织调整','订单应收变更'];
     return {schema:1,org:clone(organization),people:clone(people),arrangements,delegations:[],templates:[...initial,...legacy].map((name,i)=>{
       const t=sample(name),pub=i<initial.length;
@@ -182,12 +282,12 @@
   function getNode(t,id){let found;walk(t.nodes,n=>{if(n.id===id)found=n;});return found;}
   function getList(t,id){if(id==='root')return t.nodes;let found;walk(t.nodes,n=>{if(n.type==='branch')n.branches.forEach(b=>{if(b.id===id)found=b.nodes;});});return found;}
   function approvers(state,n,c,checkSelf=true,rules={}) {
-    const errors=[],notices=[],r=rulesFor({rules});let ids=[];
+    const errors=[],notices=[],r=rulesFor({rules});let ids=[],basis='';
     const d=departments.find(x=>x.id===c.department&&x.company===c.company);
     if(n.hierarchy||n.source==='manager'){const result=O.levels(state.org||organization,n,c);errors.push(...result.errors.map(x=>n.title+'：'+x));ids=result.layers.flatMap(x=>x.members);}
     else if(n.source==='department')ids=O.owners(state.org||organization,(state.org||organization).departments.find(x=>x.id===d?.id),c.date||O.today());
     else if(n.source==='superior')ids=O.owners(state.org||organization,(state.org||organization).departments.find(x=>x.id===d?.parent),c.date||O.today());
-    else if(n.source==='duty')ids=state.arrangements.find(a=>a.company===c.company&&a.duty===n.duty)?.members||[];
+    else if(n.source==='duty'){const resolved=resolveDuty(state,n,c);ids=resolved.ids;errors.push(...resolved.errors.map(x=>n.title+'：'+x));basis=resolved.basis||'';}
     else if(n.source==='business')ids=[c.businessOwner];
     else if(n.source==='member')ids=n.members||[];
     const originalIds=[...new Set(ids.filter(Boolean))];
@@ -216,12 +316,17 @@
       if(n.type==='approval'&&original.approvalAuthorized===false){errors.push(n.title+'：'+original.name+'无本公司审批授权');return '';}
       return id;
     });
-    return {ids:[...new Set(ids.filter(Boolean))],originalIds,errors:[...new Set(errors)],notices};
+    return {ids:[...new Set(ids.filter(Boolean))],originalIds,basis,errors:[...new Set(errors)],notices};
   }
-  function conditionText(c){return (c.field==='amount'?'申请金额（'+c.currency+'）':'调价幅度绝对值（%）')+' '+({gt:'>',gte:'≥',lt:'<',lte:'≤',eq:'='}[c.op]||'?')+' '+c.value;}
-  function matchCondition(c,context){const v=c.field==='rate'?Math.abs(Number(context.rate)):Number(context.amount);return {gt:v>c.value,gte:v>=c.value,lt:v<c.value,lte:v<=c.value,eq:v===Number(c.value)}[c.op];}
+  function conditionText(c){return (conditionFields[c.field]?.label||c.field)+(c.currency?'（'+c.currency+'）':'')+' '+({gt:'>',gte:'≥',lt:'<',lte:'≤',eq:'等于',neq:'不等于',in:'属于',notin:'不属于'}[c.op]||'?')+' '+(Array.isArray(c.value)?c.value.join('、'):c.value);}
+  function matchCondition(c,context){const f=conditionFields[c.field];if(!f)return false;const v=context[c.field];if(v===''||v===undefined||v===null)return false;
+    if(f.type!=='number'){const has=(Array.isArray(c.value)?c.value:[c.value]).includes(v);return ['eq','in'].includes(c.op)?has:!has;}
+    if(c.currency&&c.currency!==context.currency)return false;
+    const n=c.field==='rate'?Math.abs(Number(v)):Number(v),threshold=Number(c.value);return {gt:n>threshold,gte:n>=threshold,lt:n<threshold,lte:n<=threshold,eq:n===threshold}[c.op];
+  }
+  function triggerErrors(t){const x=t.trigger;if(!x||x.mode==='always')return [];if(x.mode!=='conditional')return ['审批触发方式无效'];return [...(!x.conditions?.length?['条件审批须配置触发条件']:[]),...(!x.confirmed||!x.evidence?.trim()?['免审批规则须有已确认的业务依据，当前仅可保存草稿']:[]),...(x.conditions||[]).flatMap(c=>conditionErrors(c,t.scene))];}
   function validate(state,t,excludeId) {
-    const errors=[...validateContent(t),...validateRules(state,t)];
+    const errors=[...validateContent(t),...validateRules(state,t),...triggerErrors(t)];
     if(!t.name?.trim())errors.push('请填写模板名称');
     if(!scene(t.scene))errors.push('请选择业务场景');
     if(!t.companies.length)errors.push('请至少选择一家公司');
@@ -241,21 +346,28 @@
           n.branches.forEach(b=>{
             if(!b.title?.trim())errors.push(n.title+'：请填写分支名称');
             if(!b.fallback){if(!b.conditions.length)errors.push(b.title+'：至少配置一个条件');
-              b.conditions.forEach(c=>{if(!scene(t.scene)?.conditions.includes(c.field))errors.push(b.title+'：该业务不支持此条件字段');if(!['gt','gte','lt','lte','eq'].includes(c.op)||c.value===''||!Number.isFinite(Number(c.value))||Number(c.value)<0)errors.push(b.title+'：请填写有效的非负条件数值');if(c.field==='amount'&&!['CNY','USD','EUR'].includes(c.currency))errors.push(b.title+'：请选择金额币种');});
-              if(b.conditions.length===1){const c=b.conditions[0],v=Number(c.value);const range={gt:[v,Infinity,false,false],gte:[v,Infinity,true,false],lt:[-Infinity,v,false,false],lte:[-Infinity,v,false,true],eq:[v,v,true,true]}[c.op];
+              b.conditions.forEach(c=>conditionErrors(c,t.scene).forEach(e=>errors.push(b.title+'：'+e)));
+              if(b.conditions.length===1&&conditionFields[b.conditions[0].field]?.type==='number'){const c=b.conditions[0],v=Number(c.value);const range={gt:[v,Infinity,false,false],gte:[v,Infinity,true,false],lt:[-Infinity,v,false,false],lte:[-Infinity,v,false,true],eq:[v,v,true,true]}[c.op];
                 n.branches.slice(0,n.branches.indexOf(b)).filter(p=>!p.fallback&&p.conditions.length===1).forEach(p=>{const pc=p.conditions[0],pv=Number(pc.value);if(pc.field!==c.field||pc.currency!==c.currency)return;const pr={gt:[pv,Infinity,false,false],gte:[pv,Infinity,true,false],lt:[-Infinity,pv,false,false],lte:[-Infinity,pv,false,true],eq:[pv,pv,true,true]}[pc.op];if(!range||!pr)return;const lo=Math.max(range[0],pr[0]),hi=Math.min(range[1],pr[1]);const contains=(r,x)=> (x>r[0]||(x===r[0]&&r[2]))&&(x<r[1]||(x===r[1]&&r[3]));if(lo<hi||(lo===hi&&contains(range,lo)&&contains(pr,lo)))errors.push(n.title+'：'+p.title+'与'+b.title+'的条件重叠，请明确区间');});
               }
+              n.branches.slice(0,n.branches.indexOf(b)).filter(p=>!p.fallback).forEach(p=>{if(conditionSetsOverlap(p,b))errors.push(n.title+'：'+p.title+'与'+b.title+'的条件重叠，请调整业务条件');});
+              if(!conditionSetsOverlap(b,b))errors.push(b.title+'：条件互相矛盾，无法命中');
               const signature=JSON.stringify([b.match,b.conditions]);if(signatures.has(signature))errors.push(n.title+'：存在重复条件分支');signatures.add(signature);
             }
             checkNodes(b.nodes,depth+1);
           });
         }else if(['approval','cc'].includes(n.type)){
           if(n.type==='approval')approvals++;
+          if(n.source==='duty'&&(!duties.includes(n.duty)||!scopeTypes[n.scopeBasis||'company']||!companyBases[n.companyBasis||'company']))errors.push(n.title+'：审批职责或负责范围无效');
           if(!sources[n.source])errors.push(n.title+'：请选择审批人来源');
+          if(n.source==='duty'&&n.scopeBasis&&n.scopeBasis!=='company')for(const company of t.companies){
+            const available=state.arrangements.some(a=>a.company===company&&a.duty===n.duty&&arrangementStatus(a)==='有效'&&((a.scopeType||'company')===n.scopeBasis||n.allowCompanyFallback&&(a.scopeType||'company')==='company')&&a.members.some(id=>eligible(state,id,company)));
+            if(!available)errors.push(companyName(company)+' / '+n.title+'：请先配置该负责范围内有效的审批人员');
+          }
           if(n.source==='business'&&!scene(t.scene).businessOwnerAvailable)errors.push(n.title+'：当前业务场景未提供单据负责人，请改选其他审批人来源');
           if(n.type==='approval'&&!modes[n.mode])errors.push(n.title+'：请选择多人办理方式');
           if(n.hierarchy||n.source==='manager')errors.push(...O.configErrors(n).map(x=>n.title+'：'+x));
-          ds.forEach(d=>{if(n.source==='business'||n.source==='manager'||n.hierarchy)return;const r=approvers(state,n,{company:d.company,department:d.id,scene:t.scene,date:'',applicant:''},false,t.rules);r.errors.forEach(e=>errors.push(companyName(d.company)+' / '+d.name+' / '+e));});
+          ds.forEach(d=>{if(n.source==='business'||n.source==='manager'||n.hierarchy||(n.source==='duty'&&((n.scopeBasis&&n.scopeBasis!=='company')||(n.companyBasis&&n.companyBasis!=='company'))))return;const r=approvers(state,n,{company:d.company,department:d.id,scene:t.scene,date:'',applicant:''},false,t.rules);r.errors.forEach(e=>errors.push(companyName(d.company)+' / '+d.name+' / '+e));});
         }else errors.push('不支持的节点类型');
       });
     }
@@ -272,11 +384,15 @@
     if(!accepts(t,c))errors.push('本次公司或部门不在模板适用范围内');
     const applicant=person(state,c.applicant);
     if(!applicant?.active||!applicant.companies.includes(c.company)||!O.currentPerson({...state.org||organization,people:state.people},c.applicant,c.company,c.date))errors.push('申请人不在所选公司的有效任职范围内');
+    if(t.trigger?.mode==='conditional'){
+      errors.push(...triggerErrors(t));const required=t.scene==='订单结算价变更'&&c.settlementChanged==='否'?t.trigger.conditions.filter(x=>x.field==='settlementChanged'):t.trigger.conditions;
+      errors.push(...conditionContextErrors(required,c));const currencies=required.filter(x=>x.currency).map(x=>x.currency);if(currencies.length&&!currencies.includes(c.currency))errors.push('触发条件未配置当前币种，请核对后再试跑');
+      if(!errors.length){const matched=t.trigger.match==='any'?t.trigger.conditions.some(x=>matchCondition(x,c)):t.trigger.conditions.every(x=>matchCondition(x,c));
+        if(!matched){const supplier=t.scene==='订单结算价变更'&&c.settlementChanged==='是';return {errors:[],steps:[{type:'exempt',title:supplier?'无需内部审批，待供应商确认':'本事项免审批',detail:supplier?'由外部合作供应商确认结算价，尚未生效。':t.scene==='订单结算价变更'?'仅免当前事项审批；销售优惠仍须按订单优惠流程办理。':t.scene==='合同收款例外'?'仅免合同收款例外审批；合同首次签约、法务等审核仍按各自流程办理。':'未命中本事项审批条件，其他事项仍按各自流程办理。'}],outcome:supplier?'supplier_pending':'not_required'};}
+      }
+    }
     const currencies=new Set();
-    walk(t.nodes,n=>{if(n.type==='branch')n.branches.forEach(b=>b.conditions.forEach(cond=>{
-      if(c[cond.field]===''||c[cond.field]===undefined||!Number.isFinite(Number(c[cond.field]))||Number(c[cond.field])<0)errors.push('请填写'+(cond.field==='amount'?'申请金额':'调价幅度绝对值'));
-      if(cond.field==='amount')currencies.add(cond.currency);
-    }));});
+    walk(t.nodes,n=>{if(n.type==='branch')n.branches.forEach(b=>{errors.push(...conditionContextErrors(b.conditions,c));b.conditions.forEach(cond=>{if(['amount','discountAmount'].includes(cond.field))currencies.add(cond.currency);});});});
     if(currencies.size&&!currencies.has(c.currency))errors.push('当前金额分支未配置 '+c.currency+'，请补充对应币种规则');
     if(errors.length)return {errors:[...new Set(errors)],steps};
     function run(nodes){nodes.forEach(n=>{
@@ -292,20 +408,34 @@
         }
         executionNodes.forEach(executionNode=>{
           const r=approvers(state,executionNode,c,true,t.rules);errors.push(...r.errors);
-          steps.push({type:n.type,nodeId:n.id,executionNode:executionNode===n?undefined:executionNode,ids:r.ids,title:executionNode.title,detail:r.ids.map(id=>personName(state,id)).join('、')+(n.type==='approval'?' · '+modes[executionNode.mode]:' · 抄送'),notices:[...r.notices,...(executionNode.levelNotice?[executionNode.levelNotice]:[])],delegated:r.ids.join()!==r.originalIds.join()?'原审批人：'+(r.originalIds.map(id=>personName(state,id)).join('、')||'未找到') :''});
+          steps.push({type:n.type,nodeId:n.id,executionNode:executionNode===n?undefined:executionNode,ids:r.ids,title:executionNode.title,detail:r.ids.map(id=>personName(state,id)).join('、')+(n.type==='approval'?' · '+modes[executionNode.mode]:' · 抄送'),notices:[...(r.basis?['人员依据：'+r.basis]:[]),...r.notices,...(executionNode.levelNotice?[executionNode.levelNotice]:[])],delegated:r.ids.join()!==r.originalIds.join()?'原审批人：'+(r.originalIds.map(id=>personName(state,id)).join('、')||'未找到') :''});
         });
       }
     });}
-    run(t.nodes);if(!steps.some(s=>s.type==='approval'))errors.push('本分支没有审批节点');return {errors:[...new Set(errors)],steps};
+    run(t.nodes);if(t.scene==='订单结算价变更'&&!errors.length)steps.push({type:'external',title:'外部供应商确认',detail:'内部审批完成后，仍需外部合作供应商确认结算价。'});if(!steps.some(s=>s.type==='approval'))errors.push('本分支没有审批节点');return {errors:[...new Set(errors)],steps};
   }
   function saveDraft(state,id,t){let r=state.templates.find(r=>r.id===id);if(!r){r={id:id||uid(),published:null,draft:null,disabled:false,versions:[]};state.templates.unshift(r);}r.draft=clone(t);return r;}
   function publish(state,id,t){const errors=validate(state,t,id);if(errors.length)return {errors};const r=saveDraft(state,id,t);const version={number:(r.versions.at(-1)?.number||0)+1,at:new Date().toLocaleString('zh-CN'),by:'审批管理员',template:clone(t)};r.versions.push(version);r.published=clone(t);r.draft=null;r.disabled=false;return {errors:[],record:r};}
-  function saveArrangement(state,a){const errors=[];if(!companies.some(c=>c.id===a.company)||!duties.includes(a.duty))errors.push('请选择公司和审批职责');if(!a.members.length)errors.push('请至少选择一位审批人员');a.members.forEach(id=>{const p=person(state,id);if(!eligible(state,id,a.company))errors.push('所选人员无本公司有效任职或审批授权');});const duplicate=state.arrangements.find(x=>x.company===a.company&&x.duty===a.duty&&x.id!==a.id);if(duplicate)errors.push('该公司已配置此审批职责，请编辑已有安排');if(errors.length)return errors;const i=state.arrangements.findIndex(x=>x.id===a.id);if(i<0)state.arrangements.push({...clone(a),id:uid()});else state.arrangements[i]=clone(a);return [];}
+  function saveArrangement(state,value){const a={scopeType:'company',scopes:[],includeChildren:false,start:'',end:'',disabled:false,...clone(value)},errors=[];
+    if(!companies.some(c=>c.id===a.company)||!duties.includes(a.duty))errors.push('请选择公司和审批职责');
+    if(!a.members.length)errors.push('请至少选择一位审批人员');
+    a.members.forEach(id=>{if(!eligible(state,id,a.company))errors.push('所选人员无本公司有效任职或审批授权');});
+    if(!scopeTypes[a.scopeType])errors.push('请选择负责范围');
+    if(a.scopeType!=='company'&&(!a.scopes.length||a.scopes.some(id=>a.scopeType==='channel'?!conditionFields.channel.values.includes(id):!scopeDepartments(a.scopeType,a.company).some(d=>d.id===id))))errors.push('请选择本公司的有效负责部门或渠道');
+    if((a.start&&!validDate(a.start))||(a.end&&!validDate(a.end))||(a.start&&a.end&&a.start>a.end))errors.push('生效日期和截止日期不正确');
+    const overlaps=x=>(x.start||'0000')<=(a.end||'9999')&&(a.start||'0000')<=(x.end||'9999');
+    if(!a.disabled&&state.arrangements.some(x=>x.id!==a.id&&!x.disabled&&x.company===a.company&&x.duty===a.duty&&(x.scopeType||'company')===a.scopeType&&overlaps(x)&&(a.scopeType==='company'||a.scopes.some(id=>covers(x,id))||(x.scopes||[]).some(id=>covers(a,id)))))errors.push('该公司已配置此审批职责，负责范围和有效期重叠，请调整或编辑已有安排');
+    const i=state.arrangements.findIndex(x=>x.id===a.id);
+    if(i>=0&&!a.reason?.trim())errors.push('请填写调整原因');
+    if(errors.length)return [...new Set(errors)];
+    a.history=[...(i>=0?state.arrangements[i].history||[]:[]),{at:new Date().toLocaleString('zh-CN'),reason:a.reason||'新增安排',members:a.members.slice(),scope:arrangementScope(a),start:a.start,end:a.end,disabled:a.disabled}];
+    if(i<0)state.arrangements.unshift({...a,id:uid()});else state.arrangements[i]=a;return [];
+  }
   function saveDelegation(state,a){const errors=[];if(!a.reason.trim())errors.push('请填写代办原因');if(!validDate(a.start)||!validDate(a.end)||a.start>a.end)errors.push('请填写正确的生效及结束日期');if(a.original===a.delegate)errors.push('不能将审批代办给本人');[a.original,a.delegate].forEach(id=>{const p=person(state,id);if(!eligible(state,id,a.company))errors.push('原审批人和代办人均须具有本公司有效任职及审批授权');});
     const overlaps=b=>b.company===a.company&&b.start<=a.end&&b.end>=a.start&&(!b.scenes.length||!a.scenes.length||b.scenes.some(s=>a.scenes.includes(s)));
     state.delegations.filter(b=>b.id!==a.id&&overlaps(b)).forEach(b=>{if(b.original===a.original)errors.push('该人员已有重叠期间及事项的代办');if(b.original===a.delegate||b.delegate===a.original)errors.push('暂不支持连续转交或循环代办，请直接指定最终代办人');});
     if(errors.length)return [...new Set(errors)];const i=state.delegations.findIndex(b=>b.id===a.id);const value={...clone(a),id:a.id||uid()};if(i<0)state.delegations.push(value);else state.delegations[i]=value;return [];
   }
-  const api={ensureReceivableScenes,organization,orgData:O,rulesFor,validateRules,repeatModes,eligible,contentCatalog,defaultContent,getContent,validateContent,previewContent,moveNode,reorderBranches,cloneConditionBranch,clone,uid,companies,departments,duties,sources,modes,scenes,scene,personName,companyName,node,sample,createState,activeDepartments,accepts,walk,getNode,getList,approvers,conditionText,validate,trial,saveDraft,publish,saveArrangement,saveDelegation};
+  const api={scopeDepartments,scopeChoices,demoPersonnel,conditionSetsOverlap,conditionFields,conditionErrors,conditionContextErrors,scopeTypes,companyBases,arrangementStatus,arrangementScope,resolveDuty,businessSample,ensureBusinessScenes,triggerErrors,matchCondition,ensureReceivableScenes,organization,orgData:O,rulesFor,validateRules,repeatModes,eligible,contentCatalog,defaultContent,getContent,validateContent,previewContent,moveNode,reorderBranches,cloneConditionBranch,clone,uid,companies,departments,duties,sources,modes,scenes,scene,personName,companyName,node,sample,createState,activeDepartments,accepts,walk,getNode,getList,approvers,conditionText,validate,trial,saveDraft,publish,saveArrangement,saveDelegation};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.ApprovalConfigModel=api;
 })(typeof window==='object'?window:globalThis);

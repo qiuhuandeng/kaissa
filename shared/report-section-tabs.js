@@ -25,6 +25,7 @@
   const file = location.pathname.split('/').pop().replace('.html',''), definition = config[file];
   if (!definition) return;
   const [title, entries] = definition, q = s => document.querySelector(s);
+  if(document.querySelector('[data-mice-report]')) entries.push({selector:'[data-mice-report]',key:'projectResults',label:file==='order-report-details'?'项目订单':file==='return-report-details'?'项目团':'项目结果'});
   // V2 drops obsolete data-source test filters so an old empty "pending" state cannot be restored.
   const storageKey = (['cashflow-reports', 'performance-reports', 'product-reports', 'channel-reports'].includes(file) ? 'caesar-report-navigation-v3:' : 'caesar-report-navigation-v2:') + file;
   let saved = {}, active, switching = false;

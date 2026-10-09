@@ -120,6 +120,13 @@
       title: "履约中心",
       icon: "clipboard",
       children: [
+        {
+          title: "项目团",
+          children: [
+            { title: "项目团控", href: "tour/schedules.html?mice=1" },
+            { title: "项目采购", href: "tour/fulfillment-cost.html?mice=1" },
+          ],
+        },
         { title: "团期管控", href: "tour/schedules.html" },
         { title: "团期订单", href: "tour/schedule-orders.html" },
         { title: "团期结算", href: "tour/fulfillment-cost.html" },
@@ -505,6 +512,12 @@
     let file = markerIndex >= 0 ? normalizedPath.slice(markerIndex + merchantMarker.length) : (normalizedPath.split("/").pop() || "dashboard.html");
     file = (file || "dashboard.html").split("?")[0];
     if (file.endsWith("/")) file += "dashboard.html";
+    if (file === "tour/schedules.html" && (url.searchParams.get("mice") === "1" || url.searchParams.get("batchType") === "项目团")) {
+      return "tour/schedules.html?mice=1";
+    }
+    if (file === "tour/schedules-detail.html" && (url.searchParams.get("mice") === "1" || url.searchParams.get("type") === "project" || url.searchParams.get("groupMode") === "project")) {
+      return "tour/schedules-detail.html?mice=1";
+    }
     if (file === "resource/resource-masterdata.html") {
       const type = url.searchParams.get("type") || "poi";
       return "resource/resource-masterdata.html?type=" + (masterdataRouteKeys.has(type) ? type : "poi");
@@ -524,6 +537,7 @@
       return "tour/resource-procurement-inventory.html?kind=" + (trafficProcurementKeys.has(kind) ? kind : "air");
     }
     if (file === "tour/fulfillment-cost.html") {
+      if (url.searchParams.get("mice") === "1") return "tour/fulfillment-cost.html?mice=1";
       const view = url.searchParams.get("view") || url.searchParams.get("tab") || "";
       if (view === "payment" || view === "records") return "tour/fulfillment-payment-apply.html";
     }
@@ -616,6 +630,7 @@
     "tour/team-create.html": { href: "tour/schedules.html", title: "新建团期" },
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
+    "tour/schedules-detail.html?mice=1": { href: "tour/schedules.html?mice=1", title: "项目团详情" },
     "tour/visa-processing.html": { href: "tour/visa-processing.html", title: "签证办理" },
     "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
@@ -1121,7 +1136,7 @@
       const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href)).map(tab => {
         const affected = tab.href.startsWith('finance/finance-reports.html') || tab.href.startsWith('data/');
         const href = affected ? fileFromUrl(new URL(tab.href, merchantBaseUrl)) : tab.href;
-        return { ...tab, href, title: reportTitles[href] || tab.title };
+        return { ...tab, href, title: href === "tour/schedules.html?mice=1" ? "项目团控" : reportTitles[href] || tab.title };
       });
       return migrated.filter((tab, i) => migrated.findIndex(t => t.href === tab.href) === i);
     } catch (error) {
@@ -1855,6 +1870,14 @@
   function navigateTo(href) {
     const target = resolveNavigationTarget(href);
     const contractRoutes = ["sales/contracts.html", "sales/contract-prepare.html"];
+    // These pages need a fresh source context and their ordered external dependencies.
+    const projectRoutes = ["tour/product-custom-list.html", "tour/product-custom-detail.html", "tour/schedules.html?mice=1", "tour/schedules-detail.html?mice=1", "finance/finance-invoice.html"];
+    const currentProjectRoute = currentRouteUrl || new URL(window.location.href);
+    if (target.searchParams.get("mice") === "1" || currentProjectRoute.searchParams.get("mice") === "1"
+      || projectRoutes.includes(fileFromUrl(target)) || projectRoutes.includes(fileFromUrl(currentProjectRoute))) {
+      window.location.href = target.href;
+      return;
+    }
     if (contractRoutes.includes(fileFromUrl(target)) || contractRoutes.includes(fileFromUrl(currentRouteUrl || new URL(window.location.href)))) {
       window.location.href = target.href;
       return;
@@ -1998,7 +2021,7 @@
   }
 
   function isExcludedListSurfaceNode(node) {
-    return !node || Boolean(node.closest(".modal, .modal-overlay, .drawer-modal, .mobile-frame"));
+    return !node || Boolean(node.closest(".modal, .modal-overlay, .drawer-modal, .mobile-frame, .mice-workspace"));
   }
 
   function hasDirectListPart(container, selector) {
