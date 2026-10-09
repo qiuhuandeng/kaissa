@@ -4810,3 +4810,160 @@ window.MicePrototypeSeed = {
   "approvals": [],
   "logs": []
 };
+
+/* 预置案例的详情演示资料。只补预置案例；用户新建项目不自动生成业务单据。 */
+(function(root){
+'use strict';
+const d=root.MicePrototypeSeed,copy=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v)),base=copy(d),revision='detail-demo-20261009-2';
+const round=n=>Math.round(n*100)/100,addDays=(date,n)=>{const t=new Date(date+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10);};
+const file=(name,text)=>{const content='原型演示资料，非正式业务凭据。\n'+text;return{name:name+'（演示）.txt',type:'text/plain',size:new TextEncoder().encode(content).length,text:content};};
+const done=a=>a.status==='已完成',early=p=>['草稿','待确认'].includes(p.status);
+const names=['张建国','王强','刘洋','陈红','赵明','孙丽','周伟','吴芳'];
+const tax=(amount,rate=6)=>round(amount-amount/(1+rate/100));
+d.moneyFlows=[{id:'DEMO-BANK-80000',company:'北京凯撒',customer:'北京科技发展有限公司',currency:'CNY',amount:80000,date:'2026-10-08',payer:'北京科技发展有限公司',basis:'原型演示银行到账记录，非真实资金'},{id:'DEMO-HC-250000',company:'北京凯撒',customer:'华辰医药有限公司',currency:'CNY',amount:250000,date:'2026-10-08',payer:'华辰医药有限公司',basis:'原型演示客户汇款记录，非真实资金'}];
+for(const [index,p] of d.projects.entries()){
+ const acts=d.activities.filter(a=>a.projectId===p.id),currency=p.seedScenario==='S5'?'EUR':'CNY',closed=p.status==='已结项';
+ const quoteAmount=currency==='EUR'?16000:Number(p.legacyData?.amount)||(acts.length>10?25000:50000);
+ p.demoDetails=true;p.settlementRule={days:30,basis:'本项目服务结束后30日提交结算资料（演示约定，非集团统一制度）'};
+ p.attachments=[file('客户需求确认',p.name+'\n客户：'+p.customer+'\n服务期间：'+p.start+' 至 '+p.end+'\n服务范围：'+p.scope),file('项目分工表',p.name+'\n销售：'+p.sales+'\n负责人：'+p.owner+'\n计调负责日程、名单与采购核对。')];
+ if(!p.members.length)p.members=[{name:p.sales,role:'销售',note:'客户需求、报价与合同沟通'},{name:p.owner,role:'项目负责',note:'服务方案与项目费用统筹'}];
+ p.members.forEach(m=>Object.assign(m,{start:m.start||p.start,end:m.end||p.end,activities:m.activities||[],note:m.note||'项目服务协调及资料核对'}));
+ p.members.push({name:'赵磊',role:'资源协作',start:p.start,end:p.end,activities:[acts[0].id],note:'酒店、用车及供应商确认资料'});
+ if(!p.frameworks.length)p.frameworks=[{id:'DEMO-FW-'+p.id,number:'DEMO-HT-'+String(index+1).padStart(3,'0'),name:p.name+(p.mode==='multi'?'框架合同':'服务合作协议'),customer:p.customer,company:p.company,start:p.start,end:p.end,scope:p.scope,nature:p.mode==='multi'?'上限':'固定总价',amount:d.orders.filter(o=>o.projectId===p.id).reduce((n,o)=>n+o.amount,0)||quoteAmount,currency,status:early(p)?'待办理':'已签归档',basis:'项目服务合同样例，仅用于原型展示',attachments:[file('服务合同资料',p.name+'\n服务与付款条款核对样例。')]}];
+ p.frameworks.forEach(f=>{f.name=f.name||p.name+'年度框架合同';f.attachments=f.attachments||[file('框架合同资料',f.number+'\n'+f.scope)];});
+ const planners=[...new Set(acts.map(a=>a.planner||'李梅'))];
+ p.delegations=planners.map((employee,i)=>({id:'DEMO-FG-'+p.id+'-'+i,employee,scope:p.mode==='multi'?'负责本人项目团的报价、服务安排及采购核对':'项目团服务安排与采购核对',cities:[],services:['会议','旅游','会议加旅游'],start:p.start,end:p.end,quoteMode:'confirm',canCreate:!closed,currency,control:'reference',businessAmount:p.mode==='multi'?round((p.frameworks[0].amount||quoteAmount)/planners.length):quoteAmount,costBudget:p.budget==null?20000:round(p.budget/planners.length),singleLimit:null,policyBasis:'项目分工登记样例；金额为计划参考',status:closed?'已结束':'有效'}));
+ p.closeoutPlan={owner:p.owner,date:addDays(p.end,30),note:closed?'项目服务、客户对账与业务结算已完成':'按项目团完成情况核对客户对账、采购费用及未清款票'};
+ if(closed)p.closeout={reason:'客户服务验收、供应商费用及业务结算核对完成（演示）',openItems:[],pendingOwner:p.owner,pendingPlan:'无遗留款票',exceptionBasis:'',date:addDays(p.end,15)};
+ d.logs.push({id:'DEMO-LOG-'+p.id,projectId:p.id,action:'登记项目与分工',detail:p.name+'；'+planners.join('、')+'负责执行，'+p.sales+'负责报价及合同。',time:addDays(p.start,-20)+' 10:00',demo:true});
+ for(const [ai,a] of acts.entries()){
+  a.demoDetails=true;a.planner=a.planner||'李梅';a.people=a.people||30;a.confirmedPeople=done(a)?a.people:undefined;a.reference=a.reference||'DEMO-WT-'+a.id;
+  a.nameMode=a.nameMode||(a.service==='会议'?'按人数交付':'实名服务');a.basis=a.basis||'客户委托确认单 '+a.reference+'（演示）';a.settlementDue=addDays(a.end,30);
+  const tour=a.service==='旅游',mixed=a.service==='会议加旅游',city=a.city||'北京',meetingPlace=city+'会议中心',hotel=city+'商务酒店',nights=Math.max(1,Math.round((Date.parse(a.end)-Date.parse(a.start))/86400000));
+  if(!a.agenda.length)a.agenda=[{id:a.id+'-RC-1',kind:tour?'旅游':'会议',date:a.start,start:'09:00',end:'10:00',title:tour?'抵达接站与入住安排':'参会签到与开场',place:tour?city+'机场':meetingPlace,owner:a.planner,note:tour?'分两批接站，核对名单后前往酒店':'会议资料发放、设备测试、签到',traffic:tour?'接机大巴2辆':'',hotel:tour?hotel:''},{id:a.id+'-RC-2',kind:tour?'旅游':'会议',date:a.start,start:'10:00',end:'12:00',title:tour?'城市文化参访':'主题分享与交流',place:tour?city+'文化景区':meetingPlace,owner:a.planner,note:tour?'讲解、参访及团队合影':'主题分享、分组交流、茶歇'},{id:a.id+'-RC-3',kind:tour||mixed?'旅游':'会议',date:tour||mixed?a.end:a.start,start:'14:00',end:'17:00',title:tour||mixed?'参访及返程送站':'总结交流与离场',place:tour||mixed?city+'市区':meetingPlace,owner:a.planner,note:tour||mixed?'清点人数与行李，按返程批次送站':'会议总结、回收设备与资料'}];
+  a.agenda.forEach((r,i)=>{r.id=r.id||a.id+'-RC-'+i;r.kind=r.kind||(tour?'旅游':'会议');r.title=r.title||r.name;r.note=r.note||'客户已核对本时段服务安排（演示）';});
+  a.agendaHistory=[{date:addDays(a.start,-10),version:'V1',title:tour?'接站及参访初版安排':'会议议程初版',reason:'根据客户确认人数调整签到与用车安排',owner:a.planner}];
+  if(!a.roster.length)a.roster=names.slice(0,Math.min(8,a.people)).map((name,i)=>({id:a.id+'-MD-'+i,name:name+'（演示）'}));
+  a.roster.forEach((r,i)=>Object.assign(r,{group:r.group||['一组','二组'][i%2],arrival:r.arrival||'第一批 08:30',departure:'返程第一批 17:00',room:tour||mixed?'双床房 '+(101+Math.floor(i/2)):'无需住宿',vehicle:a.service==='会议'?'无需用车':'1号车',needs:i===0?'素食餐':i===1?'靠前座位':'常规服务',phone:'138****'+String(1000+i),documentType:'其他',document:r.document||''}));
+  a.resources=[{id:a.id+'-ZY-1',category:tour?'酒店':'会场设备',name:tour?hotel+'双床房':meetingPlace+'主会议室',supplier:tour?hotel:'华东会议服务有限公司',start:a.start,end:a.end,quantity:tour?Math.ceil(a.people/2)*nights:1,unit:tour?'间夜':'台天',spec:tour?'双床房，含早餐':'课桌式，投影与音响',batches:tour?'统一入住、按名单分房':'投影1套、话筒4支',point:tour?hotel:meetingPlace,contact:'王经理（演示）',status:early(p)?'待确认':'已确认',confirmNo:early(p)?'':'DEMO-ZY-'+a.id+'-1',requiresName:tour,attachments:[file('资源确认',a.name+'\n'+(tour?hotel:meetingPlace)+'服务安排样例。')]},{id:a.id+'-ZY-2',category:tour||mixed?'车辆':'餐饮',name:tour||mixed?city+'团队接送用车':city+'会议茶歇',supplier:tour||mixed?city+'旅游车队':'华东会议服务有限公司',start:a.start,end:a.end,quantity:tour||mixed?2*(nights+1):a.people,unit:tour||mixed?'辆天':'人次',spec:tour||mixed?'49座旅游大巴':'茶点、咖啡及水果',batches:tour||mixed?'到达及返程各一批':'上午与下午茶歇',point:tour||mixed?city+'机场／车站':meetingPlace,contact:'李经理（演示）',status:early(p)?'待确认':'已确认',confirmNo:early(p)?'':'DEMO-ZY-'+a.id+'-2',requiresName:false,attachments:[]}];
+  a.attachments=[file('客户委托确认',a.name+'\n委托编号：'+a.reference+'\n服务日期：'+a.start+' 至 '+a.end),file(tour?'出团服务安排':'会议执行单',a.agenda.map(r=>r.date+' '+r.start+' '+r.title).join('\n'))];
+  if(done(a)){a.completion={actualStart:a.start,actualEnd:a.end,actualPeople:a.people,basis:'客户签收服务交付单 DEMO-JF-'+a.id,delivery:'全部完成',recordedBy:a.planner,recordedAt:addDays(a.end,1)+' 10:00',files:[file('服务交付单',a.name+'服务已完成，实际人数'+a.people+'人。')]};a.acceptance={status:'已认可',confirmationId:'DEMO-KHDZ-'+p.id};}
+  let c=d.commitments.find(c=>c.activities.includes(a.id));
+  if(!c){const amount=acts.length>10?25000:quoteAmount;c={id:'DEMO-BJ-'+a.id,projectId:p.id,name:a.name+'服务报价单',reference:a.reference,version:1,activities:[a.id],pricing:'fixed',currency,amount,status:early(p)?'草稿':'已确认',basis:early(p)?'客户需求及报价方案（演示，待确认）':'客户盖章报价确认样例',confirmedAt:early(p)?'':addDays(a.start,-15),nodes:[],contractNo:'',approval:early(p)?'待提交':'本版本已批准（演示）'};d.commitments.push(c);}
+  a.commitmentId=c.status==='已确认'?c.id:a.commitmentId;
+  c.frameworkId=p.frameworks[0].id;c.taxEstimate={method:'standard',rate:6,basis:'原型演示按6%测算，正式计税方式由财务确认'};
+  if(!c.nodes.length)c.nodes=[{name:'首款',percent:30,amount:round(c.amount*.3),date:addDays(a.start,-10)},{name:'尾款',percent:70,amount:round(c.amount*.7),date:addDays(a.end,15)}];
+  c.nodes.forEach(n=>{n.due=n.date;});
+  if(c.activities.length===1){c.nodes[0].date=c.nodes[0].due=addDays(a.start,-10);c.nodes[1].date=c.nodes[1].due=addDays(a.end,15);}
+  let o=d.orders.find(o=>o.commitmentId===c.id);
+  if(!o){o={id:'DEMO-DD-'+a.id,projectId:p.id,commitmentId:c.id,customer:p.customer,company:p.company,currency:c.currency,amount:c.amount,activities:copy(c.activities),status:c.status==='已确认'?'已确认':'待确认',contractNo:'DEMO-HT-'+a.id,nodes:copy(c.nodes),received:0,invoiced:0};d.orders.push(o);c.orderId=o.id;}
+  o.taxEstimate=copy(c.taxEstimate);o.nodes=copy(c.nodes);
+  if(!d.costs.some(c=>c.activityId===a.id)){
+   const budget=round((a.originalBudget|| (currency==='EUR'?10000:acts.length>10?18000:p.budget||quoteAmount*.7))/100)*100;
+   d.costs.push({id:'DEMO-FY-'+a.id+'-1',projectId:p.id,activityId:a.id,name:tour?'酒店与地接接待':'会场设备及会务服务',supplier:tour?hotel:'华东会议服务有限公司',currency,amount:budget,estimate:budget,budget,status:early(p)?'待确认':'已确认',unit:'项',quantity:1,price:budget,paid:0,conditionLimit:budget,basis:'供应商服务报价及采购确认样例',allocations:[]});
+  }
+  d.settlements.push({id:'DEMO-JS-'+a.id,projectId:p.id,activities:[a.id],contextActivityId:a.id,includeProjectCosts:closed,version:1,status:done(a)?'已确认':'草稿',basis:done(a)?'客户交付单、供应商结算单及费用核对表（演示）':'结算准备清单，待服务完成与客户认可后提交',pending:done(a)?'无':a.name+'尚未完成服务，完成后核对实际费用',history:[{action:done(a)?'确认业务结算':'建立结算草稿',basis:'项目团费用与服务资料样例'}]});
+  const change={id:'DEMO-BG-'+a.id,projectId:p.id,activityId:a.id,targetId:a.id,type:'activity',kind:'改期',version:1,status:'已作废',before:{start:a.start,end:a.end,status:a.status},start:addDays(a.start,1),end:addDays(a.end,1),reason:'客户曾提出顺延一天，最终保留原服务日期',basis:'客户邮件确认保留原日期（演示）',amount:null};d.adjustments.push(change);
+  d.approvals.push({id:'DEMO-SP-'+a.id,projectId:p.id,type:'项目团变更',sourceId:change.id,version:1,status:'已撤回',applicant:p.sales,approver:p.owner,basis:change.basis,opinion:'客户撤回改期需求，原日期保持',history:[{action:'撤回申请',opinion:'保留原服务日期'}]});
+  d.logs.push({id:'DEMO-LOG-'+a.id,projectId:p.id,activityId:a.id,action:done(a)?'核对服务交付':'登记执行安排',detail:a.name+'；'+a.agenda.length+'项日程、'+a.resources.length+'项资源，主责计调'+a.planner+'。',time:addDays(a.start,-7)+' 14:30',demo:true});
+ }
+ if(!d.costs.some(c=>c.projectId===p.id&&!c.activityId))d.costs.push({id:'DEMO-GGFY-'+p.id,projectId:p.id,activityId:'',scopeType:'common',name:'项目策划及资料制作',supplier:'华东会议服务有限公司',currency,amount:currency==='EUR'?500:3000,budget:currency==='EUR'?500:3000,estimate:currency==='EUR'?500:3000,status:early(p)?'待确认':'已确认',unit:'项',quantity:1,price:currency==='EUR'?500:3000,paid:0,allocations:[],basis:'项目策划与资料制作采购确认样例'});
+ if(acts.length>1)d.costs.push({id:'DEMO-KTFY-'+p.id,projectId:p.id,activityId:'',scopeType:'shared',activityIds:acts.map(a=>a.id),name:'统一会务物料与摄影服务',supplier:'华东会议服务有限公司',currency,amount:acts.length*200,budget:acts.length*200,estimate:acts.length*200,status:'已确认',unit:'项',quantity:acts.length,price:200,paid:0,commonAmount:0,allocations:acts.map(a=>({activityId:a.id,amount:200})),allocationBasis:'按每团实际使用一套物料及摄影服务分配（演示）',basis:'跨团物料及摄影采购单（演示）'});
+ const orders=d.orders.filter(o=>o.projectId===p.id),finishedOrders=orders.filter(o=>o.activities.every(id=>done(acts.find(a=>a.id===id))));
+ d.customerSettlements.push({id:'DEMO-KHDZ-'+p.id,projectId:p.id,start:p.start,end:p.end,currency,mode:'价款及服务确认',status:finishedOrders.length?'已确认':'草稿',version:1,lines:(finishedOrders.length?finishedOrders:orders).map(o=>({orderId:o.id,activityIds:o.activities,original:o.amount,accepted:o.amount,dispute:0,reason:''})),confirmBy:finishedOrders.length?p.contact:'',confirmDate:finishedOrders.length?addDays(finishedOrders.map(o=>acts.find(a=>a.id===o.activities[0]).end).sort().at(-1),1):'',basis:finishedOrders.length?'客户已核对已交付服务及金额（演示）':'预先整理对账资料，待服务完成后取得客户确认',due:addDays(p.end,15),attachments:[file('客户对账清单',p.name+'\n客户订单、服务与金额核对样例。')]});
+}
+for(const c of d.costs){
+ const p=d.projects.find(p=>p.id===c.projectId),a=d.activities.find(a=>a.id===c.activityId),closed=p.status==='已结项',completed=closed||a&&done(a);
+ Object.assign(c,{company:p.company,start:a?.start||p.start,end:a?.end||p.end,version:1,paymentTerms:'确认后支付30%，服务核对后支付尾款（演示）',conditionLimit:c.amount,expectedTaxRate:6,deductionMode:'full',deductionBasis:'预计票面税额可扣的原型样例；以财务核定为准',taxStatus:completed?'已核定':'已到待核',ticketNumber:'DEMO-FP-'+c.id,ticketAmount:c.amount,ticketRate:6,ticketTax:tax(c.amount),approvedTax:completed?tax(c.amount):null,attachments:[file('采购与票据核对',c.name+'\n供应商：'+c.supplier+'\n含税金额：'+c.amount+' '+c.currency)],financeBasis:completed?'票据与服务核对通过（原型演示）':''});
+ if(c.currency!=='CNY')Object.assign(c,{budgetRate:c.budgetRate||7.8,agreedRate:c.agreedRate||7.9,referenceRate:c.referenceRate||8,rateBasis:c.rateBasis||'本项目合同约定结算汇率7.90（演示）'});
+ (c.allocations||[]).forEach(al=>{al.approvedTax=completed?tax(al.amount):null;});
+ if(!d.requests.some(r=>r.costId===c.id)){
+  const amount=completed?c.amount:round(c.amount*.3),paid=completed?amount:c.paid||0;
+  d.requests.push({id:'DEMO-FK-'+c.id,projectId:p.id,activityId:c.activityId,costId:c.id,supplier:c.supplier,company:p.company,currency:c.currency,amount,paid,status:completed?'已付款':'待财务复核',date:addDays(c.start,-7),purpose:c.name,basis:'供应商采购付款条款与服务确认样例',version:1,accountStatus:completed?'财务已核对':'待财务核对',verifiedAccount:completed?'演示供应商账户（尾号0668）':'',history:[{action:completed?'付款完成':'提交付款申请',reason:'本项目采购付款演示记录'}],payments:completed?[{amount,reference:'DEMO-BANK-'+c.id,date:addDays(c.end,5),result:'付款成功',basis:'原型演示付款回单'}]:[]});c.paid=paid;
+ }
+}
+for(const o of d.orders){
+ const p=d.projects.find(p=>p.id===o.projectId),acts=d.activities.filter(a=>o.activities.includes(a.id)),complete=acts.every(done),date=complete?addDays(acts.map(a=>a.end).sort().at(-1),3):addDays(acts.map(a=>a.start).sort()[0],-10),amount=complete?o.amount:round(o.amount*.3);
+ o.received=complete?amount:0;o.invoiced=complete?amount:0;o.salesTaxAmount=complete?tax(o.amount):null;
+ o.nodes.forEach(n=>{n.received=complete?n.amount:0;n.invoiced=complete?n.amount:0;});
+ const flowId='DEMO-DZ-'+o.id;d.moneyFlows.push({id:flowId,company:p.company,customer:p.customer,payer:p.customer,currency:o.currency,amount,date,basis:'原型演示到账资料，非真实资金'});
+ d.claims.push({id:'DEMO-RK-'+o.id,projectId:p.id,company:p.company,customer:p.customer,currency:o.currency,flowId,amount,status:complete?'已认款':early(p)?'已退回':'待财务认款',basis:'客户汇款附言与订单核对（演示）',reason:complete?'到账资料与客户订单核对一致':early(p)?'报价尚未完成客户确认，补齐后重新提交':'待财务核对到账资料',allocations:[{orderId:o.id,amount,node:complete?'首款及尾款':'首款',nodeParts:complete?o.nodes.map(n=>({name:n.name,amount:n.amount})):[{name:'首款',amount}]}],history:[{action:complete?'财务确认认款':'提交认领',reason:'到账与订单关联样例'}]});
+ d.invoices.push({id:'DEMO-KP-'+o.id,projectId:p.id,company:p.company,customer:p.customer,title:p.customer,taxNo:'DEMO-TAX-'+p.id,currency:o.currency,service:acts.some(a=>a.service!=='旅游')?'会务服务':'旅游服务',invoiceKind:'增值税普通发票',taxRate:6,approvedRate:complete?6:null,amount,status:complete?'已开具':early(p)?'已退回':'待财务办理',recipient:'finance@example.com',note:p.name+'；'+acts.map(a=>a.name).join('、'),allocations:[{orderId:o.id,amount}],reason:complete?'财务审核与开具成功样例':early(p)?'客户确认资料待补充':'等待财务核对开票项目与税率',invoiceNo:complete?'DEMO-INV-'+o.id:'',date:complete?date:'',submissionRef:complete?'DEMO-EINV-'+o.id:'',demoPdf:complete,history:[{action:complete?'已开具':'提交开票申请',reason:'原型演示，未连接电子开票服务'}]});
+}
+// 已完成与筹备中的项目团分别列示客户对账，避免年度项目只覆盖已回团的部分。
+for(const p of d.projects){const pending=d.orders.filter(o=>o.projectId===p.id&&!d.customerSettlements.some(r=>r.lines.some(l=>l.orderId===o.id)));if(pending.length)d.customerSettlements.push({id:'DEMO-KHDZ-DRAFT-'+p.id,projectId:p.id,start:p.start,end:p.end,currency:pending[0].currency,mode:'价款及服务确认',status:'草稿',version:1,lines:pending.map(o=>({orderId:o.id,activityIds:o.activities,original:o.amount,accepted:o.amount,dispute:0,reason:''})),confirmBy:'',confirmDate:'',basis:'筹备项目团对账草稿，待服务交付后核对实际金额',attachments:[]});}
+// 已确认结算保存本次承担费用及服务完成依据，不在打开详情时重新推算历史。
+for(const s of d.settlements.filter(s=>s.status==='已确认')){
+ const costs=[];for(const c of d.costs.filter(c=>c.projectId===s.projectId)){
+  let amount=null,kind='direct';if(c.activityId&&s.activities.includes(c.activityId))amount=c.amount;
+  else if(!c.activityId){const al=c.allocations.filter(al=>s.activities.includes(al.activityId));if(al.length){amount=round(al.reduce((n,al)=>n+al.amount,0));kind=c.scopeType==='common'?'management':'shared';}else if(s.includeProjectCosts){amount=c.amount-c.allocations.reduce((n,al)=>n+al.amount,0);kind='project';}}
+  if(amount!=null&&amount>0)costs.push({id:c.id,costId:c.id,name:c.name,supplier:c.supplier,currency:c.currency,status:c.status,basis:c.basis,sourceVersion:1,originalAmount:c.amount,kind,amount,activities:s.activities,allocationAmounts:c.allocations.filter(al=>s.activities.includes(al.activityId)),allocationBasis:c.allocationBasis||'',incomplete:false});
+ }s.confirmedRecord={scopeVersion:2,activities:s.activities,includeProjectCosts:s.includeProjectCosts,costs,serviceResults:s.activities.map(id=>{const a=d.activities.find(a=>a.id===id);return{id,status:a.status,completion:copy(a.completion),acceptance:copy(a.acceptance)};})};
+ s.submittedRecord=copy(s.confirmedRecord);s.attachments=[file('业务结算核对表',s.basis+'\n'+costs.map(c=>c.name+'：'+c.amount+' '+c.currency).join('\n'))];
+ const p=d.projects.find(p=>p.id===s.projectId);
+ d.approvals.push({id:'DEMO-SP-'+s.id,projectId:p.id,type:'业务结算',sourceId:s.id,amount:round(costs.reduce((n,c)=>n+c.amount,0)),currency:costs[0]?.currency||'CNY',version:1,status:'已通过',applicant:p.owner,approver:'刘总监',company:p.company,basis:s.basis,opinion:'服务交付与本次承担费用核对一致（演示）',history:[{decision:'通过',opinion:'核对通过（演示）',version:1,by:'刘总监'}]});
+}
+for(const c of d.costs){const recorded=d.requests.filter(r=>r.costId===c.id).reduce((sum,r)=>sum+(r.paid||0),0),paid=round((c.paid||0)-recorded);if(paid>0)d.requests.push({id:'DEMO-FK-PAID-'+c.id,projectId:c.projectId,activityId:c.activityId,costId:c.id,supplier:c.supplier,company:c.company,currency:c.currency,amount:paid,paid,status:'已付款',date:addDays(c.start,-14),purpose:c.name+'首付款',basis:'原有已付金额对应的演示付款记录',version:1,accountStatus:'财务已核对',verifiedAccount:'演示供应商账户（尾号0668）',history:[{action:'财务确认付款',reason:'首付款已完成，演示回单号DEMO-BANK-PAID-'+c.id}],payments:[{amount:paid,reference:'DEMO-BANK-PAID-'+c.id,date:addDays(c.start,-14),result:'付款成功',basis:'演示付款回单'}]});}
+for(const supplier of new Set([...d.costs.map(c=>c.supplier),...d.activities.flatMap(a=>a.resources.map(r=>r.supplier))]))if(!d.catalog.suppliers.includes(supplier))d.catalog.suppliers.push(supplier);
+// 每个项目只保留足以演示差异的样例；年度会议取4个已完成和4个待执行，费用合计不超过10笔。
+const expanded=copy(d),sampleIds=new Set();
+for(const p of d.projects){const rows=d.activities.filter(a=>a.projectId===p.id),pending=rows.filter(a=>!done(a)),planners=[...new Set(pending.map(a=>a.planner))],representatives=planners.map(name=>pending.find(a=>a.planner===name)),drafts=[...representatives,...pending.filter(a=>!representatives.includes(a))].slice(0,4);for(const a of rows.length>8?[...rows.filter(done).slice(0,4),...drafts]:rows)sampleIds.add(a.id);}
+const presetIds=new Set(d.activities.map(a=>a.id));
+function compact(target,protectedProjects=new Set()){
+ const editable=pid=>!protectedProjects.has(pid),keepActivity=id=>!presetIds.has(id)||sampleIds.has(id);
+ target.activities=target.activities.filter(a=>!editable(a.projectId)||keepActivity(a.id));
+ for(const a of target.activities)if(editable(a.projectId)&&presetIds.has(a.id))a.roster=(a.roster||[]).slice(0,10);
+ for(const p of target.projects)if(editable(p.id))for(const m of p.members||[])m.activities=(m.activities||[]).filter(keepActivity);
+ for(const key of ['commitments','orders','settlements'])target[key]=target[key].filter(r=>!editable(r.projectId)||!r.activities?.length||r.activities.some(keepActivity));
+ target.costs=target.costs.filter(c=>!editable(c.projectId)||!c.activityId||keepActivity(c.activityId));
+ for(const c of target.costs)if(editable(c.projectId)&&c.id.startsWith('DEMO-KTFY-')){
+  c.activityIds=c.activityIds.filter(keepActivity);c.allocations=c.allocations.filter(r=>keepActivity(r.activityId));
+  c.quantity=c.activityIds.length;c.amount=c.budget=c.estimate=c.conditionLimit=c.ticketAmount=round(c.quantity*c.price);c.ticketTax=tax(c.amount);
+  c.attachments=[file('采购与票据核对',c.name+'\n供应商：'+c.supplier+'\n含税金额：'+c.amount+' '+c.currency)];
+ }
+ const costById=new Map(target.costs.map(c=>[c.id,c])),orderIds=new Set(target.orders.map(o=>o.id));
+ target.requests=target.requests.filter(r=>!editable(r.projectId)||costById.has(r.costId));
+ for(const r of target.requests)if(editable(r.projectId)&&r.costId?.startsWith('DEMO-KTFY-'))r.amount=round(costById.get(r.costId).amount*.3);
+ for(const key of ['claims','invoices'])target[key]=target[key].filter(r=>!editable(r.projectId)||r.allocations?.some(l=>orderIds.has(l.orderId)));
+ for(const r of target.customerSettlements)if(editable(r.projectId))r.lines=r.lines.filter(l=>orderIds.has(l.orderId));
+ target.customerSettlements=target.customerSettlements.filter(r=>!editable(r.projectId)||r.lines.length);
+ for(const key of ['adjustments','logs'])target[key]=target[key].filter(r=>!editable(r.projectId)||!r.activityId||keepActivity(r.activityId));
+ const sourceIds=new Set(['projects','commitments','settlements','adjustments','requests'].flatMap(k=>target[k].map(r=>r.id)));
+ target.approvals=target.approvals.filter(r=>!editable(r.projectId)||sourceIds.has(r.sourceId));
+ const removedFlows=new Set(expanded.claims.filter(r=>editable(r.projectId)&&!orderIds.has(r.allocations[0].orderId)).map(r=>r.flowId));
+ target.moneyFlows=(target.moneyFlows||[]).filter(r=>!removedFlows.has(r.id));
+ for(const r of target.settlements)if(editable(r.projectId))for(const key of ['submittedRecord','confirmedRecord'])for(const c of r[key]?.costs||[])if(costById.has(c.costId||c.id))c.originalAmount=costById.get(c.costId||c.id).amount;
+ return target;
+}
+compact(d);d.demoDetailsRevision=revision;
+// 升级已有演示会话：仅覆盖仍等于旧样例的字段，保留用户编辑、用户新建及已删除的原记录。
+const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+function merge(current,before,after){
+ if(equal(current,before)||current===undefined)return copy(after);
+ if(Array.isArray(current)&&(before===undefined||Array.isArray(before))&&Array.isArray(after)){
+  if(after.every(x=>x&&typeof x==='object'&&x.id)){
+   const out=copy(current);for(const next of after){const prev=(before||[]).find(x=>x.id===next.id),at=out.findIndex(x=>x.id===next.id);if(at>=0&&prev)out[at]=merge(out[at],prev,next);else if(at<0&&!prev)out.push(copy(next));}return out;
+  }if(after.every(x=>typeof x==='string'))return [...current,...after.filter(x=>!(before||[]).includes(x)&&!current.includes(x))];return current;
+ }
+ if(current&&before&&after&&typeof current==='object'&&!Array.isArray(current)&&!Array.isArray(after)){
+  const out={...current};for(const key of Object.keys(after))out[key]=merge(current[key],before[key],after[key]);return out;
+ }return current;
+}
+root.MicePrototypeDemo={revision,upgrade(saved){
+ if(saved.demoDetailsRevision===revision)return saved;
+ const protectedProjects=new Set(),before=saved.demoDetailsRevision?expanded:base;
+ for(const key of ['projects','activities','commitments','orders','costs','requests','claims','invoices','settlements','adjustments','approvals'])for(const old of before[key]){
+  const current=saved[key]?.find(r=>r.id===old.id);
+  if(!current||['name','status','amount','currency','received','invoiced','paid','activities','projectId'].some(k=>!(key==='projects'&&k==='name')&&!equal(current[k],old[k])))protectedProjects.add(old.projectId||old.id);
+ }
+ for(const key of ['activities','commitments','orders','costs','requests','claims','invoices','settlements','customerSettlements'])for(const r of saved[key]||[])if(r.projectId&&!before[key].some(old=>old.id===r.id))protectedProjects.add(r.projectId);
+ const result=merge(saved,before,d);
+ const financial=['commitments','orders','costs','requests','customerSettlements','settlements','claims','invoices','adjustments','approvals'];
+ // 用户已推进业务或修改金额的项目保留整套原业务记录，不能用新增样例改写办理结果。
+ for(const key of ['activities','logs',...financial])result[key]=result[key].filter(r=>!protectedProjects.has(r.projectId)).concat(copy((saved[key]||[]).filter(r=>protectedProjects.has(r.projectId))));
+ for(const a of result.activities)if(protectedProjects.has(a.projectId)){const prior=saved.activities.find(r=>r.id===a.id);for(const k of ['commitmentId','completion','acceptance']){if(prior?.[k]===undefined)delete a[k];else a[k]=copy(prior[k]);}}
+ const projects=new Set(result.projects.map(p=>p.id)),activities=new Set(result.activities.map(a=>a.id));
+ for(const key of ['activities',...financial,'logs'])result[key]=result[key].filter(r=>!r.id.startsWith('DEMO-')||(!r.projectId||projects.has(r.projectId))&&(!r.activityId||activities.has(r.activityId)));
+ compact(result,protectedProjects);result.demoDetailsRevision=revision;return result;
+}};
+})(window);

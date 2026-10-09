@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  const M=window.MiceModel,store=M.createStore(window.MicePrototypeSeed,window.sessionStorage);
+  const M=window.MiceModel,store=M.createStore(window.MicePrototypeSeed,window.sessionStorage,window.MicePrototypeDemo?.upgrade);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const businessLabel=value=>({'客户约定':'报价确认','活动变更':'项目团变更','取消活动':'取消项目团','订单价款变更':'订单金额变更'})[value]||value;
   const q=new URLSearchParams(location.search),rootUrl=new URL('../',document.currentScript.src);
