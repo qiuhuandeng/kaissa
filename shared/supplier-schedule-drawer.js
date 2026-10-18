@@ -171,7 +171,7 @@
       '          <div class="batch-date-layout"><div>',
       '            <div id="batchRulePanel" class="batch-date-panel"><div class="form-grid"><div class="form-group"><label class="form-label" for="batchStartDate">开始日期</label><input id="batchStartDate" class="form-control" type="date" value="2026-08-01"></div><div class="form-group"><label class="form-label" for="batchEndDate">结束日期</label><input id="batchEndDate" class="form-control" type="date" value="2026-09-30"></div><div class="form-group"><label class="form-label" for="batchRepeatCycle">发团周期</label><select id="batchRepeatCycle" class="form-control"><option value="weekly" selected>每周</option><option value="custom">自由选择</option><option value="biweekly">隔周</option><option value="monthly">每月固定日</option></select></div><div class="form-group"><label class="form-label" for="batchHolidayStrategy">节假日策略</label><select id="batchHolidayStrategy" class="form-control"><option value="normal">正常生成</option><option value="skip">跳过节假日</option><option value="only">仅生成节假日</option></select></div><div class="form-group form-group-full"><label class="form-label">发团星期</label><div class="batch-weekday-row"><label><input type="checkbox" name="batchWeekday" value="1"> 周一</label><label><input type="checkbox" name="batchWeekday" value="2"> 周二</label><label><input type="checkbox" name="batchWeekday" value="3"> 周三</label><label><input type="checkbox" name="batchWeekday" value="4"> 周四</label><label><input type="checkbox" name="batchWeekday" value="5" checked> 周五</label><label><input type="checkbox" name="batchWeekday" value="6" checked> 周六</label><label><input type="checkbox" name="batchWeekday" value="0"> 周日</label></div></div></div></div>',
       '            <div id="batchManualPanel" class="batch-date-panel" hidden><div class="form-grid"><div class="form-group"><label class="form-label" for="batchManualStartDate">日历开始</label><input id="batchManualStartDate" class="form-control" type="date" value="2026-08-01"></div><div class="form-group"><label class="form-label" for="batchManualMonths">显示月份</label><select id="batchManualMonths" class="form-control"><option value="2">2个月</option><option value="3" selected>3个月</option><option value="4">4个月</option></select></div><div class="form-group form-group-full"><label class="form-label">选择出发日期</label><div id="batchManualCalendar" class="batch-multi-calendar" aria-label="手动选择出发日期"></div></div></div></div>',
-      '            <div id="batchExcelPanel" class="batch-date-panel batch-excel-panel" hidden><button id="batchExcelUpload" class="batch-excel-upload" type="button"><span class="batch-excel-upload-icon" aria-hidden="true">↥</span><strong>点击自动模拟上传 Excel 排班文件</strong><em>支持读取：出发日期、默认余量、公开售价、结算价、确认方式</em></button><div class="batch-excel-actions"><button id="batchExcelTemplate" class="btn btn-secondary" type="button">下载 Excel 模板</button><button id="batchExcelSample" class="btn btn-secondary" type="button">载入示例排期数据（3条）</button></div><div id="batchExcelStatus" class="form-hint">尚未导入排班数据。</div></div>',
+      '            <div id="batchExcelPanel" class="batch-date-panel batch-excel-panel" hidden><label class="batch-excel-upload"><input id="batchExcelFile" type="file" accept=".xlsx,.csv" aria-label="选择排期文件"><span class="batch-excel-upload-icon" aria-hidden="true">↥</span><strong>选择 Excel / CSV 排期文件</strong><em>读取出发日期；名额与价格在下一步设置</em></label><div class="batch-excel-actions"><button id="batchExcelTemplate" class="btn btn-secondary" type="button">下载 Excel 模板</button></div><div id="batchExcelStatus" class="form-hint">尚未导入排班数据。</div></div>',
       '            <div id="batchDateResultBlock" class="batch-date-result"><div class="batch-date-result-head"><strong>生成结果</strong><span>点击日期可排除或恢复</span></div><div id="batchDateCalendar" class="batch-multi-calendar" aria-label="新建团期日期结果"></div></div>',
       '          </div></div>',
       '        </section>',
@@ -215,6 +215,7 @@
     var generatedDates = [];
     var excludedDates = new Set();
     var manualDates = new Set();
+    var excelDates = [];
     var previewMode = false;
 
     function cards() {
@@ -368,6 +369,9 @@
     }
 
     function resetSelection(showPanel) {
+      excelDates = [];
+      document.getElementById("batchExcelFile").value = "";
+      document.getElementById("batchExcelStatus").textContent = "尚未导入排期数据。";
       productSearch.value = "";
       productSearch.readOnly = false;
       clearSearch.hidden = true;
@@ -423,7 +427,7 @@
     function calcGeneratedDates() {
       var mode = document.querySelector('input[name="batchDateMode"]:checked').value;
       if (mode === "manual") return Array.from(manualDates).sort();
-      if (mode === "excel") return ["2026-08-06", "2026-08-20", "2026-09-03"];
+      if (mode === "excel") return excelDates.slice();
       var cycle = document.getElementById("batchRepeatCycle").value;
       if (cycle === "custom") return Array.from(manualDates).sort();
       var start = new Date(document.getElementById("batchStartDate").value + "T00:00:00");
@@ -674,14 +678,15 @@
       field.addEventListener("change", renderDates);
       field.addEventListener("input", renderDates);
     });
-    document.getElementById("batchExcelUpload").addEventListener("click", function () {
-      document.getElementById("batchExcelStatus").textContent = "已读取 3 条示例排期。";
+    document.getElementById("batchExcelFile").addEventListener("change", async function () {
+      const file = this.files[0]; if (!file) return;
+      const status = document.getElementById("batchExcelStatus"); excelDates = []; renderDates(); status.textContent = "正在读取 " + file.name;
+      try { excelDates = await window.ScheduleFileImport.dates(file); status.textContent = file.name + " · 已读取 " + excelDates.length + " 个出发日期"; }
+      catch (e) { status.textContent = e.message; }
       renderDates();
     });
-    document.getElementById("batchExcelSample").addEventListener("click", function () {
-      document.querySelector('input[name="batchDateMode"][value="excel"]').checked = true;
-      document.getElementById("batchExcelStatus").textContent = "已载入示例排期数据（3条）。";
-      renderDates();
+    document.getElementById("batchExcelTemplate").addEventListener("click", async function () {
+      try { await window.ScheduleFileImport.template(); } catch (e) { document.getElementById("batchExcelStatus").textContent = e.message; }
     });
     resetSelection(false);
     return { open: open, close: closeLayer, products: products };

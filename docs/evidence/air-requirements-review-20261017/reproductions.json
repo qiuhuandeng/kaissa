@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-17",
+  "scope": "内存反例验证；不替代完整浏览器验收",
+  "cases": [
+    {
+      "id": "R01",
+      "name": "一张票两航段日报重复建单",
+      "issueObserved": true,
+      "expected": "同一张联程票保留两个航段，票价及成本按票计一次；无法判断金额粒度时要求复核",
+      "actual": {
+        "orders": 2,
+        "tickets": [
+          "9991111222233",
+          "9991111222233"
+        ],
+        "costTotal": 3000,
+        "saleTotal": 3600,
+        "applied": [
+          "已应用",
+          "已应用"
+        ]
+      }
+    },
+    {
+      "id": "R02",
+      "name": "已出票名单版本直接覆盖身份",
+      "issueObserved": true,
+      "expected": "已出票身份变更保留原乘机人，并转入变更核对",
+      "actual": {
+        "oldName": "张建国",
+        "newName": "另一测试乘客",
+        "ticket": "9991234567899",
+        "state": "已出票",
+        "latestLog": {
+          "time": "2026/10/17 16:46:04",
+          "text": "票务接收名单第2版"
+        }
+      }
+    },
+    {
+      "id": "R03",
+      "name": "仅国籍和证件类型变化未形成新名单",
+      "issueObserved": true,
+      "expected": "证件类型或国籍变更也须产生可核对的新版本",
+      "actual": {
+        "versionBefore": 2,
+        "versionAfter": 2,
+        "message": "名单未变化，已交接 · HF20261017001",
+        "oldDocType": "护照",
+        "submittedDocType": "其他出入境证件"
+      }
+    },
+    {
+      "id": "R04",
+      "name": "作废结算后订单从未提结算遗漏",
+      "issueObserved": true,
+      "expected": "作废结算不等于已提交有效结算，订单仍应列入待提范围",
+      "actual": {
+        "state": "已作废",
+        "before": [
+          "HF20261017S01",
+          "HF20261017S02"
+        ],
+        "after": []
+      }
+    },
+    {
+      "id": "R05",
+      "name": "已作废结算仍计入毛利合计",
+      "issueObserved": true,
+      "expected": "作废金额不应混入有效经营毛利合计；如需查看历史则单独分组",
+      "actual": {
+        "row": [
+          "2026-10",
+          "HFJS20261017001",
+          "EU20261014001",
+          81000,
+          80000,
+          1000,
+          1000,
+          "已作废"
+        ],
+        "totals": {
+          "CNY": {
+            "3": {
+              "value": 99100,
+              "missing": 0
+            },
+            "4": {
+              "value": 97400,
+              "missing": 0
+            },
+            "5": {
+              "value": 1700,
+              "missing": 0
+            },
+            "6": {
+              "value": 1700,
+              "missing": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "R06",
+      "name": "未指定结算期间被放入固定十月查询",
+      "issueObserved": true,
+      "expected": "未定期间不能用固定月份代替，应单列待确认",
+      "actual": {
+        "displayedPeriod": "未指定",
+        "filterDate": "2026-10-01"
+      }
+    },
+    {
+      "id": "R07",
+      "name": "订单开票入口缺少当前单据",
+      "issueObserved": true,
+      "expected": "从当前订单进入应能办理本单，或明确展示本单不可申请的原因与处理入口",
+      "actual": {
+        "supported": [
+          "HF20261017001"
+        ],
+        "missing": [
+          "HF20261017002",
+          "HF20261017003",
+          "HF20261017004",
+          "HF20261017005",
+          "HF20261017006",
+          "HF20261017007"
+        ],
+        "selectableOrders": [
+          "HF20261017S04",
+          "HF20261017S05",
+          "HF20261017S03",
+          "HF20261017001",
+          "YS20261017001"
+        ]
+      }
+    },
+    {
+      "id": "R08",
+      "name": "新包机节点付款被账户待审阻断且资金模块无审核动作",
+      "issueObserved": true,
+      "expected": "保留账户审核拦截，同时给财务明确的审核／选择已审账户入口，再续原申请",
+      "actual": {
+        "account": "待审核账户",
+        "approved": false,
+        "error": "供应商收款账户尚未通过财务审核",
+        "fundsAccountApprovalFunction": []
+      },
+      "note": "入口缺失另以 air-funds-ui.js 审阅核实；此例不主张自动核准账户"
+    },
+    {
+      "id": "R09",
+      "name": "订单办理日志缺少办理人",
+      "issueObserved": true,
+      "expected": "关键变更保存办理人、时间、前后值和审批／依据",
+      "actual": {
+        "time": "2026/10/17 16:46:04",
+        "text": "复核资料更正"
+      }
+    }
+  ],
+  "observedIssues": 9,
+  "unexpectedErrors": 0
+}

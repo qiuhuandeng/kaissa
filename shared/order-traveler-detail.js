@@ -55,6 +55,7 @@
     }
     return p;
   });
+  window.OrderTravelerSource = { get: function () { return { orderNo: config.orderNo, productType: config.productType, productName: config.productName, start: context.start, end: (config.snapshot.find(x => x[0] === '出发/回团')?.[1] || '').split(' / ')[1] || '', amount: config.amount?.[0] ?? '', currency: config.currency || 'CNY', snapshot: config.snapshot, people: JSON.parse(JSON.stringify(rows)) }; } };
   let current = null, draft = null, dirty = false, lastTrigger = null, pendingClose = false;
   const materialItems = p => {
     const items = [];
@@ -85,6 +86,7 @@
   const facts = items => '<dl class="ot-facts">' + items.map(([label,value]) => '<div><dt>' + esc(label) + '</dt><dd>' + display(value) + '</dd></div>').join('') + '</dl>';
   function detailContent(p) {
     const identity = [['姓名',p.name],['出生日期',p.birthday],['证件类型',p.docType],['证件号码',p.docNo || (p.hasSavedDoc ? p.savedIdentity : '')]];
+    if(p.sourceRecognition)identity.push(['识别复核',p.sourceRecognition]);
     if (p.docType === '护照') identity.push(['英文姓名',p.englishName],['国籍',p.nationality],['签发地',p.issuedAt],['有效期至',p.expiresAt]);
     const contact = [['联系电话',p.phone],['紧急联系人',p.emergencyName],['紧急联系电话',p.emergencyPhone]];
     if (minor) contact.push(['监护人',p.guardian],['监护人电话',p.guardianPhone],['学校／年级',[p.school,p.grade].filter(Boolean).join(' / ')]);
@@ -149,7 +151,7 @@
     }
     let base = field('证件类型','docType','text',['身份证','护照','港澳通行证','台湾通行证','其他证件']) + field('证件号码','docNo') + field('联系电话','phone','tel') + field('出生日期','birthday','date');
     let doc = field('英文姓名','englishName') + field('国籍','nationality') + field('签发地','issuedAt') + field('有效期至','expiresAt','date');
-    form.innerHTML = section('基本资料', grid(base) + (draft.hasSavedDoc && !draft.docNo ? '<p class="ot-muted">已留存证件：' + esc(draft.savedIdentity) + '；未填写新号码时保留原资料。</p>' : '') + '<div id="otPassportFields"' + (draft.docType === '护照' ? '' : ' hidden') + '>' + grid(doc) + '</div>') +
+    form.innerHTML = section('基本资料', (window.AirOrders&&passport?'<button type="button" class="btn btn-secondary" data-ot-ocr="open">护照识别演示</button><div id="otOcrPreview"></div>':'') + grid(base) + (draft.hasSavedDoc && !draft.docNo ? '<p class="ot-muted">已留存证件：' + esc(draft.savedIdentity) + '；未填写新号码时保留原资料。</p>' : '') + '<div id="otPassportFields"' + (draft.docType === '护照' ? '' : ' hidden') + '>' + grid(doc) + '</div>') +
       (minor ? section('监护人与学员', grid(field('监护人姓名','guardian') + field('监护人电话','guardianPhone','tel') + field('学校','school') + field('年级','grade'))) : '') +
       (profile ? fold('签证与材料', visaContent()) : materialItems(draft).length ? fold('材料', '<div id="otMaterialContent">' + materialContent() + '</div>') : '') +
       fold(config.productType === '单项服务' ? '交付资料' : '出行需求', grid(config.productType === '单项服务' ? field('资料回寄地址','address') + field('交付备注','preference') : field('紧急联系人','emergencyName') + field('紧急联系电话','emergencyPhone','tel') + field('房型偏好','room') + field('同住人','roommate') + field('餐食及其他需求','preference') + field('健康及照顾需求','health') + (config.productType === '专列' ? field('上下车站','boarding') + field('铺位偏好','trafficPreference') : '')) + (draft.resource ? '<p class="ot-muted">当前资源安排：' + esc(draft.resource) + '</p>' : ''));
@@ -215,6 +217,8 @@
     const button = event.target.closest('[data-ot-edit]'); if (button) { lastTrigger = button; open(Number(button.dataset.otEdit)); }
   });
   form.addEventListener('click', event => {
+    const action=event.target.closest('[data-ot-ocr]')?.dataset.otOcr;
+    if(action){event.preventDefault();if(!draft||draft.name!=='张建国')return showError('当前仅提供张建国护照演示样例；其他游客请人工录入。');const box=form.querySelector('#otOcrPreview');if(action==='open'){box.innerHTML='<label for="otOcrKind">识别样例</label><select id="otOcrKind" class="form-control"><option>清晰样例</option><option>缺字样例</option><option>识别失败</option></select><button type="button" class="btn btn-secondary" data-ot-ocr="parse">解析样例</button><div id="otOcrResult"></div>';return;}if(action==='parse'){const result=box.querySelector('#otOcrResult');result.innerHTML='';if(box.querySelector('#otOcrKind').value==='识别失败')return showError('样例无法识别，请手工录入；未修改游客资料。');const values={docNo:box.querySelector('#otOcrKind').value==='缺字样例'?'E1000000?':'E10000001',englishName:'ZHANG/JIANGUO',birthday:'1988-05-12',nationality:'CHN',expiresAt:'2031-05-01'},labels={docNo:'证件号码',englishName:'英文姓名',birthday:'出生日期',nationality:'国籍',expiresAt:'有效期至'};result.innerHTML='<p class="ot-muted">张建国指定演示资料；不是实际扫描识别。缺字样例尾号应核为1。</p><div class="form-grid ot-fields">'+Object.entries(values).map(([k,v])=>'<div class="form-group"><label for="ot-ocr-'+k+'">识别'+labels[k]+'</label><input id="ot-ocr-'+k+'" class="form-control" data-ocr-key="'+k+'" value="'+v+'" type="'+(['birthday','expiresAt'].includes(k)?'date':'text')+'"></div>').join('')+'</div><label><input type="checkbox" id="otOcrReviewed">已逐项复核演示护照资料</label><button type="button" class="btn btn-secondary" data-ot-ocr="apply">采用已核资料</button>';error.hidden=true;return;}if(action==='apply'){if(!box.querySelector('#otOcrReviewed')?.checked)return showError('请逐项复核后采用；也可关闭抽屉取消。');const values=Object.fromEntries([...box.querySelectorAll('[data-ocr-key]')].map(e=>[e.dataset.ocrKey,e.value.trim()]));if(!/^[A-Za-z0-9]{5,30}$/.test(values.docNo)||!values.englishName||!values.birthday||!values.expiresAt||values.expiresAt<=values.birthday)return showError('请补齐识别缺字并核对出生及有效期日期。');Object.assign(draft,values,{docType:'护照',sourceRecognition:'指定护照样例经人工复核 · '+new Date().toLocaleString('zh-CN')});dirty=true;populate();return;}return;}
     const button = event.target.closest('[data-ot-edit]'); if (button) open(Number(button.dataset.otEdit));
   });
   form.addEventListener('submit', event => {event.preventDefault();submit();});

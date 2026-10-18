@@ -75,6 +75,10 @@
     suppliers.push(make('SUP-GRP-0008','欧洲地接ABC',['境外地接','单项供应商'],[destinations[0],destinations[2]],{brand:'欧洲地接ABC',companies:['亿步','体坛','亿步山西分公司'],agreements:[agreement('AGR-ABC-2026-01','亿步与体坛年度地接协议',[body('亿步','月结',''),body('体坛','月结','')],{end:'2026-08-31'}),agreement('AGR-ABC-2026-02','山西分公司单团合作协议',[body('亿步山西分公司','事件后付款','3')])]}));
     suppliers.push(make('临202609170001','冰岛峡湾临时酒店',['单项供应商'],[destinations[7]],{brand:'冰岛峡湾临时酒店',temporary:true,status:'已退回',application:'APR-TMP-20260917-001',service:'单次团期住宿',reason:'原定酒店临时停业，替换本团住宿',business:'EU-ICE-20261001-01',useEnd:'2026-10-10',returnReason:'请补充收款账户证明及酒店经营许可。',documents:{business:file('酒店登记证明.pdf')},contact:'酒店前台',phone:'+354 0000 2601'}));
     suppliers.push(make('SUP-GRP-0009','北京光影会展服务有限公司',['综合类供应商'],[destinations[14]],{brand:'光影会展',status:'草稿',service:'会议摄影及会展执行',documents:{business:file('营业执照.pdf')}}));
+    // 航服建单与供应商维护共用的供票档案示例；不代表真实准入或付款授权。
+    [['SUP-AIR-001','中国国际航空','航空客票、团队机位'],['SUP-AIR-002','海南航空','航空客票、包机机位'],['SUP-AIR-003','北京环球票务','机票代理、散票供票']].forEach(([id,name,service])=>{
+      suppliers.push(make(id,name,['单项供应商'],[['国内','中国',''],['欧洲','全区域',''],['亚洲','全区域','']],{service,owner:'孙丽',companies:['北京凯撒','福建凯撒'],groups:['单团','散拼','单项'],agreements:[agreement('AGR-'+id+'-2026',name+'供票合作协议（演示）',[body('北京凯撒','其他约定','',{otherRule:'按供票协议核对结算',owner:'孙丽'}),body('福建凯撒','其他约定','',{otherRule:'按供票协议核对结算',owner:'孙丽'})],{service,end:'2027-12-31'})]}));
+    });
     suppliers[0].accounts=[{id:'ACC-001',name:suppliers[0].name,bank:'中国银行北京朝阳支行',address:'北京市朝阳区',number:'62220000000000002601',swift:'',currencies:['CNY'],status:'财务已审核'}];
     euro.accounts=[{id:'ACC-007',name:'Europe United DMC',bank:'BNP Paribas',address:'Paris, France',number:'FR7600000000000000000000007',swift:'BNPAFRPP',currencies:['EUR','USD'],status:'财务已审核'}];
     suppliers.forEach(s=>{

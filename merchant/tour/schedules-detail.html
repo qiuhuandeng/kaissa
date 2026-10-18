@@ -14,7 +14,8 @@
 <script src="../../shared/fulfillment-cost-core.js"></script>
 </head>
 <body>
-  <script src="../../shared/nav-merchant.js?v=mice-menu-20261009"></script>
+  <script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261017-superadmin1"></script>
+  <script src="../../shared/nav-merchant.js?v=20261017-receipt1"></script>
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
@@ -412,6 +413,7 @@
             </div>
             <div class="btn-group">
               <button id="openAddScheduleCost" class="btn btn-secondary" type="button" hidden>新增成本项</button>
+              <a id="scheduleAirCostLink" class="btn btn-secondary" href="fulfillment-cost.html?tab=internal-air">内部供票费用</a>
               <a id="openSettlementHandoff" class="btn btn-secondary" href="fulfillment-cost.html" hidden>查看结算承接</a>
               <button id="openScheduleCostPage" class="btn btn-primary" type="button">查看成本结算</button>
             </div>
@@ -4187,6 +4189,9 @@
       }
 
       function renderCostSections(config) {
+        var airCostLink = document.getElementById('scheduleAirCostLink');
+        airCostLink.href = 'fulfillment-cost.html?tab=internal-air&group=' + encodeURIComponent(config.code || scheduleData.code);
+        airCostLink.hidden = config.typeKey !== 'group';
         var rows = [];
         var total = 0;
         (config.costGroups || []).forEach(function (group) {
@@ -4497,7 +4502,17 @@
         return rows;
       }
 
+      function aviationSupplyOrders() {
+        if (!window.AirOrders || activeDetailConfig.typeKey !== 'group') return [];
+        return window.AirOrders.load().orders.filter(function (o) { return o.group === scheduleData.code && o.company === window.AirOrders.company; });
+      }
+      function aviationSupplyOrder() { return aviationSupplyOrders()[0] || null; }
       function currentTrafficTickets() {
+        var airOrders = aviationSupplyOrders();
+        if (airOrders.length) return airOrders.flatMap(function(airOrder){ return airOrder.tickets.map(function(t) {
+          var p = airOrder.people.find(function(p){return p.id === t.personId;}), l = airOrder.legs.find(function(l){return l.id === t.legId;});
+          return { person:p.name, orderNo:airOrder.id, subtype:l.flight + ' / ' + t.cabin, docs:window.AirOrders.docGaps(p,airOrder).length ? '资料待补' : '资料已齐', ticketNo:t.ticket || '未出票', status:t.state, tag:t.state === '已出票' ? 'tag tag-green' : 'tag tag-orange' };
+        }); });
         if (!activeDetailConfig.trafficTickets) {
           activeDetailConfig.trafficTickets = trafficTicketData(activeDetailConfig);
         }
@@ -4590,6 +4605,18 @@
       }
 
       function renderResources(config) {
+        var airSupply = aviationSupplyOrder();
+        document.getElementById('openTrafficTicket').textContent = airSupply ? '供票订单' : '出票/确认';
+        var panel = document.getElementById('tab-resource');
+        var supplySection = document.getElementById('scheduleAirSupply');
+        if (airSupply) {
+          if (!supplySection) { supplySection = document.createElement('section'); supplySection.id = 'scheduleAirSupply'; supplySection.className = 'schedule-detail-block'; panel.prepend(supplySection); }
+          Array.from(panel.children).forEach(function(el){el.hidden = el !== supplySection;});
+          supplySection.innerHTML = aviationSupplyOrders().map(function(airSupply){return '<div class="schedule-air-supply-item"><div class="schedule-detail-block-head"><div><h2 class="detail-section-title">航服供票</h2><span class="schedule-muted">' + escapeHtml(airSupply.id + ' / ' + airSupply.company) + '</span></div><a class="btn btn-primary" href="air-order-detail.html?id=' + encodeURIComponent(airSupply.id) + '&role=operator">供票详情</a></div><div class="description-grid"><div class="description-item"><div class="description-label">本团人数</div><div class="description-value">' + airSupply.people.length + ' 人</div></div><div class="description-item"><div class="description-label">名单版本</div><div class="description-value">第' + airSupply.roster.sourceVersion + '版 · ' + (airSupply.roster.claimed === airSupply.roster.sourceVersion ? '本团已确认' : '待本团核对') + '</div></div><div class="description-item"><div class="description-label">已出票人数</div><div class="description-value">' + window.AirOrders.totals(airSupply).issued + ' 人</div></div></div><div class="table-wrap"><table><thead><tr><th>乘客</th><th>航段</th><th>订座编号</th><th>票号</th><th>出票结果</th></tr></thead><tbody>' + airSupply.tickets.map(function(t){var person=airSupply.people.find(function(p){return p.id===t.personId;}), leg=airSupply.legs.find(function(l){return l.id===t.legId;}); return '<tr><td>' + escapeHtml(person.name) + '</td><td>' + escapeHtml(leg.flight + ' / ' + leg.date) + '</td><td>' + escapeHtml(t.pnr || '—') + '</td><td>' + escapeHtml(t.ticket || '—') + '</td><td>' + escapeHtml(t.state) + '</td></tr>';}).join('') + '</tbody></table></div></div>';}).join('');
+          return;
+        }
+        if (supplySection) supplySection.remove();
+        Array.from(panel.children).forEach(function(el){el.hidden = false;});
         var rows = currentTrafficResources();
         var tickets = currentTrafficTickets();
         var unit = trafficUnit(config);
@@ -4642,7 +4669,7 @@
           trafficOrderDrawerRows.innerHTML = trafficOrderRows.innerHTML;
         }
         trafficTicketRows.innerHTML = tickets.length ? tickets.map(function (row, index) {
-          var action = /已/.test(row.status) ? '<button type="button" disabled>已完成</button>' : '<button class="table-action-primary" type="button" data-ticket-index="' + index + '">出票/确认</button>';
+          var action = airSupply ? '<button class="table-action-primary" type="button" data-ticket-index="' + index + '">查看供票</button>' : /已/.test(row.status) ? '<button type="button" disabled>已完成</button>' : '<button class="table-action-primary" type="button" data-ticket-index="' + index + '">出票/确认</button>';
           return '<tr data-ticket-index="' + index + '"><td>' + escapeHtml(row.person) + '</td><td>' + escapeHtml(row.orderNo) + '</td><td>' + escapeHtml(row.subtype) + '</td><td>' + tagHtml(row.docs, needsAttention(row.docs) ? 'tag tag-orange' : 'tag tag-green') + '</td><td>' + escapeHtml(row.ticketNo || '-') + '</td><td>' + tagHtml(row.status, row.tag) + '</td><td><div class="table-action">' + action + '</div></td></tr>';
         }).join('') : '<tr><td colspan="7">暂无待出票名单</td></tr>';
         var lossRows = rows.map(function (row, index) {
@@ -5774,6 +5801,8 @@
       }
 
       function openTrafficTicketDrawer(index) {
+        var airOrder = aviationSupplyOrder();
+        if (airOrder) { location.href = aviationSupplyOrders().length > 1 ? 'air-orders.html?role=operator' : 'air-order-detail.html?id=' + encodeURIComponent(airOrder.id) + '&role=operator'; return; }
         currentTrafficResourceIndex = Number(index || currentTrafficResourceIndex || 0);
         var row = currentTrafficResources()[currentTrafficResourceIndex] || currentTrafficResources()[0];
         setText('trafficTicketContract', row ? row.contractNo + ' / ' + row.resource : '-');
@@ -5786,6 +5815,7 @@
       }
 
       function saveTrafficTicket() {
+        if (aviationSupplyOrder()) return;
         var pending = currentTrafficTickets().filter(function (item) { return /待/.test(item.status); });
         var rows = currentTrafficResources();
         var changed = 0;
@@ -6751,6 +6781,7 @@
       applyInboundOrderContext();
       applyInboundScheduleFacts();
       refreshScheduleSummary();
+      if (aviationSupplyOrder()) renderResources(activeDetailConfig);
       renderLeaderDispatch();
       if (pageParams.get('tab')) activateDetailTab(pageParams.get('tab'));
       else activateInboundFocus();

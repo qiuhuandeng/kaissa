@@ -128,7 +128,7 @@
     app.innerHTML = header('排团消息') + '<div class="lm-message-head"><span>排团及变更通知</span><button class="lm-text-button" data-action="read-all">全部已读</button></div><div class="lm-content">' + (list.length ? list.map(g => '<a class="lm-message" data-read="' + g.id + '" href="#group/' + encodeURIComponent(g.id) + '/overview"><div class="lm-section-title"><h2>' + (!g.read ? '<i class="lm-unread"></i>' : '') + esc(g.events.at(-1).title) + '</h2>' + tag(g.status) + '</div><h3>' + esc(g.title) + '</h3><p>' + esc(g.events.at(-1).text) + '</p><time>' + esc(g.events.at(-1).time) + '</time></a>').join('') : empty('暂无排团消息', '收到排团或安排调整后，会在这里提醒。')) + '</div>' + nav('messages');
   }
   function profile() {
-    app.innerHTML = header('我的') + '<section class="lm-profile"><span class="lm-eyebrow">领队档案</span><h2>' + esc(user.name) + '</h2><p>' + esc(user.type) + ' · ' + esc(user.phone.slice(0, 3) + '****' + user.phone.slice(-4)) + '</p></section><div class="lm-content"><section class="lm-section"><h3>基础信息</h3><dl>' + row('所属机构', '凯撒旅游') + row('可带区域', user.region) + row('联系计调', '张明 138****8866') + '</dl></section><div class="lm-profile-actions"><button data-action="help">使用帮助' + icon('arrow') + '</button><button data-action="reset">重置演示记录' + icon('arrow') + '</button><button data-action="logout">退出登录' + icon('arrow') + '</button></div><p class="lm-prototype-note">领队移动端 · 交互原型<br>演示记录仅保存在当前浏览器会话</p></div>' + nav('profile');
+    app.innerHTML = header('我的') + '<section class="lm-profile"><span class="lm-eyebrow">领队档案</span><h2>' + esc(user.name) + '</h2><p>' + esc(user.type) + ' · ' + esc(user.phone.slice(0, 3) + '****' + user.phone.slice(-4)) + '</p></section><div class="lm-content"><section class="lm-section"><h3>基础信息</h3><dl>' + row('所属机构', '凯撒旅游') + row('可带区域', user.region) + row('联系计调', '张明 138****8866') + '</dl></section><div class="lm-profile-actions"><button data-action="help">使用帮助' + icon('arrow') + '</button><button data-action="logout">退出登录' + icon('arrow') + '</button></div><p class="lm-prototype-note">领队移动端 · 交互原型<br>演示记录仅保存在当前浏览器会话</p></div>' + nav('profile');
   }
   function current() { const parts = location.hash.slice(1).split('/'); return owned().find(g => g.id === parts[1]); }
   function closeDialog() { dialogAction = null; dialog.close(); previousFocus?.focus(); }
@@ -181,7 +181,6 @@
       }
       case 'read-all': owned().forEach(g => { g.read = true; }); save(); messages(); toast('已全部标为已读'); break;
       case 'help': modal('使用帮助', '<h3>查看与确认排团</h3><p>在“排团”中查看本人安排，核对服务日期和集合信息后确认。调整后的安排需重新确认。</p><h3>资料与变更</h3><p>团组详情可查看行程、名单、资源和出团资料。“消息”保留排团调整、取消和更换结果。</p><h3>无法出团</h3><p>请通过团组详情联系计调，由计调重新安排。</p><h3>原型演示</h3><p>所有身份、游客和团组均为演示资料，操作不会通知他人或回写后台。</p>'); break;
-      case 'reset': modal('重置演示记录', '<p>本次确认和已读记录将被清空，恢复初始演示场景。</p>', () => { groups = data.seed(); save(); profile(); toast('已恢复初始演示记录'); }, '确认重置'); break;
       case 'logout': modal('退出登录', '<p>确认退出当前领队账号？</p>', () => { user = null; try { sessionStorage.removeItem(sessionKey); } catch (_) {} location.hash = 'login'; render(); }, '退出登录'); break;
     }
   }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期管控 - 凯撒旅游</title>
-  <link rel="stylesheet" href="../../shared/style.css?v=entry-date-compact-20261009-r2">
+  <link rel="stylesheet" href="../../shared/style.css?v=20261018-air-builder2">
 </head>
 <body>
   <script>
@@ -16,6 +16,7 @@
   </script>
   <script src="../../shared/nav-merchant.js?v=mice-menu-20261009"></script>
   <script src="../../shared/schedule-route-catalog.js"></script>
+  <script src="../../shared/schedule-file-import.js?v=20261018-import-drawer2"></script>
 
   <section class="list-page-panel">
     <div class="list-page-head">
@@ -1027,14 +1028,13 @@
                   </div>
                 </div>
                 <div id="batchExcelPanel" class="batch-date-panel batch-excel-panel" hidden>
-                  <button id="batchExcelUpload" class="batch-excel-upload" type="button">
+                  <label class="batch-excel-upload"><input id="batchExcelFile" type="file" accept=".xlsx,.csv" aria-label="选择排期文件">
                     <span class="batch-excel-upload-icon" aria-hidden="true">↥</span>
-                    <strong>点击自动模拟上传 Excel 排班文件</strong>
-                    <em>支持读取：出发日期、默认容量、备注字段</em>
-                  </button>
+                    <strong>选择 Excel / CSV 排期文件</strong>
+                    <em>读取出发日期；容量与价格在下一步设置</em>
+                  </label>
                   <div class="batch-excel-actions">
-                    <button id="batchExcelTemplate" class="btn btn-secondary" type="button">下载 Excel 官方模板</button>
-                    <button id="batchExcelSample" class="btn btn-secondary" type="button">载入示例排期数据（3条）</button>
+                    <button id="batchExcelTemplate" class="btn btn-secondary" type="button">下载 Excel 模板</button>
                   </div>
                   <div id="batchExcelStatus" class="form-hint">尚未导入排班数据。</div>
                 </div>
@@ -1064,6 +1064,7 @@
                   <span id="batchTrafficBindingPill" class="tag tag-gray">未绑定</span>
                 </div>
                 <div id="batchTrafficBindHint" class="form-hint">选择已采购交通后，保存团期时占用对应库存。</div>
+                <div id="batchAirFlightInfo" class="batch-air-flight-info" hidden></div>
               </div>
               <div class="form-group">
                 <label id="batchCapacityLabel" class="form-label" for="batchCapacityLimit">计划收客</label>
@@ -2024,6 +2025,7 @@
       var executionNoticeGuestList = document.getElementById('executionNoticeGuestList');
       var pageParams = new URLSearchParams(window.location.search);
       var batchDrawerEmbedMode = pageParams.get('embed') === 'batchDrawer';
+      var airSeatPrefill = null;
       var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
       var routeFilterType = pageParams.get('type') || '';
       var routeFilterScheduleNos = (pageParams.get('scheduleNos') || '').split(/[,，\s]+/).map(function (item) { return item.trim(); }).filter(Boolean);
@@ -5766,6 +5768,7 @@
 
       function renderBatchRouteSearchOptions(keyword) {
         var value = String(keyword || '').trim().toLowerCase();
+        var selectedRoute = batchRoutePlan.value;
         var records = batchRouteSearchRecords();
         var matchedRecords = value ? records.filter(function (record) {
           return record.route.toLowerCase().indexOf(value) >= 0;
@@ -5777,6 +5780,7 @@
         batchRoutePlan.innerHTML = records.map(function (record) {
           return '<option value="' + escapeHtml(record.route) + '" data-product-name="' + escapeHtml(record.product) + '">' + escapeHtml(record.route) + '</option>';
         }).join('');
+        if (records.some(function (record) { return record.route === selectedRoute; })) batchRoutePlan.value = selectedRoute;
         batchRoutePlan.disabled = records.length === 0;
         document.getElementById('batchPlanSelectWrap').hidden = !value;
         document.getElementById('batchProductInlinePanel').hidden = true;
@@ -5830,6 +5834,7 @@
         syncBatchDateMode();
         generateBatchDates();
         updateBatchAllocation();
+        if (airSeatPrefill) applyAirSeatDates(false);
       }
 
       function batchProductSearchText(card) {
@@ -6033,6 +6038,7 @@
           var item = options.items[value];
           var selected = options.selectedDates && options.selectedDates.has(value);
           var disabled = options.startValue && options.endValue && !batchDateInRange(value, options.startValue, options.endValue);
+          if (airSeatPrefill && options.mode === 'manual' && !airSeatPrefill.dates.some(function (item) { return item.date === value; })) disabled = true;
           var classes = [];
           if (item) classes.push('generated');
           if (item && item.excluded) classes.push('excluded');
@@ -6167,12 +6173,6 @@
         if (batchCurrentStep === 2) renderBatchPreview();
       }
 
-      function loadBatchExcelSample() {
-        batchExcelDates = ['2026-07-18', '2026-08-02', '2026-08-16'];
-        document.getElementById('batchExcelStatus').textContent = '已载入 3 条排期数据，可点击下一步进入预览确认。';
-        generateBatchDates();
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('已载入 3 条 Excel 排期数据', { type: 'success' });
-      }
 
       function batchQuotaData() {
         return Array.from(document.querySelectorAll('#batchScheduleDrawer .batch-quota-input')).map(function (input) {
@@ -6199,6 +6199,11 @@
         if (!batchTrafficResource) return;
         var batchType = batchSelectedProduct ? batchSelectedProduct.dataset.batchType : '普通团期';
         var options = createTrafficResourceOptions(batchType);
+        if (airSeatPrefill) {
+          var sourceDates = airSeatDates();
+          var qty = sourceDates.length ? Math.min.apply(null, sourceDates.map(function (item) { return Number(item.available || 0); })) : 0;
+          options = [{value: airSeatPrefill.id, label: airSeatPrefill.flights.map(function (f) { return f.id; }).join(' / ') + ' · ' + airSeatPrefill.flights[0].name + ' · ' + airSeatPrefill.cabin + ' · ' + sourceDates.length + '个航期', depart: airSeatPrefill.dates[0].date, back: airSeatPrefill.dates[0].returnDate, qty: qty, unit:'席'}];
+        }
         batchTrafficResource.innerHTML = options.length ? options.map(function (option) {
           return '<option value="' + escapeHtml(option.value) + '" data-depart="' + escapeHtml(option.depart) + '" data-back="' + escapeHtml(option.back) + '" data-qty="' + Number(option.qty || 0) + '" data-unit="' + escapeHtml(option.unit || '') + '">' + escapeHtml(option.label) + '</option>';
         }).join('') : '<option value="">暂无可绑定交通资源</option>';
@@ -6211,6 +6216,7 @@
         if (!option || !option.value) return true;
         var qty = Number(batchTrafficQty.value || 0);
         var capacity = Number(document.getElementById('batchCapacityLimit').value || 0);
+        if (airSeatPrefill && (!airSeatDates().length || capacity <= 0)) return true;
         return qty < capacity || qty > Number(option.qty || 0);
       }
 
@@ -6273,10 +6279,10 @@
           if (batchTrafficBindHint) batchTrafficBindHint.textContent = '绑定数量小于计划收客，需调整名额或更换交通资源';
         } else {
           if (batchTrafficBindingPill) {
-            batchTrafficBindingPill.textContent = '已绑定';
+            batchTrafficBindingPill.textContent = airSeatPrefill ? '已选择' : '已绑定';
             batchTrafficBindingPill.className = 'tag tag-green';
           }
-          if (batchTrafficBindHint) batchTrafficBindHint.textContent = option.label + '；保存后占用' + qty + unit + '可分配库存';
+          if (batchTrafficBindHint) batchTrafficBindHint.textContent = airSeatPrefill ? '每期公共余位至少 ' + option.qty + ' 席' : option.label + '；保存后占用' + qty + unit + '可分配库存';
         }
       }
 
@@ -6369,6 +6375,8 @@
         batchPreviewRemovedDates.clear();
         batchPreviewEditingDate = '';
         batchExcelDates = [];
+        document.getElementById('batchExcelFile').value = '';
+        document.getElementById('batchExcelStatus').textContent = '尚未导入排期数据。';
         batchQuotaSource.value = '手工录入名额';
         renderBatchTrafficOptions();
         syncBatchTrafficBinding();
@@ -6380,6 +6388,48 @@
         updateBatchAllocation();
         setBatchStep(1);
       }
+
+      function airSeatDates() {
+        return airSeatPrefill ? airSeatPrefill.dates.filter(function (item) { return batchManualDates.has(item.date); }) : [];
+      }
+      function applyAirSeatDates(resetDates) {
+        if (!airSeatPrefill) return;
+        if (resetDates) batchManualDates = new Set(airSeatPrefill.dates.map(function (item) { return item.date; }));
+        document.querySelector('input[name="batchDateMode"][value="manual"]').checked = true;
+        document.querySelectorAll('input[name="batchDateMode"]').forEach(function (input) { input.closest('label').hidden = input.value !== 'manual'; });
+        var dates = airSeatPrefill.dates;
+        document.getElementById('batchManualStartDate').value = dates[0].date.slice(0, 7) + '-01';
+        var first = parseLocalDate(dates[0].date), last = parseLocalDate(dates[dates.length - 1].date);
+        var monthCount = Math.max(3, (last.getFullYear() - first.getFullYear()) * 12 + last.getMonth() - first.getMonth() + 1);
+        var monthSelect = document.getElementById('batchManualMonths');
+        if (!Array.from(monthSelect.options).some(function (option) { return Number(option.value) === monthCount; })) monthSelect.add(new Option(monthCount + '个月', String(monthCount)));
+        monthSelect.value = String(monthCount);
+        batchQuotaSource.value = '绑定已采购交通';
+        renderBatchTrafficOptions();
+        var activeDates = airSeatDates();
+        var qty = activeDates.length ? Math.min.apply(null, activeDates.map(function (item) { return item.available; })) : 0;
+        document.getElementById('batchCapacityLimit').value = Math.min(Number(document.getElementById('batchCapacityLimit').value) || 20, qty);
+        batchTrafficQty.value = document.getElementById('batchCapacityLimit').value;
+        document.getElementById('batchMinGroupSize').value = Math.ceil(Number(batchTrafficQty.value) * 0.6);
+        document.getElementById('batchCurrency').value = airSeatPrefill.currency;
+        document.getElementById('batchAirFlightInfo').hidden = false;
+        document.getElementById('batchAirFlightInfo').innerHTML = airSeatPrefill.flights.map(function (f) {
+          var ports = String(f.name || '').split(' → ');
+          return '<div class="batch-air-flight-row">' + [['方向', f.direction], ['航班', f.id], ['出发地', ports[0]], ['目的地', ports[1]], ['舱位', airSeatPrefill.cabin]].map(function (field) {
+            return '<label class="form-group"><span class="form-label">' + field[0] + '</span><input class="form-control" aria-label="' + escapeHtml(f.direction + field[0]) + '" value="' + escapeHtml(field[1] || '') + '" readonly></label>';
+          }).join('') + '</div>';
+        }).join('');
+        syncBatchDateMode();generateBatchDates();syncBatchTrafficBinding();updateBatchAllocation();
+      }
+      window.addEventListener('message', function (event) {
+        if (!batchDrawerEmbedMode || pageParams.get('source') !== 'airInventory' || event.source !== window.parent || (location.protocol === 'file:' ? !['null', 'file://'].includes(event.origin) : event.origin !== location.origin) || event.data?.type !== 'caesar:air-seats:prefill' || airSeatPrefill) return;
+        var detail = event.data.detail;
+        if (!detail || !Array.isArray(detail.dates) || !detail.dates.length || !Array.isArray(detail.flights)) return;
+        airSeatPrefill = detail;
+        openBatch({ product: detail.product, route: detail.route });
+        applyAirSeatDates(true);
+        window.parent.postMessage({ type: 'caesar:air-seats:prefilled' }, location.protocol === 'file:' ? '*' : location.origin);
+      });
 
       function openBatch(prefill) {
         if (prefill && guardFreeTravelProduct(prefill.product, prefill.route)) return;
@@ -6402,9 +6452,8 @@
         }
         window.caesarUI.openLayer(batchScheduleDrawer);
         if (batchDrawerEmbedMode) {
-          window.requestAnimationFrame(function () {
-            notifyBatchDrawerHost('ready');
-          });
+          // Readiness is a data handoff, independent of whether this iframe has painted.
+          notifyBatchDrawerHost('ready');
         }
       }
 
@@ -6444,10 +6493,10 @@
           schedules.unshift({
             code: batchScheduleCode(departDateValue, sourceIndex),
             product: batchSelectedProduct.dataset.name,
-            company: '福建凯撒',
+            company: airSeatPrefill ? airSeatPrefill.company : '福建凯撒',
             ownerOrg: productOwnerOrg(batchSelectedProduct.dataset.name),
             depart: departDateValue,
-            back: addDays(departDateValue, routeDuration - 1),
+            back: airSeatPrefill ? (airSeatPrefill.dates.find(function (item) { return item.date === departDateValue; })?.returnDate || addDays(departDateValue, routeDuration - 1)) : addDays(departDateValue, routeDuration - 1),
             stock: String(capacity),
             sold: '0',
             left: String(capacity),
@@ -6464,7 +6513,7 @@
             singleRoomDiff: document.getElementById('batchSingleRoomDiff').value.trim() || '0',
             trafficBindingMode: binding.trafficBindingMode,
             trafficResource: binding.trafficResource,
-            trafficResourceValue: binding.trafficResourceValue,
+            trafficResourceValue: airSeatPrefill ? (airSeatPrefill.dates.find(function (item) { return item.date === departDateValue; })?.record || binding.trafficResourceValue) : binding.trafficResourceValue,
             trafficResourceQty: binding.trafficResourceQty,
             trafficResourceUnit: binding.trafficResourceUnit,
             trafficResourceStatus: binding.trafficResourceStatus,
@@ -6538,7 +6587,7 @@
               batchType: batchSelectedProduct.dataset.batchType || '普通团期',
               pricingPolicy: batchPricingPolicy && batchPricingPolicy.value || recommendedPricingPolicy(batchSelectedProduct.dataset.batchType || '普通团期', batchSelectedProduct.dataset.name),
               depart: depart,
-              back: addDays(depart, routeDuration - 1),
+              back: airSeatPrefill ? (airSeatPrefill.dates.find(function (item) { return item.date === depart; })?.returnDate || addDays(depart, routeDuration - 1)) : addDays(depart, routeDuration - 1),
               deadline: addDays(depart, -5),
               stock: capacity,
               sold: 0,
@@ -7124,6 +7173,7 @@
         if (batchManualDates.has(value)) batchManualDates.delete(value);
         else batchManualDates.add(value);
         generateBatchDates();
+        if (airSeatPrefill) { renderBatchTrafficOptions(); syncBatchTrafficBinding(); }
       });
 
       document.getElementById('batchStartDate').addEventListener('input', generateBatchDates);
@@ -7138,10 +7188,15 @@
           generateBatchDates();
         });
       });
-      document.getElementById('batchExcelUpload').addEventListener('click', loadBatchExcelSample);
-      document.getElementById('batchExcelSample').addEventListener('click', loadBatchExcelSample);
-      document.getElementById('batchExcelTemplate').addEventListener('click', function () {
-        if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('已下载 Excel 官方模板');
+      document.getElementById('batchExcelFile').addEventListener('change', async function () {
+        const file = this.files[0]; if (!file) return;
+        const status = document.getElementById('batchExcelStatus'); batchExcelDates = []; generateBatchDates(); status.textContent = '正在读取 ' + file.name;
+        try { batchExcelDates = await window.ScheduleFileImport.dates(file); status.textContent = file.name + ' · 已读取 ' + batchExcelDates.length + ' 个出发日期'; }
+        catch (e) { status.textContent = e.message; }
+        generateBatchDates();
+      });
+      document.getElementById('batchExcelTemplate').addEventListener('click', async function () {
+        try { await window.ScheduleFileImport.template(); } catch (e) { document.getElementById('batchExcelStatus').textContent = e.message; }
       });
       document.getElementById('batchCapacityLimit').addEventListener('input', function () {
         document.getElementById('batchMinGroupSize').value = Math.ceil(Number(document.getElementById('batchCapacityLimit').value || 0) * 0.6) || '';

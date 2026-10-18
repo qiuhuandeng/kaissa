@@ -587,5 +587,245 @@
         ]
       }
     ]
+  },
+  {
+    "id": "SUP-AIR-001",
+    "name": "中国国际航空",
+    "brand": "中国国际航空",
+    "english": "",
+    "registration": "",
+    "registered": "中国",
+    "address": "",
+    "legal": "",
+    "manager": "",
+    "contact": "林娜",
+    "phone": "13800002601",
+    "wechat": "",
+    "email": "",
+    "regions": [
+      "国内",
+      "欧洲",
+      "亚洲"
+    ],
+    "groups": [
+      "单团",
+      "散拼",
+      "单项"
+    ],
+    "categories": [
+      "单项供应商"
+    ],
+    "service": "航空客票、团队机位",
+    "places": [
+      [
+        "国内",
+        "中国",
+        ""
+      ],
+      [
+        "欧洲",
+        "全区域",
+        ""
+      ],
+      [
+        "亚洲",
+        "全区域",
+        ""
+      ]
+    ],
+    "status": "已准入",
+    "agreements": [
+      {
+        "no": "AGR-SUP-AIR-001-2026",
+        "name": "中国国际航空供票合作协议（演示）",
+        "status": "已归档",
+        "start": "2026-01-01",
+        "end": "2027-12-31",
+        "effective": "已确认",
+        "service": "航空客票、团队机位",
+        "bodies": [
+          {
+            "company": "北京凯撒",
+            "contact": "林娜",
+            "phone": "13800002601",
+            "owner": "孙丽",
+            "term": "按供票协议核对结算",
+            "currency": [
+              "CNY"
+            ]
+          },
+          {
+            "company": "福建凯撒",
+            "contact": "林娜",
+            "phone": "13800002601",
+            "owner": "孙丽",
+            "term": "按供票协议核对结算",
+            "currency": [
+              "CNY"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SUP-AIR-002",
+    "name": "海南航空",
+    "brand": "海南航空",
+    "english": "",
+    "registration": "",
+    "registered": "中国",
+    "address": "",
+    "legal": "",
+    "manager": "",
+    "contact": "林娜",
+    "phone": "13800002601",
+    "wechat": "",
+    "email": "",
+    "regions": [
+      "国内",
+      "欧洲",
+      "亚洲"
+    ],
+    "groups": [
+      "单团",
+      "散拼",
+      "单项"
+    ],
+    "categories": [
+      "单项供应商"
+    ],
+    "service": "航空客票、包机机位",
+    "places": [
+      [
+        "国内",
+        "中国",
+        ""
+      ],
+      [
+        "欧洲",
+        "全区域",
+        ""
+      ],
+      [
+        "亚洲",
+        "全区域",
+        ""
+      ]
+    ],
+    "status": "已准入",
+    "agreements": [
+      {
+        "no": "AGR-SUP-AIR-002-2026",
+        "name": "海南航空供票合作协议（演示）",
+        "status": "已归档",
+        "start": "2026-01-01",
+        "end": "2027-12-31",
+        "effective": "已确认",
+        "service": "航空客票、包机机位",
+        "bodies": [
+          {
+            "company": "北京凯撒",
+            "contact": "林娜",
+            "phone": "13800002601",
+            "owner": "孙丽",
+            "term": "按供票协议核对结算",
+            "currency": [
+              "CNY"
+            ]
+          },
+          {
+            "company": "福建凯撒",
+            "contact": "林娜",
+            "phone": "13800002601",
+            "owner": "孙丽",
+            "term": "按供票协议核对结算",
+            "currency": [
+              "CNY"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SUP-AIR-003",
+    "name": "北京环球票务",
+    "brand": "北京环球票务",
+    "english": "",
+    "registration": "",
+    "registered": "中国",
+    "address": "",
+    "legal": "",
+    "manager": "",
+    "contact": "林娜",
+    "phone": "13800002601",
+    "wechat": "",
+    "email": "",
+    "regions": [
+      "国内",
+      "欧洲",
+      "亚洲"
+    ],
+    "groups": [
+      "单团",
+      "散拼",
+      "单项"
+    ],
+    "categories": [
+      "单项供应商"
+    ],
+    "service": "机票代理、散票供票",
+    "places": [
+      [
+        "国内",
+        "中国",
+        ""
+      ],
+      [
+        "欧洲",
+        "全区域",
+        ""
+      ],
+      [
+        "亚洲",
+        "全区域",
+        ""
+      ]
+    ],
+    "status": "已准入",
+    "agreements": [
+      {
+        "no": "AGR-SUP-AIR-003-2026",
+        "name": "北京环球票务供票合作协议（演示）",
+        "status": "已归档",
+        "start": "2026-01-01",
+        "end": "2027-12-31",
+        "effective": "已确认",
+        "service": "机票代理、散票供票",
+        "bodies": [
+          {
+            "company": "北京凯撒",
+            "contact": "林娜",
+            "phone": "13800002601",
+            "owner": "孙丽",
+            "term": "按供票协议核对结算",
+            "currency": [
+              "CNY"
+            ]
+          },
+          {
+            "company": "福建凯撒",
+            "contact": "林娜",
+            "phone": "13800002601",
+            "owner": "孙丽",
+            "term": "按供票协议核对结算",
+            "currency": [
+              "CNY"
+            ]
+          }
+        ]
+      }
+    ]
   }
 ];})(typeof window==="undefined"?globalThis:window);

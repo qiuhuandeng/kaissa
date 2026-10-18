@@ -141,6 +141,20 @@
   pointer-events: auto;
 }
 
+.air-schedule-builder-host.loading {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.air-schedule-loading {
+  position: absolute;
+  inset: 0;
+}
+
+.air-schedule-loading .drawer-modal {
+  width: min(1160px, 100vw);
+}
+
 .product-schedule-batch-drawer-frame {
   display: block;
   width: 100%;
@@ -5917,6 +5931,27 @@ textarea.form-control {
 .table-more-menu[popover]:popover-open {
   display: block;
 }
+
+/* Shared action menus escape sticky columns and scroll containers in the top layer. */
+.caesar-floating-menu {
+  position: fixed !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+  z-index: 1600 !important;
+  box-sizing: border-box;
+  min-width: min(120px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+.caesar-floating-menu.show,
+.caesar-floating-menu:popover-open {
+  display: var(--caesar-menu-display, block) !important;
+}
+.caesar-floating-menu::backdrop { background: transparent; pointer-events: none; }
 
 .finance-sticky-action-table-wrap {
   overflow-x: auto;
@@ -80087,3 +80122,623 @@ html[data-merchant-theme] .chart-line-fill {
 .mice-create-entry .mice-entry-fold{margin-bottom:16px;padding-top:14px}
 .mice-create-entry .mice-row-date{display:flex;align-items:center;gap:8px;line-height:20px;padding-right:30px;white-space:nowrap}
 .mice-create-entry .mice-row-date-action{position:absolute;right:0;top:0}
+
+/* 交通采购原有抽屉样式：从页面统一移入共享样式 */
+
+    .procurement-rule-panel { margin-top: 16px; }
+    .procurement-rule-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .procurement-rule-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #f8fafc; }
+    .procurement-rule-item strong { display: block; font-size: 13px; }
+    .procurement-rule-item span { display: block; margin-top: 2px; color: var(--color-text-muted); font-size: 12px; }
+    .procurement-change-drawer { width: min(1180px, calc(100vw - 32px)); }
+    .procurement-change-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 12px 0 16px; }
+    .procurement-change-summary > div { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #f8fafc; }
+    .procurement-change-summary span { display: block; color: var(--color-text-muted); font-size: 12px; }
+    .procurement-change-summary strong { display: block; margin-top: 2px; font-size: 15px; }
+    .procurement-change-alert { margin-top: 12px; padding: 10px 12px; border: 1px solid #f5d59b; border-radius: var(--radius-md); background: #fff8e8; color: #8a5a00; }
+    .procurement-change-alert.is-ok { border-color: #b9e6cf; background: #effbf5; color: #16794c; }
+    .procurement-inline-error { display: block; margin-top: 4px; color: var(--color-danger); font-size: 12px; }
+    .procurement-rule-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .procurement-table-number { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .procurement-action-pair { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+    .procurement-preview-note { color: var(--color-text-muted); font-size: 12px; }
+    .procurement-payment-record { display: grid; gap: 2px; }
+    .procurement-payment-record a, .procurement-payment-record button { width: fit-content; }
+    .procurement-settings-drawer { width: min(760px, calc(100vw - 32px)); }
+    @media (max-width: 900px) {
+      .procurement-rule-grid, .procurement-change-summary { grid-template-columns: 1fr 1fr; }
+    }
+
+
+/* 航服业务 · 机位管理。仅作用于航空独立工作区。 */
+#air-inventory { min-width:0; color:var(--color-text,#253046); font-size:13px; }
+#air-inventory [hidden] { display:none !important; }
+#air-inventory *, #air-inventory *::before, #air-inventory *::after { box-sizing:border-box; }
+#air-inventory .list-page-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+#air-inventory .air-role { display:flex; gap:8px; align-items:center; font-size:12px; color:var(--color-text-muted,#64748b); }
+#air-inventory input:not([type="checkbox"]):not([type="file"]), #air-inventory select { border:1px solid #dce1e8; border-radius:5px; height:34px; padding:5px 9px; background:#fff; color:#253046; font-size:13px; min-width:0; max-width:100%; }
+#air-inventory input[type="checkbox"] { width:15px; height:15px; accent-color:#2873df; vertical-align:middle; }
+#air-inventory input:focus, #air-inventory select:focus { outline:2px solid #b9d8ff; outline-offset:1px; border-color:#2873df; }
+#air-inventory button:focus-visible, #air-inventory summary:focus-visible { outline:2px solid #2873df; outline-offset:2px; }
+#air-inventory button:disabled { opacity:.45; cursor:not-allowed; }
+#air-inventory .air-surface { background:#fff; border:1px solid #e3e7ed; border-radius:8px; min-width:0; }
+#air-inventory .air-filter { padding:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; border-bottom:1px solid #edf0f4; }
+#air-inventory #air-keyword { width:220px; }
+#air-inventory .air-filter label { display:flex; align-items:center; gap:7px; color:#64748b; }
+#air-inventory .air-filter input[type="date"] { width:134px; }
+#air-inventory .air-filter-actions { margin-left:auto; display:flex; gap:8px; }
+#air-inventory .air-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 16px; border-bottom:1px solid #e7ebf0; }
+#air-inventory .air-tabs { display:flex; align-items:center; gap:20px; }
+#air-inventory .air-tabs button { border:0; border-bottom:2px solid transparent; background:none; padding:13px 0 11px; font-size:13px; white-space:nowrap; color:#657186; cursor:pointer; }
+#air-inventory .air-tabs button.active { color:#246fe5; border-bottom-color:#246fe5; font-weight:600; }
+#air-inventory .air-tabs button span { color:inherit; margin-left:5px; font-size:12px; font-weight:400; }
+#air-inventory .air-selection { display:flex; align-items:center; gap:12px; font-size:12px; color:#758197; white-space:nowrap; }
+#air-inventory .air-import-steps { list-style:none; display:flex; align-items:center; gap:36px; padding:0 0 22px; margin:0; border-bottom:1px solid #edf0f4; }
+#air-inventory .air-import-steps li { display:flex; align-items:center; gap:8px; font-size:13px; color:#8994a4; }
+#air-inventory .air-import-steps li>span { display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:#eef1f6; }
+#air-inventory .air-import-steps .current { color:#2873df; font-weight:600; }
+#air-inventory .air-import-steps .current>span { background:#eaf2ff; }
+#air-inventory .air-inventory-import-drawer .air-section { margin-top:22px; }
+#air-inventory .air-import-upload { display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px; border:1px dashed #cfd9e7; border-radius:8px; background:#fafcff; color:#66758c; font-size:13px; }
+#air-inventory .air-import-upload input { max-width:100%; }
+#air-inventory .air-table-scroll { overflow:auto; max-width:100%; min-width:0; }
+#air-inventory .air-table { border-collapse:separate; border-spacing:0; width:100%; font-size:13px; }
+#air-inventory .air-table th { text-align:left; font-weight:500; background:#f7f9fc; color:#69768a; padding:12px; border-bottom:1px solid #e7ebf0; white-space:nowrap; }
+#air-inventory .air-table td { vertical-align:middle; padding:14px 12px; border-bottom:1px solid #edf0f4; background:#fff; }
+#air-inventory .air-table tbody tr:last-child td { border-bottom:0; }
+#air-inventory .air-list { table-layout:fixed; min-width:1168px; }
+#air-inventory .air-list .air-check-col { width:40px; }
+#air-inventory .air-list .air-date-col { width:112px; }
+#air-inventory .air-list .air-type-col { width:76px; }
+#air-inventory .air-list .air-quantity-col { width:120px; }
+#air-inventory .air-list .air-allocated-col { width:132px; }
+#air-inventory .air-list .air-deadline-col { width:124px; }
+#air-inventory .air-list .air-status-col { width:88px; }
+#air-inventory .air-list .air-action-col, #air-inventory .air-list th.air-actions, #air-inventory .air-list td.air-actions { width:178px; min-width:178px; max-width:178px; }
+#air-inventory .air-list .air-actions { position:sticky; right:0; z-index:2; box-shadow:-5px 0 9px -7px #a0aaba; }
+#air-inventory .air-list thead .air-actions { z-index:3; }
+#air-inventory .air-cell { display:flex; flex-direction:column; gap:4px; line-height:1.45; }
+#air-inventory .air-cell strong { font-weight:500; }
+#air-inventory .air-flight-col { min-width:197px; }
+#air-inventory .air-list td:nth-child(2) strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#air-inventory .air-cell small { font-size:12px; color:#8892a3; }
+#air-inventory .air-number { white-space:nowrap; font-variant-numeric:tabular-nums; }
+#air-inventory .air-status { display:inline-block; padding:3px 7px; border-radius:4px; font-size:12px; white-space:nowrap; }
+#air-inventory .air-status-blue { color:#266cd0; background:#ecf3ff; }
+#air-inventory .air-status-orange { color:#ad6a0b; background:#fff5e6; }
+#air-inventory .air-status-gray { color:#768194; background:#f1f3f6; }
+#air-inventory .air-row-actions { display:flex; align-items:center; justify-content:flex-start; gap:12px; white-space:nowrap; }
+#air-inventory .air-link { border:0; padding:0; background:none; color:#2872d8; font-size:13px; cursor:pointer; white-space:nowrap; line-height:24px; }
+#air-inventory .air-more summary { list-style:none; color:#2872d8; cursor:pointer; padding:0; }
+#air-inventory .air-more summary::after { content:'⌄'; margin-left:3px; font-size:11px; }
+#air-inventory .air-more>div { position:fixed; z-index:90; min-width:120px; border:1px solid #e0e5ed; border-radius:6px; background:#fff; padding:8px 12px; box-shadow:0 4px 16px #25304622; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+#air-inventory .air-empty { text-align:center; color:#919aab; padding:48px 16px !important; }
+#air-inventory .air-pagination { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-top:1px solid #edf0f4; color:#8490a1; }
+#air-inventory .air-pagination>div { display:flex; align-items:center; gap:12px; }
+#air-inventory .air-session-note { margin:10px 0 0; font-size:12px; color:#909bac; }
+body.air-layer-open { overflow:hidden; }
+#air-inventory .air-overlay { position:fixed; inset:0; z-index:1100; background:#17243d55; display:flex; justify-content:flex-end; }
+#air-inventory .air-drawer { overflow:hidden; background:#fff; width:min(1120px,calc(100vw - 40px)); height:100%; box-shadow:-10px 0 40px #142b441a; display:flex; flex-direction:column; min-width:0; }
+#air-inventory .air-drawer>header { display:flex; align-items:center; justify-content:space-between; padding:19px 24px; border-bottom:1px solid #e4e8ee; flex-shrink:0; }
+#air-inventory .air-drawer h2 { margin:0; font-size:18px; line-height:26px; font-weight:600; }
+#air-inventory #air-drawer-meta { display:block; margin-top:5px; font-size:12px; color:#8190a5; }
+#air-inventory .air-close { font-size:25px; border:0; color:#8190a5; background:none; cursor:pointer; padding:4px 8px; }
+#air-inventory .air-drawer-body { flex:1; overflow:auto; padding:20px 24px; min-height:0; }
+#air-inventory .air-drawer>footer { padding:16px 24px; border-top:1px solid #e4e8ee; display:flex; justify-content:flex-end; gap:10px; flex-shrink:0; }
+#air-inventory .air-identity { display:flex; flex-direction:column; gap:7px; margin-bottom:18px; }
+#air-inventory .air-identity strong { font-size:15px; font-weight:600; }
+#air-inventory .air-identity span { color:#8490a2; font-size:12px; }
+#air-inventory .air-detail-tabs { border-bottom:1px solid #e4e8ee; margin-bottom:22px; }
+#air-inventory .air-section { margin:0 0 24px; }
+#air-inventory .air-section h3 { display:flex; align-items:center; gap:8px; margin:0 0 16px; font-size:14px; font-weight:600; color:#27374d; }
+#air-inventory .air-section h3::before { content:''; width:3px; height:14px; background:#2873df; border-radius:2px; }
+#air-inventory .air-section h3>.btn { margin-left:auto; }
+.batch-air-flight-info { display:grid; gap:10px; margin-top:14px; }
+.batch-air-flight-info[hidden] { display:none; }
+.batch-date-mode label[hidden] { display:none; }
+.batch-air-flight-row { display:grid; grid-template-columns:58px 90px minmax(0,1fr) minmax(0,1fr) 100px; gap:10px; padding:12px; border:1px solid #e8ebef; border-radius:6px; background:#fafafa; }
+.batch-air-flight-row .form-group { margin:0; min-width:0; }
+.batch-air-flight-row .form-control { width:100%; min-width:0; padding-inline:8px; font-size:13px; }
+#air-inventory .air-form-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+#air-inventory .air-field { display:flex; flex-direction:column; gap:7px; min-width:0; font-size:13px; }
+#air-inventory .air-field>span { color:#69768b; }
+#air-inventory .air-field input, #air-inventory .air-field select { width:100%; }
+#air-inventory #air-markup-editor, #air-inventory .air-markup-fields { grid-column:1 / -1; }
+#air-inventory .air-markup-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+#air-inventory .air-markup-with-currency { grid-template-columns:136px repeat(3,minmax(0,1fr)); }
+#air-inventory .air-flight-row { display:grid; grid-template-columns:84px minmax(250px,1.7fr) minmax(150px,1fr) minmax(150px,1fr) 36px; align-items:end; gap:14px; padding:16px; margin-bottom:12px; background:#fafafa; border:1px solid #e8ebef; border-radius:6px; }
+#air-inventory .air-flight-row>.air-link { height:32px; padding:0; margin:0; white-space:nowrap; }
+#air-inventory .air-required { color:#e24343; font-style:normal; }
+#air-inventory .air-flight-row select { font-size:13px; padding-left:10px; }
+#air-inventory .air-generator label[hidden] { display:none; }
+@media (max-width:850px) {
+  #air-inventory .air-flight-row { grid-template-columns:84px minmax(0,1fr) 36px; gap:12px; }
+  #air-inventory .air-flight-flight { grid-column:2 / 4; }
+  #air-inventory .air-flight-from { grid-column:1 / 3; }
+  #air-inventory .air-flight-to { grid-column:1 / 3; }
+  #air-inventory .air-flight-row>.air-link { grid-column:3; grid-row:3; }
+}
+#air-inventory .air-kv { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 24px; margin:0; }
+#air-inventory .air-kv-three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+#air-inventory .air-flight-detail { grid-template-columns:72px 100px minmax(0,1fr) minmax(0,1fr); gap:14px; padding:16px; background:#fafafa; border:1px solid #e8ebef; border-radius:6px; }
+#air-inventory .air-flight-detail+.air-flight-detail { margin-top:12px; }
+@media (max-width:650px) {
+  #air-inventory .air-kv-three, #air-inventory .air-flight-detail { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+#air-inventory .air-kv>div { min-width:0; }
+#air-inventory .air-kv dt { color:#8893a4; margin-bottom:6px; font-size:12px; }
+#air-inventory .air-kv dd { margin:0; line-height:1.6; overflow-wrap:anywhere; }
+#air-inventory .air-muted { color:#8390a1; font-size:12px; line-height:1.7; margin:12px 0; }
+#air-inventory .air-counts { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:12px; padding:18px 0; border-block:1px solid #e7ebf0; }
+#air-inventory .air-counts>div { display:flex; flex-direction:column; gap:10px; }
+#air-inventory .air-counts span { color:#7e8b9e; font-size:12px; }
+#air-inventory .air-counts strong { font-size:23px; color:#334a68; font-variant-numeric:tabular-nums; }
+#air-inventory .air-counts small { font-size:12px; font-weight:400; color:#8390a1; }
+#air-inventory .air-detail-table { min-width:720px; }
+#air-inventory .air-detail-table td { max-width:320px; overflow-wrap:anywhere; }
+#air-inventory .air-detail-table .air-link+.air-link { margin-left:10px; }
+#air-inventory .air-pricing-workspace { min-width:0; }
+#air-inventory .air-editor-group { padding:0 0 20px; }
+#air-inventory .air-editor-group+.air-editor-group { border-top:1px solid #edf0f4; padding-top:18px; }
+#air-inventory .air-group-heading { display:flex; align-items:center; gap:12px; margin-bottom:12px; line-height:20px; }
+#air-inventory .air-group-heading strong { color:#34445b; font-size:13px; font-weight:600; }
+#air-inventory .air-group-heading>span { color:#8b96a7; font-size:12px; }
+#air-inventory .air-generator { display:grid; grid-template-columns:minmax(150px,1.35fr) repeat(4,minmax(86px,1fr)) 96px; align-items:end; gap:16px; }
+#air-inventory .air-generator .air-field { min-width:0; }
+#air-inventory .air-generator>.btn { width:96px; height:32px; margin:0; }
+#air-inventory .air-unit-input { position:relative; display:block; min-width:0; }
+#air-inventory .air-unit-input input { width:100%; min-width:0; }
+#air-inventory .air-unit-input:has(em) input { padding-right:32px; }
+#air-inventory .air-unit-input em { position:absolute; right:11px; top:50%; transform:translateY(-50%); color:#8b96a7; font-size:12px; font-style:normal; pointer-events:none; }
+#air-inventory .air-import-tools { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:0 0 20px; padding:12px 14px; background:#f8fafc; border:1px dashed #dfe5ed; border-radius:6px; }
+#air-inventory .air-import-tools[hidden] { display:none; }
+#air-inventory #air-import-filename { color:#8491a3; font-size:12px; overflow-wrap:anywhere; }
+#air-inventory .air-preview-head { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:16px 0 12px; border-top:1px solid #edf0f4; }
+#air-inventory .air-preview-head strong { display:flex; align-items:center; gap:8px; color:#34445b; font-size:13px; font-weight:600; }
+#air-inventory .air-preview-head>span { font-size:12px; color:#8390a1; }
+#air-inventory .air-preview-head>.air-link { margin-left:auto; font-size:12px; }
+#air-inventory .air-period-count { padding:1px 6px; border-radius:4px; background:#f0f3f8; color:#65758b; font-size:12px; font-weight:500; line-height:18px; }
+#air-inventory .air-preview-scroll { max-height:360px; border:1px solid #e7ebf0; border-radius:6px; }
+#air-inventory .air-preview-table { table-layout:fixed; min-width:850px; }
+#air-inventory .air-preview-table th { padding:11px 8px; font-size:12px; position:sticky; top:0; z-index:1; }
+#air-inventory .air-preview-table td { padding:10px 8px; }
+#air-inventory .air-preview-table input:not([type="checkbox"]) { width:100%; min-width:0; font-size:13px; padding-inline:8px; }
+#air-inventory .air-preview-table input[type="checkbox"] { width:15px; height:15px; vertical-align:middle; }
+#air-inventory .air-preview-table .air-preview-actions { position:sticky; right:0; width:96px; min-width:96px; max-width:96px; white-space:nowrap; box-shadow:-1px 0 #e7ebf0; z-index:1; }
+#air-inventory .air-preview-table th.air-preview-actions { z-index:2; }
+#air-inventory .air-preview-table .air-row-number { color:#8b96a7; font-variant-numeric:tabular-nums; }
+#air-inventory .air-preview-table .air-link { font-size:12px; padding:0; }
+#air-inventory .air-preview-table .air-link+.air-link { margin-left:12px; }
+#air-inventory .air-review-link { color:#ad7a22; white-space:nowrap; }
+#air-inventory .air-ready { color:#738197; font-size:12px; white-space:nowrap; }
+#air-inventory .air-expanded-row>td { background:#f8fafc; }
+#air-inventory .air-row-editor { padding:12px; }
+#air-inventory .air-row-notes { display:flex; gap:10px; padding:10px 12px; color:#97702b; font-size:12px; line-height:1.7; background:#fff9ed; border-radius:4px; }
+#air-inventory .air-row-notes[hidden], #air-inventory .air-preview-head>.air-link[hidden] { display:none; }
+#air-inventory .air-row-notes strong { flex-shrink:0; font-weight:500; }
+@media (max-width:850px) {
+  #air-inventory .air-generator { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+  #air-inventory .air-generator>.btn { width:100%; }
+  #air-inventory .air-markup-with-currency { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+#air-inventory .air-payment-line { display:flex; gap:12px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+#air-inventory .air-payment-line label { display:flex; align-items:center; gap:8px; color:#7b8799; font-size:12px; }
+#air-inventory .air-payment-line input[type="number"] { width:130px; }
+#air-inventory .air-allocation-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; background:#f7f9fc; padding:12px; border-radius:6px; color:#6d7d92; }
+#air-inventory .air-section-actions { display:flex; justify-content:flex-end; margin-top:16px; }
+#air-inventory .air-group-table { table-layout:fixed; min-width:910px; }
+#air-inventory .air-group-table th:nth-child(1) { width:50px; }
+#air-inventory .air-group-table th:nth-child(2) { width:150px; }
+#air-inventory .air-group-table th:nth-child(3) { width:230px; }
+#air-inventory .air-group-table th:nth-child(5) { width:100px; }
+#air-inventory .air-group-table th:nth-child(6) { width:110px; }
+#air-inventory .air-group-table input:not([type="checkbox"]),#air-inventory .air-group-table select { width:100%; }
+#air-inventory .air-group-table .air-link+.air-link { margin-left:10px; }
+#air-inventory .air-history { list-style:none; margin:0; padding:0 0 0 10px; }
+#air-inventory .air-history li { position:relative; padding:0 0 20px 20px; border-left:1px solid #dce4ee; display:flex; flex-direction:column; gap:6px; }
+#air-inventory .air-history li::before { content:''; position:absolute; left:-4px; top:4px; width:7px; height:7px; border-radius:50%; background:#8caddb; }
+#air-inventory .air-history li strong { font-size:13px; font-weight:500; }
+#air-inventory .air-history li span { font-size:13px; color:#67768b; }
+#air-inventory .air-history li small { font-size:12px; color:#98a2b1; }
+#air-inventory .air-error, #air-inventory .air-warning { background:#fff7ec; border:1px solid #f4dab0; border-radius:5px; padding:11px 14px; color:#a26715; line-height:1.65; margin-bottom:18px; }
+#air-inventory .air-danger { color:#c33f40; }
+#air-inventory .air-success { color:#25805c; }
+#air-inventory .air-confirm-overlay { position:fixed; inset:0; background:#18254055; z-index:1200; display:grid; place-items:center; }
+#air-inventory .air-confirm { max-width:440px; width:min(440px,calc(100vw - 40px)); border-radius:9px; background:#fff; padding:24px; box-shadow:0 16px 60px #18254033; }
+#air-inventory .air-confirm h2 { font-size:17px; margin:0; }
+#air-inventory .air-confirm p { margin:16px 0 24px; color:#6c798d; line-height:1.7; }
+#air-inventory .air-confirm>div { display:flex; justify-content:flex-end; gap:8px; }
+#air-inventory #air-toast { position:fixed; z-index:1300; left:50%; bottom:40px; transform:translateX(-50%); padding:12px 20px; border-radius:7px; box-shadow:0 4px 20px #142b4422; background:#253952; color:#fff; font-size:13px; max-width:90vw; }
+@media (max-width:1100px) {
+  #air-inventory .air-toolbar { flex-wrap:wrap; gap:0; }
+  #air-inventory .air-selection { padding-bottom:10px; }
+  #air-inventory .air-tabs { gap:17px; }
+  #air-inventory .air-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #air-inventory .air-counts { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+
+/* 航服机票订单 · 航实02 */
+#air-orders-app { font-size:14px;line-height:22px;min-width:0;color:#263445; }
+#air-orders-app [hidden] {display:none!important;}
+#air-orders-app .ao-head {display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;background:#fff;border:1px solid #e7ebf0;border-radius:6px;margin-bottom:16px;flex-wrap:wrap;}
+#air-orders-app .ao-head h1 {font-size:18px;line-height:26px;font-weight:600;margin:0;}
+#air-orders-app .ao-title,#air-orders-app .ao-actions,#air-orders-app .ao-toolbar {display:flex;align-items:center;gap:8px;}
+#air-orders-app .ao-actions {flex-wrap:wrap;}
+#air-orders-app .ao-role {font-size:12px;color:#758295;display:flex;align-items:center;gap:8px;margin-right:8px;}
+#air-orders-app select,#air-orders-app input:not([type=checkbox]),#air-orders-app textarea {height:32px;border:1px solid #d9dfe7;border-radius:4px;background-color:#fff;padding:4px 10px;color:#263445;font-size:14px;font-family:inherit;min-width:0;max-width:100%;}
+#air-orders-app select {appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='m3 4 3 3 3-3' fill='none' stroke='%23778290'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+#air-orders-app input[type=checkbox] {accent-color:#2474df;width:14px;height:14px;flex-shrink:0;}
+#air-orders-app :focus-visible {outline:2px solid #4096ff;outline-offset:2px;}
+#air-orders-app .ao-surface {background:#fff;border:1px solid #e7ebf0;border-radius:6px;overflow:hidden;}
+#air-orders-app .filter-card {display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:16px;margin:0;background:transparent;border:0;box-shadow:none;}
+#air-orders-app .filter-card input {width:220px;}
+#air-orders-app .filter-card select {width:136px;}
+#air-orders-app .tab-bar {display:flex;overflow-x:auto;flex-wrap:nowrap;margin:0;padding:0 16px;border-bottom:1px solid #e7ebf0;background:#fff;gap:4px;}
+#air-orders-app .tab-item {flex-shrink:0;border:0;background:transparent;padding:12px 16px;line-height:22px;font-size:14px;color:#66758a;cursor:pointer;white-space:nowrap;}
+#air-orders-app .tab-item.active {background:#eef5ff;color:#176bcb;border-bottom:0;}
+#air-orders-app .ao-table-wrap {overflow:auto;width:100%;max-width:100%;margin:0;}
+#air-orders-app table {border-collapse:separate;border-spacing:0;width:100%;font-size:14px;table-layout:fixed;}
+#air-orders-app th {background:#f7f9fb;color:#66758a;font-size:13px;font-weight:500;text-align:left;white-space:nowrap;padding:12px;}
+#air-orders-app td {padding:14px 12px;border-bottom:1px solid #edf0f4;vertical-align:middle;background:#fff;}
+#air-orders-app .ao-orders-table {min-width:1150px;}
+#air-orders-app .ao-orders-table th:nth-child(2) {width:auto;}
+#air-orders-app .ao-sticky {position:sticky;right:0;z-index:2;width:148px;min-width:148px;max-width:148px;box-shadow:-6px 0 8px -8px #65758b;box-sizing:border-box;}
+#air-orders-app th.ao-sticky {background:#f7f9fb;}
+#air-orders-app .ao-row-actions {display:flex;align-items:center;gap:16px;white-space:nowrap;}
+#air-orders-app .ao-link {border:0;background:transparent;color:#1670d2;padding:0;font:inherit;cursor:pointer;white-space:nowrap;text-align:left;}
+#air-orders-app .ao-line {display:block;line-height:22px;overflow-wrap:anywhere;}
+#air-orders-app .ao-line+.ao-line {margin-top:3px;}
+#air-orders-app .ao-muted {color:#8490a1;font-size:12px;line-height:20px;}
+#air-orders-app .ao-table-foot {padding:12px 16px;color:#8490a1;font-size:12px;}
+#air-orders-app .ao-track {max-width:1216px;}
+#air-orders-app[data-page="air-order-detail"] .ao-track {width:100%;max-width:none;min-width:0;}
+#air-orders-app .ao-orders-table col:last-child,
+#air-orders-app .ao-orders-table .ao-sticky {width:180px;min-width:180px;max-width:180px;}
+#air-orders-app .ao-orders-table .ao-row-actions {gap:14px;}
+#air-orders-app .ao-orders-table .table-more-toggle {font:inherit;color:#1670d2;background:transparent;border:0;padding:0;cursor:pointer;}
+#air-orders-app .ao-detail-table {min-width:740px;font-size:13px;}
+#air-orders-app .ao-detail-table td {padding:12px 10px;}
+#air-orders-app .ao-detail-table td:last-child {position:static;box-shadow:none;}
+#air-orders-app .ao-detail-gap {margin-top:20px;}
+#air-orders-app .ao-related {margin:16px 0 0;font-size:13px;}
+.af-layer .af-collection-drawer {width:800px!important;max-width:calc(100vw - 24px)!important;}
+.af-layer .af-collection-drawer .modal-body {display:block;}
+.af-layer .af-collection-drawer .ab-table {min-width:0;width:100%;table-layout:fixed;}
+.af-layer .af-collection-drawer input,.af-layer .af-collection-drawer select {min-width:0;max-width:100%;width:100%;box-sizing:border-box;}
+.af-layer .af-collection-drawer .ab-grid {margin-top:20px;}
+.af-request-total {padding-top:16px;font-weight:600;text-align:right;}
+.af-collection-code {display:grid;grid-template-columns:170px minmax(0,1fr);gap:20px;align-items:center;}
+.af-collection-qr svg {width:160px;height:160px;display:block;}
+.af-collection-url {overflow-wrap:anywhere;font-size:13px;margin:8px 0 16px;}
+@media(max-width:600px){.af-collection-code {grid-template-columns:1fr;}.af-layer .af-collection-drawer .ab-grid {grid-template-columns:1fr;}}
+#air-orders-app .ao-section {background:#fff;padding:20px;border:1px solid #e7ebf0;border-radius:6px;margin:16px 0;}
+#air-orders-app .ao-section h2 {font-size:14px;font-weight:600;margin:0 0 20px;line-height:20px;border-left:3px solid #287ce6;padding-left:10px;}
+#air-orders-app .ao-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start;}
+#air-orders-app .ao-grid-3 {grid-template-columns:repeat(3,minmax(0,1fr));}
+#air-orders-app .ao-field {display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:0;}
+#air-orders-app .ao-field input,#air-orders-app .ao-field select {width:100%;}
+#air-orders-app .ao-toolbar {justify-content:space-between;flex-wrap:wrap;margin:16px 0;}
+#air-orders-app .ao-edit-leg,#air-orders-app .ao-edit-person,#air-orders-app .ao-issue-card {padding:0 0 20px;border-bottom:1px solid #e7ebf0;margin-bottom:16px;}
+#air-orders-app .ao-edit-person:last-child,#air-orders-app .ao-edit-leg:last-child {border:0;margin:0;padding:0;}
+#air-orders-app .ao-checks {display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;}
+#air-orders-app .ao-checks label {display:flex;align-items:center;gap:6px;}
+#air-orders-app .ao-summary {display:grid;grid-template-columns:1fr 1.3fr .8fr;align-items:center;padding:20px;gap:24px;border:1px solid #e7ebf0;background:white;margin-bottom:16px;border-radius:6px;}
+#air-orders-app .ao-summary strong {font-size:16px;margin-right:12px;}
+#air-orders-app .ao-facts {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 24px;margin:0;}
+#air-orders-app .ao-facts dt {color:#8490a1;font-size:12px;margin-bottom:4px;}
+#air-orders-app .ao-facts dd {margin:0;overflow-wrap:anywhere;}
+#air-orders-app .ao-leg-list {display:flex;gap:16px;flex-wrap:wrap;margin-top:20px;}
+#air-orders-app .ao-leg-list>div {padding:12px 16px;background:#f7f9fb;min-width:210px;}
+#air-orders-app .ao-roster-table {min-width:1100px;}
+#air-orders-app .ao-roster-table th:nth-child(1) {width:160px;}
+#air-orders-app .ao-roster-table th:nth-child(2) {width:170px;}
+#air-orders-app .ao-roster-table th:nth-child(3) {width:110px;}
+#air-orders-app .ao-roster-table th:nth-child(4) {width:195px;}
+#air-orders-app .ao-roster-table th:nth-child(5) {width:160px;}
+#air-orders-app .ao-roster-table .ao-sticky,#air-orders-app .ao-import-table .ao-sticky,#air-orders-app .ao-import-review .ao-sticky {width:88px;min-width:88px;max-width:88px;}
+#air-orders-app .ao-segment {min-height:66px;padding:6px 0;}
+#air-orders-app .ao-segment+.ao-segment {border-top:1px solid #edf0f4;}
+#air-orders-app .ao-warning {padding:12px 16px;background:#fff9e9;color:#916820;border:1px solid #f2e3bb;border-radius:4px;margin:16px 0;font-size:13px;}
+#air-orders-app .ao-error {color:#b63737;background:#fff0f0;border:1px solid #f3cece;padding:12px 16px;border-radius:4px;margin:16px 0;white-space:pre-wrap;}
+#air-orders-app #ao-error {position:sticky;bottom:16px;z-index:10;}
+#air-orders-app .ao-empty {text-align:center;padding:32px 16px;color:#8490a1;background:#fff;}
+#air-orders-app .ao-history {list-style:none;padding:0;margin:0;}
+#air-orders-app .ao-history li {padding:10px 0;border-bottom:1px solid #edf0f4;}
+#air-orders-app .ao-calculation {padding:12px 16px;background:#f7f9fb;margin-top:20px;font-weight:600;}
+#air-orders-app .ao-import-table {min-width:850px;}
+#air-orders-app .ao-import-table th:first-child {width:30%;}
+#air-orders-app .ao-import-review {min-width:940px;}
+#air-orders-app .ao-import-review th:first-child {width:56px;}
+#air-orders-app .ao-import-review th:nth-child(2) {width:180px;}
+#air-orders-app .ao-import-review th:nth-child(3) {width:180px;}
+#air-orders-app .ao-import-review th:nth-child(4) {width:140px;}
+#air-orders-app .drawer-modal {width:960px!important;max-width:calc(100vw - 32px)!important;display:flex;flex-direction:column;}
+#air-orders-app .drawer-modal .modal-body {flex:1;overflow:auto;padding:20px;min-height:0;}
+#air-orders-app .drawer-modal .modal-header,#air-orders-app .drawer-modal .modal-footer {flex-shrink:0;}
+#air-orders-app .modal-title {font-size:16px;margin:0;}
+#air-orders-app .modal-footer {display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;}
+#air-orders-app .ao-toast {position:fixed;top:110px;left:50%;transform:translateX(-50%);z-index:11000;background:#fff;border:1px solid #dce4ee;box-shadow:0 4px 18px #33445520;border-radius:5px;padding:10px 20px;max-width:80vw;}
+#air-orders-app .modal-overlay.show {display:flex;}
+#air-orders-app .modal-overlay:not(.show) {display:none;}
+#air-orders-app #ao-confirm {z-index:12000;}
+@media(max-width:1100px){#air-orders-app .ao-grid-3,#air-orders-app .ao-facts {grid-template-columns:repeat(2,minmax(0,1fr));}#air-orders-app .ao-head {padding:16px;}#air-orders-app .ao-role {margin-right:0;}#air-orders-app .ao-summary {grid-template-columns:1fr 1fr;}#air-orders-app .ao-summary>div:last-child {grid-column:1/-1;}}
+@media(max-width:600px){#air-orders-app .ao-grid,#air-orders-app .ao-facts,#air-orders-app .ao-summary {grid-template-columns:1fr;}#air-orders-app .ao-section {padding:16px;}#air-orders-app .ao-role {width:100%;}#air-orders-app .drawer-modal {max-width:100vw!important;}#air-orders-app .ao-actions {gap:6px;}#air-orders-app .tab-item {padding:10px 12px;}}
+.ao-handoff-toolbar {display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0;}
+.ao-handoff-toolbar .text-muted {margin-right:auto;}
+#air-orders-app .ao-line {white-space:normal;}
+#air-orders-app .ao-orders-table td:nth-child(2) .ao-line {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#air-orders-app .ao-orders-table td:nth-child(6) .ao-line {white-space:nowrap;overflow:visible;}
+#scheduleAirSupply[hidden],#tab-resource>[hidden] {display:none!important;}
+#air-orders-app .ao-segment {min-height:92px;}
+
+/* 航服退改与一团一结：沿用共享导航及抽屉。 */
+.ab-app,.ab-layer{font-size:14px;color:#283447;min-width:0}
+.ab-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+.ab-title,.ab-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ab-head h1{font-size:18px;line-height:26px;font-weight:600;margin:0}
+.ab-role{font-size:12px;color:#64748b;display:flex;gap:7px;align-items:center}
+.ab-app select,.ab-app input,.ab-layer select,.ab-layer input,.ab-layer textarea{font:inherit;border:1px solid #d8dee7;border-radius:5px;padding:8px 10px;background:#fff;color:#283447;min-width:0;box-sizing:border-box}
+.ab-app input[type=checkbox],.ab-layer input[type=checkbox]{width:16px;height:16px;flex:none;accent-color:#2563eb}
+.ab-app input:focus,.ab-layer input:focus,.ab-layer textarea:focus,.ab-layer select:focus{outline:2px solid #bfdbfe;outline-offset:1px}
+.ab-surface{background:#fff;border:1px solid #e5e9ef;border-radius:8px;overflow:hidden}
+.ab-app .ab-filter{display:flex;gap:10px;align-items:center;padding:16px;margin:0;background:transparent;border:0;box-shadow:none}
+.ab-filter input{width:250px}
+.ab-app .tab-bar{width:100%;margin:0;border-bottom:1px solid #e5e9ef;padding:0 16px;background:#fff;gap:3px;overflow:auto;flex-wrap:nowrap}
+.ab-app .tab-item{white-space:nowrap;padding:12px 16px;font-size:14px;border-bottom:0}
+.ab-app .tab-item.active{background:#eff6ff;color:#2563eb;border-radius:5px 5px 0 0;box-shadow:none}
+.ab-table-wrap{overflow:auto;max-width:100%;border:0;border-radius:0}
+.ab-table{table-layout:fixed;width:100%;min-width:1180px;border-collapse:separate;border-spacing:0;font-size:14px}
+.ab-table th,.ab-table td{padding:14px 16px;vertical-align:middle;border-bottom:1px solid #edf0f4;text-align:left;line-height:1.6}
+.ab-table th{background:#f7f9fc;color:#627083;font-weight:500;white-space:nowrap}
+.ab-table td{background:#fff}
+.ab-table td .ab-line{overflow-wrap:anywhere}
+.ab-table th.ab-sticky,.ab-table td.ab-sticky{position:sticky;right:0;width:88px;min-width:88px;max-width:88px;box-sizing:border-box;z-index:1;box-shadow:-1px 0 0 #edf0f4}
+.ab-table col:last-child{width:88px;min-width:88px;max-width:88px}
+.ab-detail-table{min-width:800px}
+.ab-detail-table th:last-child,.ab-detail-table td:last-child{position:static;box-shadow:none;width:auto;min-width:0;max-width:none}
+.ab-detail-table col:last-child{width:200px;min-width:200px;max-width:200px}
+.ab-line{display:block;margin:0;line-height:1.55}.ab-line+.ab-line{margin-top:4px}
+.ab-muted{color:#7c8798;font-size:12px}
+.ab-link{border:0;background:none;color:#2563eb;font:inherit;padding:0;cursor:pointer;white-space:nowrap}
+.ab-foot{padding:13px 16px;color:#748196;font-size:12px}
+.ab-empty{padding:28px 16px;color:#8b97a7;text-align:center}
+.ab-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;background:#fff;border:1px solid #e5e9ef;border-radius:7px;padding:20px;margin-bottom:18px}
+.ab-track{max-width:1216px}
+.ab-section{padding:22px;background:#fff;border-bottom:1px solid #e8edf3}
+.ab-section>h2{font-size:15px;font-weight:600;margin:0 0 18px;padding-left:10px;border-left:3px solid #3478ed;line-height:18px}
+.ab-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px;margin:0}
+.ab-facts>div{min-width:0}.ab-facts dt{color:#7c8798;font-size:12px;margin-bottom:5px}.ab-facts dd{margin:0;line-height:1.6;overflow-wrap:anywhere}
+.ab-layer #ab-drawer>.drawer-modal{width:960px;max-width:calc(100vw - 32px)}
+.ab-layer .modal-body{overflow:auto;min-height:0}.ab-layer .ab-section{padding:20px 0;background:none;border:0}
+.ab-layer .modal-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.ab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+.ab-field{display:flex;flex-direction:column;gap:8px;min-width:0;margin-bottom:4px}
+.ab-field>span{font-size:13px;color:#526176}.ab-field input,.ab-field select{width:100%;height:38px}
+.ab-field input[readonly],.ab-field select:disabled{background:#f4f6f9;color:#758195}
+.ab-choice-list{display:grid;gap:0}.ab-choice-list>label{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #edf0f4;cursor:pointer}
+.ab-check{display:flex;align-items:center;gap:9px;margin:12px 0;line-height:1.6}
+.ab-edit-line{padding:18px 0;border-bottom:1px solid #edf0f4}.ab-edit-line>strong{display:block;margin-bottom:14px}
+.ab-record{padding:18px 0;border-bottom:1px solid #edf0f4}.ab-record>.ab-facts{margin:15px 0}.ab-record .btn{margin-left:10px}
+.ab-version{padding:15px 0;border-bottom:1px solid #e5e9ef}.ab-version summary{cursor:pointer;font-weight:500;margin-bottom:16px}
+.ab-history{padding-left:18px;margin:0}.ab-history li{padding:8px 0}
+.ab-notice{background:#f3f7fc;border-radius:5px;color:#5d6f88;padding:12px 16px;margin-top:18px;line-height:1.65}
+.ab-error{background:#fff1f0;color:#b42318;padding:12px 16px;border-radius:5px;margin:12px 0;line-height:1.65}
+.ab-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#26364e;color:#fff;border-radius:7px;padding:12px 22px;z-index:99999}
+.ab-layer textarea{width:100%;min-height:90px;resize:vertical}
+.ab-layer [hidden],.ab-app [hidden]{display:none!important}
+@media(max-width:1100px){.ab-head{align-items:flex-start}.ab-actions{justify-content:flex-end}.ab-summary{gap:16px;grid-template-columns:1fr 1fr}.ab-role{width:100%;justify-content:flex-end}}
+@media(max-width:720px){.ab-grid,.ab-facts,.ab-summary{grid-template-columns:1fr}.ab-head{flex-wrap:wrap}.ab-layer #ab-drawer>.drawer-modal{max-width:100vw;width:100vw}}
+.ab-app .ab-surface>.tab-bar{height:44px;min-height:44px;max-height:44px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+.ab-app .ab-surface>.tab-bar>.tab-item{height:44px;min-height:44px;margin-top:0;margin-bottom:0;flex-shrink:0}
+
+/* 航实04：航服统一资金办理，沿用公共后台组件。 */
+.af-layer #af-drawer>.drawer-modal{width:960px;max-width:calc(100vw - 32px)}
+.af-app .ab-surface>.tab-bar{height:44px;min-height:44px;flex-shrink:0;overflow-y:hidden}
+.af-app .table-wrap>table.af-table.table-column-runtime{table-layout:fixed;width:100%;min-width:1180px}
+.af-app table.af-table .list-col{width:auto;min-width:0}
+.af-app table.af-table .af-sticky{width:88px;min-width:88px;max-width:88px}
+.af-table col:last-child,.af-table th.af-sticky,.af-table td.af-sticky{width:88px;min-width:88px;max-width:88px;box-sizing:border-box}
+.af-table th.af-sticky,.af-table td.af-sticky{position:sticky;right:0;z-index:1;box-shadow:-1px 0 0 #edf0f4}
+.af-detail-table{min-width:780px}.af-detail-table col:last-child{width:auto;min-width:0;max-width:none}
+.af-layer .table-wrap>table.af-detail-ops{table-layout:fixed;width:100%;min-width:780px}
+.af-layer table.af-detail-ops .list-col{width:auto;min-width:0;max-width:none}
+.af-layer table.af-detail-ops col:last-child,.af-layer table.af-detail-ops th:last-child,.af-layer table.af-detail-ops td:last-child{width:88px;min-width:88px;max-width:88px;box-sizing:border-box}
+.af-layer table.af-detail-ops th:last-child,.af-layer table.af-detail-ops td:last-child{position:sticky;right:0;background:#fff;box-shadow:-1px 0 #edf0f4}
+.af-layer table.af-detail-ops th:last-child{background:#f8fafc}
+.af-layer table.af-detail-ops td:not(:first-child){white-space:nowrap}
+.af-layer .ab-grid{gap:16px}.af-layer .ab-field input,.af-layer .ab-field select{width:100%;height:34px}
+.af-layer .ab-grid+.ab-section{margin-top:16px}.af-amount-input{width:116px;min-width:116px!important}
+.af-record{border-bottom:1px solid #edf0f4;padding:16px 0}.af-link-box{margin:24px 0}
+.af-app .ab-filter select{width:136px;height:32px}.af-app .ab-filter input{width:220px;height:32px}
+.af-table td:nth-last-child(2),.af-table td:nth-last-child(3){white-space:nowrap}
+@media(max-width:720px){.af-layer #af-drawer>.drawer-modal{width:100vw;max-width:100vw}}
+
+/* 航实05：四类对账与账期；保留公共导航和业务组件。 */
+.ar-app .table-wrap>table.ar-table{table-layout:fixed;width:100%;min-width:1180px}
+.ar-app table.ar-table .list-col,.ar-layer table.ar-table .list-col{width:auto;min-width:0}
+.ar-app table.ar-table .ar-sticky,.ar-layer table.ar-table .ar-sticky,.ar-table col:last-child{width:88px;min-width:88px;max-width:88px;box-sizing:border-box}
+.ar-table th.ar-sticky,.ar-table td.ar-sticky{position:sticky;right:0;z-index:1;box-shadow:-1px 0 0 #edf0f4;background:#fff}
+.ar-table th.ar-sticky{background:#fbfcfe}
+.ar-app .ab-surface>.tab-bar{height:44px;min-height:44px;flex-shrink:0;overflow-y:hidden}
+.ar-app .ab-filter input{width:220px;height:32px}.ar-app .ab-filter select{width:136px;height:32px}
+.ar-detail{max-width:1216px}.ar-detail>.ab-section{background:#fff;border:1px solid #edf0f4;border-radius:6px;padding:16px;margin-bottom:16px}
+.ar-layer #ar-drawer>.drawer-modal{width:960px;max-width:calc(100vw - 32px)}
+.ar-layer .table-wrap>table.ar-short{table-layout:fixed;width:100%;min-width:760px}.ar-layer .ar-short col:last-child{width:auto;min-width:0;max-width:none}
+.ar-layer .ab-field input,.ar-layer .ab-field select{width:100%;height:34px}.ar-layer .ab-field textarea{width:100%;padding:8px;border:1px solid #d9dfe8;border-radius:4px;font:13px/20px monospace;resize:vertical}
+.ar-layer .ar-amount{width:116px;min-width:116px}.ar-layer input[type=checkbox]{width:16px;height:16px}
+.ar-app td,.ar-layer td{vertical-align:middle}.ar-table td:nth-child(2),.ar-table td:nth-child(3),.ar-table td:nth-child(4){white-space:nowrap}
+@media(max-width:720px){.ar-layer #ar-drawer>.drawer-modal{width:100vw;max-width:100vw}}
+.ar-line-filter{margin-bottom:16px}.ar-line-filter select{width:176px;height:32px;margin-left:8px}
+
+/* 包机项目：业务资料与项目内分销、结算。 */
+.ac-app .ac-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:16px;border:0;background:none;box-shadow:none}
+.ac-filter input{width:220px}.ac-filter select{width:136px}
+.ac-app input,.ac-app select,.ac-layer input,.ac-layer select{height:32px;padding:4px 10px}
+.ac-app select,.ac-layer select{padding-right:28px}
+.ac-summary{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid #e5e9ef;border-radius:8px;padding:16px 20px;margin-bottom:16px}
+.ac-summary .ab-line{margin:0}.ac-track{margin-top:16px}.ac-track>.ab-section{margin-bottom:16px;border:1px solid #e5e9ef;border-radius:8px;padding:20px}
+#air-charter-app[data-page="detail"] .ac-track{width:100%;max-width:none;min-width:0}
+.ac-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.ac-section-head h2{font-size:15px;line-height:22px;margin:0;padding-left:10px;border-left:3px solid #3478ed;font-weight:600}
+.ac-table{min-width:1100px}.ac-table th,.ac-table td{vertical-align:middle;padding:12px 16px}.ac-table col:last-child{width:auto;min-width:0;max-width:none}
+.ac-table td:not(:first-child){overflow:visible}.ac-table .ac-last{white-space:nowrap}
+.ac-table.ac-op88 col:last-child,.ac-table.ac-op88 th.ac-sticky,.ac-table.ac-op88 td.ac-last{width:88px;min-width:88px;max-width:88px}
+.ac-table.ac-op160 col:last-child,.ac-table.ac-op160 th.ac-sticky,.ac-table.ac-op160 td.ac-last{width:160px;min-width:160px;max-width:160px}
+.ac-table:not(.ac-op0) th.ac-sticky,.ac-table:not(.ac-op0) td.ac-last{position:sticky;right:0;z-index:1;box-sizing:border-box;box-shadow:-1px 0 0 #edf0f4}
+.ac-table.ac-op0 td.ac-last{white-space:normal;overflow-wrap:anywhere}
+.ac-row-actions{display:flex;gap:12px;align-items:center}.ac-app .ab-facts+.ab-table-wrap{margin-top:20px}
+.ac-layer #ac-drawer>.drawer-modal{width:880px;max-width:calc(100vw - 32px)}
+.ac-layer .ab-facts{padding-bottom:20px;margin-bottom:16px;border-bottom:1px solid #edf0f4}
+.ac-layer .ab-facts+.ab-facts{margin-top:0}.ac-layer .modal-body{display:block;overflow:auto}
+.ac-layer textarea{min-height:80px}.ac-layer .modal-title{font-size:18px}
+@media(max-width:720px){.ac-layer #ac-drawer>.drawer-modal{width:100vw;max-width:100vw}.ac-summary{gap:12px}.ac-filter input{width:100%}}
+.ac-app .table-wrap>table.ac-table.table-column-runtime{table-layout:fixed;width:100%;min-width:1100px}
+.ac-app table.ac-table .list-col{width:auto;min-width:0}
+#ac-search.ac-filter{gap:8px}
+
+/* 航实07：票据、核算、设置和只读查询。 */
+.az-app{min-width:0}.az-entry{margin:12px 16px}.az-app [hidden],.az-layer [hidden]{display:none!important}.az-app .ab-head h1{font-size:20px;margin:0}.az-app .ab-head{gap:12px;flex-wrap:wrap}.az-table-wrap{max-width:100%;overflow:auto}.az-table{width:100%;min-width:1050px;table-layout:fixed;border-collapse:collapse}.az-table th,.az-table td{padding:13px 14px;text-align:left;vertical-align:middle;border-bottom:1px solid var(--border,#e9edf2);font-size:13px;overflow-wrap:break-word}.az-table th{background:#f8fafc;color:#667085;font-weight:500}.az-table .ab-line{margin-top:3px}.az-table .ab-line:first-child{margin-top:0}.az-ops col:last-child,.az-ops th:last-child,.az-ops td:last-child{width:88px;min-width:88px;max-width:88px}.az-ops th:last-child,.az-ops td:last-child{position:sticky;right:0;background:#fff;z-index:2;box-shadow:-1px 0 #eef0f4}.az-ops th:last-child{background:#f8fafc}.az-table .ab-link{margin:0;white-space:nowrap}.az-table .tag{white-space:nowrap}.az-filter{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.az-filter input,.az-filter select{height:34px;max-width:225px;border:1px solid #d8dee8;border-radius:5px;padding:0 10px}.az-filter label{display:flex;gap:6px;align-items:center;color:#667085;font-size:13px}.az-layer .drawer-modal{width:740px;max-width:calc(100vw - 36px)}.az-layer .ab-section{padding:16px 0;border:0;box-shadow:none}.az-layer .ab-section h2{font-size:14px;margin:0 0 12px}.az-layer .az-table{min-width:600px}.az-layer .az-select-table{width:100%;table-layout:fixed;border-collapse:collapse}.az-select-table th,.az-select-table td{padding:10px 8px;border-bottom:1px solid #e7ecf1;vertical-align:middle;text-align:left;font-size:13px}.az-select-table th:first-child{width:44px}.az-select-table th:nth-child(3),.az-select-table th:nth-child(4){width:112px}.az-select-table input[type=number]{width:100%;height:34px;box-sizing:border-box;border:1px solid #d8dee8;border-radius:4px;padding:6px}.az-entry-row{display:grid;grid-template-columns:minmax(0,1fr) 90px 130px 60px;gap:8px;align-items:end;margin-bottom:12px}.az-entry-row .btn{margin-bottom:1px}.az-check{display:flex;gap:8px;margin-top:20px;font-size:13px}.az-sample{max-width:100%;width:560px;margin-top:20px}.az-report-note{font-size:12px;color:#667085;padding:12px 16px;line-height:1.7}.az-report-number{white-space:nowrap;overflow:visible}.az-page-controls{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-size:13px;gap:12px}.az-report .az-table{min-width:1250px}.az-report .az-table th,.az-report .az-table td{padding:12px}.az-report .az-table th:last-child,.az-report .az-table td:last-child{position:static}.az-report .az-total{font-size:13px;background:#f8fafc;padding:12px 16px}.az-report .az-total span{display:inline-block;margin-right:24px;white-space:nowrap}.az-layer .modal-footer{flex-wrap:wrap}.az-layer .ab-facts dd{overflow-wrap:anywhere}
+@media(max-width:1100px){.az-app .ab-head{align-items:flex-start}.az-app .ab-actions{flex-wrap:wrap}.az-layer .drawer-modal{width:700px}.az-report .az-filter input{max-width:175px}}
+
+[data-air-hidden="true"]{display:none!important}
+
+.az-app .ab-head h1{font-size:18px;line-height:26px;font-weight:600}.az-report .az-report-note{background:#f8fafc;border-top:1px solid #e9edf2}
+#otOcrPreview:not(:empty){padding:12px;margin:12px 0;border:1px solid #e9edf2;border-radius:6px}#otOcrPreview .btn{margin:8px 0}#otOcrKind{max-width:220px}
+
+/* 航服收尾：避免通用列识别将明确列宽改为自动分配。 */
+.az-app .table-wrap>table.az-table.table-column-runtime{table-layout:fixed;width:100%;min-width:1050px}
+.az-app table.az-table .list-col,.az-layer table.az-table .list-col{width:auto;min-width:0;max-width:none}
+.az-app table.az-ops .list-col:last-child,.az-layer table.az-ops .list-col:last-child{width:88px;min-width:88px;max-width:88px}
+.az-report .table-wrap>table.az-table.table-column-runtime{min-width:1250px}
+.az-layer .table-wrap>table.az-table.table-column-runtime{table-layout:fixed;width:100%;min-width:600px}
+.ab-app:not(.az-app) .table-wrap>table.ab-table.table-column-runtime{table-layout:fixed;width:100%;min-width:1180px}
+.ab-app:not(.az-app) table.ab-table .list-col{width:auto;min-width:0;max-width:none}
+.ab-app:not(.az-app) table.ab-table .ab-sticky{width:88px;min-width:88px;max-width:88px}
+.ab-app:not(.az-app) .table-wrap>table.ab-detail-table.table-column-runtime{min-width:800px}
+.ab-app:not(.az-app) table.ab-detail-table .ab-sticky{width:auto;min-width:0;max-width:none}
+#air-orders-app .table-wrap>table.ao-import-table.table-column-runtime{table-layout:fixed;width:100%;min-width:850px}
+#air-orders-app table.ao-import-table .list-col{width:auto;min-width:0;max-width:none}
+#air-orders-app table.ao-import-table .ao-sticky{width:88px;min-width:88px;max-width:88px}
+
+/* 航服来源供票需求：当前单核对与多单选择，保持抽屉内自然布局。 */
+#air-source-demand-app .drawer-modal {width:800px!important;max-width:calc(100vw - 24px)!important;}
+#air-source-demand-app .modal-body {display:block;overflow-y:auto;overflow-x:hidden;min-width:0;padding:24px;}
+#air-source-demand-app .as-section {margin:0 0 24px;}
+#air-source-demand-app .as-section h3 {font-size:14px;margin:0 0 12px;font-weight:600;}
+.as-facts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;margin:0;}
+.as-facts>div {min-width:0;}.as-facts dt {font-size:12px;color:var(--text-secondary,#6b7280);margin:0 0 4px;}.as-facts dd {margin:0;overflow-wrap:anywhere;}
+#air-source-demand-app .as-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+#air-source-demand-app .as-field {display:flex;flex-direction:column;gap:8px;min-width:0;margin-bottom:16px;}
+#air-source-demand-app input:not([type=checkbox]),#air-source-demand-app select {width:100%;min-width:0;max-width:100%;box-sizing:border-box;height:32px;border:1px solid #d9d9d9;border-radius:4px;padding:4px 12px;background:#fff;font:inherit;}
+#air-source-demand-app .as-order {border:1px solid #e5e7eb;border-radius:6px;padding:16px;margin-bottom:12px;}
+#air-source-demand-app .as-order-head {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+#air-source-demand-app .as-order-head span {margin-left:auto;color:#6b7280;}
+#air-source-demand-app .as-order-body {margin-top:16px;}#air-source-demand-app [hidden] {display:none!important;}
+#air-source-demand-app .as-leg {display:grid;grid-template-columns:minmax(0,1fr) 110px 150px;gap:12px;align-items:center;margin-bottom:12px;}
+#air-source-demand-app .as-leg .as-field {margin:0;}
+#air-source-demand-app .as-checks {display:flex;flex-direction:column;gap:12px;}
+#air-source-demand-app .as-checks label {display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+#air-source-demand-app .as-comparison>div {display:grid;grid-template-columns:140px minmax(0,1fr) 16px minmax(0,1fr);gap:12px;padding:8px 0;border-bottom:1px solid #f0f0f0;align-items:center;}
+#air-source-demand-app .as-comparison span {overflow-wrap:anywhere;}#air-source-demand-app .as-comparison strong {font-weight:400;}
+#air-source-demand-app .as-history {display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid #f0f0f0;}
+#air-source-demand-app .as-history span {font-size:12px;color:#6b7280;overflow-wrap:anywhere;}
+#air-source-demand-app .as-warning,#air-source-demand-app .as-error {padding:12px;margin:12px 0;background:#fff7e6;color:#ad6800;border-radius:4px;}
+#air-source-demand-app .as-error {background:#fff1f0;color:#a8071a;}
+@media(max-width:700px){#air-source-demand-app .modal-body{padding:16px;}#air-source-demand-app .as-leg{grid-template-columns:1fr 140px;}#air-source-demand-app .as-leg>span{display:none;}#air-source-demand-app .as-grid,.as-facts{grid-template-columns:1fr;}#air-source-demand-app .as-comparison>div{grid-template-columns:100px minmax(0,1fr) 12px minmax(0,1fr);gap:8px;}}
+
+.schedule-air-supply-item + .schedule-air-supply-item {margin-top:24px;padding-top:24px;border-top:1px solid #e5e7eb;}
+
+/* 机票三类建单：一个页签一张表单卡，航段独立成行。 */
+#air-orders-app #ao-edit-form .ao-form-card {background:#fff;border:1px solid #e7ebf0;border-radius:6px;padding:0 20px;margin-top:16px;}
+#air-orders-app .ao-form-card .ao-section {border:0;border-radius:0;margin:0;padding:24px 0;}
+#air-orders-app .ao-form-card .ao-section+.ao-section {border-top:1px solid #edf0f4;}
+#air-orders-app .ao-booking-source {width:calc(50% - 12px);margin-top:20px;}
+#air-orders-app .ao-flight-card {background:#fafafa;border:1px solid #e7ebf0;border-radius:6px;padding:18px;margin-top:20px;}
+#air-orders-app .ao-flight-heading {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;}
+#air-orders-app .ao-flight-fields {display:grid;grid-template-columns:minmax(90px,.8fr) repeat(2,minmax(120px,1.2fr)) minmax(145px,1.1fr) minmax(100px,.8fr) minmax(100px,.8fr);gap:16px;}
+#air-orders-app .ao-flight-fields input,#air-orders-app .ao-flight-fields select {min-width:0;max-width:100%;}
+#air-orders-app .ao-flight-footer {display:flex;align-items:center;gap:20px;margin-top:20px;}
+#air-orders-app .ao-passenger-legs {border:0;padding:0;margin:20px 0 0;min-width:0;}
+#air-orders-app .ao-passenger-legs legend {font-size:13px;color:#66758a;}
+#air-orders-app .ao-passenger-legs .ao-checks {margin-top:8px;}
+#air-orders-app .ao-entry-steps {display:flex;align-items:center;justify-content:space-between;gap:16px;margin:20px 0;}
+#air-orders-app .ao-entry-steps>span {display:flex;align-items:center;gap:12px;}
+@media(max-width:1250px){#air-orders-app .ao-flight-fields {grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:650px){#air-orders-app .ao-flight-fields {grid-template-columns:repeat(2,minmax(0,1fr));}#air-orders-app .ao-booking-source {width:100%;}#air-orders-app .ao-entry-steps {flex-wrap:wrap;}}
+
+#air-orders-app .ao-installment-row+.ao-installment-row {margin-top:16px;}
+#air-orders-app .ao-installment-action {align-self:end;min-height:34px;display:flex;align-items:center;}
+
+/* 团队票：先确定需求来源，再引用本团的销售名单和采购机位。 */
+#air-orders-app .ao-source-modes {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+#air-orders-app .ao-source-mode {text-align:left;border:1px solid #dfe5ed;border-radius:6px;background:#fff;padding:16px;cursor:pointer;color:#263448;font:inherit;}
+#air-orders-app .ao-source-mode strong,#air-orders-app .ao-source-mode span {display:block;}
+#air-orders-app .ao-source-mode span {color:#708096;font-size:12px;line-height:1.6;margin-top:6px;}
+#air-orders-app .ao-source-mode.is-active {border-color:#2f6fed;background:#f5f8ff;box-shadow:inset 0 0 0 1px #2f6fed;}
+#air-orders-app .ao-source-mode:focus-visible {outline:2px solid #2f6fed;outline-offset:3px;}
+#air-orders-app .ao-source-orders {table-layout:fixed;min-width:580px;}
+#air-orders-app .ao-source-orders :is(th,td) {width:auto!important;min-width:0!important;max-width:none!important;vertical-align:middle;white-space:normal;}
+#air-orders-app .ao-source-orders :is(th,td):nth-last-child(4) {width:44px!important;min-width:44px!important;max-width:44px!important;}
+#air-orders-app .ao-source-orders :is(th,td):nth-last-child(2) {width:120px!important;min-width:120px!important;max-width:120px!important;}
+#air-orders-app .ao-source-orders :is(th,td):last-child {width:90px!important;min-width:90px!important;max-width:90px!important;}
+#air-orders-app .ao-source-orders td:first-child input {width:16px;height:16px;}
+#air-orders-app .ao-source-orders .ao-line {overflow-wrap:anywhere;}
+#air-orders-app .ao-source-orders+.ao-muted {margin-bottom:0;}
+#air-orders-app .ao-form-card .ao-section>.ao-facts {margin-top:16px;margin-bottom:20px;}
+@media(max-width:700px){#air-orders-app .ao-source-modes {grid-template-columns:1fr;gap:10px;}}
+
+/* 团队票：航段来源与名单分工，人员选择仍只在团队名单。 */
+#air-orders-app .ao-flight-card>.ao-facts {margin:16px 0;}
+#air-orders-app .ao-flight-card .ao-facts>div {min-width:0;}
+#air-orders-app .ao-flight-card .ao-facts dd {overflow-wrap:anywhere;}
+#air-orders-app .ao-leg-supply {margin-top:18px;}
+#air-orders-app .ao-leg-members {color:#64748b;font-size:13px;margin-top:16px;padding-top:12px;border-top:1px solid #e5e9ef;}
+
+/* 三类机票建单名单：身份只读展示，服务要求直接选择。 */
+#air-orders-app .ao-entry-roster-wrap {max-width:100%;overflow-x:auto;}
+#air-orders-app .ao-entry-roster {table-layout:fixed;width:100%;min-width:1150px;}
+#air-orders-app .ao-entry-roster :is(th,td) {width:auto!important;min-width:0!important;max-width:none!important;vertical-align:middle;white-space:normal;}
+#air-orders-app .ao-entry-roster :is(th,td):nth-child(2) {width:160px!important;}
+#air-orders-app .ao-entry-roster :is(th,td):nth-child(3),#air-orders-app .ao-entry-roster :is(th,td):nth-child(4) {width:104px!important;white-space:nowrap;}
+#air-orders-app .ao-entry-roster :is(th,td):nth-child(5) {width:70px!important;}
+#air-orders-app .ao-entry-roster :is(th,td):nth-child(6) {width:160px!important;}
+#air-orders-app .ao-entry-roster :is(th,td):nth-child(7) {width:120px!important;}
+#air-orders-app .ao-entry-roster :is(th,td):nth-child(8) {width:250px!important;}
+#air-orders-app .ao-entry-roster .ao-line {overflow-wrap:anywhere;}
+
+#air-orders-app .ao-entry-segments {display:flex;flex-direction:column;gap:6px;max-height:96px;overflow-y:auto;}
+#air-orders-app .ao-entry-segments label {display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;font-size:12px;}
+#air-orders-app .ao-entry-segments input {width:14px;height:14px;flex:none;margin:0;}
+
+/* 2026-10-18：三类机票建单铺满内容区；身份录入在独立抽屉。 */
+#air-orders-app[data-page="air-order-edit"] #ao-edit-form {width:100%;max-width:none;min-width:0;}
+#air-orders-app .ao-entry-roster-manual {min-width:1262px;}
+#air-orders-app .ao-entry-roster :is(col,th,td).ao-entry-person-actions {width:112px!important;min-width:112px!important;max-width:112px!important;}
+#air-orders-app .ao-entry-roster .ao-entry-person-actions {text-align:left;}
+#air-orders-app #ao-layer .drawer-modal.ao-entry-person-drawer {width:680px!important;max-width:calc(100vw - 24px)!important;}
+#air-orders-app .ao-entry-person-drawer .modal-body {display:block;}
+#air-orders-app .ao-entry-person-drawer .ao-section {padding:0;border:0;}
+/* 包机供票：项目额度、名单和报价在同一建单页处理。 */
+#air-orders-app .ao-charter-context {margin:14px 0;padding:12px 16px;background:#f5f7fb;border-radius:5px;color:#53657e;font-size:13px;}
+#air-orders-app #ao-layer .drawer-modal.ao-charter-import-drawer {width:960px!important;max-width:calc(100vw - 24px)!important;}
+#air-orders-app .ao-charter-import-drawer .modal-body {display:block;}
+#air-orders-app .ao-charter-import-table {width:100%;table-layout:fixed;border-collapse:collapse;}
+#air-orders-app .ao-charter-import-table :is(th,td) {padding:10px 12px;border-bottom:1px solid #e7ecf1;text-align:left;vertical-align:middle;font-size:13px;overflow-wrap:anywhere;}
+#air-orders-app .ao-charter-import-table th {background:#f6f8fb;color:#64748b;}
+#air-orders-app .ao-charter-import-wrap {width:100%;max-width:100%;}
+#air-orders-app .ao-charter-import-table :is(th,td):last-child {position:static;box-shadow:none;}
+#air-orders-app .ao-charter-import-drawer .ao-toolbar {align-items:end;gap:12px;flex-wrap:wrap;}
+#air-orders-app .ao-charter-import-drawer input[type=file] {max-width:100%;height:auto;padding:6px;}
+@media(max-width:700px){#air-orders-app .ao-charter-import-table col:last-child {width:160px!important;}#air-orders-app .ao-charter-import-table col:nth-child(3) {width:120px!important;}}
+
+/* 退改分类办理：双列表单保持紧凑，整单费用不展开客票编辑。 */
+.ab-layer #ab-drawer.ab-change-layer > .drawer-modal {width:800px;}
+.ab-layer .ab-change-layer .ab-grid {gap:14px 20px;}
+.ab-layer .ab-change-layer .ab-field {gap:6px;margin-bottom:0;}
+.ab-layer .ab-change-layer .ab-field input,.ab-layer .ab-change-layer .ab-field select {height:32px;font-size:13px;min-width:0;box-sizing:border-box;}
+.ab-layer .ab-change-layer .ab-section {padding:16px 0;}
+.ab-layer .ab-change-layer .ab-section > h2 {margin-bottom:14px;}
+.ab-layer .ab-change-layer .ab-choice-list label {padding:10px 12px;}
+.ab-layer .ab-change-layer .modal-body {display:block;overflow-x:hidden;}
+.ab-layer .ab-change-layer [hidden] {display:none!important;}
+@media(max-width:720px){.ab-layer #ab-drawer.ab-change-layer > .drawer-modal {width:100vw;}}

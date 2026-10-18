@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期结算 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="../../shared/air-internal-cost.css?v=20261017-receipt1">
+  <script src="../../shared/air-business-model.js?v=20261018-change-types1"></script>
+  <script src="../../shared/air-internal-cost-model.js?v=20261017-superadmin1"></script>
 <script src="../../shared/fulfillment-cost-core.js"></script>
 </head>
 <body>
-  <script src="../../shared/nav-merchant.js?v=mice-menu-20261009"></script>
+  <script src="../../shared/nav-merchant.js?v=20261017-receipt1"></script>
 
   <section class="list-page-panel">
     <div class="list-page-head">
@@ -21,9 +24,11 @@
   <section class="list-surface fulfillment-cost-list-surface" data-list-surface>
     <nav id="settlementWorkTabs" class="tab-bar list-surface-tabs list-filter-tabs" aria-label="团期结算工作区">
       <button class="tab-item active" type="button" data-settlement-work-tab="cost">团期结算</button>
+      <button class="tab-item" type="button" data-settlement-work-tab="internal-air">内部供票费用</button>
       <button class="tab-item" type="button" data-settlement-work-tab="reconciliation">供应商对账</button>
     </nav>
     <section id="supplierReconciliationPanel" data-cost-panel="reconciliation" hidden><div data-reconciliation-app="merchant"></div></section>
+    <section data-cost-panel="internal-air" hidden><div id="air-internal-cost-app"></div></section>
     <nav id="paymentWorkTabs" class="tab-bar list-surface-tabs list-filter-tabs" aria-label="付款申请工作区" hidden>
       <button class="tab-item active" type="button" data-payment-work-tab="payment">待申请付款</button>
       <button class="tab-item" type="button" data-payment-work-tab="records">申请记录</button>
@@ -240,6 +245,7 @@
       </div>
       <div class="modal-body group-cost-drawer-body">
         <section id="costDrawerSummary" class="drawer-object-summary settlement-basis-summary group-cost-summary" aria-label="团期摘要"></section>
+        <p class="form-hint">本团航服供票通过 <a id="airCostReceiptLink" class="link-primary" href="fulfillment-cost.html?tab=internal-air">内部供票费用</a> 接收；其他采购费用在下方维护。</p>
         <section class="group-cost-editor" aria-label="成本明细维护">
           <div class="group-cost-table-actions">
             <h2>成本明细</h2>
@@ -3867,6 +3873,7 @@
           '</div>';
         document.getElementById('groupCostAttachment').value = '';
         document.getElementById('groupCostAttachmentNote').value = '';
+        document.getElementById('airCostReceiptLink').href = 'fulfillment-cost.html?tab=internal-air&group=' + encodeURIComponent(schedule.id);
         groupCostDrafts = [createGroupCostDraft()];
         renderGroupCostRows();
       }
@@ -3889,6 +3896,7 @@
             '<div class="form-group"><label class="form-label" for="costAgreement' + index + '">实际供应商合作协议</label><select id="costAgreement' + index + '" class="form-control" data-group-cost-field="agreementNo"' + (row.supplier === '领队/导游个人' ? ' disabled' : '') + '>' + SupplierCompanyAgreements.options(row.supplier, row.company, row.agreementNo) + '</select></div></div>' +
             '<p class="form-hint" data-cost-agreement-hint>' + escapeHtml(row.supplier === '领队/导游个人' ? '个人服务费用按派团及费用确认依据审核，不套用企业供应商合作协议。' : row.supplier ? SupplierCompanyAgreements.hint(row.supplier, row.company, row.agreementNo) : '先选实际采购供应商；产品提供公司不能代替地接、酒店等实际采购供应商。') + '</p>' +
             (row.supplier === '欧洲联合地接社' ? '<a class="link-primary" href="../resource/supplier-detail.html?supplier=SUP-GRP-0007&amp;tab=agreements&amp;company=' + encodeURIComponent(row.company || '') + '">查看公司合作与协议</a>' : '') +
+            '<label class="form-label">关联航服结算单（如有）<input class="form-control" data-group-cost-field="airSourceNo" value="' + escapeHtml(row.airSourceNo || '') + '" placeholder="关联该笔供票时填写原结算单号"></label>' +
           '</td></tr>';
         }).join('');
       }
@@ -3953,6 +3961,7 @@
             supplier: String(row.supplier || '').trim(),
             company: row.company,
             agreementNo: row.agreementNo,
+            airSourceNo: row.airSourceNo || '',
             quantity: '1项',
             currency: row.currency || 'CNY',
             originalAmount: originalAmount,
@@ -3968,6 +3977,8 @@
         if (!activeSchedule) return;
         var wasUnstarted = settlementStatus(activeSchedule) === '未开始';
         var rows = readGroupCostRows();
+        try { rows.forEach(function (row) { AirInternalCost.manualCheck(AirBusiness.load(), row.airSourceNo); }); }
+        catch (error) { openActionResult('供票费用不能重复手录', error.message, '其他采购的交通费用仍可正常维护。'); return; }
         var attachment = document.getElementById('groupCostAttachment').value.trim();
         var attachmentNote = document.getElementById('groupCostAttachmentNote').value.trim();
         if (!rows.length) {
@@ -4496,7 +4507,7 @@
       }
 
       function setTab(tab) {
-        var next = pageMode === 'payment' ? (['payment', 'records'].indexOf(tab) >= 0 ? tab : 'payment') : (tab === 'reconciliation' ? 'reconciliation' : 'cost');
+        var next = pageMode === 'payment' ? (['payment', 'records'].indexOf(tab) >= 0 ? tab : 'payment') : (['reconciliation', 'internal-air'].indexOf(tab) >= 0 ? tab : 'cost');
         document.querySelectorAll('[data-settlement-work-tab]').forEach(function (button) {
           button.classList.toggle('active', button.dataset.settlementWorkTab === next);
           button.setAttribute('aria-pressed', String(button.dataset.settlementWorkTab === next));
@@ -4521,7 +4532,7 @@
         document.getElementById('fulfillmentCostPageTitle').textContent = paymentMode ? '付款申请' : '团期结算';
         document.getElementById('paymentWorkTabs').hidden = !paymentMode;
         document.getElementById('settlementWorkTabs').hidden = paymentMode;
-        setTab(paymentMode ? initialPaymentTab() : (pageParams.get('tab') === 'reconciliation' ? 'reconciliation' : 'cost'));
+        setTab(paymentMode ? initialPaymentTab() : pageParams.get('tab'));
       }
 
       window.SupplierPaymentWorkbench={show:function(tab){pageMode='payment';applyPageMode();setTab(tab||'payment');},back:function(){pageMode='settlement';applyPageMode();setTab('reconciliation');}};
@@ -4904,7 +4915,7 @@
         filterPaymentWorkbench();
         filterPaymentRecords();
       }
-      if (pageParams.get('scheduleNo') && pageMode !== 'payment') openCostDrawer(pageParams.get('scheduleNo'));
+      if (pageParams.get('scheduleNo') && pageMode !== 'payment' && pageParams.get('tab') !== 'internal-air') openCostDrawer(pageParams.get('scheduleNo'));
     })();
   </script>
   <script src="../../shared/supplier-reconciliation-model.js"></script>
@@ -4921,5 +4932,6 @@
 <script src="../../shared/mice-changes.js?v=mice-terms-20261009"></script>
 <script src="../../shared/mice-access.js?v=mice-terms-20261009"></script>
 <script src="../../shared/mice-tax-summary.js?v=mice-terms-20261009"></script>
+<script src="../../shared/air-internal-cost-ui.js?v=20261017-superadmin1"></script>
 </body>
 </html>

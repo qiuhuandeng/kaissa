@@ -1,5 +1,12 @@
 (function () {
   const bootScript = document.currentScript;
+  if (!document.querySelector('script[data-caesar-action-menus]')) {
+    const actionMenuScript = document.createElement('script');
+    actionMenuScript.dataset.caesarActionMenus = 'true';
+    actionMenuScript.src = new URL('action-menus.js?v=20261018-global1', bootScript.src).href;
+    actionMenuScript.async = false;
+    document.head.appendChild(actionMenuScript);
+  }
   const financeReportPages = {
     cashflow: ['cashflow-reports', '收付明细'],
     balances: ['balance-reports', '往来账龄'],
@@ -136,11 +143,21 @@
         {
           title: "交通采购",
           children: [
-            { title: "机票切位", href: "tour/resource-procurement-inventory.html?kind=air" },
             { title: "邮轮包舱", href: "tour/resource-procurement-inventory.html?kind=cruise" },
             { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
+      ],
+    },
+    {
+      title: "航服",
+      icon: "plane",
+      children: [
+        { title: "机位管理", href: "tour/resource-procurement-inventory.html?kind=air" },
+        { title: "机票订单", href: "tour/air-orders.html" },
+        { title: "票务导入", href: "tour/air-import.html" },
+        { title: "退改处理", href: "tour/air-changes.html" },
+        { title: "包机项目", href: "tour/air-charters.html" },
       ],
     },
     {
@@ -278,6 +295,16 @@
             { title: "发票管理", href: "finance/finance-invoice.html" },
           ],
         },
+        {
+          title: "航服财务",
+          children: [
+            { title: "航服资金", href: "finance/air-funds.html" },
+            { title: "航服结算", href: "finance/air-settlement.html" },
+            { title: "航服对账", href: "finance/air-reconciliation.html" },
+            { title: "航服票据", href: "finance/finance-invoice.html?business=airclose" },
+            { title: "航服核算", href: "finance/finance-nc.html?business=airclose" },
+          ],
+        },
         { title: "NC推送", href: "finance/finance-nc.html" },
         { title: "收付款配置", href: "finance/finance-account-settings.html" },
       ],
@@ -354,6 +381,7 @@
         { title: "基础参数", href: "system/business-params.html" },
         { title: "财务设置", href: "finance/finance-currency.html" },
         { title: "通知模板", href: "system/notice-templates.html" },
+        { title: "航服设置", href: "system/air-settings.html" },
       ],
     },
   ];
@@ -387,6 +415,7 @@
     资源: "资源",
     产品中心: "产品",
     营销中心: "营销",
+    航服: "航服",
     销售中心: "销售",
     门店中心: "门店",
     渠道中心: "渠道",
@@ -403,6 +432,7 @@
     资源: "资源管理",
     产品中心: "产品中心",
     营销中心: "营销中心",
+    航服: "航服",
     销售中心: "销售中心",
     门店中心: "门店中心",
     渠道中心: "渠道中心",
@@ -522,6 +552,9 @@
       const type = url.searchParams.get("type") || "poi";
       return "resource/resource-masterdata.html?type=" + (masterdataRouteKeys.has(type) ? type : "poi");
     }
+    if (["finance/finance-invoice.html", "finance/finance-nc.html"].includes(file) && url.searchParams.get("business") === "airclose") {
+      return file + "?business=airclose";
+    }
     if (file === "finance/finance-control.html") {
       const view = url.searchParams.get("view") || "fund-transfer";
       return "finance/finance-control.html?view=" + (financeControlViewKeys.has(view) ? view : "fund-transfer");
@@ -631,8 +664,11 @@
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
     "tour/schedules-detail.html?mice=1": { href: "tour/schedules.html?mice=1", title: "项目团详情" },
+    "tour/air-order-edit.html": { href: "tour/air-orders.html", title: new URLSearchParams(location.search).has("id") ? "编辑机票订单" : ({bsp:"新增BSP散票",team:"新增团队票",charter:"新增包机票"}[new URLSearchParams(location.search).get("type")] || "选择机票订单类型") },
+    "tour/air-order-detail.html": { href: "tour/air-orders.html", title: "机票订单详情" },
+    "tour/air-charter-detail.html": { href: "tour/air-charters.html", title: "包机项目详情" },
     "tour/visa-processing.html": { href: "tour/visa-processing.html", title: "签证办理" },
-    "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机票切位" },
+    "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机位管理" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
     "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-payment-apply.html", title: "付款申请" },
     "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管控" },
@@ -1871,9 +1907,9 @@
     const target = resolveNavigationTarget(href);
     const contractRoutes = ["sales/contracts.html", "sales/contract-prepare.html"];
     // These pages need a fresh source context and their ordered external dependencies.
-    const projectRoutes = ["tour/product-custom-list.html", "tour/product-custom-detail.html", "tour/schedules.html?mice=1", "tour/schedules-detail.html?mice=1", "finance/finance-invoice.html"];
+    const projectRoutes = ["tour/fulfillment-cost.html", "system/air-settings.html", "finance/finance-nc.html", "tour/air-charters.html", "tour/air-charter-detail.html", "finance/air-reconciliation.html", "finance/air-funds.html", "tour/air-changes.html", "finance/air-settlement.html", "approval/approvals.html", "tour/air-orders.html", "tour/air-order-edit.html", "tour/air-order-detail.html", "tour/air-import.html", "tour/product-custom-list.html", "tour/product-custom-detail.html", "tour/schedules.html?mice=1", "tour/schedules-detail.html?mice=1", "finance/finance-invoice.html"];
     const currentProjectRoute = currentRouteUrl || new URL(window.location.href);
-    if (target.searchParams.get("mice") === "1" || currentProjectRoute.searchParams.get("mice") === "1"
+    if (target.searchParams.get("business") === "air" || currentProjectRoute.searchParams.get("business") === "air" || target.searchParams.get("mice") === "1" || currentProjectRoute.searchParams.get("mice") === "1"
       || projectRoutes.includes(fileFromUrl(target)) || projectRoutes.includes(fileFromUrl(currentProjectRoute))) {
       window.location.href = target.href;
       return;
@@ -3179,182 +3215,7 @@
   }
 
   function initActionMenus(scope) {
-    const menuSelector = ".action-dropdown-menu, .dropdown-menu, .table-more-menu";
-    const toggleSelector = "[data-action-menu-toggle], .table-more-toggle, [data-row-more], [data-schedule-more], [data-product-more], [data-bulk-menu-toggle], [data-export-toggle]";
-
-    const getActionMenu = (wrap) => wrap.__floatingActionMenu || wrap.querySelector(menuSelector);
-
-    const portalActionMenu = (wrap, menu) => {
-      if (!menu.__actionMenuPortal) {
-        menu.__actionMenuPortal = {
-          parent: menu.parentNode,
-          next: menu.nextSibling
-        };
-      }
-      wrap.__floatingActionMenu = menu;
-      document.body.appendChild(menu);
-    };
-
-    const restoreActionMenu = (wrap, menu) => {
-      const portal = menu.__actionMenuPortal;
-      if (portal && portal.parent && portal.parent.isConnected) {
-        const next = portal.next && portal.next.parentNode === portal.parent ? portal.next : null;
-        portal.parent.insertBefore(menu, next);
-      } else if (wrap && wrap.isConnected) {
-        wrap.appendChild(menu);
-      }
-      delete menu.__actionMenuPortal;
-      if (wrap && wrap.__floatingActionMenu === menu) delete wrap.__floatingActionMenu;
-    };
-
-    const showActionMenuTopLayer = (menu) => {
-      if (typeof menu.showPopover !== "function" || typeof menu.hidePopover !== "function") return false;
-      if (!menu.hasAttribute("popover")) menu.setAttribute("popover", "manual");
-      try {
-        if (!menu.matches(":popover-open")) menu.showPopover();
-        menu.__actionMenuTopLayer = true;
-        return true;
-      } catch (error) {
-        return false;
-      }
-    };
-
-    const hideActionMenuTopLayer = (menu) => {
-      if (!menu.__actionMenuTopLayer || typeof menu.hidePopover !== "function") return;
-      try {
-        if (menu.matches(":popover-open")) menu.hidePopover();
-      } catch (error) {
-        // Ignore browsers that partially support the popover selector.
-      }
-      delete menu.__actionMenuTopLayer;
-    };
-
-    const resetActionMenuPosition = (menu) => {
-      hideActionMenuTopLayer(menu);
-      menu.classList.remove("dropdown-menu-floating");
-      menu.style.top = "";
-      menu.style.right = "";
-      menu.style.bottom = "";
-      menu.style.left = "";
-      menu.style.maxHeight = "";
-    };
-
-    const positionActionMenu = (wrap) => {
-      const toggle = wrap.querySelector(toggleSelector);
-      const menu = getActionMenu(wrap);
-      if (!toggle || !menu) return;
-
-      menu.classList.add("dropdown-menu-floating");
-      menu.classList.add("show");
-      if (!showActionMenuTopLayer(menu)) portalActionMenu(wrap, menu);
-      menu.style.right = "auto";
-      menu.style.bottom = "auto";
-      menu.style.left = "0px";
-      menu.style.top = "0px";
-      menu.style.maxHeight = "";
-
-      const edgeGap = 8;
-      const triggerGap = 6;
-      const toggleRect = toggle.getBoundingClientRect();
-      const menuRect = menu.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - toggleRect.bottom - edgeGap - triggerGap;
-      const spaceAbove = toggleRect.top - edgeGap - triggerGap;
-      const openAbove = menuRect.height > spaceBelow && spaceAbove > spaceBelow;
-      const availableHeight = Math.max(96, openAbove ? spaceAbove : spaceBelow);
-
-      menu.style.maxHeight = availableHeight + "px";
-
-      const placedRect = menu.getBoundingClientRect();
-      const menuWidth = placedRect.width;
-      const menuHeight = placedRect.height;
-      let left = toggleRect.right - menuWidth;
-      let top = openAbove ? toggleRect.top - menuHeight - triggerGap : toggleRect.bottom + triggerGap;
-
-      left = Math.min(left, window.innerWidth - menuWidth - edgeGap);
-      left = Math.max(edgeGap, left);
-      top = Math.min(top, window.innerHeight - menuHeight - edgeGap);
-      top = Math.max(edgeGap, top);
-
-      menu.style.left = Math.round(left) + "px";
-      menu.style.top = Math.round(top) + "px";
-    };
-
-    const closeActionMenu = (wrap) => {
-      wrap.classList.remove("open");
-      const menus = new Set(wrap.querySelectorAll(menuSelector));
-      if (wrap.__floatingActionMenu) menus.add(wrap.__floatingActionMenu);
-      menus.forEach((menu) => {
-        menu.classList.remove("show");
-        resetActionMenuPosition(menu);
-        if (menu.__actionMenuPortal) restoreActionMenu(wrap, menu);
-      });
-      wrap.querySelectorAll(toggleSelector).forEach((toggle) => {
-        toggle.setAttribute("aria-expanded", "false");
-      });
-    };
-
-    const closeAllActionMenus = (except) => {
-      document.querySelectorAll("[data-action-menu].open, .dropdown.open").forEach((wrap) => {
-        if (wrap !== except) closeActionMenu(wrap);
-      });
-    };
-
-    scope.querySelectorAll("[data-action-menu], .dropdown.table-action-more").forEach((wrap) => {
-      const toggle = wrap.querySelector(toggleSelector);
-      if (toggle && !toggle.hasAttribute("aria-expanded")) toggle.setAttribute("aria-expanded", "false");
-    });
-    scope.querySelectorAll(toggleSelector).forEach((toggle) => {
-      if (!toggle.hasAttribute("aria-expanded")) toggle.setAttribute("aria-expanded", "false");
-    });
-
-    if (document.documentElement.dataset.actionMenuReady !== "true") {
-      document.documentElement.dataset.actionMenuReady = "true";
-
-      document.addEventListener("click", (event) => {
-        const toggle = event.target.closest(toggleSelector);
-        if (toggle) {
-          const wrap = toggle.closest("[data-action-menu], .dropdown");
-          if (!wrap || !getActionMenu(wrap)) return;
-
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
-
-          closeAllActionMenus(wrap);
-          const open = !wrap.classList.contains("open");
-          wrap.classList.toggle("open", open);
-          toggle.setAttribute("aria-expanded", open ? "true" : "false");
-          const menu = getActionMenu(wrap);
-          if (menu) {
-            menu.classList.toggle("show", open);
-            if (open) {
-              positionActionMenu(wrap);
-            } else {
-              resetActionMenuPosition(menu);
-            }
-          }
-          return;
-        }
-
-        if (event.target.closest(menuSelector)) {
-          if (event.target.closest(".dropdown-item, a, button")) {
-            window.setTimeout(() => closeAllActionMenus(null), 0);
-          }
-          return;
-        }
-        closeAllActionMenus(null);
-      }, true);
-
-      document.addEventListener("scroll", () => {
-        closeAllActionMenus(null);
-      }, true);
-      window.addEventListener("resize", () => {
-        closeAllActionMenus(null);
-      });
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeAllActionMenus(null);
-      });
-    }
+    if (window.CaesarActionMenus) window.CaesarActionMenus.init(scope);
   }
 
   function initLayerSemantics(scope) {

@@ -16,6 +16,13 @@
   };
 
   const bootScript = document.currentScript;
+  if (!document.querySelector('script[data-caesar-action-menus]')) {
+    const actionMenuScript = document.createElement('script');
+    actionMenuScript.dataset.caesarActionMenus = 'true';
+    actionMenuScript.src = new URL('action-menus.js?v=20261018-global1', bootScript.src).href;
+    actionMenuScript.async = false;
+    document.head.appendChild(actionMenuScript);
+  }
   const icons = {
     box: '<path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
     calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/>',
