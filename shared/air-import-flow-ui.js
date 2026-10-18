@@ -3,6 +3,8 @@
 window.createAirImportViews=function(ctx){
  const {M,X,root,shell,head,open,close,confirm,section,facts,esc,amount,tag,line,persist,toast,error}=ctx,F=window.AirImportFlow;
  const data=()=>ctx.getData(),btn=(s,a,id='',primary=false)=>'<button type="button" class="btn '+(primary?'btn-primary':'btn-secondary')+'" data-ai="'+a+'" data-id="'+esc(id)+'">'+s+'</button>';
+ let orderContext=null;
+ const scopeRows=rs=>orderContext?rs.map(r=>({...r,scopeOrder:orderContext.orderId})):rs;
  const link=(s,a,id='')=>'<button type="button" class="ao-link" data-ai="'+a+'" data-id="'+esc(id)+'">'+s+'</button>';
  const opts=(values,value)=>values.map(x=>{const [v,t]=Array.isArray(x)?x:[x,x];return '<option value="'+esc(v)+'"'+(String(v)===String(value)?' selected':'')+'>'+esc(t)+'</option>';}).join('');
  const field=(label,key,value='',type='text',values=null,ro=false)=>'<label class="ao-field"><span>'+label+'</span>'+(ro?'<span class="ai-readonly">'+esc(value||'未提供')+'</span>':values?'<select name="'+key+'">'+opts(values,value)+'</select>':'<input name="'+key+'" type="'+type+'" value="'+esc(value)+'">')+'</label>';
@@ -12,26 +14,35 @@ window.createAirImportViews=function(ctx){
  const suppliers=()=>[...new Set((window.SupplierCompanyView||[]).filter(x=>x.status==='已准入'&&/机票|航空客票/.test(x.service)).map(x=>x.name))];
  const calendarRows=()=>window.AirReconciliation?.load().calendar||[];
  const q=new URLSearchParams(location.search);
- let mode=q.get('tab')==='票号回填'?'票号回填':'日报',view='list',rows=[],name='',reading=false,readToken=0,batchId='',retryOf='',filter='全部',category='',rowIndex=-1,matchDraft='',rowDraft={},ready=false,demo=true;
+ let mode=['票号回填','PDF账单'].includes(q.get('tab'))?q.get('tab'):'日报',view='list',rows=[],name='',reading=false,readToken=0,batchId='',retryOf='',filter='全部',category='',rowIndex=-1,matchDraft='',rowDraft={},ready=false,demo=true;
  let meta={dailyDate:'2026-10-17',account:'BSP结算账户',currency:'CNY'};
- const queries={'日报':{q:'',state:'',from:'',to:''},'票号回填':{q:'',state:'',from:'',to:''}};
- const title=()=>mode==='日报'?'BSP日报':'票号回填';
+ const queries={'日报':{q:'',state:'',from:'',to:''},'票号回填':{q:'',state:'',from:'',to:''},'PDF账单':{q:'',state:'',from:'',to:''}};
+ const title=()=>mode==='日报'?'BSP日报':mode;
  const currentBatch=()=>data().batches.find(x=>x.id===batchId);
  const results=()=>view==='result'?currentBatch().results:F.preview(rows,data(),mode);
  const unique=a=>[...new Set(a)];
  function locationState(){if(ctx.embedded)return;const u=new URL(location.href);u.searchParams.set('tab',title());u.searchParams.delete('prepare');u.searchParams.delete('assist');if(batchId)u.searchParams.set('batch',batchId);else u.searchParams.delete('batch');history.replaceState(null,'',u.pathname+u.search);}
- function drawer(label,body,footer='',row=false){open(label,body,footer,row?()=>returnFromRow():null);const d=root.querySelector('#ao-layer .drawer-modal');d.classList.add(row?'ai-row-drawer':'ai-import-drawer');d.dataset.aiDrawer=row?'row':'batch';d.dataset.aiStage=view;root.querySelector('#ao-layer .modal-body').scrollTop=0;if(row)root.querySelector('#ao-layer-footer [data-ao="layer-back"]').textContent='返回核对';else root.querySelector('#ao-layer-footer [data-ao="close"]').textContent='关闭';}
+ function drawer(label,body,footer='',row=false){const o=orderContext&&data().orders.find(o=>o.id===orderContext.orderId);const context=o&&!row?'<div class="ao-charter-context">'+esc(o.id+' · '+o.customer+(o.group?' · '+o.group:''))+'</div>':'';open(label,context+body,footer,row?()=>returnFromRow():null);const d=root.querySelector('#ao-layer .drawer-modal');d.classList.add(row?'ai-row-drawer':'ai-import-drawer');d.dataset.aiDrawer=row?'row':'batch';d.dataset.aiStage=view;root.querySelector('#ao-layer .modal-body').scrollTop=0;if(row)root.querySelector('#ao-layer-footer [data-ao="layer-back"]').textContent='返回核对';else root.querySelector('#ao-layer-footer [data-ao="close"]').textContent=orderContext?'返回出票':'关闭';}
  function returnFromRow(){drawReview();}
  function closeRequested(){const d=root.querySelector('#ao-layer.show [data-ai-drawer]');if(!d)return false;if(d.dataset.aiDrawer==='row'){if(ctx.isLayerDirty())confirm('本行修改尚未保存，确认返回核对？',()=>returnFromRow());else returnFromRow();}else leave();return true;}
  function steps(n){return '<ol class="ao-import-steps" aria-label="票务导入步骤">'+['选择资料','核对数据','导入结果'].map((s,i)=>'<li class="'+(i+1===n?'current':i+1<n?'done':'')+'"><span>'+(i+1)+'</span>'+s+'</li>').join('')+'</ol>';}
  function table(headers,body,widths,cls=''){return '<div class="table-wrap ai-table-wrap" tabindex="0"><table class="ai-table '+cls+'"><colgroup>'+headers.map((s,i)=>'<col'+(widths[i]?' style="width:'+widths[i]+'px"':'')+'>').join('')+'</colgroup><thead><tr>'+headers.map((s,i)=>'<th'+(i===headers.length-1&&cls!=='ai-source-records'?' class="ao-sticky"':'')+'>'+s+'</th>').join('')+'</tr></thead><tbody>'+body+'</tbody></table>'+(!body?'<div class="ao-empty">当前范围暂无记录</div>':'')+'</div>';}
  function day(b){return b.dailyDate||unique(b.results.map(r=>r.row.issuedDate).filter(Boolean)).join('、')||'未提供';}
  function batchState(b){const c=F.counts(b.results,b,data());return c.pending?'待核对':'已完成';}
- function list(){
+ function list(nextMode){
+  if(nextMode)mode=nextMode;
   view='list';batchId='';ctx.dirty(false);if(ctx.embedded){ctx.onReturn();return;}locationState();const f=queries[mode];
   const batches=data().batches.filter(b=>b.mode===mode&&(!f.q||[b.id,b.name].join(' ').includes(f.q))&&(!f.state||batchState(b)===f.state)&&(!f.from||day(b)>=f.from)&&(!f.to||day(b)<=f.to));
-  const search='<div class="filter-card filter-card-compact"><input id="ai-query" aria-label="批次或文件名" placeholder="批次 / 文件名" value="'+esc(f.q)+'"><select id="ai-status" aria-label="批次状态">'+opts([['','全部状态'],'待核对','已完成'],f.state)+'</select><input name="from" type="date" aria-label="业务开始日期" value="'+f.from+'"><input name="to" type="date" aria-label="业务结束日期" value="'+f.to+'">'+btn('搜索','search')+btn('重置','reset')+'</div>';
-  const tabs='<div class="tab-bar" role="tablist">'+['日报','票号回填'].map(t=>'<button role="tab" aria-selected="'+(t===mode)+'" class="tab-item '+(t===mode?'active':'')+'" data-ai="category" data-id="'+t+'">'+(t==='日报'?'BSP日报':t)+'</button>').join('')+'</div>';
+  const search='<div class="filter-card filter-card-compact"><input id="ai-query" aria-label="批次或文件名" placeholder="'+(mode==='PDF账单'?'核对记录 / 文件 / 账期':'批次 / 文件名')+'" value="'+esc(f.q)+'"><select id="ai-status" aria-label="批次状态">'+opts([['','全部状态'],'待核对',mode==='PDF账单'?'已核对':'已完成'],f.state)+'</select><input name="from" type="date" aria-label="业务开始日期" value="'+f.from+'"><input name="to" type="date" aria-label="业务结束日期" value="'+f.to+'">'+btn('搜索','search')+btn('重置','reset')+'</div>';
+  const tabs='<div class="tab-bar" role="tablist">'+['日报','票号回填','PDF账单'].map(t=>'<button role="tab" aria-selected="'+(t===mode)+'" class="tab-item '+(t===mode?'active':'')+'" data-ai="category" data-id="'+t+'">'+(t==='日报'?'BSP日报':t)+'</button>').join('')+'</div>';
+  if(mode==='PDF账单'){
+   const T=window.AirTicketEntry,records=(data().ticketIntakes||[]).filter(r=>r.kind==='pdf').map(r=>T.statementRecord(data(),r));
+   const stateOf=r=>r.rows.every(x=>x.result==='金额一致')?'已核对':'待核对';
+   const dateOf=r=>{const date=new Date(r.savedAt||r.time);return Number.isNaN(date.getTime())?'':date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');};
+   const filtered=records.filter(r=>(!f.q||[r.id,r.file,r.meta.period,r.meta.account].join(' ').includes(f.q))&&(!f.state||stateOf(r)===f.state)&&(!f.from||dateOf(r)>=f.from)&&(!f.to||dateOf(r)<=f.to));
+   const body=filtered.map(r=>{const c=T.statementCounts(r.rows);return '<tr><td>'+line(r.id)+line(r.file,true)+'</td><td>'+line(r.meta.period)+line(r.meta.account+' · '+r.meta.currency,true)+'</td><td>'+line('一致 '+c.same+' · 差异 '+c.different)+line('待匹配 '+c.unmatched+' · 其他待核 '+c.pending,true)+'</td><td>'+tag(stateOf(r))+'</td><td>'+esc(r.time)+'</td><td class="ao-sticky"><div class="ao-row-actions">'+link('详情','statement',r.id)+'</div></td></tr>';}).join('');
+   shell(head('票务导入',ctx.intakeMenu())+'<section class="ao-surface">'+search+tabs+table(['核对记录 / 文件','账期 / 账户','核对结果','状态','保存时间','操作'],body,[0,205,230,100,160,132],'ai-batches')+'</section>');return;
+  }
   const body=batches.map(b=>{const c=F.counts(b.results,b,data());return '<tr><td>'+line(b.id)+line(b.name,true)+'</td><td>'+line(day(b))+line(b.time,true)+'</td><td>'+line('已处理 '+c.applied+' · 待处理 '+c.pending)+line('重复跳过 '+c.duplicate+' · 本次跳过 '+c.skipped,true)+'</td><td>'+tag(batchState(b))+'</td><td>'+line(b.who||'未记录')+'</td><td class="ao-sticky"><div class="ao-row-actions">'+link('详情','batch',b.id)+(c.pending?link('核对','process',b.id):'')+'</div></td></tr>';}).join('');
   shell(head('票务导入',ctx.intakeMenu()+(mode==='票号回填'?btn('导入票号','new','',true):''))+'<section class="ao-surface">'+search+tabs+table(['批次 / 文件',mode==='日报'?'日报日期 / 导入时间':'出票日期 / 导入时间','处理结果','状态','导入人','操作'],body,[0,205,230,100,145,132],'ai-batches')+'<div class="ao-table-foot">共 '+batches.length+' 批</div></section>');
  }
@@ -39,8 +50,8 @@ window.createAirImportViews=function(ctx){
  function demoRows(){
   const stamp=String(Date.now()).slice(-10),ticket=i=>String(Number('999'+stamp)+i),pnr='D'+stamp.slice(-5);
   if(mode==='票号回填'){
-   const candidates=data().orders.filter(o=>o.company===M.company&&['待确认','待出票','出票中','已出票'].includes(o.state)).flatMap(o=>o.tickets.filter(t=>t.state!=='结果待查').map(t=>({o,t})));
-   const available=candidates.filter(({t})=>!t.ticket),selected=(available.length?available:candidates.filter(({t})=>t.state==='已出票')).slice(0,3);
+   const candidates=data().orders.filter(o=>(!orderContext||o.id===orderContext.orderId)&&o.company===M.company&&['待确认','待出票','出票中','已出票'].includes(o.state)).flatMap(o=>o.tickets.filter(t=>t.state!=='结果待查').map(t=>({o,t})));
+   const available=candidates.filter(({t})=>!t.ticket),all=available.length?available:candidates.filter(({t})=>t.state==='已出票'),selected=orderContext?all:all.slice(0,3);
    return selected.map(({o,t},i)=>{const p=o.people.find(p=>p.id===t.personId),l=o.legs.find(l=>l.id===t.legId);return {sourceRow:i+2,type:'出票',orderId:o.id,name:p.name,docNo:p.docNo,flight:l.flight,date:l.date,from:l.from,to:l.to,ticket:t.ticket||ticket(i),pnr:t.pnr||o.bookingPnr||pnr,airlineNo:t.airlineNo||'CA-DEMO-'+stamp,issuedDate:'2026-10-17'};});
   }
   const base={type:'出票',issuedDate:'2026-10-17',original:'',pnr,airlineNo:'CA-DEMO-'+stamp,date:'2026-11-05',flight:'CA1333',from:'PEK',to:'SYX',fare:'1200',tax:'180',cost:'1380',customer:'华远科技有限公司',sale:'1800',priceBasis:'企业客户确认报价（演示）',currency:'CNY',internal:'否',group:'',amountScope:'整票',carrier:'中国国际航空',supplier:'中国国际航空'};
@@ -48,7 +59,7 @@ window.createAirImportViews=function(ctx){
   const original=data().orders.find(o=>o.id==='HF20261017007'),originalTicket=original?.tickets.find(t=>t.ticket),originalLeg=original?.legs.find(l=>l.id===originalTicket?.legId),originalPerson=original?.people.find(p=>p.id===originalTicket?.personId);
   return [first,second,{...first,sourceRow:4},{...base,...(originalLeg?{flight:originalLeg.flight,date:originalLeg.date,from:originalLeg.from,to:originalLeg.to}:{}),sourceRow:5,type:'退票',ticket:ticket(2),original:originalTicket?.ticket||'9991234567899',name:originalPerson?.name||'张建国',docNo:originalPerson?.docNo||'E10000001',cost:'1180',sale:'',priceBasis:''},{...base,sourceRow:6,type:'改签',ticket:ticket(3),original:'9999999999999',name:'陈晓',docNo:'DEMO'+stamp+'03',sale:'',priceBasis:''}];
  }
- function useDefaultRows(){rows=demoRows();name=title()+'演示资料';ready=true;demo=true;}
+ function useDefaultRows(){rows=scopeRows(demoRows());name=title()+'演示资料';ready=true;demo=true;}
  function newImport(){batchId='';retryOf='';filter='全部';category='';reading=false;readToken++;meta={dailyDate:'2026-10-17',account:'BSP结算账户',currency:'CNY'};useDefaultRows();view='source';locationState();drawSource();}
  function drawSource(){
   view='source';const cal=F.calendar(meta,rows,calendarRows());
@@ -107,7 +118,7 @@ window.createAirImportViews=function(ctx){
   drawer('核对原文件第'+r.sourceRow+'行',body,btn('保存并核对','save-row','',true),true);
  }
  function saveRow(){
-  const values=getForm('ai-row'),r={...readRow(),...values};r.match=values.match||'';
+  const values=getForm('ai-row'),r={...scopeRows([readRow()])[0],...values};r.match=values.match||'';
   if(view==='result'){
    const original=currentBatch();rows=[r];retryOf=original.id;meta={dailyDate:original.dailyDate||r.issuedDate,account:original.account||'BSP结算账户',currency:r.currency||'CNY'};name=original.name+'（纠错）';
    const b=F.apply(rows,data(),mode,{...meta,name,retryOf,calendarText:F.calendar(meta,rows,calendarRows()).text});persist();close(true);batch(b.id);toast('核对记录已保存，原批次保留');return;
@@ -120,10 +131,11 @@ window.createAirImportViews=function(ctx){
   else await X.download(errorsOnly?'日报待处理行.xlsx':'BSP日报模板.xlsx',rs,errorsOnly?list.map(r=>[r.error||'客户或售价待补']):null);
   toast(errorsOnly?'已下载待处理行':'已下载对应业务模板');
  }
- function leave(){const exit=()=>{readToken++;reading=false;ready=false;ctx.dirty(false);close(true);list();};if(['source','review'].includes(view)&&ready&&!demo)confirm('本次资料尚未导入，确认返回列表？',exit);else exit();}
+ function leave(){const exit=()=>{readToken++;reading=false;ready=false;ctx.dirty(false);close(true);const back=orderContext?.onReturn;orderContext=null;back?back():list();};if(['source','review'].includes(view)&&ready&&!demo)confirm('本次资料尚未导入，确认返回来源页面？',exit);else exit();}
  function action(a,id){
   if(a==='category'){mode=id;list();}
   else if(a==='new')newImport();
+  else if(a==='statement')ctx.openStatement(id);
   else if(a==='back')leave();
   else if(a==='search'){queries[mode]={q:root.querySelector('#ai-query').value.trim(),state:root.querySelector('#ai-status').value,from:root.querySelector('[name=from]').value,to:root.querySelector('[name=to]').value};list();}
   else if(a==='reset'){queries[mode]={q:'',state:'',from:'',to:''};list();}
@@ -150,8 +162,8 @@ window.createAirImportViews=function(ctx){
   if(x.id==='ai-business'){category=x.value;drawReview();}
   if(x.dataset.aiSelect!==undefined){rows[Number(x.dataset.aiSelect)].skip=!x.checked;ctx.dirty(true);drawReview();}
   if(['match','type'].includes(x.name)&&x.closest('#ai-row')){rowDraft={...rowDraft,...getForm('ai-row')};matchDraft=rowDraft.match||'';drawRowForm(results()[rowIndex]);ctx.layerDirty(true);}
-  if(x.id==='ai-file'&&x.files[0]){const file=x.files[0],token=++readToken;reading=true;drawSource();X.read(file,mode).then(r=>{if(token!==readToken)return;reading=false;if(r.length){rows=r;name=file.name;ready=true;demo=false;ctx.dirty(true);}drawSource();}).catch(()=>{if(token!==readToken)return;reading=false;drawSource();toast('文件未替换当前资料，可直接点击下一步');});}
+  if(x.id==='ai-file'&&x.files[0]){const file=x.files[0],token=++readToken;reading=true;drawSource();X.read(file,mode).then(r=>{if(token!==readToken)return;reading=false;if(r.length){rows=scopeRows(r);name=file.name;ready=true;demo=false;ctx.dirty(true);}drawSource();}).catch(()=>{if(token!==readToken)return;reading=false;drawSource();toast('文件未替换当前资料，可直接点击下一步');});}
  }catch(err){error(err.message);}});
- return {list,batch,retry:id=>batch(id,true),closeRequested,start(nextMode='日报'){mode=nextMode;newImport();}};
+ return {list,batch,retry:id=>batch(id,true),closeRequested,start(nextMode='日报',context=null){orderContext=context;mode=nextMode;newImport();}};
 };
 })();

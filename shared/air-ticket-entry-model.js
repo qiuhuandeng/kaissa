@@ -13,10 +13,11 @@ function draft(data,source,values,kind){const signature=[source.pnr,source.peopl
 }
 function statementRows(data){const txs=(data.transactions||[]).filter(t=>t.row?.ticket).slice(0,2);return [0,1,2].map(i=>{const t=txs[i],cost=t&&Number.isFinite(Number(t.row.cost))?Number(t.row.cost):1380;return {ticket:t?.row.ticket||'999900000000'+i,name:t?.row.name||['张建国','李梅','赵明'][i],fare:Math.max(0,cost-180),tax:180,amount:cost+(i===1?50:0),order:t?.order||'',note:i===1?'账单与原记录金额不同':''};});}
 function compare(data,rows,meta={}){return rows.map(r=>{
+ const hasAmount=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
  const tx=(data.transactions||[]).find(t=>M.ticketNo(t.row?.ticket)===M.ticketNo(r.ticket)),order=data.orders?.find(o=>o.id===tx?.order);
  const currency=meta.currency||r.currency||'CNY',systemCurrency=tx?.row?.currency||tx?.currency||order?.currency||'';
- const cost=tx&&M.finite(tx.row.cost)?Number(tx.row.cost):null;
- const comparable=cost!==null&&systemCurrency===currency,delta=comparable&&M.finite(r.amount)?M.money(Number(r.amount)-cost):null;
+ const cost=tx&&hasAmount(tx.row.cost)?Number(tx.row.cost):null;
+ const comparable=cost!==null&&systemCurrency===currency,delta=comparable&&hasAmount(r.amount)?M.money(Number(r.amount)-cost):null;
  return {...copy(r),order:tx?.order||r.order,currency,systemCurrency,systemCost:cost,delta,result:cost===null?'待匹配':!systemCurrency?'币种待核':systemCurrency!==currency?'币种不一致':delta===null?'金额待核':delta===0?'金额一致':'金额差异'};
 });}
 function statementCounts(rows){return {same:rows.filter(r=>r.result==='金额一致').length,different:rows.filter(r=>r.result==='金额差异').length,unmatched:rows.filter(r=>r.result==='待匹配').length,pending:rows.filter(r=>!['金额一致','金额差异','待匹配'].includes(r.result)).length};}

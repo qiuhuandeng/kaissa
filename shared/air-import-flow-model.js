@@ -9,7 +9,7 @@
   const refillFields=['orderId','name','docNo','flight','date','from','to','ticket','pnr','airlineNo','issuedDate'];
   const key=r=>[r.type||'出票',M.ticketNo(r.ticket),r.date,r.flight].join('|');
   function candidates(r,data,loose=false){
-    return data.orders.filter(o=>o.company===M.company&&o.state!=='已取消'&&(!r.orderId||r.orderId===o.id)).flatMap(o=>o.tickets.flatMap(t=>{
+    return data.orders.filter(o=>o.company===M.company&&o.state!=='已取消'&&(!r.scopeOrder||r.scopeOrder===o.id)&&(!r.orderId||r.orderId===o.id)).flatMap(o=>o.tickets.flatMap(t=>{
       const p=o.people.find(x=>x.id===t.personId),l=o.legs.find(x=>x.id===t.legId);if(!p||!l)return [];
       if(loose){if(r.name&&p.name!==r.name&&(!r.docNo||p.docNo!==r.docNo))return [];}
       else if(r.name!==p.name||r.docNo&&p.docNo!==r.docNo||r.flight!==l.flight||r.date!==l.date||r.from&&r.from!==l.from||r.to&&r.to!==l.to||r.pnr&&t.pnr&&r.pnr!==t.pnr)return [];
