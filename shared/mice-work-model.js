@@ -26,6 +26,7 @@ function plannerFor(c,data){if(c.responsiblePlanner)return c.responsiblePlanner;
 function quoteAccess(data,p,c,actor,confirm=false){
  if(!actor||!p||actor.company!==p.company)return '无权办理其他公司的报价';
  if(['已结项','已终止'].includes(p.status))return '项目已结束，不能办理新报价';
+ const phaseIssue=M.quoteActivityIssue(c,p,data);if(phaseIssue)return phaseIssue;
  if(manager(actor,p))return '';
  const acts=(c.activities||[]).map(id=>data.activities.find(a=>a.id===id));
  if(!acts.length||acts.some(a=>!a||a.projectId!==p.id||a.planner!==actor.name))return '仅可办理本人负责的本项目团报价';

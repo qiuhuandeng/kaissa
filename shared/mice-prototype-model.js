@@ -6,6 +6,33 @@
   const money=(v,c='CNY')=>v==null||!Number.isFinite(Number(v))?'待确认':(c==='CNY'?'¥':c+' ')+Number(v).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
   const round=v=>Math.round((Number(v)+Number.EPSILON)*100)/100;
   const sum=(rows,key='amount')=>round(rows.reduce((a,x)=>a+(Number(x[key])||0),0));
+  const activityStatuses=Object.freeze(['草稿','进行中','已完成','已取消']);
+  const activityStatus=value=>value==='待确认'?'草稿':['准备中','执行中'].includes(value)?'进行中':value;
+  function canAdvanceActivity(a,p,next){return !!a&&!!p&&a.projectId===p.id&&!['已结项','已终止'].includes(p.status)&&!!next&&({草稿:'进行中',进行中:'已完成'})[a.status]===next;}
+  function activityAllows(a,p,kind){
+    if(!a||!p||a.projectId!==p.id||['已结项','已终止'].includes(p.status))return false;
+    return ({quote:['草稿'],execution:['进行中'],change:['进行中'],cost:['进行中','已完成'],budget:['进行中'],files:['进行中','已完成'],assignment:['草稿','进行中'],settlement:['已完成','已取消']}[kind]||[]).includes(a.status);
+  }
+  function copyActivityDraft(a,{id,projectId=a.projectId,copyAgenda=true,copyBudget=false,copyPlanner=true}={}){
+    const next={id,projectId,name:a.name+'-副本',status:'草稿',reference:'',start:'',end:'',confirmedPeople:null,basis:'',commitmentId:'',formationSource:'',formation:null,completion:null,completedAt:null,acceptance:null,executionConfirmation:null,settlementDue:'',agenda:[],agendaHistory:[],roster:[],resources:[],attachments:[],planner:copyPlanner?a.planner:'',originalBudget:copyBudget?a.originalBudget:null};
+    for(const key of ['service','city','people','nameMode','scope','startTime','endTime','estimatedSales'])if(a[key]!==undefined)next[key]=clone(a[key]);
+    if(copyAgenda)next.agenda=(a.agenda||[]).map((row,index)=>({...clone(row),id:id+'-RC-'+(index+1),date:''}));
+    return next;
+  }
+  function quoteActivityIssue(c,p,ctx={}){
+    const acts=(c.activities||[]).map(id=>(ctx.activities||[]).find(a=>a.id===id));
+    return acts.some(a=>!a||a.projectId!==p?.id)?'请选择本项目的项目团':acts.some(a=>!activityAllows(a,p,'quote'))?'仅草稿项目团可以办理新报价；已建团的价款变化请从原订单申请改价':'';
+  }
+  // 建团引用本团已有客户确认，不另造报价、订单或收款。
+  function activityFormationSources(a,p,ctx={}){
+    const quotes=(ctx.commitments||[]).filter(c=>c.projectId===p.id&&c.status==='已确认'&&c.activities?.includes(a.id));
+    const orders=(ctx.orders||[]).filter(o=>o.projectId===p.id&&o.activities?.includes(a.id)&&(o.status==='已确认'||o.status==='待结算确认'&&quotes.some(c=>c.id===o.commitmentId))&&(!o.customer||o.customer===p.customer)&&(!o.company||o.company===p.company));
+    return [...quotes.map(c=>({value:'quote:'+c.id,label:'已确认报价 · '+c.name+'／'+c.id,basis:c.basis||'',frameworkId:c.frameworkId||'',commitmentId:c.id,orderId:orders.find(o=>o.commitmentId===c.id)?.id||''})),...orders.map(o=>{const c=quotes.find(c=>c.id===o.commitmentId);return {value:'order:'+o.id,label:'有效订单 · '+o.id+(o.amount==null?'／按实际结算':''),basis:o.basis||o.confirmationBasis||c?.basis||'',frameworkId:o.frameworkId||c?.frameworkId||'',commitmentId:c?.id||'',orderId:o.id};})];
+  }
+  function activityFormationSource(a,p,ctx={}){
+    const sources=activityFormationSources(a,p,ctx);
+    return a.formationSource?sources.find(s=>s.value===a.formationSource):sources.find(s=>s.commitmentId===a.commitmentId)||sources[0];
+  }
   function validateProject(p,mode='draft',ctx={}){
     const e={};if(!p.name?.trim())e.name='请填写项目名称';if(!p.customer?.trim())e.customer='请选择客户单位';
     if(mode!=='draft'){
@@ -22,9 +49,15 @@
     if(a.start&&a.end&&a.start>a.end)e.end='结束日期不能早于开始日期';
     if(a.people!==null&&a.people!==''&&a.people!==undefined&&(!Number.isInteger(Number(a.people))||Number(a.people)<=0))e.people='人数须为正整数，未确定请选择人数待定';
     if(mode!=='draft'){
-      for(const [k,l] of [['service','服务类型'],['start','开始日期'],['end','结束日期'],['city','项目团地点'],['planner','计调'],['scope','服务范围'],['commitmentId','关联报价单']])if(!a[k])e[k]='请填写'+l;
+      for(const [k,l] of [['service','服务类型'],['start','开始日期'],['end','结束日期'],['city','项目团地点'],['planner','计调'],['scope','服务范围']])if(!a[k])e[k]='请填写'+l;
       if(p.start&&a.start<p.start||p.end&&a.end>p.end)e.start='项目团日期超出项目服务期间，请先核对或办理期间变更';
-      const c=ctx.commitments?.find(x=>x.id===a.commitmentId&&x.projectId===p.id&&x.status==='已确认'&&x.activities.includes(a.id));if(!c)e.commitmentId='请选择覆盖本团的已确认报价单';const f=p.frameworks?.find(f=>f.id===c?.frameworkId);if(f&&(!['已签署','已签归档','已归档'].includes(f.status)||a.start<f.start||a.end>f.end))e.commitmentId='关联框架合同未签署或未覆盖本团日期，请先取得补充依据';
+    }
+    if(mode!=='draft'){
+      const source=activityFormationSource(a,p,ctx);
+      if(!source)e.formationSource='请先取得覆盖本团的已确认报价或有效订单';
+      if(!a.basis&&!source?.basis)e.basis='请补充客户委托或报价确认凭据';
+      const f=p.frameworks?.find(f=>f.id===source?.frameworkId);
+      if(source?.frameworkId&&(!f||!['已签署','已签归档','已归档'].includes(f.status)||a.start<f.start||a.end>f.end))e.formationSource='适用框架合同未签署或未覆盖本团日期，请先取得补充依据';
     }
     if(a.planner&&ctx.catalog&&!ctx.catalog.staff.some(x=>x.name===a.planner&&x.canPlan&&x.companies.includes(p.company)))e.planner='请选择该公司有执行权限的计调';
     return e;
@@ -76,9 +109,10 @@
     }
     return '';
   }
+  function projectCloseoutIssues(p,D){const link=(path,params)=>({path,params});const hard=[],soft=[],acts=D.activities.filter(a=>a.projectId===p.id),orders=D.orders.filter(o=>o.projectId===p.id&&!['已取消','已作废'].includes(o.status)),costs=D.costs.filter(c=>c.projectId===p.id);const add=(a,text,url,owner)=>a.push({text,...url,owner});for(const a of acts){if(!['已完成','已取消'].includes(a.status))add(hard,a.name+(a.status==='草稿'?'尚未确认建团':'服务未完成'),link('merchant/tour/schedules-detail.html',{mice:1,id:a.id}),a.planner);if(a.status==='已完成'&&a.acceptance?.status!=='已认可')add(hard,a.name+'客户认可未完成',link('merchant/tour/product-custom-detail.html',{id:p.id,tab:'agreements'}),p.sales);}for(const c of costs){if(c.status!=='已确认'||!c.basis)add(hard,c.name+'费用未确认',link('merchant/tour/fulfillment-cost.html',{mice:1,projectId:p.id}),p.owner);if(c.amount>(c.paid||0)+(c.offset||0))add(soft,c.name+'供应商款项未清',link('merchant/finance/finance-payable.html',{mice:1,projectId:p.id}),p.owner);if(c.taxStatus!=='已核定')add(soft,c.name+'票据尚未核定',link('merchant/finance/finance-payable.html',{mice:1,projectId:p.id}),p.owner);}for(const o of orders){if(o.amount==null)add(hard,o.id+'最终客户成交金额未确认',link('merchant/sales/orders-detail.html',{mice:1,orderNo:o.id,tab:'aftersales'}),p.sales);if(o.amount!=null&&o.amount>(o.received||0))add(soft,o.id+'客户款项未清',link('merchant/sales/orders-detail.html',{mice:1,orderNo:o.id,tab:'receivable'}),p.sales);if(o.amount>(o.invoiced||0))add(soft,o.id+'开票尚未完成',link('merchant/finance/finance-invoice.html',{mice:1,orderNo:o.id,mode:'request'}),p.sales);}if(D.customerSettlements.some(r=>r.projectId===p.id&&sum(r.lines,'dispute')>0))add(hard,'客户争议未解决',link('merchant/tour/product-custom-detail.html',{id:p.id,tab:'agreements'}),p.sales);if(D.adjustments.some(r=>r.projectId===p.id&&!['已批准','已作废'].includes(r.status)))add(hard,'存在未完成变更调整',link('merchant/finance/finance-settlement-adjustment.html',{mice:1,projectId:p.id}),p.owner);const unsettled=acts.find(a=>(a.status==='已完成'||a.status==='已取消'&&(orders.some(o=>o.activities.includes(a.id))||costs.some(c=>c.activityId===a.id||c.allocations?.some(r=>r.activityId===a.id))))&&!D.settlements.some(s=>s.projectId===p.id&&s.status==='已确认'&&s.activities.includes(a.id)));if(unsettled)add(hard,'存在尚未确认的业务结算',link('merchant/tour/schedules-detail.html',{mice:1,projectId:p.id,id:unsettled.id,tab:'settlement'}),p.owner);const retained=costs.some(c=>!c.activityId&&costDistribution(c).common!==0),retainedSettled=D.settlements.some(r=>r.projectId===p.id&&r.status==='已确认'&&(r.includeProjectCosts||!r.confirmedRecord?.scopeVersion&&r.activities.length===acts.length));if(retained&&!retainedSettled&&acts.length)add(hard,'项目承担费用尚未确认结算',link('merchant/tour/schedules-detail.html',{mice:1,projectId:p.id,id:acts[0].id,tab:'settlement'}),p.owner);return{hard,soft};}
   function payable(cost,requests){const unpaid=sum(requests.filter(r=>r.costId===cost.id&&!['已撤回','已退回','已作废'].includes(r.status)).map(r=>({amount:Math.max(0,r.amount-(r.paid||0))})));const paid=Number(cost.paid||0);return {paid,unpaid,available:Math.max(0,round(Math.min(Math.max(0,Number(cost.amount||0)+Number(cost.paymentReduction||0)),cost.conditionLimit==null?Infinity:Number(cost.conditionLimit))-paid-unpaid-Number(cost.offset||0)))};}
   function parseCSV(text){text=text.replace(/^\uFEFF/,'');const rows=[];let row=[],s='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){s+='"';i++;}else quoted=!quoted;}else if((ch===','||ch==='\t')&&!quoted){row.push(s);s='';}else if(ch==='\n'&&!quoted){row.push(s.replace(/\r$/,''));if(row.some(Boolean))rows.push(row);row=[];s='';}else s+=ch;}row.push(s.replace(/\r$/,''));if(row.some(Boolean))rows.push(row);if(quoted)throw Error('引号未闭合，请检查导入文件');return rows;}
   function csv(rows){return '\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');}
   function createStore(seed,storage,upgrade){const key='caesar-mice-prototype-v1';let d=clone(seed),upgraded=false;try{const saved=JSON.parse(storage?.getItem(key)||'null');if(saved?.version===seed.version){const restored=upgrade?upgrade(saved):saved;d={...d,...restored};upgraded=restored!==saved;}}catch{}d.catalog.staff=d.catalog.staff.map(s=>({...seed.catalog.staff.find(t=>t.name===s.name),...s}));d.activities.forEach(a=>{for(const [key,prefix] of [['agenda','RC'],['roster','MD'],['resources','ZY']]){(a[key]||[]).forEach((r,i)=>{r.id=r.id||a.id+'-'+prefix+'-'+(i+1);if(key==='agenda'){r.kind=r.kind||(a.service==='旅游'?'旅游':'会议');r.title=r.title||r.name||'';}});}});function persist(){try{storage?.setItem(key,JSON.stringify(d));}catch{d.storageWarning='会话保存失败，请导出当前资料后再离开';}}if(upgraded)persist();return {get data(){return d;},save:persist,reset(){d=clone(seed);persist();},id(prefix){d.sequence=(d.sequence||1000)+1;return prefix+'20261008'+d.sequence;},find(type,id){return d[type]?.find(x=>x.id===id);},log(projectId,action,detail){d.logs.push({id:this.id('LOG'),projectId,action,detail,time:new Date().toLocaleString('zh-CN')});persist();}};}
-  return {clone,num,money,round,sum,validateProject,validateActivity,allocation,costType,costDistribution,costScope,settlementEvidence,memberRows,settledCost,lockedAllocation,payable,parseCSV,csv,createStore};
+  return {clone,num,money,round,sum,activityStatuses,activityStatus,canAdvanceActivity,activityAllows,copyActivityDraft,projectCloseoutIssues,quoteActivityIssue,activityFormationSources,activityFormationSource,validateProject,validateActivity,allocation,costType,costDistribution,costScope,settlementEvidence,memberRows,settledCost,lockedAllocation,payable,parseCSV,csv,createStore};
 });

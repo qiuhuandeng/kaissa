@@ -4990,3 +4990,15 @@ root.MicePrototypeDemo={revision,upgrade(saved){
   result.settlementTaxRevision=revision;return result;
  };
 })(window);
+
+/* 项目团四状态：只转换当前团状态及旧筛选，不改历史单据和服务事实。 */
+(function(root){
+ const status=value=>root.MiceModel.activityStatus(value);
+ const normalize=data=>{for(const a of data.activities||[])if(status(a.status)!==a.status){a.statusBeforeSimplification=a.statusBeforeSimplification||a.status;a.status=status(a.status);}return data;};
+ normalize(root.MicePrototypeSeed);
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=function(saved){
+  const result=prior(saved);
+  return result.activities?.some(a=>status(a.status)!==a.status)?normalize(JSON.parse(JSON.stringify(result))):result;
+ };
+})(window);
