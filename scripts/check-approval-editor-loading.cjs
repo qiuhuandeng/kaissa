@@ -16,7 +16,7 @@ assert(html.indexOf('approval-config.js')<html.indexOf('approval-editor-boot.js'
  click(p,'[data-ac=edit-node]');for(const option of [...layer(p).querySelector('[name=source]').options]){set(p,'[name=source]',option.value,layer(p));check();}close(p);
  for(const step of [1,3,2]){click(p,'.ac-steps [data-step="'+step+'"]');check();}
  click(p,'.ac-branch-title');check();close(p);assert.deepEqual(p.errors,[]);p.w.close();
- const files=['shared/style.css',...Array.from(read('shared/style.css').matchAll(/@import url\("(?:\.\/)?([^\"]+)"\)/g),m=>'shared/'+m[1])];
+ const files=['shared/style.css',...Array.from(read('shared/style.css').matchAll(/@import url\("(?:\.\/)?([^\"]+)"\)/g),m=>'shared/'+m[1].split('?')[0])];
  const before=files.reduce((n,f)=>n+Buffer.byteLength(read(f)),0),after=Buffer.byteLength(bundle);
  console.log(JSON.stringify({states,originalCSSBytes:before,editorCSSBytes:after,reduction:((1-after/before)*100).toFixed(1)+'%',originalGzipBytes:files.reduce((n,f)=>n+zlib.gzipSync(read(f)).length,0),editorGzipBytes:zlib.gzipSync(bundle).length}));
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -50,56 +50,125 @@
   }
   const names=ids=>ids.map(id=>M.personName(state,id)).join('、');
   const display=r=>r.draft||r.published;
-  const status=r=>r.disabled?'已停用':r.published?'已发布':'草稿';
-  const statusTag=r=>`<span class="tag ${r.disabled?'tag-gray':r.published?'tag-green':'tag-orange'}">${status(r)}</span>`;
+  const isZhiyuan=r=>r.provider==='zhiyuan';
+  const allTemplates=()=>[...(state.zhiyuanTemplates||[]),...state.templates];
+  const status=r=>r.draft?(r.published?'待发布':'草稿'):r.disabled?'已停用':r.published?'已发布':'草稿';
+  const statusTag=r=>`<span class="tag ${r.draft?'tag-orange':r.disabled?'tag-gray':r.published?'tag-green':'tag-orange'}">${status(r)}</span>`;
   function scopeText(t){return t.companies.map(M.companyName).join('、')||'未选择公司';}
   function summary(t){return t.nodes.map(n=>n.type==='branch'?'条件分支':n.title).join(' → ')||'待配置审批节点';}
-  function editorUrl(id,mode='edit',version=''){return 'approval-template-edit.html?'+new URLSearchParams({id,mode,...(version?{version}: {})});}
+  function editorUrl(id,mode='edit',version=''){const external=state.zhiyuanTemplates?.some(r=>r.id===id);return (external?'approval-config.html?':'approval-template-edit.html?')+new URLSearchParams({[external?'zhiyuan':'id']:id,mode,...(version?{version}: {})});}
   function mountConfig(host){
-    host.className='ac-config list-surface';let tab=new URLSearchParams(location.search).get('tab')==='people'?'people':'templates';let page=1,filters={q:'',scene:'',company:'',status:''};
-    try{const saved=JSON.parse(sessionStorage.getItem(KEY+'-filters')||'null');if(saved&&!new URLSearchParams(location.search).has('tab')){filters=saved.filters;page=saved.page;tab=saved.tab;}}catch(_){}
+    host.className='ac-config list-surface';let tab=new URLSearchParams(location.search).get('tab')==='people'?'people':'templates';let page=1,filters={q:'',provider:'',scene:'',company:'',status:''};
+    try{const saved=JSON.parse(sessionStorage.getItem(KEY+'-filters')||'null');if(saved&&!new URLSearchParams(location.search).has('tab')){filters={...filters,...saved.filters};if(filters.status==='已启用')filters.status='已发布';page=saved.page;tab=saved.tab;}}catch(_){}
     function remember(){try{sessionStorage.setItem(KEY+'-filters',JSON.stringify({filters,page,tab}));}catch(_) {}}
-    function rows(){return state.templates.filter(r=>{const t=display(r);return (!filters.q||t.name.includes(filters.q))&&(!filters.scene||t.scene===filters.scene)&&(!filters.company||t.companies.includes(filters.company))&&(!filters.status||status(r)===filters.status);});}
+    function rows(){return allTemplates().filter(r=>{const t=display(r);return (!filters.q||[t.name,t.templateCode,r.published?.name,r.published?.templateCode].some(value=>value?.includes(filters.q)))&&(!filters.provider||(isZhiyuan(r)?'zhiyuan':'system')===filters.provider)&&(!filters.scene||t.scene===filters.scene)&&(!filters.company||t.companies.includes(filters.company))&&(!filters.status||status(r)===filters.status);});}
     function render(){
       const list=tab==='templates'?rows():state.arrangements.filter(a=>(!filters.company||a.company===filters.company)&&(!filters.q||[a.duty,M.arrangementScope(a),names(a.members)].some(s=>s.includes(filters.q))));
       const size=10;page=Math.max(1,Math.min(page,Math.ceil(list.length/size)||1));const visible=list.slice((page-1)*size,page*size);
-      const cols=tab==='templates'?['auto','180px','320px','96px','164px']:['160px','160px','auto','180px','96px','164px'];
-      host.innerHTML=`<div class="list-surface-tabs list-function-tabs ac-tabs" role="tablist" aria-label="审批配置"><button class="tab-item ${tab==='templates'?'active':''}" role="tab" aria-selected="${tab==='templates'}" data-ac="tab" data-tab="templates"><span class="list-tab-label">审批模板</span></button><button class="tab-item ${tab==='people'?'active':''}" role="tab" aria-selected="${tab==='people'}" data-ac="tab" data-tab="people"><span class="list-tab-label">审批人员</span></button></div>
-      <form class="filter-card filter-card-compact list-surface-filter" data-ac-search data-list-filter-enhanced="true" aria-label="审批配置筛选"><div class="list-surface-filter-layout"><div class="list-surface-filter-fields"><label class="filter-item filter-item-search"><span class="sr-only">${tab==='templates'?'模板名称':'审批职责或人员'}</span><input type="search" name="q" value="${e(filters.q)}" placeholder="${tab==='templates'?'模板名称':'审批职责或人员'}"></label>
+      const cols=tab==='templates'?['auto','104px','160px','240px','128px','128px']:['160px','160px','auto','180px','96px','164px'];
+      host.innerHTML=`<form class="filter-card filter-card-compact list-surface-filter" data-ac-search data-list-filter-enhanced="true" aria-label="审批配置筛选"><div class="list-surface-filter-layout"><div class="list-surface-filter-fields"><label class="filter-item filter-item-search"><span class="sr-only">${tab==='templates'?'模板名称或志远模板编号':'审批职责或人员'}</span><input type="search" name="q" value="${e(filters.q)}" placeholder="${tab==='templates'?'模板名称 / 志远模板编号':'审批职责或人员'}"></label>
+      ${tab==='templates'?`<label class="filter-item filter-item-sm"><span class="sr-only">模板类型</span>${select('provider',[['','全部模板类型'],['system','系统模板'],['zhiyuan','志远模板']],filters.provider)}</label>`:''}
       ${tab==='templates'?`<label class="filter-item filter-item-sm"><span class="sr-only">业务场景</span>${select('scene',[['','全部业务场景'],...M.scenes.map(s=>s.name)],filters.scene)}</label>`:''}
       <label class="filter-item filter-item-sm"><span class="sr-only">适用公司</span>${select('company',[['','全部公司'],...M.companies.map(c=>[c.id,c.short])],filters.company)}</label>
-      ${tab==='templates'?`<label class="filter-item filter-item-status"><span class="sr-only">模板状态</span>${select('status',[['','全部状态'],'草稿','已发布','已停用'],filters.status)}</label>`:''}
-      <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="submit">搜索</button>${button('重置','reset')}</div></div><div class="filter-actions list-surface-filter-actions list-filter-pinned-actions">${tab==='templates'?'<a class="btn btn-primary" href="approval-template-edit.html">新建模板</a>':button('安排人员','person-new','',true)}</div></div></form>
-      ${storageError?errorsHTML([storageError]):''}<section class="table-wrap list-surface-table list-table-with-pagination business-optimized-table ac-table-wrap ${tab==='templates'?'ac-template-list':''}" aria-label="${tab==='templates'?'审批模板列表':'审批人员列表'}"><table class="ac-table"><colgroup>${cols.map(width=>`<col style="--ac-col-width:${width}" class="${width==='auto'?'ac-flex-col':'ac-fixed-col'}">`).join('')}</colgroup><thead><tr>${(tab==='templates'?['模板名称','业务场景','适用公司','状态','操作']:['公司','审批职责','负责范围','审批人员','状态','操作']).map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${visible.length?visible.map(tab==='templates'?templateRow:personRow).join(''):`<tr><td class="ac-empty" colspan="${cols.length}">暂无匹配记录</td></tr>`}</tbody></table></section>
+      ${tab==='templates'?`<label class="filter-item filter-item-status"><span class="sr-only">模板状态</span>${select('status',[['','全部状态'],'草稿','待发布','已发布','已停用'],filters.status)}</label>`:''}
+      <div class="filter-actions"><button class="btn btn-secondary btn-filter-search" type="submit">搜索</button>${button('重置','reset')}</div></div><div class="filter-actions list-surface-filter-actions list-filter-pinned-actions">${tab==='templates'?'<span class="dropdown table-action-more ac-create-menu"><button class="btn btn-primary table-more-toggle" type="button" aria-haspopup="menu" aria-expanded="false">新建模板</button><span class="dropdown-menu action-dropdown-menu" role="menu"><a class="dropdown-item" role="menuitem" href="approval-template-edit.html">新建系统模板</a><button type="button" class="dropdown-item" role="menuitem" data-ac="zhiyuan-new">新建志远模板</button></span></span>':button('安排人员','person-new','',true)}</div></div></form>
+      ${storageError?errorsHTML([storageError]):''}<div class="tab-bar list-surface-tabs list-function-tabs ac-tabs" role="tablist" aria-label="审批配置"><button class="tab-item ${tab==='templates'?'active':''}" role="tab" aria-selected="${tab==='templates'}" data-ac="tab" data-tab="templates"><span class="list-tab-label">审批模板</span></button><button class="tab-item ${tab==='people'?'active':''}" role="tab" aria-selected="${tab==='people'}" data-ac="tab" data-tab="people"><span class="list-tab-label">审批人员</span></button></div>
+      <section class="table-wrap list-surface-table list-table-with-pagination business-optimized-table ac-table-wrap ${tab==='templates'?'ac-template-list':''}" aria-label="${tab==='templates'?'审批模板列表':'审批人员列表'}"><table class="ac-table"><colgroup>${cols.map(width=>`<col style="--ac-col-width:${width}" class="${width==='auto'?'ac-flex-col':'ac-fixed-col'}">`).join('')}</colgroup><thead><tr>${(tab==='templates'?['模板名称','模板类型','业务场景','适用公司','状态','操作']:['公司','审批职责','负责范围','审批人员','状态','操作']).map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${visible.length?visible.map(tab==='templates'?templateRow:personRow).join(''):`<tr><td class="ac-empty" colspan="${cols.length}">暂无匹配记录</td></tr>`}</tbody></table></section>
       <div class="pagination list-surface-pagination list-pagination-attached ac-pagination"><span>第 ${list.length?(page-1)*size+1:0}—${Math.min(page*size,list.length)} 条 / 共 ${list.length} 条</span><div class="pager">${button('上一页','prev',page===1?'disabled':'')}<span>${page} / ${Math.ceil(list.length/size)||1}</span>${button('下一页','next',page*size>=list.length?'disabled':'')}</div></div>`;
       host.querySelectorAll('.ac-table tr').forEach(row=>[...row.cells].forEach((cell,i)=>{if(cell.colSpan>1)return;cell.classList.add(cols[i]==='auto'?'ac-flex-col':'ac-fixed-col');cell.style.setProperty('--ac-col-width',cols[i]);}));
       host.querySelectorAll('td:last-child .ac-actions').forEach(actions=>{actions.className='table-action';actions.querySelectorAll('.ac-link').forEach(x=>x.classList.remove('ac-link'));actions.firstElementChild?.classList.add('table-action-primary');});
-      host.querySelectorAll('td .ac-muted').forEach(x=>{x.classList.remove('ac-muted');x.classList.add('table-cell-sub');});remember();
+      host.querySelectorAll('td .ac-muted').forEach(x=>{x.classList.remove('ac-muted');x.classList.add('table-cell-sub');});
+      host.querySelector('[data-ac=zhiyuan-new]')?.addEventListener('click',()=>{window.CaesarActionMenus?.close();zhiyuanDrawer(null,()=>{filters={q:'',provider:'',scene:'',company:'',status:''};page=1;render();});});
+      host.querySelectorAll('[data-ac=template-action]').forEach(b=>b.addEventListener('click',()=>{window.CaesarActionMenus?.close();templateAction(allTemplates().find(r=>r.id===b.dataset.id),b.dataset.action);}));remember();
     }
-    function templateRow(r){const t=display(r),published=r.published&&!r.disabled;return `<tr data-template-id="${e(r.id)}"><td><strong title="${e(t.name)}">${e(t.name)}</strong></td><td><span class="ac-text" title="${e(t.scene)}">${e(t.scene)}</span></td><td><span class="ac-text" title="${e(scopeText(t))}">${e(scopeText(t))}</span></td><td>${statusTag(r)}</td><td><div class="ac-actions">${r.published?`<a class="ac-link" href="${editorUrl(r.id,'view')}">查看</a>`:''}<a class="ac-link" href="${editorUrl(r.id)}">${published?'修改':'编辑'}</a>${link('更多','template-more',`data-id="${e(r.id)}"`)}</div></td></tr>`;}
+    function templateRow(r){const t=display(r),items=r.draft?[['publish','发布']]:[['edit','编辑']];
+      if(r.published)items.push([r.disabled?'enable':'disable',r.disabled?'启用':'停用']);items.push(['copy','复制模板']);
+      if(r.versions.length)items.push(['versions','版本记录']);if(r.draft&&r.published){items.push(['view','查看已发布版本'],['discard','丢弃修订草稿']);}if(!r.published)items.push(['delete','删除草稿']);
+      const entry=(label,mode)=>isZhiyuan(r)?link(label,'zhiyuan-open',`data-id="${e(r.id)}" data-mode="${mode}"`):`<a class="ac-link" href="${editorUrl(r.id,mode)}">${label}</a>`;
+      return `<tr data-template-id="${e(r.id)}"><td><strong title="${e(t.name)}">${e(t.name)||'未命名模板'}</strong></td><td>${isZhiyuan(r)?'志远模板':'系统模板'}</td><td><span class="ac-text" title="${e(t.scene)}">${e(t.scene)}</span></td><td><span class="ac-text" title="${e(scopeText(t))}">${e(scopeText(t))}</span></td><td>${statusTag(r)}${r.draft&&r.published?`<span class="ac-published-note">V${r.versions.at(-1)?.number||1} ${r.disabled?'已停用':'生效中'}</span>`:''}</td><td><div class="ac-actions">${r.draft?entry('编辑','edit'):entry('查看','view')}<span class="dropdown table-action-more"><button type="button" class="table-more-toggle" data-ac="template-more" aria-expanded="false">更多</button><span class="dropdown-menu action-dropdown-menu">${items.map(([action,label])=>`<button type="button" class="dropdown-item ${['delete','discard'].includes(action)?'danger':''}" data-ac="template-action" data-id="${e(r.id)}" data-action="${action}">${label}</button>`).join('')}</span></span></div></td></tr>`;}
     function personRow(a){return `<tr data-arrangement-id="${e(a.id)}"><td>${e(M.companyName(a.company))}</td><td>${e(a.duty)}</td><td><span class="ac-text" title="${e(M.arrangementScope(a))}">${e(M.arrangementScope(a))}</span></td><td>${e(names(a.members))}</td><td><span class="tag ${M.arrangementStatus(a)==='有效'?'tag-green':'tag-gray'}">${e(M.arrangementStatus(a))}</span></td><td><div class="ac-actions">${link('修改','person-edit',`data-id="${e(a.id)}"`)}${link('设置代办','delegate',`data-id="${e(a.id)}"`)}</div></td></tr>`;}
-    host.addEventListener('submit',ev=>{if(!ev.target.matches('[data-ac-search]'))return;ev.preventDefault();const f=new FormData(ev.target);filters={q:f.get('q').trim(),scene:f.get('scene')||'',company:f.get('company')||'',status:f.get('status')||''};page=1;render();});
+    host.addEventListener('submit',ev=>{if(!ev.target.matches('[data-ac-search]'))return;ev.preventDefault();const f=new FormData(ev.target);filters={q:f.get('q').trim(),provider:f.get('provider')||'',scene:f.get('scene')||'',company:f.get('company')||'',status:f.get('status')||''};page=1;render();});
     host.addEventListener('click',ev=>{const b=ev.target.closest('[data-ac]');if(!b)return;const a=b.dataset.ac;
-      if(a==='tab'){tab=b.dataset.tab;filters={q:'',scene:'',company:'',status:''};page=1;render();}
-      if(a==='reset'){filters={q:'',scene:'',company:'',status:''};page=1;render();}
+      if(a==='tab'){tab=b.dataset.tab;filters={q:'',provider:'',scene:'',company:'',status:''};page=1;render();}
+      if(a==='reset'){filters={q:'',provider:'',scene:'',company:'',status:''};page=1;render();}
       if(a==='prev'||a==='next'){page+=a==='next'?1:-1;render();}
       if(a==='person-new'||a==='person-edit')arrangementDrawer(state.arrangements.find(x=>x.id===b.dataset.id),render);
       if(a==='delegate')delegationDrawer(state.arrangements.find(x=>x.id===b.dataset.id),render);
-      if(a==='template-more'){
-        const r=state.templates.find(x=>x.id===b.dataset.id),items=[['copy','复制模板']];
-        if(r.versions.length)items.push(['versions','版本记录']);
-        if(r.published&&!r.disabled)items.push(['disable','停用模板']);
-        if(r.draft&&r.published)items.push(['discard','丢弃修订草稿']);
-        if(!r.published)items.push(['delete','删除草稿']);
-        menu(b,items,action=>{
-          if(action==='copy'){const draft=M.clone(display(r));draft.name+='（副本）';draft.companies=[];draft.departments=[];draft.departmentMode='all';draft.rules={...M.rulesFor(draft),emptyMembers:{},departedMembers:{}};M.walk(draft.nodes,n=>{if(n.source==='member')n.members=[];});const next=M.clone(state),copy=M.saveDraft(next,'',draft);if(persist(next))location.href=editorUrl(copy.id);}
-          if(action==='versions')versionsDrawer(r);
-          if(['disable','discard','delete'].includes(action))confirmAction({disable:'停用审批模板？',discard:'丢弃修订草稿？',delete:'删除审批草稿？'}[action],{disable:'停用后不再供新申请使用，在途申请保留原审批流程。',discard:'已发布版本不变，尚未发布的修改将被清除。',delete:'此草稿尚未发布，删除后无法恢复。'}[action],()=>{const next=M.clone(state),rec=next.templates.find(x=>x.id===r.id);if(action==='disable')rec.disabled=true;if(action==='discard')rec.draft=null;if(action==='delete')next.templates=next.templates.filter(x=>x.id!==r.id);if(persist(next)){render();toast('操作已保存');}});
-        });
-      }
+      if(a==='zhiyuan-open')zhiyuanDrawer(allTemplates().find(r=>r.id===b.dataset.id),render,b.dataset.mode==='view');
     });render();
+    function templateAction(r,action){
+      if(!r)return;
+      if(action==='copy'){
+        const draft=M.clone(display(r));draft.name+='（副本）';
+        if(isZhiyuan(r)){draft.enabled=true;zhiyuanDrawer(null,()=>{filters={q:'',provider:'',scene:'',company:'',status:''};page=1;render();},false,draft);return;}
+        draft.companies=[];draft.departments=[];draft.departmentMode='all';draft.rules={...M.rulesFor(draft),emptyMembers:{},departedMembers:{}};M.walk(draft.nodes,n=>{if(n.source==='member')n.members=[];});const next=M.clone(state),copy=M.saveDraft(next,'',draft);if(persist(next))location.href=editorUrl(copy.id);
+      }
+      if(action==='versions')versionsDrawer(r);
+      if(action==='edit'){if(isZhiyuan(r))zhiyuanDrawer(r,render);else location.href=editorUrl(r.id);}
+      if(action==='view'){if(isZhiyuan(r))zhiyuanDrawer(r,render,true);else location.href=editorUrl(r.id,'view');}
+      if(action==='enable'&&!isZhiyuan(r)){const errors=M.validate(state,r.published,r.id);if(errors.length){makeLayer('暂不能启用',errorsHTML(errors),'<button class="btn btn-secondary" data-ac-close>关闭</button>',true);return;}}
+      if(action==='publish'&&r.draft){
+        const t=r.draft,external=isZhiyuan(r),errors=external?[]:M.validate(state,t,r.id),notes=external?window.ApprovalZhiyuan.issues(t):[];
+        const l=makeLayer('发布审批模板？',`<p>确认发布“${e(t.name||'未命名模板')}”？${r.published?'本次发布生成新版本，在途申请保留原版本。':''}</p><p class="form-hint">${external&&t.enabled===false?'发布后保持停用，可在列表启用。':'发布后启用，供新申请使用。'}</p>${notes.length?`<div class="ac-zhiyuan-notice">${notes.map(e).join('；')}<br>本次按当前填写内容演示发布。</div>`:''}${errorsHTML(errors)}`,'<button class="btn btn-secondary" data-ac-close>取消</button>'+(errors.length?'<button class="btn btn-primary" data-publish-edit>继续编辑</button>':'<button class="btn btn-primary" data-template-publish>确认发布</button>'),true);
+        l.el.querySelector('[data-publish-edit]')?.addEventListener('click',()=>{closeLayer(l,true);if(external)zhiyuanDrawer(r,render);else location.href=editorUrl(r.id);});
+        l.el.querySelector('[data-template-publish]')?.addEventListener('click',()=>{const next=M.clone(state),current=(external?next.zhiyuanTemplates:next.templates).find(x=>x.id===r.id);if(!current?.draft){closeLayer(l,true);toast('当前没有待发布的草稿');return;}const result=external?window.ApprovalZhiyuan.publish(next,r.id):M.publish(next,r.id,current.draft);if(result.errors.length){showErrors(l.el.querySelector('[data-errors]'),result.errors);return;}if(persist(next)){closeLayer(l,true);render();toast(result.record.disabled?'模板已发布，当前已停用':'模板已发布并启用');}});
+      }
+      if(['enable','disable','discard','delete'].includes(action))confirmAction({enable:'启用审批模板？',disable:'停用审批模板？',discard:'丢弃修订草稿？',delete:'删除审批草稿？'}[action],{enable:`启用“${r.published?.name}”已发布的 V${r.versions.at(-1)?.number||1} 版本。${r.draft?'未发布的修改仍保留为草稿。':''}`,disable:'停用后不再供新申请使用，在途申请保留原审批流程。',discard:'已发布版本不变，尚未发布的修改将被清除。',delete:'此草稿尚未发布，删除后无法恢复。'}[action],()=>{const next=M.clone(state),key=isZhiyuan(r)?'zhiyuanTemplates':'templates',rec=next[key].find(x=>x.id===r.id);if(!rec)return;if(action==='enable')rec.disabled=false;if(action==='disable')rec.disabled=true;if(action==='discard')rec.draft=null;if(action==='delete')next[key]=next[key].filter(x=>x.id!==r.id);if(persist(next)){render();toast({enable:'模板已启用',disable:'模板已停用',discard:'修订草稿已丢弃',delete:'草稿已删除'}[action]);}});
+    }
+    const params=new URLSearchParams(location.search),external=state.zhiyuanTemplates?.find(r=>r.id===params.get('zhiyuan'));
+    if(external){const historical=params.has('version')?external.versions.find(v=>String(v.number)===params.get('version')):null;if(params.has('version')&&!historical)toast('未找到此版本');else zhiyuanDrawer(external,render,params.get('mode')==='view'||!!historical,historical?.template);}
   }
-  function versionsDrawer(r){makeLayer('版本记录',drawerSection('发布记录',r.versions.slice().reverse().map(v=>`<div class="ac-version"><div><strong>V${v.number}</strong><span class="ac-muted">${e(v.at)} · ${e(v.by)}</span><span class="ac-muted">${e(scopeText(v.template))}</span></div><a class="ac-link" href="${editorUrl(r.id,'view',v.number)}">查看版本</a></div>`).join('')),'<button class="btn btn-secondary" data-ac-close>关闭</button>',false,'drawer-preview drawer-md');}
+  function versionsDrawer(r){const l=makeLayer('版本记录',drawerSection('发布记录',r.versions.slice().reverse().map(v=>`<div class="ac-version"><div><strong>V${v.number}</strong><span class="ac-muted">${e(v.at)} · ${e(v.by)}</span><span class="ac-muted">${e(scopeText(v.template))}</span></div>${isZhiyuan(r)?`<button type="button" class="ac-link" data-zhiyuan-version="${v.number}">查看版本</button>`:`<a class="ac-link" href="${editorUrl(r.id,'view',v.number)}">查看版本</a>`}</div>`).join('')),'<button class="btn btn-secondary" data-ac-close>关闭</button>',false,'drawer-preview drawer-md');l.el.querySelectorAll('[data-zhiyuan-version]').forEach(b=>b.onclick=()=>zhiyuanDrawer(r,()=>{},true,r.versions.find(v=>String(v.number)===b.dataset.zhiyuanVersion).template));}
+  function zhiyuanDrawer(record,onSave,readonly=false,initial){
+    const Z=window.ApprovalZhiyuan;
+    const t=M.clone(initial||(record?(readonly?record.published||record.draft:display(record)):Z.defaults()));
+    if(!initial&&record&&(readonly||!record.draft))t.enabled=!record.disabled;
+    const scenes=[...new Set([...M.scenes.map(s=>s.name),t.scene])];
+    const l=makeLayer(readonly?'查看志远模板':record?'编辑志远模板':'新建志远模板',`<form novalidate class="ac-zhiyuan-form">
+      <div class="ac-form ac-form-two">${field('模板名称 <span class="req">*</span>',input('name',t.name,'maxlength="60"'))}${field('业务场景 <span class="req">*</span>',select('scene',scenes,t.scene))}</div>
+      ${drawerSection('适用范围',`<div class="ac-form"><div class="ac-field"><span data-company-label>${e(M.scene(t.scene)?.companyLabel||'业务责任公司')} <span class="req">*</span></span><div class="ac-options">${M.companies.map(c=>check('company',e(c.name),t.companies.includes(c.id),`value="${c.id}"`)).join('')}</div></div><div class="ac-field"><span>适用部门</span><div class="ac-options">${[['all','全部部门'],['selected','指定部门']].map(([value,label])=>`<label class="ac-check"><input type="radio" name="departmentMode" value="${value}" ${t.departmentMode===value?'checked':''}>${label}</label>`).join('')}</div><div data-zhiyuan-departments ${t.departmentMode==='selected'?'':'hidden'}></div></div></div>`)}
+      ${drawerSection('志远模板配置',`<div class="ac-form ac-form-two">${field('志远模板编号 <span class="req">*</span>',input('templateCode',t.templateCode,'placeholder="填写志远中的模板编号"'))}${field('志远模板名称 <span class="req">*</span>',input('templateName',t.templateName))}${field('模板内容',`<textarea name="templateContent" class="ac-zhiyuan-content" spellcheck="false" aria-describedby="acZhiyuanContentNotice">${e(t.templateContent)}</textarea>`,'ac-wide')}<div id="acZhiyuanContentNotice" class="ac-zhiyuan-notice ac-wide" data-zhiyuan-notice role="status" hidden></div><div class="ac-field ac-wide"><span>系统标签</span><div class="ac-zhiyuan-tags">${Z.tags.map(([id,label])=>`<span class="ac-zhiyuan-tag"><code>$${e(id)}</code><span>${e(label)}</span></span>`).join('')}</div></div><div class="ac-field ac-wide"><span>${readonly?'使用状态':'发布设置'}</span>${check('enabled',readonly?'启用模板':'发布后启用模板',t.enabled)}</div></div>`)}
+      <section class="drawer-section ac-zhiyuan-mapping-section"><details open><summary class="drawer-section-head"><h3 class="drawer-section-title">字段关联 <span class="ac-zhiyuan-count" data-mapping-count></span></h3></summary><div data-zhiyuan-mappings></div></details></section>
+      </form>`,readonly?'<button class="btn btn-secondary" data-ac-close>关闭</button>':'<button class="btn btn-secondary" data-ac-close>取消</button><button class="btn btn-primary" data-zhiyuan-save>保存草稿</button>',false,'drawer-edit drawer-lg ac-zhiyuan-drawer');
+    const form=l.el.querySelector('form'),textarea=form.elements.templateContent;
+    function departments(){
+      const target=l.el.querySelector('[data-zhiyuan-departments]');target.hidden=t.departmentMode!=='selected';
+      target.innerHTML=`<div class="ac-person-list ac-person-grid">${M.departments.filter(d=>t.companies.includes(d.company)).map(d=>check('department',e(M.companyName(d.company)+' / '+d.name),t.departments.includes(d.id),`value="${e(d.id)}"`)).join('')||'<span class="ac-muted">未选择适用公司</span>'}</div>${check('includeChildren','包含下级部门',t.includeChildren)}`;
+      if(readonly)target.querySelectorAll('input').forEach(x=>x.disabled=true);
+    }
+    function mappingControl(f){const m=Z.mapping(f),known=Z.tags.some(([id])=>id===m.value);return m.mode==='system'?select('mappingValue',[['','请选择系统字段'],...(!known&&m.value?[[m.value,'未匹配：'+m.value]]:[]),...Z.tags],m.value,`data-mapping-value="${e(f.id)}" aria-label="${e(f.label)}关联内容"`):input('mappingValue',m.value,`data-mapping-value="${e(f.id)}" aria-label="${e(f.label)}固定值" placeholder="填写固定值"`);}
+    function mappings(){
+      const parsed=Z.parse(textarea.value),notice=l.el.querySelector('[data-zhiyuan-notice]');notice.textContent=parsed.issue;notice.hidden=!parsed.issue;
+      l.el.querySelector('[data-mapping-count]').textContent=parsed.fields.length+' 项';
+      l.el.querySelector('[data-zhiyuan-mappings]').innerHTML=parsed.fields.length?`<div class="ac-zhiyuan-table-wrap"><table class="ac-zhiyuan-table"><colgroup><col class="ac-zhiyuan-field-col"><col class="ac-zhiyuan-method-col"><col></colgroup><thead><tr><th>志远字段</th><th>取值方式</th><th>关联内容</th></tr></thead><tbody>${parsed.fields.map(f=>`<tr data-zhiyuan-field="${e(f.id)}"><td><span class="ac-zhiyuan-field-name">${e(f.label)}${f.required?' <span class="req">*</span>':''}</span><small>${e(Z.types[f.type]||f.type||'文本')}</small></td><td>${select('mappingMode',[['system','系统字段'],['fixed','固定值']],Z.mapping(f).mode,`data-mapping-mode="${e(f.id)}" aria-label="${e(f.label)}取值方式"`)}</td><td>${mappingControl(f)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="ac-zhiyuan-empty">模板内容待完善，尚未生成字段关联。</div>';
+      if(readonly)l.el.querySelectorAll('[data-zhiyuan-mappings] input,[data-zhiyuan-mappings] select').forEach(x=>x.disabled=true);
+    }
+    function collect(){const f=new FormData(form);Object.assign(t,{name:String(f.get('name')||'').trim(),scene:f.get('scene'),companies:f.getAll('company'),departmentMode:f.get('departmentMode'),departments:f.get('departmentMode')==='selected'?f.getAll('department'):[],includeChildren:f.has('includeChildren'),templateCode:String(f.get('templateCode')||'').trim(),templateName:String(f.get('templateName')||'').trim(),templateContent:textarea.value,enabled:f.has('enabled')});}
+    departments();mappings();
+    if(readonly){form.querySelectorAll('input,select').forEach(x=>x.disabled=true);textarea.readOnly=true;}
+    else {
+      form.addEventListener('submit',ev=>ev.preventDefault());
+      form.addEventListener('input',ev=>{
+        l.dirty=true;
+        if(ev.target===textarea)mappings();
+        if(ev.target.matches('input[data-mapping-value]')){const id=ev.target.dataset.mappingValue;textarea.value=Z.updateMapping(textarea.value,id,'fixed',ev.target.value);}
+      });
+      form.addEventListener('change',ev=>{
+        l.dirty=true;
+        const control=ev.target;
+        if(control.name==='company'||control.name==='departmentMode'){
+          collect();t.departments=t.departments.filter(id=>M.departments.some(d=>d.id===id&&t.companies.includes(d.company)));departments();
+        }
+        if(control.name==='scene')l.el.querySelector('[data-company-label]').innerHTML=e(M.scene(control.value)?.companyLabel||'业务责任公司')+' <span class="req">*</span>';
+        if(control.hasAttribute('data-mapping-mode')){
+          const parsed=Z.parse(textarea.value),f=parsed.fields.find(f=>f.id===control.dataset.mappingMode),m=Z.mapping(f),value=control.value==='system'?(Z.tags.some(([id])=>id===m.value)?m.value:''):m.value;
+          textarea.value=Z.updateMapping(textarea.value,f.id,control.value,value);mappings();
+        }
+        if(control.matches('select[data-mapping-value]')){textarea.value=Z.updateMapping(textarea.value,control.dataset.mappingValue,'system',control.value);}
+      });
+      l.el.querySelector('[data-zhiyuan-save]').onclick=()=>{collect();const next=M.clone(state),result=Z.save(next,record?.id,t,M.uid);if(persist(next)){closeLayer(l,true);onSave();toast(result.record.published?'修订草稿已保存，请在列表发布新版本':'草稿已保存，请在列表发布');}};
+    }
+  }
   function arrangementDrawer(original,onSave){
     refreshOrganization();
     const a={scopeType:'company',scopes:[],includeChildren:false,start:today(),end:'',disabled:false,...M.clone(original||{id:'',company:'fj',duty:'财务BP',members:[]})};
@@ -124,6 +193,7 @@
   }
   function mountEditor(host){
     const params=new URLSearchParams(location.search);let id=params.get('id')||M.uid(),record=state.templates.find(x=>x.id===id),readonly=params.get('mode')==='view',step=2,dirty=false,flowZoom=100;
+    if(state.zhiyuanTemplates?.some(r=>r.id===id)){location.replace(editorUrl(id,params.get('mode')||'edit',params.get('version')||''));return;}
     if(params.get('id')&&!record){host.innerHTML='<div class="ac-heading"><h1>审批模板不存在</h1><a class="btn btn-secondary" href="approval-config.html">返回</a></div>';return;}
     const historical=params.get('version')?record?.versions.find(v=>String(v.number)===params.get('version')):null;
     if(params.has('version')&&!historical){host.innerHTML='<div class="ac-heading"><h1>未找到此版本</h1><a class="btn btn-secondary" href="approval-config.html">返回</a></div>';return;}
