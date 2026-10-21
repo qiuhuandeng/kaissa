@@ -27,23 +27,19 @@ function issues(p,ids,includeProjectCosts=false){
   for(const r of scope.pending)rows.push({text:r.text,href:U.url('merchant/tour/fulfillment-cost.html',{mice:1,projectId:p.id,costId:r.costId})});
   return rows.filter((r,i)=>rows.findIndex(v=>v.text===r.text&&v.href===r.href)===i);
 }
-function canRead(p,r){
-  if(!p)return false;const access=window.MiceAccess;
-  if(!access)return true;if(!access.project(p)||access.current().role==='协作查看')return false;
-  return access.current().role!=='计调'||(r.activities||[]).every(id=>S.find('activities',id)?.planner===access.current().name);
-}
+function canRead(p){return !!p;}
 function business(projectId,activityId,id){
   const p=S.find('projects',projectId),old=S.find('settlements',id);
   if(!p||id&&(!old||old.projectId!==p.id)||old&&!['草稿','已退回'].includes(old.status))return U.toast('未找到可办理的结算记录','error');
   if(!canRead(p,old||{activities:activityId?[activityId]:[]})||window.MiceAccess&&!MiceAccess.allowed('business-settle',p))return U.toast('当前人员无权办理本项目结算','error');
   const acts=D.activities.filter(a=>a.projectId===p.id),others=D.settlements.filter(r=>r.id!==id&&r.projectId===p.id&&['审批中','已确认'].includes(r.status));
   const used=new Set(others.flatMap(r=>r.activities)),projectUsed=others.some(r=>r.includeProjectCosts||!r.submittedRecord&&!r.confirmedRecord?.scopeVersion&&r.activities?.length===acts.length);
-  const allowed=a=>!window.MiceAccess||MiceAccess.current().role!=='计调'||a.planner===MiceAccess.current().name;
+  const allowed=()=>true;
   let ids=old?.activities|| (activityId?(!used.has(activityId)?[activityId]:[]):acts.filter(a=>allowed(a)&&!used.has(a.id)&&['已完成','已取消'].includes(a.status)).map(a=>a.id));
   let includeProjectCosts=old?.includeProjectCosts??(!activityId&&ids.length===acts.length&&!projectUsed),manualProject=!!old;
-  U.drawer('业务结算核对',SEC('结算范围',U.table(['选择','项目团','完成情况'],acts.map(a=>['<input type="checkbox" name="act-'+a.id+'" '+(ids.includes(a.id)?'checked ':'')+(used.has(a.id)||!allowed(a)?'disabled':'')+'>',E(a.name),U.lines(E(a.status),used.has(a.id)?'已纳入有效结算':'')]))+'<label class="mice-inline-check"><input type="checkbox" name="includeProjectCosts" '+(includeProjectCosts?'checked ':'')+(projectUsed?'disabled':'')+'> 同时核对项目承担费用'+(projectUsed?'（已纳入其他结算）':'')+'</label>')+'<div id="mice-settlement-costs"></div><div id="mice-settlement-issues"></div><span class="mice-error" data-error="issues"></span>'+G(F('noCost','无费用说明',old?.noCost||'',{type:'textarea',full:true})+F('basis','业务结算依据',old?.basis||'',{type:'textarea',required:true,full:true})+F('pending','款票及其他未结事项',old?.pending||'',{type:'textarea',full:true}))+U.summary([['上次退回原因',old?.returnReason||'—']]),{
+  U.drawer('业务结算核对',SEC('结算范围',U.table(['选择','项目团','完成情况'],acts.map(a=>['<input type="checkbox" name="act-'+a.id+'" '+(ids.includes(a.id)?'checked ':'')+(used.has(a.id)||!allowed(a)?'disabled':'')+'>',E(a.name),U.lines(E(a.status),used.has(a.id)?'已纳入有效结算':'')]))+'<label class="mice-inline-check"><input type="checkbox" name="includeProjectCosts" '+(includeProjectCosts?'checked ':'')+(projectUsed?'disabled':'')+'> 同时核对项目承担费用'+(projectUsed?'（已纳入其他结算）':'')+'</label>')+'<div id="mice-settlement-money"></div><div id="mice-settlement-costs"></div><div id="mice-settlement-issues"></div><span class="mice-error" data-error="issues"></span>'+G(F('noCost','无费用说明',old?.noCost||(!scopeFor(p,ids,includeProjectCosts).lines.length?'本次无采购费用（演示）':''),{type:'textarea',full:true})+F('basis','业务结算依据',old?.basis||'客户交付确认、采购费用及税额核对资料（演示）',{type:'textarea',required:true,full:true})+F('pending','款票及其他未结事项',old?.pending||'',{type:'textarea',full:true}))+U.summary([['上次退回原因',old?.returnReason||'—']]),{
     wide:true,buttons:[['保存草稿','draft'],['提交结算','submit']],
-    onOpen({form}){const update=e=>{ids=acts.filter(a=>form.elements['act-'+a.id].checked&&!form.elements['act-'+a.id].disabled).map(a=>a.id);if(e?.target.name==='includeProjectCosts')manualProject=true;if(!manualProject&&!projectUsed)form.elements.includeProjectCosts.checked=ids.length===acts.length;includeProjectCosts=!projectUsed&&form.elements.includeProjectCosts.checked;form.querySelector('#mice-settlement-costs').innerHTML=scopePreview(p,ids,includeProjectCosts);form.querySelector('#mice-settlement-issues').innerHTML=SEC('核对缺项',issues(p,ids,includeProjectCosts).map(r=>'<p>'+L(E(r.text),r.href)+'</p>').join('')||'<p class="mice-muted">当前核对范围无业务缺项。</p>');};form.addEventListener('change',e=>{if(e.target.name?.startsWith('act-')||e.target.name==='includeProjectCosts')update(e);});update();},
+    onOpen({form}){const update=e=>{ids=acts.filter(a=>form.elements['act-'+a.id].checked&&!form.elements['act-'+a.id].disabled).map(a=>a.id);if(e?.target.name==='includeProjectCosts')manualProject=true;if(!manualProject&&!projectUsed)form.elements.includeProjectCosts.checked=ids.length===acts.length;includeProjectCosts=!projectUsed&&form.elements.includeProjectCosts.checked;const hasCosts=scopeFor(p,ids,includeProjectCosts).lines.length>0;form.elements.noCost.closest('.mice-field').hidden=hasCosts;if(hasCosts)form.elements.noCost.value='';else if(!form.elements.noCost.value&&e?.target.name!=='noCost')form.elements.noCost.value='本次无采购费用（演示）';form.querySelector('#mice-settlement-money').innerHTML=MiceTaxSummary.settlementSection(MiceTaxModel.settlementEvidence(D,{projectId:p.id,activities:ids,includeProjectCosts,noCost:form.elements.noCost.value}));form.querySelector('#mice-settlement-costs').innerHTML=scopePreview(p,ids,includeProjectCosts);form.querySelector('#mice-settlement-issues').innerHTML=SEC('核对缺项',issues(p,ids,includeProjectCosts).map(r=>'<p>'+L(E(r.text),r.href)+'</p>').join('')||'<p class="mice-muted">当前核对范围无业务缺项。</p>');};form.addEventListener('change',e=>{if(e.target.name?.startsWith('act-')||['includeProjectCosts','noCost'].includes(e.target.name))update(e);});form.elements.noCost.addEventListener('input',update);update();},
     submit(v,intent,x){
       const e={},scope=scopeFor(p,ids,includeProjectCosts),active=D.settlements.filter(r=>r.id!==id&&r.projectId===p.id&&['审批中','已确认'].includes(r.status));
       if(!ids.length&&!includeProjectCosts)e.issues='请选择结算项目团或项目承担费用';
@@ -51,22 +47,47 @@ function business(projectId,activityId,id){
       if(intent==='submit'){const gaps=issues(p,ids,includeProjectCosts);if(gaps.length)e.issues='请先补齐：'+gaps.map(g=>g.text).join('；');if(!v.basis)e.basis='请填写本次结算依据';if(!scope.lines.length&&!v.noCost)e.noCost='当前无费用，须说明无费用依据';}
       if(Object.keys(e).length)return x.errors(e);
       const r={...(old||{id:S.id('JS'),projectId:p.id,version:0}),noCost:v.noCost,basis:v.basis,pending:v.pending,activities:[...ids],includeProjectCosts,contextActivityId:activityId||old?.contextActivityId||ids[0]||acts[0]?.id,version:(old?.version||0)+1,status:intent==='submit'?'审批中':'草稿',history:[...(old?.history||[]),{action:intent==='submit'?'提交结算':'保存结算',basis:v.basis}]};
-      r.submittedRecord=intent==='submit'?M.settlementEvidence(D,r):null;
+      if(old?.submittedRecord)r.amountHistory=[...(old.amountHistory||[]),{version:old.version,submittedAt:old.submittedAt,record:M.clone(old.submittedRecord)}];
+      r.submittedAt=intent==='submit'?new Date().toISOString():null;
+      r.submittedRecord=intent==='submit'?MiceTaxModel.settlementEvidence(D,r):null;
       if(old)Object.assign(old,r);else D.settlements.push(r);
       if(intent==='submit')D.approvals.push({id:S.id('SP'),type:'业务结算',sourceId:r.id,projectId:p.id,version:r.version,status:'待审批',applicant:p.owner,company:p.company,summary:ids.length+'团业务结算'+(includeProjectCosts?'及项目承担费用':''),basis:v.basis});
       S.log(p.id,'业务结算',r.id+'／'+r.status);x.close();refresh();
     }
   });
 }
+function recordEvidence(r){
+  if(r.status==='已确认')return r.confirmedRecord;
+  if(['审批中','已退回'].includes(r.status))return r.submittedRecord;
+  return MiceTaxModel.settlementEvidence(D,r);
+}
+function recordBody(r,evidence){
+  const p=evidence?.financial?.project||S.find('projects',r.projectId),acts=evidence?.financial?.activities||r.activities.map(id=>({id,name:S.find('activities',id)?.name||id}));
+  const state=id=>evidence?.serviceResults?.find(a=>a.id===id)?.status||'原记录未保存';
+  const resultLabel=r.status==='已确认'?'确认时结算金额':r.status==='审批中'?'提交时结算金额':r.status==='已退回'?'退回版本结算金额':'草稿结算金额';
+  return U.summary([['结算编号',r.id],['项目',p.name],['客户',p.customer||'—'],['我方公司',p.company||'—'],['状态',r.status],['版本',r.version],['项目承担费用',r.includeProjectCosts?'本次包含':'本次不包含'],['提交时间',MiceTaxSummary.dateText(r.submittedAt,'原记录未登记')],['确认时间',MiceTaxSummary.dateText(evidence?.confirmedAt,r.status==='已确认'?'原记录未登记':'尚未确认')]])+MiceTaxSummary.settlementSection(evidence,resultLabel)+
+    SEC('结算项目团',acts.length?U.table(['项目团','结算时执行状态'],acts.map(a=>[U.lines(E(a.name),E(a.id)),E(state(a.id))])):'<p class="mice-muted">本次仅核对项目承担费用。</p>')+
+    SEC('本次费用依据',evidence?costEvidenceTable({...evidence,projectId:r.projectId}):'<p class="mice-muted">原结算费用依据未保存。</p>')+
+    SEC('结算依据',U.summary([['业务结算依据',r.basis||'待补充'],['无费用说明',r.noCost||'—'],['未结事项',r.pending||'无登记'],['退回原因',r.returnReason||'—']]));
+}
+function outputRecord(r,evidence,mode){
+  if(mode==='export'){
+    // 防止自由文本在表格软件中被当成公式执行。
+    const rows=MiceTaxSummary.settlementExportRows(r,evidence).map(row=>row.map(v=>typeof v==='string'&&/^[=+@\-\t\r]/.test(v)?"'"+v:v));
+    U.download('业务结算单-'+r.id+'-V'+r.version+'.csv',M.csv(rows));return;
+  }
+  const printStyle='<style media="print">@page{size:A4 landscape;margin:12mm}body{overflow:visible!important}body:has(>.mice-settlement-print)>:not(.mice-settlement-print){display:none!important}.mice-settlement-print,.mice-settlement-print .modal,.mice-settlement-print form,.mice-settlement-print .modal-body{display:block!important;position:static!important;transform:none!important;width:100%!important;max-width:none!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;padding:0!important;margin:0!important;box-shadow:none!important;background:white!important}.mice-settlement-print button,.mice-settlement-print .modal-footer,.mice-settlement-print .mice-actions,.mice-settlement-print .mice-actions-col{display:none!important}.mice-settlement-print .mice-table-wrap{overflow:visible!important}.mice-settlement-print table{min-width:0!important;width:100%!important;font-size:11px}.mice-settlement-print col{width:auto!important}.mice-settlement-print th,.mice-settlement-print td{white-space:normal!important;padding:6px!important}.mice-settlement-print tr{break-inside:avoid}.mice-settlement-print thead{display:table-header-group}.mice-settlement-print h3,.mice-settlement-print h4,.mice-settlement-print summary{break-after:avoid}.mice-settlement-print .modal-header{padding:0 0 12px!important}.mice-settlement-print a{color:inherit;text-decoration:none}</style>';
+  U.drawer('业务结算单 · 打印预览',printStyle+recordBody(r,evidence).replaceAll('<details ','<details open '),{wide:true,readonly:true,onBack:()=>businessView(r.id),backLabel:'返回结算记录',buttons:[['打印','print']],onOpen({el}){el.classList.add('mice-settlement-print');},submit(){window.print();}});
+}
 function businessView(id){
   const r=S.find('settlements',id),p=S.find('projects',r?.projectId);
-  if(!r||!canRead(p,r))return U.toast('未找到结算记录或无权查看','error');
-  const evidence=r.status==='已确认'?r.confirmedRecord:r.submittedRecord;
-  U.drawer('业务结算记录',U.summary([['结算编号',r.id],['项目',p.name],['状态',r.status],['版本',r.version],['项目承担费用',r.includeProjectCosts?'本次包含':'本次不包含'],['业务结算依据',r.basis||'待补充'],['未结事项',r.pending||'无登记'],['退回原因',r.returnReason||'—']])+SEC('结算项目团',U.table(['项目团','当前执行状态'],r.activities.map(id=>[E(S.find('activities',id)?.name||id),E(S.find('activities',id)?.status||'资料待核对')])))+SEC('本次确认费用',evidence?costEvidenceTable({...evidence,projectId:p.id}):scopePreview(p,r.activities,!!r.includeProjectCosts))+SEC('审批记录',L('查看审批',U.url('merchant/approval/approvals.html',{mice:1,sourceId:r.id}))),{wide:true,readonly:true,buttons:[]});
+  if(!r||!canRead(p,r))return U.toast('未找到结算记录','error');
+  const evidence=M.clone(recordEvidence(r)||null),viewRecord=M.clone(r);
+  U.drawer('业务结算记录',recordBody(viewRecord,evidence)+SEC('审批记录',L('查看审批',U.url('merchant/approval/approvals.html',{mice:1,sourceId:r.id}))),{wide:true,readonly:true,buttons:[['导出结算单','export'],['打印预览','print']],submit(v,intent){outputRecord(viewRecord,evidence,intent);}});
 }
 function costSection(p,activityId){return SEC('业务结算','<div class="mice-toolbar">'+B('核对结算','business-settle',{project:p.id,activity:activityId||''})+'</div>'+U.table(['结算单','核对范围','状态','退回原因','操作'],D.settlements.filter(r=>r.projectId===p.id&&(!activityId||r.activities.includes(activityId)||r.includeProjectCosts)).map(r=>[E(r.id),r.activities.length+'团'+(r.includeProjectCosts?'／项目承担费用':''),U.tag(r.status),E(r.returnReason||'—'),['草稿','已退回'].includes(r.status)?A('办理','business-edit',r.id):A('详情','business-view',r.id)])));}
 function activitySection(p,a){return SEC('服务完成',U.summary([['执行状态',a.status],['实际结束',a.completion?.actualEnd||a.completedAt||'待登记'],['完成依据',a.completion?.basis||'待登记'],['客户认可',a.acceptance?.status||'待客户确认']]))+SEC('客户对账',U.table(['对账单／期间','核对状态','客户确认凭据','操作'],D.customerSettlements.filter(r=>r.projectId===p.id&&r.lines.some(l=>l.activityIds?.includes(a.id))).map(r=>[U.lines(E(r.id),E(r.start)+' 至 '+E(r.end)),U.tag(r.status),E(r.basis),A('详情','customer-settlement-view',r.id)]))+L('查看项目客户对账',U.url('merchant/tour/product-custom-detail.html',{id:p.id,tab:'agreements'})))+costSection(p,a.id);}
 Object.assign(U.actions,{'customer-settlement-new':()=>customerForm(),'customer-settlement-edit':({id})=>customerForm(id),'customer-settlement-view':({id})=>customerView(id),'business-settle':d=>business(d.project,d.activity),'business-edit':({id})=>{const r=S.find('settlements',id);if(r)business(r.projectId,'',id);},'business-view':({id})=>businessView(id)});
-window.MiceSettlement={projectSection,activitySection,costSection,issues,customerForm,business,businessView};
+window.MiceSettlement={projectSection,activitySection,costSection,issues,customerForm,business,businessView,recordEvidence,recordBody,outputRecord};
 U.ready(()=>{const id=U.q.get('settlementId');if(!id||!location.pathname.endsWith('schedules-detail.html'))return;const r=S.find('settlements',id),a=S.find('activities',U.q.get('id')),p=S.find('projects',a?.projectId);if(!r||!a||r.projectId!==a.projectId||U.q.get('projectId')&&U.q.get('projectId')!==p?.id||!r.activities.includes(a.id)&&r.contextActivityId!==a.id||!canRead(p,r))return U.missing('结算记录');businessView(id);});
 })();

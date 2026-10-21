@@ -26,4 +26,57 @@ function values(data,projectId,currency='CNY',activityId=''){
  const netIncome=profit(grossIncome,outputTax),netCost=profit(grossCost,inputTax),estimatedNetIncome=profit(grossIncome,estimatedOutputTax),estimatedNetCost=profit(grossCost,estimatedInputTax),grossProfit=profit(grossIncome,grossCost),netProfit=profit(netIncome,netCost),estimatedNetProfit=profit(estimatedNetIncome,estimatedNetCost);
  return{grossIncome,grossCost,grossProfit,grossRate:rate(grossProfit,grossIncome),outputTax,inputTax,netIncome,netCost,netProfit,netRate:rate(netProfit,netIncome),estimatedOutputTax,estimatedInputTax,estimatedNetIncome,estimatedNetCost,estimatedNetProfit,estimatedNetRate:rate(estimatedNetProfit,estimatedNetIncome),issues};
 }
-return{rates,settings,activeRates,split,sales,salesErrors,costEstimate,costErrors,invoiceOccupied,invoiceErrors,values};});
+// 结算金额只使用本次范围；完整覆盖的订单计一次，整包未分团不分摊收入。
+function settlementEvidence(data,record){
+ const evidence=M.settlementEvidence(data,record),selected=new Set(record.activities),project=data.projects?.find(p=>p.id===record.projectId);
+ const known=xs=>xs.length&&xs.every(valid)?M.round(xs.reduce((n,v)=>n+Number(v),0)):null;
+ const orders=(data.orders||[]).filter(o=>o.projectId===record.projectId&&!['已取消','已作废'].includes(o.status)&&(o.activities||[]).some(id=>selected.has(id)));
+ const incomeLines=orders.map(o=>{const covered=(o.activities||[]).every(id=>selected.has(id)),estimate=sales(o.taxEstimate,o.amount);return{
+  id:o.id,version:o.version||1,status:o.status,currency:o.currency||'CNY',activities:[...o.activities],
+  originalAmount:M.num(o.amount),amount:covered?M.num(o.amount):null,covered,
+  estimatedTax:covered?estimate.tax:null,approvedTax:covered?M.num(o.salesTaxAmount):null,
+  method:o.taxEstimate?.method||'pending',rate:o.taxEstimate?.rate??null,estimateBasis:o.taxEstimate?.basis||'',approvedBasis:o.salesTaxBasis||''
+ };});
+ const costLines=evidence.costs.map(line=>{
+  const c=data.costs.find(c=>c.id===line.costId),estimate=costEstimate(c),allocations=c.allocations||[];
+  const share=amount=>valid(estimate.deduction)&&valid(amount)&&valid(c.amount)&&Number(c.amount)!==0?M.round(estimate.deduction*amount/c.amount):Number(c.amount)===0&&Number(amount)===0&&estimate.deduction===0?0:null;
+  let estimatedTax=null,approvedTax=null;
+  if(!line.incomplete&&valid(line.amount)){
+   if(line.kind==='direct'){estimatedTax=estimate.deduction;approvedTax=M.num(c.approvedTax);}
+   else if(line.kind==='project'){
+    // 项目承担额取已完整分配后的余数；不把分团待核税额猜成零。
+    const distribution=M.costDistribution(c),estimatedShares=allocations.length?known(allocations.map(a=>share(a.amount))):0,approvedShares=allocations.length?known(allocations.map(a=>a.approvedTax)):0;
+    if(distribution.remaining===0){
+     if(valid(estimate.deduction)&&estimatedShares!=null)estimatedTax=M.round(estimate.deduction-estimatedShares);
+     if(valid(c.approvedTax)&&approvedShares!=null)approvedTax=M.round(c.approvedTax-approvedShares);
+    }
+   }else{
+    estimatedTax=known(line.allocationAmounts.map(a=>share(a.amount)));
+    approvedTax=known(line.allocationAmounts.map(a=>a.approvedTax));
+    if(!valid(c.approvedTax)||allocations.some(a=>valid(a.approvedTax)&&Number(a.approvedTax)<0)||M.sum(allocations,'approvedTax')>Number(c.approvedTax))approvedTax=null;
+   }
+  }
+  const bounded=value=>valid(value)&&valid(line.amount)&&Number(value)>=Math.min(0,line.amount)&&Number(value)<=Math.max(0,line.amount)?Number(value):null;
+  return {...line,estimatedTax:bounded(estimatedTax),approvedTax:bounded(approvedTax),rate:c.expectedTaxRate??null,deductionMode:c.deductionMode||'pending',estimateBasis:c.deductionBasis||'',approvedBasis:c.financeBasis||'',ticketNumber:c.ticketNumber||'',ticketTax:M.num(c.ticketTax)};
+ });
+ const currencies=[...new Set([...incomeLines,...costLines].map(l=>l.currency))];
+ const amounts=currencies.map(currency=>{
+  const ins=incomeLines.filter(l=>l.currency===currency),costs=costLines.filter(l=>l.currency===currency),issues=[];
+  const grossIncome=known(ins.map(l=>l.amount)),noCosts=!costs.length&&!!record.noCost&&!M.costScope(data.costs,record.projectId,record.activities,!!record.includeProjectCosts).pending.length;
+  const grossCost=noCosts?0:costs.every(c=>c.status==='已确认'&&!c.incomplete)?known(costs.map(c=>c.amount)):null;
+  const estimatedOutputTax=known(ins.map(l=>l.estimatedTax)),outputTax=known(ins.map(l=>l.approvedTax));
+  const estimatedInputTax=noCosts?0:known(costs.map(l=>l.estimatedTax)),inputTax=noCosts?0:known(costs.map(l=>l.approvedTax));
+  const diff=(a,b)=>valid(a)&&valid(b)?M.round(a-b):null,pct=(profit,base)=>valid(profit)&&base>0?M.round(profit/base*100):null;
+  const estimatedNetIncome=diff(grossIncome,estimatedOutputTax),netIncome=diff(grossIncome,outputTax),estimatedNetCost=diff(grossCost,estimatedInputTax),netCost=diff(grossCost,inputTax);
+  const grossProfit=diff(grossIncome,grossCost),estimatedNetProfit=diff(estimatedNetIncome,estimatedNetCost),netProfit=diff(netIncome,netCost);
+  if(ins.some(l=>!l.covered))issues.push('整包收入未分团：'+ins.filter(l=>!l.covered).map(l=>l.id).join('、'));
+  if(selected.size&&!ins.length)issues.push('本币种收入未明确');
+  if(ins.some(l=>l.covered&&!valid(l.amount)))issues.push('客户金额待确认');
+  if(ins.some(l=>l.covered&&!valid(l.approvedTax)))issues.push('销项税额待核定');
+  if(costs.some(l=>!valid(l.approvedTax)))issues.push('可扣税额待核定');
+  if(grossCost==null)issues.push('本次成本待确认');
+  return{currency,incomeApplicable:selected.size>0,grossIncome,grossCost,grossProfit,grossRate:pct(grossProfit,grossIncome),estimatedOutputTax,outputTax,estimatedInputTax,inputTax,estimatedNetIncome,netIncome,estimatedNetCost,netCost,estimatedNetProfit,netProfit,estimatedNetRate:pct(estimatedNetProfit,estimatedNetIncome),netRate:pct(netProfit,netIncome),issues};
+ });
+ return {...evidence,financial:{version:1,project:{id:record.projectId,name:project?.name||record.projectId,customer:project?.customer||'',company:project?.company||''},activities:record.activities.map(id=>{const a=data.activities.find(a=>a.id===id);return{id,name:a?.name||id,start:a?.start||'',end:a?.end||''};}),noCost:record.noCost||'',incomeLines,costLines,amounts}};
+}
+return{rates,settings,activeRates,split,sales,salesErrors,costEstimate,costErrors,invoiceOccupied,invoiceErrors,values,settlementEvidence};});

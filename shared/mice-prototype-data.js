@@ -4967,3 +4967,26 @@ root.MicePrototypeDemo={revision,upgrade(saved){
  compact(result,protectedProjects);result.demoDetailsRevision=revision;return result;
 }};
 })(window);
+
+/* 结算金额样例升级只作用于整套资料未改变的预置项目，不重算用户的历史结算。 */
+(function(root){
+ if(!root.MiceTaxModel)return;
+ const d=root.MicePrototypeSeed,M=root.MiceModel,previous=M.clone(d),revision='settlement-tax-20261021';
+ function complete(target){for(const s of target.settlements.filter(s=>s.status==='已确认')){s.confirmedRecord={...root.MiceTaxModel.settlementEvidence(target,s),version:s.version};s.submittedRecord=M.clone(s.confirmedRecord);}}
+ complete(d);d.settlementTaxRevision=revision;
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=function(saved){
+  const upgraded=prior(saved);if(upgraded.settlementTaxRevision===revision)return upgraded;
+  const result=M.clone(upgraded),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  for(const p of previous.projects){
+   const unchanged=['projects','activities','orders','costs','settlements'].every(key=>{
+    const rows=list=>list.filter(r=>key==='projects'?r.id===p.id:r.projectId===p.id).sort((a,b)=>a.id.localeCompare(b.id));
+    return same(rows(upgraded[key]||[]),rows(previous[key]||[]));
+   });
+   if(unchanged)for(const s of result.settlements.filter(s=>s.projectId===p.id&&s.status==='已确认')){
+    const seed=d.settlements.find(r=>r.id===s.id);s.submittedRecord=M.clone(seed.submittedRecord);s.confirmedRecord=M.clone(seed.confirmedRecord);
+   }
+  }
+  result.settlementTaxRevision=revision;return result;
+ };
+})(window);
