@@ -222,14 +222,53 @@
       title: "营销中心",
       icon: "gift",
       children: [
-        {
-          title: "营销工具",
-          children: [
-            { title: "活动管理", href: "marketing/campaigns.html" },
-            { title: "优惠券", href: "marketing/coupons.html" },
-            { title: "发券中心", href: "marketing/issue-center.html" },
-          ],
-        },
+{
+  "title": "活动管理",
+  "children": [
+    {
+      "title": "活动列表",
+      "href": "marketing/activities.html"
+    }
+  ]
+},
+{
+  "title": "优惠券",
+  "children": [
+    {
+      "title": "优惠券",
+      "href": "marketing/coupon-templates.html"
+    },
+    {
+      "title": "发券管理",
+      "href": "marketing/coupon-issue.html"
+    },
+    {
+      "title": "发券记录",
+      "href": "marketing/coupon-ledger.html"
+    }
+  ]
+},
+{
+  "title": "销售激励",
+  "children": [
+    {
+      "title": "激励团组",
+      "href": "marketing/incentive-groups.html"
+    },
+    {
+      "title": "激励规则",
+      "href": "marketing/incentive-rules.html"
+    },
+    {
+      "title": "激励统计",
+      "href": "marketing/incentive-triggers.html"
+    },
+    {
+      "title": "发放记录",
+      "href": "marketing/incentive-payouts.html"
+    }
+  ]
+},
         {
           title: "小程序运营",
           children: [
@@ -238,18 +277,87 @@
           ],
         },
         { title: "素材中心", href: "marketing/miniapp-assets.html" },
-        { title: "营销分析", href: "marketing/marketing-analysis.html" },
       ],
     },
     {
-      title: "客户",
-      icon: "users",
-      children: [
-        { title: "散客会员", href: "customer/list.html" },
-        { title: "企业客户", href: "customer/enterprise-list.html" },
-        { title: "会员规则", href: "customer/member-rules.html" },
-      ],
+  "title": "会员中心",
+  "icon": "users",
+  "children": [
+    {
+      "title": "会员档案",
+      "children": [
+        {
+          "title": "注册用户",
+          "href": "member/registered-users.html"
+        },
+        {
+          "title": "会员列表",
+          "href": "member/members.html"
+        },
+        { "title": "企业客户", "href": "customer/enterprise-list.html" }
+      ]
     },
+    {
+      "title": "等级管理",
+      "children": [
+        {
+          "title": "等级规则",
+          "href": "member/level-rules.html"
+        },
+        {
+          "title": "等级评估",
+          "href": "member/level-tasks.html"
+        },
+        {
+          "title": "等级变更",
+          "href": "member/level-changes.html"
+        }
+      ]
+    },
+    {
+      "title": "积分管理",
+      "children": [
+        {
+          "title": "积分规则",
+          "href": "member/point-rules.html"
+        },
+        {
+          "title": "积分任务",
+          "href": "member/behavior-tasks.html"
+        },
+        {
+          "title": "积分流水",
+          "href": "member/point-ledger.html"
+        },
+        {
+          "title": "积分发放",
+          "href": "member/point-dispatch.html"
+        },
+        {
+          "title": "兑换订单",
+          "href": "member/shop-orders.html"
+        }
+      ]
+    },
+    {
+      "title": "权益管理",
+      "children": [
+        {
+          "title": "自有权益",
+          "href": "member/own-benefits.html"
+        },
+        {
+          "title": "第三方权益",
+          "href": "member/partner-benefits.html"
+        }
+      ]
+    },
+    {
+      "title": "会员章程",
+      "href": "member/charters.html"
+    }
+  ]
+},
     {
       title: "财务",
       icon: "wallet",
@@ -415,6 +523,7 @@
     资源: "资源",
     产品中心: "产品",
     营销中心: "营销",
+    会员中心: "会员",
     航服: "航服",
     销售中心: "销售",
     门店中心: "门店",
@@ -432,6 +541,7 @@
     资源: "资源管理",
     产品中心: "产品中心",
     营销中心: "营销中心",
+    会员中心: "会员中心",
     航服: "航服",
     销售中心: "销售中心",
     门店中心: "门店中心",
@@ -610,7 +720,18 @@
     return new URL(href, merchantBaseUrl).href;
   }
 
+  function couponPageTitle(search) {
+    const mode = new URLSearchParams(search).get('mode');
+    return mode === 'new' ? '新建券模板' : ['edit', 'config'].includes(mode) ? '编辑券模板' : '券模板详情';
+  }
+
   const pageOwners = {
+    "member/member-detail.html": { href: "member/members.html", title: "会员详情", preserveQuery: true },
+    "marketing/issue-create.html": { href: "marketing/coupon-issue.html", title: "发券任务", preserveQuery: true },
+    "marketing/activity-edit.html": { href: "marketing/activities.html", title: new URLSearchParams(location.search).has("id") ? "编辑活动" : "新建活动", preserveQuery: true },
+    "marketing/activity-detail.html": { href: "marketing/activities.html", title: "活动详情", preserveQuery: true },
+    "marketing/activity-whitelist.html": { href: "marketing/activities.html", title: "活动团期白名单", preserveQuery: true },
+    "marketing/coupon-tiers.html": { href: "marketing/coupon-templates.html", title: couponPageTitle(location.search), preserveQuery: true },
     "data/report-scenarios.html": { href: "data/report-management.html", title: "报表业务场景验收" },
     "data/performance-reports-legacy.html": { href: "data/performance-reports.html", title: "历史经营分析（已归档）" },
     "data/finance-dashboard-v2.html": { href: "data/performance-reports.html", title: "历史方案二（已归档）" },
@@ -634,18 +755,10 @@
     "resource/supplier-detail.html": { href: "resource/suppliers.html", title: "供应商详情" },
     "resource/refund-rules.html": { href: "resource/refund-rules.html", title: "退改规则" },
     "product/product-competitor-price.html": { href: "product/product-pricing.html", title: "竞品价格" },
-    "marketing/campaigns.html": { href: "marketing/campaigns.html", title: "活动管理" },
-    "marketing/campaign-edit.html": { href: "marketing/campaigns.html", title: "营销活动" },
-    "marketing/coupons.html": { href: "marketing/coupons.html", title: "优惠券" },
-    "marketing/coupon-edit.html": { href: "marketing/coupons.html", title: "优惠券" },
-    "marketing/issue-center.html": { href: "marketing/issue-center.html", title: "发券中心" },
-    "marketing/issue-create.html": { href: "marketing/issue-center.html", title: "新建发券任务" },
-    "marketing/issue-detail.html": { href: "marketing/issue-center.html", title: "发券结果" },
     "marketing/miniapp-pages.html": { href: "marketing/miniapp-pages.html", title: "网店装修" },
     "marketing/miniapp-editor.html": { href: "marketing/miniapp-pages.html", title: "页面配置" },
     "marketing/miniapp-templates.html": { href: "marketing/miniapp-templates.html", title: "专题活动" },
     "marketing/miniapp-assets.html": { href: "marketing/miniapp-assets.html", title: "素材中心" },
-    "marketing/marketing-analysis.html": { href: "marketing/marketing-analysis.html", title: "营销分析" },
     "tour/product-custom-detail.html": { href: "tour/product-custom-list.html", title: "单团项目详情" },
     "tour/product-custom-inquiry-create.html": { href: "tour/product-custom-list.html", title: "发起单团询价" },
     "sales/contract-prepare.html": { href: "sales/contracts.html", title: "合同准备" },
@@ -710,12 +823,8 @@
     "finance/finance-remittance.html": { href: "finance/finance-remittance.html", title: "回单核销" },
     "finance/finance-settlement-adjustment.html": { href: "finance/finance-settlement.html", title: "业务结算" },
     "resource/resource-leader-schedule.html": { href: "resource/resource-tour-leaders.html", title: "领队详情" },
-    "customer/customers-detail.html": { href: "customer/list.html", title: "会员详情" },
-    "customer/detail.html": { href: "customer/list.html", title: "会员详情" },
     "customer/enterprise-list.html": { href: "customer/enterprise-list.html", title: "企业客户" },
     "customer/enterprise-detail.html": { href: "customer/enterprise-list.html", title: "企业客户详情" },
-    "customer/member-rules.html": { href: "customer/member-rules.html", title: "会员规则" },
-    "customer/member-rule-config.html": { href: "customer/member-rules.html", title: "会员制度配置" },
     "channel/ota_shops.html": { href: "channel/ota_shops.html", title: "店铺配置" },
     "channel/ota_products.html": { href: "channel/ota_products.html", title: "商品映射" },
     "channel/ota_orders.html": { href: "sales/orders.html", title: "订单管理" },
@@ -856,6 +965,9 @@
     },
   ];
 
+  // Read-only organization access for business selectors; selection does not switch workspace.
+  window.caesarOrganizationTree = () => JSON.parse(JSON.stringify(organizationTree));
+
   const workspaceExpandedIds = new Set([
     "plate-tourism",
     "company-fj-tourism",
@@ -905,7 +1017,7 @@
 
     const active = findActive(menu, owner.href);
     if (!active) return null;
-    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href, tabHref: owner.tabHref });
+    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href, tabHref: owner.preserveQuery ? file + currentRouteUrl.search : owner.tabHref });
   }
 
   function resolveActiveFromMenu(items, file) {
@@ -917,7 +1029,7 @@
 
     const active = findActive(items, owner.href);
     if (!active) return null;
-    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href, tabHref: owner.tabHref });
+    return Object.assign({}, active, { currentTitle: owner.title, ownerHref: owner.href, tabHref: owner.preserveQuery ? file + currentRouteUrl.search : owner.tabHref });
   }
 
   function rootTitleFromActive(active) {
@@ -1166,13 +1278,31 @@
   function readTabs(storageKey) {
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      const archived = ['data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
+      const archived = ['customer/list.html', 'customer/detail.html', 'customer/customers-detail.html', 'customer/member-rules.html', 'customer/member-rule-config.html', 'marketing/campaigns.html', 'marketing/campaign-edit.html', 'marketing/coupons.html', 'marketing/coupon-edit.html', 'marketing/issue-center.html', 'marketing/issue-detail.html', 'marketing/marketing-analysis.html', 'data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
       const reportTitles = Object.fromEntries(menu.find(item => item.title === '数据中心').children.flatMap(group => group.children.map(item => [item.href, item.title])));
+      const centerTitles = {};
+      const collectCenterTitles = (items) => items.forEach(item => {
+        if (item.href) centerTitles[item.href] = item.title;
+        if (item.children) collectCenterTitles(item.children);
+      });
+      collectCenterTitles(menu.filter(item => ["会员中心", "营销中心"].includes(item.title)));
       if (!Array.isArray(tabs)) return [];
-      const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href)).map(tab => {
+      const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href.split('?')[0])).map(tab => {
+        if (tab.href.split('?')[0] === 'marketing/coupon-rules.html') {
+          const params = new URLSearchParams(tab.href.split('?')[1] || '');
+          const template = params.get('template');
+          return template ? { href: 'marketing/coupon-tiers.html?' + new URLSearchParams({template, mode: 'edit', tab: 'rules'}), title: '编辑券模板' } : { href: 'marketing/coupon-templates.html', title: '优惠券' };
+        }
+        if (['marketing/activity-approvals.html','member/level-approvals.html'].includes(tab.href.split('?')[0])) return {href:'approval/approvals.html?view=todo',title:'待我审批'};
+        // Older center tabs omitted the member/activity/template identifier.
+        const owner = pageOwners[tab.href];
+        if (owner?.preserveQuery && tab.href !== 'marketing/activity-edit.html') {
+          const parent = findActive(menu, owner.href);
+          return { href: owner.href, title: parent ? parent.item.title : tab.title };
+        }
         const affected = tab.href.startsWith('finance/finance-reports.html') || tab.href.startsWith('data/');
         const href = affected ? fileFromUrl(new URL(tab.href, merchantBaseUrl)) : tab.href;
-        return { ...tab, href, title: href === "tour/schedules.html?mice=1" ? "项目团控" : reportTitles[href] || tab.title };
+        return { ...tab, href, title: href === "tour/schedules.html?mice=1" ? "项目团控" : reportTitles[href] || centerTitles[href] || (href.startsWith('marketing/coupon-tiers.html?') ? couponPageTitle(href.slice(href.indexOf('?'))) : tab.title) };
       });
       return migrated.filter((tab, i) => migrated.findIndex(t => t.href === tab.href) === i);
     } catch (error) {
@@ -1222,7 +1352,7 @@
         event.stopPropagation();
         const nextTabs = readTabs(storageKey).filter((itemTab) => itemTab.href !== tab.href);
         saveTabs(storageKey, nextTabs);
-        if (tab.href === file && nextTabs.length > 0) {
+        if (tab.href === currentHref && nextTabs.length > 0) {
           navigateTo(nextTabs[nextTabs.length - 1].href);
           return;
         }
@@ -1909,6 +2039,9 @@
     // These pages need a fresh source context and their ordered external dependencies.
     const projectRoutes = ["tour/fulfillment-cost.html", "system/air-settings.html", "finance/finance-nc.html", "tour/air-charters.html", "tour/air-charter-detail.html", "finance/air-reconciliation.html", "finance/air-funds.html", "tour/air-changes.html", "finance/air-settlement.html", "approval/approvals.html", "tour/air-orders.html", "tour/air-order-edit.html", "tour/air-order-detail.html", "tour/air-import.html", "tour/product-custom-list.html", "tour/product-custom-detail.html", "tour/schedules.html?mice=1", "tour/schedules-detail.html?mice=1", "finance/finance-invoice.html"];
     const currentProjectRoute = currentRouteUrl || new URL(window.location.href);
+    const centerFiles = ["marketing/issue-create.html", "member/registered-users.html", "member/members.html", "member/member-detail.html", "member/level-rules.html", "member/level-tasks.html", "member/level-changes.html", "member/level-approvals.html", "member/point-rules.html", "member/behavior-tasks.html", "member/point-ledger.html", "member/point-dispatch.html", "member/shop-orders.html", "member/own-benefits.html", "member/partner-benefits.html", "member/charters.html", "marketing/activities.html", "marketing/activity-edit.html", "marketing/activity-detail.html", "marketing/activity-approvals.html", "marketing/activity-whitelist.html", "marketing/coupon-templates.html", "marketing/coupon-tiers.html", "marketing/coupon-rules.html", "marketing/coupon-issue.html", "marketing/coupon-ledger.html", "marketing/incentive-groups.html", "marketing/incentive-rules.html", "marketing/incentive-triggers.html", "marketing/incentive-payouts.html"];
+    if(centerFiles.includes(fileFromUrl(target)) || centerFiles.includes(fileFromUrl(currentProjectRoute))){window.location.href=target.href;return;}
+
     if (target.searchParams.get("business") === "air" || currentProjectRoute.searchParams.get("business") === "air" || target.searchParams.get("mice") === "1" || currentProjectRoute.searchParams.get("mice") === "1"
       || projectRoutes.includes(fileFromUrl(target)) || projectRoutes.includes(fileFromUrl(currentProjectRoute))) {
       window.location.href = target.href;

@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>待我审批 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css?v=settlement-tax-20261021">
-<link rel="stylesheet" href="../../shared/air-template.css?v=20261017-template2"><link rel="stylesheet" href="../../shared/air-list.css?v=20261017-list1"><link rel="stylesheet" href="../../shared/air-funds.css?v=20261018-due1"></head>
+<link rel="stylesheet" href="../../shared/air-template.css?v=20261017-template2"><link rel="stylesheet" href="../../shared/air-list.css?v=20261017-list1"><link rel="stylesheet" href="../../shared/air-funds.css?v=20261018-due1"><style>
+.approval-center-modal.member-marketing-approval [hidden] { display: none !important; }
+.mm-approval-flow { grid-column: 1 / -1; min-width: 0; }
+.mm-approval-flow h3 { margin: 12px 0 10px; font-size: 14px; }
+.mm-approval-flow .mm-approval-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.mm-approval-flow p { display: flex; flex-wrap: wrap; gap: 8px; }
+.mm-approval-flow .tag-blue { color: var(--color-primary); }
+</style></head>
 <body>
   <script src="../../shared/nav-merchant.js?v=air-funds-1"></script>
 
@@ -138,6 +145,8 @@
   <script src="../../shared/approval-org-workflow-ui.js"></script>
   <script src="../../shared/approval-config-model.js"></script>
   <script src="../../shared/order-amendment-model.js"></script>
+  <script src="../../shared/member-marketing-model.js"></script>
+  <script src="../../shared/member-marketing-approval.js"></script>
   <script>
     (function () {
       if (new URLSearchParams(location.search).get('view') === 'config') {
@@ -1065,7 +1074,8 @@
       });
       let approvals = collectApprovals().filter(item=>item.matter!=="合同作废");
       approvals.unshift(...ContractApproval.records());
-      matterOptions.push(...ContractApproval.matters);
+      [...ContractApproval.matters,...MemberMarketingApproval.matters].forEach(m=>{if(!matterOptions.includes(m))matterOptions.push(m);});
+      if(!sourceOptions.includes("会员中心"))sourceOptions.push("会员中心");
 
       function optionHtml(values, allText) {
         return ["<option value=\"\">" + escapeHtml(allText) + "</option>"].concat(values.map((value) => {
@@ -1152,6 +1162,7 @@
       }
 
       function actionHtml(item) {
+        if(item.memberMarketing)return (currentView==='todo'&&item.status==='待审批'?'<button type="button" data-approval-action="approve" data-approval-no="'+escapeHtml(item.no)+'">审批</button>':'')+'<button type="button" data-approval-action="detail" data-approval-no="'+escapeHtml(item.no)+'">详情</button>';
         if(item.orgRequest){
           const id=escapeHtml(item.no),button=(action,label)=>'<button type="button" data-approval-action="'+action+'" data-approval-no="'+id+'">'+label+'</button>';
           return (currentView==='todo'&&item.status==='审批中'?button('approve','审批'):'')+(currentView==='mine'&&item.status==='已退回'?button('supplement','修改重提'):'')+(currentView==='mine'&&['审批中','已退回'].includes(item.status)?button('withdraw','撤回'):'')+button('detail','详情');
@@ -1193,7 +1204,8 @@
 
       function renderApprovals() {
         approvals=approvals.filter(item=>!item.orgRequest&&item.no!=='APR-MS-ORG-001');
-        approvals.unshift(...OrgWorkflowUI.approvalRecords());
+        approvals=approvals.filter(item=>!item.memberMarketing);
+        approvals.unshift(...OrgWorkflowUI.approvalRecords(),...MemberMarketingApproval.records(currentView));
         renderTabs();
         const items = visibleApprovals();
         rowsBody.innerHTML = items.length ? items.map(rowHtml).join("") : "<tr><td colspan=\"7\">暂无匹配的审批记录</td></tr>";
@@ -1288,11 +1300,12 @@
       function openModal(item, action, actionTitle) {
         if(item.orgRequest){OrgWorkflowUI.requestDetail(item.no,action,renderApprovals);return;}
         activeApproval = item;
+        modal.classList.toggle("member-marketing-approval", !!item.memberMarketing);
         activeAction = action;
         modalTitle.textContent = modalTitleFor(action, item, actionTitle);
         detailSectionTitle.textContent = action === "approve" ? "判断依据" : "申请内容";
         summaryGrid.innerHTML = summaryGridHtml(summaryItems(item));
-        detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action)) + (item.contractMatter ? ContractApproval.render(item) : "");
+        detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action)) + (item.contractMatter ? ContractApproval.render(item) : "") + (item.memberMarketing ? MemberMarketingApproval.render(item) : "");
         var paymentPanel = document.getElementById('approvalPaymentBasis');
         paymentPanel.hidden = !['付款申请','交通资源付款'].includes(item.matter);
         var bases = item.paymentBases || [];
@@ -1308,9 +1321,9 @@
         const isOperation = canDecide || canWithdraw || canSupplement;
         decisionPanel.hidden = !isOperation;
         decisionTitle.textContent = canSupplement && item.priceBefore ? "修改重提" : canSupplement ? "补充材料" : canWithdraw ? "撤回申请" : "本次处理";
-        decisionControls.innerHTML = decisionControlsHtml(action);
+        decisionControls.innerHTML = item.memberMarketing&&action==="approve" ? MemberMarketingApproval.controls(item) : decisionControlsHtml(action);
         opinionInput.value = action === "approve" ? (item.opinion || "") : "";
-        opinionInput.placeholder = canSupplement && item.priceBefore ? "填写修改内容、补充依据和重新提交说明" : canSupplement ? "填写补充说明或材料清单" : "填写审批意见，驳回、退回补充或撤回时必填";
+        opinionInput.placeholder = item.memberMarketing ? "填写审批意见（必填）" : canSupplement && item.priceBefore ? "填写修改内容、补充依据和重新提交说明" : canSupplement ? "填写补充说明或材料清单" : "填写审批意见，驳回、退回补充或撤回时必填";
         cancelBtn.hidden = !isOperation;
         submitBtn.textContent = canDecide ? "提交审批意见" : canWithdraw ? "确认撤回" : canSupplement && item.priceBefore ? "重新提交" : canSupplement ? "提交补充" : "关闭";
         if (window.caesarUI && window.caesarUI.openLayer) {
@@ -1372,6 +1385,13 @@
       }
 
       function submitModalAction() {
+        if(activeApproval?.memberMarketing&&activeAction==='approve'){
+          const decision=document.querySelector("input[name='approvalDecision']:checked")?.value||'通过';
+          const delegate=document.getElementById('mmApprovalDelegate')?.value||'';
+          if(!opinionInput.value.trim()){toast('审批意见必填');opinionInput.focus();return;}
+          if(!window.confirm('确认'+decision+'当前审批节点？'))return;
+          try{const result=MemberMarketingApproval.decide(activeApproval.no,decision,opinionInput.value,delegate);renderApprovals();closeModal();toast(result.status==='审批中'?'当前节点已处理，申请已流转至下一节点':'审批'+decision+'已完成，业务状态已更新');}catch(error){toast(error.message);}return;
+        }
         if (!activeApproval) {
           closeModal();
           return;
@@ -1465,6 +1485,7 @@
       }
 
       document.addEventListener('organization-updated',renderApprovals);
+      window.addEventListener('storage',event=>{if(event.key===CaesarCenters.KEY)renderApprovals();});
       setupFilters();
       if(params.get('contractNo')) keywordInput.value=params.get('contractNo');
       else if(params.get('type')==='contract') keywordInput.value='合同';

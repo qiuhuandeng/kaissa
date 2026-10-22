@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),M=require('../shared/member-marketing-model.js');
+const s=M.seed(),t={id:'QM-SIMPLE',type:'standard',label:'直减券',name:'秋冬会员礼遇',status:'启用',pointsExchange:true,allowRegular:true,tiers:M.tiers('standard'),useRules:M.normalizeCouponRules(),activityIds:[]};
+t.tiers[0].points=1500;s.templates.unshift(t);
+const u=s.users.find(u=>u.member&&u.status==='正常'&&u.balance>=1500),v=s.users.find(u=>!u.member&&u.status==='正常'),before=u.balance;
+assert.throws(()=>M.redeem(s,v.id,t.id,t.tiers[0].id),/会员/);
+const w=M.redeem(s,u.id,t.id,t.tiers[0].id);assert.equal(u.balance,before-1500);assert.equal(w.points,1500);const snapshot=M.clone(w);
+t.pointsExchange=false;t.tiers[0].points=0;assert.equal(M.isPoints(t),false);assert.deepEqual(w,snapshot);
+s.publicClaims.unshift({id:'GK-SIMPLE',template:t.id,tier:t.tiers[0].id,activity:'',start:'2026-10-01T00:00',end:'2026-12-31T23:59',total:100,perUser:1,status:'生效中'});
+assert.equal(M.claimCouponEntry(s,'GK-SIMPLE',v.id).points,0);
+for(const points of [0,-1,1.5,NaN])assert(M.validateTiers('standard',[{...t.tiers[0],points}],t.useRules.allocations,true).some(e=>/正整数/.test(e)));
+const subsidy=s.templates.find(t=>t.type==='subsidy');subsidy.pointsExchange=true;subsidy.tiers[0].points=1500;const member=s.users.find(u=>u.member&&u.status==='正常'&&u.balance>=1500);const exchanged=M.redeem(s,member.id,subsidy.id,subsidy.tiers[0].id);const schedule=s.schedules.find(x=>exchanged.productScope.scheduleIds.includes(x.id));s.orders.push({id:'ORDER-POINTS',uid:member.id,amount:20000,paid:0,product:schedule.product,schedule:schedule.id,status:'待支付',refund:0});assert.doesNotThrow(()=>M.previewCoupon(s,exchanged.id,'ORDER-POINTS'));
+console.log('PASS 积分开关、会员实际扣分、关闭后免费领取、无效积分拦截、历史券快照与领取核销一致');

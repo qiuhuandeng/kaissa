@@ -32,6 +32,7 @@
     '销售与渠道':['渠道授权','佣金规则','渠道账户','渠道对账','改期转团','订单应收变更','订单结算价变更','订单优惠','订单转款'],
     '财务':['供应商账户变更','付款申请','退款申请','认款调整／复核','坏账处理','结算确认','发票红冲','NC异常处理','预存账户开户','收付款配置变更','收付款资料停用','付款退回','预付款退回','领队费用申请','开票申请','预付转款'],
     '合同':['合同首次签约','合同变更','合同撤销','合同解除','企业合同归档','合同模板发布','合同收款例外','单团合同审核'],
+    '会员与营销':['活动报批','活动变更','人工调级','注销用户','积分补发','积分发放处理','等级失败重跑','取消兑换','等级规则发布','积分规则发布','章程发布','券作废','券恢复'],
     '组织与门店':['组织人事','门店档案准入','门店销售授权','门店财务配置','门店恢复营业','员工组织调整']
   };
   const moneyScenes = ['订单应收变更','付款申请','退款申请','交通资源付款','成本差异','认款调整／复核','坏账处理','结算确认','发票红冲'];
@@ -46,6 +47,7 @@
   })));
   const scene = name => scenes.find(s => s.name===name);
   const conditionFields={
+    activityLevel:{label:'活动级别',values:['A','B','常规']},
     amount:{label:'申请金额',type:'number'},rate:{label:'调价幅度绝对值（%）',type:'number'},
     channel:{label:'销售渠道',values:['门店','呼叫中心','电商','分销']},
     paymentType:{label:'付款申请类型',values:['预付款','应付付款']},
@@ -66,6 +68,7 @@
   const scopeChoices={company:'本公司全部业务',businessDepartment:'指定业务部门的业务',productDepartment:'指定产品部门的产品',channel:'指定销售渠道的订单'};
   const companyBases={company:'单据业务责任公司',productCompany:'产品责任公司',salesCompany:'销售责任公司'};
   const extraFields={
+    '活动报批':['activityLevel'], '活动变更':['activityLevel'],
     '付款申请':['paymentType'], '退款申请':['refundRoute','channel'], '结算确认':['settlementStage'],
     '订单结算价变更':['settlementChanged','returned'], '订单优惠':['amount','discountAmount','discountRate','channel'],
     '订单转款':['amount'], '预付转款':['amount'], '付款退回':['amount'], '预付款退回':['amount'],
@@ -141,7 +144,7 @@
     }));
   }
   function ensureBusinessScenes(state){if(state.businessConfigVersion===1)return state;
-    const names=Object.keys(extraFields);for(const name of names){state.templates.push({id:'business-'+name,published:null,draft:businessSample(name),disabled:false,versions:[]});}
+    const names=Object.keys(extraFields).filter(name=>!groups['会员与营销'].includes(name));for(const name of names){state.templates.push({id:'business-'+name,published:null,draft:businessSample(name),disabled:false,versions:[]});}
     state.businessConfigVersion=1;return state;
   }
   // Display configuration references existing business fields; it never changes their input requirements.
@@ -254,6 +257,14 @@
       {id:uid(),title:'较大幅度调整',match:'all',conditions:[{field:'rate',op:'gt',value:3,currency:''}],nodes:[node('财务审核')]},
       {id:uid(),title:'其他情况',fallback:true,conditions:[],nodes:[]}
     ]}];
+    else if(s?.group==='会员与营销'){
+      const first=()=>node('业务负责人','department'),second=()=>node('复核负责人','duty','业务审核');
+      if(['活动报批','活动变更'].includes(name))nodes=[{id:uid(),type:'branch',title:'按活动级别审批',branches:[
+        {id:uid(),title:'A级活动',match:'all',conditions:[{field:'activityLevel',op:'eq',value:'A'}],nodes:[node('部门负责人','department'),node('分管领导','duty','业务审核'),node('总经理','duty','公司负责人')]},
+        {id:uid(),title:'B级活动',match:'all',conditions:[{field:'activityLevel',op:'eq',value:'B'}],nodes:[node('部门负责人','department'),node('分管领导','duty','业务审核')]},
+        {id:uid(),title:'常规活动',fallback:true,conditions:[],nodes:[node('部门负责人','department')]}
+      ]}];else nodes=[first(),second()];
+    }
     else if(s?.group==='合同') nodes=[node(name==='合同解除'?'法务审核':'合同审核','duty',name==='合同解除'?'法务审核':'合同审核')];
     return {name:name+'流程',scene:name,companies:['fj','bj'],departments:[],departmentMode:'all',includeChildren:true,fields:{note:true,noteRequired:false,attachments:true,attachmentRequired:false},content:defaultContent(name),nodes,rules:rulesFor({}),demo:true};
   }
@@ -265,6 +276,23 @@
       const t=sample(name),pub=i<initial.length;
       return {id:'template-'+i,published:pub?clone(t):null,draft:pub?null:t,disabled:false,versions:pub?[{number:1,at:'2026-09-24',by:'审批管理员',template:clone(t)}]:[]};
     })};
+  }
+  function ensureMemberMarketingScenes(state){
+    groups['会员与营销'].forEach((name,index)=>{if(state.templates.some(r=>(r.draft||r.published)?.scene===name))return;
+      const t=sample(name);t.rules={...t.rules,transferAllowed:true,approveOpinionRequired:true};
+      state.templates.push({id:'member-marketing-'+index,published:t,draft:null,disabled:false,versions:[{number:1,at:'2026-10-22',by:'审批管理员',template:clone(t)}]});
+    });return state;
+  }
+  function memberMarketingRoute(kind,context={},storage){
+    if(!groups['会员与营销'].includes(kind))return null;
+    const raw=storage?.getItem('caesar-approval-configuration-v1');
+    const state=ensureMemberMarketingScenes(raw?JSON.parse(raw):createState());
+    const entries=state.templates.filter(r=>r.published?.scene===kind&&!r.disabled);
+    if(entries.length!==1)throw Error(kind+'须在审批模板中保留一个已发布且启用的流程');
+    const entry=entries[0],t=entry.published,nodes=[];
+    function collect(list){for(const n of list){if(n.type==='branch'){const branch=n.branches.find(b=>!b.fallback&&(b.match==='any'?b.conditions.some(c=>matchCondition(c,context)):b.conditions.every(c=>matchCondition(c,context))))||n.branches.find(b=>b.fallback);if(branch)collect(branch.nodes);}else if(n.type==='approval')nodes.push(n.title);}}
+    collect(t.nodes);if(!nodes.length)throw Error('审批模板没有匹配的审批节点');
+    return {id:entry.id,name:t.name,version:entry.versions?.at(-1)?.number||1,nodes,template:clone(t)};
   }
   function ensureReceivableScenes(state){
     ['订单应收变更','认款调整／复核'].forEach(name=>{
@@ -436,6 +464,6 @@
     state.delegations.filter(b=>b.id!==a.id&&overlaps(b)).forEach(b=>{if(b.original===a.original)errors.push('该人员已有重叠期间及事项的代办');if(b.original===a.delegate||b.delegate===a.original)errors.push('暂不支持连续转交或循环代办，请直接指定最终代办人');});
     if(errors.length)return [...new Set(errors)];const i=state.delegations.findIndex(b=>b.id===a.id);const value={...clone(a),id:a.id||uid()};if(i<0)state.delegations.push(value);else state.delegations[i]=value;return [];
   }
-  const api={scopeDepartments,scopeChoices,demoPersonnel,conditionSetsOverlap,conditionFields,conditionErrors,conditionContextErrors,scopeTypes,companyBases,arrangementStatus,arrangementScope,resolveDuty,businessSample,ensureBusinessScenes,triggerErrors,matchCondition,ensureReceivableScenes,organization,orgData:O,rulesFor,validateRules,repeatModes,eligible,contentCatalog,defaultContent,getContent,validateContent,previewContent,moveNode,reorderBranches,cloneConditionBranch,clone,uid,companies,departments,duties,sources,modes,scenes,scene,personName,companyName,node,sample,createState,activeDepartments,accepts,walk,getNode,getList,approvers,conditionText,validate,trial,saveDraft,publish,saveArrangement,saveDelegation};
+  const api={ensureMemberMarketingScenes,memberMarketingRoute,scopeDepartments,scopeChoices,demoPersonnel,conditionSetsOverlap,conditionFields,conditionErrors,conditionContextErrors,scopeTypes,companyBases,arrangementStatus,arrangementScope,resolveDuty,businessSample,ensureBusinessScenes,triggerErrors,matchCondition,ensureReceivableScenes,organization,orgData:O,rulesFor,validateRules,repeatModes,eligible,contentCatalog,defaultContent,getContent,validateContent,previewContent,moveNode,reorderBranches,cloneConditionBranch,clone,uid,companies,departments,duties,sources,modes,scenes,scene,personName,companyName,node,sample,createState,activeDepartments,accepts,walk,getNode,getList,approvers,conditionText,validate,trial,saveDraft,publish,saveArrangement,saveDelegation};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.ApprovalConfigModel=api;
 })(typeof window==='object'?window:globalThis);
