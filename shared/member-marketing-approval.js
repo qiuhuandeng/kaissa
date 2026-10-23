@@ -39,6 +39,10 @@ function render(item){
   if(a.kind==='等级规则发布'){
     const v=s.levelVersions.find(x=>x.id===a.target);if(v)extra='<h3>本次等级规则</h3><table class="table"><thead><tr><th>等级</th><th>消费门槛</th><th>积分倍数</th><th>年度活动次数</th></tr></thead><tbody>'+v.levels.map(l=>'<tr><td>'+e(l.name)+'</td><td>'+money(l.min)+'</td><td>'+e(l.multiplier)+'</td><td>'+e(l.annual)+'</td></tr>').join('')+'</tbody></table>';
   }
+  if(a.kind==='等级规则发布'){
+    const v=s.levelVersions.find(x=>x.id===a.target),r=v?.benefitDefinitions?.find(r=>r.id===v.benefitSource);
+    if(r)extra='<h3>'+e(r.name)+'</h3><p>'+e(r.description)+'</p><p>公示日期：'+e(v.notice)+'；生效日期：'+e(v.effective)+'</p>'+(r.kind==='service'?'<table class="table"><thead><tr><th>会员等级</th><th>权益待遇</th></tr></thead><tbody>'+M.gradeNames.map(g=>'<tr><td>'+e(g)+'</td><td>'+e(r.values?.[g]||'不享有')+'</td></tr>').join('')+'</tbody></table>':extra);
+  }
   if(a.kind==='积分规则发布'){
     const v=s.pointVersions.find(x=>x.id===a.target);if(v)extra='<h3>本次积分规则</h3><p>'+e('基础积分 '+v.baseRate+'%；'+v.ratio+' 积分抵1元；单笔上限 '+v.cap+'%；有效期 '+v.days+' 天；适用 '+v.scope.join('、'))+'</p>';
   }

@@ -223,17 +223,12 @@
       icon: "gift",
       children: [
 {
-  "title": "活动管理",
+  "title": "营销工具",
   "children": [
     {
-      "title": "活动列表",
+      "title": "营销活动",
       "href": "marketing/activities.html"
-    }
-  ]
-},
-{
-  "title": "优惠券",
-  "children": [
+    },
     {
       "title": "优惠券",
       "href": "marketing/coupon-templates.html"
@@ -343,12 +338,12 @@
       "title": "权益管理",
       "children": [
         {
-          "title": "自有权益",
+          "title": "会员权益",
           "href": "member/own-benefits.html"
         },
         {
-          "title": "第三方权益",
-          "href": "member/partner-benefits.html"
+          "title": "会员活动",
+          "href": "member/member-events.html"
         }
       ]
     },
@@ -1278,7 +1273,7 @@
   function readTabs(storageKey) {
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      const archived = ['customer/list.html', 'customer/detail.html', 'customer/customers-detail.html', 'customer/member-rules.html', 'customer/member-rule-config.html', 'marketing/campaigns.html', 'marketing/campaign-edit.html', 'marketing/coupons.html', 'marketing/coupon-edit.html', 'marketing/issue-center.html', 'marketing/issue-detail.html', 'marketing/marketing-analysis.html', 'data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
+      const archived = ['member/partner-benefits.html','customer/list.html', 'customer/detail.html', 'customer/customers-detail.html', 'customer/member-rules.html', 'customer/member-rule-config.html', 'marketing/campaigns.html', 'marketing/campaign-edit.html', 'marketing/coupons.html', 'marketing/coupon-edit.html', 'marketing/issue-center.html', 'marketing/issue-detail.html', 'marketing/marketing-analysis.html', 'data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
       const reportTitles = Object.fromEntries(menu.find(item => item.title === '数据中心').children.flatMap(group => group.children.map(item => [item.href, item.title])));
       const centerTitles = {};
       const collectCenterTitles = (items) => items.forEach(item => {
