@@ -93,5 +93,26 @@
     if(includeProjectCosts&&(s.commonPending||s.commonUnknown))e.push('项目公共费用尚未完整核对');
     return e;
   }
-  return {enabled,valid,rate,costs,snapshot,groupIssues,allocationIssues,costIssues,releaseIssues};
+  const memberName=m=>m.name||m.employee;
+  const memberAssignment=(p,m)=>!m.ended&&(p.delegations||[]).find(d=>d.status!=='已结束'&&(d.memberId&&d.memberId===m.id||d.employee===memberName(m)));
+  function syncMembers(p,newId){
+    p.members=p.members||[];
+    for(const d of (p.delegations||[]).filter(d=>d.status!=='已结束')){
+      let m=p.members.find(m=>!m.ended&&memberName(m)===d.employee);
+      if(!m){m={id:newId(),name:d.employee,role:'操作',start:d.start||p.start,end:d.end||p.end,note:d.scope||'子团执行与费用预算管理',activities:[],source:'分工额度'};p.members.push(m);}
+      if(!m.id)m.id=newId();d.memberId=m.id;
+    }
+    return p.members;
+  }
+  function endAssignmentIssues(data,p,employee){
+    const unfinished=(data.activities||[]).filter(a=>a.projectId===p.id&&a.planner===employee&&['草稿','进行中'].includes(a.status));
+    return unfinished.length?['仍负责 '+unfinished.length+' 个未完成项目团，请先移交或完成，再结束分工']:[];
+  }
+  function endMember(data,p,m,date,reason){
+    const issues=endAssignmentIssues(data,p,memberName(m));if(issues.length)return issues;
+    m.ended=true;m.end=date;m.endReason=reason;
+    for(const d of p.delegations||[])if(d.status!=='已结束'&&d.employee===memberName(m)){d.status='已结束';d.end=date;d.endReason=reason;d.history=[...(d.history||[]),{action:'成员结束参与，收回未使用额度',basis:reason,date}];}
+    return [];
+  }
+  return {enabled,valid,rate,costs,snapshot,groupIssues,allocationIssues,costIssues,releaseIssues,memberAssignment,syncMembers,endAssignmentIssues,endMember};
 });

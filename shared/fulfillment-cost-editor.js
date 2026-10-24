@@ -19,7 +19,7 @@ function canManage(c,action='cost-edit'){
   const p=S.find('projects',c.projectId),a=S.find('activities',c.activityId);
   if(a&&['cost-new','cost-edit','cost-budget'].includes(action)){
     if(!['进行中','已完成'].includes(a.status))return false;
-    if(action==='cost-budget'&&a.status==='已完成')return false;
+    if(action==='cost-budget'&&a.status==='已完成'&&!root.MiceBudgetModel?.enabled(p))return false;
     if(D.settlements.some(r=>r.projectId===p.id&&r.activities?.includes(a.id)&&['审批中','已确认'].includes(r.status)))return false;
   }
   return p.status!=='已终止'&&(p.status!=='已结项'||action==='cost-adjust');

@@ -1,6 +1,7 @@
 (function(){
   'use strict';
   const U=MiceUI,{store:S,M,esc:E,field:F,grid:G,section:SEC,btn:B,action:A}=U,D=S.data,Q=MiceBudgetModel;
+  let teamUpdated=false;for(const p of D.projects.filter(p=>!['已结项','已终止'].includes(p.status))){const before=JSON.stringify([p.members,p.delegations]);Q.syncMembers(p,()=>S.id('XM'));if(before!==JSON.stringify([p.members,p.delegations]))teamUpdated=true;}if(teamUpdated)S.save();
   const state=p=>Q.snapshot(D,p);
   const refresh=()=>location.pathname.endsWith('product-custom-list.html')?MiceProjects.render():location.pathname.endsWith('product-custom-detail.html')?MiceProjectDetail.render():window.MiceSettlementHost?MiceSettlementHost.refreshCosts():window.MiceActivity?.render();
   function groupNote(p,a){

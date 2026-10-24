@@ -33,11 +33,12 @@
     draw();
     return () => read().filter(m => m.name && m.role).map(m => ({ ...m, start: m.start || form.elements.start.value, end: m.end || form.elements.end.value, activities: m.activities || [] }));
   }
+  function memberBudget(p,m){const d=window.MiceBudgetModel?.memberAssignment(p,m);return d?M.money(d.costBudget,d.currency):'未分配';}
   function members(p) {
-    return SEC('项目组成员', U.table(['员工／职责', '负责项目团', '参与期间', '负责事项', '操作'], (p.members || []).map((m, i) => [
+    return SEC('项目组成员', U.table(['员工／职责', '负责项目团', '参与期间', '负责事项', '费用额度', '操作'], (p.members || []).map((m, i) => [
       U.lines(E(m.name || m.employee), E(m.role), m.ended ? '已结束参与' : ''),
       E(m.activities?.length ? m.activities.map(id => S.find('activities', id)?.name || id).join('、') : '项目总体'),
-      E((m.start || p.start) + ' 至 ' + (m.end || p.end)), E(m.note || '—'),
+      E((m.start || p.start) + ' 至 ' + (m.end || p.end)), E(m.note || '—'), memberBudget(p,m),
       !editable(p) || m.ended ? '—' : A('编辑', 'flow-member-edit', i) + A('结束参与', 'flow-member-end', i)
     ])), (editable(p) ? B('新增成员', 'flow-member-new', { project: p.id }) : '') + B('导出参与记录', 'flow-member-export', { project: p.id }));
   }
@@ -45,9 +46,9 @@
     const p = project(); if (!editable(p)) return;
     const old = index === undefined ? null : p.members?.[Number(index)], m = old || { name: '李梅', role: '操作', start: p.start, end: p.end, note: '执行安排与采购成本核对', activities: [] };
     if (m.ended) return;
-    const acts = D.activities.filter(a => a.projectId === p.id);
-    U.drawer(old ? '编辑项目成员' : '新增项目成员', G(F('name', '员工', m.name || m.employee, { options: D.catalog.staff.map(s => s.name) }) + F('role', '职责', m.role, { options: [...new Set([...roles, m.role])] }) + F('start', '参与开始', m.start, { type: 'date' }) + F('end', '参与结束', m.end, { type: 'date' }) + F('note', '负责事项', m.note, { full: true, type: 'textarea' })) + SEC('负责项目团', '<p class="mice-muted">未选具体团时，登记为项目总体参与。</p><div class="mice-checklist">' + acts.map(a => '<label><input type="checkbox" name="scope-' + E(a.id) + '" ' + (m.activities?.includes(a.id) ? 'checked' : '') + '>' + E(a.name) + '</label>').join('') + '</div>'), {
-      submit(v, i, x) { if (!editable(p)) return; const n = { ...m, ...v, activities: acts.filter(a => v['scope-' + a.id]).map(a => a.id) }; if (old) { n.history = [...(old.history || []), { name: old.name, role: old.role, note: old.note, start: old.start, end: old.end }]; Object.assign(old, n); } else (p.members ||= []).push(n); S.log(p.id, old ? '编辑项目成员' : '新增项目成员', n.name + '／' + n.role); x.close(); refresh(); }
+    const acts = D.activities.filter(a => a.projectId === p.id),linked=old&&(window.MiceBudgetModel?.memberAssignment(p,m)||acts.some(a=>a.planner===(m.name||m.employee)));
+    U.drawer(old ? '编辑项目成员' : '新增项目成员', G(F('name', '员工', m.name || m.employee, { options: D.catalog.staff.map(s => s.name),disabled:!!linked }) + F('role', '职责', m.role, { options: [...new Set([...roles, m.role])] }) + F('start', '参与开始', m.start, { type: 'date' }) + F('end', '参与结束', m.end, { type: 'date' }) + F('note', '负责事项', m.note, { full: true, type: 'textarea' })) + SEC('负责项目团', '<p class="mice-muted">未选具体团时，登记为项目总体参与。</p><div class="mice-checklist">' + acts.map(a => '<label><input type="checkbox" name="scope-' + E(a.id) + '" ' + (m.activities?.includes(a.id) ? 'checked' : '') + '>' + E(a.name) + '</label>').join('') + '</div>'), {
+      submit(v, i, x) { if (!editable(p)) return;const name=linked?(m.name||m.employee):v.name;if((!old||name!==(old.name||old.employee))&&(p.members||[]).some(other=>other!==old&&!other.ended&&(other.name||other.employee)===name))return x.errors({name:'该员工已在项目成员中，请编辑原记录补充负责事项'}); const n = { ...m, ...v,name, activities: acts.filter(a => v['scope-' + a.id]).map(a => a.id) }; if (old) { n.history = [...(old.history || []), { name: old.name, role: old.role, note: old.note, start: old.start, end: old.end }]; Object.assign(old, n); } else (p.members ||= []).push(n); S.log(p.id, old ? '编辑项目成员' : '新增项目成员', n.name + '／' + n.role); x.close(); refresh(); }
     });
   }
   function budgetRows(p) {
@@ -173,7 +174,7 @@
   Object.assign(U.actions, {
     'flow-budget': ({ project: pid }) => budgetEdit(pid),
     'flow-member-new': () => memberEdit(), 'flow-member-edit': ({ id }) => memberEdit(id),
-    'flow-member-end': ({ id }) => { const p = project(), m = p?.members?.[+id]; if (!editable(p) || !m || m.ended) return; U.drawer('结束成员参与', U.summary([['员工', m.name || m.employee], ['职责', m.role]]) + G(F('end', '结束日期', new Date().toLocaleDateString('en-CA'), { type: 'date' }) + F('reason', '交接说明', '本阶段工作完成，历史参与记录保留', { full: true })), { submit(v, i, x) { m.ended = true; m.end = v.end; m.endReason = v.reason; S.log(p.id, '结束成员参与', (m.name || m.employee) + '／' + v.reason); x.close(); refresh(); } }); },
+    'flow-member-end': ({ id }) => { const p = project(), m = p?.members?.[+id]; if (!editable(p) || !m || m.ended) return;const issues=window.MiceBudgetModel?.endAssignmentIssues(D,p,m.name||m.employee)||[];if(issues.length)return U.toast(issues.join('；'),'warning'); U.drawer('结束成员参与', U.summary([['员工', m.name || m.employee], ['职责', m.role]])+'<p class="mice-muted">结束后收回未使用的人员额度，原项目团预算、费用和参与记录继续保留。</p>' + G(F('end', '结束日期', new Date().toLocaleDateString('en-CA'), { type: 'date' }) + F('reason', '交接说明', '本阶段工作完成，历史参与记录保留', { full: true })), { submit(v, i, x) { const issues=window.MiceBudgetModel?MiceBudgetModel.endMember(D,p,m,v.end,v.reason):[];if(issues.length)return x.errors({reason:issues.join('；')});m.ended = true; m.end = v.end; m.endReason = v.reason; S.log(p.id, '结束成员参与', (m.name || m.employee) + '／' + v.reason); x.close(); refresh(); } }); },
     'flow-member-export': ({ project: pid }) => { const p = project(pid); U.download(p.name + '-项目参与记录.csv', M.csv([['项目', '项目团', '员工', '职责', '参与开始', '参与结束', '移交前后', '负责事项'], ...M.memberRows(p, D.activities)])); },
     'flow-oa-link': ({ project: pid }) => contractLink(pid),
     'flow-oa-view': ({ id }) => { const p = project(), f = p?.frameworks?.find(f => f.id === id); if (f) U.drawer('OA回传合同资料', U.summary([['合同', f.number], ['版本', 'V' + f.oaVersion], ['状态', f.status], ['客户', p.customer], ['合同金额', M.money(f.amount, f.currency)], ['金额性质', f.nature], ['回传附件', f.oaFile], ['关联依据', f.basis]]), { readonly: true, buttons: [] }); },
