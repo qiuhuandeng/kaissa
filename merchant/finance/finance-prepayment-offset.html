@@ -6,6 +6,7 @@
   <title>预付管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
   <link rel="stylesheet" href="../../shared/supplier-prepayment-return.css">
+  <link rel="stylesheet" href="../../shared/cruise-finance.css">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -535,6 +536,9 @@
 
   <script src="../../shared/supplier-finance-model.js"></script>
   <script src="../../shared/supplier-finance-ui.js"></script>
+  <script src="../../shared/cruise-finance-model.js"></script>
+  <script src="../../shared/cruise-prepayment.js"></script>
+  <script>CruisePrepayment.mount();</script>
   <script src="../../shared/supplier-prepayment-return-model.js"></script>
   <script src="../../shared/supplier-prepayment-return.js"></script>
   <script>
@@ -738,6 +742,7 @@
       }
 
       function renderDetail(row) {
+        detailDrawer.classList.toggle("cruise-finance-open", CruisePrepayment.match(row));
         var data = row.dataset;
         document.getElementById('detailObjectTitle').textContent = data.prepayNo + ' / ' + data.supplier;
         document.getElementById('detailObjectSubtitle').textContent = data.prepayType + ' / ' + data.business + ' / ' + data.businessNo;
@@ -787,6 +792,7 @@
         ].map(function (item) {
           return '<div class="timeline-item"><div class="timeline-title">' + escapeHtml(item[0]) + '</div><div class="timeline-desc">' + escapeHtml(item[1]) + '</div></div>';
         }).join('');
+        CruisePrepayment.detail(row);
       }
 
       function actionForStatus(status) {
@@ -828,6 +834,8 @@
       }
 
       function actionHtml(row) {
+        var cruiseActions = CruisePrepayment.actions(row);
+        if (cruiseActions !== null) return cruiseActions;
         var action = actionForRow(row);
         if (action === 'detail') {
           return '<div class="table-action"><button class="table-action-primary" type="button" data-open-detail>详情</button></div>';
@@ -1019,6 +1027,8 @@
         if (activeAction === 'allocate') document.getElementById('workSubmitButton').textContent = '确认分摊';
         if (activeAction === 'offset') document.getElementById('workSubmitButton').textContent = '提交确认';
         if (activeAction === 'diff') document.getElementById('workSubmitButton').textContent = '确认处理';
+        workDrawer.classList.toggle("cruise-finance-open", CruisePrepayment.match(row));
+        CruisePrepayment.work(row, activeAction);
         openLayer(workDrawer);
       }
 
@@ -1049,6 +1059,15 @@
 
       function confirmWork() {
         if (!activeRow) return;
+        if (CruisePrepayment.match(activeRow)) {
+          try {
+            CruisePrepayment.submit(activeRow, activeAction);
+            window.SupplierPrepaymentReturnUI.syncUsage(activeRow);
+            closeLayer(workDrawer); updateRowCells(activeRow); updateCounts(); applyFilters();
+            notify('本次处理已记录');
+          } catch (error) { notify(error.message, 'error'); }
+          return;
+        }
         try {
           var guardedAmount = activeAction === 'confirm' ? activeRow.dataset.currentAmount : activeAction === 'offset' ? document.getElementById('workOffsetAmount').value : document.getElementById('workBalanceAmount').value;
           if (['offset', 'confirm', 'transfer', 'balance'].indexOf(activeAction) >= 0) window.SupplierPrepaymentReturnUI.guardUse(activeRow, guardedAmount);

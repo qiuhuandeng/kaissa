@@ -8,12 +8,22 @@ function check(name,fn){fn();checks.push(name);}
 check('所有当前项目团均为四状态，项目和订单待确认保持原意',()=>{
  assert.deepEqual([...M.activityStatuses],['草稿','进行中','已完成','已取消']);
  for(const a of w.MicePrototypeSeed.activities)assert(M.activityStatuses.includes(a.status));
- for(const kind of ['projects','orders'])assert.deepEqual(M.clone(w.MicePrototypeSeed[kind]),M.clone(old[kind]));
+ for(const kind of ['projects','orders'])assert.deepEqual(M.clone(w.MicePrototypeSeed[kind].filter(r=>old[kind].some(x=>x.id===r.id))),M.clone(old[kind]));
 });
 check('旧待确认只并入草稿，不自动执行，报价金额与历史单据不改变',()=>{
  const saved=M.clone(old),pending=saved.activities.filter(a=>a.status==='待确认'),upgraded=w.MicePrototypeDemo.upgrade(saved);
  assert(pending.length>0);for(const a of pending){const b=upgraded.activities.find(x=>x.id===a.id);assert.equal(b.status,'草稿');assert.equal(b.statusBeforeSimplification,'待确认');const clean=M.clone(b);delete clean.statusBeforeSimplification;clean.status=a.status;assert.deepEqual(clean,a);}
- for(const k of ['projects','commitments','orders','costs','claims','invoices','settlements','adjustments','approvals'])assert.deepEqual(M.clone(upgraded[k]),saved[k]);
+ for(const k of ['projects','commitments','orders','costs','claims','invoices','settlements','adjustments','approvals'])assert.deepEqual(M.clone(upgraded[k].filter(r=>saved[k].some(x=>x.id===r.id))),saved[k]);
+});
+check('详情统一只补原欧洲团及其原订单费用，不重复也不改原项目资料',()=>{
+ const next=w.MicePrototypeDemo.upgrade(M.clone(old)),extra=k=>next[k].filter(r=>!old[k].some(x=>x.id===r.id));
+ assert.deepEqual(extra('projects').map(r=>r.id),['MICE-20250623-001']);
+ assert.deepEqual(extra('activities').map(r=>r.id),['PRJ-MICE-20260915-001']);
+ assert.deepEqual(extra('orders').map(r=>r.id),['KSMICE20260704001']);
+ assert.equal(extra('costs').length,6);assert(extra('costs').every(c=>c.activityId==='PRJ-MICE-20260915-001'));assert.equal(M.sum(extra('costs')),1292600);assert.equal(extra('activities')[0].legacyCostTotal,1512600);
+ assert.equal(extra('orders')[0].amount,1906000);assert.equal(extra('orders')[0].received,1524800);
+ for(const k of ['commitments','claims','invoices','settlements','adjustments','approvals'])assert.equal(extra(k).length,0);
+ assert.deepEqual(M.clone(w.MicePrototypeDemo.upgrade(next)),M.clone(next));
 });
 check('旧准备中和执行中合并进行中，用户资料与已完成历史保留',()=>{
  const saved=M.clone(old);saved.activities.push({id:'USER-RUN',projectId:old.projects[0].id,status:'执行中',formation:{basis:'用户确认'},completion:null,resources:[{id:'R',confirmNo:'原确认号'}]});

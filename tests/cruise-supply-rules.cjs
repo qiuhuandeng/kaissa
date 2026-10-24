@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+require('../shared/cruise-supply.js');
+const S=globalThis.CaesarCruiseSupply;
+const checks=[];function check(name,run){run();checks.push(name);}
+check('20间共同舱房扣2间已售和3间锁定后共余15间',()=>{const c=S.exampleContract();assert.equal(S.available(c.sharedCabins[0]),15);assert.equal(c.subtypes[0].allocated,20);});
+check('第三个销售团加入共同使用不再次分配20间',()=>{const c=S.exampleContract();assert.ok(S.allocate(c,['CZ20261112003'],[],true,c.sharedCabins[0].id).ok);assert.equal(c.sharedCabins[0].members.length,3);assert.equal(c.subtypes[0].allocated,20);assert.equal(S.available(c.sharedCabins[0]),15);S.allocate(c,['CZ20261112003'],[],true,c.sharedCabins[0].id);assert.equal(c.sharedCabins[0].members.length,3);});
+check('独立分配只减少该舱型未分配量',()=>{const c=S.exampleContract();assert.ok(S.allocate(c,['CZ20261112003'],[{name:'阳台 BC',quantity:2}],false).ok);assert.equal(S.unallocated(c.subtypes[1]),0);assert.equal(S.available(c.sharedCabins[0]),15);});
+check('超量和负数不产生部分分配',()=>{const c=S.exampleContract(),before=JSON.stringify(c);assert.equal(S.allocate(c,['x'],[{name:'阳台 BC',quantity:3}],false).ok,false);assert.equal(JSON.stringify(c),before);assert.equal(S.allocate(c,['x'],[{name:'阳台 BC',quantity:-1}],false).ok,false);assert.equal(JSON.stringify(c),before);});
+check('新共同份额关联两个团只占一次采购量',()=>{const c=S.exampleContract();assert.ok(S.allocate(c,['a','b'],[{name:'阳台 BC',quantity:2}],true).ok);assert.equal(c.subtypes[1].allocated,6);assert.equal(c.sharedCabins[1].quantity,2);});
+check('内部归还保留已售已锁和采购总量',()=>{const c=S.exampleContract();assert.equal(S.releaseAllocation(c,0),2);assert.equal(c.subtypes[1].total,6);assert.equal(c.subtypes[1].allocated,2);assert.equal(S.unallocated(c.subtypes[1]),4);assert.equal(S.releaseAllocation(c,0),0);});
+check('申请退舱不减少采购有效数量且不自动估损',()=>{const c=S.exampleContract();assert.ok(S.requestReturn(c,'阳台 BC',1,'销售不足').ok);assert.equal(c.subtypes[1].returned,0);assert.equal(S.unallocated(c.subtypes[1]),2);assert.equal(c.losses.length,0);assert.equal(c.cruiseReturns[0].amount,null);});
+check('同意退舱才减量并采用确认损失而非固定比例',()=>{const c=S.exampleContract();S.requestReturn(c,'阳台 BC',1,'销售不足');assert.ok(S.confirmReturn(c,'TC-001',true,1234,'船方确认').ok);assert.equal(c.subtypes[1].returned,1);assert.equal(S.unallocated(c.subtypes[1]),1);assert.equal(c.losses[0].amount,1234);assert.equal(S.confirmReturn(c,'TC-001',true,1234,'重复').ok,false);assert.equal(c.subtypes[1].returned,1);});
+check('船方拒绝、待确认重复申请和已占用舱房分别保护',()=>{const c=S.exampleContract();assert.equal(S.requestReturn(c,'阳台 BA',1,'已分配').ok,false);S.requestReturn(c,'阳台 BC',2,'销售不足');assert.equal(S.requestReturn(c,'阳台 BC',1,'重复申请').ok,false);S.confirmReturn(c,'TC-001',false,0,'未同意');assert.equal(S.unallocated(c.subtypes[1]),2);assert.equal(c.losses.length,0);});
+check('申请后新增分配不足时不能继续确认退舱',()=>{const c=S.exampleContract();S.requestReturn(c,'阳台 BC',2,'销售不足');S.allocate(c,['x'],[{name:'阳台 BC',quantity:1}],false);assert.equal(S.confirmReturn(c,'TC-001',true,0,'确认').ok,false);assert.equal(c.subtypes[1].returned,0);});
+check('含税不重复加税、另收逐项相加',()=>{const p=S.prices();assert.equal(S.priceTotal(p),31200);p.feeMode='已含';assert.equal(S.priceTotal(p),28800);});
+check('不同开航日期的舱房数量独立',()=>{const a=S.clone(S.voyages);a[0].locked=10;assert.equal(a[1].locked,0);assert.equal(a[0].shared-a[0].sold-a[0].locked,8);assert.equal(a[1].shared-a[1].sold-a[1].locked,12);});
+console.log(JSON.stringify({checks,errors:[]},null,2));

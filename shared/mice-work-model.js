@@ -1,7 +1,7 @@
 /* 项目分工与报价原型规则；金额参考不等于成交、应收或付款权限。 */
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./mice-prototype-model.js'):root.MiceModel);if(typeof module==='object'&&module.exports)module.exports=api;else root.MiceWorkModel=api;})(typeof window!=='undefined'?window:globalThis,function(M){
 'use strict';
-const manager=(actor,p)=>!!actor&&!!p&&actor.company===p.company&&['负责人','销售'].includes(actor.role);
+const manager=(actor,p)=>!!actor&&!!p&&(actor.superAdmin||actor.company===p.company&&['负责人','销售'].includes(actor.role));
 const staff=(data,name)=>data.catalog.staff.find(s=>s.name===name);
 const delegation=(p,name)=>(p.delegations||[]).find(d=>d.employee===name&&d.status==='有效');
 function scopeProblem(p,a,d){
@@ -14,7 +14,7 @@ function scopeProblem(p,a,d){
 }
 function canCreate(data,p,actor){if(!p||['已结项','已终止'].includes(p.status))return false;return manager(actor,p)||!!(actor&&p&&actor.company===p.company&&['计调','销操兼岗'].includes(actor.role)&&delegation(p,actor.name)?.canCreate&&staff(data,actor.name)?.canPlan);}
 function activityIssue(data,p,a,actor,isNew=true){
- if(!p||!actor||actor.company!==p.company)return '无权办理其他公司的项目团';
+ if(!p||!actor||!actor.superAdmin&&actor.company!==p.company)return '无权办理其他公司的项目团';
  if(['已结项','已终止'].includes(p.status))return '项目已结束，不能新增或修改项目团';
  if(manager(actor,p))return '';
  if(!['计调','销操兼岗'].includes(actor.role))return '当前岗位没有项目团办理权限';
@@ -24,7 +24,7 @@ function activityIssue(data,p,a,actor,isNew=true){
 }
 function plannerFor(c,data){if(c.responsiblePlanner)return c.responsiblePlanner;const names=[...new Set((c.activities||[]).map(id=>data.activities.find(a=>a.id===id)?.planner).filter(Boolean))];return names.length===1?names[0]:'';}
 function quoteAccess(data,p,c,actor,confirm=false){
- if(!actor||!p||actor.company!==p.company)return '无权办理其他公司的报价';
+ if(!actor||!p||!actor.superAdmin&&actor.company!==p.company)return '无权办理其他公司的报价';
  if(['已结项','已终止'].includes(p.status))return '项目已结束，不能办理新报价';
  const phaseIssue=M.quoteActivityIssue(c,p,data);if(phaseIssue)return phaseIssue;
  if(manager(actor,p))return '';
@@ -37,9 +37,9 @@ function quoteAccess(data,p,c,actor,confirm=false){
 }
 function usage(data,p,currency,person='',frameworkId='',exclude=''){
  const match=c=>c&&c.projectId===p.id&&c.id!==exclude&&c.currency===currency&&(!person||plannerFor(c,data)===person)&&(!frameworkId||c.frameworkId===frameworkId);
- const orders=data.orders.filter(o=>{const c=data.commitments.find(c=>c.id===o.commitmentId);return match(c)&&!['已取消','已作废'].includes(o.status);});
+ const orders=data.orders.filter(o=>{const c=data.commitments.find(c=>c.id===o.commitmentId);return match(c||o)&&!['已取消','已作废'].includes(o.status);});
  const pending=data.commitments.filter(c=>match(c)&&c.status==='待审批'&&!orders.some(o=>o.commitmentId===c.id));
- const quotes=data.commitments.filter(c=>match(c)&&['草稿','已报价'].includes(c.status));
+ const quotes=data.commitments.filter(c=>match(c)&&['草稿','已报价'].includes(c.status)&&!orders.some(o=>o.commitmentId===c.id));
  return {confirmed:M.sum(orders),pending:M.sum(pending),quoted:M.sum(quotes),unknown:[...orders,...pending].some(r=>M.num(r.amount)==null)};
 }
 function quoteLimits(data,p,c,{approved=false}={}){

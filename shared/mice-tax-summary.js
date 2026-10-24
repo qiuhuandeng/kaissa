@@ -11,7 +11,7 @@ function settlementRows(v){
   ['核定扣税后',income(v.netIncome),income(v.outputTax),money(v.netCost),money(v.inputTax),income(v.netProfit),rate(v.netRate)]
  ];
 }
-function settlementSection(evidence,title='本次结算金额'){
+function settlementSection(evidence,title='本次结算金额',part='all'){
  const f=evidence?.financial;
  if(!f)return U.section(title,'<p class="mice-muted">原结算未保存收入与税额，金额结果待核对。</p>');
  const table=f.amounts.map(v=>'<h4>'+E(v.currency)+'</h4>'+U.table(settlementHeaders,settlementRows(v).map(row=>row.map(E)),'mice-settlement-money-table')+(v.issues.length?'<p class="mice-settlement-gaps">'+v.issues.map(E).join('；')+'</p>':'')).join('');
@@ -21,6 +21,9 @@ function settlementSection(evidence,title='本次结算金额'){
  const costs=U.table(['费用／承担范围','含税成本','预计可扣税','核定可扣税'],f.costLines.map(l=>[
   U.lines(E(l.name||l.costId),E(l.costId),E(({direct:'本团直接费用',shared:'跨团分配',management:'管理分摊',project:'项目承担费用'})[l.kind]||l.kind)),M.money(l.amount,l.currency),M.money(l.estimatedTax,l.currency),M.money(l.approvedTax,l.currency)
  ]),'mice-settlement-tax-lines');
+ if(part==='income')return U.section(title,income);
+ if(part==='cost')return U.section(title,costs);
+ if(part==='summary')return U.section(title,table||'<p class="mice-muted">本次范围暂无收入和费用记录。</p>');
  return U.section(title,(table||'<p class="mice-muted">本次范围暂无收入和费用记录。</p>')+'<details class="mice-settlement-sources"><summary>收入与税额明细</summary>'+income+'</details><details class="mice-settlement-sources"><summary>成本与抵扣明细</summary>'+costs+'</details>');
 }
 function settlementExportRows(record,evidence){

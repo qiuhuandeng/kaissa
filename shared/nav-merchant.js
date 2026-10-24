@@ -73,6 +73,7 @@
             { title: "船公司", href: "resource/resource-cruise-companies.html" },
             { title: "船只档案", href: "resource/resource-cruise-ships.html" },
             { title: "邮轮模板", href: "resource/resource-cruise-routes.html" },
+            { title: "港口", href: "resource/resource-cruise-ports.html" },
           ],
         },
         {

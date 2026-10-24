@@ -16,6 +16,9 @@
   </script>
   <script src="../../shared/nav-merchant.js?v=mice-menu-20261009"></script>
   <script src="../../shared/schedule-route-catalog.js"></script>
+  <script src="../../shared/cruise-supply.js"></script>
+  <script src="../../shared/cruise-batch-supply.js"></script>
+  <link rel="stylesheet" href="../../shared/cruise-supply.css">
   <script src="../../shared/schedule-file-import.js?v=20261018-import-drawer2"></script>
 
   <section class="list-page-panel">
@@ -906,7 +909,7 @@
                         <div class="batch-product-head"><strong>日本关西深度游</strong><span class="tag tag-blue">自营</span></div>
                         <div class="batch-product-meta"><span>参团游</span><span>7天</span><span>已有3个团期</span></div>
                       </button>
-                      <button class="batch-product-card" type="button" data-product-code="CZ" data-product-type="邮轮" data-batch-type="邮轮航次" data-tag-class="tag-orange" data-name="理想号地中海邮轮" data-route="地中海西线 / 阳台舱" data-route-options="地中海西线 / 内舱|地中海西线 / 阳台舱|地中海东线 / 套房" data-unit="人" data-default-capacity="30" data-default-price="¥28,800" data-destination="巴塞罗那/马赛/罗马" data-days="14" data-planner="王强">
+                      <button class="batch-product-card" type="button" data-product-code="CZ" data-product-type="邮轮" data-batch-type="邮轮航次" data-tag-class="tag-orange" data-name="理想号地中海邮轮" data-route="地中海西线 / 阳台舱" data-route-options="地中海西线 / 内舱|地中海西线 / 阳台舱|地中海东线 / 套房" data-unit="间" data-default-capacity="30" data-default-price="¥28,800" data-destination="巴塞罗那/马赛/罗马" data-days="14" data-planner="王强">
                         <div class="batch-product-head"><strong>理想号地中海邮轮</strong><span class="tag tag-orange">邮轮</span></div>
                         <div class="batch-product-meta"><span>邮轮</span><span>14天</span><span>已有2个航次</span></div>
                       </button>
@@ -2130,7 +2133,7 @@
       var productStockUnits = {
         '欧洲十国经典游': '人',
         '日本关西深度游': '人',
-        '理想号地中海邮轮': '人',
+        '理想号地中海邮轮': '间',
         '三亚亲子5日游': '人',
         '泰国曼谷清迈8日': '人',
         '北京故宫定制游': '人',
@@ -2266,10 +2269,10 @@
         '邮轮航次': {
           title: '舱型价格与舱房',
           mode: ['按舱型售卖', 'tag tag-orange'],
-          capacityLabel: '计划收客',
+          capacityLabel: '可销售舱房（间）',
           minLabel: '团人数',
           priceLabel: '成人价',
-          secondaryLabels: ['港务税/服务费', '岸上游参考价', '升舱差价'],
+          secondaryLabels: ['港务税', '服务费', '升舱差价'],
           trafficLabel: '选择邮轮舱房资源',
           trafficHint: '选择已采购邮轮包舱资源后，保存航次时占用可分配库存。',
           fields: [],
@@ -2824,6 +2827,7 @@
         if (!currentSchedule) return;
         var unit = currentSchedule.unit || '人';
         var capacity = Number(quotaTotalStock.value || 0);
+        if (currentSchedule.cruiseSupply && capacity > currentSchedule.cruiseSupply.cabins.reduce(function(sum,cabin){return sum+Number(cabin.fields['间数']||0);},0)) { window.caesarUI.toast('可销售舱房不能超过已关联舱型的间数，请先核对采购分配', {type:'warning'}); return; }
         var sold = stockNumber(currentSchedule.sold);
         var left = Math.max(capacity - sold, 0);
         var channelTotal = quotaChannelTotal();
@@ -3292,13 +3296,23 @@
       function schedulePriceFields(item) {
         var type = normalizeBatchType(item.batchType);
         if (type === '邮轮航次') {
+          if (item.cruiseSupply) return item.cruiseSupply.cabins.flatMap(function (cabin, index) {
+            return ['第1人','第2人','第3人','第4人','儿童价','单人附加费','港务税','服务费','燃油费'].filter(function (label) { return cabin.fields[label] !== '不适用'; }).map(function (label, priceIndex) {
+              return priceRow(item, {key:'cruise_'+index+'_'+priceIndex,label:cabin.name+' · '+label+(/税|服务费|燃油费/.test(label)?'（'+cabin.fields['税费方式']+'）':''),value:'¥'+Number(cabin.fields[label]||0).toLocaleString('zh-CN'),primary:index===0&&priceIndex===0,ratio:1,settlementRatio:1});
+            });
+          });
           return [
             priceRow(item, { key: 'insideAdultPrice', label: '内舱 IC', value: item.insideAdultPrice || item.price || '¥23,800', primary: true, ratio: 1, settlementRatio: 0.78 }),
             priceRow(item, { key: 'oceanAdultPrice', label: '海景 OV', value: item.oceanAdultPrice || '¥26,800', ratio: 1.12, settlementRatio: 0.78 }),
             priceRow(item, { key: 'balconyAdultPrice', label: '阳台 BA', value: item.balconyAdultPrice || '¥28,800', ratio: 1.22, settlementRatio: 0.78 }),
-            priceRow(item, { key: 'thirdFourthPrice', label: '第三/第四人', value: item.thirdFourthPrice || '¥20,800', ratio: 0.78, settlementRatio: 0.72 }),
+            priceRow(item, { key: 'secondPrice', label: '第2人', value: item.secondPrice || item.price || '¥23,800', ratio: 1, settlementRatio: 0.78 }),
+            priceRow(item, { key: 'thirdPrice', label: '第3人', value: item.thirdPrice || item.thirdFourthPrice || '¥20,800', ratio: 0.78, settlementRatio: 0.72 }),
+            priceRow(item, { key: 'fourthPrice', label: '第4人', value: item.fourthPrice || '¥18,800', ratio: 0.72, settlementRatio: 0.72 }),
             priceRow(item, { key: 'childPrice', label: '儿童价', value: item.childPrice || '¥18,800', ratio: 0.72, settlementRatio: 0.72 }),
-            priceRow(item, { key: 'portServiceFee', label: '港务税/服务费', value: item.portServiceFee || '¥980', ratio: 0.06, settlementRatio: 0.88 }),
+            priceRow(item, { key: 'portServiceFee', label: '原港务税／服务费合计（待拆分）', value: item.portServiceFee || '¥980', ratio: 0.06, settlementRatio: 0.88 }),
+            priceRow(item, { key: 'portFee', label: '港务税（待核对）', value: item.portFee || '¥0', ratio: 0, settlementRatio: 1 }),
+            priceRow(item, { key: 'serviceFee', label: '服务费（待核对）', value: item.serviceFee || '¥0', ratio: 0, settlementRatio: 1 }),
+            priceRow(item, { key: 'fuelFee', label: '燃油费', value: item.fuelFee || '¥0', ratio: 0, settlementRatio: 1 }),
             priceRow(item, { key: 'singleRoomDiff', label: '单房差', value: item.singleRoomDiff || '¥6,800', ratio: 0.28, settlementRatio: 0.7 })
           ];
         }
@@ -5027,12 +5041,7 @@
 
       function createTrafficResourceOptions(batchType) {
         var type = normalizeBatchType(batchType || scheduleTypeSelect.value || '普通团期');
-        if (type === '邮轮航次') {
-          return [
-            { value: 'CRU-BLK-20261003-001', label: '理想号 MED-20261003 上海吴淞口 · 全舱型 · 约可分配252人', depart: '2026-10-03', back: '2026-10-10', qty: 252, unit: '人' },
-            { value: 'CRU-BLK-20260912-003', label: '理想号 MED-20260912 上海吴淞口 · 全舱型 · 约可分配76人', depart: '2026-09-12', back: '2026-09-19', qty: 76, unit: '人' }
-          ];
-        }
+        if (type === '邮轮航次') return window.CaesarCruiseBatch.options();
         if (type === '专列班期') {
           return [
             { value: 'TRN-BLK-20260920-001', label: 'Y653 西安-乌鲁木齐 2026/09/20 · 全席别 · 可分配96铺', depart: '2026-09-20', back: '2026-09-28', qty: 96, unit: '铺' },
@@ -5082,6 +5091,9 @@
       }
 
       function createTrafficInvalid() {
+        if (currentMode === 'edit' && currentSchedule && currentSchedule.cruiseSupply) {
+          if (!createTrafficBound() || createTrafficResource.value !== currentSchedule.cruiseSupply.voyage.id) return true;
+        }
         if (!createTrafficBound()) return false;
         var option = selectedCreateTrafficOption();
         if (!option || !option.value) return true;
@@ -5586,7 +5598,9 @@
         createTypeSpecificTag.className = config.mode[1];
         createTypeSpecificTag.textContent = config.mode[0];
         var fieldsHtml = config.fields && config.fields.length ? '<div class="batch-type-field-grid">' + config.fields.map(function (field) { return createTypeFieldHtml(field, savedFields); }).join('') + '</div>' : '';
-        var matrixHtml = config.matrixRows && config.matrixRows.length ? createTypeMatrixHtml(config, item || { price: adultPrice.value }) : '';
+        var cruiseSource = normalizedType === '邮轮航次' && item && item.cruiseSupply;
+        if (cruiseSource) config = window.CaesarCruiseBatch.editConfig(item, config);
+        var matrixHtml = config.matrixRows && config.matrixRows.length ? createTypeMatrixHtml(config, cruiseSource ? {price:item.price} : (item || { price: adultPrice.value })) : '';
         createTypeSpecificPanel.hidden = !matrixHtml && !fieldsHtml;
         createTypeSpecificGrid.innerHTML = fieldsHtml + matrixHtml;
       }
@@ -5601,8 +5615,9 @@
 
       function batchPrimaryPrice() {
         var priceInput = Array.from(document.querySelectorAll('#batchTypeSpecificGrid [data-batch-matrix-field]')).find(function (input) {
-          return /成人价|学生价|铺位对客价/.test(input.dataset.batchMatrixField || '');
+          return /成人价|学生价|铺位对客价|第1人/.test(input.dataset.batchMatrixField || '');
         });
+        if (batchSelectedProduct && batchSelectedProduct.dataset.batchType === '邮轮航次' && priceInput) return moneyText(priceInput.value);
         return priceInput && priceInput.value.trim() || document.getElementById('batchPriceGroup').value.trim() || '¥0';
       }
 
@@ -5614,7 +5629,9 @@
         var batchType = card && card.dataset.batchType || '普通团期';
         var config = batchTypeConfig(batchType);
         var quantityName = batchQuantityName(config);
-        var matrixHtml = config.matrixRows && config.matrixRows.length ? batchTypeMatrixHtml(config) : '';
+        document.getElementById('batchCapacityLimit').readOnly = false;
+        batchTrafficQty.readOnly = false;
+        var matrixHtml = batchType === '邮轮航次' ? window.CaesarCruiseBatch.matrix() : (config.matrixRows && config.matrixRows.length ? batchTypeMatrixHtml(config) : '');
         if (batchCapacityLabel) batchCapacityLabel.textContent = config.capacityLabel;
         if (batchMinGroupLabel) batchMinGroupLabel.textContent = config.minLabel;
         if (batchPriceLabel) batchPriceLabel.textContent = config.priceLabel;
@@ -5826,6 +5843,12 @@
         renderBatchTrafficOptions();
         syncBatchTrafficBinding();
         applyBatchDefaultQuota();
+        if (card.dataset.batchType === '邮轮航次') {
+          window.CaesarCruiseBatch.sync(true);
+          var cruiseVoyage = window.CaesarCruiseBatch.voyage();
+          batchManualDates = new Set([cruiseVoyage.depart]);
+          document.getElementById('batchManualStartDate').value = cruiseVoyage.depart;
+        }
         if (card.dataset.batchType === '邮轮航次' || card.dataset.batchType === '专列班期') {
           document.querySelector('input[name="batchDateMode"][value="manual"]').checked = true;
         } else {
@@ -6198,7 +6221,7 @@
       function renderBatchTrafficOptions(selectedValue) {
         if (!batchTrafficResource) return;
         var batchType = batchSelectedProduct ? batchSelectedProduct.dataset.batchType : '普通团期';
-        var options = createTrafficResourceOptions(batchType);
+        var options = batchType === '邮轮航次' ? window.CaesarCruiseBatch.options() : createTrafficResourceOptions(batchType);
         if (airSeatPrefill) {
           var sourceDates = airSeatDates();
           var qty = sourceDates.length ? Math.min.apply(null, sourceDates.map(function (item) { return Number(item.available || 0); })) : 0;
@@ -6211,6 +6234,7 @@
       }
 
       function batchTrafficInvalid() {
+        if (batchSelectedProduct && batchSelectedProduct.dataset.batchType === '邮轮航次') return window.CaesarCruiseBatch.invalid();
         if (!batchTrafficBound()) return false;
         var option = selectedBatchTrafficOption();
         if (!option || !option.value) return true;
@@ -6224,6 +6248,7 @@
         if (!batchQuotaSource || !batchTrafficResource || !batchTrafficQty) return;
         var batchType = normalizeBatchType(batchSelectedProduct ? batchSelectedProduct.dataset.batchType : '普通团期');
         var config = batchTypeConfig(batchType);
+        if (batchType === '邮轮航次') { window.CaesarCruiseBatch.sync(); return; }
         if (!batchNeedsTraffic(batchType)) {
           batchQuotaSource.value = '手工录入名额';
           batchTrafficQty.value = 0;
@@ -6357,6 +6382,7 @@
           var capacity = Number(batchPreviewCapacityOverrides[item.date] || defaultCapacity);
           return '<tr data-batch-preview-date="' + item.date + '" data-capacity="' + capacity + '" data-route="' + escapeHtml(routePlan) + '" data-price="' + escapeHtml(price) + '" data-leader="' + escapeHtml(leader) + '"><td><span class="batch-preview-date-cell"><strong>' + item.date + '</strong><em>' + item.week + '</em></span></td><td>' + capacity + unit + '</td><td>' + escapeHtml(price) + '</td><td>' + escapeHtml(leader) + (binding.trafficBindingMode === '绑定已采购交通' ? '<br><span class="text-muted">交通已绑定</span>' : '') + '</td><td><div class="table-action"><button type="button" data-edit-batch-preview>编辑</button><button class="danger" type="button" data-remove-batch-preview>移除</button></div></td></tr>';
         }).join('');
+        if (batchSelectedProduct.dataset.batchType === '邮轮航次') window.CaesarCruiseBatch.preview(Array.from(document.querySelectorAll('#batchPreviewRows tr')));
         updateBatchCreateCount();
       }
 
@@ -6529,6 +6555,7 @@
             inheritExecution: true,
             inheritChannelAuth: true,
             typeSpecific: batchTypeSpecificData(),
+            cruiseSupply: batchSelectedProduct.dataset.batchType === '邮轮航次' ? window.CaesarCruiseBatch.data() : null,
             saleStatus: '筹备中',
             executionStatus: '未出团',
             settlementStatus: '未结算',
@@ -6548,6 +6575,7 @@
         var result = document.getElementById('batchCreateResult');
         var count = document.querySelectorAll('#batchPreviewRows tr').length;
         if (batchCreated) return;
+        if (batchSelectedProduct.dataset.batchType === '邮轮航次' && !window.CaesarCruiseBatch.datesValid(Array.from(document.querySelectorAll('#batchPreviewRows tr')))) { window.caesarUI.toast('所选日期未关联对应船方航次，请在原日期区核对', {type:'warning'}); return; }
         if (count === 0) {
           if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('请至少保留一个要创建的出发日期', { type: 'warning' });
           return;
@@ -6649,11 +6677,13 @@
         if (!scheduleRoutePlan.value || !departDate.value || !returnDate.value || !totalStock.value) return;
         if (daysBetween(departDate.value, returnDate.value) <= 0) return;
         if (createAllocationOverLimit()) return;
+        if (currentSchedule && currentSchedule.cruiseSupply && (!createTrafficBound() || createTrafficResource.value !== currentSchedule.cruiseSupply.voyage.id)) { window.caesarUI.toast('当前航次已关联舱房，请保留原来源；换航次从原转团流程办理', {type:'warning'}); return; }
         if (createTrafficInvalid()) {
           if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('绑定交通库存不足，请调整计划收客或占用数量', { type: 'warning' });
           return;
         }
         var next = normalizeScheduleItem(formData());
+        if (currentSchedule && currentSchedule.cruiseSupply) next = window.CaesarCruiseBatch.editedSchedule(currentSchedule, next);
         if (currentMode === 'edit' && currentSchedule) {
           var editIndex = schedules.indexOf(currentSchedule);
           if (editIndex > -1) schedules.splice(editIndex, 1, next);
@@ -6734,6 +6764,7 @@
       saveQuotaPrice.addEventListener('click', function () {
         if (!currentSchedule) return;
         var capacity = Number(quotaTotalStock.value || 0);
+        if (currentSchedule.cruiseSupply && capacity > currentSchedule.cruiseSupply.cabins.reduce(function(sum,cabin){return sum+Number(cabin.fields['间数']||0);},0)) { window.caesarUI.toast('可销售舱房不能超过已关联舱型的间数，请先核对采购分配', {type:'warning'}); return; }
         var sold = stockNumber(currentSchedule.sold);
         var left = Math.max(capacity - sold, 0);
         var seats = readQuotaChannelInputs();
@@ -6882,16 +6913,17 @@
           closeMenus();
           if (['销售中', '出发准备'].indexOf(scheduleMainStage(item)) < 0) return;
           window.caesarWholeGroupTransfer.open({
-            code: item.code, product: item.product, depart: item.depart,
+            code: item.code, product: item.product, depart: item.depart, type: normalizeBatchType(item.batchType) === '邮轮航次' ? 'cruise' : 'group',
             orders: orderRowsForSchedule(item).map(function (order) {
               return { no: order.no, customer: order.customer, people: parseInt(order.qty, 10) || 0, quantity: order.qty,
                 occupation: order.resource || order.qty, contract: order.pay, decision: '待客户确认', status: '待处理', processed: false };
             }),
             targets: schedules.filter(function (target) {
-              return target.code !== item.code && target.product === item.product && target.batchType === item.batchType && target.unit === item.unit &&
+              return target.code !== item.code && (normalizeBatchType(item.batchType) === '邮轮航次' || target.product === item.product) && target.batchType === item.batchType && target.unit === item.unit &&
                 target.approvalStatus !== '待审批' && ['销售中', '出发准备'].indexOf(scheduleMainStage(target)) >= 0;
             }).map(function (target) {
               return { code: target.code, available: Math.max(0, stockNumber(target.left)),
+                cabins: target.cruiseSupply ? target.cruiseSupply.cabins.map(function (c) { var code=c.code || (c.name.match(/BA|BC|OV|IC|SU/) || ['BA'])[0];var v=target.cruiseSupply.voyage;return {code:code,capacity:code === 'BC' ? 2 : 4,available:Math.min(Number(c.fields['间数'] || 0),c.mode === 'shared' ? Math.max(0,v.shared-v.sold-v.locked) : Math.max(0,stockNumber(target.left)))}; }) : null,
                 label: target.code + ' / ' + target.depart + ' / 可用' + stockText(target.left, target.unit),
                 supply: (target.route || target.product) + '；' + (target.resourceStatus || '资源待核对') };
             })
@@ -7212,6 +7244,13 @@
         if (batchCurrentStep === 2) renderBatchPreview();
       });
       batchTrafficResource.addEventListener('change', function () {
+        if (batchSelectedProduct && batchSelectedProduct.dataset.batchType === '邮轮航次') {
+          window.CaesarCruiseBatch.sync(true);
+          var voyage = window.CaesarCruiseBatch.voyage();
+          batchManualDates = new Set([voyage.depart]);
+          document.getElementById('batchManualStartDate').value = voyage.depart;
+          generateBatchDates();
+        }
         var option = selectedBatchTrafficOption();
         if (option) batchTrafficQty.value = Math.min(Number(option.qty || 0), Number(document.getElementById('batchCapacityLimit').value || option.qty || 0));
         syncBatchTrafficBinding();
@@ -7231,6 +7270,7 @@
       });
       batchTypeSpecificGrid.addEventListener('input', function (event) {
         if (!event.target.matches('[data-batch-matrix-field]')) return;
+        if (batchSelectedProduct && batchSelectedProduct.dataset.batchType === '邮轮航次') window.CaesarCruiseBatch.sync();
         syncBatchPrimaryPrice();
         if (batchCurrentStep === 2) renderBatchPreview();
       });
@@ -7267,6 +7307,7 @@
       document.getElementById('saveBatchPreviewEdit').addEventListener('click', function () {
         var capacity = Number(document.getElementById('batchPreviewCapacityInput').value || 0);
         if (!batchPreviewEditingDate) return;
+        if (batchSelectedProduct.dataset.batchType === '邮轮航次' && (!Number.isInteger(capacity) || capacity > Number(document.getElementById('batchCapacityLimit').value))) { window.caesarUI.toast('舱房上限不能超过已关联来源的可售间数', {type:'warning'}); return; }
         if (!capacity || capacity < 1) {
           if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast(batchPreviewCapacityInputLabel.textContent + '必须大于 0', { type: 'warning' });
           return;
@@ -7594,17 +7635,22 @@
       }
     })();
   </script>
+  <link rel="stylesheet" href="../../shared/cruise-roster.css">
+  <script src="../../shared/cruise-transfer.js"></script>
   <script src="../../shared/schedule-whole-transfer.js"></script>
 <script src="../../shared/fulfillment-cost-core.js"></script>
-<script src="../../shared/mice-prototype-model.js?v=activity-flow-sync-20261021"></script>
-<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-work-model.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-data.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-ui.js?v=mice-demo-20261009"></script>
-<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/mice-projects.js?v=activity-flow-sync-20261021"></script><script src="../../shared/fulfillment-cost-editor.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-payments.js?v=mice-terms-20261009"></script><script src="../../shared/mice-agreements.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-activity-dates.js?v=mice-terms-20261009"></script><script src="../../shared/mice-project-detail.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-activity-actions.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-activities.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-settlement.js?v=activity-flow-sync-20261021"></script>
+<script src="../../shared/mice-prototype-model.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-work-model.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-data.js?v=settlement-ready-demos-20261024"></script><script src="../../shared/mice-prototype-ui.js?v=detail-unification-20261024"></script><script src="../../shared/mice-budget-model.js?v=budget-control-20261024-2"></script><script src="../../shared/mice-budget-ui.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/mice-projects.js?v=budget-control-20261024-2"></script><script src="../../shared/fulfillment-cost-editor.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-payments.js?v=mice-terms-20261009"></script><script src="../../shared/mice-agreements.js?v=order-workspace-20261024-r2"></script><script src="../../shared/mice-activity-dates.js?v=mice-terms-20261009"></script><script src="../../shared/mice-project-detail.js?v=budget-control-20261024-2"></script><script src="../../shared/mice-activity-actions.js?v=order-workspace-20261024-r2"></script><script src="../../shared/mice-activities.js?v=detail-boundary-20261024"></script><script src="../../shared/mice-settlement.js?v=budget-control-20261024-2"></script>
 <script src="../../shared/mice-changes.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-access.js?v=group-form-actions-20261021-r2"></script><script src="../../shared/mice-project-work.js?v=activity-four-states-20261021"></script>
+<script src="../../shared/mice-access.js?v=group-form-actions-20261021-r2"></script><script src="../../shared/mice-project-work.js?v=order-workspace-20261024-r2"></script>
 <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script>
-<script src="../../shared/mice-finance.js?v=mice-terms-20261009"></script>
+<script src="../../shared/mice-finance.js?v=application-scope-20261024"></script>
 <script src="../../shared/mice-einvoice.js"></script>
 <script src="../../shared/mice-billing.js?v=activity-four-states-20261021"></script>
+<script src="../../shared/mice-project-flow.js?v=budget-control-20261024-2"></script>
+<link rel="stylesheet" href="../../shared/mice-order-entry.css?v=order-workspace-20261024">
+<script src="../../shared/mice-order-entry.js?v=budget-control-20261024-2"></script>
 </body>
 </html>

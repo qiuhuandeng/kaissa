@@ -1,0 +1,108 @@
+--- before/shared/mice-settlement-host.js
++++ after/shared/mice-settlement-host.js
+@@ -35,7 +35,7 @@
+  const a=S.find('activities',s.miceActivityId),r=recordFor(a),p=S.find('projects',s.projectNo);
+  const readonly=!ended(a)||['已结项','已终止'].includes(p.status)||['审批中','已确认'].includes(r?.status);
+  const editable=MiceCosts.canManage({projectId:p.id,activityId:a.id},'cost-new');
+- return '<div class="table-action"><button type="button" class="table-action-primary" data-open-settlement-basis="'+E(s.id)+'">'+(readonly?'查看结算':'结算')+'</button>'+(editable?'<button type="button" class="table-link" data-open-cost="'+E(s.id)+'">维护成本</button>':'')+'</div>';
++ return '<div class="table-action"><button type="button" class="table-action-primary" data-open-settlement-basis="'+E(s.id)+'">'+(readonly?'查看结算':'结算')+'</button>'+(editable?'<button type="button" class="table-link" data-open-cost="'+E(s.id)+'">维护成本</button>':'')+'<button type="button" class="table-link" data-open-project-settlement-detail="'+E(s.id)+'" data-drawer-title="项目团结算详情">详情</button></div>';
+ }
+ // Reuse the ordinary cost-maintenance drawer. Its original form is restored for other products.
+ function detailReturnUrl(){
+@@ -96,7 +96,7 @@
+  if(sum!==amount)evidence.financial.amounts.forEach(v=>v.issues.push('成本明细合计 '+M.money(sum,'CNY')+' 与原成本总额 '+M.money(amount,'CNY')+' 不一致，待复核'));
+  return evidence;
+ }
+-function paint(s){
++function paint(s,detailOnly=false){
+  if(s.type!=='项目团')return;
+  current=s;
+  if(!s.miceActivityId){
+@@ -110,18 +110,18 @@
+  const a=S.find('activities',s.miceActivityId),p=S.find('projects',a.projectId),requested=S.find('settlements',requestedRecord);
+  const r=requested&&requested.projectId===p.id&&(requested.activities.includes(a.id)||requested.contextActivityId===a.id)?requested:recordFor(a);
+  requestedRecord=null;
+- const locked=['审批中','已确认'].includes(r?.status)||['已结项','已终止'].includes(p.status)||!ended(a);
+- selection={projectId:p.id,id:r?.id,activities:[...(r?.activities||[a.id])],includeProjectCosts:!!r?.includeProjectCosts,contextActivityId:a.id,noCost:r?.noCost||'',basis:r?.basis||'客户交付确认、采购费用及税额核对资料（演示）',pending:r?.pending||'',locked,record:r};
++ const locked=detailOnly||['审批中','已确认'].includes(r?.status)||['已结项','已终止'].includes(p.status)||!ended(a);
++ selection={projectId:p.id,id:r?.id,activities:[...(r?.activities||[a.id])],includeProjectCosts:!!r?.includeProjectCosts,contextActivityId:a.id,noCost:r?.noCost||'',basis:r?.basis||'客户交付确认、采购费用及税额核对资料（演示）',pending:r?.pending||'',locked,detailOnly,record:r};
+  if(!M.costScope(D.costs,p.id,selection.activities,selection.includeProjectCosts).lines.length&&!selection.noCost)selection.noCost='本次无采购费用（演示）';
+  const evidence=locked&&r&&['审批中','已确认'].includes(r.status)?MiceSettlement.recordEvidence(r):T.settlementEvidence(D,selection);
+  for(const id of ['settlementSummaryRows','settlementBasicInfo','projectSettlementPanel','projectSettlementActions']){const n=id==='settlementSummaryRows'?$(id).closest('section'):$(id);n.hidden=true;n.dataset.projectSettlementHidden='1';}
+- $('settlementBasisTitle').dataset.drawerTitleLocked=locked?'结算详情':'结算';
+- $('settlementBasisTitle').textContent=locked?'结算详情':'结算';
++ $('settlementBasisTitle').dataset.drawerTitleLocked=detailOnly?'项目团结算详情':locked?'结算详情':'结算';
++ $('settlementBasisTitle').textContent=$('settlementBasisTitle').dataset.drawerTitleLocked;
+  $('settlementBasisSummary').innerHTML='<div class="drawer-object-main"><div><strong class="drawer-object-title">'+E(a.name)+'</strong><span class="drawer-object-subtitle">'+E(p.customer)+' / '+E(p.name)+'</span></div>'+U.tag(r?.status||'未结算')+'</div><div class="settlement-basis-summary-line"><span>我方公司 <strong>'+E(p.company)+'</strong></span><span>团号 <strong>'+E(a.id)+'</strong></span><span>人数 <strong>'+E(s.people)+'</strong></span><span>负责人 <strong>'+E(s.owner)+'</strong></span><span>结算范围 <strong id="projectSettlementScopeLabel">'+selection.activities.length+'团'+(selection.includeProjectCosts?'及项目承担费用':'')+'</strong></span></div>';
+  const overviewTitle=document.querySelector('[data-settlement-doc-panel="overview"] > .drawer-section-head');overviewTitle.hidden=true;overviewTitle.dataset.projectSettlementHidden='1';
+  const acts=D.activities.filter(n=>n.projectId===p.id),others=D.settlements.filter(n=>n.id!==r?.id&&n.projectId===p.id&&['审批中','已确认'].includes(n.status));
+  const ranges=acts.map(n=>{const occupied=others.some(v=>v.activities.includes(n.id));return '<label><input type="checkbox" data-settlement-activity="'+E(n.id)+'" '+(selection.activities.includes(n.id)?'checked ':'')+(locked||occupied||!ended(n)?'disabled':'')+'> <span>'+E(n.name)+' <small>'+E(n.status)+(occupied?' · 已纳入其他结算':'')+'</small></span></label>';}).join('');
+- const scopeNode=panel('overview',section('结算范围','<div class="project-settlement-range">'+ranges+'</div><label class="project-settlement-project-cost"><input id="projectSettlementIncludeCosts" type="checkbox" '+(selection.includeProjectCosts?'checked ':'')+(locked||others.some(n=>n.includeProjectCosts||!n.submittedRecord&&!n.confirmedRecord?.scopeVersion&&n.activities.length===acts.length)?'disabled':'')+'> 同时核对项目承担费用</label>')+(locked&&r?.submittedAt?'<p class="text-muted">金额依据：'+(r.status==='已确认'?'确认时结果':'提交时结果')+' · '+E(MiceTaxSummary.dateText(r.submittedAt))+'</p>':''),{first:true});
++ const scopeNode=panel('overview',section('结算范围','<div class="project-settlement-range">'+ranges+'</div><label class="project-settlement-project-cost"><input id="projectSettlementIncludeCosts" type="checkbox" '+(selection.includeProjectCosts?'checked ':'')+(locked||others.some(n=>n.includeProjectCosts||!n.submittedRecord&&!n.confirmedRecord?.scopeVersion&&n.activities.length===acts.length)?'disabled':'')+'> 同时核对项目承担费用</label>')+(locked&&r?.submittedAt&&['审批中','已确认'].includes(r.status)?'<p class="text-muted">金额依据：'+(r.status==='已确认'?'确认时结果':'提交时结果')+' · '+E(MiceTaxSummary.dateText(r.submittedAt))+'</p>':''),{first:true});
+  scopeNode.addEventListener('change',()=>{readFields();selection.activities=[...scopeNode.querySelectorAll('[data-settlement-activity]:checked')].map(n=>n.dataset.settlementActivity);selection.includeProjectCosts=$('projectSettlementIncludeCosts').checked;updateScope();});
+  paintTax(evidence);
+  panel('overview',section('客户款项',orderMoneyTable(selection.activities)));
+@@ -168,7 +168,7 @@
+ function showGaps(){
+  if(!selection||!$('projectSettlementGaps'))return;
+  const gaps=MiceSettlement.issues(S.find('projects',selection.projectId),selection.activities,selection.includeProjectCosts);
+- $('projectSettlementGaps').innerHTML=section('核对缺项',selection.locked?'<p class="text-muted">'+(['审批中','已确认'].includes(selection.record?.status)?'当前记录只读，请核对提交或确认时保存的结算依据。':'服务完成或取消后才能办理结算。')+'</p>':gaps.map(g=>'<p>'+U.link(E(g.text),g.href)+'</p>').join('')||'<p class="text-muted">当前范围无业务缺项。</p>');
++ $('projectSettlementGaps').innerHTML=section('核对缺项',selection.detailOnly?(['审批中','已确认'].includes(selection.record?.status)?'<p class="text-muted">当前记录只读，请核对提交或确认时保存的结算依据。</p>':gaps.map(g=>'<p>'+E(g.text)+'</p>').join('')||'<p class="text-muted">当前范围无业务缺项。</p>'):selection.locked?'<p class="text-muted">'+(['审批中','已确认'].includes(selection.record?.status)?'当前记录只读，请核对提交或确认时保存的结算依据。':'服务完成或取消后才能办理结算。')+'</p>':gaps.map(g=>'<p>'+U.link(E(g.text),g.href)+'</p>').join('')||'<p class="text-muted">当前范围无业务缺项。</p>');
+  const noCosts=!M.costScope(D.costs,selection.projectId,selection.activities,selection.includeProjectCosts).lines.length;
+  $('projectSettlementNoCost').closest('label').hidden=!noCosts;
+ }
+--- before/merchant/tour/fulfillment-cost.html
++++ after/merchant/tour/fulfillment-cost.html
+@@ -697,6 +697,7 @@
+       var settlementDocTabs = Array.from(document.querySelectorAll('[data-settlement-doc-tab]'));
+       var settlementDocPanels = Array.from(document.querySelectorAll('[data-settlement-doc-panel]'));
+       var activeSchedule = null;
++      var settlementDetailOnly = false;
+       var activePaymentGroup = null;
+       var activePaymentContext = null;
+       var activePaymentRequest = null;
+@@ -3688,11 +3689,12 @@
+         document.getElementById('submitSettlementApply').textContent = status === '已结算'
+           ? (second && second.status === '草稿' ? '提交二次结算' : '关闭')
+           : (isProjectSchedule(schedule) ? (status === '已驳回' ? '再提交' : '提交结算') : '提交结算');
+-        if (window.MiceSettlementHost) MiceSettlementHost.paint(schedule);
+-      }
+-
+-      function openSettlementBasisDrawer(id) {
++        if (window.MiceSettlementHost) MiceSettlementHost.paint(schedule, settlementDetailOnly);
++      }
++
++      function openSettlementBasisDrawer(id, detailOnly) {
+         activeSchedule = findSchedule(id);
++        settlementDetailOnly = !!detailOnly && !!activeSchedule.miceActivityId;
+         renderSettlementBasis(activeSchedule);
+         openLayer(settlementBasisDrawer);
+       }
+@@ -4666,6 +4668,7 @@
+         var settlementDocTab = event.target.closest('[data-settlement-doc-tab]');
+         var openCost = event.target.closest('[data-open-cost]');
+         var openSettlementBasis = event.target.closest('[data-open-settlement-basis]');
++        var openProjectSettlementDetail = event.target.closest('[data-open-project-settlement-detail]');
+         var viewSettlementButton = event.target.closest('[data-view-settlement]');
+         var startSecondSettlementButton = event.target.closest('[data-start-second-settlement]');
+         var openPaymentCreateButton = event.target.closest('[data-open-payment-create]');
+@@ -4693,6 +4696,10 @@
+         }
+         if (openCost) {
+           openCostDrawer(openCost.dataset.openCost);
++          return;
++        }
++        if (openProjectSettlementDetail) {
++          openSettlementBasisDrawer(openProjectSettlementDetail.dataset.openProjectSettlementDetail, true);
+           return;
+         }
+         if (openSettlementBasis) {
+@@ -4974,7 +4981,7 @@
+ <script src="../../shared/mice-changes.js?v=activity-four-states-20261021"></script>
+ <script src="../../shared/mice-access.js?v=settlement-tax-20261021"></script>
+ <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script>
+-<script src="../../shared/mice-settlement-host.js?v=detail-unification-20261024"></script>
++<script src="../../shared/mice-settlement-host.js?v=settlement-detail-entry-20261024"></script>
+ <script src="../../shared/air-internal-cost-ui.js?v=20261017-superadmin1"></script>
+ </body>
+ </html>

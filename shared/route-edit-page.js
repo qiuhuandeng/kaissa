@@ -798,6 +798,7 @@
         '</tbody></table></div>'
       ].join('');
     }
+    if (window.CaesarCruiseProductReference) window.CaesarCruiseProductReference.mount(page);
   }
 
   function configureTrainLineSections() {
@@ -1002,10 +1003,11 @@
       travelType: '出境游',
       chips: [['供货方', '福建凯撒'], ['归属中心/部门', '邮轮产品中心'], ['出发城市', '全国']],
       heroTags: ['阳台舱', '岸上游', '接送机'],
-      readiness: [['线路数', '2条'], ['参考起价', '¥12,800/人'], ['数据完整度', '100%']],
+      readiness: [['线路数', '3条'], ['参考起价', '¥12,800/人'], ['数据完整度', '100%']],
       plans: [
         { name: '地中海经典航线', meta: '8天7晚 · 4港口 · 舱房按航次售卖' },
-        { name: '爱琴海岛屿航线', meta: '8天7晚 · 岛屿停靠 · 舱房按航次售卖' }
+        { name: '爱琴海岛屿航线', meta: '8天7晚 · 岛屿停靠 · 舱房按航次售卖' },
+        { name: '地中海经典航线 B方案岸上自由', meta: '同一船方航线 · 靠港自由活动 · 不另建舱房库存' }
       ],
       planTitle: '产品航线',
       planSummary: '当前线路关联 4 类舱型，参考价 ¥12,800 - ¥26,800/人',
@@ -1025,14 +1027,14 @@
       costHtml: [
         '<div class="route-section-titlebar"><h2 class="route-section-title">费用规则</h2></div>',
         '<div class="route-field-grid">',
-        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="儿童占位按所选舱型计价，儿童不占位使用独立儿童不占位价且不扣舱室库存"></div>',
+        '<div class="form-group"><label class="form-label" for="childPolicy">儿童价标准 <span class="req">*</span></label><input id="childPolicy" class="form-control" type="text" value="所有儿童计入同舱入住人数；儿童价与第3/4人价择一适用，具体年龄及船方政策按航次确认"></div>',
         '<div class="form-group"><label class="form-label" for="taxIncluded">港口税费是否已含 <span class="req">*</span></label><select id="taxIncluded" class="form-control"><option selected>已含</option><option>未含</option></select></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="includeFee">船票通常包含 <span class="req">*</span></label><textarea id="includeFee" class="form-control" rows="4">指定舱型住宿、船上主餐厅与自助餐厅、船上基础娱乐活动、港口税费。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="excludeFee">船票通常不含 <span class="req">*</span></label><textarea id="excludeFee" class="form-control" rows="4">个人消费、收费餐厅、SPA、部分船上活动、岸上自费项目、签证及保险差额。</textarea></div>',
         '<div class="form-group route-field-full"><label class="form-label" for="refundRule">退改规则 <span class="req">*</span></label><textarea id="refundRule" class="form-control" rows="3">名单与舱房确认后按船方政策核损，港务税和船票损失按实际发生扣减。</textarea></div>',
         '</div>'
       ].join(''),
-      publishTiles: [['航线与船舶', '船舶与母港已维护'], ['航程与登离船', '岸上游/接驳已维护'], ['舱房售卖', '2条航线，4类舱型'], ['费用与证件', '税费/小费/签证已维护']],
+      publishTiles: [['航线与船舶', '船舶与母港已维护'], ['航程与登离船', '岸上游/接驳已维护'], ['舱房售卖', '3条航线方案，4类舱型'], ['费用与证件', '税费/小费/签证已维护']],
       modalTitle: '已提交邮轮产品审核',
       modalFocus: '航程登离船与舱房售卖',
       navigateText: '查看航次',

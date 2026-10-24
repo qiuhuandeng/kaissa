@@ -5002,3 +5002,166 @@ root.MicePrototypeDemo={revision,upgrade(saved){
   return result.activities?.some(a=>status(a.status)!==a.status)?normalize(JSON.parse(JSON.stringify(result))):result;
  };
 })(window);
+
+/* 旧欧洲项目团归入同一项目团档案。保留原单号、原金额及待核差异，不采用详情模板的比例预算。 */
+(function(root){
+ const M=root.MiceModel,revision='project-detail-20261024',pid='MICE-20250623-001',aid='PRJ-MICE-20260915-001';
+ const project={id:pid,name:'北京某科技有限公司欧洲奖励旅游',customer:'北京某科技有限公司',company:'福建凯撒',department:'会奖业务部',mode:'single',kind:'奖励旅游',start:'2026-09-15',end:'2026-09-24',sales:'陈刚',owner:'高明',scope:'欧洲奖励旅游、酒店、晚宴及团建服务',basis:'V4 客户确认版',status:'进行中',budget:1458000,contact:'刘总监',phone:'',members:[{name:'高明',role:'项目负责人',activities:[aid],start:'2026-09-15',end:'2026-09-24'}],frameworks:[],attachments:[]};
+ const activity={id:aid,projectId:pid,name:project.name,reference:'V4 客户确认版',service:'旅游',nameMode:'实名服务',city:'法国、瑞士、意大利',start:project.start,end:project.end,people:80,confirmedPeople:80,planner:'高明',status:'进行中',basis:'客户确认版项目订单 KSMICE20260704001',originalBudget:1458000,latestEstimate:1512600,scope:project.scope,roster:[],agenda:[],resources:[],attachments:[],visaRequirement:{required:true,country:'法国、瑞士、意大利',type:'申根旅游签证',basis:'欧洲奖励旅游服务范围；实际办签人员按名单核对'},leaders:[{id:'LEADER-MICE-001',leaderId:'LD-20260312001',name:'张建国',scope:'全程领队',start:project.start,end:project.end,status:'待领队确认',basis:'原团期结算登记领队',history:[]}],sourceChecks:['日期待核对：客户档案为2026-09-15至09-24，旧详情模板为2025-09-15至09-23。','名单待核对：原费用页标注80人已导入，但旧详情没有对应人员明细。'],legacyCostTotal:1512600,legacyReferences:[{no:'JS-PRJ-20250623',label:'原财务结算记录',path:'merchant/finance/finance-settlement.html'},{no:'PAY-MICE-20260915-001',label:'原付款申请（已驳回）',path:'merchant/tour/fulfillment-cost.html'}]};
+ const source=[['往返交通','欧洲航空服务商',80,'人',3600,288000,'已确认','按企业团队名单锁定机票成本','交通'],['酒店住宿','欧洲酒店会务联盟',360,'间夜',5200,468000,'待确认','原单价5200与9晚×40间口径不一致；原总额468000保留，主酒店确认、尾款待账单','酒店'],['地接服务','欧洲DMC地接服务',80,'人',2800,224000,'待确认','地接总账单待客户行程确认后回传','地接'],['商务晚宴','巴黎宴会服务商',80,'人',1350,108000,'已确认','含场地、餐饮和基础搭建','餐饮'],['团建活动','欧洲活动执行公司',1,'项',185000,185000,'待确认','活动执行方案已确认，供应商账单待补','会场设备'],['领队服务','凯撒领队中心',2,'人',9800,19600,'已确认','双领队全程服务','领队']];
+ const costs=source.map((r,i)=>({id:aid+'-C'+i,projectId:pid,activityId:aid,name:r[0],supplier:r[1],quantity:r[2],unit:r[3],price:r[4],amount:r[5],budget:r[5],estimate:r[5],status:r[6],basis:r[7],category:({酒店:'住宿',地接:'地接服务',领队:'领队服务'})[r[8]]||r[8],currency:'CNY',company:project.company,start:project.start,end:project.end,paid:0,amountMode:'total',scopeType:'direct',allocations:[],taxStatus:'待核定',expectedTaxRate:null,approvedTax:null,attachments:[]}));
+ const order={id:'KSMICE20260704001',projectId:pid,activities:[aid],customer:project.customer,company:project.company,currency:'CNY',amount:1906000,received:1524800,invoiced:0,version:1,status:'已确认',pricing:'fixed',basis:'V4 客户确认版',nodes:[],history:[],legacyInvoiceUnknown:true};
+ activity.resources=[{id:'CG-MICE-AIR-001',category:'交通',name:'北京—巴黎团队机票',supplier:'中国国际航空',start:project.start,end:project.start,quantity:80,unit:'人次',status:'待确认',requiresName:true,reference:'AIR-MICE-20260704-001',spec:'经济舱团队位',point:'北京首都T3 → 巴黎戴高乐T1',confirmNo:'',batches:'航班及订位记录待核对'},{id:'CG-MICE-AIR-002',category:'交通',name:'罗马—北京团队机票',supplier:'中国国际航空',start:project.end,end:project.end,quantity:80,unit:'人次',status:'待确认',requiresName:true,reference:'AIR-MICE-20260704-002',spec:'经济舱团队位',point:'罗马菲乌米奇诺 → 北京首都T3',confirmNo:'',batches:'航班及订位记录待核对'}];
+ costs[1].legacyRequested=120000;
+ const requests=[{id:'PAY-MICE-20260915-001',projectId:pid,activityId:aid,costId:costs[4].id,supplier:costs[4].supplier,company:project.company,currency:'CNY',amount:185000,paid:0,status:'已退回',version:1,basis:'原项目执行款申请',returnReason:'活动执行供应商账单缺少客户确认附件',history:[{action:'付款申请退回',reason:'活动执行供应商账单缺少客户确认附件'}]}];
+ const additions={projects:[project],activities:[activity],orders:[order],costs,requests};
+ function install(data){if(data.projectDetailRevision===revision)return data;for(const [key,rows]of Object.entries(additions))for(const row of rows)if(!data[key].some(v=>v.id===row.id))data[key].push(M.clone(row));if(!data.catalog.staff.some(p=>p.name==='高明'))data.catalog.staff.push({name:'高明',companies:['福建凯撒'],canPlan:true});
+ for(const supplier of [...source.map(r=>r[1]),'中国国际航空'])if(!data.catalog.suppliers.some(v=>(typeof v==='string'?v:v.name)===supplier))data.catalog.suppliers.push(supplier);
+ data.projectDetailRevision=revision;return data;}
+ install(root.MicePrototypeSeed);
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=saved=>{const data=prior(saved);return data.projectDetailRevision===revision?data:install(M.clone(data));};
+})(window);
+
+/* 可直接办理的结算案例。仅首次补入独立案例，不覆盖已有项目、已提交记录或用户的填写结果。 */
+(function(root){
+ const M=root.MiceModel,T=root.MiceTaxModel,revision='settlement-workflow-20261024',pid='PRJ-20261024-001';
+ const additions={projects:[],activities:[],commitments:[],orders:[],costs:[],requests:[],claims:[],moneyFlows:[],customerSettlements:[],settlements:[],approvals:[],logs:[]};
+ const file=(name,text)=>{const content='原型演示资料，非正式业务凭据。\n'+text;return{name:name+'（演示）.txt',type:'text/plain',text:content,size:new TextEncoder().encode(content).length};};
+ const project={id:pid,name:'华东渠道伙伴交流项目',customer:'华东医疗器械有限公司',company:'北京凯撒',department:'会奖业务部',mode:'multi',kind:'会议',start:'2026-10-12',end:'2026-10-18',sales:'陈红',owner:'王芳',scope:'杭州、苏州及南京三场渠道交流会，会场、设备、茶歇与会务服务',basis:'三场客户服务委托（演示）',status:'进行中',budget:290000,contact:'刘洋',phone:'',members:[],frameworks:[],attachments:[file('客户服务委托','三场会议的服务内容与日期已确认。')]};
+ additions.projects.push(project);
+ const cases=[['杭州','12',106000,74200,''],['苏州','15',148400,106000,'草稿'],['南京','18',127200,90100,'已退回']];
+ for(const [i,[city,day,income,amount,status]]of cases.entries()){
+  const n=String(i+1).padStart(3,'0'),aid='PRJ20261024'+n,orderId='KS20261024'+n,commitmentId='BJ20261024'+n,costId='FY20261024'+n,acceptanceId='KHJS20261024'+n,date='2026-10-'+day,people=50+i*10;
+  const basis=city+'场客户签收及供应商费用核对单（演示）',files=[file(city+'场服务完成确认',basis)];
+  const a={id:aid,projectId:pid,name:city+'渠道伙伴交流会',reference:'WT20261024'+n,service:'会议',nameMode:'按人数交付',city,start:date,end:date,people,confirmedPeople:people,planner:'李梅',status:'已完成',basis:city+'场客户委托确认（演示）',scope:'会场、设备、茶歇及现场会务服务',commitmentId,originalBudget:amount,latestEstimate:amount+2120,settlementDue:'2026-10-31',agenda:[{id:aid+'-RC-1',kind:'会议',date,start:'09:00',end:'17:00',title:'渠道交流、产品说明与合作沟通',place:city+'会议中心',owner:'李梅',note:'按确认服务范围完成交付'}],agendaHistory:[],roster:[],resources:[{id:aid+'-ZY-1',category:'会场设备',name:city+'会议会场及设备',supplier:'华东会议服务有限公司',start:date,end:date,quantity:1,unit:'场',status:'已确认',confirmNo:'ZY20261024'+n}],attachments:files,materials:[],completedAt:date,completion:{actualStart:date,actualEnd:date,actualPeople:people,basis,delivery:'全部完成',recordedBy:'李梅',recordedAt:date+' 18:00',files},acceptance:{status:'已认可',confirmationId:acceptanceId},demoDetails:true};
+  additions.activities.push(a);
+  const taxEstimate={method:'standard',rate:6,basis:'会务服务税额测算样例，适用口径以财务确认为准'};
+  additions.commitments.push({id:commitmentId,projectId:pid,name:a.name+'服务报价单',activities:[aid],pricing:'fixed',currency:'CNY',amount:income,status:'已确认',version:1,basis:'客户确认报价单（演示）',confirmedAt:'2026-10-09',taxEstimate,nodes:[]});
+  additions.orders.push({id:orderId,projectId:pid,commitmentId,activities:[aid],customer:project.customer,company:project.company,currency:'CNY',amount:income,received:income/2,invoiced:0,discountAmount:0,discountBasis:'客户确认价，无另列优惠（演示）',version:1,status:'已确认',pricing:'fixed',basis:'客户确认报价单（演示）',taxEstimate,salesTaxAmount:i===2?null:T.split(income,6).tax,salesTaxBasis:i===2?'待财务核定':'财务核对销项税额（演示）',nodes:[{name:'首款',amount:income/2,received:income/2,invoiced:0},{name:'尾款',amount:income/2,received:0,invoiced:0}],history:[]});
+  additions.costs.push({id:costId,projectId:pid,activityId:aid,name:a.name+'会场及会务服务',category:'会场设备',supplier:'华东会议服务有限公司',company:project.company,currency:'CNY',amount,budget:amount,estimate:amount,amountMode:'total',quantity:1,unit:'场',price:amount,start:date,end:date,scopeType:'direct',status:'已确认',basis,serviceConfirmed:true,deliveryBasis:basis,paid:amount/2,conditionLimit:amount,paymentTerms:'首款50%，服务完成核对后付尾款（演示）',paymentBasis:basis,version:1,expectedTaxRate:6,deductionMode:'full',deductionBasis:'可扣税额测算样例，以财务核定为准',taxStatus:i===2?'已到待核':'已核定',ticketNumber:'DEMO-FP-'+costId,ticketAmount:amount,ticketRate:6,ticketTax:T.split(amount,6).tax,approvedTax:i===2?null:T.split(amount,6).tax,financeBasis:i===2?'':'票据与本场服务核对一致（演示）',allocations:[],attachments:[file(city+'场采购与票据',basis)]});
+  additions.customerSettlements.push({id:acceptanceId,projectId:pid,start:date,end:date,currency:'CNY',mode:'价款及服务确认',status:'已确认',version:1,lines:[{orderId,activityIds:[aid],original:income,accepted:income,dispute:0,reason:''}],confirmBy:project.contact,confirmDate:date,basis,attachments:files});
+  const flowId='DZ20261024'+n;
+  additions.moneyFlows.push({id:flowId,company:project.company,customer:project.customer,payer:project.customer,currency:'CNY',amount:income/2,date:'2026-10-10',basis:'客户首款到账（演示）'});
+  additions.claims.push({id:'RK20261024'+n,projectId:pid,company:project.company,customer:project.customer,flowId,currency:'CNY',amount:income/2,status:'已认款',basis:'客户首款与原订单核对（演示）',allocations:[{orderId,amount:income/2,node:'首款'}],history:[]});
+  additions.requests.push({id:'FK20261024'+n,projectId:pid,activityId:aid,costId,supplier:'华东会议服务有限公司',company:project.company,currency:'CNY',amount:amount/2,paid:amount/2,status:'已付款',version:1,date:'2026-10-10',basis:'原采购首款50%（演示）',purpose:a.name+'首款',accountStatus:'财务已核对',verifiedAccount:'演示供应商账户（尾号0668）',payments:[{amount:amount/2,reference:'DEMO-BANK-'+n,date:'2026-10-10',result:'付款成功',basis:'原型演示付款回单'}],history:[]});
+  if(status){const r={id:'JS20261024'+n,projectId:pid,activities:[aid],contextActivityId:aid,includeProjectCosts:false,version:1,status,basis,pending:i===2?'税额待财务核定；客户尾款及供应商尾款在原单据继续办理。':'客户尾款及供应商尾款在原单据继续办理。',attachments:[file(city+'场结算核对表',basis)],noCost:'',savedAt:'2026-10-21T02:00:00.000Z',history:[{action:'保存结算草稿',version:1,at:'2026-10-21T02:00:00.000Z',by:'王芳',basis}]};
+   if(status==='已退回'){r.submittedAt='2026-10-21T03:00:00.000Z';r.returnReason='请补充尾款安排及本场供应商确认资料';r.history.push({action:'提交结算',version:1,at:r.submittedAt,by:'王芳',basis});additions.approvals.push({id:'SP20261024003',type:'业务结算',sourceId:r.id,projectId:pid,version:1,status:'已退回',applicant:project.owner,company:project.company,basis,opinion:r.returnReason,decidedBy:'刘总监',decidedAt:'2026-10-22T02:00:00.000Z',history:[{decision:'退回',opinion:r.returnReason,version:1,by:'刘总监'}]});}
+   additions.settlements.push(r);
+  }
+ }
+ const common=(id,name,amount,scopeType)=>({id,projectId:pid,activityId:'',name,category:'会场设备',supplier:'华东会议服务有限公司',company:project.company,currency:'CNY',amount,budget:amount,estimate:amount,amountMode:'total',quantity:1,unit:'项',start:project.start,end:project.end,scopeType,status:'已确认',basis:'三场项目采购及分配依据（演示）',serviceConfirmed:true,deliveryBasis:'三场服务交付完成（演示）',paid:0,conditionLimit:amount,version:1,expectedTaxRate:6,deductionMode:'full',deductionBasis:'会务服务可扣测算样例，以财务核定为准',taxStatus:'已核定',ticketNumber:'DEMO-FP-'+id,ticketAmount:amount,ticketTax:T.split(amount,6).tax,approvedTax:T.split(amount,6).tax,financeBasis:'财务核对票据及分团税额（演示）',attachments:[file('公共采购分配依据',name)],allocations:[]});
+ const shared=common('FY20261024004','三场统一设计及物料',6360,'shared');shared.activityIds=additions.activities.map(a=>a.id);shared.allocations=shared.activityIds.map(activityId=>({activityId,amount:2120,approvedTax:120}));shared.allocationBasis='按三场同量物料分配（演示）';shared.unallocated=0;
+ const overhead=common('FY20261024005','项目整体策划统筹',10600,'common');overhead.commonAmount=10600;overhead.unallocated=0;
+ additions.costs.push(shared,overhead);
+ for(const r of additions.settlements)if(r.status==='已退回')r.submittedRecord=T.settlementEvidence(additions,r);
+ function install(data){
+  if(data.settlementWorkflowRevision===revision)return data;
+  // 已存在同编号项目时不猜测哪些记录可替换。
+  if(!data.projects.some(p=>p.id===pid))for(const [key,rows]of Object.entries(additions)){data[key]??=[];for(const row of rows)if(!data[key].some(r=>r.id===row.id))data[key].push(M.clone(row));}
+  data.settlementWorkflowRevision=revision;return data;
+ }
+ install(root.MicePrototypeSeed);
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=saved=>{const data=prior(saved);return data.settlementWorkflowRevision===revision?data:install(M.clone(data));};
+})(window);
+
+/* 用户要求所有预置项目团可办理结算：只更新一次示例阶段，后续办理结果不重置。 */
+(function(root){
+ 'use strict';
+ const M=root.MiceModel,seed=root.MicePrototypeSeed,revision='settlement-ready-demos-20261024';
+ const activityIds=new Set(seed.activities.map(a=>a.id));
+ function install(data){
+  if(data.settlementReadyDemoRevision===revision)return data;
+  const activities=data.activities.filter(a=>activityIds.has(a.id));
+  const projectIds=new Set(activities.map(a=>a.projectId));
+  for(const p of data.projects)if(projectIds.has(p.id)&&p.status!=='进行中')p.status='进行中';
+  for(const a of activities){
+   a.status='已完成';
+   a.completedAt=a.completedAt||a.end;
+   a.completion={actualStart:a.start,actualEnd:a.end,actualPeople:a.confirmedPeople??a.people,
+    basis:'服务已完成，进入结算核对（演示）',delivery:'全部完成',recordedBy:a.planner||'项目负责人',recordedAt:a.end,
+    ...(a.completion||{})};
+  }
+  const reopened=new Set();
+  for(const r of data.settlements){
+   // 用户另外创建的项目或与新团合并的结算不属于本次预置范围。
+   if(!projectIds.has(r.projectId)||!(r.activities||[]).length||!r.activities.every(id=>activityIds.has(id))||!['审批中','已确认'].includes(r.status))continue;
+   const previous=r.confirmedRecord||r.submittedRecord;
+   if(previous)r.amountHistory=[...(r.amountHistory||[]),{version:r.version,submittedAt:r.submittedAt,record:M.clone(previous)}];
+   r.version=(r.version||0)+1;
+   r.status='草稿';
+   r.submittedAt=null;r.confirmedAt=null;r.submittedRecord=null;r.confirmedRecord=null;
+   r.history=[...(r.history||[]),{action:'保存结算草稿',version:r.version,at:'2026-10-24T02:00:00.000Z',by:'原型示例',basis:'示例调整为可继续核对结算，保留原金额版本'}];
+   reopened.add(r.id);
+  }
+  for(const approval of data.approvals||[])if(reopened.has(approval.sourceId)&&['待审批','审批中','处理中','待处理'].includes(approval.status)){
+   approval.status='已撤回';approval.opinion='示例已调整为结算草稿，重新提交后按新版本审批';
+  }
+  data.settlementReadyDemoRevision=revision;
+  return data;
+ }
+ install(seed);
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=saved=>{
+  const data=prior(saved);
+  return data.settlementReadyDemoRevision===revision?data:install(M.clone(data));
+ };
+})(window);
+
+/* 项目团管理试用：补入草稿和执行中案例，保留原结算案例及已办理结果。 */
+(function(root){
+ 'use strict';
+ const M=root.MiceModel,revision='project-work-stages-20261024';
+ const cases=[
+  ['PRJ-20261008-003','DEMO-PREP-HC-001','杭州渠道会议','杭州','2026-11-05','李梅',30,20000,'草稿'],
+  ['PRJ-20261008-003','DEMO-PREP-HC-002','苏州学术交流会','苏州','2026-11-12','赵磊',40,22000,'草稿'],
+  ['PRJ-20261008-003','DEMO-PREP-HC-003','南京科室交流会','南京','2026-12-03','王芳',35,18000,'草稿'],
+  ['PRJ-20261008-003','DEMO-PREP-HC-004','合肥区域会议','合肥','2026-12-17','李梅',45,23000,'草稿'],
+  ['PRJ-20261008-003','DEMO-EXEC-HC-001','上海专家交流会','上海','2026-10-28','李梅',30,20000,'进行中'],
+  ['PRJ-20261008-003','DEMO-EXEC-HC-002','宁波渠道说明会','宁波','2026-10-30','赵磊',40,22000,'进行中'],
+  ['PRJ-20261008-002','DEMO-PREP-BX-001','厦门奖励旅游筹备','厦门','2026-11-15','李梅',60,120000,'草稿'],
+  ['PRJ-20261008-002','DEMO-PREP-BX-002','成都奖励旅游筹备','成都','2026-11-20','赵磊',50,100000,'草稿']
+ ];
+ function install(data){
+  if(data.projectWorkStagesRevision===revision)return data;
+  for(const [pid,id,name,city,date,planner,people,budget,status]of cases){
+   const p=data.projects.find(p=>p.id===pid),oid='DEMO-ORDER-'+id;
+   if(!p||p.status!=='进行中'||data.activities.some(a=>a.id===id)||data.orders.some(o=>o.id===oid))continue;
+   const service=pid.endsWith('002')?'旅游':'会议',basis=status==='草稿'?'客户服务需求筹备资料（演示），尚未成交':'客户已线下确认服务及价格（演示）';
+   const a={id,projectId:pid,name,city,start:date,end:date,planner,people,originalBudget:budget,status,service,businessMode:service==='会议'?'会议专票团':'旅游单团',nameMode:service==='会议'?'按人数交付':'实名服务',scope:service==='会议'?'会议场地、设备、茶歇及现场会务服务':'交通、酒店及当地行程安排',basis,reference:'',agenda:[],roster:[],resources:[],attachments:[],demoStageCase:true};
+   if(status==='进行中'){
+    const amount=budget+8000;
+    a.confirmedPeople=people;a.formationSource='order:'+oid;a.formation={source:a.formationSource,basis,by:planner,time:'2026-10-24 10:00'};
+    a.agenda=[{id:id+'-AGENDA',kind:'会议',date,start:'09:00',end:'17:00',title:'交流与分组讨论',place:city+'会议中心',owner:planner,note:'场地及设备按资源安排核对'}];
+    data.orders.push({id:oid,projectId:pid,activities:[id],name:name+'会务服务',customer:p.customer,company:p.company,currency:'CNY',amount,received:0,invoiced:0,version:1,status:'已确认',source:'成交登记',pricing:'fixed',basis,confirmationBasis:basis,confirmBy:p.contact||'客户负责人',confirmDate:'2026-10-24',nodes:[{name:'订金',amount:amount*0.3,received:0,invoiced:0,due:'2026-10-26'},{name:'尾款',amount:amount*0.7,received:0,invoiced:0,due:'2026-11-15'}],history:[]});
+   }
+   data.activities.push(a);
+  }
+  data.projectWorkStagesRevision=revision;return data;
+ }
+ install(root.MicePrototypeSeed);
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=saved=>{const data=prior(saved);return data.projectWorkStagesRevision===revision?data:install(M.clone(data));};
+})(window);
+
+/* 每个预置项目均有草稿和进行中案例；只补独立记录，不重置用户办理。 */
+(function(root){
+ 'use strict';
+ const M=root.MiceModel,revision='all-project-stages-20261024',seed=root.MicePrototypeSeed,templates=[];
+ for(const p of seed.projects){
+  const rows=seed.activities.filter(a=>a.projectId===p.id),base=rows[0]||{};
+  for(const status of ['草稿','进行中'])if(!rows.some(a=>a.status===status)){
+   const id='DEMO-STAGE-'+p.id+(status==='草稿'?'-DRAFT':'-ACTIVE'),planner=seed.catalog.staff.find(s=>s.name===base.planner&&s.canPlan&&s.companies.includes(p.company))?.name||seed.catalog.staff.find(s=>s.canPlan&&s.companies.includes(p.company))?.name||'';
+   templates.push({id,projectId:p.id,name:p.name+(status==='草稿'?' · 筹备场':' · 执行场'),status,service:base.service||'会议',businessMode:base.businessMode||p.businessMode||'旅游单团',start:p.start,end:p.start,city:base.city||'上海',planner,people:30,originalBudget:20000,scope:base.scope||p.scope,reference:'',nameMode:base.nameMode||'按人数交付',agenda:[],roster:[],resources:[],attachments:[],demoStageCase:true,...(status==='进行中'?{formation:{source:'直接建团',basis:'按项目服务计划开始执行准备（演示）',by:planner,time:'2026-10-24 10:00'}}:{})});
+  }
+ }
+ function install(data){
+  if(data.allProjectStagesRevision===revision)return data;
+  for(const a of templates){const p=data.projects.find(p=>p.id===a.projectId);if(!p||p.status!=='进行中'||data.activities.some(r=>r.id===a.id))continue;data.activities.push(M.clone(a));}
+  data.allProjectStagesRevision=revision;return data;
+ }
+ install(seed);
+ const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=saved=>{const data=prior(saved);return data.allProjectStagesRevision===revision?data:install(M.clone(data));};
+})(window);

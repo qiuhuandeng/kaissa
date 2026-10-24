@@ -1,0 +1,6 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..'),pages=['merchant/tour/schedules-detail.html','merchant/tour/schedules.html','merchant/sales/orders-after-sales.html'],scripts=['shared/cruise-roster.js','shared/cruise-transfer.js','shared/cruise-transfer-handoff.js','shared/schedule-whole-transfer.js'];let inline=0,refs=0;
+for(const name of pages){const source=fs.readFileSync(path.join(root,name),'utf8');for(const m of source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){if(!m[1].includes('src=')&&m[2].trim()){new vm.Script(m[2],{filename:name});inline++;}}
+for(const m of source.matchAll(/(?:src|href)=["']([^"']+\.(?:js|css)(?:\?[^"']*)?)["']/g)){if(/^(https?:|\/\/)/.test(m[1]))continue;assert.ok(fs.existsSync(path.resolve(root,path.dirname(name),m[1].split('?')[0])),name+': '+m[1]);refs++;}}
+for(const name of scripts)new vm.Script(fs.readFileSync(path.join(root,name),'utf8'),{filename:name});
+const report={pages,inlineScripts:inline,sharedScripts:scripts,localReferences:refs,errors:[]};fs.writeFileSync(path.join(root,'docs/evidence/cruise-integration-step4-20261023/static.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));

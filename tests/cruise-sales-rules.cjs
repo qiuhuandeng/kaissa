@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+require('../shared/cruise-sales-rules.js');const R=globalThis.CaesarCruiseSalesRules,checks=[],ok=(name,fn)=>{fn();checks.push(name);};
+const rates=R.tariff('阳台舱 BA'),adult=()=>({kind:'adult',basis:'position',age:35}),child=()=>({kind:'child',basis:'position',age:8});const family={people:[adult(),adult(),child()]};
+ok('两成人一儿童仅计3人和3份船票',()=>{const q=R.quoteRoom(family,rates,'另收');assert.equal(q.people,3);assert.equal(q.total,85750);assert.equal(q.lines.slice(0,3).length,3);});
+ok('儿童价与第三人价互斥',()=>{const room=R.clone(family);room.people[2].basis='child';assert.equal(R.quoteRoom(room,rates,'另收').total,88750);});
+ok('原儿童不占床价仍可采用且计实际游客',()=>{const room=R.clone(family);room.people[2].basis='childNoBerth';const q=R.quoteRoom(room,rates,'另收');assert.equal(q.people,3);assert.equal(q.total,75750);});
+ok('已含税费不重复加收',()=>assert.equal(R.quoteRoom(family,rates,'已含').total,78400));
+ok('单人附加费仅一次且入住1人',()=>{const q=R.quoteRoom({people:[adult()]},rates,'另收');assert.equal(q.total,40050);assert.equal(q.people,1);});
+ok('第四人独立人次价',()=>assert.equal(R.quoteRoom({people:[adult(),adult(),adult(),child()]},rates,'已含').total,97200));
+ok('最大入住含儿童',()=>assert.equal(R.quoteRoom({people:[adult(),adult(),child(),child(),child()]},rates,'已含').overCapacity,true));
+ok('已含服务再次选择仍零元',()=>{const q=R.serviceQuote(R.templates,['transfer','insurance'],['transfer','insurance'],family.people);assert.equal(q.reduce((s,x)=>s+x.amount,0),0);assert.equal(q.length,2);});
+ok('免费儿童计服务人数',()=>{const q=R.serviceQuote(R.templates,['museum'],['insurance'],family.people).find(x=>x.id==='museum');assert.equal(q.amount,1200);assert.equal(q.quantity,3);assert.equal(q.exceeded,false);});
+ok('免费儿童同样触发容量不足',()=>assert.equal(R.serviceQuote(R.templates,['museum'],['insurance'],family.people.concat(child())).find(x=>x.id==='museum').exceeded,true));
+ok('B方案不含接送，A方案已含',()=>{assert.equal(R.plan('B方案岸上自由').included.includes('transfer'),false);assert.equal(R.plan('A方案').included.includes('transfer'),true);});
+const out=path.resolve(__dirname,'../docs/evidence/cruise-integration-step3-20261023');fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'rules.json'),JSON.stringify({checks,errors:[]},null,2));console.log(JSON.stringify({checks:checks.length,errors:[]}));

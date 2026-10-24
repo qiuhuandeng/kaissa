@@ -11,7 +11,7 @@
   function canAdvanceActivity(a,p,next){return !!a&&!!p&&a.projectId===p.id&&!['已结项','已终止'].includes(p.status)&&!!next&&({草稿:'进行中',进行中:'已完成'})[a.status]===next;}
   function activityAllows(a,p,kind){
     if(!a||!p||a.projectId!==p.id||['已结项','已终止'].includes(p.status))return false;
-    return ({quote:['草稿'],execution:['进行中'],change:['进行中'],cost:['进行中','已完成'],budget:['进行中'],files:['进行中','已完成'],assignment:['草稿','进行中'],settlement:['已完成','已取消']}[kind]||[]).includes(a.status);
+    return ({quote:['草稿','进行中'],execution:['进行中'],change:['进行中'],cost:['进行中','已完成'],budget:['进行中'],files:['进行中','已完成'],assignment:['草稿','进行中'],settlement:['已完成','已取消']}[kind]||[]).includes(a.status);
   }
   function copyActivityDraft(a,{id,projectId=a.projectId,copyAgenda=true,copyBudget=false,copyPlanner=true}={}){
     const next={id,projectId,name:a.name+'-副本',status:'草稿',reference:'',start:'',end:'',confirmedPeople:null,basis:'',commitmentId:'',formationSource:'',formation:null,completion:null,completedAt:null,acceptance:null,executionConfirmation:null,settlementDue:'',agenda:[],agendaHistory:[],roster:[],resources:[],attachments:[],planner:copyPlanner?a.planner:'',originalBudget:copyBudget?a.originalBudget:null};
@@ -21,12 +21,12 @@
   }
   function quoteActivityIssue(c,p,ctx={}){
     const acts=(c.activities||[]).map(id=>(ctx.activities||[]).find(a=>a.id===id));
-    return acts.some(a=>!a||a.projectId!==p?.id)?'请选择本项目的项目团':acts.some(a=>!activityAllows(a,p,'quote'))?'仅草稿项目团可以办理新报价；已建团的价款变化请从原订单申请改价':'';
+    return acts.some(a=>!a||a.projectId!==p?.id)?'请选择本项目的项目团':acts.some(a=>!activityAllows(a,p,'quote'))?'仅未完成项目团可以办理新报价':acts.some(a=>(ctx.orders||[]).some(o=>o.projectId===p.id&&o.activities?.includes(a.id)&&!['已取消','已作废'].includes(o.status)))?'项目团已有关联订单，价款变化请从原订单办理':'';
   }
-  // 建团引用本团已有客户确认，不另造报价、订单或收款。
+  // 客户确认来源用于成交与结算核对；独立建团不以已有订单为前提。
   function activityFormationSources(a,p,ctx={}){
     const quotes=(ctx.commitments||[]).filter(c=>c.projectId===p.id&&c.status==='已确认'&&c.activities?.includes(a.id));
-    const orders=(ctx.orders||[]).filter(o=>o.projectId===p.id&&o.activities?.includes(a.id)&&(o.status==='已确认'||o.status==='待结算确认'&&quotes.some(c=>c.id===o.commitmentId))&&(!o.customer||o.customer===p.customer)&&(!o.company||o.company===p.company));
+    const orders=(ctx.orders||[]).filter(o=>o.projectId===p.id&&o.activities?.includes(a.id)&&(o.status==='已确认'||o.status==='待结算确认'&&(quotes.some(c=>c.id===o.commitmentId)||o.source==='成交登记'&&o.confirmationBasis&&o.unitPrice!=null))&&(!o.customer||o.customer===p.customer)&&(!o.company||o.company===p.company));
     return [...quotes.map(c=>({value:'quote:'+c.id,label:'已确认报价 · '+c.name+'／'+c.id,basis:c.basis||'',frameworkId:c.frameworkId||'',commitmentId:c.id,orderId:orders.find(o=>o.commitmentId===c.id)?.id||''})),...orders.map(o=>{const c=quotes.find(c=>c.id===o.commitmentId);return {value:'order:'+o.id,label:'有效订单 · '+o.id+(o.amount==null?'／按实际结算':''),basis:o.basis||o.confirmationBasis||c?.basis||'',frameworkId:o.frameworkId||c?.frameworkId||'',commitmentId:c?.id||'',orderId:o.id};})];
   }
   function activityFormationSource(a,p,ctx={}){
@@ -52,13 +52,14 @@
       for(const [k,l] of [['service','服务类型'],['start','开始日期'],['end','结束日期'],['city','项目团地点'],['planner','计调'],['scope','服务范围']])if(!a[k])e[k]='请填写'+l;
       if(p.start&&a.start<p.start||p.end&&a.end>p.end)e.start='项目团日期超出项目服务期间，请先核对或办理期间变更';
     }
-    if(mode!=='draft'){
+    if(mode!=='draft'&&mode!=='execute'){
       const source=activityFormationSource(a,p,ctx);
       if(!source)e.formationSource='请先取得覆盖本团的已确认报价或有效订单';
       if(!a.basis&&!source?.basis)e.basis='请补充客户委托或报价确认凭据';
       const f=p.frameworks?.find(f=>f.id===source?.frameworkId);
       if(source?.frameworkId&&(!f||!['已签署','已签归档','已归档'].includes(f.status)||a.start<f.start||a.end>f.end))e.formationSource='适用框架合同未签署或未覆盖本团日期，请先取得补充依据';
     }
+    if(mode!=='draft'&&typeof window!=='undefined'&&window.MiceBudget){const issues=window.MiceBudget.groupIssues(p,[{...a,status:'进行中'}]);if(issues.length)e.originalBudget=issues.join('；');}
     if(a.planner&&ctx.catalog&&!ctx.catalog.staff.some(x=>x.name===a.planner&&x.canPlan&&x.companies.includes(p.company)))e.planner='请选择该公司有执行权限的计调';
     return e;
   }

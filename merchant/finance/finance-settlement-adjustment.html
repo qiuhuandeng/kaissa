@@ -81,7 +81,7 @@
           <div class="date-range">
             <input id="dateStart" type="date" value="2026-06-01" aria-label="开始日期">
             <span>至</span>
-            <input id="dateEnd" type="date" value="2026-07-31" aria-label="结束日期">
+            <input id="dateEnd" type="date" value="2026-12-31" aria-label="结束日期">
           </div>
         </div>
         <div class="filter-actions">
@@ -139,6 +139,17 @@
             <td><div class="table-cell-main"><strong>RFD-20260722002</strong><span>部分退款优惠重算</span></div></td>
             <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>待审批</span></div></td>
             <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="review">冲回</button><button type="button" data-open-detail>详情</button></div></td>
+          </tr>
+          <tr data-adjustment-no="ADJ-CRU-20261121-020" data-source-type="供应商账单" data-settlement-no="JS-CZ20261112002" data-original-status="已结算" data-lock="已锁定" data-object-type="邮轮航次" data-object-no="CZ20261112002" data-object-name="理想号地中海邮轮" data-business-name="上海出发 / 共同包舱" data-company="上海凯撒" data-adjustment-type="后补账单" data-income-delta="¥0" data-cost-delta="¥20,000" data-tax-delta="待财务核定" data-profit-delta="-¥20,000" data-original-income="¥450,000" data-original-cost="¥320,000" data-original-profit="¥130,000" data-after-income="¥450,000" data-after-cost="¥340,000" data-after-profit="¥110,000" data-after-rate="24.44%" data-evidence="BN-CRU-20261121-020 / 船方后补港务费（演示）" data-evidence-no="BN-CRU-20261121-020" data-invoice-impact="进项票待补 ¥20,000" data-tax-impact="税额待财务核定" data-period-impact="原结算保留，调整期间待财务核定" data-approval="未提交" data-nc="未生成" data-voucher="未生成" data-owner="结算会计郑华" data-date="2026-11-21" data-status="待核对">
+            <td><div class="table-cell-main"><strong>ADJ-CRU-20261121-020</strong><span>供应商账单 / 2026-11-21</span></div></td>
+            <td><div class="table-cell-main"><strong>JS-CZ20261112002</strong><span>已锁定 / 已结算</span></div></td>
+            <td><div class="table-cell-main"><strong>理想号地中海邮轮</strong><span>CZ20261112002 / 邮轮航次</span></div></td>
+            <td><span class="tag tag-blue">后补账单</span></td>
+            <td><div class="table-cell-main"><strong class="amount-red">成本 +¥20,000</strong><span>毛利 -¥20,000</span></div></td>
+            <td><div class="table-cell-main"><strong>毛利 ¥110,000</strong><span>成本 ¥340,000 / 毛利率 24.44%</span></div></td>
+            <td><div class="table-cell-main"><strong>BN-CRU-20261121-020</strong><span>船方后补港务费（演示）</span></div></td>
+            <td><div class="table-cell-main"><span class="tag tag-gray">未生成</span><span>未提交</span></div></td>
+            <td class="sticky-action"><div class="table-action"><button class="table-action-primary" type="button" data-open-work="review">核对</button><button type="button" data-open-detail>详情</button></div></td>
           </tr>
           <tr data-adjustment-no="ADJ-SUP-20260701003" data-source-type="供应商账单" data-settlement-no="JS20260623003" data-original-status="已结算" data-lock="已锁定" data-object-type="专列班期" data-object-no="TR-SILK-20250815-001" data-object-name="丝路专列深度游" data-business-name="丝路经典线 / 软卧" data-company="总部财务" data-adjustment-type="后补账单" data-income-delta="¥0" data-cost-delta="¥6,000" data-tax-delta="¥0" data-profit-delta="-¥6,000" data-original-income="¥1,255,200" data-original-cost="¥386,000" data-original-profit="¥869,200" data-after-income="¥1,255,200" data-after-cost="¥392,000" data-after-profit="¥863,200" data-after-rate="68.77%" data-evidence="BN-SILK-20260701003 / 供应商后补账单" data-evidence-no="BN-SILK-20260701003" data-invoice-impact="进项票待补 ¥6,000" data-tax-impact="税额无变化" data-period-impact="影响2026-08结算" data-approval="未提交" data-nc="未生成" data-voucher="未生成" data-owner="结算会计郑华" data-date="2026-07-01" data-status="待核对">
             <td><div class="table-cell-main"><strong>ADJ-SUP-20260701003</strong><span>供应商账单 / 2026-07-01</span></div></td>
@@ -421,6 +432,7 @@
       }
 
       function evidenceHref(row) {
+        if (row.dataset.adjustmentNo === "ADJ-CRU-20261121-020") return "../tour/fulfillment-cost.html?scheduleNo=CZ20261112002";
         var data = row.dataset;
         if (data.sourceType === '优惠使用明细') return '../sales/orders-detail.html?orderNo=' + encodeURIComponent(data.sourceOrder || data.objectNo) + '&tab=finance';
         if (data.sourceType === '供应商账单') return 'finance-supplier-bills.html?billNo=' + encodeURIComponent(data.evidenceNo);
@@ -549,6 +561,7 @@
         document.getElementById('evidenceRows').innerHTML = '<tr><td>' + escapeHtml(data.sourceType) + '</td><td>' + escapeHtml(data.evidenceNo) + '</td><td>' + escapeHtml(data.discountAmount || data.profitDelta) + '</td><td>' + linkHtml(evidenceHref(row), '查看依据') + '</td></tr>' +
           (/优惠|承担/.test(data.adjustmentType || '') ? '<tr><td>优惠重算</td><td>' + escapeHtml(data.originalDiscount || data.sourceCampaign || '-') + '</td><td>' + escapeHtml(data.afterDiscount ? data.originalDiscount + ' → ' + data.afterDiscount : (data.discountAmount || '-')) + '</td><td>' + escapeHtml(data.refundAmount ? '本次退款 ' + data.refundAmount : data.carryTarget || '-') + '</td></tr><tr><td>承担去向</td><td>' + escapeHtml(data.bearer || '-') + '</td><td>' + escapeHtml(data.discountAmount || '-') + '</td><td>' + escapeHtml(data.carryTarget || '-') + '</td></tr>' : '');
 
+        if (data.adjustmentNo === 'ADJ-CRU-20261121-020') { document.querySelector('#originalGrid a').href = '../tour/fulfillment-cost.html?scheduleNo=CZ20261112002'; document.getElementById('evidenceRows').innerHTML = '<tr><td>船方后补账单</td><td>BN-CRU-20261121-020</td><td>+¥20,000</td><td><a class="link-primary" href="../tour/fulfillment-cost.html?scheduleNo=CZ20261112002">查看原团结算</a></td></tr>'; }
         document.getElementById('amountRows').innerHTML = [
           ['收入', data.originalIncome, data.incomeDelta, data.afterIncome],
           ['成本', data.originalCost, data.costDelta, data.afterCost],
@@ -621,6 +634,7 @@
       }
 
       function openWork(row, action) {
+        if (row.dataset.adjustmentNo === "ADJ-CRU-20261121-020") { action = actionForStatus(row.dataset.status); if (action === "detail") { openDetail(row); return; } }
         activeRow = row;
         activeAction = action || actionForStatus(row.dataset.status);
         document.getElementById('adjustmentWorkTitle').textContent = actionTitle(activeAction, row);
@@ -638,11 +652,13 @@
       }
 
       function updateRowStatusCells(row) {
+        if (row.dataset.adjustmentNo === 'ADJ-CRU-20261121-020') { var next = actionForStatus(row.dataset.status); row.children[8].innerHTML = '<div class="table-action">' + (next === 'detail' ? '' : '<button class="table-action-primary" type="button" data-open-work="' + next + '">' + (next === 'submit' ? '提交' : '核对') + '</button>') + '<button type="button" data-open-detail>详情</button></div>'; }
         row.children[7].innerHTML = '<div class="table-cell-main">' + tagHtml(row.dataset.status) + '<span>' + escapeHtml(row.dataset.approval + ' / ' + row.dataset.nc) + '</span></div>';
       }
 
       function confirmWork() {
         if (!activeRow) return;
+        if (activeRow.dataset.adjustmentNo === "ADJ-CRU-20261121-020" && activeAction !== actionForStatus(activeRow.dataset.status)) return;
         var result = document.getElementById('workResult').value;
         if (activeAction === 'review') {
           activeRow.dataset.status = '待提交';
@@ -703,6 +719,7 @@
         if (event.target.closest('[data-detail-primary]')) {
           if (!activeRow) return;
           var primaryAction = event.target.closest('[data-detail-primary]').dataset.primaryAction;
+          if (primaryAction === 'approval' && activeRow.dataset.adjustmentNo === 'ADJ-CRU-20261121-020') { window.location.href = '../approval/approvals.html?sourceNo=' + encodeURIComponent(activeRow.dataset.adjustmentNo); return; }
           if (primaryAction === 'nc') {
             window.location.href = 'finance-nc.html?sourceNo=' + encodeURIComponent(activeRow.dataset.adjustmentNo);
             return;
@@ -757,8 +774,9 @@
     })();
   </script>
 <script src="../../shared/mice-prototype-model.js?v=activity-flow-sync-20261021"></script>
-<script src="../../shared/mice-prototype-data.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-prototype-ui.js?v=mice-demo-20261009"></script>
+<script src="../../shared/mice-tax-model.js?v=settlement-tax-20261021"></script>
+<script src="../../shared/mice-prototype-data.js?v=detail-unification-20261024"></script>
+<script src="../../shared/mice-prototype-ui.js?v=detail-unification-20261024"></script>
 <script src="../../shared/mice-files.js"></script>
 <script src="../../shared/mice-changes.js?v=activity-four-states-20261021"></script>
 <script src="../../shared/mice-access.js?v=mice-terms-20261009"></script>

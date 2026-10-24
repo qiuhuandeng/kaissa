@@ -91,7 +91,12 @@
   function missing(label='项目'){const el=mount(label);el.innerHTML=pageHead(label,'',url('merchant/tour/product-custom-list.html'))+'<div class="card mice-empty">未找到该'+esc(label)+'或无权查看，请返回列表选择。</div>';}
   function settlementUrl(r){
     const a=store.data.activities.find(a=>a.projectId===r.projectId&&(r.activities?.includes(a.id)||a.id===r.contextActivityId));
-    return url('merchant/tour/schedules-detail.html',{mice:1,id:a?.id||'UNKNOWN',projectId:r.projectId,tab:'settlement',settlementId:r.id});
+    return url('merchant/tour/fulfillment-cost.html',{type:'project',activityId:a?.id,projectId:r.projectId,settlementId:r.id});
   }
-  window.MiceUI={M,store,esc,businessLabel,q,rootUrl,url,settlementUrl,tag,btn,action,link,table,lines,options,field,section,grid,summary,toast,confirm,drawer,download,actions,ready,mount,takeover,pageHead,listHead,hero,layout,render,tabs,missing,get dialog(){return openDialog;}};
+  function activityUrl(activity,params={}){return url('merchant/tour/schedules-detail.html',{...params,mice:1,type:'project',id:activity.id,projectId:activity.projectId});}
+  function resolveActivity(id,projectId=''){
+    const canonical=id==='MICE20250915001'?'PRJ-MICE-20260915-001':id;
+    const a=store.find('activities',canonical);return a&&(!projectId||a.projectId===projectId)?a:null;
+  }
+  window.MiceUI={activityUrl,resolveActivity,M,store,esc,businessLabel,q,rootUrl,url,settlementUrl,tag,btn,action,link,table,lines,options,field,section,grid,summary,toast,confirm,drawer,download,actions,ready,mount,takeover,pageHead,listHead,hero,layout,render,tabs,missing,get dialog(){return openDialog;}};
 })();

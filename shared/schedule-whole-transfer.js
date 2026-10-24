@@ -48,6 +48,7 @@
   ];
 
   function renderTransferRows() {
+    if (currentSession && currentSession.cruise) { window.CaesarCruiseTransfer.draw(); return; }
     var rows = document.getElementById('wholeTransferRows');
     rows.innerHTML = transferOrders.map(function (order, index) {
       var tag = order.status === '成功' ? 'tag tag-green' : order.status === '失败' ? 'tag tag-red' : 'tag tag-orange';
@@ -67,12 +68,14 @@
   var currentSession = null;
 
   document.getElementById('wholeTransferTarget').addEventListener('change', function () {
+    if (currentSession && currentSession.cruise) { window.CaesarCruiseTransfer.capture(); window.CaesarCruiseTransfer.draw(); return; }
     var option = this.options[this.selectedIndex];
     if (option.dataset.supply || !option.value) { document.getElementById('wholeTransferSupply').textContent = option.dataset.supply || '暂无可转入团期'; return; }
     document.getElementById('wholeTransferSupply').textContent = Number(option.dataset.available || 0) >= 6 ? '同线路经济款；机位待确认6座；酒店房量已确认' : '目标名额不足；仅可处理部分订单，其他订单保留待处理';
   });
 
   document.getElementById('confirmWholeTransfer').addEventListener('click', function () {
+    if (currentSession && currentSession.cruise) { window.CaesarCruiseTransfer.confirm(); return; }
     var selected = Array.from(document.querySelectorAll('#wholeTransferRows [data-transfer-select]:checked'));
     if (!selected.length) { showFeedback('请至少选择一笔未处理订单。', true); return; }
     var target = document.getElementById('wholeTransferTarget');
@@ -105,6 +108,9 @@
       if (!sessions[key]) sessions[key] = { orders: context.orders || transferOrders.map(function (order) { return Object.assign({}, order); }), used: {} };
       currentSession = sessions[key];
       transferOrders = currentSession.orders;
+      currentSession.cruise = context.type === 'cruise';
+      wholeDrawer.classList.toggle('cruise-transfer', currentSession.cruise);
+      if (currentSession.cruise) window.CaesarCruiseTransfer.prepare(context, currentSession);
       var target = document.getElementById('wholeTransferTarget');
       if (context.targets) {
         target.innerHTML = context.targets.length ? context.targets.map(function (item) {
@@ -121,13 +127,13 @@
       summary.hidden = !context.code;
       summary.textContent = context.code ? '原团期：' + context.code + ' / ' + (context.product || '') + ' / ' + (context.depart || '') : '';
       document.getElementById('wholeTransferFeedback').hidden = true;
-      target.dispatchEvent(new Event('change'));
+      if (!currentSession.cruise) target.dispatchEvent(new Event('change'));
       renderTransferRows();
       openLayer(wholeDrawer);
     }
   };
   document.addEventListener('click', function (event) {
-    if (event.target.closest('#openWholeGroupTransfer')) window.caesarWholeGroupTransfer.open();
+    if (event.target.closest('#openWholeGroupTransfer')) window.caesarWholeGroupTransfer.open(document.getElementById('cruiseRosterView') && window.CaesarCruiseRoster ? window.CaesarCruiseRoster.transferContext() : undefined);
     if (event.target.closest('#wholeGroupTransferDrawer [data-close-schedule-extension]') || event.target === wholeDrawer) closeLayer(wholeDrawer);
   });
 })();

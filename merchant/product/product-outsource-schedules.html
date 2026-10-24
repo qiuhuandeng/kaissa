@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>代理安排定价 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="../../shared/cruise-sales.css">
+  <script src="../../shared/cruise-sales-rules.js"></script>
+  <script src="../../shared/cruise-agency-prices.js"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -344,6 +347,7 @@
       };
       var productKey = sourceMap[params.get('source')] || params.get('product') || 'group';
       var product = products[productKey] || products.group;
+      if (product.type === '邮轮') window.CaesarCruiseAgencyPrices.prepare(product);
 
       function escapeHtml(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
@@ -512,7 +516,7 @@
             '<td><div class="table-cell-main"><strong>' + escapeHtml(item.no) + '</strong><span>' + escapeHtml(product.name) + '</span></div></td>',
             '<td><div class="table-cell-main"><strong>' + escapeHtml(item.route || '-') + '</strong><span>' + escapeHtml(item.routeMeta || product.name) + '</span></div></td>',
             '<td><div class="table-cell-main"><strong>' + escapeHtml(item.depart + ' / ' + item.back) + '</strong><span>报名截止 ' + escapeHtml(item.deadline) + '</span></div></td>',
-            '<td><div class="table-cell-main"><strong>' + escapeHtml(left + '/' + item.quota + product.unit) + '</strong><span>已售 ' + escapeHtml(item.sold + product.unit) + ' · ' + escapeHtml(item.confirm) + '</span></div></td>',
+            '<td><div class="table-cell-main"><strong>' + escapeHtml(item.confirm === '逐单询位' ? '无固定配额' : left + '/' + item.quota + product.unit) + '</strong><span>已售 ' + escapeHtml(item.sold + product.unit) + ' · ' + escapeHtml(item.confirm) + '</span></div></td>',
             '<td>' + priceCell(item, 'settlement', 'settlement') + '</td>',
             '<td>' + priceCell(item, 'public', 'public') + '</td>',
             '<td>' + salePriceCell(item) + '</td>',
@@ -560,7 +564,7 @@
           '<div class="outsource-stop-metrics">',
           '<div><span>销售状态</span><strong><span class="' + tagClass(item.status) + '">' + escapeHtml(item.status) + '</span></strong></div>',
           '<div><span>定价状态</span><strong><span class="' + tagClass(item.priceStatus) + '">' + escapeHtml(item.priceStatus) + '</span></strong></div>',
-          '<div><span>剩余/总名额</span><strong>' + escapeHtml(left + '/' + item.quota + product.unit) + '</strong></div>',
+          '<div><span>剩余/总名额</span><strong>' + escapeHtml(item.confirm === '逐单询位' ? '无固定配额' : left + '/' + item.quota + product.unit) + '</strong></div>',
           '<div><span>供应商确认</span><strong><span class="' + tagClass(item.confirm) + '">' + escapeHtml(item.confirm) + '</span></strong></div>',
           '</div>'
         ].join('');
@@ -596,6 +600,7 @@
       }
 
       function applyPriceValues(item) {
+        if (product.type === '邮轮') item.feeMode = document.getElementById('cruiseAgencyFeeMode').value;
         collectPriceValues().forEach(function (row) {
           if (!item.priceItems[row.index]) return;
           item.priceItems[row.index].sale = row.value;
@@ -608,7 +613,7 @@
           var label = document.querySelector('[data-price-index="' + row.index + '"]');
           var nameCell = label && label.closest('tr') && label.closest('tr').querySelector('td strong');
           var name = nameCell ? nameCell.textContent : '价格项';
-          if (row.value == null || row.value <= 0) {
+          if (row.value == null || row.value < 0 || (row.value === 0 && !(product.type === '邮轮' && findSchedule(activeScheduleNo).priceItems[row.index].tax))) {
             if (requireAll) errors.push(name + '未填写我方对客销售价');
             return;
           }
@@ -636,6 +641,8 @@
         activeScheduleNo = item.no;
         document.getElementById('schedulePriceSummary').innerHTML = scheduleSummary(item);
         renderPriceMatrix(item);
+        var oldInfo = document.getElementById('cruiseAgencyInfo'); if (oldInfo) oldInfo.remove();
+        if (product.type === '邮轮') window.CaesarCruiseAgencyPrices.open(item);
         showPriceWarning([]);
         document.getElementById('submitSchedulePriceReview').textContent = item.priceStatus === '已生效' ? '提交改价审核' : '提交定价审核';
         document.getElementById('schedulePriceRemarkLabel').textContent = item.priceStatus === '已生效' ? '改价原因' : '定价原因';
@@ -653,6 +660,7 @@
           ['名额/已售', escapeHtml(item.quota + product.unit + ' / 已售' + item.sold + product.unit)],
           ['报名截止', escapeHtml(item.deadline)]
         ]);
+        if (product.type === '邮轮') document.getElementById('scheduleDetailSummary').insertAdjacentHTML('beforeend', window.CaesarCruiseAgencyPrices.info(item));
         document.getElementById('scheduleOrderRows').innerHTML = item.orders.length ? item.orders.map(function (row) {
           return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td><td><span class="' + tagClass(row[3]) + '">' + escapeHtml(row[3]) + '</span></td></tr>';
         }).join('') : '<tr><td colspan="4" class="text-muted">暂无订单占用</td></tr>';

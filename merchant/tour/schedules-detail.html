@@ -12,6 +12,12 @@
   <link rel="stylesheet" href="../../shared/order-amendment.css">
   <script src="../../shared/order-amendment-model.js"></script>
 <script src="../../shared/fulfillment-cost-core.js"></script>
+  <link rel="stylesheet" href="../../shared/cruise-sales.css">
+  <script src="../../shared/cruise-sales-rules.js"></script>
+  <script src="../../shared/cruise-addon-editor.js"></script>
+  <link rel="stylesheet" href="../../shared/cruise-roster.css">
+  <script src="../../shared/cruise-roster.js"></script>
+  <link rel="stylesheet" href="../../shared/mice-execution-detail.css?v=detail-boundary-20261024">
 </head>
 <body>
   <script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261017-superadmin1"></script>
@@ -1637,6 +1643,9 @@
   </div>
 
   <script src="../../shared/leader-prototype-data.js"></script>
+  <link rel="stylesheet" href="../../shared/cruise-supply.css">
+  <script src="../../shared/cruise-supply.js"></script>
+  <script src="../../shared/cruise-detail-supply.js"></script>
   <script>
     (function () {
       var tabButtons = Array.from(document.querySelectorAll('.detail-tabs-card .tab-item[data-tab]'));
@@ -1757,6 +1766,7 @@
       }
 
       function renderAddonPrices() {
+        if (pageParams.get('type') === 'cruise') { addonPriceRows.innerHTML = addonPrices.map(window.CaesarCruiseAddonEditor.row).join(''); return; }
         addonPriceRows.innerHTML = addonPrices.map(function (item, index) {
           var price = item.status === '待报价' ? '待报价' : item.currency + ' ' + Number(item.price || 0).toLocaleString('zh-CN');
           return '<tr><td><strong>' + escapeHtml(item.name) + '</strong></td><td><span class="' + addonStatusTag(item.status) + '">' + escapeHtml(item.status) + '</span></td><td>' + escapeHtml(price) + '／' + escapeHtml(item.unit) + '</td><td>' + item.min + '-' + item.max + '</td><td>' + escapeHtml(item.audience) + '</td><td>' + escapeHtml(item.start) + ' 至 ' + escapeHtml(item.end) + '</td><td>' + escapeHtml(item.resource) + '</td><td><button class="table-link" type="button" data-edit-addon="' + index + '">编辑</button></td></tr>';
@@ -1765,12 +1775,13 @@
 
       function openAddonPrice(index) {
         editingAddonIndex = typeof index === 'number' ? index : -1;
-        var item = editingAddonIndex > -1 ? addonPrices[editingAddonIndex] : { name: '单房差', status: '有效销售价', price: 1800, currency: 'CNY', unit: '人/晚', min: 1, max: 1, audience: '成人', start: scheduleData.depart, end: scheduleData.back, resource: '无需确认' };
+        var item = editingAddonIndex > -1 ? addonPrices[editingAddonIndex] : pageParams.get('type') === 'cruise' ? Object.assign(window.CaesarCruiseAddonEditor.samples()[0], { start: scheduleData.depart, end: scheduleData.back }) : { name: '单房差', status: '有效销售价', price: 1800, currency: 'CNY', unit: '人/晚', min: 1, max: 1, audience: '成人', start: scheduleData.depart, end: scheduleData.back, resource: '无需确认' };
         document.getElementById('addonPriceDrawerTitle').textContent = editingAddonIndex > -1 ? '编辑附加项目' : '新增附加项目';
         ['Name', 'Status', 'Price', 'Currency', 'Unit', 'Min', 'Max', 'Audience', 'Start', 'End', 'Resource'].forEach(function (suffix) {
           var map = { Name: 'name', Status: 'status', Price: 'price', Currency: 'currency', Unit: 'unit', Min: 'min', Max: 'max', Audience: 'audience', Start: 'start', End: 'end', Resource: 'resource' };
           document.getElementById('addon' + suffix).value = item[map[suffix]];
         });
+        if (pageParams.get('type') === 'cruise') window.CaesarCruiseAddonEditor.open(item);
         syncAddonCharge();
         document.getElementById('addonPriceError').hidden = true;
         window.caesarUI.openLayer(addonPriceDrawer);
@@ -1802,6 +1813,7 @@
           end: document.getElementById('addonEnd').value,
           resource: document.getElementById('addonResource').value
         };
+        if (pageParams.get('type') === 'cruise') window.CaesarCruiseAddonEditor.read(item);
         var error = '';
         if (item.status === '免费') { item.price = 0; item.resource = '占位后确认'; }
         if (item.status !== '待报价' && item.status !== '免费' && (!Number.isFinite(item.price) || item.price <= 0)) error = '参考价或有效销售价必须大于0；免费项目请选择免费。';
@@ -1813,6 +1825,7 @@
         closeScheduleLayer(addonPriceDrawer);
       }
 
+      if (pageParams.get('type') === 'cruise') { window.CaesarCruiseAddonEditor.mount(); addonPrices = window.CaesarCruiseAddonEditor.samples(); }
       renderAddonPrices();
       scheduleData.company = pageParams.get('company') || '福建凯撒';
       scheduleData.groupMode = '散拼';
@@ -2710,6 +2723,7 @@
       }
 
       function prepareSeatReleaseConfig(type, config) {
+        if (type === 'cruise') { config.channelQuotas = defaultChannelQuotas(config); window.CaesarCruiseDetail.prepare(config, createReleaseRecord); return; }
         var sample = seatReleaseSamples[type] || {};
         config.releaseBaseSold = Number(config.summary && config.summary.sold || 0);
         config.releaseBaseAvailable = Number(config.summary && config.summary.available || 0);
@@ -3281,6 +3295,7 @@
       function renderInventoryMatrix(config) {
         var mode = config.inventoryMode || ['按人售卖', 'tag tag-blue'];
         setTag(inventoryModeTag, mode[0], mode[1]);
+        if (config.typeKey === 'cruise') { window.CaesarCruiseDetail.renderMatrix(config); return; }
         if (config.typeKey === 'project') {
           var projectHead = ['分组', '计划人数', '名单进度', '资料状态', '资源确认', '备注'];
           var projectBody = (config.inventoryMatrix || []).map(function (item) {
@@ -4802,6 +4817,7 @@
       }
 
       function rosterTrafficCell(typeKey, order, index) {
+        if (typeKey === 'cruise') return window.CaesarCruiseRoster.trafficCell(index);
         var tickets = currentTrafficTickets();
         var ticket = tickets.find(function (item) { return item.orderNo === order.no; }) || tickets[index % Math.max(tickets.length, 1)] || {};
         var status = ticket.status || (typeKey === 'cruise' || typeKey === 'train' ? '待确认' : '待出票');
@@ -4811,13 +4827,14 @@
 
       function rosterViewForRow(config, roster, row, index) {
         var orders = ordersFor(config).map(normalizeOrderView);
-        var order = orders[index % Math.max(orders.length, 1)] || {};
+        var orderIndex = config.typeKey === 'cruise' ? window.CaesarCruiseRoster.orderIndex(index) : index % Math.max(orders.length, 1);
+        var order = orders[orderIndex] || {};
         var typeKey = (config && config.typeKey) || 'group';
         var text = row.map(plainCellText).join(' ') + ' ' + (order.no || '') + ' ' + (order.customer || '');
         var status = rosterStatusFromText(text);
         return {
           index: index,
-          orderIndex: index % Math.max(orders.length, 1),
+          orderIndex: orderIndex,
           order: order,
           person: plainCellText(row[1]) || plainCellText(row[2]) || '-',
           source: plainCellText(row[row.length - 2]) || order.channel || '-',
@@ -4829,6 +4846,7 @@
       }
 
       function rosterMatchesFilter(view, filter) {
+        if (activeDetailConfig.typeKey === 'cruise') return window.CaesarCruiseRoster.matchesFilter(view, filter);
         if (filter === 'doc') return /证件|护照|实名|资料|通过/.test(view.text);
         if (filter === 'progress') return /签证|船票|值机|分铺|告知书|确认号|出票|待确认/.test(view.text);
         if (filter === 'special') return /素食|轮椅|儿童|相邻|照护|过敏|特殊|单人|下铺|座椅|房型/.test(view.text);
@@ -4863,12 +4881,14 @@
         document.getElementById('rosterHandleStatus').innerHTML = tagHtml(view.status, view.statusTag);
         document.getElementById('rosterHandleOwner').textContent = (view.source || '-') + ' / ' + (view.order.sales || '-');
         document.getElementById('rosterHandleRemark').value = '';
+        if (activeDetailConfig.typeKey === 'cruise') window.CaesarCruiseRoster.openPerson(Number(index));
         window.caesarUI.openLayer(rosterHandleDrawer);
       }
 
       function renderRoster(config) {
         var roster = config.roster || detailConfigs.group.roster;
         var typeKey = (config && config.typeKey) || 'group';
+        if (typeKey === 'cruise') window.CaesarCruiseRoster.mount(config, ordersFor(config).map(normalizeOrderView), function () { renderRoster(config); });
         var unit = rosterPeopleUnit(config);
         var specialCount = roster.special || ((roster.specialNeeds || []).reduce(function (sum, row) {
           var match = String(row[1] || '').match(/\d+/);
@@ -4894,6 +4914,7 @@
           return rosterViewForRow(config, roster, row, index);
         });
         renderRosterRows();
+        if (typeKey === 'cruise') window.CaesarCruiseRoster.render();
       }
 
       function renderFiles(config) {
@@ -4982,7 +5003,7 @@
         setText('openTrafficProcurement', isProject ? '查看采购' : '查看采购');
         setText('openEditSchedule', isProject ? '编辑项目团' : '编辑');
         setText('openCancelSchedule', isProject ? '取消项目团' : '取消团期');
-        setHidden('openAddScheduleCost', !isProject);
+        setHidden('openAddScheduleCost', true);
         setHidden('openSettlementHandoff', !isProject);
         setHidden('openTrafficOrders', isProject);
         setHidden('openTrafficReturn', isProject);
@@ -5570,6 +5591,7 @@
         setText('drawerOrderScheduleLabel', '关联' + objectName);
         document.getElementById('summaryProduct').textContent = scheduleData.product + '·' + duration + '天' + nights + '晚';
         document.getElementById('summaryRoutePlan').textContent = scheduleData.route || '-';
+        if (pageParams.get('type') === 'cruise' && !addonPriceRows.dataset.cruiseDatesReady) { addonPrices.forEach(function(item) { item.start = scheduleData.depart; item.end = scheduleData.back; }); addonPriceRows.dataset.cruiseDatesReady = 'true'; renderAddonPrices(); }
         document.getElementById('summaryDepart').textContent = dateWithWeek(scheduleData.depart);
         document.getElementById('summaryReturn').textContent = scheduleData.back;
         setTag(document.getElementById('summarySaleStatus'), scheduleData.saleStatus, saleStatusClass(scheduleData.saleStatus) + ' tag-lg');
@@ -6028,6 +6050,7 @@
       }
 
       function recomputeSeatReleaseState(config) {
+        if (config.typeKey === 'cruise') { window.CaesarCruiseDetail.recompute(config, config === activeDetailConfig ? scheduleData : null); return; }
         var releasedByChannel = {};
         var totalReleased = 0;
         Object.keys(config.releaseBatches || {}).forEach(function (inventoryNo) {
@@ -6164,8 +6187,8 @@
         refreshScheduleSummary();
         closeScheduleLayer(releaseModal);
         releaseSubmitting = false;
-        setText('successTitle', '原渠道名额已归还');
-        setText('successText', transactionNo + ' 已释放 ' + total + (validation.updates[0].record.unit || scheduleData.unit) + '，归还至' + channels.join('、') + '；采购数量及已付款未变。');
+        setText('successTitle', config.typeKey === 'cruise' ? '锁定舱房已释放' : '原渠道名额已归还');
+        setText('successText', transactionNo + ' 已释放 ' + total + (validation.updates[0].record.unit || scheduleData.unit) + (config.typeKey === 'cruise' ? '，回到原可售来源；已售、采购量及已付款未变。' : '，归还至' + channels.join('、') + '；采购数量及已付款未变。'));
         window.caesarUI.openLayer(successModal);
       }
 
@@ -6339,6 +6362,7 @@
         var rosterOrderButton = event.target.closest('[data-roster-order]');
         if (importButton) {
           event.preventDefault();
+          if (activeDetailConfig.typeKey === 'cruise') { window.CaesarCruiseRoster.openImport(); return; }
           document.getElementById('successTitle').textContent = activeDetailConfig.typeKey === 'project' ? '项目名单导入任务已创建' : '名单导入任务已创建';
           document.getElementById('successText').textContent = activeDetailConfig.typeKey === 'project'
             ? '已创建客户名单导入任务，导入后会更新项目名单、分房分车和资源确认口径。'
@@ -6356,6 +6380,7 @@
         }
         if (button) {
           closeRosterExportMenu();
+          if (activeDetailConfig.typeKey === 'cruise') { window.CaesarCruiseRoster.exportRoster(button.dataset.rosterExport); return; }
           document.getElementById('successText').textContent = button.dataset.rosterExport + '导出任务已创建。';
           window.caesarUI.openLayer(successModal);
         }
@@ -6539,6 +6564,7 @@
 
       document.getElementById('saveRosterHandle').addEventListener('click', function () {
         if (!currentRosterAction) return;
+        if (activeDetailConfig.typeKey === 'cruise') window.CaesarCruiseRoster.savePerson();
         closeScheduleLayer(rosterHandleDrawer);
         document.getElementById('successTitle').textContent = '名单处理已记录';
         document.getElementById('successText').textContent = currentRosterAction.person + ' 的名单处理记录已保存，可在操作日志中追溯。';
@@ -6788,17 +6814,23 @@
     })();
   </script>
   <script src="../../shared/schedule-visa-detail.js"></script>
+  <script src="../../shared/cruise-transfer.js"></script>
   <script src="../../shared/schedule-whole-transfer.js"></script>
   <script src="../../shared/schedule-change-handoff.js"></script>
-<script src="../../shared/mice-prototype-model.js?v=activity-flow-sync-20261021"></script>
-<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-work-model.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-data.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-ui.js?v=mice-demo-20261009"></script>
-<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/mice-projects.js?v=activity-flow-sync-20261021"></script><script src="../../shared/fulfillment-cost-editor.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-payments.js?v=mice-terms-20261009"></script><script src="../../shared/mice-agreements.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-activity-dates.js?v=mice-terms-20261009"></script><script src="../../shared/mice-project-detail.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-activities.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-settlement.js?v=activity-flow-sync-20261021"></script>
+<script src="../../shared/mice-prototype-model.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-work-model.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-data.js?v=settlement-ready-demos-20261024"></script><script src="../../shared/mice-prototype-ui.js?v=detail-unification-20261024"></script><script src="../../shared/mice-budget-model.js?v=budget-control-20261024-2"></script><script src="../../shared/mice-budget-ui.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/mice-projects.js?v=budget-control-20261024-2"></script><script src="../../shared/fulfillment-cost-editor.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-payments.js?v=mice-terms-20261009"></script><script src="../../shared/mice-agreements.js?v=order-workspace-20261024-r2"></script><script src="../../shared/mice-activity-dates.js?v=mice-terms-20261009"></script><script src="../../shared/mice-project-detail.js?v=budget-control-20261024-2"></script><script src="../../shared/mice-activities.js?v=detail-boundary-20261024"></script><script src="../../shared/mice-settlement.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-roster.js?v=detail-boundary-20261024"></script>
+<script src="../../shared/mice-execution-detail.js?v=detail-boundary-20261024"></script>
 <script src="../../shared/mice-changes.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-access.js?v=group-form-actions-20261021-r2"></script><script src="../../shared/mice-project-work.js?v=activity-four-states-20261021"></script>
+<script src="../../shared/mice-access.js?v=group-form-actions-20261021-r2"></script><script src="../../shared/mice-project-work.js?v=order-workspace-20261024-r2"></script>
 <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script>
-<script src="../../shared/mice-finance.js?v=mice-terms-20261009"></script>
+<script src="../../shared/mice-finance.js?v=application-scope-20261024"></script>
 <script src="../../shared/mice-einvoice.js"></script>
 <script src="../../shared/mice-billing.js?v=activity-four-states-20261021"></script>
+<script src="../../shared/mice-project-flow.js?v=budget-control-20261024-2"></script>
+<link rel="stylesheet" href="../../shared/mice-order-entry.css?v=order-workspace-20261024">
+<script src="../../shared/mice-order-entry.js?v=budget-control-20261024-2"></script>
 </body>
 </html>

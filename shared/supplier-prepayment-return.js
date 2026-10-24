@@ -120,6 +120,8 @@
     }
     function renderDrawer() {
       var r = active.get(), a = r.applications.find(function (v) { return v.id === selectedId; }), editable = mode === 'apply';
+      var cruiseLimit=root.CruisePrepayment&&root.CruisePrepayment.refundLimit(r.id);
+      if(cruiseLimit!=null&&editable){r=Object.assign({},r,{totals:Object.assign({},r.totals,{available:cruiseLimit}),payments:r.payments.map(function(p){return Object.assign({},p,{available:Math.min(p.available,cruiseLimit)});})});}
       layer._sprDirty = false;
       var title = editable ? '申请预付退回' : mode === 'history' ? '预付退回详情' : '预付款详情';layer.querySelector('.spr-title').dataset.drawerTitleLocked=title;layer.querySelector('.spr-title').textContent=title;
       var error = '<div class="spr-error" role="alert" hidden></div>';
@@ -141,7 +143,7 @@
     footer.addEventListener('click', function(e) {
       var link=e.target.closest('a');if(link&&layer._sprDirty){e.preventDefault();askDiscard(layer,function(){location.href=link.href;});return;}
       try {
-        if(e.target.closest('[data-spr-submit]')) { var r=active.get(); var updated=active.apply(r.version,{reason:body.querySelector('#sprReason').value,attachments:Array.from(body.querySelector('#sprApplyFiles').files).map(function(f){return f.name;}),lines:Array.from(body.querySelectorAll('[data-spr-apply]')).map(function(n){return {paymentId:n.dataset.sprApply,amount:n.value||'0'};})}); selectedId=updated.applications[0].id;mode='history';renderDrawer();refreshRows();refreshPanel();notify('退回申请已生成，待退款到账'); }
+        if(e.target.closest('[data-spr-submit]')) { var r=active.get(); if(root.CruisePrepayment) root.CruisePrepayment.guardRefund(r.id,Array.from(body.querySelectorAll('[data-spr-apply]')).reduce(function(n,input){return n+(Number(input.value)||0);},0)); var updated=active.apply(r.version,{reason:body.querySelector('#sprReason').value,attachments:Array.from(body.querySelector('#sprApplyFiles').files).map(function(f){return f.name;}),lines:Array.from(body.querySelectorAll('[data-spr-apply]')).map(function(n){return {paymentId:n.dataset.sprApply,amount:n.value||'0'};})}); selectedId=updated.applications[0].id;mode='history';renderDrawer();refreshRows();refreshPanel();notify('退回申请已生成，待退款到账'); }
         if(e.target.closest('[data-spr-cancel]')) { active.cancel(active.get().version,{applicationId:selectedId,reason:body.querySelector('#sprCancelReason').value});renderDrawer();refreshRows();refreshPanel();notify('申请已撤销，可退金额已释放'); }
       } catch(error) { var el=body.querySelector('.spr-error');el.textContent=error.message;el.hidden=false; }
     });
@@ -149,7 +151,10 @@
       var session=makeSession(row);
       if (!session) { notify('外币预付退回口径待财务确认，暂不提交'); return true; }
       if (row.dataset.status === '已关闭' && view === 'apply') {notify('预付单已关闭，不能申请退回');return true;}
-      active=session;selectedId=null;mode=view||'apply';renderDrawer();openLayer(layer);return true;
+      active=session;selectedId=null;mode=view||'apply';renderDrawer();
+      var limit=root.CruisePrepayment&&root.CruisePrepayment.refundLimit(row.dataset.prepayNo);
+      if(mode==='apply'&&limit!=null){var input=body.querySelector('[data-spr-apply]');if(input){input.value=limit;input.max=limit;}body.querySelector('#sprApplyTotal').textContent=cash(limit);body.querySelector('#sprReason').value='船方确认退还未分配的包舱预付（演示）';var note=document.createElement('p');note.className='form-hint';note.textContent='未分配可退 '+cash(limit)+'；已分摊到航次的金额先调整用途。';body.querySelector('.spr-error').after(note);}
+      openLayer(layer);return true;
     }
     function refreshRows() {
       var r=sample.get(); sampleRow.dataset.offset=cash(r.totals.offset);sampleRow.dataset.balance=cash(r.totals.balance);

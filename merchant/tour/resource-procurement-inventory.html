@@ -767,6 +767,9 @@
 
   </div>
   <script src="../../shared/procurement-quantity-change.js"></script>
+  <link rel="stylesheet" href="../../shared/cruise-supply.css">
+  <script src="../../shared/cruise-supply.js"></script>
+  <script src="../../shared/cruise-procurement-supply.js"></script>
   <script>
     (function () {
       var currentDate = new Date('2026-07-06T00:00:00');
@@ -1146,6 +1149,8 @@
         payments: [{node:'一压',dueDate:'2026-10-01',amount:50000,ratio:50,applyNo:'',approvalStatus:'待申请',paymentStatus:'未付款',receiptStatus:'-',ncStatus:'待生成'}],
         allocations: [], tickets: [], losses: [], changeOrders: [], feeAdjustments: [], returns: []
       });
+
+      if (activeKind === 'cruise') { contracts.unshift(window.CaesarCruiseSupply.exampleContract()); schedules['邮轮'] = schedules['邮轮'].concat(window.CaesarCruiseSupply.schedules); }
 
       function $(selector, root) {
         return (root || document).querySelector(selector);
@@ -1971,6 +1976,7 @@
           var freeLossMeta = row.freeLossRate != null ? ('免损比例' + row.freeLossRate + '%') : ('免损' + row.freeLoss);
           return '<tr><td><span class="resource-procurement-main">' + escapeHtml(row.type) + '</span><span class="resource-procurement-meta">' + escapeHtml(row.subtype) + '</span></td><td><span class="resource-procurement-main">' + escapeHtml('保底' + row.guarantee + ' · 使用' + row.actual + ' · 损耗' + row.lossQty) + '</span><span class="resource-procurement-meta">' + escapeHtml(freeLossMeta + ' · 已还位' + row.returned) + '</span></td><td class="amount-strong">' + escapeHtml(money(row.amount)) + '</td><td>' + escapeHtml(row.scheduleNo) + '</td><td><span class="' + tagClass(row.status) + '">' + escapeHtml(row.status) + '</span><div class="table-action">' + action + '</div></td></tr>';
         }).join('') : '<tr><td colspan="5">暂无待确认损耗</td></tr>';
+        window.CaesarCruiseProcurement.renderDetail(contract);
       }
 
       function openDetail(contractNo, tab, actionTitle) {
@@ -2416,6 +2422,7 @@
         }).join('');
         fillAllocationScheduleSummary();
         updateAllocationTotal();
+        window.CaesarCruiseProcurement.prepareAllocation(contract);
         openLayer($('#allocationDrawer'));
       }
 
@@ -2478,6 +2485,7 @@
       function saveAllocation() {
         var contract = selectedContract();
         if (!contract) return;
+        if (window.CaesarCruiseProcurement.saveAllocation(contract)) return;
         var option = $('#allocationSchedule').options[$('#allocationSchedule').selectedIndex];
         var scheduleNo = $('#allocationSchedule').value;
         var scheduleName = option ? option.getAttribute('data-name') : scheduleNo;
@@ -2752,12 +2760,14 @@
           return '<option value="' + escapeHtml(item.name) + '">' + escapeHtml(item.name + ' / 可分配' + subtypeAvailable(item) + item.unit) + '</option>';
         }).join('');
         $('#returnQtyInput').value = 1;
+        window.CaesarCruiseProcurement.prepareReturn(contract);
         openLayer($('#returnDrawer'));
       }
 
       function saveReturn() {
         var contract = selectedContract();
         if (!contract) return;
+        if (window.CaesarCruiseProcurement.saveReturn(contract)) return;
         var subtype = subtypeByName(contract, $('#returnSubtypeSelect').value);
         var qty = Number($('#returnQtyInput').value || 0);
         if (!subtype || !qty) {
@@ -3029,6 +3039,7 @@
         });
       });
 
+      window.CaesarCruiseProcurement.install({current:selectedContract,detail:fillDetail,list:renderContracts,toast:toast,tab:activateDetailTab,updateAllocation:updateAllocationTotal,scheduleSummary:fillAllocationScheduleSummary,daysUntil:daysUntil});
       applyKindView();
       syncCreateDefaults();
       renderContracts();

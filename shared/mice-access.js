@@ -1,5 +1,5 @@
 (function(){'use strict';const U=MiceUI,D=U.store.data;let profile='auto';const profiles={owner:{name:'张三',company:'北京凯撒',role:'负责人'},combined:{name:'李梅',company:'北京凯撒',role:'销操兼岗'},sales:{name:'陈刚',company:'北京凯撒',role:'销售'},planner:{name:'李梅',company:'北京凯撒',role:'计调'},plannerZhao:{name:'赵磊',company:'北京凯撒',role:'计调'},plannerWang:{name:'王芳',company:'北京凯撒',role:'计调'},collaborator:{name:'周伟',company:'北京凯撒',role:'协作查看'},approver:{name:'刘总监',company:'北京凯撒',role:'审批人'},finance:{name:'财务复核员',company:'北京凯撒',role:'财务'},foreign:{name:'福建协作',company:'福建凯撒',role:'协作查看'}};
-function current(){return profile==='auto'?profiles[location.pathname.includes('/finance/')?'finance':location.pathname.includes('/approval/')?'approver':location.pathname.includes('/sales/')?'sales':'owner']:profiles[profile]||profiles.owner;}
+function current(){return {...(profile==='auto'?profiles[location.pathname.includes('/finance/')?'finance':location.pathname.includes('/approval/')?'approver':location.pathname.includes('/sales/')?'sales':'owner']:profiles[profile]||profiles.owner),superAdmin:true};}
 function allowed(action,project){
  if(['cost-search','cost-reset','cost-clear-activity'].includes(action))return true;
  const p=project||contextProject();

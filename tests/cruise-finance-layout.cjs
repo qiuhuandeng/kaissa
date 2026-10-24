@@ -1,0 +1,23 @@
+const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'docs/evidence/cruise-integration-step5-20261023'),checks=[],errors=[];
+const server=http.createServer((req,res)=>{try{let rel=decodeURIComponent(new URL(req.url,'http://x').pathname).slice(1),baseline=rel.startsWith('__before/');if(baseline)rel=rel.slice(9);const backup=path.join('/tmp/caissa-cruise-step5-before',rel),f=baseline&&fs.existsSync(backup)?backup:path.join(root,rel);res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(baseline&&!fs.existsSync(backup)?execFileSync('git',['show','HEAD:'+rel],{cwd:root}):fs.readFileSync(f));}catch{res.writeHead(404);res.end();}});
+const wait=p=>p.waitForTimeout(500);
+async function main(){await new Promise(r=>server.listen(0,'127.0.0.1',r));const b=await chromium.launch({channel:'chrome',headless:true}),host='http://127.0.0.1:'+server.address().port;
+try{
+ const p=await b.newPage();p.setDefaultTimeout(6500);p.on('pageerror',e=>errors.push(e.message));
+ const go=async rel=>{await p.goto(host+'/'+rel);await wait(p);};
+ async function capture(name,width){const bounds=await p.evaluate(()=>{const drawer=[...document.querySelectorAll('.modal-overlay.show .drawer-modal')].find(n=>n.getBoundingClientRect().width);const r=drawer?.getBoundingClientRect();return {width:innerWidth,body:document.documentElement.scrollWidth,drawer:r&&{left:r.left,right:r.right,width:r.width},tables:[...(drawer||document).querySelectorAll('.cruise-finance-table')].filter(n=>n.offsetHeight).map(n=>({container:n.clientWidth,scroll:n.scrollWidth,parent:n.parentElement.clientWidth})),head:[...document.querySelectorAll('.list-page-head')].some(n=>n.offsetHeight>0)};});assert.ok(bounds.body<=width+1);assert.ok(!bounds.head);assert.ok(bounds.drawer.left>=-1&&bounds.drawer.right<=width+1);assert.ok(bounds.tables.every(t=>t.container<=t.parent));await p.screenshot({path:path.join(out,name+'-'+width+'.png')});checks.push({name,width,bounds});}
+ for(const width of [1440,1024]){await p.setViewportSize({width,height:1000});
+ await go('merchant/finance/finance-prepayment-offset.html');let row=p.locator('[data-prepay-no="PP-CRU-20260701005"]');await row.locator('.table-more-toggle').click();await p.locator('.action-dropdown-menu [data-open-work="allocate"]:visible').click();await wait(p);await capture('allocation',width);assert.equal(await p.locator('#workAllocateAmount').isVisible(),false);
+ await p.locator('#workSubmitButton').click();await wait(p);await row.locator('[data-open-detail]').click();await wait(p);await capture('prepayment-detail',width);await p.locator('#prepaymentDetailDrawer [data-close-layer]').first().click();await wait(p);
+ await row.locator('.table-more-toggle').click();await p.locator('.action-dropdown-menu [data-open-work="offset"]:visible').click();await wait(p);await capture('offset',width);
+ await go('merchant/tour/fulfillment-cost.html?scheduleNo=CZ20261112001');await capture('cost-editor',width);
+ await go('merchant/tour/fulfillment-cost.html?scheduleNo=CZ20261112002');await p.locator('[data-settlement-doc-tab="cost"]').click();await capture('settlement-cost',width);
+ await go('merchant/finance/finance-settlement-adjustment.html?adjustmentNo=ADJ-CRU-20261121-020');await p.locator('[data-detail-tab="amount"]').click();await capture('adjustment',width);
+ }
+ // 原记录与修改前页面逐项比较；新增演示团不计入原数据。
+ for(const [rel,selector] of [['merchant/finance/finance-prepayment-offset.html','#prepaymentRows tr[data-prepay-no="PP-AIR-20260618001"],#prepaymentRows tr[data-prepay-no="PP-HOTEL-20260528002"]'],['merchant/tour/fulfillment-cost.html','#scheduleCostRows tr:nth-child(-n+9)']]){await go('__before/'+rel);const before=await p.locator(selector).evaluateAll(ns=>ns.map(n=>n.outerHTML));await go(rel);const after=await p.locator(selector).evaluateAll(ns=>ns.map(n=>n.outerHTML));assert.deepEqual(after,before);checks.push({name:'原记录DOM保持：'+rel,count:before.length});}
+ await go('merchant/tour/fulfillment-cost.html?scheduleNo=EU20260818001');assert.equal(await p.locator('#cruiseCostEditor').isVisible(),false);assert.equal(await p.locator('#groupCostRows [data-group-cost-field="currency"]').inputValue(),'CNY');checks.push({name:'普通跟团原成本表单保持'});
+ assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,'layout.json'),JSON.stringify({passed:checks.length,checks,errors},null,2));console.log(JSON.stringify({passed:checks.length,errors}));
+}finally{await b.close();server.close();}}
+main().catch(e=>{console.error(e);server.close();process.exitCode=1;});

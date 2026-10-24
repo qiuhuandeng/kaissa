@@ -6,12 +6,14 @@
   <title>团期结算 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css?v=settlement-tax-20261021">
   <link rel="stylesheet" href="../../shared/air-internal-cost.css?v=20261017-receipt1">
+  <link rel="stylesheet" href="../../shared/cruise-finance.css">
   <script src="../../shared/air-business-model.js?v=20261018-review-fixes1"></script>
   <script src="../../shared/air-internal-cost-model.js?v=20261017-superadmin1"></script>
 <script src="../../shared/fulfillment-cost-core.js"></script>
+  <link rel="stylesheet" href="../../shared/mice-settlement-host.css?v=all-settlement-details-20261024">
 </head>
 <body>
-  <script src="../../shared/nav-merchant.js?v=20261017-receipt1"></script>
+  <script src="../../shared/nav-merchant.js?v=project-procurement-20261024"></script>
 
   <section class="list-page-panel">
     <div class="list-page-head">
@@ -38,13 +40,14 @@
       <section class="filter-card filter-card-compact fulfillment-cost-filter list-surface-filter" aria-label="团期结算筛选">
         <div class="list-surface-filter-actions list-filter-pinned-actions">
           <div class="btn-group">
+            <button id="openProjectCosts" class="btn btn-secondary" type="button">项目费用</button>
             <button id="openBatchCostAction" class="btn btn-secondary" type="button">批量操作</button>
           </div>
         </div>
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="costKeyword">团期/项目团/线路/客户/供应商</label><input id="costKeyword" type="search" placeholder="团期/项目团/线路/客户/供应商"></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="costType">成团类型</label><select id="costType"><option>全部类型</option><option>普通团期</option><option>邮轮团期</option><option>专列团期</option><option>研学团期</option><option>项目团</option></select></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="costProgress">当前进度</label><select id="costProgress"><option>全部进度</option><option>成本待维护</option><option>成本复核中</option><option>待提交</option><option>审批中</option><option>驳回待修改</option><option>新增应收/应付</option><option>二次结算中</option></select></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="costProgress">当前进度</label><select id="costProgress"><option>全部进度</option><option>成本待维护</option><option>成本复核中</option><option>待提交</option><option>草稿</option><option>审批中</option><option>驳回待修改</option><option>新增应收/应付</option><option>二次结算中</option></select></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="costOwner">负责人</label><select id="costOwner"><option>全部负责人</option><option>王芳</option><option>赵明</option><option>李铭</option><option>王强</option><option>郑华</option><option>陈刚</option><option>高明</option></select></div>
           <div class="filter-item filter-item-wide filter-item-date-range"><label class="sr-only">出发或回团日期范围</label><div class="date-range"><input type="date" aria-label="出发或回团开始日期"><span>至</span><input type="date" aria-label="出发或回团结束日期"></div></div>
           <div class="filter-actions"><button id="searchCosts" class="btn btn-secondary btn-filter-search" type="button">搜索</button><button id="resetCosts" class="btn btn-secondary" type="button">重置</button></div>
@@ -675,6 +678,8 @@
 
   <script src="../../shared/supplier-company-agreements.js"></script>
   <script src="../../shared/settlement-income-basis.js"></script>
+  <script src="../../shared/cruise-finance-model.js"></script>
+  <script src="../../shared/cruise-cost-settlement.js"></script>
   <script>
     (function () {
       var pageParams = new URLSearchParams(window.location.search);
@@ -692,6 +697,7 @@
       var settlementDocTabs = Array.from(document.querySelectorAll('[data-settlement-doc-tab]'));
       var settlementDocPanels = Array.from(document.querySelectorAll('[data-settlement-doc-panel]'));
       var activeSchedule = null;
+      var settlementDetailOnly = false;
       var activePaymentGroup = null;
       var activePaymentContext = null;
       var activePaymentRequest = null;
@@ -1099,6 +1105,7 @@
         }
       ];
 
+      CruiseCostSettlement.seed(schedules);
       schedules.forEach(function (schedule) {
         schedule.settlement.incomeRows = window.SettlementIncomeBasis.examples[schedule.id] || [];
         schedule.settlement.orders = schedule.settlement.incomeRows.length + '单';
@@ -1579,15 +1586,14 @@
 
       function scheduleDetailHref(item) {
         if (isProjectSchedule(item)) {
-          return 'schedules-detail.html?type=project&source=customProject&groupMode=project&scheduleNo=' +
-            encodeURIComponent(item.id || '') +
-            '&projectNo=' + encodeURIComponent(item.projectNo || '') +
-            '&customer=' + encodeURIComponent(item.customer || '');
+          const activity=window.MiceUI?.resolveActivity(item.miceActivityId||item.id,item.projectNo);
+          return activity?MiceUI.activityUrl(activity,{from:'settlement',returnUrl:window.MiceSettlementHost?.detailReturnUrl()||location.href}):'schedules-detail.html?type=project&scheduleNo='+encodeURIComponent(item.id||'')+'&projectNo='+encodeURIComponent(item.projectNo||'');
         }
         return 'schedules-detail.html?scheduleNo=' + encodeURIComponent(item.id || '');
       }
 
       function projectHref(item) {
+        if (item.miceActivityId) return MiceUI.url('merchant/tour/product-custom-detail.html', {id:item.projectNo});
         return 'product-custom-detail.html?projectNo=' + encodeURIComponent(item.projectNo || '') +
           '&projectName=' + encodeURIComponent(item.name || item.projectNo || '') +
           '&customer=' + encodeURIComponent(item.customer || '') +
@@ -1595,6 +1601,7 @@
       }
 
       function projectOrderHref(item) {
+        if (item.miceActivityId) return MiceUI.url('merchant/sales/orders-detail.html', {mice:1, orderNo:item.projectOrder, projectId:item.projectNo});
         return '../sales/orders-detail.html?type=project&source=customProject&orderNo=' +
           encodeURIComponent(item.projectOrder || '') +
           '&projectNo=' + encodeURIComponent(item.projectNo || '') +
@@ -1734,6 +1741,8 @@
       }
 
       function settlementProgressText(item) {
+        if (item.miceActivityId && item.settlement.status === '未开始') return '服务未完成';
+        if (item.miceActivityId && item.settlement.status === '草稿') return '草稿';
         var info = settlementInfo(item);
         var status = settlementStatus(item);
         var second = info.secondSettlement;
@@ -1833,6 +1842,7 @@
       }
 
       function receivableReceivedCell(item) {
+        if (item.miceActivityId) return MiceSettlementHost.metric(item, 'income');
         var totals = settlementTotals(item);
         if (!totals.ready) return '<span class="text-muted">订单收退依据待补</span>';
         var detail = '净收款 ' + money(totals.netReceived) + ' · 待收 ' + money(totals.unreceived);
@@ -1841,6 +1851,7 @@
       }
 
       function profitCell(item) {
+        if (item.miceActivityId) return MiceSettlementHost.metric(item, 'profit');
         var income = settlementTotals(item).settlementIncome;
         var cost = costTotal(item);
         var profit = income - cost;
@@ -1851,6 +1862,7 @@
       }
 
       function trafficPayableCell(item) {
+        if (item.miceActivityId) return MiceSettlementHost.metric(item, 'cost');
         var confirmed = item.items.filter(function (row) { return /已确认/.test(row[5] || ''); }).length;
         var progress = progressBucket(confirmed, item.items.length || 0);
         if (isProjectSchedule(item)) {
@@ -1924,23 +1936,22 @@
       }
 
       function settlementActionHtml(item) {
+        if (item.miceActivityId) return MiceSettlementHost.action(item);
         var mainStatus = settlementMainStatus(item);
-        var second = settlementInfo(item).secondSettlement;
         var id = escapeHtml(item.id);
+        var detailAttr = 'data-view-settlement="' + id + '" data-drawer-title="' + (isProjectSchedule(item) ? '项目团结算详情' : '团期结算详情') + '"';
         var buttons = [];
         function button(label, attr, primary) {
           buttons.push('<button type="button"' + (primary ? ' class="table-action-primary"' : '') + ' ' + attr + '>' + label + '</button>');
         }
         if (mainStatus === '已结算') {
-          if (hasPendingPostSettlement(item) || (second && second.status === '草稿')) {
-            button('二次结算', 'data-start-second-settlement="' + id + '"', true);
-            button('详情', 'data-view-settlement="' + id + '"');
-          } else {
-            button('详情', 'data-view-settlement="' + id + '"', true);
-          }
+          button('详情', detailAttr, true);
+        } else if (/审批中|审批通过|已通过/.test(settlementStatus(item))) {
+          button('详情', detailAttr, true);
         } else {
           button('结算', 'data-open-settlement-basis="' + id + '"', true);
           button('维护成本', 'data-open-cost="' + id + '"');
+          button('详情', detailAttr);
         }
         return '<div class="table-action">' + buttons.join('') + '</div>';
       }
@@ -1954,6 +1965,7 @@
       }
 
       function ensureLeaderCostItem(schedule) {
+        if (schedule && schedule.miceActivityId) return;
         var info = settlementInfo(schedule);
         if (!schedule || leaderCostIndex(schedule) >= 0 || info.returnStatus !== '已回团') return;
         var days = isProjectSchedule(schedule) ? '10天' : '12天';
@@ -1985,6 +1997,7 @@
       }
 
       function scheduleBatchSelectable(schedule) {
+        if (schedule && schedule.miceActivityId) return false;
         return schedule && settlementMainStatus(schedule) === '未结算';
       }
 
@@ -2021,7 +2034,7 @@
           var progressStatus = settlementProgressText(item);
           var leaderPendingStatus = leaderCostNeedsConfirm(item) ? '领队费用待确认' : '';
           var checkbox = '<input type="checkbox" data-cost-select="' + escapeHtml(item.id) + '"' + (selectable ? '' : ' disabled') + (activeBatchCostIds.indexOf(item.id) >= 0 && selectable ? ' checked' : '') + '>';
-          return '<tr data-main-status="' + escapeHtml(mainStatus) + '" data-progress-status="' + escapeHtml(progressStatus) + '" data-tab-status="' + escapeHtml([mainStatus, progressStatus, flowStatus, item.status, leaderPendingStatus].join(' ')) + '">' +
+          return '<tr data-project-keyword="' + escapeHtml(item.miceActivityId ? (item.projectNo || '') + ' ' + (item.plan || '') : '') + '" data-main-status="' + escapeHtml(mainStatus) + '" data-progress-status="' + escapeHtml(progressStatus) + '" data-tab-status="' + escapeHtml([mainStatus, progressStatus, flowStatus, item.status, leaderPendingStatus].join(' ')) + '">' +
             '<td class="settlement-cost-select-cell">' + checkbox + '</td>' +
             '<td class="settlement-cost-object-cell">' + scheduleRouteCell(item) + '</td>' +
             '<td class="settlement-cost-date-cell">' + datePeopleCell(item) + '</td>' +
@@ -3063,6 +3076,7 @@
 
       function startSecondSettlementDraft() {
         if (!activeSchedule) return;
+        if (settlementDetailOnly) { openSecondSettlementDrawer(activeSchedule.id); return; }
         activeSchedule.settlement = activeSchedule.settlement || {};
         var info = activeSchedule.settlement;
         if (!info.secondSettlement) {
@@ -3086,6 +3100,7 @@
       function openSecondSettlementDrawer(id) {
         activeSchedule = findSchedule(id);
         if (!activeSchedule) return;
+        settlementDetailOnly = false;
         ensureSecondSettlementDraft(activeSchedule);
         renderSettlementBasis(activeSchedule);
         renderScheduleCosts();
@@ -3093,6 +3108,8 @@
       }
 
       function handleSettlementPrimaryAction() {
+        if (settlementDetailOnly) { closeLayer(settlementBasisDrawer); return; }
+        if (window.MiceSettlementHost && MiceSettlementHost.save(activeSchedule, 'submit')) return;
         if (activeSchedule && settlementStatus(activeSchedule) === '已结算') {
           var second = settlementInfo(activeSchedule).secondSettlement;
           if (hasPendingPostSettlement(activeSchedule) || (second && second.status === '草稿')) {
@@ -3107,6 +3124,9 @@
 
       function openCostDrawer(id) {
         activeSchedule = findSchedule(id);
+        if (activeSchedule && activeSchedule.miceActivityId) { MiceSettlementHost.openCosts(activeSchedule); return; }
+        if (window.MiceSettlementHost) MiceSettlementHost.resetCosts();
+        if (CruiseCostSettlement.share(activeSchedule) && (CruiseCostSettlement.share(activeSchedule).locked || ['审批中', '已结算'].includes(settlementStatus(activeSchedule)))) { openSettlementBasisDrawer(id, true); return; }
         renderGroupCostDrawer(activeSchedule);
         openLayer(scheduleCostDrawer);
       }
@@ -3352,6 +3372,9 @@
           var status = attachmentStatus(item);
           var required = item.required ? item.required + '份' : '按付款结果';
           var uploaded = item.uploaded ? item.uploaded + '份' : '-';
+          var action = settlementDetailOnly
+            ? (item.uploaded ? '<button type="button" class="table-action-primary" data-toast="已打开附件查看">查看</button>' : '<span class="text-muted">暂无附件</span>')
+            : '<button type="button" class="table-action-primary" data-toast="已打开附件维护">' + escapeHtml(item.action || '查看') + '</button>';
           return '<tr>' +
             '<td>' + escapeHtml(item.type) + '</td>' +
             '<td>' + escapeHtml(required) + '</td>' +
@@ -3359,7 +3382,7 @@
             '<td>' + tag(status, status === '已齐' ? 'tag tag-green' : (status === '部分上传' ? 'tag tag-orange' : 'tag tag-gray')) + '</td>' +
             '<td>' + escapeHtml(item.latest || '-') + '</td>' +
             '<td>' + escapeHtml(item.owner || '-') + '</td>' +
-            '<td><div class="table-action"><button type="button" class="table-action-primary" data-toast="已打开附件维护">' + escapeHtml(item.action || '查看') + '</button></div></td>' +
+            '<td><div class="table-action">' + action + '</div></td>' +
           '</tr>';
         }).join('');
       }
@@ -3630,8 +3653,11 @@
       }
 
       function renderSettlementBasis(schedule) {
+        if (window.MiceSettlementHost) MiceSettlementHost.reset();
         var detailTotals = settlementTotals(schedule);
-        document.getElementById('settlementBasisTitle').textContent = settlementDocumentAction(schedule);
+        var title = document.getElementById('settlementBasisTitle');
+        title.dataset.drawerTitleLocked = settlementDetailOnly ? (isProjectSchedule(schedule) ? '项目团结算详情' : '团期结算详情') : settlementDocumentAction(schedule);
+        title.textContent = title.dataset.drawerTitleLocked;
         renderSettlementObjectSummary(schedule, detailTotals);
         renderSettlementBasicInfo(schedule, detailTotals);
         renderSecondSettlementScope(schedule);
@@ -3642,19 +3668,24 @@
         renderSettlementOrderRows(schedule);
         renderSettlementReceiptRows(schedule);
         renderSettlementPrepayRows(schedule);
+        CruiseCostSettlement.detail(schedule);
         renderSettlementChangeRows(schedule, detailTotals);
         renderSettlementAttachmentRows(schedule);
         renderSettlementHandoff(schedule, detailTotals);
         renderSettlementSummaryRows(schedule, detailTotals);
         renderSettlementRecordRows(schedule, detailTotals);
-        document.getElementById('settlementRemark').value = '';
+        var remark = document.getElementById('settlementRemark');
+        remark.value = settlementInfo(schedule).remark || '';
+        remark.readOnly = settlementDetailOnly;
+        remark.placeholder = settlementDetailOnly ? '暂无结算备注' : '记录回团资料、异常关闭、实际收退款或结算提交说明';
+        settlementBasisDrawer.querySelector('.modal-footer [data-close-modal]').hidden = settlementDetailOnly;
         document.getElementById('settlementSubmitResult').hidden = true;
         switchSettlementDocTab('overview');
         var status = settlementStatus(schedule);
         var second = settlementInfo(schedule).secondSettlement;
         var secondActionVisible = status === '已结算' && (hasPendingPostSettlement(schedule) || (second && second.status === '草稿')) && !(second && second.status === '审批中');
         var secondActionText = second && second.status === '草稿' ? '提交二次结算' : '二次结算';
-        document.getElementById('secondSettlementActions').hidden = !secondActionVisible;
+        document.getElementById('secondSettlementActions').hidden = settlementDetailOnly || !secondActionVisible;
         if (secondActionVisible) {
           var delta = currentSecondSettlementDelta(schedule);
           var title = document.querySelector('#secondSettlementActions .finance-link-title');
@@ -3662,22 +3693,32 @@
         }
         [document.getElementById('startSecondSettlement'), document.getElementById('startSecondSettlementOverview')].forEach(function (button) {
           if (!button) return;
-          button.hidden = !secondActionVisible;
-          button.textContent = secondActionText;
+          button.hidden = !secondActionVisible || settlementDetailOnly && button.id === 'startSecondSettlementOverview';
+          button.textContent = settlementDetailOnly ? (second && second.status === '草稿' ? '继续二次结算' : '二次结算') : secondActionText;
         });
         document.getElementById('saveSettlementBasis').textContent = second && second.status === '草稿' ? '保存二次结算' : '保存依据';
         document.getElementById('submitSettlementApply').textContent = status === '已结算'
           ? (second && second.status === '草稿' ? '提交二次结算' : '关闭')
           : (isProjectSchedule(schedule) ? (status === '已驳回' ? '再提交' : '提交结算') : '提交结算');
+        if (window.MiceSettlementHost) MiceSettlementHost.paint(schedule, settlementDetailOnly);
+        if (settlementDetailOnly) {
+          document.getElementById('projectSettlementActions').hidden = true;
+          document.getElementById('saveSettlementBasis').hidden = true;
+          document.getElementById('submitSettlementApply').textContent = '关闭';
+        }
       }
 
-      function openSettlementBasisDrawer(id) {
+      function openSettlementBasisDrawer(id, detailOnly) {
         activeSchedule = findSchedule(id);
+        if (!activeSchedule) return;
+        settlementDetailOnly = !!detailOnly;
         renderSettlementBasis(activeSchedule);
         openLayer(settlementBasisDrawer);
       }
 
       function saveSettlementBasisRecord() {
+        if (settlementDetailOnly) return;
+        if (window.MiceSettlementHost && MiceSettlementHost.save(activeSchedule, 'draft')) return;
         if (!activeSchedule) return;
         activeSchedule.settlement = activeSchedule.settlement || {};
         if (activeSchedule.settlement.secondSettlement && activeSchedule.settlement.secondSettlement.status === '草稿') {
@@ -3704,7 +3745,7 @@
       }
 
       function uploadProjectAcceptance() {
-        if (!activeSchedule || !isProjectSchedule(activeSchedule)) return;
+        if (settlementDetailOnly || !activeSchedule || !isProjectSchedule(activeSchedule)) return;
         activeSchedule.settlement = activeSchedule.settlement || {};
         var digits = String(activeSchedule.projectNo || activeSchedule.id).replace(/\D/g, '').slice(-8) || '20260915';
         activeSchedule.settlement.acceptanceNo = activeSchedule.settlement.acceptanceNo || ('YS-MICE-' + digits);
@@ -3718,7 +3759,7 @@
       }
 
       function supplementProjectBasis() {
-        if (!activeSchedule || !isProjectSchedule(activeSchedule)) return;
+        if (settlementDetailOnly || !activeSchedule || !isProjectSchedule(activeSchedule)) return;
         activeSchedule.settlement = activeSchedule.settlement || {};
         activeSchedule.settlement.basisStatus = projectAcceptanceReady(activeSchedule) ? '客户验收单已上传' : '结算依据已保存';
         activeSchedule.settlement.financeStatus = activeSchedule.settlement.financeStatus || '未承接';
@@ -3736,7 +3777,7 @@
       }
 
       function viewProjectActualCost() {
-        if (!activeSchedule || !isProjectSchedule(activeSchedule)) return;
+        if (settlementDetailOnly || !activeSchedule || !isProjectSchedule(activeSchedule)) return;
         var scheduleId = activeSchedule.id;
         closeLayer(settlementBasisDrawer);
         openCostDrawer(scheduleId);
@@ -3758,6 +3799,7 @@
       }
 
       function submitSettlement(id) {
+        if (settlementDetailOnly) return;
         activeSchedule = findSchedule(id || (activeSchedule && activeSchedule.id));
         var status = settlementStatus(activeSchedule);
         if (status === '审批中' || status === '已结算') {
@@ -3798,8 +3840,7 @@
       }
 
       function viewSettlement(id) {
-        activeSchedule = findSchedule(id);
-        openSettlementBasisDrawer(id);
+        openSettlementBasisDrawer(id, true);
       }
 
       function groupCostCurrencyLabel(currency) {
@@ -3876,6 +3917,7 @@
         document.getElementById('airCostReceiptLink').href = 'fulfillment-cost.html?tab=internal-air&group=' + encodeURIComponent(schedule.id);
         groupCostDrafts = [createGroupCostDraft()];
         renderGroupCostRows();
+        CruiseCostSettlement.editor(schedule);
       }
 
       function renderGroupCostRows() {
@@ -3981,6 +4023,10 @@
         catch (error) { openActionResult('供票费用不能重复手录', error.message, '其他采购的交通费用仍可正常维护。'); return; }
         var attachment = document.getElementById('groupCostAttachment').value.trim();
         var attachmentNote = document.getElementById('groupCostAttachmentNote').value.trim();
+        if (CruiseCostSettlement.share(activeSchedule) && !rows.length) {
+          try { CruiseCostSettlement.save(activeSchedule, true); } catch (error) { openActionResult('成本金额待核对', error.message, '原成本保留'); return; }
+          renderScheduleCosts(); closeLayer(scheduleCostDrawer); openActionResult('本团成本已确认', '已按本团承担金额记录，采购总额保持不变。', '原结算流程继续办理'); return;
+        }
         if (!rows.length) {
           openActionResult('成本明细必填', '请至少维护一条成本明细。', '未添加成本。');
           return;
@@ -3995,6 +4041,7 @@
           openActionResult('请选择采购公司协议', '第 ' + missingAgreement.index + ' 行需选择与实际供应商及采购公司一致、可新引用的协议。', '草稿可保留；未新增成本，不影响已发生成本及原协议。');
           return;
         }
+        if (CruiseCostSettlement.share(activeSchedule)) { try { CruiseCostSettlement.save(activeSchedule, true); } catch (error) { openActionResult('成本金额待核对', error.message, '原成本保留'); return; } }
         rows.forEach(function (data) {
           var costSource = groupCostAutoSource(activeSchedule);
           var generatedStatus = groupCostAutoStatus(activeSchedule);
@@ -4556,13 +4603,18 @@
         var progress = document.getElementById('costProgress').value;
         var owner = document.getElementById('costOwner').value;
         panelRows('#scheduleCostPanel').forEach(function (row) {
-          var text = row.textContent.toLowerCase();
+          var text = (row.textContent + ' ' + (row.dataset.projectKeyword || '')).toLowerCase();
           var matchKeyword = !keyword || text.indexOf(keyword) >= 0;
           var matchType = type === '全部类型' || row.textContent.indexOf(type) >= 0;
           var matchStatus = status === '全部状态' || row.dataset.mainStatus === status;
           var matchProgress = progress === '全部进度' || String(row.dataset.progressStatus || '').indexOf(progress) >= 0;
           var matchOwner = owner === '全部负责人' || row.textContent.indexOf(owner) >= 0;
           row.hidden = !(matchKeyword && matchType && matchStatus && matchProgress && matchOwner);
+        });
+        var matchedCount = panelRows('#scheduleCostPanel').filter(function (row) { return !row.hidden; }).length;
+        document.getElementById('scheduleCostPagination').textContent = matchedCount ? '第1-' + matchedCount + '条/共' + matchedCount + '条' : '共0条';
+        document.querySelectorAll('#scheduleCostPanel a[href*="schedules-detail.html"]').forEach(function(link){
+          const u=new URL(link.href,location.href);if(u.searchParams.get('mice')==='1'&&window.MiceSettlementHost){u.searchParams.set('returnUrl',MiceSettlementHost.detailReturnUrl());link.href=u.href;}
         });
         updateBatchCostSelection();
       }
@@ -4589,8 +4641,7 @@
         document.getElementById('costProgress').value = '全部进度';
         document.getElementById('costOwner').value = '全部负责人';
         syncSettlementMainTabs();
-        panelRows('#scheduleCostPanel').forEach(function (row) { row.hidden = false; });
-        updateBatchCostSelection();
+        filterScheduleCosts();
       }
 
       function filterPaymentWorkbench() {
@@ -4636,6 +4687,7 @@
         var settlementDocTab = event.target.closest('[data-settlement-doc-tab]');
         var openCost = event.target.closest('[data-open-cost]');
         var openSettlementBasis = event.target.closest('[data-open-settlement-basis]');
+        var openProjectSettlementDetail = event.target.closest('[data-open-project-settlement-detail]');
         var viewSettlementButton = event.target.closest('[data-view-settlement]');
         var startSecondSettlementButton = event.target.closest('[data-start-second-settlement]');
         var openPaymentCreateButton = event.target.closest('[data-open-payment-create]');
@@ -4663,6 +4715,10 @@
         }
         if (openCost) {
           openCostDrawer(openCost.dataset.openCost);
+          return;
+        }
+        if (openProjectSettlementDetail) {
+          openSettlementBasisDrawer(openProjectSettlementDetail.dataset.openProjectSettlementDetail, true);
           return;
         }
         if (openSettlementBasis) {
@@ -4773,6 +4829,9 @@
       document.getElementById('batchCostMode').addEventListener('change', renderBatchCostPreview);
       document.getElementById('applyBatchCostAction').addEventListener('click', applyBatchCostAction);
       document.getElementById('saveScheduleCost').addEventListener('click', function () {
+        if (CruiseCostSettlement.share(activeSchedule)) {
+          try { CruiseCostSettlement.save(activeSchedule, false); renderScheduleCosts(); CruiseCostSettlement.editor(activeSchedule); } catch (error) { openActionResult('成本金额待核对', error.message, '原成本保留'); return; }
+        }
         openActionResult('草稿已保留', '当前成本明细已保留在抽屉中。', '点击提交后写入成本明细。');
       });
       document.getElementById('submitScheduleCost').addEventListener('click', submitGroupCostForm);
@@ -4892,6 +4951,15 @@
         });
       });
 
+      window.ProjectSettlementPage = {
+        schedules: schedules, open: openSettlementBasisDrawer,
+        openCosts: openCostDrawer,
+        showCostShell: function (schedule) { activeSchedule = schedule || null; openLayer(scheduleCostDrawer); },
+        refresh: function () { renderScheduleCosts(); filterScheduleCosts(); },
+        repaint: function () { if (activeSchedule) renderSettlementBasis(activeSchedule); },
+        close: function () { closeLayer(settlementBasisDrawer); },
+        totals: settlementTotals, tab: switchSettlementDocTab
+      };
       renderScheduleCosts();
       renderPayableCosts();
       renderPaymentRecords();
@@ -4925,13 +4993,15 @@
 <script src="../../shared/supplier-adjustment-model.js"></script>
 <script src="../../shared/supplier-adjustment-ui.js"></script>
 <script src="../../shared/supplier-reconciliation.js"></script>
-<script src="../../shared/mice-prototype-model.js?v=activity-flow-sync-20261021"></script>
-<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-prototype-data.js?v=activity-four-states-20261021"></script><script src="../../shared/mice-prototype-ui.js?v=mice-demo-20261009"></script>
-<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/fulfillment-cost-editor.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-payments.js?v=mice-terms-20261009"></script><script src="../../shared/mice-settlement.js?v=activity-flow-sync-20261021"></script>
+<script src="../../shared/mice-prototype-model.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-prototype-data.js?v=settlement-ready-demos-20261024"></script><script src="../../shared/mice-prototype-ui.js?v=detail-unification-20261024"></script><script src="../../shared/mice-budget-model.js?v=budget-control-20261024-2"></script><script src="../../shared/mice-budget-ui.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/fulfillment-cost-editor.js?v=budget-control-20261024-2"></script>
+<script src="../../shared/mice-payments.js?v=mice-terms-20261009"></script><script src="../../shared/mice-settlement.js?v=budget-control-20261024-2"></script>
 <script src="../../shared/mice-changes.js?v=activity-four-states-20261021"></script>
 <script src="../../shared/mice-access.js?v=settlement-tax-20261021"></script>
 <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script>
+<script src="../../shared/mice-settlement-host.js?v=budget-control-20261024-2"></script>
 <script src="../../shared/air-internal-cost-ui.js?v=20261017-superadmin1"></script>
+<script src="../../shared/mice-project-flow.js?v=budget-control-20261024-2"></script>
 </body>
 </html>
