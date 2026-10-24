@@ -6,8 +6,14 @@
   <title>新建订单 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
   <link rel="stylesheet" href="../../shared/cruise-sales.css">
+  <script src="../../shared/cruise-resource-catalog.js"></script>
+  <script src="../../shared/cruise-purchase-model.js"></script>
+  <script src="../../shared/cruise-inventory-model.js"></script>
+  <script src="../../shared/cruise-sales-supply.js"></script>
   <script src="../../shared/cruise-sales-rules.js"></script>
   <script src="../../shared/cruise-booking.js"></script>
+  <script src="../../shared/schedule-route-catalog.js"></script>
+  <script src="../../shared/team-booking-rules.js?v=20261024"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -1422,7 +1428,17 @@
 
       const cruiseBooking = window.CaesarCruiseBooking;
       const cruiseRules = window.CaesarCruiseSalesRules;
-      function cruiseRates(row) { return cruiseRules.tariff(row.spec, priceRowsForSpec(row.spec)); }
+      const cruiseSupply = window.CaesarCruiseSalesSupply;
+      let cruiseReservationBefore=null;
+      function cruiseContext() { const stock=selectedStock();return cruiseSupply.context({voyage:pageParams.get('voyage') || (/^HC-/.test(stock[1])?stock[1]:''),date:stock[0],product:pageParams.get('cruiseProduct'),schedule:pageParams.get('scheduleNo'),channel:channelSource.value}); }
+      function cruiseRates(row) { return cruiseSupply.rates(cruiseContext(),row.spec) || {...cruiseRules.tariff(row.spec,priceRowsForSpec(row.spec)),unconfirmed:true}; }
+      function prepareCruiseProduct() {
+        if(currentProduct.type!=='cruise'||isManualMode())return;
+        const c=cruiseContext(),rows=cruiseSupply.stockRows(c.product,c.v?.ship||'ideal');
+        if(c.v&&pageParams.get('cruiseProduct')){currentProduct.name=c.p.name;currentProduct.meta=(window.CaesarCruiseResources.ships.find(s=>s.id===c.v.ship)?.name||c.v.ship)+' / '+c.v.days+'天';}
+        if(rows.length)currentProduct.stocks=rows;
+        if(c.v&&presetStockOverride){const price=cruiseSupply.rates(c,c.stocks[0]?.code);presetStockOverride=[c.v.date,pageParams.get('scheduleNo')||c.v.id,'航次余'+c.stocks.reduce((n,st)=>n+window.CaesarCruiseInventory.count(c.s,st).available,0)+'间',price?.first||0,['预售','在售'].includes(c.v.status)?c.v.status:'已关闭','tag tag-blue'];}
+      }
 
       function usesCompositionRows() {
         return !isManualMode() && currentProduct && ['cruise', 'train', 'free'].indexOf(currentProduct.type) >= 0 && currentProduct.priceMatrix && currentProduct.priceMatrix.rows;
@@ -1440,6 +1456,7 @@
 
       function compositionOptions() {
         if (!usesCompositionRows()) return [];
+        if(currentProduct.type==='cruise'){const c=cruiseContext();if(c.stocks.length)return c.stocks.map(cruiseSupply.name);}
         return Object.keys(currentProduct.priceMatrix.rows || {});
       }
 
@@ -1506,7 +1523,7 @@
       }
 
       function ensureCompositionRows() {
-        if (currentProduct.type === 'cruise') cruiseBooking.context(selectedPlanName());
+        if (currentProduct.type === 'cruise') {cruiseBooking.context(selectedPlanName());cruiseBooking.supply(cruiseContext());}
         if (!usesCompositionRows()) {
           saleCompositionRows = [];
           return;
@@ -2038,6 +2055,7 @@
       }
 
       function channelQuotaSnapshot() {
+        if(currentProduct.type==='cruise'){const c=cruiseContext(),items=saleCompositionRows.map(r=>cruiseSupply.allowance(c,r.spec));return {channel:c.channel,allocated:items.reduce((n,a)=>n+a.physical,0),used:0,available:items.reduce((n,a)=>n+a.available,0),quantity:occupancyQuantitySnapshot(),unit:'间'};}
         const samples = {
           '门店': { allocated: 5, used: 3 },
           '直客': { allocated: 5, used: 4 },
@@ -2059,6 +2077,8 @@
       function renderChannelQuota() {
         const target = document.getElementById('bookingChannelQuota');
         if (!target) return;
+        if(currentProduct.type==='cruise'&&!isManualMode()){target.dataset.cruiseSupply='';target.hidden=!hasSaleObject;target.innerHTML=cruiseSupply.summary(cruiseContext(),saleCompositionRows);return;}
+        delete target.dataset.cruiseSupply;
         if (isManualMode()) {
           target.hidden = true;
           target.innerHTML = '';
@@ -2087,7 +2107,7 @@
         const createdAt = dateTimeText();
         const confirmedAt = process.status === '已确认' ? createdAt : '';
         const ownership = businessOwnershipSnapshot();
-        const quota = channelQuotaSnapshot();
+        const quota = cruiseReservationBefore || channelQuotaSnapshot();
         const createsOccupation = ['已确认', '占位', '预留'].indexOf(process.status) >= 0 && !isManualMode();
         const occupation = {
           recordNo: createsOccupation ? 'ZY-' + orderNo : '',
@@ -2363,6 +2383,7 @@
 
       function renderAll() {
         if (isManualMode()) refreshManualProduct();
+        prepareCruiseProduct();
         renderPlanCards();
         renderCoreFields();
         applySelectedPriceMatrix();
@@ -2562,6 +2583,7 @@
       }
 
       function updateChannelFields() {
+        if(currentProduct.type==='cruise'&&hasSaleObject){renderCounts();renderFee();}
         const source = channelSource.value;
         distributorField.hidden = source !== '分销';
         distributorMemberField.hidden = source !== '分销';
@@ -2636,7 +2658,7 @@
       function submissionIssues() {
         const mode = processingMode();
         if (mode === 'draft') return [];
-        const issues = [];
+        const issues = window.TeamBookingRules.issues({type:currentProduct.type,mode,stock:selectedStock(),stocks:currentProduct.stocks,catalog:window.caesarScheduleRouteCatalog});
         const relation = crossCompanyRelation();
         const arrangement = crossArrangement();
         if (relation && (!arrangement || !['instant', 'request'].includes(arrangement.confirmation))) issues.push('资源确认方式尚未明确');
@@ -2645,11 +2667,7 @@
           const cruiseStock = selectedStock();
           if (/停售|未发布|已关闭|不可售/.test(cruiseStock[4] || '')) issues.push('所选航次当前不可售');
           if (mode === 'pending') return issues;
-          const quota = channelQuotaSnapshot();
-          if (quota.quantity > quota.available) issues.push(quota.channel + '渠道可用舱房不足，请提交待确认');
-          if (presetStockOverride && !currentProduct.stocks.some(stock => presetStockOverride[1].includes(stock[1]))) issues.push('所选航次舱房余量尚待确认');
-          const availability = [{ '阳台舱 BA': 8, '海景 OV': 12, '内舱 IC': 10, '套房 SU': 2 }, { '阳台舱 BA': 6, '海景 OV': 12, '内舱 IC': 8, '套房 SU': 2 }, { '阳台舱 BA': 4, '海景 OV': 6, '内舱 IC': 8, '套房 SU': 2 }][selectedStockIndex] || {};
-          saleCompositionRows.forEach(row => { if (row.cabinCount > (availability[row.spec] || 0)) issues.push(row.spec + '可用舱房不足，请提交待确认'); });
+          issues.push(...cruiseSupply.issues(cruiseContext(),saleCompositionRows));
           if (mode === 'confirm') issues.push('船方确认及付款条件尚待核对，请先提交待确认');
           return issues;
         }
@@ -2716,6 +2734,8 @@
         const isDraft = processingMode() === 'draft';
         const isPending = processingMode() === 'pending';
         const orderNo = (isDraft ? 'DRAFT-' : '') + generatedOrderNo();
+        cruiseReservationBefore=currentProduct.type==='cruise'?channelQuotaSnapshot():null;
+        if(currentProduct.type==='cruise'&&!isDraft&&!isPending){try{cruiseSupply.hold(cruiseContext(),saleCompositionRows,orderNo,document.getElementById('contactName').value,cruiseBooking.snapshot(saleCompositionRows).lockExpiry);}catch(error){window.alert(error.message);return;}}
         const process = processProfile();
         const stock = selectedStock();
         const discounts = currentDiscountUsages();
@@ -3077,8 +3097,9 @@
       });
       document.querySelectorAll('[data-close-booking]').forEach(function (button) {
         button.addEventListener('click', function () {
-          if (window.caesarNavigateTo) window.caesarNavigateTo('orders.html');
-          else window.location.href = 'orders.html';
+          const target=pageParams.get('from')==='schedule-orders'?'../tour/schedule-orders.html?type=cruise':'orders.html';
+          if (window.caesarNavigateTo) window.caesarNavigateTo(target);
+          else window.location.href = target;
         });
       });
 
@@ -3184,12 +3205,13 @@
         if (!currentProduct.crossCompany) applyPresetPrice(sourceContext.amount || params.get('price'));
         const presetDate = params.get('date');
         const presetStock = params.get('stock') || params.get('scheduleNo');
-        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || presetStock || '可售';
+        const knownStock = currentProduct.stocks.find(row => row[1] === presetStock);
+        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || knownStock?.[4] || (currentProduct.type === 'group' ? '待核对' : '可售');
         const presetTag = /紧张|少量|确认|询位/.test(presetStatus) ? 'tag tag-orange' : 'tag tag-green';
         if (!sourceContext.isCustomProject && (presetDate || presetStock)) {
           presetStockOverride = [
             presetDate || '已选班期',
-            [presetDate, presetStock].filter(Boolean).join(' / '),
+            currentProduct.type === 'group' ? (presetStock || '') : [presetDate, presetStock].filter(Boolean).join(' / '),
             presetStock || '以提交校验为准',
             priceNumber(params.get('price')),
             presetStatus,

@@ -51,10 +51,10 @@ function overview(a,p){
  if(missing.length)gaps.push(['资源确认',missing.length+' 项未确认',A('查看资源','tab','resources')]);
  const changed=(a.agenda||[]).filter(r=>r.dateNeedsCheck).length;if(changed)gaps.push(['日程日期',changed+' 项待核',A('查看安排','tab','execution')]);
  if(a.visaRequirement?.required){const count=roster.filter(r=>r.visaReviewRequired||((r.visaMode||(r.visaRequired===false?'exempt':'agency'))==='agency'?r.visa?.status!=='已出签':!r.visaBasis)).length;if(count)gaps.push(['签证资料',count+' 人待核对',A('查看签证','tab','visa')]);}
- return SEC('执行概况',U.summary([['服务类型',a.service],['计划人数',a.people==null?'待确认':a.people+' 人'],['确认人数',a.confirmedPeople==null?'待确认':a.confirmedPeople+' 人'],['实际服务人数',a.completion?.actualPeople==null?'未登记':a.completion.actualPeople+' 人'],['已登记名单',roster.length+' 人'],['资源确认',resources.filter(r=>r.status==='已确认').length+' / '+resources.length+' 项']]))+
+ return SEC('业务归属',U.summary([['业务执行公司',a.executionCompany||M.executionCompany(p)],['合同签约公司',p.company]]))+SEC('执行概况',U.summary([['服务类型',a.service],['计划人数',a.people==null?'待确认':a.people+' 人'],['确认人数',a.confirmedPeople==null?'待确认':a.confirmedPeople+' 人'],['实际服务人数',a.completion?.actualPeople==null?'未登记':a.completion.actualPeople+' 人'],['已登记名单',roster.length+' 人'],['资源确认',resources.filter(r=>r.status==='已确认').length+' / '+resources.length+' 项']]))+
  (a.sourceChecks?.length?SEC('原资料待核',a.sourceChecks.map(v=>'<p class="mice-muted">'+E(v)+'</p>').join('')):'')+
  SEC('执行缺口',gaps.length?U.table(['核对内容','当前情况','操作'],gaps):'<p class="mice-muted">当前已登记资料无待补项。</p>')+
- SEC('服务完成记录',U.summary([['执行状态',a.status],['实际服务日期',a.completion?(a.completion.actualStart||'未登记')+' 至 '+(a.completion.actualEnd||'未登记'):'尚未登记'],['完成依据',a.completion?.basis||'尚未登记'],['未结事项',a.completion?.unfinished||'未登记'],['登记人／时间',[a.completion?.recordedBy,a.completion?.recordedAt].filter(Boolean).join(' / ')||'尚未登记'],['客户认可',a.acceptance?.status||'待客户确认']]))+
+ (window.MiceBusinessUI?.receipts(a)||'')+SEC('服务完成记录',U.summary([['执行状态',a.status],['实际服务日期',a.completion?(a.completion.actualStart||'未登记')+' 至 '+(a.completion.actualEnd||'未登记'):'尚未登记'],['完成依据',a.completion?.basis||'尚未登记'],['未结事项',a.completion?.unfinished||'未登记'],['登记人／时间',[a.completion?.recordedBy,a.completion?.recordedAt].filter(Boolean).join(' / ')||'尚未登记'],['客户认可',a.acceptance?.status||'待客户确认']]))+
  SEC('结算状态',U.summary([['业务结算',record?.status||'未结算'],['结算单',record?.id||'尚未登记']]),U.link('查看结算详情',settlement));
 }
 let resourceCategory='',resourceActivity='';

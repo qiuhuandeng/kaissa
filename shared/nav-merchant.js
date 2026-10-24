@@ -144,10 +144,37 @@
         {
           title: "交通采购",
           children: [
-            { title: "邮轮包舱", href: "tour/resource-procurement-inventory.html?kind=cruise" },
             { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
           ],
         },
+      ],
+    },
+    {
+      title: "邮轮中心",
+      icon: "ship",
+      children: [
+        { title: "舱位采购", children: [
+          { title: "采购合同", href: "cruise/procurement-contracts.html" },
+          { title: "采购订单", href: "cruise/procurement-orders.html" },
+          { title: "采购入库", href: "cruise/procurement-receipts.html" },
+        ] },
+        { title: "航次库存", children: [
+          { title: "航次管理", href: "cruise/voyages.html" },
+          { title: "库存管理", href: "cruise/inventory.html" },
+          { title: "虚拟库存池", href: "cruise/inventory-pools.html" },
+          { title: "库存调拨", href: "cruise/inventory-transfers.html" },
+          { title: "锁定释放", href: "cruise/inventory-locks.html" },
+          { title: "价格日历", href: "cruise/price-calendar.html" },
+          { title: "航次日历", href: "cruise/voyage-calendar.html" },
+        ] },
+        { title: "分房管理", children: [
+          { title: "房号管理", href: "cruise/room-assignments.html" },
+          { title: "客人偏好", href: "cruise/guest-preferences.html" },
+          { title: "名单管理", href: "cruise/passenger-manifests.html" },
+          { title: "救生艇分组", href: "cruise/lifeboat-groups.html" },
+          { title: "用餐分配", href: "cruise/dining-assignments.html" },
+          { title: "其他分组", href: "cruise/service-groups.html" },
+        ] },
       ],
     },
     {
@@ -492,6 +519,7 @@
   const fullMenu = menu.slice();
 
   const icons = {
+    ship: '<path d="M5 12V5h14v7"/><path d="M9 5V2h6v3"/><path d="m3 13 9-3 9 3-3 6H6z"/><path d="M12 10v9"/><path d="M3 21q3-2 6 0 3-2 6 0 3-2 6 0"/>',
     chart: '<path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M3 19h18"/>',
     map: '<path d="M9 18 3 20V6l6-2 6 2 6-2v14l-6 2-6-2Z"/><path d="M9 4v14"/><path d="M15 6v14"/>',
     clipboard: '<path d="M9 5h6"/><path d="M9 3h6v4H9z"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>',
@@ -514,6 +542,7 @@
   };
 
   const primaryLabels = {
+    邮轮中心: "邮轮",
     工作: "工作",
     数据中心: "数据",
     资源: "资源",
@@ -532,6 +561,7 @@
   };
 
   const primaryFullLabels = {
+    邮轮中心: "邮轮中心",
     工作: "工作台",
     数据中心: "数据中心",
     资源: "资源管理",
@@ -722,6 +752,7 @@
   }
 
   const pageOwners = {
+    "tour/resource-procurement-inventory.html?kind=cruise": { href: "cruise/procurement-receipts.html", title: "舱位库存", tabHref: "tour/resource-procurement-inventory.html?kind=cruise" },
     "member/member-detail.html": { href: "member/members.html", title: "会员详情", preserveQuery: true },
     "marketing/issue-create.html": { href: "marketing/coupon-issue.html", title: "发券任务", preserveQuery: true },
     "marketing/activity-edit.html": { href: "marketing/activities.html", title: new URLSearchParams(location.search).has("id") ? "编辑活动" : "新建活动", preserveQuery: true },
@@ -773,7 +804,7 @@
     "tour/schedules-calendar.html": { href: "tour/schedules.html", title: "团期日历" },
     "tour/schedules-detail.html": { href: "tour/schedules.html", title: "团期详情" },
     "tour/schedules-detail.html?mice=1": { href: "tour/schedules.html?mice=1", title: "项目团详情" },
-    "tour/air-order-edit.html": { href: "tour/air-orders.html", title: new URLSearchParams(location.search).has("id") ? "编辑机票订单" : ({bsp:"新增BSP散票",team:"新增团队票",charter:"新增包机票"}[new URLSearchParams(location.search).get("type")] || "选择机票订单类型") },
+    "tour/air-order-edit.html": { href: "tour/air-orders.html", title: new URLSearchParams(location.search).has("id") ? "编辑机票订单" : ({bsp:"新增散客票",team:"新增团队票",charter:"新增包机票"}[new URLSearchParams(location.search).get("type")] || "选择机票订单类型") },
     "tour/air-order-detail.html": { href: "tour/air-orders.html", title: "机票订单详情" },
     "tour/air-charter-detail.html": { href: "tour/air-charters.html", title: "包机项目详情" },
     "tour/visa-processing.html": { href: "tour/visa-processing.html", title: "签证办理" },
@@ -2036,7 +2067,7 @@
     const projectRoutes = ["tour/fulfillment-cost.html", "system/air-settings.html", "finance/finance-nc.html", "tour/air-charters.html", "tour/air-charter-detail.html", "finance/air-reconciliation.html", "finance/air-funds.html", "tour/air-changes.html", "finance/air-settlement.html", "approval/approvals.html", "tour/air-orders.html", "tour/air-order-edit.html", "tour/air-order-detail.html", "tour/air-import.html", "tour/product-custom-list.html", "tour/product-custom-detail.html", "tour/schedules.html?mice=1", "tour/schedules-detail.html?mice=1", "finance/finance-invoice.html"];
     const currentProjectRoute = currentRouteUrl || new URL(window.location.href);
     const centerFiles = ["marketing/issue-create.html", "member/registered-users.html", "member/members.html", "member/member-detail.html", "member/level-rules.html", "member/level-tasks.html", "member/level-changes.html", "member/level-approvals.html", "member/point-rules.html", "member/behavior-tasks.html", "member/point-ledger.html", "member/point-dispatch.html", "member/shop-orders.html", "member/own-benefits.html", "member/partner-benefits.html", "member/charters.html", "marketing/activities.html", "marketing/activity-edit.html", "marketing/activity-detail.html", "marketing/activity-approvals.html", "marketing/activity-whitelist.html", "marketing/coupon-templates.html", "marketing/coupon-tiers.html", "marketing/coupon-rules.html", "marketing/coupon-issue.html", "marketing/coupon-ledger.html", "marketing/incentive-groups.html", "marketing/incentive-rules.html", "marketing/incentive-triggers.html", "marketing/incentive-payouts.html"];
-    if(centerFiles.includes(fileFromUrl(target)) || centerFiles.includes(fileFromUrl(currentProjectRoute))){window.location.href=target.href;return;}
+    if(centerFiles.includes(fileFromUrl(target)) || centerFiles.includes(fileFromUrl(currentProjectRoute)) || fileFromUrl(target).startsWith("cruise/") || fileFromUrl(currentProjectRoute).startsWith("cruise/")){window.location.href=target.href;return;}
 
     if (target.searchParams.get("business") === "air" || currentProjectRoute.searchParams.get("business") === "air" || target.searchParams.get("mice") === "1" || currentProjectRoute.searchParams.get("mice") === "1"
       || projectRoutes.includes(fileFromUrl(target)) || projectRoutes.includes(fileFromUrl(currentProjectRoute))) {

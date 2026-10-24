@@ -5165,3 +5165,18 @@ root.MicePrototypeDemo={revision,upgrade(saved){
  const prior=root.MicePrototypeDemo.upgrade;
  root.MicePrototypeDemo.upgrade=saved=>{const data=prior(saved);return data.allProjectStagesRevision===revision?data:install(M.clone(data));};
 })(window);
+
+/* 收款约定和有依据的费用预计示例：只补未成交的筹备团，不覆盖已填写资料。 */
+(function(root){
+ const revision='collection-commercial-20261024',M=root.MiceModel;
+ function install(data){if(data.collectionCommercialRevision===revision)return data;
+  const a=data.activities.find(a=>a.id==='DEMO-PREP-BX-001');
+  if(a&&!data.orders.some(o=>o.activities.includes(a.id)&&!['已取消','已作废'].includes(o.status))){
+   if(!a.collectionPlan)a.collectionPlan=[{name:'订金',mode:'比例',ratio:30,dateKind:'约定',due:'2026-11-10',trigger:'客户约定的首款日期'},{name:'尾款',mode:'比例',ratio:70,dateKind:'预计',expectedDue:'2026-12-15',due:'',trigger:'开票后30天，预计开票日待核对'}];
+   if(a.latestEstimate==null){a.latestEstimate=23000;(a.budgetHistory||=[]).push({after:23000,reason:'按本团服务范围核对费用预计（演示）',basis:'酒店、交通及接待费用预计清单（演示）',charge:'待客户确认'});}
+  }
+  data.collectionCommercialRevision=revision;return data;
+ }
+ install(root.MicePrototypeSeed);const prior=root.MicePrototypeDemo.upgrade;
+ root.MicePrototypeDemo.upgrade=saved=>{const data=prior(saved);return data.collectionCommercialRevision===revision?data:install(M.clone(data));};
+})(window);

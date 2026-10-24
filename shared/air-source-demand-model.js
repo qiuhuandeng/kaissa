@@ -6,7 +6,7 @@ const dateOK=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')&&Number.isFinite(Date.parse(v)
 const value=(s,k)=>(s.snapshot||[]).find(x=>x[0]===k)?.[1]||'';
 function source(s){
  const range=value(s,'出发/回团').split(' / '),raw=s.amount,amount=raw===undefined||raw===''?null:Number(String(raw).replace(/[¥￥,\s]/g,''));
- return {orderNo:s.orderNo,productName:s.productName||'',group:s.group??value(s,'团期编号'),start:s.start||range[0]||'',end:s.end||range[1]||'',tourAmount:Number.isFinite(amount)?amount:null,currency:s.currency||'CNY',people:(s.people||[]).map(p=>({id:p.id,name:p.name,english:p.englishName??p.english??'',docType:p.docType||'护照',docNo:p.docNo||'',birth:p.birthday??p.birth??'',expiry:p.expiresAt??p.expiry??'',nationality:p.nationality||''}))};
+ return {groupState:s.groupState||value(s,'团期状态')||value(s,'销售状态'),orderState:s.orderState||value(s,'订单状态'),orderNo:s.orderNo,productName:s.productName||'',group:s.group??value(s,'团期编号'),start:s.start||range[0]||'',end:s.end||range[1]||'',tourAmount:Number.isFinite(amount)?amount:null,currency:s.currency||'CNY',people:(s.people||[]).map(p=>({id:p.id,name:p.name,english:p.englishName??p.english??'',docType:p.docType||'护照',docNo:p.docNo||'',birth:p.birthday??p.birth??'',expiry:p.expiresAt??p.expiry??'',nationality:p.nationality||''}))};
 }
 function orders(data,s,role){return data.orders.filter(o=>o.sourceOrder===s.orderNo&&M.canSee(o,role));}
 function latest(o){return o.sourceDemands?.at(-1)||null;}
@@ -44,6 +44,9 @@ function submit(data,s,requests,reason,role='sales'){
  for(let req of requests){
   let o=work.orders.find(o=>o.id===req.orderId),created=false;
   if(!req.orderId){
+   if(!String(s.group||'').trim()||/^\d{4}-\d{2}-\d{2}$/.test(s.group))throw Error('团队供票须关联已有团号，请先核对来源团期');
+   if(req.group&&req.group!==s.group)throw Error('新供票单须归属来源订单所在团期');
+   if(/停售|关闭|取消|终止|未开放|筹备/.test((s.groupState||'')+' '+(s.orderState||'')))throw Error('来源团期或订单已停止，不能新增供票');
    if(role==='sales'&&s.orderNo!==M.roles.sales.source)throw Error('当前销售无权提交此来源订单');
    if(role==='operator'&&s.group!==M.roles.operator.group)throw Error('当前计调无权提交此来源团期');
    if(!req.peopleIds?.length)throw Error('另建供票单至少选择一位乘客');const l=req.newLeg;if(!l||!dateOK(l.date)||!M.airports[l.from]||!M.airports[l.to]||l.from===l.to)throw Error('另建供票单须填写有效日期及出发、到达机场');
@@ -54,7 +57,9 @@ function submit(data,s,requests,reason,role='sales'){
   if(o.state==='已取消')throw Error('已取消供票单不能提交新需求');
   if(o.sourceConditionsPending)throw Error('本单上次变更的供票条件尚未复核');
   const pending=active(o);if(pending)throw Error(o.id+'已有'+pending.state+'的需求，请先处理或撤回');
-  const p=proposal(o,req,s),prev=latest(o),signature=JSON.stringify({source:s,group:req.group,legIds:p.legIds,peopleIds:p.peopleIds,dates:req.dates});
+  const p=proposal(o,req,s);
+  if(/停售|关闭|取消|终止|未开放|筹备/.test((s.groupState||'')+' '+(s.orderState||''))&&p.next.tickets.some(t=>!o.tickets.some(old=>old.personId===t.personId&&old.legId===t.legId)))throw Error('来源团期或订单已停止，不能新增供票人段；退减沿原单办理');
+  const prev=latest(o),signature=JSON.stringify({source:s,group:req.group,legIds:p.legIds,peopleIds:p.peopleIds,dates:req.dates});
   if(prev?.state==='已接收'&&prev.signature===signature){results.push({id:o.id,unchanged:true});continue;}
   const sourceChanges=prev?M.changes(prev.source,s,{group:'旅游团号',start:'旅游出发日期',end:'旅游回团日期',tourAmount:'旅游订单成交金额',currency:'旅游订单币种'}):[];
   const d={id:'GX'+Date.now()+Math.random().toString(36).slice(2,6),version:(prev?.version||0)+1,state:'待计调核对',source:copy(s),previousSource:copy(prev?.source||null),sourceChanges,request:copy(req),reason:reason.trim(),signature,base:base(o),ownerGroup:o.group||s.group,changes:p.changes,route:p.route,protection:p.protection,created,history:[]};

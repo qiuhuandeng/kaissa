@@ -272,6 +272,7 @@ document.addEventListener('click',event=>{
 });
 window.MiceSettlementHost={detailReturnUrl,metric,action,reset,paint,save,sync,openCosts,refreshCosts,resetCosts,costLedgerRoot};
 U.ready(()=>{
+ if(U.q.get('view')==='payment')return;
  sync();
  for(const [key,id]of [['Keyword','costKeyword'],['Type','costType'],['Status','costStatus'],['Progress','costProgress'],['Owner','costOwner'],['DateStart','costDateStart'],['DateEnd','costDateEnd']])if(U.q.has('filter'+key))$(id).value=U.q.get('filter'+key);
  H.refresh();

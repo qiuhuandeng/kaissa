@@ -20,6 +20,7 @@
     return { first,second:first,third,fourth:third-2000,child:get('childOccupancy',23800),childNoBerth:get('childNoBerth',10800),single:8800,portTax:get('portTax',1850),service:600,fuel:0,maximum:/套房/.test(spec)?3:4 };
   }
   function quoteRoom(room, rates, feeMode) {
+    feeMode=rates.feeMode||feeMode;
     const people=room.people||[], lines=people.map((p,i)=>{
       const key=p.kind==='child'&&['child','childNoBerth'].includes(p.basis)?p.basis:['first','second','third','fourth'][i];
       return {label:'第'+(i+1)+'人 · '+(p.kind==='child'?'儿童（'+p.age+'岁）':'成人')+' · '+(key==='child'?'儿童价':key==='childNoBerth'?'儿童不占床价':'同舱人次价'), quantity:1,price:rates[key]||0,amount:rates[key]||0};

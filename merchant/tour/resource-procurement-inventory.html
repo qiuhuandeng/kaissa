@@ -770,6 +770,8 @@
   <link rel="stylesheet" href="../../shared/cruise-supply.css">
   <script src="../../shared/cruise-supply.js"></script>
   <script src="../../shared/cruise-procurement-supply.js"></script>
+  <script src="../../shared/cruise-resource-catalog.js"></script>
+  <script src="../../shared/cruise-purchase-model.js"></script>
   <script>
     (function () {
       var currentDate = new Date('2026-07-06T00:00:00');
@@ -1150,7 +1152,8 @@
         allocations: [], tickets: [], losses: [], changeOrders: [], feeAdjustments: [], returns: []
       });
 
-      if (activeKind === 'cruise') { contracts.unshift(window.CaesarCruiseSupply.exampleContract()); schedules['邮轮'] = schedules['邮轮'].concat(window.CaesarCruiseSupply.schedules); }
+      if(activeKind==='cruise'){const oldNo=new URLSearchParams(location.search).get('contractNo'),receipt=window.CaesarCruisePurchase.read().receipts.find(r=>r.legacyNo===oldNo&&r.id!=='RK-YL-003');if(receipt){location.replace('../cruise/procurement-receipts.html?id='+encodeURIComponent(receipt.id));return;}}
+      if (activeKind === 'cruise') { contracts.unshift(window.CaesarCruiseSupply.exampleContract()); contracts.unshift(...window.CaesarCruisePurchase.inventory()); schedules['邮轮'] = schedules['邮轮'].concat(window.CaesarCruiseSupply.schedules); }
 
       function $(selector, root) {
         return (root || document).querySelector(selector);
@@ -1977,6 +1980,10 @@
           return '<tr><td><span class="resource-procurement-main">' + escapeHtml(row.type) + '</span><span class="resource-procurement-meta">' + escapeHtml(row.subtype) + '</span></td><td><span class="resource-procurement-main">' + escapeHtml('保底' + row.guarantee + ' · 使用' + row.actual + ' · 损耗' + row.lossQty) + '</span><span class="resource-procurement-meta">' + escapeHtml(freeLossMeta + ' · 已还位' + row.returned) + '</span></td><td class="amount-strong">' + escapeHtml(money(row.amount)) + '</td><td>' + escapeHtml(row.scheduleNo) + '</td><td><span class="' + tagClass(row.status) + '">' + escapeHtml(row.status) + '</span><div class="table-action">' + action + '</div></td></tr>';
         }).join('') : '<tr><td colspan="5">暂无待确认损耗</td></tr>';
         window.CaesarCruiseProcurement.renderDetail(contract);
+        if (contract.purchaseContractId) {
+          $('#detailLinked').innerHTML = '<a class="link-primary" href="../cruise/procurement-contracts.html?id=' + encodeURIComponent(contract.purchaseContractId) + '">' + escapeHtml(contract.purchaseContractId) + '</a> / <a class="link-primary" href="../cruise/procurement-receipts.html?id=' + encodeURIComponent(contract.purchaseReceiptId) + '">查看入库单</a>';
+          $('#contractGuaranteeText').textContent = '按原采购合同约定核对';
+        }
       }
 
       function openDetail(contractNo, tab, actionTitle) {
@@ -2019,8 +2026,8 @@
 
       function applyKindView() {
         var config = currentCreateConfig();
-        $('#pageTitle').textContent = config.title;
-        $('#openCreateContract').textContent = '新增' + config.title;
+        $('#pageTitle').textContent = activeKind === 'cruise' ? '舱位库存' : config.title;
+        $('#openCreateContract').textContent = activeKind === 'cruise' ? '新建采购合同' : '新增' + config.title;
         $('#createContractTitle').textContent = $('#openCreateContract').textContent;
         $('#listResourceHead').textContent = config.listResourceLabel;
         $('#listDepartHead').textContent = '出行/DL';
@@ -2034,7 +2041,7 @@
         $('.resource-procurement-tabs').setAttribute('aria-label', config.title + '快捷筛选');
         $('#directionFilterGroup').hidden = config.type !== '机票';
         if (config.type !== '机票') $('#directionFilter').value = '全部';
-        document.title = config.title + ' - 凯撒旅游';
+        document.title = (activeKind === 'cruise' ? '舱位库存' : config.title) + ' - 凯撒旅游';
       }
 
       function updateResourceSummary() {
@@ -2902,6 +2909,7 @@
       }
 
       $('#openCreateContract').addEventListener('click', function () {
+        if (activeKind === 'cruise') { location.href = '../cruise/procurement-contracts.html?create=1'; return; }
         syncCreateDefaults();
         openLayer($('#createContractDrawer'));
       });
@@ -3047,8 +3055,9 @@
     })();
   </script>
   <script src="../../shared/vendor/jszip-3.10.1.min.js"></script>
-  <script src="../../shared/air-inventory-model.js?v=20261018-charter-fields1"></script>
+  <script src="../../shared/air-funds-model.js?v=20261024-docs-step3"></script>
+  <script src="../../shared/air-inventory-model.js?v=20261024-cancel-step2"></script>
   <script src="../../shared/air-inventory-excel.js?v=20261018-markup1"></script>
-  <script src="../../shared/air-list-ui.js?v=20261017-list1"></script><script src="../../shared/air-inventory-ui.js?v=20261018-import-batch1"></script>
+  <script src="../../shared/air-list-ui.js?v=20261017-list1"></script><script src="../../shared/air-inventory-ui.js?v=20261024-cancel-step2"></script>
 </body>
 </html>

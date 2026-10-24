@@ -5,17 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>航司协议 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <link rel="stylesheet" href="../../shared/air-agreements.css?v=20261024">
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
-
-  <section class="list-page-panel flight-block-page">
-    <div class="list-page-head">
-      <div>
-        <h1 class="page-title">航司协议</h1>
-      </div>
-    </div>
-  </section>
 
   <section class="list-surface resource-flight-block-list-surface" data-list-surface>
     <section class="filter-card filter-card-compact flight-block-filter list-surface-filter" aria-label="航司协议筛选">
@@ -24,8 +17,8 @@
       </div>
       <div class="filter-row">
         <div class="filter-item">
-          <label class="sr-only" for="agreementKeyword">协议/航空公司/航班</label>
-          <input id="agreementKeyword" type="search" placeholder="协议/航空公司/航班">
+          <label class="sr-only" for="agreementKeyword">协议/航空公司/负责人</label>
+          <input id="agreementKeyword" type="search" placeholder="协议/航空公司/负责人">
         </div>
         <div class="filter-item filter-item-sm">
           <label class="sr-only" for="agreementAirline">航空公司</label>
@@ -58,8 +51,8 @@
           </select>
         </div>
         <div class="filter-actions">
-          <button class="btn btn-secondary btn-filter-search" type="button">搜索</button>
-          <button class="btn btn-secondary" type="button">重置</button>
+          <button class="btn btn-secondary btn-filter-search" type="button" data-agreement-search>搜索</button>
+          <button class="btn btn-secondary" type="button" data-agreement-reset>重置</button>
         </div>
       </div>
     </section>
@@ -71,7 +64,7 @@
             <th>协议名称</th>
             <th>航空公司</th>
             <th>绑定供应商</th>
-            <th>适用航班</th>
+            <th>协议负责人</th>
             <th>采购方式</th>
             <th>规则摘要</th>
             <th>币种</th>
@@ -79,53 +72,20 @@
             <th>操作</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td><strong>国航欧洲团队票协议</strong><br><span class="text-muted">2026-01-01 至 2026-12-31</span></td>
-            <td>中国国际航空</td>
-            <td>国航团队票中心</td>
-            <td>CA937 / CA938 / CA939</td>
-            <td>锁位协议 + 团队票</td>
-            <td>定金20%，起飞前10天释放，名单齐后72小时出票</td>
-            <td>CNY</td>
-            <td><span class="tag tag-green">有效</span></td>
-            <td><div class="table-action"><button type="button" data-open-agreement-drawer class="table-action-primary">编辑</button></div></td>
-          </tr>
-          <tr>
-            <td><strong>海航欧洲团队位协议</strong><br><span class="text-muted">2026-03-01 至 2026-10-31</span></td>
-            <td>海南航空</td>
-            <td>海航团队销售部</td>
-            <td>HU489 / HU782</td>
-            <td>团队票协议</td>
-            <td>定金30%，起飞前14天释放，PNR确认后锁价</td>
-            <td>CNY</td>
-            <td><span class="tag tag-green">有效</span></td>
-            <td><div class="table-action"><button type="button" data-open-agreement-drawer class="table-action-primary">编辑</button></div></td>
-          </tr>
-          <tr>
-            <td><strong>东航日本团队票协议</strong><br><span class="text-muted">2026-01-01 至 2026-12-31</span></td>
-            <td>中国东方航空</td>
-            <td>东航华东销售部</td>
-            <td>MU225 / MU226</td>
-            <td>团队票协议</td>
-            <td>按名单申请团队票价，名单提交后48小时出票</td>
-            <td>CNY</td>
-            <td><span class="tag tag-green">有效</span></td>
-            <td><div class="table-action"><button type="button" data-open-agreement-drawer class="table-action-primary">编辑</button></div></td>
-          </tr>
+        <tbody id="agreementRows">
         </tbody>
       </table>
     </section>
     <div class="pagination list-surface-pagination list-pagination-attached">
-      <span>第1-3条/共3条</span>
+      <span id="agreementCount"></span>
     </div>
   </section>
 
-  <div id="agreementDrawer" class="modal-overlay drawer-overlay" hidden>
+  <div id="agreementDrawer" data-static="true" class="modal-overlay drawer-overlay" hidden>
     <section class="modal drawer-modal drawer-edit drawer-lg resource-agreement-drawer" role="dialog" aria-modal="true" aria-labelledby="agreementDrawerTitle">
       <div class="modal-header">
         <div id="agreementDrawerTitle" class="modal-title">航司协议维护</div>
-        <button class="modal-close" type="button" data-close-agreement-drawer aria-label="关闭">×</button>
+        <button class="modal-close" data-layer-close-ready="true" type="button" data-close-agreement-drawer aria-label="关闭">×</button>
       </div>
       <div class="modal-body">
         <section class="drawer-section">
@@ -133,14 +93,16 @@
             <h3 class="drawer-section-title">协议基础</h3>
           </div>
           <div class="form-grid resource-agreement-form">
-            <div class="form-group"><label class="form-label">协议名称</label><input class="form-control" type="text" value="国航欧洲团队票协议"></div>
-            <div class="form-group"><label class="form-label">协议状态</label><select class="form-control"><option>草稿</option><option>待审核</option><option selected>有效</option><option>暂停</option><option>终止</option></select></div>
-            <div class="form-group"><label class="form-label">航空公司</label><select class="form-control"><option selected>中国国际航空</option><option>海南航空</option><option>中国东方航空</option><option>德国汉莎航空</option></select></div>
-            <div class="form-group"><label class="form-label">绑定供应商</label><input class="form-control" type="text" value="国航团队票中心" readonly></div>
-            <div class="form-group"><label class="form-label">采购方式</label><select class="form-control"><option selected>锁位协议 + 团队票</option><option>锁位协议</option><option>团队票协议</option><option>临采协议</option></select></div>
-            <div class="form-group"><label class="form-label">结算币种</label><select class="form-control"><option selected>CNY</option><option>EUR</option><option>USD</option><option>JPY</option></select></div>
-            <div class="form-group"><label class="form-label">开始日期</label><input class="form-control" type="date" value="2026-01-01"></div>
-            <div class="form-group"><label class="form-label">结束日期</label><input class="form-control" type="date" value="2026-12-31"></div>
+            <div class="form-group"><label class="form-label">协议名称</label><input data-agreement-field="name" class="form-control" type="text" value="国航欧洲团队票协议"></div>
+            <div class="form-group"><label class="form-label">协议状态</label><select data-agreement-field="state" class="form-control"><option>草稿</option><option>待审核</option><option selected>有效</option><option>暂停</option><option>终止</option></select></div>
+            <div class="form-group"><label class="form-label">航空公司</label><select data-agreement-field="airline" class="form-control"><option selected>中国国际航空</option><option>海南航空</option><option>中国东方航空</option><option>德国汉莎航空</option></select></div>
+            <div class="form-group"><label class="form-label">绑定供应商</label><input data-agreement-field="supplier" class="form-control" type="text" value="国航团队票中心"></div>
+            <div class="form-group"><label class="form-label">采购方式</label><select data-agreement-field="method" class="form-control"><option selected>锁位协议 + 团队票</option><option>锁位协议</option><option>团队票协议</option><option>临采协议</option></select></div>
+            <div class="form-group"><label class="form-label">结算币种</label><select data-agreement-field="currency" class="form-control"><option selected>CNY</option><option>EUR</option><option>USD</option><option>JPY</option></select></div>
+            <div class="form-group"><label class="form-label">协议负责人</label><input class="form-control" data-agreement-field="owner" value="孙丽"></div>
+            <div class="form-group"><label class="form-label">签约日期</label><input type="date" class="form-control" data-agreement-field="signed" value="2025-12-20"></div>
+            <div class="form-group"><label class="form-label">开始日期</label><input data-agreement-field="start" class="form-control" type="date" value="2026-01-01"></div>
+            <div class="form-group"><label class="form-label">结束日期</label><input data-agreement-field="end" class="form-control" type="date" value="2026-12-31"></div>
           </div>
         </section>
 
@@ -149,44 +111,40 @@
             <h3 class="drawer-section-title">适用航班</h3>
           </div>
           <div class="form-grid resource-agreement-form">
-            <div class="form-group form-group-full"><label class="form-label">适用航班</label><select class="form-control"><option selected>CA937 / CA938 北京-巴黎往返</option><option>CA939 / CA940 北京-罗马往返</option><option>HU489 / HU782 北京-柏林-成都</option></select></div>
-            <div class="form-group form-group-full"><label class="form-label">舱位规则</label><input class="form-control" type="text" value="经济舱团队位，G/K舱优先"></div>
+            <div class="form-group form-group-full"><label class="form-label">适用航班</label><select data-agreement-field="flights" class="form-control"><option selected>CA937 / CA938 北京-巴黎往返</option><option>CA939 / CA940 北京-罗马往返</option><option>HU489 / HU782 北京-柏林-成都</option></select></div>
+            <div class="form-group form-group-full"><label class="form-label">舱位规则</label><input data-agreement-field="cabin" class="form-control" type="text" value="经济舱团队位，G/K舱优先"></div>
           </div>
         </section>
 
         <section class="drawer-section">
           <div class="drawer-section-head">
-            <h3 class="drawer-section-title">结算与规则</h3>
+            <h3 class="drawer-section-title">框架条款</h3>
           </div>
           <div class="form-grid resource-agreement-form">
-            <div class="form-group"><label class="form-label">定金规则</label><input class="form-control" type="text" value="定金20%，确认后7日内支付"></div>
-            <div class="form-group form-group-full"><label class="form-label">释放规则</label><textarea class="form-control" rows="3">起飞前10天释放未确认座位；已确认名单取消按协议损失核算。</textarea></div>
-            <div class="form-group form-group-full"><label class="form-label">出票规则</label><textarea class="form-control" rows="3">名单和证件资料齐全后72小时内出票，出票后按航司退改规则执行。</textarea></div>
+            <div class="form-group"><label class="form-label">定金规则</label><input data-agreement-field="deposit" class="form-control" type="text" value="定金20%，确认后7日内支付"></div>
+            <div class="form-group form-group-full"><label class="form-label">释放规则</label><textarea data-agreement-field="release" class="form-control" rows="3">起飞前10天释放未确认座位；已确认名单取消按协议损失核算。</textarea></div>
+            <div class="form-group form-group-full"><label class="form-label">出票规则</label><textarea data-agreement-field="ticketing" class="form-control" rows="3">名单和证件资料齐全后72小时内出票，出票后按航司退改规则执行。</textarea></div>
           </div>
         </section>
       </div>
-      <div class="modal-footer">
+              <section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">签约资料</h3></div>
+          <label class="form-label">签约依据<input class="form-control" data-agreement-field="basis" value="双方签署的年度团队合作协议（演示）"></label>
+          <label class="form-label">协议附件<input id="agreementFiles" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" multiple></label>
+          <div id="agreementAttachments"></div><p id="agreementFileNote" class="text-muted" role="status"></p>
+        </section>
+        <section class="drawer-section"><div class="drawer-section-head"><h3 class="drawer-section-title">签约与续约记录</h3></div><div id="agreementHistory"></div></section>
+        <p id="agreementError" class="text-danger" role="alert" hidden></p>
+<div class="modal-footer">
         <div class="drawer-footer-actions">
           <button class="btn btn-secondary" type="button" data-close-agreement-drawer>取消</button>
-          <button class="btn btn-primary" type="button" data-close-agreement-drawer>保存</button>
+          <button class="btn btn-primary" type="button" data-agreement-save>保存</button>
         </div>
       </div>
     </section>
   </div>
 
-  <script>
-    (function () {
-      var drawer = document.getElementById('agreementDrawer');
-      document.querySelectorAll('[data-open-agreement-drawer]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.openLayer(drawer); });
-      });
-      document.querySelectorAll('[data-close-agreement-drawer]').forEach(function (button) {
-        button.addEventListener('click', function () { window.caesarUI.closeLayer(drawer); });
-      });
-      drawer.addEventListener('click', function (event) {
-        if (event.target === drawer) window.caesarUI.closeLayer(drawer);
-      });
-    })();
-  </script>
+  <div id="agreementConfirm" class="modal-overlay" data-static="true" hidden><section class="modal modal-sm modal-confirm" role="dialog" aria-modal="true"><div class="modal-header"><h2 class="modal-title">放弃修改</h2></div><div class="modal-body">当前内容未保存，确认离开吗？</div><div class="modal-footer"><button class="btn btn-secondary" data-agreement-stay>继续填写</button><button class="btn btn-primary" data-agreement-leave>放弃修改</button></div></section></div>
+  <script src="../../shared/air-agreements-model.js?v=20261024"></script>
+  <script src="../../shared/air-agreements-ui.js?v=20261024"></script>
 </body>
 </html>

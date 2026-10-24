@@ -147,6 +147,8 @@
   <script src="../../shared/order-amendment-model.js"></script>
   <script src="../../shared/member-marketing-model.js"></script>
   <script src="../../shared/member-marketing-approval.js"></script>
+  <script src="../../shared/cruise-purchase-model.js"></script>
+  <script src="../../shared/cruise-inventory-model.js"></script>
   <script>
     (function () {
       if (new URLSearchParams(location.search).get('view') === 'config') {
@@ -1074,7 +1076,8 @@
       });
       let approvals = collectApprovals().filter(item=>item.matter!=="合同作废");
       approvals.unshift(...ContractApproval.records());
-      [...ContractApproval.matters,...MemberMarketingApproval.matters].forEach(m=>{if(!matterOptions.includes(m))matterOptions.push(m);});
+      [...ContractApproval.matters,...MemberMarketingApproval.matters,...Object.values(CaesarCruisePurchase.matters),...Object.values(CaesarCruiseInventory.matters)].forEach(m=>{if(!matterOptions.includes(m))matterOptions.push(m);});
+      if(!sourceOptions.includes("邮轮中心"))sourceOptions.push("邮轮中心");
       if(!sourceOptions.includes("会员中心"))sourceOptions.push("会员中心");
 
       function optionHtml(values, allText) {
@@ -1162,7 +1165,7 @@
       }
 
       function actionHtml(item) {
-        if(item.memberMarketing)return (currentView==='todo'&&item.status==='待审批'?'<button type="button" data-approval-action="approve" data-approval-no="'+escapeHtml(item.no)+'">审批</button>':'')+'<button type="button" data-approval-action="detail" data-approval-no="'+escapeHtml(item.no)+'">详情</button>';
+        if(item.memberMarketing||item.cruisePurchase||item.cruiseInventory)return (currentView==='todo'&&item.status==='待审批'?'<button type="button" data-approval-action="approve" data-approval-no="'+escapeHtml(item.no)+'">审批</button>':'')+'<button type="button" data-approval-action="detail" data-approval-no="'+escapeHtml(item.no)+'">详情</button>';
         if(item.orgRequest){
           const id=escapeHtml(item.no),button=(action,label)=>'<button type="button" data-approval-action="'+action+'" data-approval-no="'+id+'">'+label+'</button>';
           return (currentView==='todo'&&item.status==='审批中'?button('approve','审批'):'')+(currentView==='mine'&&item.status==='已退回'?button('supplement','修改重提'):'')+(currentView==='mine'&&['审批中','已退回'].includes(item.status)?button('withdraw','撤回'):'')+button('detail','详情');
@@ -1204,8 +1207,8 @@
 
       function renderApprovals() {
         approvals=approvals.filter(item=>!item.orgRequest&&item.no!=='APR-MS-ORG-001');
-        approvals=approvals.filter(item=>!item.memberMarketing);
-        approvals.unshift(...OrgWorkflowUI.approvalRecords(),...MemberMarketingApproval.records(currentView));
+        approvals=approvals.filter(item=>!item.memberMarketing&&!item.cruisePurchase&&!item.cruiseInventory);
+        approvals.unshift(...OrgWorkflowUI.approvalRecords(),...MemberMarketingApproval.records(currentView),...CaesarCruisePurchase.approvalRecords(),...CaesarCruiseInventory.approvalRecords());
         renderTabs();
         const items = visibleApprovals();
         rowsBody.innerHTML = items.length ? items.map(rowHtml).join("") : "<tr><td colspan=\"7\">暂无匹配的审批记录</td></tr>";
@@ -1305,7 +1308,7 @@
         modalTitle.textContent = modalTitleFor(action, item, actionTitle);
         detailSectionTitle.textContent = action === "approve" ? "判断依据" : "申请内容";
         summaryGrid.innerHTML = summaryGridHtml(summaryItems(item));
-        detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action)) + (item.contractMatter ? ContractApproval.render(item) : "") + (item.memberMarketing ? MemberMarketingApproval.render(item) : "");
+        detailContent.innerHTML = detailGridHtml(detailItemsForAction(item, action)) + (item.contractMatter ? ContractApproval.render(item) : "") + (item.memberMarketing ? MemberMarketingApproval.render(item) : "") + (item.cruisePurchase ? CaesarCruisePurchase.approvalHtml(item) : "") + (item.cruiseInventory ? CaesarCruiseInventory.approvalHtml(item) : "");
         var paymentPanel = document.getElementById('approvalPaymentBasis');
         paymentPanel.hidden = !['付款申请','交通资源付款'].includes(item.matter);
         var bases = item.paymentBases || [];
@@ -1385,6 +1388,16 @@
       }
 
       function submitModalAction() {
+        if(activeApproval?.cruiseInventory && activeAction==='approve'){
+          const decision=document.querySelector("input[name='approvalDecision']:checked")?.value||'通过';
+          try { CaesarCruiseInventory.decide(activeApproval.no,decision,opinionInput.value); renderApprovals(); closeModal(); toast(decision==='通过'?'审批通过，调整已生效':'已退回来源单据核对'); }
+          catch(error){toast(error.message);} return;
+        }
+        if(activeApproval?.cruisePurchase && activeAction==='approve'){
+          const decision=document.querySelector("input[name='approvalDecision']:checked")?.value||'通过';
+          try { CaesarCruisePurchase.decide(activeApproval.no,decision,opinionInput.value); renderApprovals(); closeModal(); toast(decision==='通过'?'审批通过，采购单据已更新':'已退回来源单据补充'); }
+          catch(error){toast(error.message);} return;
+        }
         if(activeApproval?.memberMarketing&&activeAction==='approve'){
           const decision=document.querySelector("input[name='approvalDecision']:checked")?.value||'通过';
           const delegate=document.getElementById('mmApprovalDelegate')?.value||'';
@@ -1534,21 +1547,21 @@
       submitBtn.addEventListener("click", submitModalAction);
     })();
   </script>
-<script src="../../shared/mice-prototype-model.js?v=activity-flow-sync-20261021"></script>
-<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-work-model.js?v=activity-four-states-20261021"></script>
-<script src="../../shared/mice-prototype-data.js?v=detail-unification-20261024"></script>
+<script src="../../shared/mice-prototype-model.js?v=business-summary-20261024"></script>
+<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-work-model.js?v=business-summary-20261024"></script>
+<script src="../../shared/mice-prototype-data.js?v=business-summary-20261024"></script>
 <script src="../../shared/mice-prototype-ui.js?v=detail-unification-20261024"></script>
 <script src="../../shared/mice-tax-ui.js"></script>
 <script src="../../shared/mice-files.js"></script>
-<script src="../../shared/mice-agreements.js?v=activity-four-states-20261021"></script>
+<script src="../../shared/mice-agreements.js?v=business-summary-20261024"></script>
 <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script><script src="../../shared/mice-approval.js?v=activity-flow-sync-20261021"></script>
 <script src="../../shared/mice-changes.js?v=activity-four-states-20261021"></script>
 <script src="../../shared/approval-rule-run.js"></script>
-<script src="../../shared/mice-access.js?v=settlement-tax-20261021"></script>
-<script src="../../shared/air-business-model.js?v=20261018-review-fixes1"></script>
-<script src="../../shared/air-list-ui.js?v=20261017-list1"></script><script src="../../shared/air-business-ui.js?v=20261018-scope1"></script>
-<script src="../../shared/air-funds-model.js?v=20261018-due1"></script>
-<script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261017-superadmin1"></script><script src="../../shared/air-close-model.js?v=20261017-superadmin1"></script><script src="../../shared/air-funds-ui.js?v=20261018-due1"></script>
+<script src="../../shared/mice-access.js?v=business-summary-20261024"></script>
+<script src="../../shared/air-business-model.js?v=20261024-cancel-step2"></script>
+<script src="../../shared/air-list-ui.js?v=20261017-list1"></script><script src="../../shared/air-business-ui.js?v=20261024-cancel-step2"></script>
+<script src="../../shared/air-funds-model.js?v=20261024-docs-step3"></script>
+<script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261024-cancel-step2"></script><script src="../../shared/air-close-model.js?v=20261017-superadmin1"></script><script src="../../shared/air-change-funds-model.js?v=20261024-cancel-step2"></script><script src="../../shared/air-change-funds-ui.js?v=20261024-cancel-step2"></script><script src="../../shared/air-funds-ui.js?v=20261024-docs-step3"></script>
 <script src="../../shared/air-reconciliation-model.js?v=20261017-superadmin1"></script><script src="../../shared/air-reconciliation-ui.js?v=20261017-list1"></script>
 
 <script src="../../shared/air-charter-model.js?v=20261018-charter-entry1"></script><script src="../../shared/air-charter-ui.js?v=20261017-list1"></script>

@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团期结算 - 凯撒旅游</title>
-  <link rel="stylesheet" href="../../shared/style.css?v=settlement-tax-20261021">
+  <link rel="stylesheet" href="../../shared/style.css?v=payment-list-layout-20261024">
   <link rel="stylesheet" href="../../shared/air-internal-cost.css?v=20261017-receipt1">
   <link rel="stylesheet" href="../../shared/cruise-finance.css">
-  <script src="../../shared/air-business-model.js?v=20261018-review-fixes1"></script>
+  <script src="../../shared/air-business-model.js?v=20261024-cancel-step2"></script>
   <script src="../../shared/air-internal-cost-model.js?v=20261017-superadmin1"></script>
 <script src="../../shared/fulfillment-cost-core.js"></script>
   <link rel="stylesheet" href="../../shared/mice-settlement-host.css?v=all-settlement-details-20261024">
+
 </head>
 <body>
   <script src="../../shared/nav-merchant.js?v=full-branch-acceptance-20261024"></script>
@@ -105,8 +106,9 @@
           </div>
         </div>
         <div class="filter-row">
-          <div class="filter-item"><label class="sr-only" for="paymentKeyword">供应商/团期/项目团/成本项</label><input id="paymentKeyword" type="search" placeholder="供应商/团期/项目团/成本项"></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentGroupMode">汇总方式</label><select id="paymentGroupMode"><option value="supplier">按供应商</option><option value="schedule">按团期</option><option value="subject">按科目</option></select></div>
+          <div class="filter-item"><label class="sr-only" for="paymentKeyword">供应商/项目/团期/成本项</label><input id="paymentKeyword" type="search" placeholder="供应商/项目/团期/成本项"></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentGroupMode">汇总方式</label><select id="paymentGroupMode"><option value="supplier">按供应商</option><option value="schedule">按团期</option>
+                  <option value="project">按项目</option><option value="subject">按科目</option></select></div>
           <div class="filter-item filter-item-sm"><label class="sr-only" for="paymentStatus">可申请状态</label><select id="paymentStatus"><option>全部状态</option><option>待申请</option><option>部分可申请</option><option>草稿</option><option>驳回待重提</option></select></div>
           <div class="filter-actions"><button id="searchPayments" class="btn btn-secondary btn-filter-search" type="button">搜索</button><button id="resetPayments" class="btn btn-secondary" type="button">重置</button></div>
         </div>
@@ -159,7 +161,7 @@
         </div>
         <div class="filter-row">
           <div class="filter-item"><label class="sr-only" for="recordKeyword">供应商/团期/项目团/申请单号</label><input id="recordKeyword" type="search" placeholder="供应商/团期/项目团/申请单号"></div>
-          <div class="filter-item filter-item-sm"><label class="sr-only" for="recordStatus">申请状态</label><select id="recordStatus"><option>全部状态</option><option>审批中</option><option>驳回</option><option>通过</option><option>待确认</option><option>已撤销</option></select></div>
+          <div class="filter-item filter-item-sm"><label class="sr-only" for="recordStatus">申请状态</label><select id="recordStatus"><option>全部状态</option><option>审批中</option><option>驳回</option><option>通过</option><option>待确认</option><option>已撤销</option><option>待财务复核</option><option>待审批</option><option>已批待付</option><option>部分付款</option><option>已付款</option><option>已退回</option><option>已撤回</option></select></div>
           <div class="filter-actions"><button id="searchRecords" class="btn btn-secondary btn-filter-search" type="button">搜索</button><button id="resetRecords" class="btn btn-secondary" type="button">重置</button></div>
         </div>
       </section>
@@ -600,6 +602,7 @@
           <label class="form-label" for="applyReason">备注</label>
           <textarea id="applyReason" class="form-control" rows="3" placeholder="请输入备注"></textarea>
         </div>
+        <p id="projectPaymentError" role="alert" style="color:#c62828"></p>
         <section id="paymentCreateResult" class="finance-link-card receipt-result" hidden>
           <div class="finance-link-title">已生成付款申请 PAY-REQ-20260703-001，状态：审批中。</div>
           <div class="finance-link-items">
@@ -2067,6 +2070,7 @@
       }
 
       function paymentModeLabel(mode) {
+        if (mode === 'project') return '按项目';
         if (mode === 'schedule') return '按团期';
         if (mode === 'subject') return '按科目';
         return '按供应商';
@@ -2148,11 +2152,12 @@
       }
 
       function existingRequestForContext(context) {
-        if (!context) return null;
+        if (!context || window.MicePaymentWorkbench?.handles(context)) return null;
         return paymentRequestForAnyGroup(context.groupIds || [context.id]);
       }
 
       function requestMainStatus(request) {
+        if(request.miceRequestId) return request.status;
         if (request.status === '已撤销' || request.status === '已撤回' || request.approvalStatus === '已撤销') return '已撤销';
         if (request.status === '草稿' || request.approvalStatus === '草稿') return '草稿';
         if (request.status === '已驳回' || request.approvalStatus === '已驳回') return '驳回';
@@ -2183,6 +2188,7 @@
 
       function paymentRecordActionHtml(request, index) {
         var status = requestMainStatus(request);
+        if (request.miceRequestId) return '<button type="button" class="table-action-primary" data-open-payment-record="'+index+'">详情</button>';
         if (status === '驳回') {
           return '<button type="button" class="table-action-primary" data-open-payment-record="' + index + '">再提交</button>';
         }
@@ -2206,6 +2212,7 @@
       }
 
       function groupItemAvailable(group, item) {
+        if (group.miceCostId) return item.available;
         var request = paymentRequestForGroup(group.id);
         if (request && group.status !== '待申请' && group.status !== '部分付款') {
           var matched = request.items.find(function (recordItem) {
@@ -2226,6 +2233,7 @@
       }
 
       function payableApplyStatusText(groups) {
+        if(payableGroupMode === 'project') return groups.some(g=>g.status==='草稿')?'草稿':groups.some(g=>g.status==='部分付款')?'部分可申请':'待申请';
         return joinUnique(groups.map(payableApplyState));
       }
 
@@ -2236,6 +2244,8 @@
       }
 
       function payableViewGroups() {
+        window.MicePaymentWorkbench?.sync(payableCostGroups, paymentRequests);
+        if (payableGroupMode === 'project') return window.MicePaymentWorkbench?.views(payableCostGroups) || [];
         var sourceGroups = payableCostGroups.filter(function (group) {
           return payableGroupIsSelectable(group);
         });
@@ -2245,6 +2255,7 @@
             var request = paymentRequestForGroup(group.id);
             return {
               key: group.id,
+              currency:group.miceCostId ? group.currency : '',
               label: group.supplier,
               subLabel: group.entity + (group.sourceType === 'project' ? ' / ' + group.projectNo : ''),
               groupIds: [group.id],
@@ -2255,7 +2266,7 @@
               amount: totals.amount,
               applied: totals.applied,
               paid: totals.paid,
-              available: request && group.status !== '待申请' && group.status !== '部分付款' ? requestAmount(request) : Math.max(totals.amount - totals.applied, 0),
+              available: group.miceCostId ? group.available : request && group.status !== '待申请' && group.status !== '部分付款' ? requestAmount(request) : Math.max(totals.amount - totals.applied, 0),
               expectedDate: group.expectedDate,
               tabStatus: group.status
             };
@@ -2468,21 +2479,42 @@
       }
 
       function renderPayableCosts() {
+        document.querySelector('#payableCostPanel table').dataset.groupMode=payableGroupMode;
+        document.querySelector('#payableCostPanel th:nth-child(4)').textContent=payableGroupMode==='project'?'关联项目团':payableGroupMode==='schedule'?'关联供应商':'关联团期/项目团';
+        document.querySelector('#payableCostPanel th:nth-child(2)').textContent=({project:'项目 / 客户',supplier:'供应商',schedule:'团期/项目团',subject:'财务科目'})[payableGroupMode];
+        document.querySelector('#payableCostPanel th:nth-child(5)').textContent=['project','subject'].includes(payableGroupMode)?'供应商':'成本范围';
         var viewRows = payableViewGroups();
         var rows = viewRows.map(function (view) {
           var selectableIds = view.groupIds.filter(function (groupId) {
             return payableGroupIsSelectable(findPaymentGroup(groupId));
           });
           var applyStatus = payableApplyStatusText(view.groups);
-          return '<tr data-tab-status="' + escapeHtml(applyStatus) + '">' +
+          var values = function (text) { return [...new Set(String(text || '').split('、').filter(Boolean))]; };
+          var nodes=values(view.node),related=values(view.relatedObjects),scopes=values(view.costScope),dates=values(view.expectedDate);
+          var nodeText=nodes.length>1?nodes.length+' 种付款节点':view.node;
+          var relatedText=view.relatedObjects,relatedNote=view.relatedNote||'';
+          if(payableGroupMode!=='project'){
+            if(payableGroupMode==='schedule') relatedText=related.length>1?related.length+' 家供应商':related[0];
+            else {
+              var tours=related.filter(function(v){return v!=='项目公共费用';});
+              relatedText=tours.length>1?tours.length+' 个团期/项目团':tours[0]||'项目公共费用';
+              if(tours.length&&related.includes('项目公共费用'))relatedNote='含项目公共费用';
+            }
+          }
+          var scopeText=payableGroupMode==='project'?view.costScope:scopes.length>1?scopes.length+(payableGroupMode==='subject'?' 家供应商':' 项费用'):scopes[0];
+          var searchText=view.searchText||joinUnique([view.label,view.subLabel,view.node,view.relatedObjects,view.costScope].concat(view.groups.flatMap(function(g){
+            var items=g.items.filter(function(item){return payableGroupMode==='supplier'||(payableGroupMode==='schedule'?item.scheduleNo===view.key:paymentSubject(item)===view.key);});
+            return [g.supplier,g.projectNo,g.projectName,g.customer].concat(items.flatMap(function(item){return [item.scheduleNo,item.route,item.fee];}));
+          })));
+          return '<tr data-tab-status="' + escapeHtml(applyStatus) + '" data-search="'+escapeHtml(searchText)+'">' +
             '<td class="payable-cost-select-cell"><input type="checkbox" data-payable-select="' + escapeHtml(selectableIds.join(',')) + '"' + (selectableIds.length ? '' : ' disabled') + '></td>' +
-            '<td class="payable-cost-object-cell"><strong>' + escapeHtml(view.label) + '</strong><span class="text-muted">' + escapeHtml(view.subLabel || '') + '</span></td>' +
-            '<td class="payable-cost-node-cell">' + escapeHtml(view.node) + '</td>' +
-            '<td class="payable-cost-related-cell">' + escapeHtml(view.relatedObjects || '-') + '</td>' +
-            '<td class="payable-cost-scope-cell">' + escapeHtml(view.costScope || '-') + '</td>' +
-            '<td class="payable-cost-payable-cell"><span class="amount-strong">应付 ' + money(view.amount) + '</span><span class="text-muted schedule-route-name">已申请 ' + money(view.applied) + ' · 已付 ' + money(view.paid) + '</span></td>' +
-            '<td class="payable-cost-available-cell amount-strong">' + money(view.available) + '</td>' +
-            '<td class="payable-cost-date-cell">' + escapeHtml(view.expectedDate) + '</td>' +
+            '<td class="payable-cost-object-cell" title="'+escapeHtml(view.label+' '+(view.subLabel||''))+'"><strong>' + escapeHtml(view.label) + '</strong><span class="text-muted">' + (payableGroupMode==='project'?escapeHtml(view.projectNo)+'<br>'+escapeHtml(view.customer+' · '+view.currency):escapeHtml(view.subLabel || '')) + '</span></td>' +
+            '<td class="payable-cost-node-cell"><span class="payable-cost-clamp" title="'+escapeHtml(view.node)+'">' + escapeHtml(nodeText) + '</span></td>' +
+            '<td class="payable-cost-related-cell" title="'+escapeHtml(view.relatedObjects||'')+'"><span class="payable-cost-clamp">' + escapeHtml(relatedText || '-') + '</span>' + (relatedNote?'<span class="text-muted payable-cost-related-note">'+escapeHtml(relatedNote)+'</span>':'') + '</td>' +
+            '<td class="payable-cost-scope-cell" title="'+escapeHtml(view.supplierNames||view.costScope||'')+'"><span class="payable-cost-clamp">' + escapeHtml(scopeText || '-') + '</span></td>' +
+            '<td class="payable-cost-payable-cell"><span class="amount-strong">应付 ' + (view.currency ? MicePaymentWorkbench.money(view.amount,view.currency) : money(view.amount)) + '</span><span class="text-muted schedule-route-name">已申请 ' + (view.currency ? MicePaymentWorkbench.money(view.applied,view.currency) : money(view.applied)) + '</span><span class="text-muted schedule-route-name">已付 ' + (view.currency ? MicePaymentWorkbench.money(view.paid,view.currency) : money(view.paid)) + '</span></td>' +
+            '<td class="payable-cost-available-cell amount-strong">' + (view.currency ? MicePaymentWorkbench.money(view.available,view.currency) : money(view.available)) + '</td>' +
+            '<td class="payable-cost-date-cell" title="'+escapeHtml(view.expectedDate||'')+'">' + escapeHtml(dates.slice().sort()[0]||'—') + (dates.length>1?'<span class="payable-cost-date-note">等 '+dates.length+' 个日期</span>':'') + '</td>' +
             '<td class="payable-cost-status-cell">' + payableApplyStatusTags(view.groups) + '</td>' +
             '<td class="payable-cost-action-cell"><div class="table-action">' + paymentViewAction(view) + '</div></td>' +
             '</tr>';
@@ -2493,6 +2525,7 @@
       }
 
       function renderPaymentRecords() {
+        window.MicePaymentWorkbench?.sync(payableCostGroups, paymentRequests);
         var recordRequests = paymentRequests.map(function (request, index) {
           return { request: request, index: index };
         }).filter(function (entry) {
@@ -2503,7 +2536,7 @@
           var index = entry.index;
           var mainStatus = requestMainStatus(request);
           return '<tr data-tab-status="' + escapeHtml([mainStatus, request.status, request.approvalStatus].join(' ')) + '">' +
-            '<td class="payment-record-id-cell"><strong>' + escapeHtml(request.id) + '</strong><span class="text-muted">' + escapeHtml(request.approvalNo || '未提交审批') + '</span></td>' +
+            '<td class="payment-record-id-cell"><strong>' + escapeHtml(request.id) + '</strong><span class="text-muted">' + escapeHtml(request.miceRequestId ? (request.projectNo+' · '+(window.MiceUI?.store.find('projects',request.projectNo)?.name||'')) : request.approvalNo || '未提交审批') + '</span></td>' +
             '<td class="payment-record-object-cell"><span class="schedule-product-name">' + escapeHtml(request.supplier) + '</span><span class="text-muted">' + escapeHtml(request.account || request.entity || '-') + '</span></td>' +
             '<td>' + escapeHtml(paymentRecordScheduleText(request)) + '</td>' +
             '<td>' + tag(request.node) + '</td>' +
@@ -4181,15 +4214,15 @@
         document.getElementById('paymentApplyCostRows').innerHTML = context.items.map(function (item, index) {
           var matched = requestItemForLine(request, item);
           var available = applyItemAmount(context, item);
-          var amount = matched ? Number(matched.requestAmount || 0) : available;
-          var checked = matched || available > 0;
-          var remark = matched && matched.remark ? matched.remark : '';
+          var amount = item.costId ? item.suggested : matched ? Number(matched.requestAmount || 0) : available;
+          var checked = item.costId ? amount > 0 : matched || available > 0;
+          var remark = item.costId ? item.remark : matched && matched.remark ? matched.remark : '';
           return '<div class="payment-detail-entry" role="row">' +
-            '<label class="payment-line-cell payment-line-select" role="cell"><input type="checkbox" aria-label="选择付款明细" data-apply-line-index="' + index + '"' + (checked ? ' checked' : '') + '><span class="sr-only">选择</span></label>' +
+            '<label class="payment-line-cell payment-line-select" role="cell"><input type="checkbox" aria-label="选择付款明细" data-apply-line-index="' + index + '"' + (checked ? ' checked' : '') + (item.conditionMissing ? ' disabled' : '') + '><span class="sr-only">选择</span></label>' +
             '<div class="payment-line-cell payment-line-field payment-line-supplier" role="cell"><span class="payment-line-label">供应商</span><strong>' + escapeHtml(item.supplier) + '</strong><small>' + escapeHtml(item.entity || '-') + '</small></div>' +
             '<div class="payment-line-cell payment-line-field payment-line-schedule" role="cell"><span class="payment-line-label">团期/项目团</span><strong>' + escapeHtml(item.scheduleNo) + '</strong><small>' + escapeHtml(item.route) + '</small></div>' +
-            '<div class="payment-line-cell payment-line-field payment-line-subject" role="cell"><span class="payment-line-label">财务科目</span><strong>' + escapeHtml(item.subject) + '</strong></div>' +
-            '<div class="payment-line-cell payment-line-field payment-line-available" role="cell"><span class="payment-line-label">可申请金额</span><strong>' + money(available) + '</strong></div>' +
+            '<div class="payment-line-cell payment-line-field payment-line-subject" role="cell"><span class="payment-line-label">财务科目</span><strong>' + escapeHtml(item.subject) + '</strong>' + (item.costId ? '<small>' + escapeHtml(item.fee) + '</small><small>' + escapeHtml(item.costId) + '</small>' : '') + '</div>' +
+            '<div class="payment-line-cell payment-line-field payment-line-available" role="cell"><span class="payment-line-label">可申请金额</span><strong>' + (item.conditionMissing ? '付款条件待核对' : item.costId ? MicePaymentWorkbench.money(available,item.currency) : money(available)) + '</strong></div>' +
             '<label class="payment-line-cell payment-line-field payment-line-current" role="cell"><span class="payment-line-label">本次申请金额</span><input class="form-control payment-line-amount" type="number" min="0" max="' + available + '" value="' + amount + '" data-apply-amount-input data-max-amount="' + available + '"></label>' +
             '<label class="payment-line-cell payment-line-field payment-line-remark" role="cell"><span class="payment-line-label">备注</span><input class="form-control" type="text" value="' + escapeHtml(remark) + '" placeholder="请输入备注" data-apply-remark-input></label>' +
             '</div>';
@@ -4214,7 +4247,7 @@
           }
           return Object.assign({}, source, {
             requestAmount: amount,
-            account: headerAccount,
+            account: source.costId ? source.account : headerAccount,
             remark: String(remarkInput.value || '').trim()
           });
         }).filter(function (item) {
@@ -4228,6 +4261,8 @@
       }
 
       function openPaymentDrawerForGroups(groupIds, sourceText) {
+        window.MicePaymentWorkbench?.sync(payableCostGroups, paymentRequests);
+        delete paymentApplyDrawer.querySelector('[role=dialog]').dataset.drawerTitleFixed;
         activePaymentContext = paymentContextFromGroups(groupIds, sourceText);
         activePaymentGroup = activePaymentContext.groups[0] || null;
         if (!activePaymentContext.groups.length) {
@@ -4264,6 +4299,7 @@
         document.getElementById('applyReason').value = '';
         document.getElementById('paymentCreateResult').hidden = true;
         renderPaymentApplyRows(activePaymentContext);
+        window.MicePaymentWorkbench?.opened(activePaymentContext);
         updateApplyAmount();
         document.getElementById('paymentCreateResult').hidden = true;
         openLayer(paymentApplyDrawer);
@@ -4281,6 +4317,7 @@
         }).join('') || '<p class="form-hint">请选择付款成本项。</p>';
       }
       function updateApplyAmount() {
+        if(window.MicePaymentWorkbench?.update(activePaymentContext,activeSelectedItems())) return;
         var amount = 0;
         document.querySelectorAll('[data-apply-line-index]').forEach(function (checkbox) {
           var row = checkbox.closest('.payment-detail-entry');
@@ -4306,6 +4343,8 @@
       function upsertPaymentRequest(status) {
         if (!activePaymentContext) return null;
         var items = activeSelectedItems();
+        if(window.MicePaymentWorkbench?.handles(activePaymentContext)) return MicePaymentWorkbench.save(activePaymentContext,items,status);
+        if (activePaymentContext.groups.some(function(g){return g.miceCostId;})) { openActionResult('请分别办理', '项目费用与其他团期成本请分别选择。', '未生成付款申请。'); return null; }
         if (!items.length) {
           openActionResult('请选择成本项', '当前没有可提交的成本明细，请先选择至少一条成本项。', '未生成付款申请。');
           return null;
@@ -4526,7 +4565,7 @@
         var applyStatus = requestMainStatus(request);
         document.getElementById('paymentViewSummary').innerHTML =
           '<div class="description-item"><div class="description-label">申请单号</div><div class="description-value">' + escapeHtml(request.id) + '</div></div>' +
-          '<div class="description-item"><div class="description-label">审批单号</div><div class="description-value">' + escapeHtml(request.approvalNo || '未提交审批') + '</div></div>' +
+          '<div class="description-item"><div class="description-label">审批单号</div><div class="description-value">' + escapeHtml(request.miceRequestId ? (request.projectNo+' · '+(window.MiceUI?.store.find('projects',request.projectNo)?.name||'')) : request.approvalNo || '未提交审批') + '</div></div>' +
           '<div class="description-item"><div class="description-label">付款对象</div><div class="description-value">' + escapeHtml(request.supplier) + '</div></div>' +
           '<div class="description-item"><div class="description-label">收款账户</div><div class="description-value">' + escapeHtml(request.account) + '</div></div>' +
           (request.sourceType === 'project'
@@ -4582,10 +4621,10 @@
         setTab(paymentMode ? initialPaymentTab() : pageParams.get('tab'));
       }
 
-      window.SupplierPaymentWorkbench={show:function(tab){pageMode='payment';applyPageMode();setTab(tab||'payment');},back:function(){pageMode='settlement';applyPageMode();setTab('reconciliation');}};
+      window.SupplierPaymentWorkbench={show:function(tab){pageMode='payment';applyPageMode();setTab(tab||'payment');},back:function(){pageMode='settlement';applyPageMode();setTab('reconciliation');},renderLines:renderPaymentApplyRows,refreshPayments:function(){renderPayableCosts();renderPaymentRecords();filterPaymentWorkbench();filterPaymentRecords();},groupMode:setPayableGroupMode,filterPayments:filterPaymentWorkbench,closePayment:function(){closeLayer(paymentApplyDrawer);}};
 
       function setPayableGroupMode(mode) {
-        payableGroupMode = ['supplier', 'schedule', 'subject'].indexOf(mode) >= 0 ? mode : 'supplier';
+        payableGroupMode = ['supplier', 'schedule', 'subject', 'project'].indexOf(mode) >= 0 ? mode : 'supplier';
         document.getElementById('paymentGroupMode').value = payableGroupMode;
         renderPayableCosts();
         filterPaymentWorkbench();
@@ -4668,7 +4707,7 @@
         var keyword = String(document.getElementById('paymentKeyword').value || '').trim().toLowerCase();
         var status = document.getElementById('paymentStatus').value;
         panelRows('#paymentApplyPanel').forEach(function (row) {
-          var matchKeyword = !keyword || row.textContent.toLowerCase().indexOf(keyword) >= 0;
+          var matchKeyword = !keyword || (row.dataset.search || row.textContent).toLowerCase().indexOf(keyword) >= 0;
           var matchStatus = status.indexOf('全部') === 0 || String(row.dataset.tabStatus || '').indexOf(status) >= 0;
           row.hidden = !(matchKeyword && matchStatus);
         });
@@ -4767,6 +4806,7 @@
         }
         if (openPaymentRecordButton) {
           var request = paymentRequests[Number(openPaymentRecordButton.dataset.openPaymentRecord)];
+          if(request.miceRequestId && request.status !== '草稿') { MicePayments.view(request.miceRequestId); return; }
           if (request && (request.status === '草稿' || request.status === '已驳回')) {
             if ((request.groupIds || []).length > 1) {
               openPaymentDrawerForGroups(request.groupIds);
@@ -4884,14 +4924,14 @@
       document.getElementById('submitSettlementApply').addEventListener('click', handleSettlementPrimaryAction);
       document.getElementById('savePaymentDraft').addEventListener('click', function () {
         var request = upsertPaymentRequest('草稿');
-        if (!request) return;
+        if (!request || request.projectRequests) return;
         renderPayableCosts();
         renderPaymentRecords();
         openActionResult('付款草稿已保存', request.id + ' 已保存为草稿，尚未提交审批。', '草稿不进入财务付款执行。');
       });
       document.getElementById('submitPaymentApply').addEventListener('click', function () {
         var request = upsertPaymentRequest('审批中');
-        if (!request) return;
+        if (!request || request.projectRequests) return;
         syncApprovalTask(request);
         var result = document.getElementById('paymentCreateResult');
         result.querySelector('.finance-link-title').textContent = '已生成付款申请 ' + request.id + '，状态：审批中。';
@@ -5013,15 +5053,17 @@
 <script src="../../shared/supplier-adjustment-model.js"></script>
 <script src="../../shared/supplier-adjustment-ui.js"></script>
 <script src="../../shared/supplier-reconciliation.js"></script>
-<script src="../../shared/mice-prototype-model.js?v=budget-control-20261024-3"></script>
-<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-prototype-data.js?v=settlement-ready-demos-20261024"></script><script src="../../shared/mice-prototype-ui.js?v=detail-unification-20261024"></script><script src="../../shared/mice-budget-model.js?v=budget-control-20261024-3"></script><script src="../../shared/mice-budget-ui.js?v=budget-control-20261024-3"></script>
-<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js"></script><script src="../../shared/fulfillment-cost-editor.js?v=budget-control-20261024-3"></script>
-<script src="../../shared/mice-payments.js?v=full-branch-acceptance-20261024"></script><script src="../../shared/mice-settlement.js?v=budget-control-20261024-3"></script>
+<script src="../../shared/mice-prototype-model.js?v=business-summary-20261024"></script>
+<script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script><script src="../../shared/mice-prototype-data.js?v=business-summary-20261024"></script><script src="../../shared/mice-prototype-ui.js?v=cost-entry-20261024"></script><script src="../../shared/mice-budget-model.js?v=budget-control-20261024-3"></script><script src="../../shared/mice-budget-ui.js?v=cost-ui-20261024-r2"></script>
+<script src="../../shared/mice-tax-ui.js"></script><script src="../../shared/mice-files.js?v=cost-ui-20261024-r2"></script><script src="../../shared/fulfillment-cost-editor.js?v=cost-ui-20261024-r2"></script>
+<script src="../../shared/mice-payments.js?v=project-payment-20261024"></script>
+<script src="../../shared/mice-payment-model.js?v=project-payment-20261024"></script>
+<script src="../../shared/mice-payment-workbench.js?v=payment-drawer-ui-20261024"></script><script src="../../shared/mice-settlement.js?v=budget-control-20261024-3"></script>
 <script src="../../shared/mice-changes.js?v=settlement-source-status-20261024"></script>
-<script src="../../shared/mice-access.js?v=settlement-tax-20261021"></script>
+<script src="../../shared/mice-access.js?v=business-summary-20261024"></script>
 <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script>
 <script src="../../shared/mice-settlement-host.js?v=full-branch-acceptance-final-20261024"></script>
 <script src="../../shared/air-internal-cost-ui.js?v=20261017-superadmin1"></script>
-<script src="../../shared/mice-project-flow.js?v=full-branch-acceptance-20261024"></script>
+<script src="../../shared/mice-project-flow.js?v=business-summary-20261024"></script>
 </body>
 </html>

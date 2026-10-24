@@ -11,7 +11,7 @@
   }
   function summary(p){
     const s=state(p);
-    return SEC('费用预算',U.summary([['管控方式',Q.enabled(p)?'预算管控':'预算参考'],['项目总预算',M.money(p.originalBudget)],['公共费用预算',M.money(p.publicBudget??0)],['项目预留／可分配',M.money(s.available)],['预算已占用',M.money(s.occupied)],['已确认／已发生费用',M.money(s.actual)]])+U.table(['操作人员','负责业务金额（参考）','费用额度','已占用','可用额度'],s.people.map(r=>[E(r.d.employee),M.money(r.d.businessAmount,r.d.currency),M.money(r.d.costBudget,r.d.currency),M.money(r.unknown?null:r.occupied),M.money(r.remaining)]))+U.table(['项目团','本团预算','已确认／已发生费用','预算占用','核对情况'],s.groups.map(r=>[E(r.a.name),M.money(r.budget),M.money(r.unknown?null:r.cost),M.money(r.unknown?null:r.occupied),E(r.unknown?'折算／金额待核对':r.overrun?'超预算 '+M.money(r.overrun):r.released?'已释放未使用预算':r.a.status==='草稿'?'草稿不占用':r.pending?'仍有费用待确认':'执行中保留预算')])));
+    return SEC('费用预算',U.summary([['管控方式',Q.enabled(p)?'预算管控':'预算参考'],['项目总预算',M.money(p.originalBudget)],['公共费用预算',M.money(p.publicBudget??0)],['项目预留／可分配',M.money(s.available)],['预算已占用',M.money(s.occupied)],['已确认／已发生费用',M.money(s.actual)]])+U.table(['操作人员','负责业务金额（参考）','费用额度','已占用','可用额度'],s.people.map(r=>[E(r.d.employee),M.money(r.d.businessAmount,r.d.currency),M.money(r.d.costBudget,r.d.currency),M.money(r.unknown?null:r.occupied),M.money(r.remaining)]))+U.table(['项目团','本团预算','已确认／已发生费用','预算占用','核对情况'],s.groups.map(r=>[E(r.a.name),M.money(r.budget),M.money(r.unknown?null:r.cost),M.money(r.unknown?null:r.occupied),E(r.unknown?'折算／金额待核对':r.overrun?'超预算 '+M.money(r.overrun):r.released?'已释放未使用预算':r.a.status==='草稿'?(r.cost>0?'草稿已确认费用占用':'草稿预算未占用'):r.pending?'仍有费用待确认':'执行中保留预算')])));
   }
   function adjust(id){
     const a=S.find('activities',id),p=S.find('projects',a?.projectId);if(!a||!p)return;

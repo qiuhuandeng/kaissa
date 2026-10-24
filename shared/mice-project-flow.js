@@ -66,7 +66,7 @@
   }
   function budgetEdit(pid) {
     const p = project(pid); if (!editable(p)) return;
-    const names = [...new Set([...D.catalog.staff.filter(s => s.canPlan && s.companies.includes(p.company)).map(s => s.name), ...(p.delegations || []).filter(d => d.status !== '已结束' && d.currency === 'CNY').map(d => d.employee)])].filter(name=>!p.delegations?.some(d=>d.employee===name&&d.status!=='已结束'&&d.currency!=='CNY'));
+    const names = [...new Set([...D.catalog.staff.filter(s => s.canPlan && s.companies.includes(M.executionCompany(p))).map(s => s.name), ...(p.delegations || []).filter(d => d.status !== '已结束' && d.currency === 'CNY').map(d => d.employee)])].filter(name=>!p.delegations?.some(d=>d.employee===name&&d.status!=='已结束'&&d.currency!=='CNY'));
     U.drawer('分配操作人员费用额度', U.summary([['大项目', p.name], ['客户', p.customer]]) + G(F('total', '项目总预算（CNY）', p.originalBudget ?? 500000, { type: 'number' }) + F('manager', '超期提醒部门经理', p.departmentManager || '张三', { options: D.catalog.staff.map(s => s.name) })) + U.table(['操作人员', '可分配费用额度（CNY）', '负责事项'], names.map((name, i) => {
       const d = p.delegations?.find(d => d.employee === name && d.status !== '已结束' && d.currency === 'CNY');
       return [E(name), F('limit-' + i, name + '费用额度', d?.costBudget ?? (i === 0 && !p.delegations?.length ? 100000 : ''), { type: 'number' }), F('scope-' + i, name + '负责事项', d?.scope || '负责本人子团的采购与执行结算')];
@@ -109,6 +109,7 @@
     // 默认资料只作为可选择的回传演示；不自动关联、不自动形成成交。
     return D.oaContractReturns?.filter(r => r.customer === p.customer && r.company === p.company) || [];
   }
+  function contractFromOA(r) { return { id: S.id('FW'), source: 'OA', oaId: r.id, oaVersion: r.version, number: r.number, name: r.name, amount: r.amount, currency: r.currency, nature: r.nature, signedDate:r.signedAt, attachments:[], start: r.start, end: r.end, scope: r.scope, terms: r.terms, basis: r.number + '／V' + r.version + '／OA盖章完成（演示）', status: '已签归档', oaFile: r.file }; }
   function contractLink(pid) {
     const p = project(pid); if (!editable(p)) return;
     const records = oaRecords(p), first = records.find(r => r.status === '盖章完成') || records[0];
@@ -118,7 +119,7 @@
       }, submit(v, i, x) {
         const r = oaRecords(p).find(r => r.id === v.oaId); if (!r || r.status !== '盖章完成') return x.errors({ oaId: '请选择已盖章完成的回传版本；未完成合同继续在OA办理' });
         p.frameworks ||= []; if (p.frameworks.some(f => f.oaId === r.id)) { x.close(); U.toast('该合同版本已关联'); return; }
-        p.frameworks.push({ id: S.id('FW'), source: 'OA', oaId: r.id, oaVersion: r.version, number: r.number, name: r.name, amount: r.amount, currency: r.currency, nature: r.nature, signedDate:r.signedAt, attachments:[], start: r.start, end: r.end, scope: r.scope, terms: r.terms, basis: r.number + '／V' + r.version + '／OA盖章完成（演示）', status: '已签归档', oaFile: r.file });
+        p.frameworks.push(contractFromOA(r));
         S.log(p.id, '关联OA已签合同', r.number + '／V' + r.version); x.close(); refresh();
       }
     });
@@ -182,6 +183,6 @@
     'flow-claim-view': ({ id }) => { const r = S.find('claims', id); if (r) U.drawer('收款认领详情', U.summary([['认领编号', id], ['到账流水', r.flowId], ['状态', r.status], ['认领依据', r.basis]]) + U.table(['订单', '金额', '收款阶段'], r.allocations.map(a => [E(a.orderId), M.money(a.amount, r.currency), E(a.node)])), { readonly: true, buttons: [] }); },
     'flow-invoice-delivery': ({ id }) => delivery(id)
   });
-  window.MiceProjectFlow = { mode, modeField, setupFields, bindTeam, members, budgets, budgetRows, groupBudgetNote, refresh, receipts, settlementSummary };
+  window.MiceProjectFlow = { contractFromOA, mode, modeField, setupFields, bindTeam, members, budgets, budgetRows, groupBudgetNote, refresh, receipts, settlementSummary };
   U.ready(bootstrap);
 })();

@@ -9,6 +9,8 @@
 <body>
   <script src="../../shared/nav-merchant.js"></script>
   <script src="../../shared/schedule-route-catalog.js"></script>
+  <script src="../../shared/cruise-purchase-model.js"></script>
+  <script src="../../shared/cruise-inventory-model.js"></script>
 
   <main class="product-schedule-page">
     <section class="page-workbar product-schedule-workbar">
@@ -223,6 +225,10 @@
         });
       });
 
+      if(profile.typeKey==='cruise'){
+        const M=window.CaesarCruiseInventory,state=M.read(),productId=new URLSearchParams(location.search).get('cruiseProduct')||'BJ';
+        state.voyages.filter(v=>v.ship==='ideal'&&v.products.includes(productId)&&['预售','在售','截止'].includes(v.status)).forEach(v=>{const stocks=state.stocks.filter(st=>st.voyage===v.id),counts=stocks.map(st=>M.count(state,st)),price=stocks.find(st=>!st.priceReady||st.priceReady['B2C零售价'])?.prices['B2C零售价'];schedules.push({code:v.id,route:profile.route,routeCode:profile.routeCode,product:profile.product,productTitle:profile.productTitle,type:profile.type,typeKey:'cruise',batchType:'邮轮航次',depart:v.date,back:v.back,deadline:'按航次约定',stock:counts.reduce((n,x)=>n+x.total,0),sold:counts.reduce((n,x)=>n+x.used,0),price:price?'¥'+price.first.toLocaleString():'待定价',status:v.status==='截止'?'已停售':v.status==='预售'?'筹备中':'销售中',execution:'未开始',unit:'间',voyage:v.id,cruiseProduct:productId});});
+      }
       function setText(id, value) {
         var el = document.getElementById(id);
         if (el) el.textContent = value;
@@ -231,6 +237,7 @@
       function detailHref(item) {
         var query = new URLSearchParams();
         query.set("source", "product");
+        if(item.voyage){query.set("voyage",item.voyage);query.set("date",item.depart);query.set("cruiseProduct",item.cruiseProduct);}
         query.set("scheduleNo", item.code);
         query.set("productName", item.product);
         query.set("type", item.typeKey || "");
@@ -328,7 +335,7 @@
             '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.route) + '</strong><span>' + escapeHtml(item.productTitle || item.product) + '</span></div></td>',
             '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.depart) + '</strong><span>回团 ' + escapeHtml(item.back) + '</span></div></td>',
             '  <td><div class="table-cell-main"><strong>' + escapeHtml(item.deadline) + '</strong><span>截止报名</span></div></td>',
-            '  <td><div class="table-cell-main"><strong>' + escapeHtml(String(left)) + '/' + escapeHtml(String(item.stock)) + escapeHtml(item.unit) + '</strong><span>已售 ' + escapeHtml(String(item.sold)) + escapeHtml(item.unit) + '</span></div></td>',
+            '  <td><div class="table-cell-main"><strong>' + escapeHtml(String(left)) + '/' + escapeHtml(String(item.stock)) + escapeHtml(item.unit) + '</strong><span>' + (item.voyage?'已占用 ':'已售 ') + escapeHtml(String(item.sold)) + escapeHtml(item.unit) + '</span></div></td>',
             '  <td><strong>' + escapeHtml(item.price) + '</strong></td>',
             '  <td><div class="tag-row"><span class="' + statusClass(item.status) + '">' + escapeHtml(item.status) + '</span><span class="tag tag-gray">' + escapeHtml(item.execution) + '</span></div></td>',
             '  <td><div class="table-action"><a class="table-action-primary" href="' + escapeHtml(detailHref(item)) + '">详情</a><button type="button" data-adjust-schedule>调价名额</button><button type="button" data-toggle-schedule>' + stopText + '</button></div></td>',
@@ -472,6 +479,7 @@
         var item = schedules.find(function (schedule) { return schedule.code === row.dataset.scheduleCode; });
         if (!item) return;
         if (event.target.closest("[data-adjust-schedule]")) {
+          if(item.voyage){location.href="../cruise/voyages.html?id="+encodeURIComponent(item.voyage);return;}
           if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast("已打开调价名额处理入口");
           return;
         }

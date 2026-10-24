@@ -33,7 +33,7 @@ window.createAirIssuanceViews=function(ctx){
    '<td>'+(can?'<input type="checkbox" data-issue-select aria-label="选择 '+esc(p.name+' '+p.docNo+' '+l.flight)+'"'+(d.selected?' checked':'')+'>':'')+'</td>'+
    '<td>'+line(p.name+(p.english?' · '+p.english:''))+line(p.docNo||'证件待补',true)+'</td>'+
    '<td>'+line(l.flight+' · '+l.from+' → '+l.to)+line(l.date,true)+'</td>'+
-   '<td>'+control('订座编号','pnr')+'</td><td>'+control('航司订单号','airlineNo')+'</td><td>'+control('票号','ticket','inputmode="numeric"')+'</td>'+
+   '<td>'+control('订座编号','pnr')+'<span class="ao-muted">订座舱位</span>'+control('订座舱位代码','bookingCode','placeholder="如 Y / K"')+'</td><td>'+control('航司订单号','airlineNo')+'</td><td>'+control('票号','ticket','inputmode="numeric"')+'</td>'+
    '<td>'+(can?'<select data-issue-field="state" aria-label="'+esc(p.name+' '+l.flight+' 本次结果')+'">'+options(['已出票','失败','结果待查'],d.state)+'</select>'+(t.state!=='未出票'?line('原结果：'+t.state,true):'')+'<div data-issue-reason'+(d.state==='已出票'?' hidden':'')+'>'+input(p.name+' '+l.flight+' 失败或待查原因','reason',d.reason,'placeholder="失败 / 待查原因"')+'</div>'+(d.error?'<span class="ais-row-error">'+esc(d.error)+'</span>':''):tag(t.state)+(t.reason?line(t.reason,true):''))+'</td></tr>';
  }
  function visible(t){
@@ -58,7 +58,7 @@ window.createAirIssuanceViews=function(ctx){
   const bulk=can?'<details class="ais-bulk"><summary>批量填写订座信息</summary><div><label>订座编号<input id="ais-pnr" value="'+esc(work.pnr)+'" placeholder="本批订座编号"></label><label>航司订单号<input id="ais-airline" value="'+esc(work.airlineNo)+'" placeholder="本批航司订单号"></label>'+btn('应用到已选','bulk')+'</div></details>':'';
   const table='<div class="table-wrap ais-table-wrap" tabindex="0" aria-label="出票结果表"><table class="ais-table"><colgroup><col class="ais-col-select"><col><col class="ais-col-flight"><col class="ais-col-pnr"><col class="ais-col-airline"><col class="ais-col-ticket"><col class="ais-col-result"></colgroup><thead><tr><th><input id="ais-all" type="checkbox" aria-label="选择当前筛选可办理记录"></th><th>乘客 / 证件</th><th>航班 / 日期</th><th>订座编号</th><th>航司订单号</th><th>13位票号</th><th>本次结果</th></tr></thead><tbody>'+o.tickets.map(row).join('')+'</tbody></table><div id="ais-empty" class="ao-empty" hidden>当前范围没有可办理记录</div></div>';
   const queryButton=!work.query&&o.tickets.some(t=>t.state==='结果待查')?btn('查证待查结果','query'):work.query?btn('返回出票','issue'):'';
-  open(work.query?'查证出票结果':team?'团队出票':'登记出票结果',summary(o)+(team?teamContext(o):'')+(issues.length?'<div class="ao-warning ais-conditions">'+issues.map(s=>line(s)).join('')+'</div>':'')+'<section class="ais-results"><div class="drawer-section-head ais-section-head"><h3 class="drawer-section-title">'+(work.query?'待查客票':'客票结果')+'</h3><span class="ao-muted">'+(can?'预置出票资料':'已有出票记录')+'</span>'+queryButton+'</div>'+tools+bulk+table+'</section>',can?btn(work.query?'保存查证结果':'保存出票结果','save',true):'');
+  open(work.query?'查证出票结果':team?'团队出票':'登记出票结果',summary(o)+(team?teamContext(o):'')+(issues.length?'<div class="ao-warning ais-conditions">'+issues.map(s=>line(s)).join('')+'</div>':'')+'<section class="ais-results"><div class="drawer-section-head ais-section-head"><h3 class="drawer-section-title">'+(work.query?'待查客票':'客票结果')+'</h3><span class="ao-muted">'+(can?'预置出票资料':'已有出票记录')+'</span>'+queryButton+'</div>'+tools+bulk+table+'</section>'+(window.AirDocumentUI?'<div class="ad-heading">'+btn('上传与交付资料','documents')+'</div>'+window.AirDocumentUI.orderSection(o):''),can?btn(work.query?'保存查证结果':'保存出票结果','save',true):'');
   root.querySelector('#ao-layer .drawer-modal').classList.add('ais-drawer');
   root.querySelector('#ao-layer-footer [data-ao="close"]').textContent='关闭';
   ctx.layerDirty(work.edited);filterRows();
@@ -68,7 +68,7 @@ window.createAirIssuanceViews=function(ctx){
  function related(kind){ctx.related(kind,order(),resume);}
  function save(){
   const o=order(),chosen=selection();let saved=0;
-  for(const t of chosen){const d=work.drafts[key(t)],u={personId:t.personId,legId:t.legId,state:d.state,pnr:d.pnr||(!o.legs.find(l=>l.id===t.legId).additional?o.bookingPnr:'')||'DEMO01',airlineNo:d.airlineNo||(!o.legs.find(l=>l.id===t.legId).additional?o.bookingAirlineNo:'')||'DEMO-'+o.legs.find(l=>l.id===t.legId).flight,ticket:d.ticket,reason:d.state==='已出票'?'':d.reason||(d.state==='失败'?'供应商返回出票失败':'供应商回执尚未明确')};
+  for(const t of chosen){const d=work.drafts[key(t)],u={personId:t.personId,legId:t.legId,state:d.state,pnr:d.pnr||(!o.legs.find(l=>l.id===t.legId).additional?o.bookingPnr:'')||'DEMO01',airlineNo:d.airlineNo||(!o.legs.find(l=>l.id===t.legId).additional?o.bookingAirlineNo:'')||'DEMO-'+o.legs.find(l=>l.id===t.legId).flight,ticket:d.ticket,bookingCode:d.bookingCode||'',reason:d.state==='已出票'?'':d.reason||(d.state==='失败'?'供应商返回出票失败':'供应商回执尚未明确')};
    if(!u.ticket)u.ticket=String(Number('999'+String(Date.now()).slice(-10))+saved);
    try{M.record(o,[u],'superadmin',ctx.getData().orders,work.query);d.selected=false;d.error='';saved++;}catch(e){d.error=e.message;}
   }
@@ -79,6 +79,7 @@ window.createAirIssuanceViews=function(ctx){
  root.addEventListener('click',e=>{const b=e.target.closest('[data-ais]');if(!b)return;e.preventDefault();try{
   switch(b.dataset.ais){
    case 'save':save();break;
+   case 'documents':ctx.documents(order(),resume);break;
    case 'roster':related('roster');break;
    case 'template':related('template');break;
    case 'import':ctx.import(order(),resume);break;

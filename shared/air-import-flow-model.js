@@ -5,8 +5,8 @@
 })(typeof window==='object'?window:globalThis,function(M){
   'use strict';
   const copy=M.copy;
-  const refillHeaders=['订单号','乘客姓名','证件号码','航班号','出行日期','出发机场','到达机场','票号','订座编号','航司订单号','出票日期'];
-  const refillFields=['orderId','name','docNo','flight','date','from','to','ticket','pnr','airlineNo','issuedDate'];
+  const refillHeaders=['订单号','乘客姓名','证件号码','航班号','出行日期','出发机场','到达机场','票号','订座编号','航司订单号','出票日期','订座舱位代码'];
+  const refillFields=['orderId','name','docNo','flight','date','from','to','ticket','pnr','airlineNo','issuedDate','bookingCode'];
   const key=r=>[r.type||'出票',M.ticketNo(r.ticket),r.date,r.flight].join('|');
   function candidates(r,data,loose=false){
     return data.orders.filter(o=>o.company===M.company&&o.state!=='已取消'&&(!r.scopeOrder||r.scopeOrder===o.id)&&(!r.orderId||r.orderId===o.id)).flatMap(o=>o.tickets.flatMap(t=>{
@@ -30,7 +30,7 @@
       if(t.ticket&&t.ticket!==M.ticketNo(r.ticket))issues.push('已有不同票号，请核对原票退改记录');
       if(data.orders.some(x=>x.tickets.some(y=>y.ticket===M.ticketNo(r.ticket)&&(x.id!==o.id||y.personId!==target.person))))issues.push('本票号已用于其他乘客或订单');
       if(!issues.length&&t.state==='已出票'){
-        if((r.pnr||'')!==(t.pnr||'')||(r.airlineNo||'')!==(t.airlineNo||''))issues.push('原票订座或航司订单号不同，请核对原出票记录');
+        if((r.pnr||'')!==(t.pnr||'')||(r.airlineNo||'')!==(t.airlineNo||'')||r.bookingCode&&t.bookingCode&&r.bookingCode!==t.bookingCode)issues.push('原票订座或航司订单号不同，请核对原出票记录');
         else return {state:'重复跳过',candidates:list,target,issues:[]};
       }
     }
@@ -43,7 +43,7 @@
       const v=inspectRefill(r,data),result={row:r,state:v.state,error:v.issues.join('；'),order:v.target?.order};
       if(v.state==='可回填'){
         const o=data.orders.find(x=>x.id===v.target.order),t=o.tickets.find(x=>x.personId===v.target.person&&x.legId===v.target.leg),before=copy(t);
-        Object.assign(t,{state:'已出票',ticket:r.ticket,pnr:r.pnr,airlineNo:r.airlineNo,issuedDate:r.issuedDate,reason:'航司回票导入',checkedAt:new Date().toISOString()});
+        Object.assign(t,{state:'已出票',ticket:r.ticket,pnr:r.pnr,airlineNo:r.airlineNo,issuedDate:r.issuedDate,bookingCode:r.bookingCode||t.bookingCode||'',reason:'航司回票导入',checkedAt:new Date().toISOString()});
         if(o.state!=='待确认')o.state=o.tickets.every(x=>x.state==='已出票')&&(!o.charterVersion||o.people.length>=Number(o.bookedSeats))?'已出票':'出票中';
         M.log(o,'回填票号 '+r.ticket+' · '+r.name+' · '+r.flight,'superadmin',{basis:'回票文件第'+r.sourceRow+'行',changes:M.changes(before,t,{state:'出票状态',ticket:'票号',pnr:'订座编号',airlineNo:'航司订单号',issuedDate:'出票日期'})});
         // Provenance only; no sale, procurement, funds or stock mutation.
@@ -56,8 +56,9 @@
   }
   function apply(rows,data,mode,meta={}){
     const existing=new Set(data.orders.map(o=>o.id));
+    const range=mode==='日报'?dailyRange(meta,rows,data):null;
     const b=mode==='票号回填'?applyRefill(rows,data):M.applyImport(rows,data,'superadmin','日报');
-    Object.assign(b,meta);
+    Object.assign(b,meta);if(range)b.dailyRange=range;
     b.results.forEach(r=>{r.action=mode==='票号回填'?'回填票号':r.row.type!=='出票'?'退改记录':r.state==='更正已记录'?'交易更正':r.order&&!existing.has(r.order)?'新增订单':'回填票号';});
     return b;
   }
@@ -90,6 +91,11 @@
       if(r.state==='退改待办理')n.afterSales++;
     }n.created=new Set(results.filter(r=>r.order&&r.action==='新增订单'&&r.state!=='未应用').map(r=>r.order)).size;return n;
   }
+  function dailyRange(meta,rows,data){
+    const dates=[...new Set(rows.map(r=>r.issuedDate).filter(Boolean))].sort(),outside=rows.filter(r=>r.issuedDate&&r.issuedDate!==meta.dailyDate).length,missing=rows.filter(r=>!r.issuedDate).length;
+    const prior=(data?.batches||[]).filter(b=>b.mode==='日报'&&b.dailyDate===meta.dailyDate&&b.account===meta.account&&b.currency===meta.currency);
+    return {dates,outside,missing,prior:prior.map(b=>b.id),text:meta.dailyDate+' 00:00 至次日 00:00（不含）'+(outside?'；跨营业日 '+outside+' 行':'')+(missing?'；出票日期待补 '+missing+' 行':'')+(prior.length?'；已有 '+prior.length+' 批，请核对补导／重复记录':'')};
+  }
   function calendar(meta,rows,calendarRows){
     const dates=[...new Set(rows.map(r=>[r.issuedDate||meta.dailyDate,r.currency||meta.currency||'CNY'].join('|')))];
     if(!dates.length&&meta.dailyDate)dates.push(meta.dailyDate+'|'+(meta.currency||'CNY'));
@@ -97,5 +103,5 @@
     for(const item of dates){const [date,currency]=item.split('|');const matches=(calendarRows||[]).filter(c=>c.company===M.company&&c.account===meta.account&&c.currency===currency&&c.from<=date&&c.to>=date);if(matches.length!==1)missing=true;else if(!found.some(x=>x.id===matches[0].id))found.push(matches[0]);}
     return {found,missing:missing||!dates.length,text:!found.length?'账期待确认':found.map(c=>c.period+' · '+c.from+' 至 '+c.to+(c.demo?'（演示日历）':'')).join('；')+(missing?'；部分日期账期待确认':'')||'账期待确认'};
   }
-  return {refillHeaders,refillFields,candidates,inspectRefill,apply,preview,later,pending,state,counts,calendar,key};
+  return {refillHeaders,refillFields,candidates,inspectRefill,apply,preview,later,pending,state,counts,calendar,dailyRange,key};
 });

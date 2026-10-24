@@ -3,8 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    if(new URLSearchParams(location.search).get('type')==='cruise'){const p=new URLSearchParams(location.search);p.set('from','schedule-orders');location.replace('../sales/booking.html?'+p.toString());}
+  </script>
+  <script src="../../shared/cruise-purchase-model.js"></script>
+  <script src="../../shared/cruise-inventory-model.js"></script>
+  <script src="../../shared/cruise-sales-supply.js"></script>
   <title>新建团期订单 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/schedule-route-catalog.js"></script>
+  <script src="../../shared/team-booking-rules.js?v=20261024"></script>
 </head>
 <body>
   <script src="../../shared/nav-merchant.js"></script>
@@ -2181,6 +2189,7 @@
         if (!record || !record.product) return;
         const item = record.product;
         currentProduct = cloneProduct(item);
+        if(item.type==='cruise')currentProduct.stocks=window.CaesarCruiseSalesSupply.stockRows();
         selectedPlanIndex = Number(record.planIndex || 0);
         selectedStockIndex = -1;
         saleCompositionRows = [];
@@ -2208,6 +2217,7 @@
       }
 
       function selectCurrentStock(index) {
+        if(currentProduct.type==='cruise'){const row=currentProduct.stocks[Number(index)||0];const p=new URLSearchParams({type:'cruise',from:'schedule-orders',product:currentProduct.name,plan:selectedPlanName(),date:row[0],scheduleNo:row[1]});location.href='../sales/booking.html?'+p.toString();return;}
         selectedStockIndex = Number(index || 0);
         const stock = currentProduct.stocks[selectedStockIndex] || currentProduct.stocks[0];
         if (stock) applyPresetPrice(stock[3]);
@@ -2296,6 +2306,8 @@
           window.alert('请先补充：' + missing.join('、'));
           return;
         }
+        const teamIssues = window.TeamBookingRules.issues({type:currentProduct.type,mode:'pending',stock:selectedStock(),stocks:currentProduct.stocks,catalog:window.caesarScheduleRouteCatalog});
+        if (teamIssues.length) { window.alert('暂不能报名：' + teamIssues.join('；')); return; }
         const orderNo = generatedOrderNo();
         const process = processProfile();
         const stock = selectedStock();
@@ -2724,12 +2736,13 @@
         applyPresetPrice(sourceContext.amount || params.get('price'));
         const presetDate = params.get('date');
         const presetStock = params.get('stock') || params.get('scheduleNo');
-        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || presetStock || '可售';
+        const knownStock = currentProduct.stocks.find(row => row[1] === presetStock);
+        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || knownStock?.[4] || (currentProduct.type === 'group' ? '待核对' : '可售');
         const presetTag = /紧张|少量|确认|询位/.test(presetStatus) ? 'tag tag-orange' : 'tag tag-green';
         if (!sourceContext.isCustomProject && (presetDate || presetStock)) {
           presetStockOverride = [
             presetDate || '已选班期',
-            [presetDate, presetStock].filter(Boolean).join(' / '),
+            currentProduct.type === 'group' ? (presetStock || '') : [presetDate, presetStock].filter(Boolean).join(' / '),
             presetStock || '以提交校验为准',
             priceNumber(params.get('price')),
             presetStatus,

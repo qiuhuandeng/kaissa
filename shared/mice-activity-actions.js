@@ -15,11 +15,12 @@
     if(closed){add('roster-export','导出名单');return result;}
     const hasOrder=(data.orders||[]).some(o=>o.projectId===project.id&&o.activities?.includes(activity.id)&&!['已取消','已作废'].includes(o.status));
     if(status==='草稿'){
-      if(!hasOrder)add('order-new','创建订单','primary');add('form','确认成团','primary');add('edit','编辑');if(!hasOrder)add('quote-new','报价');return result;
+      if(!hasOrder)add('order-new','创建订单','primary');add('form','确认成团','primary');add('edit','编辑');if(!readonly)add('cost-new','新增费用');if(!hasOrder)add('quote-new','报价');return result;
     }
     if(status==='进行中'&&!hasOrder){add('order-new','创建订单','primary');add('quote-new','报价');}
     const phase={进行中:['complete','确认完成']}[status];
     if(phase)add(...phase,'primary');
+    if(['进行中','已完成'].includes(status)&&!readonly)add('cost-new','新增费用');
     add('roster-export','导出名单');
     if(status==='已取消')return result;
     if(['进行中','已完成'].includes(status)){
@@ -30,7 +31,11 @@
     add('files','维护附件');
     return result;
   }
-  const api={items,settlementFor,allows:(activity,project,key,data)=>items(activity,project,data).some(item=>item.key===key&&!item.reason)};
+  function compareForWork(a,b){
+    const rank=status=>['草稿','进行中'].includes(status)?0:status==='已完成'?1:2;
+    return rank(a.status)-rank(b.status)||(a.start||'9999').localeCompare(b.start||'9999');
+  }
+  const api={items,settlementFor,compareForWork,allows:(activity,project,key,data)=>items(activity,project,data).some(item=>item.key===key&&!item.reason)};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.MiceActivityActions=api;
 })(typeof window==='object'?window:globalThis);

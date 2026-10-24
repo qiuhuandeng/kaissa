@@ -104,18 +104,23 @@
     if(a.kind==='团期使用'&&Number(a.qty)+r.allocations.filter(x=>x.kind==='团期使用'&&x.name===a.name).reduce((sum,x)=>sum+x.qty,0)>Number(a.capacity))throw Error('分配数量超过团期人数上限');
     const row={...clone(a),id:id('AL'),qty:Number(a.qty),occupied:0,issued:0,parent:a.parent||''};r.allocations.push(row);log(r,'分配机位',row.name+' '+row.qty+'席；来源 '+(p?p.name:'公共余位'));return row;
   }
-  function release(r,aid,qty) {
+  function release(r,aid,qty,context={}) {
     const a=r.allocations.find(x=>x.id===aid);if(r.status!=='执行中'||!a)throw Error('当前记录不能释放');
     if(!positiveInt(qty)||Number(qty)>free(r,aid))throw Error('可释放量不足；订单占用和已下分额度不能直接收回');
-    a.qty-=Number(qty);log(r,'释放额度',a.name+' '+qty+'席，回到'+(a.parent?'上级部门':'公共余位'));
+    const origin=context.originRelease&&(r.releases||[]).find(x=>x.id===context.originRelease&&x.parent===aid);
+    if(context.originRelease&&(!origin||Number(qty)>origin.qty-(r.releases||[]).filter(x=>x.originalReleaseId===origin.id).reduce((n,x)=>n+x.qty,0)))throw Error('原团释放来源数量不足');
+    const row={id:id('RL'),allocationId:aid,originalReleaseId:origin?.id||'',group:origin?.group||(a.kind==='团期使用'?a.name:''),name:a.name,parent:a.parent||'',qty:Number(qty),reason:context.reason||'释放未占用额度',orderId:context.orderId||origin?.orderId||'',time:new Date().toLocaleString('zh-CN')};
+    (r.releases||=[]).push(row);a.qty-=Number(qty);log(r,'释放额度',a.name+' '+qty+'席，回到'+(a.parent?'上级部门':'公共余位')+'；原团 '+(row.group||'公共库存')+'；'+row.reason);return row;
   }
-  function requestReturn(r,qty,reason,source='') {
+  function requestReturn(r,qty,reason,source='',releaseId='') {
     if(r.status!=='执行中')throw Error('当前状态不能退位');
     if(r.type==='包机位'&&r.returnPolicy==='不可退位')throw Error('本采购协议约定不可退位');
     if(source){const a=r.allocations.find(x=>x.id===source);throw Error(a&&a.issued?'已出票机位不能直接退位，请从原订单办理退票':'已分配额度须先释放回公共余位');}
     if(!positiveInt(qty)||Number(qty)>stats(r).available-stats(r).pendingReturn)throw Error('退位数量超过可申请公共余位；已分配或已出票机位不能直接退位');
     if(!String(reason||'').trim())throw Error('请填写退位原因');
-    const row={id:id('RT'),qty:Number(qty),reason,status:'待确认',loss:null,evidence:''};r.returns.push(row);log(r,'申请退位',qty+'席；尚未扣减库存');return row;
+    const release=releaseId&&(r.releases||[]).find(x=>x.id===releaseId&&!x.parent);
+    if(releaseId&&(!release||Number(qty)>release.qty-r.returns.filter(x=>x.releaseId===releaseId).reduce((n,x)=>n+x.qty,0)))throw Error('原团释放数量不足或尚未回到公共余位');
+    const row={id:id('RT'),qty:Number(qty),reason,status:'待确认',loss:null,evidence:'',releaseId,group:release?.group||'',allocationId:release?.allocationId||'',orderId:release?.orderId||''};r.returns.push(row);log(r,'申请退位',qty+'席；原团 '+(row.group||'公共库存，责任归属待确认')+'；尚未扣减库存');return row;
   }
   function confirmReturn(r,rid,evidence,loss) {
     const row=r.returns.find(x=>x.id===rid);if(!row||row.status!=='待确认')throw Error('退位申请已处理');
@@ -124,6 +129,17 @@
     if(row.qty>stats(r).available)throw Error('公共余位不足，先核对已分配额度');
     row.status='已确认';row.loss=loss===''?null:Number(loss);row.evidence=evidence;log(r,'确认退位',row.qty+'席；损耗 '+(row.loss===null?'待确认':row.loss+' '+r.currency));
   }
+  function confirmLoss(r,rid,evidence,loss){const row=r.returns.find(x=>x.id===rid);if(!row||row.status!=='已确认'||row.loss!==null)throw Error('仅已退位待定损记录可确认损失');if(!num(loss)||Number(loss)<0||!String(evidence||'').trim())throw Error('请核对损失金额和依据');row.loss=Number(loss);row.lossEvidence=evidence;log(r,'确认退位损失',row.id+'；原团 '+(row.group||'公共库存')+'；'+loss+' '+r.currency+'；'+evidence);}
+  function connectPayment(r,i,funds){
+    const p=r.payments[i];if(r.status!=='执行中'||!p)throw Error('当前付款节点不可办理');if(r.paymentReview)throw Error('采购已变更，付款计划须先复核');
+    const sid='INVENTORY:'+r.id+':'+i;let s=funds.sources.find(s=>s.id===sid);
+    if(!s){s={id:sid,company:r.company,currency:r.currency,type:r.type==='包机位'?'包机协议':'机位采购',terms:'协议节点',supplier:r.supplier,agreement:r.agreement,node:p.name,total:Number(p.amount),paid:Number(p.paid||0),account:'待核供应商收款账户',approved:false,checked:true,date:p.date,invoice:'成本凭证待补',invoiceRequired:false,inventoryId:r.id,inventoryNode:i,inventoryDate:r.date,inventoryReturn:r.returnDate,inventoryFlights:[r.out,r.back].filter(Boolean).join(' / '),group:'',history:[]};funds.sources.push(s);}
+    if(s.total!==Number(p.amount)||s.agreement!==r.agreement||s.supplier!==r.supplier)throw Error('付款来源与现行计划有差异，请核对原申请');
+    return s;
+  }
+  const storageKey='caesar-air-inventory-v1';
+  function load(){try{const rows=JSON.parse(sessionStorage.getItem(storageKey));if(Array.isArray(rows)&&rows.length){seq=Math.max(seq,...rows.flatMap(r=>[r,...(r.releases||[]),...(r.returns||[]),...(r.allocations||[])].map(x=>Number(String(x.id).match(/^[A-Z]+-(\d+)$/)?.[1]||0))));return rows.map(ensure);}}catch(_){}return seed();}
+  function save(rows){try{sessionStorage.setItem(storageKey,JSON.stringify(rows));return true;}catch(_){return false;}}
   function requestChange(r,qty,reason) {
     const s=stats(r);if(r.status!=='执行中')throw Error('仅执行中采购可申请变更');
     if(!positiveInt(qty)||Number(qty)<s.returned+s.allocated)throw Error('变更后数量不能小于已退位与已分配合计');
@@ -172,6 +188,6 @@
     const f=make({...base,date:'2026-09-18',returnDate:'2026-09-24',cutoff:'2026-09-01',payments:[]},'已关闭');
     return [a,b,c,d,e,f];
   }
-  const api={purchaseAmount,company,flights,agreements,products,clone,id,validDate,addDays,deadlineState,key,validate,batchValidate,stats,free,make,confirm,allocate,release,requestReturn,confirmReturn,requestChange,confirmChange,groupPreview,buildGroups,paymentRequest,log,seed};
+  const api={storageKey,load,save,confirmLoss,connectPayment,purchaseAmount,company,flights,agreements,products,clone,id,validDate,addDays,deadlineState,key,validate,batchValidate,stats,free,make,confirm,allocate,release,requestReturn,confirmReturn,requestChange,confirmChange,groupPreview,buildGroups,paymentRequest,log,seed};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.AirInventory=api;
 })(typeof window==='object'?window:globalThis);

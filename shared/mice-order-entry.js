@@ -13,15 +13,15 @@
   const number = v => v !== '' && v != null && Number.isFinite(Number(v)) ? Number(v) : null;
   function paymentRow(n, i) {
     const mode = n.mode || (n.ratio != null ? '比例' : '金额');
-    return '<tr data-deal-node><td>' + F('dealNodeName' + i, '收款阶段', n.name) + '</td><td>' + F('dealNodeMode' + i, '金额或比例', mode, { options: ['金额', '比例'], blank: null }) + '</td><td>' + F('dealNodeValue' + i, '金额／比例%', mode === '金额' ? n.amount : n.ratio, { type: 'number' }) + '</td><td>' + F('dealNodeDue' + i, '到期日', n.due || n.date || '', { type: 'date' }) + F('dealNodeTrigger' + i, '收款条件', n.trigger || '').replace('type="text"','type="text" placeholder="收款条件（选填）"') + '</td><td><button type="button" class="mice-link" data-deal-node-remove>删除</button></td></tr>';
+    return '<tr data-deal-node><td>' + F('dealNodeName' + i, '收款阶段', n.name) + '</td><td>' + F('dealNodeMode' + i, '金额或比例', mode, { options: ['金额', '比例'], blank: null }) + '</td><td>' + F('dealNodeValue' + i, '金额／比例%', mode === '金额' ? n.amount : n.ratio, { type: 'number' }) + '</td><td>' + F('dealNodeDue' + i, '收款日期', n.expectedDue || n.due || n.date || '', { type: 'date' }) + F('dealNodeDateKind'+i,'日期口径',n.dateKind||'约定',{options:[{value:'约定',label:'约定收款日期'},{value:'预计',label:'预计收款日期'}],blank:null}) + F('dealNodeTrigger' + i, '收款条件', n.trigger || '').replace('type="text"','type="text" placeholder="收款条件（选填）"') + '</td><td><button type="button" class="mice-link" data-deal-node-remove>删除</button></td></tr>';
   }
   function fields(p, a = {}, c = {}) {
     const pricing = c.pricing === 'quantity' && c.quantityKind === '预计' ? 'actual' : c.pricing || 'fixed';
-    const nodes = c.nodes?.length ? c.nodes : [{ name: '订金', mode: '比例', ratio: 30, due: a.start || p.start }, { name: '尾款', mode: '比例', ratio: 70, due: a.end || p.end }];
-    return '<div class="mice-deal-fields">' + SEC('客户已确认的成交', G(
+    const nodes = c.nodes?.length ? c.nodes : window.MiceBusinessModel?.orderPlan(a).length ? MiceBusinessModel.orderPlan(a) : [{ name: '订金', mode: '比例', ratio: 30,dateKind:'预计',expectedDue: a.start || p.start }, { name: '尾款', mode: '比例', ratio: 70,dateKind:'预计',expectedDue: a.end || p.end }];
+    return '<div class="mice-deal-fields" data-commercial-activities="'+E(JSON.stringify(a.activityIds||[a.id].filter(Boolean)))+'">' + SEC('客户已确认的成交', G(
       F('dealName', '订单服务名称', c.name || a.name || p.name, { full: true }) +
       F('dealPricing', '计价方式', pricing, { options: [{ value: 'fixed', label: '固定总价' }, { value: 'quantity', label: '确定数量 × 单价' }, { value: 'actual', label: '按实际数量最终定价' }], blank: null }) +
-      F('dealCurrency', '币种', c.currency || 'CNY', { options: ['CNY', 'EUR', 'USD'], blank: null }) +
+      F('dealCurrency', '币种', c.currency || a.collectionPlan?.[0]?.currency || 'CNY', { options: ['CNY', 'EUR', 'USD'], blank: null }) +
       '<div data-deal-pricing="fixed">' + F('dealAmount', '客户确认含税总价', c.amount ?? 30000, { type: 'number' }) + '</div>' +
       '<div data-deal-pricing="quantity actual">' + F('dealQuantity', '计价数量（按实际计价时为预计）', c.quantity ?? a.people ?? 60, { type: 'number' }) + '</div>' +
       '<div data-deal-pricing="quantity actual">' + F('dealUnitPrice', '客户确认含税单价', c.unitPrice ?? 500, { type: 'number' }) + '</div>' +
@@ -32,13 +32,14 @@
       F('dealConfirmDate', '客户确认日期', c.confirmDate || today(), { type: 'date' }) +
       F('dealBasis', '成交依据', c.basis || '客户已在线下确认本次服务及价格，确认单待归档（演示）', { type: 'textarea', full: true })
     ) + '<p class="mice-muted" data-deal-total></p>') +
-    SEC('收款计划', '<div class="mice-table-wrap"><table class="mice-table mice-deal-nodes"><thead><tr><th>阶段</th><th>计算方式</th><th>金额／比例%</th><th>期限／条件</th><th>操作</th></tr></thead><tbody data-deal-nodes>' + nodes.map(paymentRow).join('') + '</tbody></table></div><button type="button" class="btn btn-secondary" data-deal-node-add>增加收款阶段</button><span class="mice-error" data-error="dealNodes"></span>') +
+    '<div data-commercial-summary></div>'+SEC('收款计划', '<div class="mice-table-wrap"><table class="mice-table mice-deal-nodes"><thead><tr><th>阶段</th><th>计算方式</th><th>金额／比例%</th><th>期限／条件</th><th>操作</th></tr></thead><tbody data-deal-nodes>' + nodes.map(paymentRow).join('') + '</tbody></table></div><button type="button" class="btn btn-secondary" data-deal-node-add>增加收款阶段</button><span class="mice-error" data-error="dealNodes"></span>') +
     '<details class="mice-deal-extra"><summary>计税参考与成交附件</summary>' + (window.MiceTaxUI?.salesFields(c, p) || '') + SEC('成交附件', window.MiceFiles?.html(c.attachments || [], 'dealFiles') || '') + '</details></div>';
   }
   function bind(form, p, c = {}) {
     const root = form.querySelector('.mice-deal-fields'); if (!root) return;
     const files = window.MiceFiles?.bind(root, c.attachments || [], 'dealFiles') || (() => []);
-    let seq = root.querySelectorAll('[data-deal-node]').length;
+    let seq = root.querySelectorAll('[data-deal-node]').length,planCurrency=form.elements.dealCurrency.value;
+    root.addEventListener('change',e=>{if(e.target.name==='dealCurrency'&&e.target.value!==planCurrency){root.querySelectorAll('[data-deal-node]').forEach(row=>{if(row.querySelector('[name^=dealNodeMode]').value==='金额')row.querySelector('[name^=dealNodeValue]').value='';});planCurrency=e.target.value;}});
     const update = () => {
       const v = Object.fromEntries(new FormData(form)), mode = v.dealPricing;
       root.querySelectorAll('[data-deal-pricing]').forEach(n => n.hidden = !n.dataset.dealPricing.split(' ').includes(mode));
@@ -48,15 +49,16 @@
       const fw=p.frameworks?.find(f=>f.id===v.dealFramework);
       if(fw?.nature==='上限'&&(amount==null||D.orders.some(o=>active(o)&&o.projectId===p.id&&o.frameworkId===fw.id&&o.amount==null)))root.querySelector('[data-deal-total]').textContent+=' 合同存在待定金额，上限余额待最终定价后核对。';
       window.MiceTaxUI?.updateSales(form, amount, v.dealCurrency);
+      if(window.MiceBusinessUI)root.querySelector('[data-commercial-summary]').innerHTML=MiceBusinessUI.commercial(p,JSON.parse(root.dataset.commercialActivities||'[]'),v.dealCurrency,amount);
       return amount;
     };
     root.querySelector('[data-deal-node-add]').onclick = () => { root.querySelector('[data-deal-nodes]').insertAdjacentHTML('beforeend', paymentRow({ name: '阶段款', mode: '比例', ratio: 0, due: p.end }, seq++)); };
     root.addEventListener('click', e => { if (e.target.closest('[data-deal-node-remove]')) e.target.closest('tr').remove(); });
     root.addEventListener('input', update); root.addEventListener('change', update); update();
-    return { files, nodes: () => [...root.querySelectorAll('[data-deal-node]')].map(row => {
+    return {files,setNodes(nodes,currency){if(currency){form.elements.dealCurrency.value=currency;planCurrency=currency;}seq=Math.max(seq,nodes.length);root.querySelector('[data-deal-nodes]').innerHTML=U.layout(nodes.map(paymentRow).join(''),{drawer:true});update();}, nodes: () => [...root.querySelectorAll('[data-deal-node]')].map(row => {
       const input = suffix => row.querySelector('[name^=dealNode' + suffix + ']').value;
       const mode = input('Mode'), value = number(input('Value'));
-      return { name: input('Name'), mode, ratio: mode === '比例' ? value : null, amount: mode === '金额' ? value : null, due: input('Due'), trigger: input('Trigger') };
+      return { name: input('Name'), mode, ratio: mode === '比例' ? value : null, amount: mode === '金额' ? value : null, dateKind:input('DateKind'),due:input('DateKind')==='预计'?'':input('Due'),expectedDue:input('DateKind')==='预计'?input('Due'):'',trigger:input('Trigger') };
     }) };
   }
   function nodeAmounts(nodes, total) {
@@ -119,7 +121,7 @@
     if(!Object.keys(executionState(a).errors).length)return U.confirm('确认成团',a.name+'将进入进行中，可维护执行安排、报名名单和资源。此操作不生成订单或收款。',()=>{if(!startExecution(a))return U.toast('项目团状态或资料已变化，请重新查看','warning');S.log(p.id,'确认成团',a.name+'／进入进行中');refresh();enter();},'确认成团');
     const state=executionState(a),errors=state.errors,keys=new Set(Object.keys(errors));
     if(keys.has('start')||keys.has('end')){keys.add('start');keys.add('end');}
-    const options={service:{options:['会议','旅游','会议加旅游']},start:{type:'date'},end:{type:'date'},planner:{options:D.catalog.staff.filter(s=>s.canPlan&&s.companies.includes(p.company)).map(s=>s.name)},people:{type:'number',step:'1'},scope:{type:'textarea',full:true},basis:{type:'textarea',full:true}};
+    const options={service:{options:['会议','旅游','会议加旅游']},start:{type:'date'},end:{type:'date'},planner:{options:D.catalog.staff.filter(s=>s.canPlan&&s.companies.includes(M.executionCompany(p))).map(s=>s.name)},people:{type:'number',step:'1'},scope:{type:'textarea',full:true},basis:{type:'textarea',full:true}};
     const labels={name:'项目团名称',service:'服务类型',start:'开始日期',end:'结束日期',city:'城市／地点',planner:'主责计调',people:'计划人数',scope:'本团服务范围',basis:'客户委托依据'},fields=[...keys].filter(k=>labels[k]);
     if(errors.originalBudget)return U.drawer('成团预算待核对',U.summary([['项目团',a.name],['客户订单',state.o?.id||'未创建订单']])+'<p>'+E(errors.originalBudget)+'</p>'+B('调整费用预算','budget-group-adjust',{id:a.id})+'<p class="mice-muted">人员额度或项目总预算不足时，请在单团项目列表的分工额度中调整，完成后再确认成团。</p>',{readonly:true,buttons:[]});
     if(!fields.length)return U.drawer('执行资料待核对',U.summary([['项目团',a.name]])+'<p>'+E(Object.values(errors).join('；'))+'</p>'+(state.o?L('查看原订单',orderUrl(state.o)):''),{readonly:true,buttons:[]});
@@ -194,10 +196,10 @@
       const seed = quote ? M.clone(quote) : {};
       // A quotation remark is not evidence that the customer has agreed to buy.
       if (quote && quote.status !== '已确认') { seed.basis = ''; seed.confirmBy = ''; seed.confirmDate = ''; }
-      const a = acts.length === 1 ? acts[0] : { name: acts.map(a => a.name).join('、'), start: p.start, end: p.end, people: acts.reduce((n,a) => n + (a.people || 0), 0), scope: p.scope };
+      const a = acts.length === 1 ? acts[0] : { activityIds:acts.map(a=>a.id),name: acts.map(a => a.name).join('、'), start: p.start, end: p.end, people: acts.reduce((n,a) => n + (a.people || 0), 0), scope: p.scope };
       const draft = document.createElement('form'); draft.innerHTML = fields(p, a, seed);
       const values = Object.fromEntries(new FormData(draft));
-      const nodes = seed.nodes?.length ? M.clone(seed.nodes) : [{name:'订金',mode:'比例',ratio:30,due:a.start||p.start},{name:'尾款',mode:'比例',ratio:70,due:a.end||p.end}];
+      const nodes = seed.nodes?.length ? M.clone(seed.nodes) : window.MiceBusinessModel?.orderPlan(a).length ? MiceBusinessModel.orderPlan(a) : [{name:'订金',mode:'比例',ratio:30,dateKind:'预计',expectedDue:a.start||p.start},{name:'尾款',mode:'比例',ratio:70,dateKind:'预计',expectedDue:a.end||p.end}];
       return { a, seed, values, nodes, files: M.clone(seed.attachments || []), quoteId: quote?.id || '', error: '' };
     }
     for (const a of rows) states.set(a.id, newState(a.id, options.quoteId || undefined));
@@ -212,7 +214,7 @@
     function overview() {
       const host = form.querySelector('[data-order-overview]');
       if (!multiple) { host.innerHTML = U.summary([['项目团',rows[0].name],['执行状态',rows[0].status]]); return; }
-      host.innerHTML = mode === 'package' ? U.summary([['覆盖项目团',rows.map(a=>a.name).join('、')],['本次创建','1笔订单']])
+      host.innerHTML = mode === 'package' ? (window.MiceBusinessUI?'<details class="mice-collection-plan"><summary>各团收款约定（整包建单时核对一份订单计划）</summary>'+rows.map(a=>SEC(E(a.name),MiceBusinessUI.planView(a.collectionPlan))).join('')+'</details>':'')+U.summary([['覆盖项目团',rows.map(a=>a.name).join('、')],['本次创建','1笔订单']])
         : U.table(['项目团','本团订单金额','收款计划','操作'],rows.map(a=>{
           const state=states.get(a.id), quote=S.find('commitments',state.quoteId);
           return [U.lines(E(a.name),quote?E('报价 '+quote.id+' · V'+(quote.version||1)):''),

@@ -25,7 +25,7 @@
     must(s && eligible(s), '未找到本范围内的内部供票原结算');
     const scope = { id: s.id, company: s.company, customer: s.customer, group: s.group, currency: s.currency };
     const original = s.versions?.at(-1);
-    if (!original) return { ...scope, ready: false, amount: null, externalCost: null, stamp: '', parts: [], lines: [], note: '航服结算尚未审批确认' };
+    if (!original) return { ...scope, quote: { amount: s.lines?.length && s.lines.every(l=>validAmount(l.sale)) ? round(s.lines.reduce((n,l)=>n+Number(l.sale),0)) : null, lines: (s.lines||[]).map(l=>({orderId:l.orderId,amount:validAmount(l.sale)?Number(l.sale):null,basis:l.basis||'待核对'})) }, ready: false, amount: null, externalCost: null, stamp: '', parts: [], lines: [], note: '航服结算尚未审批确认' };
     const family = [s, ...db.settlements.filter(x => x.parent === s.id && x.kind === '调整' && x.state !== '已作废' && x.versions?.length)].sort((a, b) => a.id.localeCompare(b.id));
     const parts = [], lines = [];
     let amount = 0, externalCost = 0;
@@ -81,6 +81,8 @@
   function manualCheck(business, sourceNo) {
     const value = String(sourceNo || '').trim();
     if (!value) return true;
+    const orderSource=business.settlements.find(x=>eligible(x)&&(x.lines||[]).some(l=>l.orderId===value));
+    must(!orderSource, '该航服订单已纳入内部供票结算，请从“内部供票费用”核对，不能手工重复录入');
     const s = business.settlements.find(x => x.id === value);
     const base = s?.kind === '调整' ? business.settlements.find(x => x.id === s.parent) : s;
     must(!base || !eligible(base), '该笔航服供票须从“内部供票费用”接收，不能手工重复录入；差异请回航服原结算处理');

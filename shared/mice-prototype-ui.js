@@ -94,9 +94,10 @@
     return url('merchant/tour/fulfillment-cost.html',{type:'project',activityId:a?.id,projectId:r.projectId,settlementId:r.id});
   }
   function activityUrl(activity,params={}){return url('merchant/tour/schedules-detail.html',{...params,mice:1,type:'project',id:activity.id,projectId:activity.projectId});}
+  function costCreateUrl(projectId,activityId=''){return url('merchant/tour/fulfillment-cost.html',{mice:1,projectId,activityId,open:'cost-new',returnUrl:location.href});}
   function resolveActivity(id,projectId=''){
     const canonical=id==='MICE20250915001'?'PRJ-MICE-20260915-001':id;
     const a=store.find('activities',canonical);return a&&(!projectId||a.projectId===projectId)?a:null;
   }
-  window.MiceUI={activityUrl,resolveActivity,M,store,esc,businessLabel,q,rootUrl,url,settlementUrl,tag,btn,action,link,table,lines,options,field,section,grid,summary,toast,confirm,drawer,download,actions,ready,mount,takeover,pageHead,listHead,hero,layout,render,tabs,missing,get dialog(){return openDialog;}};
+  window.MiceUI={activityUrl,costCreateUrl,resolveActivity,M,store,esc,businessLabel,q,rootUrl,url,settlementUrl,tag,btn,action,link,table,lines,options,field,section,grid,summary,toast,confirm,drawer,download,actions,ready,mount,takeover,pageHead,listHead,hero,layout,render,tabs,missing,get dialog(){return openDialog;}};
 })();

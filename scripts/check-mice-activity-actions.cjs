@@ -6,8 +6,8 @@ const M=require('../shared/mice-prototype-model.js');
 const project={id:'P1',status:'进行中'},activity=status=>({id:'A1',name:'项目团一',projectId:'P1',status});
 const order={id:'O1',projectId:'P1',activities:['A1'],status:'已确认'};
 const checks=[];function check(name,fn){fn();checks.push(name);}
-check('已有订单的进行中团不重复报价建单，也不提前结算',()=>assert.deepEqual(actions.items(activity('进行中'),project,{orders:[order]}).map(x=>x.key),['complete','roster-export','claim','invoice','order-change','change','files']));
-check('已有订单的草稿保留成团和编辑，不重复报价建单',()=>assert.deepEqual(actions.items(activity('草稿'),project,{orders:[order]}).map(x=>[x.key,x.label]),[['form','确认成团'],['edit','编辑']]));
+check('已有订单的进行中团不重复报价建单，也不提前结算',()=>assert.deepEqual(actions.items(activity('进行中'),project,{orders:[order]}).map(x=>x.key),['complete','cost-new','roster-export','claim','invoice','order-change','change','files']));
+check('已有订单的草稿保留成团和编辑，不重复报价建单',()=>assert.deepEqual(actions.items(activity('草稿'),project,{orders:[order]}).map(x=>[x.key,x.label]),[['form','确认成团'],['edit','编辑'],['cost-new','新增费用']]));
 check('各主状态决定常驻办理入口，取消不再推进履约',()=>{
  for(const [status,key] of Object.entries({草稿:'order-new',进行中:'complete'}))
   assert.equal(actions.items(activity(status),project,status==='进行中'?{orders:[order]}:{}).find(x=>x.place==='primary').key,key);
@@ -44,7 +44,7 @@ check('准确匹配本团结算，生效单优先且排除仅项目费用单',()
  assert.equal(actions.settlementFor(activity('已完成'),{settlements:[{...draft,activities:[],includeProjectCosts:true}]}),undefined);
 });
 const calls=[],data={projects:[project,{id:'P2',status:'进行中'}],activities:[activity('进行中'),{id:'A2',name:'项目团二',projectId:'P2',status:'进行中'}],orders:[order,{...order,id:'O2',projectId:'P2',activities:['A2']}],settlements:[draft]};
-const U={M:{...M,csv:x=>JSON.stringify(x)},q:new URLSearchParams('mice=1'),actions:{},ready(){},toast:message=>calls.push(['toast',message]),download:(name)=>calls.push(['export',name]),store:{data,find:(kind,id)=>data[kind]?.find(r=>r.id===id)}};
+const U={M:{...M,csv:x=>JSON.stringify(x)},q:new URLSearchParams('mice=1'),actions:{},ready(){},toast:message=>calls.push(['toast',message]),costCreateUrl:(p,a)=>'https://prototype.test/cost?project='+p+'&activity='+a,download:(name)=>calls.push(['export',name]),store:{data,find:(kind,id)=>data[kind]?.find(r=>r.id===id)}};
 const context={MiceUI:U,MiceActivityActions:actions,location:{pathname:'/merchant/tour/schedules.html'},URLSearchParams,console};context.window=context;
 context.MiceBilling={openFor:(a,kind)=>calls.push([kind,a.id,a.projectId])};
 context.MiceChanges={open:(type,id)=>calls.push([type,id])};
@@ -55,9 +55,9 @@ context.MiceAgreements={edit:(id,ctx)=>calls.push(['quote',ctx.activityId,ctx.pr
 context.MiceSettlement={business:(p,a,id)=>calls.push(['settle',p,a,id]),businessView:id=>calls.push(['settle-view',id])};
 vm.runInNewContext(fs.readFileSync(require.resolve('../shared/mice-activities.js'),'utf8'),context);
 U.actions['activity-files']=()=>calls.push(['files',context.MiceActivity.activity.id]);
-check('团控不再办理费用及预计，旧快捷动作不能写入',()=>{
- context.MiceActivity.quick('A1','cost-new');context.MiceActivity.quick('A2','cost-budget');
- assert(calls.slice(-2).every(call=>call[0]==='toast'));
+check('团控新增费用进入原费用页并带入本团，预计入口不恢复',()=>{
+ context.MiceActivity.quick('A1','cost-new');assert.equal(context.location.href,'https://prototype.test/cost?project=P1&activity=A1');
+ context.MiceActivity.quick('A2','cost-budget');assert.equal(calls.at(-1)[0],'toast');
 });
 check('款票与订单改价直接带入本团',()=>{
  for(const kind of ['claim','invoice','order-change'])context.MiceActivity.quick('A1',kind);
@@ -89,6 +89,16 @@ check('草稿不发起结算或团变更，旧状态不生成新操作',()=>{
 check('进行中不提前结算；完成且已有有效结算不直接新增费用',()=>{
  assert(!actions.allows(activity('进行中'),project,'settlement'));
  for(const status of ['审批中','已确认']){const data={settlements:[{...draft,status}]};assert(!actions.allows(activity('已完成'),project,'cost-new',data));assert(!actions.items(activity('已完成'),project,data).some(x=>x.key==='settlement'));}
- assert(!actions.allows(activity('已完成'),project,'cost-new',{settlements:[{...draft,status:'已退回'}]}));
+ assert(actions.allows(activity('已完成'),project,'cost-new',{settlements:[{...draft,status:'已退回'}]}));
+});
+check('未完成团排在完成取消之前，原始状态不变',()=>{
+ const rows=[{id:1,status:'已完成',start:'2026-01-01'},{id:2,status:'草稿',start:'2026-11-01'},{id:3,status:'进行中',start:'2026-10-01'},{id:4,status:'已取消',start:'2026-01-01'}],before=JSON.stringify(rows);
+ assert.deepEqual(rows.slice().sort(actions.compareForWork).map(r=>r.id),[3,2,1,4]);assert.equal(JSON.stringify(rows),before);
+});
+check('费用入口按团及结算状态限制，与订单是否成交无关',()=>{
+ for(const status of ['草稿','进行中','已完成'])for(const orders of [[],[order]])assert(actions.allows(activity(status),project,'cost-new',{orders}));
+ assert(!actions.allows(activity('已取消'),project,'cost-new'));
+ for(const status of ['审批中','已确认'])for(const phase of ['草稿','进行中','已完成'])assert(!actions.allows(activity(phase),project,'cost-new',{settlements:[{...draft,status}]}));
+ for(const status of ['已结项','已终止'])assert(!actions.allows(activity('进行中'),{...project,status},'cost-new'));
 });
 console.log(JSON.stringify({passed:checks.length,checks},null,2));

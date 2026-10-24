@@ -67,7 +67,7 @@ function quoteLimits(data,p,c,{approved=false}={}){
 }
 function validateDelegation(data,p,d,oldId=''){
  const e={},s=staff(data,d.employee);
- if(!s||!s.canPlan||!s.companies.includes(p.company))e.employee='请选择本公司已有计调权限的员工';
+ if(!s||!s.canPlan||!s.companies.includes(M.executionCompany(p)))e.employee='请选择本公司已有计调权限的员工';
  if(!d.scope?.trim())e.scope='请写明负责事项';
  if(!d.start||!d.end||d.start>d.end||p.start&&d.start<p.start||p.end&&d.end>p.end)e.end='请填写项目服务期间内的有效范围';
  if(!d.services?.length)e.services='至少选择一种服务类型';
