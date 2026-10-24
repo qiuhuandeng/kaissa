@@ -783,7 +783,8 @@
       var paramContractNo = params.get('contractNo') || '';
       var inferredKind = paramContractNo.indexOf('CRU') === 0 ? 'cruise' : paramContractNo.indexOf('TRN') === 0 ? 'train' : 'air';
       var activeKind = params.get('kind') || inferredKind;
-      if (!['cruise', 'train'].includes(activeKind)) return; // 航空由独立工作区处理，邮轮专列保留原逻辑。
+      if (activeKind === 'train') { location.replace('schedules.html?type=train'); return; }
+      if (activeKind !== 'cruise') return; // 航空由独立工作区处理，保留旧邮轮库存资料。
       var kindConfig = {
         air: {
           title: '机票切位',
@@ -862,48 +863,6 @@
             { name: '海景', qty: 10, price: 19800, guarantee: 8, freeLoss: 1, lossRate: 100 },
             { name: '阳台', qty: 8, price: 22000, guarantee: 6, freeLoss: 1, lossRate: 100 }
           ]
-        },
-        train: {
-          title: '专列包铺',
-          createTitle: '新增专列包铺',
-          type: '专列',
-          mode: '包铺/包厢',
-          outboundLabel: '去程车次',
-          inboundLabel: '返程车次',
-          subtypeNameLabel: '铺位类型',
-          unitLabel: '单位',
-          guaranteeLabel: '保底铺数',
-          freeLossLabel: '免损铺数',
-          paymentQtyLabel: '铺位数',
-          listResourceLabel: '车次/运营商',
-          listInventoryLabel: '铺位/分配',
-          listSalesLabel: '销售/确认',
-          quickIssueLabel: '待铺位确认',
-          quickLossLabel: '铺损待确认',
-          subtype: '软卧下铺',
-          unit: '铺',
-          price: 10800,
-          defaultQty: 40,
-          defaultGuarantee: 32,
-          defaultFreeLoss: 4,
-          defaultLossRate: 100,
-          resourceSummarySuffix: '专列运营协议自动带出',
-          owner: '专列计调郑华',
-          contractPrefix: 'TRN-BLK',
-          returnPrefix: 'TRN-RET',
-          outboundOptions: [
-            { value: 'Y653', label: 'Y653 西安-乌鲁木齐', supplier: '丝路文旅专列结算公司', resource: 'Y653 东方丝路专列', route: '西安 → 敦煌 → 乌鲁木齐' },
-            { value: 'Y889', label: 'Y889 成都-拉萨', supplier: '青藏文旅专列运营方', resource: 'Y889 雪域专列', route: '成都 → 拉萨' }
-          ],
-          inboundOptions: [
-            { value: 'Y654', label: 'Y654 乌鲁木齐-西安', supplier: '丝路文旅专列结算公司', resource: 'Y654 东方丝路专列返程', route: '乌鲁木齐 → 敦煌 → 西安' }
-          ],
-          subtypeDefaults: [
-            { name: '软卧下铺', qty: 24, price: 10800, guarantee: 20, freeLoss: 3, lossRate: 100 },
-            { name: '软卧上铺', qty: 24, price: 9800, guarantee: 20, freeLoss: 3, lossRate: 100 },
-            { name: '硬卧中铺', qty: 28, price: 8800, guarantee: 22, freeLoss: 3, lossRate: 100 },
-            { name: '硬卧上铺', qty: 20, price: 8200, guarantee: 16, freeLoss: 2, lossRate: 100 }
-          ]
         }
       };
       if (!kindConfig[activeKind]) activeKind = 'air';
@@ -917,9 +876,6 @@
         ],
         '邮轮': [
           { code: 'CZ20260912001', name: '理想号地中海邮轮 / 地中海西线', departDate: '2026-09-12', returnDate: '2026-09-19', sold: 19 }
-        ],
-        '专列': [
-          { code: 'TR20260920001', name: '东方丝路专列 / 西安敦煌乌鲁木齐线', departDate: '2026-09-20', returnDate: '2026-09-28', sold: 16 }
         ]
       };
 
@@ -1100,44 +1056,6 @@
           losses: [
             { type: '舱损', subtype: '阳台', guarantee: 8, actual: 2, freeLoss: 0, returned: 0, lossQty: 6, amount: 132000, scheduleNo: 'CZ20260912001', status: '已确认', costNo: 'CB-CZ20260912001' }
           ]
-        },
-        {
-          contractNo: 'TRN-BLK-20260628-004',
-          type: '专列',
-          mode: '包铺/包厢',
-          supplier: '丝路文旅专列结算公司',
-          resourceName: 'Y653 东方丝路专列',
-          route: '西安 → 敦煌 → 乌鲁木齐',
-          departDate: '2026-09-20',
-          returnDate: '2026-09-28',
-          dlDate: '2026-08-30',
-          status: '履约中',
-          owner: '专列计调郑华',
-          guaranteeQty: 86,
-          freeLossQty: 10,
-          subtypes: [
-            { name: '软卧下铺', unit: '铺', total: 48, allocated: 24, sold: 16, issued: 12, returned: 0, unitPrice: 10800, seatClass: '软卧', berth: '下铺', compartment: '否', childNoBerth: '支持', adultOccupancy: 14, childOccupancy: 2, childNoBerthSold: 1 },
-            { name: '硬卧中铺', unit: '铺', total: 28, allocated: 10, sold: 4, issued: 2, returned: 0, unitPrice: 8800, seatClass: '硬卧', berth: '中铺', compartment: '否', childNoBerth: '支持', adultOccupancy: 4, childOccupancy: 0, childNoBerthSold: 1 },
-            { name: '硬卧上铺', unit: '铺', total: 20, allocated: 8, sold: 3, issued: 0, returned: 0, unitPrice: 8200, seatClass: '硬卧', berth: '上铺', compartment: '否', childNoBerth: '支持', adultOccupancy: 3, childOccupancy: 0, childNoBerthSold: 0 },
-            { name: '软卧包厢', unit: '间', total: 6, allocated: 2, sold: 1, issued: 1, returned: 0, unitPrice: 38800, seatClass: '软卧', berth: '包厢', compartment: '是', childNoBerth: '需确认', adultOccupancy: 2, childOccupancy: 1, childNoBerthSold: 1 }
-          ],
-          payments: [
-            { node: '一压', dueDate: '2026-06-30', amount: 285120, applyNo: 'FK20260630011', approvalStatus: '已通过', paymentStatus: '已付款', receiptStatus: '已回单', ncStatus: '已推送' },
-            { node: '二压', dueDate: '2026-07-30', amount: 380160, applyNo: '', approvalStatus: '未到期', paymentStatus: '未付款', receiptStatus: '-', ncStatus: '待生成' },
-            { node: '三压/尾款', dueDate: '2026-08-30', amount: 360720, applyNo: 'APR-TRN-LOSS-20260920001', payableNo: 'AP-TRN-20260920001', paymentNo: 'PAY-TRN-20260920001', approvalStatus: '已通过', paymentStatus: '待付款', receiptStatus: '-', ncStatus: '待生成' }
-          ],
-          allocations: [
-            { scheduleNo: 'TR20260920001', scheduleName: '东方丝路专列 / 西安敦煌乌鲁木齐线', subtype: '软卧下铺', allocated: 24, sold: 16, issued: 12, returned: 0, adultOccupancy: 14, childOccupancy: 2, childNoBerthSold: 1, status: '开放报名' },
-            { scheduleNo: 'TR20260920001', scheduleName: '东方丝路专列 / 西安敦煌乌鲁木齐线', subtype: '硬卧中铺', allocated: 10, sold: 4, issued: 2, returned: 0, adultOccupancy: 4, childOccupancy: 0, childNoBerthSold: 1, status: '开放报名' },
-            { scheduleNo: 'TR20260920001', scheduleName: '东方丝路专列 / 西安敦煌乌鲁木齐线', subtype: '软卧包厢', allocated: 2, sold: 1, issued: 1, returned: 0, adultOccupancy: 2, childOccupancy: 1, childNoBerthSold: 1, status: '开放报名' }
-          ],
-          tickets: [
-            { person: '李建军', orderNo: 'KS202607020039', scheduleNo: 'TR20260920001', subtype: '软卧下铺', ticketNo: '6车12下', docs: '实名资料已齐', issueStatus: '已确认', cost: 10800, occupancy: '成人占位' },
-            { person: '李小雨', orderNo: 'KS202607020039', scheduleNo: 'TR20260920001', subtype: '软卧下铺', ticketNo: '-', docs: '实名资料已齐', issueStatus: '已确认', cost: 1800, occupancy: '儿童不占位' }
-          ],
-          losses: [
-            { type: '铺损', subtype: '硬卧中铺', guarantee: 8, actual: 2, freeLoss: 0, returned: 0, lossQty: 6, amount: 52800, scheduleNo: 'TR20260920001', status: '已确认', costNo: 'CB-TR20260920001' }
-          ]
         }
       ];
 
@@ -1225,7 +1143,6 @@
         if (/票损|舱损|铺损|损耗/.test(text)) return 'tag tag-red';
         if (/草稿|待|临近|审批中|未付款|未到期|开放报名|履约中|结算中|销售不足|名单待提交|已预占/.test(text)) return 'tag tag-orange';
         if (/邮轮/.test(text)) return 'tag tag-purple';
-        if (/专列|包铺/.test(text)) return 'tag tag-orange';
         if (/机票|包机|切位/.test(text)) return 'tag tag-blue';
         return 'tag tag-gray';
       }
@@ -1255,14 +1172,6 @@
           var capacity = '标准' + (subtype.capacity || 2) + '人/最大' + (subtype.maxCapacity || subtype.capacity || 2) + '人';
           return capacity + ' · 三四人' + (subtype.thirdFourth || '需确认') + ' · 儿童不占位' + (subtype.childNoBerth || '需确认');
         }
-        if (contract.type === '专列') {
-          var pieces = [];
-          var seat = (subtype.seatClass || '') + (subtype.berth ? '/' + subtype.berth : '');
-          if (seat) pieces.push(seat);
-          if (subtype.compartment) pieces.push(subtype.compartment === '是' ? '整包厢' : '非包厢');
-          if (subtype.childNoBerth) pieces.push('儿童不占位' + subtype.childNoBerth);
-          return pieces.length ? pieces.join(' · ') : '随产品线路带出';
-        }
         return '';
       }
 
@@ -1278,7 +1187,7 @@
         if (!contract) return '-';
         if (contract.type === '机票') return '机票位';
         if (contract.type === '邮轮') return '邮轮舱';
-        return '专列铺';
+        return contract.type;
       }
 
       function allocationUnitText(contract) {
@@ -2114,7 +2023,6 @@
       function defaultUnitForSubtype(config, subtypeName, row) {
         if (row && row.unit) return row.unit;
         if (config.type === '邮轮') return '间';
-        if (config.type === '专列') return subtypeName && subtypeName.indexOf('包厢') >= 0 ? '间' : '铺';
         return config.unit;
       }
 
@@ -2316,13 +2224,6 @@
             lossRate: row.lossRate
           };
           if (config.type === '邮轮') {
-            subtype.adultOccupancy = 0;
-            subtype.childOccupancy = 0;
-            subtype.childNoBerthSold = 0;
-          }
-          if (config.type === '专列') {
-            subtype.seatClass = row.name.indexOf('硬卧') >= 0 ? '硬卧' : '软卧';
-            subtype.berth = row.name.indexOf('包厢') >= 0 ? '包厢' : row.name.indexOf('上铺') >= 0 ? '上铺' : row.name.indexOf('中铺') >= 0 ? '中铺' : row.name.indexOf('下铺') >= 0 ? '下铺' : '';
             subtype.adultOccupancy = 0;
             subtype.childOccupancy = 0;
             subtype.childNoBerthSold = 0;
@@ -2784,7 +2685,7 @@
         subtype.returned += qty;
         if ($('#returnModeSelect').value.indexOf('超DL') >= 0) {
           contract.losses.push({
-            type: contract.type === '邮轮' ? '舱损' : contract.type === '专列' ? '铺损' : '票损',
+            type: contract.type === '邮轮' ? '舱损' : '票损',
             subtype: subtype.name,
             guarantee: contract.guaranteeQty,
             actual: subtype.issued,

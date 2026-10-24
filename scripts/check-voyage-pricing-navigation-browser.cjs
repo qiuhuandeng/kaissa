@@ -1,0 +1,49 @@
+const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'docs/evidence/voyage-pricing-navigation-20261024');fs.mkdirSync(out,{recursive:true});
+(async()=>{
+ const server=http.createServer((req,res)=>{try{const file=path.join(root,decodeURIComponent(new URL(req.url,'http://localhost').pathname));res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml'})[path.extname(file)]||'application/octet-stream');res.end(fs.readFileSync(file));}catch{res.writeHead(404).end();}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port+'/merchant/';
+ const browser=await chromium.launch({channel:'chrome',headless:true}),p=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true}),checks=[],errors=[];
+ p.setDefaultTimeout(8000);p.on('pageerror',e=>errors.push(e.message));p.on('dialog',d=>d.accept());
+ const go=f=>p.goto(base+f),ci=(a,id)=>p.locator('[data-ci="'+a+'"]'+(id?'[data-id="'+id+'"]':'')),f=k=>p.locator('[data-f="'+k+'"]'),state=()=>p.evaluate(()=>CaesarCruiseInventory.read());
+ const check=(name,value)=>{assert.ok(value,name);checks.push(name);console.log('PASS '+name);};
+ const target='HC-IDEAL-20261112',other='HC-IDEAL-20261126';
+ const more=async(id,a)=>{await ci('voyage-detail',id).locator('xpath=ancestor::tr').locator('.table-more-toggle').click();await ci(a,id).click();};
+ const shot=async name=>{await p.locator('.crp-drawer').evaluateAll(async ns=>{for(const n of ns)await Promise.all(n.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));});await p.screenshot({path:path.join(out,name+'.png')});};
+ const approve=async(no,reject=false)=>{await go('approval/approvals.html?view=todo&approvalNo='+no);await p.locator('#approvalSubmitBtn').waitFor({state:'visible'});if(reject)await p.locator('input[name=approvalDecision][value="退回补充"]').check();await p.locator('#approvalOpinion').fill(reject?'退回核对航次范围':'已核对航次、舱型和渠道');await p.locator('#approvalSubmitBtn').click();};
+ try{
+  await go('cruise/voyages.html');
+  check('移除两个日历和交通采购菜单',await p.locator('.sidebar a[href*="price-calendar"],.sidebar a[href*="voyage-calendar"],.sidebar a[href*="kind=train"]').count()===0&&!(await p.locator('.sidebar').innerText()).includes('交通采购'));
+  check('独立日历HTML已删除',!fs.existsSync(path.join(root,'merchant/cruise/price-calendar.html'))&&!fs.existsSync(path.join(root,'merchant/cruise/voyage-calendar.html')));
+  check('列表操作列调价可用',await ci('voyage-price',target).innerText()==='调价');
+  await ci('voyage-price',target).click();check('行内直接打开航次调价',await p.locator('#cviTitle').innerText()==='航次调价'&&await f('stock').inputValue()===target+'|BA');
+  await f('stock').selectOption(target+'|BC');check('两人舱不维护第三第四人价',await f('price.third').count()===0&&await f('price.fourth').count()===0);
+  await f('stock').selectOption(target+'|BA');await f('channel').selectOption('B2B同业价');
+  const before=await state();await f('price.first').fill('27000');await f('price.port').fill('1900');await ci('submit-price-detail').click();
+  let s=await state(),request=s.priceRequests[0];check('单项提交回到本航次调价记录',await p.locator('#cviTitle').innerText()==='调价记录'&&request.rows[0].stock===target+'|BA');
+  check('待审保留原价',s.stocks[0].prices['B2B同业价'].first===before.stocks[0].prices['B2B同业价'].first);
+  await approve(request.approvalNo);s=await state();check('统一审批后仅指定渠道价格生效',s.stocks[0].prices['B2B同业价'].first===27000&&s.stocks[0].prices['B2B同业价'].port===1900&&s.stocks[0].prices['B2C零售价'].first===before.stocks[0].prices['B2C零售价'].first);
+  const source=await p.evaluate(id=>CaesarCruiseInventory.approvalRecords().find(a=>a.businessNo===id).sourceHref,request.id);await go(source.replace('../',''));check('审批来源回到航次调价详情',await p.locator('#cviTitle').innerText()==='调价详情');
+  await go('cruise/voyages.html');await more(target,'batch-price');check('批量调价默认仅当前航次',await p.locator('[data-price-voyage]:checked').count()===1&&await p.locator('[data-price-voyage="'+target+'"]').isChecked());
+  await p.locator('[data-price-voyage="'+other+'"]').check();await f('code').selectOption('BA');await f('rule').selectOption('早鸟价');await ci('preview-price').click();check('早鸟按选中航次及提前天数筛选',await p.locator('.cvi-price-preview tbody tr').count()===1&&(await p.locator('.cvi-price-preview').innerText()).includes('2026-11-26'));
+  await f('rule').selectOption('尾单价');await f('days').fill('20');await ci('preview-price').click();check('尾单筛选保留',await p.locator('.cvi-price-preview tbody tr').count()===1&&(await p.locator('.cvi-price-preview').innerText()).includes('2026-11-12'));
+  await f('rule').selectOption('节假日加价');await ci('preview-price').click();check('节假日批量覆盖两个选中航次',await p.locator('.cvi-price-preview tbody tr').count()===2);
+  await f('rule').selectOption('季节价');await f('value').fill('26000');await ci('preview-price').click();await shot('batch-preview-1440');await ci('submit-price').click();s=await state();request=s.priceRequests[0];check('批量提交保存明确范围',request.rows.length===2&&request.voyages.length===2&&request.rows.every(r=>r.stock===target+'|BA'||r.stock===other+'|BA'));
+  await approve(request.approvalNo,true);await go('cruise/voyages.html');await more(target,'price-history');await ci('retry-price',request.id).click();check('退回重提保留原航次和参数',await p.locator('[data-price-voyage]:checked').count()===2&&await f('value').inputValue()==='26000');
+  await ci('submit-price').click();s=await state();request=s.priceRequests[0];await approve(request.approvalNo);s=await state();check('批量审批只改已选舱型及渠道',s.stocks.find(st=>st.id===target+'|BA').prices['B2C零售价'].first===26000&&s.stocks.find(st=>st.id===other+'|BA').prices['B2C零售价'].first===26000&&s.stocks.find(st=>st.id===target+'|BC').prices['B2C零售价'].first===before.stocks.find(st=>st.id===target+'|BC').prices['B2C零售价'].first);
+  await go('cruise/voyages.html?action=price&voyage='+target);check('原团期价格链接进入当前航次',await f('stock').inputValue()===target+'|BA');
+  const download=p.waitForEvent('download');await ci('export-prices').click();const d=await download;await d.saveAs(path.join(out,'航次价格.csv'));const csv=fs.readFileSync(path.join(out,'航次价格.csv'),'utf8');check('价格导出保留各舱型渠道税费',csv.includes('第4人票价')&&csv.includes('港口税')&&csv.includes('内部员工价')&&csv.includes('BC'));
+  await ci('close').first().click();s=await state();const done=s.voyages.find(v=>['出团','完成'].includes(v.status)&&s.stocks.some(st=>st.voyage===v.id));await go('cruise/voyages.html');await ci('voyage-price',done.id).click();check('已执行航次价格只读',await f('price.first').isDisabled()&&await ci('submit-price-detail').count()===0);
+  await ci('close').first().click();await more(target,'batch-price');await p.locator('[data-price-voyage="'+target+'"]').uncheck();const n=(await state()).priceRequests.length;await ci('submit-price').click();check('空选不误调其他航次',(await state()).priceRequests.length===n);await ci('close').first().click();
+  for(const width of [1440,1024]){await p.setViewportSize({width,height:1000});await go('cruise/voyages.html');await shot('voyages-'+width);check(width+'列表无页面横向溢出',await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await ci('voyage-price',target).click();await shot('price-'+width);check(width+'调价字段完整',await f('price.first').evaluate(el=>el.getBoundingClientRect().right<=el.closest('.crp-body').getBoundingClientRect().right));await ci('close').first().click();await more(target,'batch-price');await ci('preview-price').click();await shot('batch-'+width);check(width+'批量价格短表不溢出',await p.locator('.cvi-price-preview .crp-scroll').evaluate(el=>el.scrollWidth<=el.clientWidth+1));await ci('close').first().click();}
+  await p.evaluate(()=>localStorage.setItem('caesar-merchant-tabs',JSON.stringify([{href:'cruise/price-calendar.html',title:'价格日历'},{href:'cruise/voyage-calendar.html',title:'航次日历'},{href:'tour/resource-procurement-inventory.html?kind=train',title:'专列包铺'}])));await go('cruise/voyages.html');check('旧页签不再保留已删除页面',!(await p.locator('body').innerText()).includes('价格日历')&&!(await p.locator('body').innerText()).includes('航次日历')&&!(await p.locator('body').innerText()).includes('专列包铺'));
+  await ci('toggle-view').click();check('航次管理原月历保留',await p.locator('.cvi-month').count()===1);
+  await go('tour/resource-procurement-inventory.html?kind=train');await p.waitForURL('**/tour/schedules.html?type=train');check('旧专列包铺地址退出已删办理页',await p.locator('#openCreateContract').count()===0);
+  await go('tour/resource-procurement-inventory.html?contractNo=TRN-BLK-20260628-004');await p.waitForURL('**/tour/schedules.html?type=train');check('旧专列合同地址不误入航服',await p.locator('#air-inventory').count()===0);
+  await go('tour/schedules-detail.html?type=train&tab=resource');check('专列团期原资源保留且无包铺采购入口',await p.locator('#resourceRows tr').count()>0&&await p.locator('#tab-resource a[href*="resource-procurement-inventory"]:visible').count()===0);
+  await go('tour/resource-procurement-inventory.html?kind=air');await p.locator('#air-inventory').waitFor();check('航服机位管理保留',await p.locator('#air-inventory tbody tr').count()>0);
+  await go('tour/resource-procurement-inventory.html?kind=cruise&contractNo=CRU-POOL-20261112-005');check('旧邮轮库存保留',await p.locator('#contractRows tr').count()>0);
+  await go('cruise/inventory.html');check('邮轮库存页保留',await ci('stock-detail').count()>0);
+  check('浏览器脚本异常为零',errors.length===0);fs.writeFileSync(path.join(out,'browser.json'),JSON.stringify({checks,errors,passed:checks.length},null,2));
+ }catch(e){await shot('failure').catch(()=>{});fs.writeFileSync(path.join(out,'failure.json'),JSON.stringify({checks,errors,error:e.stack,url:p.url()},null,2));throw e;}finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);process.exitCode=1;});

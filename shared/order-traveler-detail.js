@@ -55,7 +55,7 @@
     }
     return p;
   });
-  window.OrderTravelerSource = { get: function () { return { orderNo: config.orderNo, productType: config.productType, productName: config.productName, start: context.start, end: (config.snapshot.find(x => x[0] === '出发/回团')?.[1] || '').split(' / ')[1] || '', amount: config.amount?.[0] ?? '', currency: config.currency || 'CNY', snapshot: config.snapshot, people: JSON.parse(JSON.stringify(rows)) }; } };
+  window.OrderTravelerSource = { get: function () { return { orderState: Array.isArray(config.orderStatus) ? config.orderStatus[0] : config.orderStatus || '', groupState: config.groupState || '', orderNo: config.orderNo, productType: config.productType, productName: config.productName, start: context.start, end: (config.snapshot.find(x => x[0] === '出发/回团')?.[1] || '').split(' / ')[1] || '', amount: config.amount?.[0] ?? '', currency: config.currency || 'CNY', snapshot: config.snapshot, people: JSON.parse(JSON.stringify(rows)) }; } };
   let current = null, draft = null, dirty = false, lastTrigger = null, pendingClose = false;
   const materialItems = p => {
     const items = [];

@@ -3,9 +3,10 @@
 const P=window.ContractPrepare,W=window.ContractWorkflow,C=window.ContractCatalog,D=P.settings,B=P.bridge,F=window.ContractTemplateFields,host=document.getElementById('contractPrepare');if(!host)return;
 const q=s=>host.querySelector(s),qa=s=>[...host.querySelectorAll(s)],e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const params=new URLSearchParams(location.search),state=W.createState();let incoming=null;try{incoming=JSON.parse(sessionStorage.getItem('caesar-contract-current-draft')||'null');}catch(_){}
-let c=state.contracts.find(x=>x.id===params.get('contractNo')),o=state.orders.find(x=>x.id===(params.get('orderNo')||c?.orderId))||P.demoOrder(params.get('orderNo'));
+let c=state.contracts.find(x=>x.id===params.get('contractNo')),o=state.orders.find(x=>x.id===(params.get('orderNo')||c?.orderId))||P.allOrders().find(x=>x.id===params.get('orderNo'));
 if(incoming?.results){const match=incoming.results.find(x=>x.id===params.get('contractNo'));if(match)incoming.c=match;}
 if(incoming&&(incoming.c.id===params.get('contractNo')||(!params.get('contractNo')&&incoming.o.id===params.get('orderNo')))&&(!params.get('orderNo')||incoming.o.id===params.get('orderNo'))){c=incoming.c;o=incoming.o;}
+if(o&&window.CruiseOrderMainflow)o=window.CruiseOrderMainflow.contractOrder(window.CruiseOrderMainflow.get(o.id),W)||o;
 if(!o){host.innerHTML='<div class="page-workbar"><a class="btn btn-secondary" href="contracts.html">返回</a><h1>合同准备</h1></div><p>未找到可核对的订单，请从订单或合同管理重新进入。</p>';return;}
 c=c||W.draft(o,'HT-PREP-'+o.id.replace('ORD-PREP-',''),{deadline:'2026-10-10'});
 const originalStatus=c.status;let d=c.preparation?P.copy(c.preparation):P.create(o,c),step=0,dirty=false,errors=[],notice='',templateDrafts={},attachments=new Map(),openGroups=null;

@@ -1,11 +1,12 @@
 /* 直接团队报名的来源检查；不改变其他产品的出行日期、库存或财务流程。 */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.TeamBookingRules=api;})(typeof window!=='undefined'?window:globalThis,function(){
   'use strict';
-  function issues({type,mode,stock,stocks=[],catalog=[]}){
+  function issues({type,mode,stock,stocks=[],catalog=[],productName=''}){
     if(type!=='group'||mode==='draft')return [];
     const id=String(stock?.[1]||'').trim();
     if(!id||!/[A-Za-z]/.test(id)||!/\d/.test(id)||/\s|\//.test(id))return ['请先选择已生成团号的团队'];
-    const original=stocks.find(r=>r[1]===id),entry=(Array.isArray(catalog)?catalog:(catalog?.routes||[])).flatMap(r=>r.schedules||[]).find(r=>r[0]===id);
+    const original=stocks.find(r=>r[1]===id),route=(Array.isArray(catalog)?catalog:(catalog?.routes||[])).find(r=>(r.schedules||[]).some(r=>r[0]===id)),entry=route?.schedules.find(r=>r[0]===id);
+    if(!original&&route&&productName&&!String(productName).replace(/[·\s]/g,'').includes(String(route.product).replace(/[·\s]/g,'')))return ['所选团号不属于当前线路，请重新选择团期'];
     if(!original&&!entry)return ['所选团号未在当前团期资料中找到，请返回选择已有团期'];
     const blocked=/停售|关闭|取消|终止|未发布|未开放|筹备|不可售|满员|售罄/;
     const states=[stock?.[4],original?.[4],entry?.[7]].filter(Boolean);

@@ -140,7 +140,7 @@
     <section class="modal drawer-modal drawer-xl aftersales-drawer" role="dialog" aria-modal="true" aria-labelledby="afterSalesDrawerTitle">
       <header class="modal-header">
         <div>
-          <h2 id="afterSalesDrawerTitle">申请详情</h2>
+          <h2 id="afterSalesDrawerTitle" class="modal-title">申请详情</h2>
           <p class="modal-subtitle" id="afterSalesDrawerSubtitle">-</p>
         </div>
         <button class="modal-close" type="button" aria-label="关闭" data-close-after-detail>×</button>
@@ -160,7 +160,7 @@
     <section class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="afterSalesWithdrawTitle">
       <header class="modal-header">
         <div>
-          <h2 id="afterSalesWithdrawTitle">撤销售后申请</h2>
+          <h2 id="afterSalesWithdrawTitle" class="modal-title">撤销售后申请</h2>
           <p class="modal-subtitle" id="afterSalesWithdrawSubtitle">-</p>
         </div>
         <button class="modal-close" type="button" aria-label="关闭" data-close-after-withdraw>×</button>
@@ -179,8 +179,12 @@
     </section>
   </div>
 
+  <script src="../../shared/cruise-aftersales-model.js"></script>
+  <script src="../../shared/cruise-aftersales-ui.js"></script>
   <script>
-    (function () {
+    (function initAfterSalesResults() {
+      if(!window.CruiseAftersalesUI){document.addEventListener('cruise-aftersales-ui-ready',initAfterSalesResults,{once:true});return;}
+      CruiseAftersalesUI.mountList();
       var rows = Array.prototype.slice.call(document.querySelectorAll('#afterSalesRows tr'));
       var keywordInput = document.getElementById('afterSalesKeyword');
       var statusSelect = document.getElementById('afterSalesStatus');
@@ -406,6 +410,10 @@
         document.getElementById('afterSalesSummary').innerHTML = detail.summary.map(function (rowItem) {
           return item(rowItem[0], rowItem[1], rowItem[2]);
         }).join('');
+        if(window.CruiseAftersalesUI?.render(row,detail,detailSectionHtml)){openLayer(detailDrawer);return;}
+        document.getElementById('afterSalesDetailSections').classList.remove('ca-results');
+        document.getElementById('afterSalesDetailSections').onclick=null;
+        document.getElementById('afterSalesDetailSections').onchange=null;
         document.getElementById('afterSalesDetailSections').innerHTML = (detail.sections || []).map(detailSectionHtml).join('');
         openLayer(detailDrawer);
       }
@@ -490,6 +498,9 @@
         else document.querySelector('.aftersales-tabs .tab-item[data-filter-value="全部类型"]').classList.add('active');
       }
       applyFilters();
+      var caseNo=new URLSearchParams(location.search).get('cruiseCase');
+      var caseRow=rows.find(function(r){return r.dataset.serviceNo===caseNo;});
+      if(caseRow)renderDetail(caseRow);
     })();
   </script>
 </body>

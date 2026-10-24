@@ -2658,7 +2658,7 @@
       function submissionIssues() {
         const mode = processingMode();
         if (mode === 'draft') return [];
-        const issues = window.TeamBookingRules.issues({type:currentProduct.type,mode,stock:selectedStock(),stocks:currentProduct.stocks,catalog:window.caesarScheduleRouteCatalog});
+        const issues = window.TeamBookingRules.issues({type:currentProduct.type,productName:currentProduct.name,mode,stock:selectedStock(),stocks:currentProduct.stocks,catalog:window.caesarScheduleRouteCatalog});
         const relation = crossCompanyRelation();
         const arrangement = crossArrangement();
         if (relation && (!arrangement || !['instant', 'request'].includes(arrangement.confirmation))) issues.push('资源确认方式尚未明确');
@@ -2681,6 +2681,8 @@
         }
         const stock = selectedStock();
         if (stock && /停售|未发布|已关闭|不可售/.test(stock[4] || '')) issues.push('所选产品或团期当前不可售');
+        // 服务单受理不占用团队名额，仍保留上方门店资格和停售检查。
+        if (isManualMode() || currentProduct.type === 'single') return issues;
         if (mode === 'pending') return issues;
         if (mode === 'reserve' || mode === 'hold') {
           if (channelSource.value === '门店' && (!(Number(store[mode + 'Hours']) > 0) || !store.releaseMode)) issues.push('保留期限及到期处理规则尚未确定，请提交待确认或保存草稿');
@@ -3206,7 +3208,7 @@
         const presetDate = params.get('date');
         const presetStock = params.get('stock') || params.get('scheduleNo');
         const knownStock = currentProduct.stocks.find(row => row[1] === presetStock);
-        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || knownStock?.[4] || (currentProduct.type === 'group' ? '待核对' : '可售');
+        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || (currentProduct.type === 'group' ? (knownStock?.[4] || '待核对') : presetStock || '可售');
         const presetTag = /紧张|少量|确认|询位/.test(presetStatus) ? 'tag tag-orange' : 'tag tag-green';
         if (!sourceContext.isCustomProject && (presetDate || presetStock)) {
           presetStockOverride = [

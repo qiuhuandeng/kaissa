@@ -371,8 +371,12 @@
     </div>
   </div>
 
+  <script src="../../shared/cruise-aftersales-model.js"></script>
+  <script src="../../shared/cruise-aftersales-finance.js"></script>
   <script>
-    (function () {
+    (function initCruiseFinanceSource() {
+      if(!window.CruiseAftersalesFinance){document.addEventListener('cruise-aftersales-finance-ready',initCruiseFinanceSource,{once:true});return;}
+      CruiseAftersalesFinance.mount();
       var rows = Array.from(document.querySelectorAll('#refundRows tr'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
@@ -431,7 +435,8 @@
           window.caesarUI.openLayer(layer);
           return;
         }
-        layer.classList.add('is-open');
+        layer.hidden = false;
+        layer.classList.add('show');
         layer.setAttribute('aria-hidden', 'false');
       }
 
@@ -440,7 +445,7 @@
           window.caesarUI.closeLayer(layer);
           return;
         }
-        layer.classList.remove('is-open');
+        layer.classList.remove('show');
         layer.setAttribute('aria-hidden', 'true');
       }
 
@@ -625,6 +630,7 @@
         var mode = actionModeByStatus(row.dataset.status);
         detailAction.hidden = !(mode === 'execute' || mode === 'receipt' || mode === 'exception');
         detailAction.textContent = actionByStatus(row.dataset.status);
+        CruiseAftersalesFinance.details(row);
         openLayer(detailDrawer);
       }
 
@@ -750,6 +756,7 @@
           if (field) field.addEventListener('change', syncWorkFields);
         });
         syncWorkFields();
+        CruiseAftersalesFinance.defaults(row);
         openLayer(executeDrawer);
       }
 
@@ -772,6 +779,14 @@
 
       function confirmExecution() {
         if (!activeRow) return;
+        if(activeRow.dataset.cruiseFund){
+          try{
+            CruiseAftersalesFinance.handle(activeRow,activeWorkMode,{ref:fieldValue('refundBankFlow'),amount:fieldValue('refundReceiptAmount'),review:fieldValue('refundReviewResult'),result:fieldValue('refundReceiptResult'),exception:fieldValue('exceptionResult')});
+            updateRow(activeRow);applyFilters();closeLayer(executeDrawer);notify('本次办理结果已保存，返回售后可核对');
+          }catch(error){notify(error.message,'warning');}
+          return;
+        }
+
         var flow = fieldValue('refundBankFlow');
         var method = activeRow.dataset.method;
         var message = '退款处理已确认';
@@ -957,6 +972,9 @@
       }
 
       applyFilters();
+      var cruiseCase=new URLSearchParams(location.search).get('cruiseCase');
+      var cruiseRow=rows.find(function(r){return r.dataset.cruiseCase===cruiseCase;});
+      if(cruiseCase&&cruiseRow)openDetail(cruiseRow);
     })();
   </script>
 </body>

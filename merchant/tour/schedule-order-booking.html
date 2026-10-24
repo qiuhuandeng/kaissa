@@ -2306,7 +2306,7 @@
           window.alert('请先补充：' + missing.join('、'));
           return;
         }
-        const teamIssues = window.TeamBookingRules.issues({type:currentProduct.type,mode:'pending',stock:selectedStock(),stocks:currentProduct.stocks,catalog:window.caesarScheduleRouteCatalog});
+        const teamIssues = window.TeamBookingRules.issues({type:currentProduct.type,productName:currentProduct.name,mode:'pending',stock:selectedStock(),stocks:currentProduct.stocks,catalog:window.caesarScheduleRouteCatalog});
         if (teamIssues.length) { window.alert('暂不能报名：' + teamIssues.join('；')); return; }
         const orderNo = generatedOrderNo();
         const process = processProfile();
@@ -2737,7 +2737,7 @@
         const presetDate = params.get('date');
         const presetStock = params.get('stock') || params.get('scheduleNo');
         const knownStock = currentProduct.stocks.find(row => row[1] === presetStock);
-        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || knownStock?.[4] || (currentProduct.type === 'group' ? '待核对' : '可售');
+        const presetStatus = sourceContext.isSingleGroup ? '客户专属' : params.get('status') || (currentProduct.type === 'group' ? (knownStock?.[4] || '待核对') : presetStock || '可售');
         const presetTag = /紧张|少量|确认|询位/.test(presetStatus) ? 'tag tag-orange' : 'tag tag-green';
         if (!sourceContext.isCustomProject && (presetDate || presetStock)) {
           presetStockOverride = [

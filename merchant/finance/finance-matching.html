@@ -84,8 +84,15 @@
     </div>
   </div>
 
+  <script src="../../shared/cruise-order-mainflow.js"></script>
+  <script src="../../shared/cruise-order-matching.js"></script>
   <script>
-    (function () {
+    window.initFinanceMatching = function () {
+      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', window.initFinanceMatching, { once: true }); return; }
+      var host = document.getElementById('matchingRows');
+      if (!window.CruiseOrderMatching || !host || host.dataset.initialized) return;
+      host.dataset.initialized = 'true';
+      window.CruiseOrderMatching.mount();
       var activeRow = null;
       var rows = Array.from(document.querySelectorAll('#matchingRows tr:not(#matchingEmptyRow)'));
       var emptyRow = document.getElementById('matchingEmptyRow');
@@ -102,10 +109,12 @@
         if (window.caesarUI && typeof window.caesarUI.toast === 'function') window.caesarUI.toast(message);
       }
       function openLayer(layer) {
-        window.caesarUI.openLayer(layer);
+        if (window.caesarUI?.openLayer) window.caesarUI.openLayer(layer);
+        else { layer.hidden = false; layer.classList.add('show'); layer.setAttribute('aria-hidden', 'false'); }
       }
       function closeLayer(layer) {
-        window.caesarUI.closeLayer(layer);
+        if (window.caesarUI?.closeLayer) window.caesarUI.closeLayer(layer);
+        else { layer.hidden = true; layer.classList.remove('show'); layer.setAttribute('aria-hidden', 'true'); }
       }
       function statusClass(status) {
         if (status === '待复核') return 'tag-blue';
@@ -232,6 +241,8 @@
         row.children[7].innerHTML = '<span class="tag ' + statusClass(row.dataset.status) + '">' + escapeHtml(row.dataset.status) + '</span>';
         if (row.dataset.status === '待复核') {
           row.children[8].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-review>复核</button><button type="button" data-open-detail>详情</button></div>';
+        } else if (row.dataset.cruiseOrder) {
+          row.children[8].innerHTML = '<div class="table-action"><button type="button" data-open-detail>详情</button></div>';
         } else if (row.dataset.status === '差异中') {
           row.children[8].innerHTML = '<div class="table-action"><button class="table-action-primary" type="button" data-open-review>处理</button><button type="button" data-open-detail>详情</button></div>';
         } else if (row.dataset.status === '已确认') {
@@ -247,6 +258,14 @@
         var data = rowData(activeRow);
         var action = document.getElementById('reviewAction').value;
         var diffExists = hasDiff(data);
+        if (activeRow.dataset.cruiseOrder) {
+          try {
+            var reason = action === '退回补充' ? document.getElementById('returnReason').value + '；' + document.getElementById('returnRemark').value.trim() : document.getElementById('reviewRemark').value.trim();
+            window.CruiseOrderMatching.review(activeRow, action, reason);
+            updateRow(activeRow); closeLayer(reviewDrawer); applyFilters(); notify(action === '退回补充' ? '认款已退回，未计入已收' : '认款已确认，可回原订单核对收款进度');
+          } catch (error) { notify(error.message); }
+          return;
+        }
         if (action === '退回补充') {
           var reason = document.getElementById('returnReason').value;
           var returnRemark = document.getElementById('returnRemark').value.trim();
@@ -308,6 +327,7 @@
         document.getElementById('detailAllocationRows').innerHTML = allocationRows(data);
         renderGrid(document.getElementById('detailVoucherGrid'), [['收款凭证号', escapeHtml(data.receiptNo)], ['凭证金额', '<span class="amount-strong">' + escapeHtml(data.status === '已确认' ? data.amount : '未生成') + '</span>'], ['应收核销', escapeHtml(data.status === '已确认' ? '已核销' : '未生成')], ['NC状态', escapeHtml(data.nc)]].concat(diffDetailItems(data), [['凭证来源', escapeHtml(data.matchNo + ' / ' + data.sourceNo), true]]));
         document.getElementById('detailLogRows').innerHTML = '<tr><td>' + escapeHtml(data.submitTime) + '</td><td>提交认款</td><td>待财务复核</td><td>' + escapeHtml(data.submitter) + '</td></tr><tr><td>2026-07-13 10:20</td><td>财务复核</td><td>' + escapeHtml(data.status) + '</td><td>财务专员</td></tr><tr><td>2026-07-13 14:30</td><td>下游记录</td><td>' + escapeHtml(data.result) + '</td><td>系统</td></tr>';
+        window.CruiseOrderMatching?.details(row);
         switchDetailTab(row.dataset.openVoucher === 'true' ? 'voucher' : 'source');
         row.dataset.openVoucher = '';
         openLayer(detailDrawer);
@@ -345,7 +365,8 @@
       document.querySelectorAll('.modal-overlay').forEach(function (overlay) { overlay.addEventListener('click', function (event) { if (event.target === overlay) closeLayer(overlay); }); });
       applyFilters();
       openFromParams();
-    })();
+    };
+    window.initFinanceMatching();
   </script>
 <script src="../../shared/mice-prototype-model.js?v=business-summary-20261024"></script>
 <script src="../../shared/mice-tax-model.js?v=activity-flow-sync-20261021"></script>

@@ -28,7 +28,7 @@
       var rate=A.rates(c,i?'BC':'BA'),keys={'第1人':'first','第2人':'second','第3人':'third','第4人':'fourth','儿童价':'child','单人附加费':'single','港务税':'port','服务费':'service','燃油费':'fuel','税费方式':'feeMode'};
       Object.entries(keys).forEach(([label,key])=>{var el=row.querySelector('[data-batch-matrix-field="'+label+'"]');if(!el)return;if(el.tagName==='SELECT'){el.value=rate?rate[key]:'另收';el.disabled=true;}else {el.value=rate?rate[key]:'';el.readOnly=true;el.placeholder='待定价';}});
 
-      row.querySelector('[data-cruise-source-note]').innerHTML=e(v.id+' · 本使用方可申请'+free+'间；舱价采用航次已生效价格。')+' <a class="table-link" target="_top" href="../cruise/price-calendar.html?voyage='+encodeURIComponent(v.id)+'">维护航次价格</a>';
+      row.querySelector('[data-cruise-source-note]').innerHTML=e(v.id+' · 本使用方可申请'+free+'间；舱价采用航次已生效价格。')+' <a class="table-link" target="_top" href="../cruise/voyages.html?action=price&voyage='+encodeURIComponent(v.id)+'">维护航次价格</a>';
       var get=function(k){return row.querySelector('[data-batch-matrix-field="'+k+'"]').value;};
       var total=S.priceTotal({first:get('第1人'),port:get('港务税'),service:get('服务费'),fuel:get('燃油费'),feeMode:get('税费方式')});
       row.querySelector('[data-cruise-price-total]').textContent='第1人应收参考 ¥'+total.toLocaleString()+'；第二至第四人与儿童价按适用规则择一计价。';

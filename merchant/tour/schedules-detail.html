@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="../../shared/cruise-fulfillment.css">
 </head>
 <body>
-  <script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261024-cancel-step2"></script>
+  <script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261024-base-step4"></script>
   <script src="../../shared/nav-merchant.js?v=20261017-receipt1"></script>
   <script>
     (function () {
@@ -4617,6 +4617,7 @@
         setText('trafficTicketCount', stats.pendingTicket + '人待处理');
         var procurementLink = document.getElementById('openTrafficProcurement');
         if (procurementLink) {
+          procurementLink.hidden = config && config.typeKey === 'train';
           procurementLink.href = 'resource-procurement-inventory.html?scheduleNo=' + encodeURIComponent(scheduleData.code || '');
         }
       }
@@ -4663,7 +4664,7 @@
             '<button type="button" data-open-traffic-order-row>订单</button>',
             pending > 0 ? '<button type="button" data-open-traffic-return-row>释放</button>' : '',
             lossQty > 0 && pending > 0 ? '<button type="button" data-open-traffic-loss-row>损耗</button>' : '',
-            '<a href="resource-procurement-inventory.html?contractNo=' + encodeURIComponent(row.contractNo) + '">采购</a>'
+            config && config.typeKey === 'train' ? '' : '<a href="resource-procurement-inventory.html?contractNo=' + encodeURIComponent(row.contractNo) + '">采购</a>'
           ].filter(Boolean).join('');
           if (isProject) {
             primaryAction = pending > 0
@@ -4674,7 +4675,7 @@
               '<a href="resource-procurement-inventory.html?source=project&contractNo=' + encodeURIComponent(row.contractNo) + '&scheduleNo=' + encodeURIComponent(scheduleData.code || '') + '">采购</a>'
             ].join('');
           }
-          return '<tr data-traffic-index="' + index + '"><td><span class="tag ' + (row.direction === '返程' ? 'tag-purple' : 'tag-blue') + '">' + escapeHtml(row.direction || row.type) + '</span><a class="link-primary table-main-link" href="resource-procurement-inventory.html?contractNo=' + encodeURIComponent(row.contractNo) + '">' + escapeHtml(row.contractNo) + '</a><span class="text-muted">' + escapeHtml(linked) + '</span></td>' +
+          return '<tr data-traffic-index="' + index + '"><td><span class="tag ' + (row.direction === '返程' ? 'tag-purple' : 'tag-blue') + '">' + escapeHtml(row.direction || row.type) + '</span>' + (config && config.typeKey === 'train' ? '<span class="table-main-link">' + escapeHtml(row.contractNo) + '</span>' : '<a class="link-primary table-main-link" href="resource-procurement-inventory.html?contractNo=' + encodeURIComponent(row.contractNo) + '">' + escapeHtml(row.contractNo) + '</a>') + '<span class="text-muted">' + escapeHtml(linked) + '</span></td>' +
             '<td><span class="schedule-product-name">' + escapeHtml(row.resource) + '</span><span class="text-muted">' + escapeHtml(row.route) + '</span><span class="text-muted">' + escapeHtml(row.subtype + ' / ' + row.spec) + '</span></td>' +
             '<td><div class="schedule-traffic-usage"><strong>已售 ' + escapeHtml(row.sold + '/' + row.allocated + unit) + '</strong><span class="schedule-traffic-meter ' + usageClass + '"><i></i></span><em>已确认' + escapeHtml(row.issued + unit) + ' · 可释放' + escapeHtml(releasable + unit) + ' · 待确认' + escapeHtml(pending + unit) + '</em></div></td>' +
             '<td><div class="schedule-traffic-todo">' + tagHtml(row.status, row.tag) + '<span>' + escapeHtml('DL ' + row.dlDate + ' · ' + risk) + '</span><em>' + escapeHtml(payableText) + '</em></div></td>' +

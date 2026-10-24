@@ -5,7 +5,7 @@
   const $=s=>document.querySelector(s);
   function render(){
     const rows=db.records.filter(r=>(!filters.q||[r.name,r.airline,r.supplier,r.owner,r.flights].join(' ').includes(filters.q))&&(!filters.airline||r.airline===filters.airline)&&(!filters.method||r.method.includes(filters.method))&&(!filters.state||r.state===filters.state));
-    $('#agreementRows').innerHTML=rows.map(r=>'<tr><td><strong>'+E(r.name)+'</strong><br><span class="text-muted">'+E(r.start+' 至 '+r.end)+'</span></td><td>'+E(r.airline)+'</td><td>'+E(r.supplier)+'</td><td>'+E(r.owner||'待补')+'</td><td>'+E(r.method)+'</td><td>'+E(r.deposit+'；'+r.release+'；'+r.ticketing)+'</td><td>'+E(r.currency)+'</td><td><span class="tag '+(r.state==='有效'?'tag-green':'tag-gray')+'">'+E(r.state)+'</span></td><td><div class="table-action"><button class="table-action-primary" data-agreement-edit="'+E(r.id)+'">编辑</button>'+(!['草稿','待审核','终止'].includes(r.state)?'<button data-agreement-renew="'+E(r.id)+'">续约</button>':'')+'</div></td></tr>').join('')||'<tr><td colspan="9">当前条件没有协议</td></tr>';
+    $('#agreementRows').innerHTML=rows.map(r=>'<tr><td><strong>'+E(r.name)+'</strong><br><span class="text-muted">'+E(r.start+' 至 '+r.end)+'</span></td><td>'+E(r.airline)+'</td><td>'+E(r.supplier)+'</td><td>'+E(r.owner||'待补')+'</td><td>'+E(r.method)+'</td><td><span class="agreement-rule-summary" title="'+E(r.deposit+'；'+r.release+'；'+r.ticketing)+'">'+E(r.deposit+'；'+r.release+'；'+r.ticketing)+'</span></td><td>'+E(r.currency)+'</td><td><span class="tag '+(r.state==='有效'?'tag-green':'tag-gray')+'">'+E(r.state)+'</span></td><td><div class="table-action"><button class="table-action-primary" data-agreement-edit="'+E(r.id)+'">编辑</button>'+(!['草稿','待审核','终止'].includes(r.state)?'<button data-agreement-renew="'+E(r.id)+'">续约</button>':'')+'</div></td></tr>').join('')||'<tr><td colspan="9">当前条件没有协议</td></tr>';
     $('#agreementCount').textContent='共 '+rows.length+' 条';
   }
   function attachments(){
@@ -13,10 +13,11 @@
   }
   function open(id,renew){
     draft=M.draft(db,id,renew);dirty=false;opener=document.activeElement;
-    $('#agreementDrawerTitle').textContent=renew?'登记协议续约':id?'航司协议维护':'新增航司协议';
+    const title=renew?'登记协议续约':id?'航司协议维护':'新增航司协议';
+    drawer.querySelector('.drawer-modal').dataset.drawerTitleFixed=title;$('#agreementDrawerTitle').textContent=title;
     drawer.querySelectorAll('[data-agreement-field]').forEach(el=>{const v=draft[el.dataset.agreementField]||'';if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v;});
     $('#agreementHistory').innerHTML=(draft.previous?'<p>续约来源：'+E(db.records.find(r=>r.id===draft.previous)?.name)+'；原协议资料保留。</p>':'')+(draft.history.map(h=>'<details><summary>'+E(h.at+' · '+h.action+' · '+h.by)+'</summary>'+(h.before?'<p>'+E(h.before.name+' · '+h.before.start+' 至 '+h.before.end+' · '+h.before.owner+' · '+h.before.state)+'</p><p>'+E(h.before.basis)+'</p><p>'+E(h.before.deposit+'；'+h.before.release+'；'+h.before.ticketing)+'</p>'+(h.before.attachments||[]).map(f=>'<a download="'+E(f.name)+'" href="'+E(f.data)+'">'+E(f.name)+'</a>').join(' '):h.next?'<p>续约协议：'+E(db.records.find(r=>r.id===h.next)?.name)+'</p>':'')+'</details>').join('')||'<p class="text-muted">首次资料登记，保存后保留记录</p>');
-    $('#agreementFiles').value='';$('#agreementFileNote').textContent='';$('#agreementError').hidden=true;attachments();window.caesarUI.openLayer(drawer);
+    $('#agreementFiles').value='';$('#agreementFileNote').textContent='';$('#agreementError').hidden=true;attachments();window.caesarUI.openLayer(drawer);requestAnimationFrame(()=>{drawer.querySelector('.modal-body').scrollTop=0;drawer.querySelector('.modal-close').focus({preventScroll:true});});window.caesarUI.syncDrawerTitle?.(drawer,{title:renew?'登记协议续约':id?'航司协议维护':'新增航司协议'});
   }
   function close(){if(filesPending)return;if(dirty){window.caesarUI.openLayer(confirm);return;}window.caesarUI.closeLayer(drawer);opener?.focus();}
   function error(message){$('#agreementError').hidden=false;$('#agreementError').textContent=message;}

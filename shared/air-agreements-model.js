@@ -16,7 +16,7 @@
     if(renew&&db.records.some(r=>r.previous===id&&['草稿','待审核'].includes(r.state)))throw Error('已有待完成的续约资料，请编辑原续约记录');
     const d=copy(old||seed().records[0]);
     if(!old){d.id='';d.name='新的航司合作协议';d.state='草稿';d.history=[];d.attachments=[];}
-    if(renew){const start=new Date(old.end+'T00:00:00Z');start.setUTCDate(start.getUTCDate()+1);const end=new Date(start);end.setUTCFullYear(end.getUTCFullYear()+1);end.setUTCDate(end.getUTCDate()-1);Object.assign(d,{id:'',previous:id,name:old.name+'（续约）',start:start.toISOString().slice(0,10),end:end.toISOString().slice(0,10),signed:'',state:'草稿',basis:'续约资料待核对',attachments:[],history:[]});}
+    if(renew){const start=new Date(old.end+'T00:00:00Z');start.setUTCDate(start.getUTCDate()+1);const end=new Date(start);end.setUTCFullYear(end.getUTCFullYear()+1);end.setUTCDate(end.getUTCDate()-1);Object.assign(d,{id:'',previous:id,name:old.name+'（续约）',start:Number.isFinite(+start)?start.toISOString().slice(0,10):'',end:Number.isFinite(+end)?end.toISOString().slice(0,10):'',signed:'',state:'草稿',basis:'续约资料待核对',attachments:[],history:[]});}
     return d;
   }
   function saveRecord(db,d){

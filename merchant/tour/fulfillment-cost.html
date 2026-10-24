@@ -8,11 +8,11 @@
   <link rel="stylesheet" href="../../shared/air-internal-cost.css?v=20261017-receipt1">
   <link rel="stylesheet" href="../../shared/cruise-finance.css">
   <script src="../../shared/air-business-model.js?v=20261024-cancel-step2"></script>
-  <script src="../../shared/air-internal-cost-model.js?v=20261017-superadmin1"></script>
+  <script src="../../shared/air-internal-cost-model.js?v=20261024-base-step4"></script>
 <script src="../../shared/fulfillment-cost-core.js"></script>
   <link rel="stylesheet" href="../../shared/mice-settlement-host.css?v=all-settlement-details-20261024">
 
-</head>
+<link rel="stylesheet" href="../../shared/cruise-closeout.css"></head>
 <body>
   <script src="../../shared/nav-merchant.js?v=full-branch-acceptance-20261024"></script>
 
@@ -682,7 +682,10 @@
   <script src="../../shared/supplier-company-agreements.js"></script>
   <script src="../../shared/settlement-income-basis.js"></script>
   <script src="../../shared/cruise-finance-model.js"></script>
-  <script src="../../shared/cruise-cost-settlement.js"></script>
+  <script src="../../shared/cruise-purchase-model.js"></script>
+<script src="../../shared/cruise-closeout-model.js"></script>
+<script src="../../shared/cruise-closeout-ui.js"></script>
+<script src="../../shared/cruise-cost-settlement.js"></script>
   <script>
     (function () {
       var pageParams = new URLSearchParams(window.location.search);
@@ -1535,6 +1538,8 @@
         }
       ];
 
+      CruiseCloseout.mountPayments(payableCostGroups, paymentRequests);
+
       function escapeHtml(value) {
         return String(value == null ? '' : value)
           .replace(/&/g, '&amp;')
@@ -2255,9 +2260,9 @@
             var request = paymentRequestForGroup(group.id);
             return {
               key: group.id,
-              currency:group.miceCostId ? group.currency : '',
+              currency:(group.miceCostId || group.cruiseContract) ? group.currency : '',
               label: group.supplier,
-              subLabel: group.entity + (group.sourceType === 'project' ? ' / ' + group.projectNo : ''),
+              subLabel: group.entity + (group.cruiseContract ? ' / ' + group.cruiseContract : '') + (group.sourceType === 'project' ? ' / ' + group.projectNo : ''),
               groupIds: [group.id],
               groups: [group],
               node: group.node,
@@ -2479,6 +2484,7 @@
       }
 
       function renderPayableCosts() {
+        var payableMoney = function(amount,currency) { return currency ? (window.MicePaymentWorkbench?.money(amount,currency) || currency + ' ' + Number(amount).toLocaleString('zh-CN')) : money(amount); };
         document.querySelector('#payableCostPanel table').dataset.groupMode=payableGroupMode;
         document.querySelector('#payableCostPanel th:nth-child(4)').textContent=payableGroupMode==='project'?'关联项目团':payableGroupMode==='schedule'?'关联供应商':'关联团期/项目团';
         document.querySelector('#payableCostPanel th:nth-child(2)').textContent=({project:'项目 / 客户',supplier:'供应商',schedule:'团期/项目团',subject:'财务科目'})[payableGroupMode];
@@ -2504,7 +2510,7 @@
           var scopeText=payableGroupMode==='project'?view.costScope:scopes.length>1?scopes.length+(payableGroupMode==='subject'?' 家供应商':' 项费用'):scopes[0];
           var searchText=view.searchText||joinUnique([view.label,view.subLabel,view.node,view.relatedObjects,view.costScope].concat(view.groups.flatMap(function(g){
             var items=g.items.filter(function(item){return payableGroupMode==='supplier'||(payableGroupMode==='schedule'?item.scheduleNo===view.key:paymentSubject(item)===view.key);});
-            return [g.supplier,g.projectNo,g.projectName,g.customer].concat(items.flatMap(function(item){return [item.scheduleNo,item.route,item.fee];}));
+            return [g.supplier,g.projectNo,g.projectName,g.customer,g.contract].concat(items.flatMap(function(item){return [item.scheduleNo,item.route,item.fee];}));
           })));
           return '<tr data-tab-status="' + escapeHtml(applyStatus) + '" data-search="'+escapeHtml(searchText)+'">' +
             '<td class="payable-cost-select-cell"><input type="checkbox" data-payable-select="' + escapeHtml(selectableIds.join(',')) + '"' + (selectableIds.length ? '' : ' disabled') + '></td>' +
@@ -2512,8 +2518,8 @@
             '<td class="payable-cost-node-cell"><span class="payable-cost-clamp" title="'+escapeHtml(view.node)+'">' + escapeHtml(nodeText) + '</span></td>' +
             '<td class="payable-cost-related-cell" title="'+escapeHtml(view.relatedObjects||'')+'"><span class="payable-cost-clamp">' + escapeHtml(relatedText || '-') + '</span>' + (relatedNote?'<span class="text-muted payable-cost-related-note">'+escapeHtml(relatedNote)+'</span>':'') + '</td>' +
             '<td class="payable-cost-scope-cell" title="'+escapeHtml(view.supplierNames||view.costScope||'')+'"><span class="payable-cost-clamp">' + escapeHtml(scopeText || '-') + '</span></td>' +
-            '<td class="payable-cost-payable-cell"><span class="amount-strong">应付 ' + (view.currency ? MicePaymentWorkbench.money(view.amount,view.currency) : money(view.amount)) + '</span><span class="text-muted schedule-route-name">已申请 ' + (view.currency ? MicePaymentWorkbench.money(view.applied,view.currency) : money(view.applied)) + '</span><span class="text-muted schedule-route-name">已付 ' + (view.currency ? MicePaymentWorkbench.money(view.paid,view.currency) : money(view.paid)) + '</span></td>' +
-            '<td class="payable-cost-available-cell amount-strong">' + (view.currency ? MicePaymentWorkbench.money(view.available,view.currency) : money(view.available)) + '</td>' +
+            '<td class="payable-cost-payable-cell"><span class="amount-strong">应付 ' + payableMoney(view.amount,view.currency) + '</span><span class="text-muted schedule-route-name">已申请 ' + payableMoney(view.applied,view.currency) + '</span><span class="text-muted schedule-route-name">已付 ' + payableMoney(view.paid,view.currency) + '</span></td>' +
+            '<td class="payable-cost-available-cell amount-strong">' + payableMoney(view.available,view.currency) + '</td>' +
             '<td class="payable-cost-date-cell" title="'+escapeHtml(view.expectedDate||'')+'">' + escapeHtml(dates.slice().sort()[0]||'—') + (dates.length>1?'<span class="payable-cost-date-note">等 '+dates.length+' 个日期</span>':'') + '</td>' +
             '<td class="payable-cost-status-cell">' + payableApplyStatusTags(view.groups) + '</td>' +
             '<td class="payable-cost-action-cell"><div class="table-action">' + paymentViewAction(view) + '</div></td>' +
@@ -2525,6 +2531,7 @@
       }
 
       function renderPaymentRecords() {
+        CruiseCloseout.capturePayments(payableCostGroups, paymentRequests);
         window.MicePaymentWorkbench?.sync(payableCostGroups, paymentRequests);
         var recordRequests = paymentRequests.map(function (request, index) {
           return { request: request, index: index };
@@ -2538,7 +2545,7 @@
           return '<tr data-tab-status="' + escapeHtml([mainStatus, request.status, request.approvalStatus].join(' ')) + '">' +
             '<td class="payment-record-id-cell"><strong>' + escapeHtml(request.id) + '</strong><span class="text-muted">' + escapeHtml(request.miceRequestId ? (request.projectNo+' · '+(window.MiceUI?.store.find('projects',request.projectNo)?.name||'')) : request.approvalNo || '未提交审批') + '</span></td>' +
             '<td class="payment-record-object-cell"><span class="schedule-product-name">' + escapeHtml(request.supplier) + '</span><span class="text-muted">' + escapeHtml(request.account || request.entity || '-') + '</span></td>' +
-            '<td>' + escapeHtml(paymentRecordScheduleText(request)) + '</td>' +
+            '<td>' + escapeHtml(paymentRecordScheduleText(request) || '') + (request.items.some(function(x){return /^HT-YL-/.test(x.contract||'');}) ? '<span class="text-muted">' + escapeHtml(joinUnique(request.items.map(function(x){return x.contract;}))) + '</span>' : '') + '</td>' +
             '<td>' + tag(request.node) + '</td>' +
             '<td class="amount-strong">' + money(requestAmount(request)) + '<br><span class="text-muted">' + escapeHtml(request.currency || 'CNY') + '</span></td>' +
             '<td>' + tag(mainStatus) + '</td>' +
@@ -5037,6 +5044,11 @@
         syncSettlementMainTabs();
         filterScheduleCosts();
       }
+      if (pageMode === 'payment' && pageParams.get('cruiseContract')) {
+        document.getElementById('paymentKeyword').value = pageParams.get('cruiseContract');
+        document.getElementById('recordKeyword').value = pageParams.get('cruiseContract');
+        filterPaymentWorkbench(); filterPaymentRecords();
+      }
       if (pageMode === 'payment' && pageParams.get('scheduleNo')) {
         document.getElementById('paymentKeyword').value = pageParams.get('scheduleNo');
         document.getElementById('recordKeyword').value = pageParams.get('scheduleNo');
@@ -5063,7 +5075,7 @@
 <script src="../../shared/mice-access.js?v=business-summary-20261024"></script>
 <script src="../../shared/mice-tax-summary.js?v=settlement-tax-20261021"></script>
 <script src="../../shared/mice-settlement-host.js?v=full-branch-acceptance-final-20261024"></script>
-<script src="../../shared/air-internal-cost-ui.js?v=20261017-superadmin1"></script>
+<script src="../../shared/air-internal-cost-ui.js?v=20261024-base-step4"></script>
 <script src="../../shared/mice-project-flow.js?v=business-summary-20261024"></script>
 </body>
 </html>

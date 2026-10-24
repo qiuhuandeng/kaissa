@@ -14,7 +14,7 @@
  function name(st){const categories={BA:'阳台舱',BC:'阳台舱',OV:'海景',IC:'内舱',IR:'内舱',SU:'套房'};return (categories[st.code]||'舱型')+' '+st.code;}
  function rates(c,spec){const st=cabin(c,spec);if(!st||st.priceReady&&!st.priceReady[c.priceChannel])return null;const p=st.prices[c.priceChannel];if(!p)return null;
   const maximum=R?.ships.find(x=>x.id===c.v.ship)?.cabins.find(x=>x.code===st.code)?.maximum|| (st.code==='BC'?2:st.code==='SU'?3:4);
-  return {...p,portTax:p.port,maximum,childNoBerth:p.childNoBerth,source:'航次价格日历',stock:st.id,priceChannel:c.priceChannel};
+  return {...p,portTax:p.port,maximum,childNoBerth:p.childNoBerth,source:'航次价格',stock:st.id,priceChannel:c.priceChannel};
  }
  function allowance(c,spec){const st=cabin(c,spec);if(!st)return {physical:0,available:0,reason:'舱位待确认'};const a=M.availability(c.s,st,c);if(!c.linked)return {...a,available:0,reason:'该产品尚未关联航次'};if(!['预售','在售'].includes(c.v.status))return {...a,available:0,reason:'航次已停止销售'};return a;}
  function issues(c,rows){const errors=[];const totals={};rows.forEach(row=>totals[row.spec]=(totals[row.spec]||0)+Number(row.cabinCount));for(const [spec,n] of Object.entries(totals)){const a=allowance(c,spec),r=rates(c,spec);if(!r)errors.push(spec+'售价待确认');else if(r.currency!=='CNY')errors.push(spec+'为'+r.currency+'报价，请先确认本单人民币报价');if(n>a.available)errors.push(spec+'本次可申请'+a.available+'间（'+a.reason+'），可提交待确认');}return errors;}

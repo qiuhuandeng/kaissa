@@ -140,7 +140,7 @@
     <section class="modal drawer-modal drawer-xl aftersales-drawer" role="dialog" aria-modal="true" aria-labelledby="afterSalesDrawerTitle">
       <header class="modal-header">
         <div>
-          <h2 id="afterSalesDrawerTitle">申请详情</h2>
+          <h2 id="afterSalesDrawerTitle" class="modal-title">申请详情</h2>
           <p class="modal-subtitle" id="afterSalesDrawerSubtitle">-</p>
         </div>
         <button class="modal-close" type="button" aria-label="关闭" data-close-after-detail>×</button>
@@ -160,7 +160,7 @@
     <section class="modal modal-sm modal-confirm" role="dialog" aria-modal="true" aria-labelledby="afterSalesWithdrawTitle">
       <header class="modal-header">
         <div>
-          <h2 id="afterSalesWithdrawTitle">撤销售后申请</h2>
+          <h2 id="afterSalesWithdrawTitle" class="modal-title">撤销售后申请</h2>
           <p class="modal-subtitle" id="afterSalesWithdrawSubtitle">-</p>
         </div>
         <button class="modal-close" type="button" aria-label="关闭" data-close-after-withdraw>×</button>
@@ -181,8 +181,12 @@
 
   <script src="../../shared/contract-channel.js"></script><script src="../../shared/contract-workflow-model.js"></script>
   <script src="../../shared/cruise-transfer-handoff.js"></script>
+  <script src="../../shared/cruise-aftersales-model.js"></script>
+  <script src="../../shared/cruise-aftersales-ui.js"></script>
   <script>
-    (function () {
+    (function initAfterSalesResults() {
+      if(!window.CruiseAftersalesUI || !window.ContractWorkflow){document.addEventListener('cruise-aftersales-ui-ready',initAfterSalesResults,{once:true});return;}
+      CruiseAftersalesUI.mountList();
       var contractExamples=ContractWorkflow.createState();
       try{var currentContract=JSON.parse(sessionStorage.getItem('caesar-contract-current-draft')||'null');if(currentContract?.o&&currentContract?.c){var oi=contractExamples.orders.findIndex(x=>x.id===currentContract.o.id);if(oi<0)contractExamples.orders.push(currentContract.o);else contractExamples.orders[oi]=currentContract.o;[...(currentContract.siblings||[]),...(currentContract.results||[currentContract.c])].forEach(c=>{var i=contractExamples.contracts.findIndex(x=>x.id===c.id);if(i<0)contractExamples.contracts.push(c);else contractExamples.contracts[i]=c;});(currentContract.sources||[]).forEach(x=>{if(!contractExamples.sources.some(y=>y.id===x.id))contractExamples.sources.push(x);});}}catch(_){}
       contractExamples.sources.forEach(function(src){var o=contractExamples.orders.find(x=>x.id===src.orderId),row=document.createElement('tr');Object.assign(row.dataset,{productType:o.business,type:'转团/改期',status:src.status==='已确认'?'已通过':'审批中',node:src.status==='已确认'?'变更已确认':'主管审批',date:'2026-09-24',serviceNo:src.id,orderNo:o.id,customer:o.customer,passengers:o.people.length+'人',product:o.product,schedule:o.trip,reason:src.after,amount:'金额变化 ¥'+src.delta,deduction:'以确认依据为准',resource:'无名额变化',contract:'待合同办理',finance:'按售后单另行处理',owner:o.owner,contractConfirmed:src.status});row.innerHTML='<td><strong>'+src.id+'</strong><span class="text-muted">'+o.id+'</span></td><td><strong>'+o.customer+'</strong><span class="text-muted">'+o.people.length+'人</span></td><td><strong>'+o.product+'</strong><span class="text-muted">'+o.trip+'</span></td><td>¥'+src.delta+'</td><td><span class="tag">'+row.dataset.status+'</span></td><td><div class="table-action"><button class="table-action-primary" data-open-after-detail>详情</button></div></td>';document.getElementById('afterSalesRows').appendChild(row);});
@@ -450,6 +454,10 @@
         document.getElementById('afterSalesSummary').innerHTML = detail.summary.map(function (rowItem) {
           return item(rowItem[0], rowItem[1], rowItem[2]);
         }).join('');
+        if(window.CruiseAftersalesUI?.render(row,detail,detailSectionHtml)){openLayer(detailDrawer);return;}
+        document.getElementById('afterSalesDetailSections').classList.remove('ca-results');
+        document.getElementById('afterSalesDetailSections').onclick=null;
+        document.getElementById('afterSalesDetailSections').onchange=null;
         var sections = (detail.sections || []).slice();
         if (data.cruiseTarget) sections.push({title:'邮轮转团核对',rows:[['原航次 / 舱型',data.schedule+' / '+data.cruiseOriginal],['目标航次',data.cruiseTarget],['目标方案',data.type==='退款'?'不转团':data.cruisePlan],['人数与舱房',data.passengers],['客户款处理',data.finance],['船方成本处理','船方预付、实际扣损与航次成本分别核对；本次未自动调整'],['原合同及收款',data.cruiseContract],['办理结果','待售后审批、资源确认与合同办理；原订单记录保留']]});
         var timeline = sections.filter(function (section) { return section.type === 'timeline'; });
@@ -545,6 +553,9 @@
       }
       keywordInput.value=new URLSearchParams(location.search).get('orderNo')||'';
       applyFilters();
+      var caseNo=new URLSearchParams(location.search).get('cruiseCase');
+      var caseRow=rows.find(function(r){return r.dataset.serviceNo===caseNo;});
+      if(caseRow)renderDetail(caseRow);
     })();
   </script>
 <script src="../../shared/mice-prototype-model.js?v=business-summary-20261024"></script>

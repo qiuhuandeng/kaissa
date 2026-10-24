@@ -8,6 +8,8 @@
     try{const h=JSON.parse(sessionStorage.getItem('caesar-contract-current-draft')||'null');if(h?.o&&h?.c){const oi=S.orders.findIndex(x=>x.id===h.o.id);if(h.o.sourceKind==='framework'){S.projectSources=S.projectSources||[];const i=S.projectSources.findIndex(x=>x.frameworkId===h.o.frameworkId);if(i<0)S.projectSources.push(h.o);else S.projectSources[i]=h.o;}else if(oi<0)S.orders.push(h.o);else S.orders[oi]=h.o;const results=[...(h.siblings||[]),...(h.results||[h.c])];if(h.sources)S.sources.push(...h.sources.filter(x=>!S.sources.some(y=>y.id===x.id)));if(h.replacedId)S.contracts=S.contracts.filter(x=>x.id!==h.replacedId);results.forEach(c=>{const ci=S.contracts.findIndex(x=>x.id===c.id);if(ci<0)S.contracts.unshift(c);else S.contracts[ci]=c;});}}catch(_){}
   }
 
+  if(window.CruiseOrderMainflow) S.orders=S.orders.map(o=>window.CruiseOrderMainflow.contractOrder(window.CruiseOrderMainflow.get(o.id),M)||o);
+
   const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const money=v=>v!==null&&v!==''&&Number.isFinite(Number(v))?'¥'+Number(v).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}):'待确认';
   const q=(x,r=document)=>r.querySelector(x),qa=(x,r=document)=>[...r.querySelectorAll(x)];

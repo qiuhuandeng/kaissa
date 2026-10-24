@@ -6,7 +6,7 @@ const dateOK=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')&&Number.isFinite(Date.parse(v)
 const value=(s,k)=>(s.snapshot||[]).find(x=>x[0]===k)?.[1]||'';
 function source(s){
  const range=value(s,'出发/回团').split(' / '),raw=s.amount,amount=raw===undefined||raw===''?null:Number(String(raw).replace(/[¥￥,\s]/g,''));
- return {groupState:s.groupState||value(s,'团期状态')||value(s,'销售状态'),orderState:s.orderState||value(s,'订单状态'),orderNo:s.orderNo,productName:s.productName||'',group:s.group??value(s,'团期编号'),start:s.start||range[0]||'',end:s.end||range[1]||'',tourAmount:Number.isFinite(amount)?amount:null,currency:s.currency||'CNY',people:(s.people||[]).map(p=>({id:p.id,name:p.name,english:p.englishName??p.english??'',docType:p.docType||'护照',docNo:p.docNo||'',birth:p.birthday??p.birth??'',expiry:p.expiresAt??p.expiry??'',nationality:p.nationality||''}))};
+ return {productType:s.productType||'参团游',groupState:s.groupState||value(s,'团期状态')||value(s,'销售状态'),orderState:s.orderState||value(s,'订单状态'),orderNo:s.orderNo,productName:s.productName||'',group:s.group??value(s,'团期编号'),start:s.start||range[0]||'',end:s.end||range[1]||'',tourAmount:Number.isFinite(amount)?amount:null,currency:s.currency||'CNY',people:(s.people||[]).map(p=>({id:p.id,name:p.name,english:p.englishName??p.english??'',docType:p.docType||'护照',docNo:p.docNo||'',birth:p.birthday??p.birth??'',expiry:p.expiresAt??p.expiry??'',nationality:p.nationality||''}))};
 }
 function orders(data,s,role){return data.orders.filter(o=>o.sourceOrder===s.orderNo&&M.canSee(o,role));}
 function latest(o){return o.sourceDemands?.at(-1)||null;}
@@ -44,7 +44,7 @@ function submit(data,s,requests,reason,role='sales'){
  for(let req of requests){
   let o=work.orders.find(o=>o.id===req.orderId),created=false;
   if(!req.orderId){
-   if(!String(s.group||'').trim()||/^\d{4}-\d{2}-\d{2}$/.test(s.group))throw Error('团队供票须关联已有团号，请先核对来源团期');
+   if(s.productType!=='自由行'&&(!String(s.group||'').trim()||/^\d{4}-\d{2}-\d{2}$/.test(s.group)))throw Error('团队供票须关联已有团号，请先核对来源团期');
    if(req.group&&req.group!==s.group)throw Error('新供票单须归属来源订单所在团期');
    if(/停售|关闭|取消|终止|未开放|筹备/.test((s.groupState||'')+' '+(s.orderState||'')))throw Error('来源团期或订单已停止，不能新增供票');
    if(role==='sales'&&s.orderNo!==M.roles.sales.source)throw Error('当前销售无权提交此来源订单');

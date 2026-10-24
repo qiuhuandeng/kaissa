@@ -340,8 +340,12 @@
     </div>
   </div>
 
+  <script src="../../shared/cruise-aftersales-model.js"></script>
+  <script src="../../shared/cruise-aftersales-finance.js"></script>
   <script>
-    (function () {
+    (function initCruiseFinanceSource() {
+      if(!window.CruiseAftersalesFinance){document.addEventListener('cruise-aftersales-finance-ready',initCruiseFinanceSource,{once:true});return;}
+      CruiseAftersalesFinance.mount();
       var rows = Array.from(document.querySelectorAll('#transferRows tr'));
       var detailTabs = Array.from(document.querySelectorAll('[data-detail-tab]'));
       var detailPanels = Array.from(document.querySelectorAll('[data-detail-panel]'));
@@ -649,6 +653,7 @@
         document.getElementById('transferDetailTitle').textContent = '转款详情';
         renderDetail(row);
         switchDetailTab(tabName || 'overview');
+        CruiseAftersalesFinance.details(row);
         openLayer(detailDrawer);
       }
 
@@ -834,6 +839,14 @@
 
       function confirmWork() {
         if (!activeRow) return;
+        if(activeRow.dataset.cruiseFund){
+          try{
+            CruiseAftersalesFinance.handle(activeRow,activeAction,{conclusion:getValue('workConfirmResult','确认转款')});
+            closeLayer(workDrawer);updateRowCells(activeRow);updateCounts();applyFilters();notify('本次办理结果已保存，返回售后可核对');
+          }catch(error){notify(error.message,'warning');}
+          return;
+        }
+
         var result = document.querySelector('[data-confirm-work]').textContent;
         var target = getValue('workDifferenceTarget', activeRow.dataset.differenceTarget);
         var remark = getValue('workRemark', activeRow.dataset.checkResult);
@@ -886,6 +899,8 @@
         applyFilters();
         notify(result + '已记录');
       }
+
+      rows.filter(function(r){return r.dataset.cruiseFund;}).forEach(updateRowCells);
 
       function openFromParams() {
         var params = new URLSearchParams(window.location.search);

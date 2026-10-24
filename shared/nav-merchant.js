@@ -17,6 +17,15 @@
   };
   function reportDestination(input) {
     const url = new URL(input.href), params = url.searchParams;
+    // Retired navigation targets resolve to the surviving business entry.
+    if (/\/cruise\/(price-calendar|voyage-calendar)\.html$/.test(url.pathname)) {
+      const pricing = url.pathname.endsWith('/price-calendar.html');
+      url.pathname = url.pathname.replace(/(price-calendar|voyage-calendar)\.html$/, 'voyages.html');
+      if (pricing && params.has('voyage')) params.set('action', 'price');
+    }
+    if (url.pathname.endsWith('/tour/resource-procurement-inventory.html') && (params.get('kind') === 'train' || (params.get('contractNo') || '').startsWith('TRN'))) {
+      return new URL('schedules.html?type=train', url);
+    }
     if (url.pathname.endsWith('/finance/finance-reports.html')) {
       const old = params.get('report') || 'cashflow';
       const key = ({ receipt: 'cashflow', payment: 'cashflow', 'ar-ap': 'balances', prepay: 'prepayments', fund: 'funds' })[old] || old;
@@ -141,12 +150,6 @@
         { title: "付款申请", href: "tour/fulfillment-payment-apply.html" },
         { title: "签证办理", href: "tour/visa-processing.html" },
         { title: "供应商对账", href: "tour/supplier-reconciliation.html" },
-        {
-          title: "交通采购",
-          children: [
-            { title: "专列包铺", href: "tour/resource-procurement-inventory.html?kind=train" },
-          ],
-        },
       ],
     },
     {
@@ -164,8 +167,6 @@
           { title: "虚拟库存池", href: "cruise/inventory-pools.html" },
           { title: "库存调拨", href: "cruise/inventory-transfers.html" },
           { title: "锁定释放", href: "cruise/inventory-locks.html" },
-          { title: "价格日历", href: "cruise/price-calendar.html" },
-          { title: "航次日历", href: "cruise/voyage-calendar.html" },
         ] },
         { title: "分房管理", children: [
           { title: "房号管理", href: "cruise/room-assignments.html" },
@@ -608,7 +609,7 @@
   const financeControlViewKeys = new Set(["fund-transfer"]);
   const approvalViewKeys = new Set(["todo", "mine", "cc", "overview", "config"]);
   const masterdataRouteKeys = new Set(["poi", "hotel", "restaurant", "vehicle", "alias"]);
-  const trafficProcurementKeys = new Set(["air", "cruise", "train"]);
+  const trafficProcurementKeys = new Set(["air", "cruise"]);
   const merchantBaseUrl = new URL("../merchant/", new URL(bootScript.src || "../../shared/nav-merchant.js", window.location.href));
 
   function normalizeMerchantTheme(value) {
@@ -1305,7 +1306,7 @@
   function readTabs(storageKey) {
     try {
       const tabs = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      const archived = ['member/partner-benefits.html','customer/list.html', 'customer/detail.html', 'customer/customers-detail.html', 'customer/member-rules.html', 'customer/member-rule-config.html', 'marketing/campaigns.html', 'marketing/campaign-edit.html', 'marketing/coupons.html', 'marketing/coupon-edit.html', 'marketing/issue-center.html', 'marketing/issue-detail.html', 'marketing/marketing-analysis.html', 'data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
+      const archived = ['cruise/price-calendar.html','cruise/voyage-calendar.html','member/partner-benefits.html','customer/list.html', 'customer/detail.html', 'customer/customers-detail.html', 'customer/member-rules.html', 'customer/member-rule-config.html', 'marketing/campaigns.html', 'marketing/campaign-edit.html', 'marketing/coupons.html', 'marketing/coupon-edit.html', 'marketing/issue-center.html', 'marketing/issue-detail.html', 'marketing/marketing-analysis.html', 'data/performance-reports-legacy.html', 'data/finance-dashboard-v2.html', 'data/finance-dashboard-v3.html', 'data/product-analysis.html'];
       const reportTitles = Object.fromEntries(menu.find(item => item.title === '数据中心').children.flatMap(group => group.children.map(item => [item.href, item.title])));
       const centerTitles = {};
       const collectCenterTitles = (items) => items.forEach(item => {
@@ -1314,7 +1315,7 @@
       });
       collectCenterTitles(menu.filter(item => ["会员中心", "营销中心"].includes(item.title)));
       if (!Array.isArray(tabs)) return [];
-      const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href.split('?')[0])).map(tab => {
+      const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href.split('?')[0]) && !(tab.href.startsWith('tour/resource-procurement-inventory.html') && (new URLSearchParams(tab.href.split('?')[1] || '').get('kind') === 'train' || (new URLSearchParams(tab.href.split('?')[1] || '').get('contractNo') || '').startsWith('TRN')))).map(tab => {
         if (tab.href.split('?')[0] === 'marketing/coupon-rules.html') {
           const params = new URLSearchParams(tab.href.split('?')[1] || '');
           const template = params.get('template');

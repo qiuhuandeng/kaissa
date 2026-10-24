@@ -50,6 +50,6 @@
     });
     if(t)session.cabinUsed[t.code]=used;draw();$('wholeTransferFeedback').hidden=false;$('wholeTransferFeedback').className='alert alert-blue';$('wholeTransferFeedback').textContent='本次提交'+submitted+'笔，未通过或待决定订单继续保留。客户实收未转用，供应商预付及成本未调整。';
   }
-  function handoff(o){const params=new URLSearchParams({fromCruiseTransfer:'1',orderNo:o.no,serviceNo:o.serviceNo,type:o.decision==='退款'?'退款':'转团/改期',customer:o.customer,product:o.product,sourceSchedule:o.source,targetSchedule:o.targetCode||'',targetLabel:o.targetLabel||'',cabin:o.targetCabin,rooms:String(o.rooms),people:String(o.people),plan:o.plan,delta:String(o.delta),contract:o.contract,sourceCabin:o.sourceCabin});return '../sales/orders-after-sales.html?'+params;}
+  function handoff(o){const params=new URLSearchParams({fromCruiseTransfer:'1',orderNo:o.no,serviceNo:o.serviceNo,type:o.decision==='退款'?'退款':'转团/改期',customer:o.customer,product:o.product,sourceSchedule:o.source,targetSchedule:o.targetCode||'',targetLabel:o.targetLabel||'',cabin:o.targetCabin,rooms:String(o.rooms),sourceRooms:String(o.sourceRooms),people:String(o.people),plan:o.plan,delta:String(o.delta),contract:o.contract,sourceCabin:o.sourceCabin});return '../sales/orders-after-sales.html?'+params;}
   root.CaesarCruiseTransfer={prepare,draw,capture,confirm};
 })(typeof window==='undefined'?globalThis:window);
