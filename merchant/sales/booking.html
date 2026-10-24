@@ -3078,6 +3078,14 @@
       document.getElementById('createdNextSteps').addEventListener('click', function (event) {
         const button = event.target.closest('[data-next-action]');
         if (!button) return;
+        if (currentProduct.type === 'cruise' && !sourceContext.isSingleGroup) {
+          const target = new URL(createdDetailHref, window.location.href);
+          if (button.dataset.nextAction === '补充资料') target.searchParams.set('tab', 'travelers');
+          if (button.dataset.nextAction === '收款') { target.searchParams.set('tab', 'receivable'); target.searchParams.set('open', 'receipt'); }
+          // The order page needs its own head dependencies as well as the body scripts.
+          window.location.assign(target.href);
+          return;
+        }
         if (sourceContext.isSingleGroup && button.dataset.nextAction === '合同签署') {
           if (window.caesarNavigateTo) window.caesarNavigateTo(sourceContextHref('contract'));
           else window.location.href = sourceContextHref('contract');

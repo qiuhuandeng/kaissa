@@ -1,0 +1,14 @@
+const assert = require('node:assert/strict');
+const M = require('../shared/cruise-aftersales-model.js');
+M.write({cases:{}});
+const order={orderNo:'NEW-CR-1',orderType:'邮轮',customer:'陈女士',productName:'邮轮八日',advisor:'王顾问',received:'¥62600',orderStatus:'已确认',cruiseBookingDetails:{supply:{voyage:'HC-NEW'},rooms:[{spec:'阳台 BA',rooms:[{people:[{name:'陈女士'},{name:'王先生'}]}]}]},cruiseOrderFlow:{receipts:[{id:'RK-1',status:'已确认'},{id:'RK-2',status:'已退回'}]}};
+const before=JSON.stringify(order);
+let c=M.fromOrder(order,62600,{scope:'整舱',amount:59400,reason:'出行前退舱'});
+assert.equal(c.source.orderNo,order.orderNo);assert.equal(c.source.schedule,'HC-NEW');assert.equal(c.rooms,1);assert.equal(c.people,'陈女士、王先生');
+assert.equal(c.paid,62600);assert.equal(c.receiptRef,'RK-1');assert.equal(c.refundDue,59400);assert.equal(c.supplierLoss,null);
+assert.equal(c.approval,'待确认');assert.equal(c.supplier,'待确认');assert.equal(c.closedAt,'');assert.equal(c.funds.length,0);assert.throws(()=>M.submit(c.id,'refund'),/审批/);
+assert.equal(M.fromOrder(order,62600,{amount:62600}).id,c.id);assert.equal(M.get(c.id).refundDue,59400);
+assert.equal(JSON.stringify(order),before);
+c=M.fromOrder({...order,orderNo:'NEW-CR-2'},62600,{scope:'部分乘客',amount:10000,passengers:'陈女士'});
+assert.equal(c.rooms,0);assert.equal(c.resource,'保留整间');assert.equal(c.retainDue,52600);assert.equal(c.people,'陈女士');
+console.log('6组连续交接规则通过：本单来源、认款依据、未办结保护、防重复、原单保留、部分乘客不退整舱');

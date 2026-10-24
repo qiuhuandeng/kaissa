@@ -14,7 +14,7 @@
 
 <link rel="stylesheet" href="../../shared/cruise-closeout.css"></head>
 <body>
-  <script src="../../shared/nav-merchant.js?v=full-branch-acceptance-20261024"></script>
+  <script src="../../shared/nav-merchant.js?v=mice-center-20261024"></script>
 
   <section class="list-page-panel">
     <div class="list-page-head">
@@ -1114,7 +1114,7 @@
       CruiseCostSettlement.seed(schedules);
       schedules.forEach(function (schedule) {
         schedule.settlement.incomeRows = window.SettlementIncomeBasis.examples[schedule.id] || [];
-        schedule.settlement.orders = schedule.settlement.incomeRows.length + '单';
+        if (!schedule.cruiseLinked) schedule.settlement.orders = schedule.settlement.incomeRows.length + '单';
       });
 
       // 已发生成本保留当时的公司协议，不随续签改用新协议。
@@ -1860,6 +1860,7 @@
 
       function profitCell(item) {
         if (item.miceActivityId) return MiceSettlementHost.metric(item, 'profit');
+        if (item.cruiseLinked && !settlementTotals(item).ready) return '<span class="text-muted">收入依据待补，毛利待核对</span>';
         var income = settlementTotals(item).settlementIncome;
         var cost = costTotal(item);
         var profit = income - cost;
@@ -3316,7 +3317,7 @@
             '<span>确认人数 <strong>' + escapeHtml(settlementInfo(schedule).confirmedPeople || schedule.people || '-') + '</strong></span>' +
             '<span>负责人 <strong>' + escapeHtml(schedule.owner || '-') + '</strong></span>' +
             '<span>结算次数 <strong>' + settlementRoundCount(schedule) + '</strong></span>' +
-            '<span>毛利率 <strong>' + totals.profitRate + '%</strong></span>' +
+            '<span>毛利率 <strong>' + (schedule.cruiseLinked && !totals.ready ? '待核对' : totals.profitRate + '%') + '</strong></span>' +
             secondSummary +
           '</div>';
       }
@@ -3437,6 +3438,7 @@
           ['未付金额', money(totals.pending)], ['结算收入', money(totals.settlementIncome)],
           ['结算毛利', money(totals.profit)], ['毛利率', totals.profitRate + '%']
         ];
+        if (schedule.cruiseLinked && !totals.ready) values.forEach(function (row) { if (['订单应收','客户已收','已退款','净收款','客户待收','客户待退','已含优惠','结算收入','结算毛利','毛利率'].includes(row[0])) row[1] = '待核对'; });
         document.getElementById('settlementSummaryRows').innerHTML = values.map(function (entry) {
           return '<tr><th>' + entry[0] + '</th><td>' + escapeHtml(entry[1]) + '</td></tr>';
         }).join('');
@@ -3452,9 +3454,9 @@
           round: '第1次',
           no: settlementNumber(schedule, 1),
           reason: status === '未开始' ? '待回团后生成' : '首次结算',
-          incomeAdjust: money(firstIncome),
+          incomeAdjust: schedule.cruiseLinked && !totals.ready ? '待核对' : money(firstIncome),
           costAdjust: money(firstCost),
-          profitImpact: money(firstIncome - firstCost),
+          profitImpact: schedule.cruiseLinked && !totals.ready ? '待核对' : money(firstIncome - firstCost),
           attachment: settlementAttachmentItems(schedule).filter(function (item) { return item.uploaded > 0; }).length + '类附件',
           status: status === '已结算' ? '完结' : status
         }];
@@ -3649,9 +3651,9 @@
           rows.push({
             no: '无变更',
             type: '准单口径',
-            income: money(totals.settlementIncome),
+            income: schedule.cruiseLinked && !totals.ready ? '待核对' : money(totals.settlementIncome),
             cost: money(totals.cost),
-            profit: money(totals.profit),
+            profit: schedule.cruiseLinked && !totals.ready ? '待核对' : money(totals.profit),
             status: '无变更'
           });
         }
@@ -3686,6 +3688,7 @@
           ['财务入口', '<a class="link-primary" href="../finance/finance-settlement.html?businessNo=' + encodeURIComponent(schedule.id || '') + '">业务结算</a>'],
           ['NC状态', tag(info.ncStatus || (status === '已结算' ? '待推送' : '未生成'))]
         ];
+        if (schedule.cruiseLinked && !totals.ready) fields.forEach(function (row) { if (['结算收入','优惠减免','应收平衡','结算毛利'].includes(row[0])) row[1] = '待核对'; });
         document.getElementById('settlementHandoffGrid').innerHTML = fields.map(function (item) {
           var value = item[0] === '主状态' || item[0] === '当前进度' || item[0] === '财务承接' || item[0] === '应收平衡' || item[0] === '财务入口' || item[0] === 'NC状态' ? item[1] : escapeHtml(item[1]);
           return '<div class="description-item"><div class="description-label">' + escapeHtml(item[0]) + '</div><div class="description-value">' + value + '</div></div>';
@@ -5055,7 +5058,11 @@
         filterPaymentWorkbench();
         filterPaymentRecords();
       }
-      if (pageParams.get('scheduleNo') && pageMode !== 'payment' && pageParams.get('tab') !== 'internal-air') openCostDrawer(pageParams.get('scheduleNo'));
+      if (pageParams.get('scheduleNo') && pageMode !== 'payment' && pageParams.get('tab') !== 'internal-air') {
+        const linkedSource = pageParams.get('cruiseSource'), target = pageParams.get('scheduleNo');
+        if (linkedSource && (!schedules.some(s => s.id === target) || !CruiseCloseout.sourcesForGroup(target).some(c => c.key === linkedSource))) openActionResult('采购承担尚未关联', '请回原采购费用核对，保存本航次邮轮团期承担后再办理成本。', '没有打开其他团期或更改成本');
+        else openCostDrawer(target);
+      }
     })();
   </script>
   <script src="../../shared/supplier-reconciliation-model.js"></script>

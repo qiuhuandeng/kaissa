@@ -1,0 +1,84 @@
+{
+  "rules": [
+    {
+      "file": "tests/cruise-cost-association.cjs",
+      "passed": 8,
+      "checks": [
+        "只从本航次实际订单关联，不按日期船名关联旧团或不存在的团期",
+        "公司不符不能关联，重复团期不能重复分配",
+        "分配差额保留，采购未确认或少分1元均不能确认团期成本",
+        "已核费用可后补承担，不改已确认金额；关联不视为成本确认或收入确认",
+        "原币不能篡改或混用，成本确认核提供公司和币种",
+        "确认成本后不可删改承担，原已结算上海团32万元不被覆盖",
+        "同团多笔采购分别保留来源，原成本仅合计一次；刷新不重复增加",
+        "外币不按1:1作人民币，原成本区明确汇率后按原币核采购承担"
+      ]
+    },
+    {
+      "file": "tests/cruise-closeout-mainflow.cjs",
+      "passed": 10,
+      "checks": [
+        "采购56万元与原成本80万元不自动合并，未核齐不出毛利",
+        "船方另列24万元后总额80万元，已含12万元未售成本不重复增加",
+        "团期确认只计本团承担，收入不取实收，待生效2万元不加成本",
+        "未核采购及分配差额不能确认本团成本；本团数不符保留原值",
+        "保底范围不明与打包待结清不能按单航次确认补差",
+        "保底另计与已含分开；达标不自动增加费用，销售不超过采购",
+        "争议金额单列，确认不把待核费用当实际成本",
+        "跨公司、币种不合计收入成本或毛利",
+        "付款按合同节点承接，10航次打包不重复10份",
+        "付款申请保留原节点及申请号，申请不等于已付且不改变毛利"
+      ]
+    },
+    {
+      "file": "tests/cruise-finance-rules.cjs",
+      "checks": [
+        "100万元按30/40万元分摊，余额不扣减",
+        "超分摊、重复航次、负数与无效金额不改变原记录",
+        "部分冲抵提交不扣款，待确认期间不重复办理",
+        "退回修改保留原款并允许重新提交",
+        "确认20万元后80万元余额，未分配仍30万元",
+        "不得重复确认、超本航次冲抵、删除已冲抵用途",
+        "同原款跨航次转用，保留已冲抵与原付款",
+        "已冲抵部分、同航次和未知航次不可转用",
+        "退回占用不与新分摊和转用重复使用",
+        "确认前退回占用变化须重新核对",
+        "两位小数金额守恒",
+        "共同80万元=本团48万元+另一团32万元",
+        "未结算本团可维护，已结算另一团原值保留",
+        "超分配及锁定结算不能覆盖原成本",
+        "后补2万元只加一次，原成本不覆盖"
+      ],
+      "passed": 15,
+      "errors": []
+    }
+  ],
+  "scripts": [
+    "shared/cruise-closeout-model.js",
+    "shared/cruise-closeout-ui.js",
+    "shared/cruise-cost-settlement.js",
+    "scripts/check-cruise-cost-association-browser.cjs",
+    "scripts/check-cruise-fullflow-acceptance.cjs"
+  ],
+  "html": [
+    {
+      "file": "merchant/tour/fulfillment-cost.html",
+      "inlineScripts": 1
+    },
+    {
+      "file": "merchant/cruise/procurement-contracts.html",
+      "inlineScripts": 0
+    },
+    {
+      "file": "merchant/cruise/procurement-orders.html",
+      "inlineScripts": 0
+    }
+  ],
+  "finance": {
+    "errors": [],
+    "currentBatch": "已收尾",
+    "completedBatches": 8,
+    "acceptedItems": 36,
+    "acceptedScenarios": 6
+  }
+}

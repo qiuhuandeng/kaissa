@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>团期管控 - 凯撒旅游</title>
+  <title>团期管理 - 凯撒旅游</title>
   <link rel="stylesheet" href="../../shared/style.css?v=group-form-actions-20261021-final">
 </head>
 <body>
@@ -14,7 +14,7 @@
       }
     })();
   </script>
-  <script src="../../shared/nav-merchant.js?v=mice-menu-20261009"></script>
+  <script src="../../shared/nav-merchant.js?v=schedule-management-20261024"></script>
   <script src="../../shared/schedule-route-catalog.js"></script>
   <script src="../../shared/cruise-resource-catalog.js"></script>
   <script src="../../shared/cruise-purchase-model.js"></script>
@@ -22,13 +22,17 @@
   <script src="../../shared/cruise-sales-supply.js"></script>
   <script src="../../shared/cruise-supply.js"></script>
   <script src="../../shared/cruise-batch-supply.js"></script>
+  <script src="../../shared/cruise-roster.js"></script>
+  <script src="../../shared/cruise-room-model.js"></script>
+  <script src="../../shared/cruise-schedule-view.js"></script>
+  <link rel="stylesheet" href="../../shared/cruise-schedule-view.css">
   <link rel="stylesheet" href="../../shared/cruise-supply.css">
   <script src="../../shared/schedule-file-import.js?v=20261018-import-drawer2"></script>
 
   <section class="list-page-panel">
     <div class="list-page-head">
       <div>
-        <h1 class="page-title">团期管控</h1>
+        <h1 class="page-title">团期管理</h1>
       </div>
 
     </div>
@@ -36,7 +40,7 @@
         </section>
 
 <section class="list-surface schedules-list-surface" data-list-surface>
-<section class="filter-card filter-card-compact schedule-filter list-surface-filter" aria-label="团期管控筛选">
+<section class="filter-card filter-card-compact schedule-filter list-surface-filter" aria-label="团期管理筛选">
       <div class="filter-row">
         <div class="filter-item">
           <label class="sr-only" for="productName">产品/线路名称</label>
@@ -58,10 +62,10 @@
           <label class="sr-only" for="batchTypeFilter">团期类型</label>
           <select id="batchTypeFilter">
             <option value="全部">全部类型</option>
-            <option value="普通团期">团期</option>
-            <option value="邮轮航次">航次</option>
-            <option value="专列班期">班期</option>
-            <option value="研学营期">营期</option>
+            <option value="普通团期">跟团游团期</option>
+            <option value="邮轮航次">邮轮团期</option>
+            <option value="专列班期">专列团期</option>
+            <option value="研学营期">研学团期</option>
           </select>
         </div>
         <div class="filter-item filter-item-sm filter-item-status">
@@ -110,13 +114,14 @@
       <div class="tour-view-switch schedule-view-switch" role="group" aria-label="团期视图切换">
         <button class="active" type="button" data-schedule-view="list">列表</button>
         <button type="button" data-schedule-view="calendar">日历</button>
+        <button type="button" data-schedule-view="voyage">按航次</button>
       </div>
     </div>
   </div>
 
   <section id="scheduleListPanel" data-schedule-panel="list">
 
-  <section class="table-wrap schedule-list-table list-surface-table list-table-with-pagination" aria-label="团期管控">
+  <section class="table-wrap schedule-list-table list-surface-table list-table-with-pagination" aria-label="团期管理">
     <table class="schedule-control-table">
       <colgroup>
         <col class="schedule-control-col-object">
@@ -483,10 +488,10 @@
             <div class="form-group">
               <label class="form-label" for="scheduleTypeSelect">产品类型 <span class="req">*</span></label>
               <select id="scheduleTypeSelect" class="form-control">
-                <option value="普通团期">团期</option>
-                <option value="邮轮航次">航次</option>
-                <option value="专列班期">班期</option>
-                <option value="研学营期">营期</option>
+                <option value="普通团期">跟团游团期</option>
+                <option value="邮轮航次">邮轮团期</option>
+                <option value="专列班期">专列团期</option>
+                <option value="研学营期">研学团期</option>
               </select>
             </div>
             <div class="form-group">
@@ -559,7 +564,7 @@
                   <option>邮轮舱型阶梯策略</option>
                   <option>专列铺位阶梯策略</option>
                   <option>自由行套餐定价策略</option>
-                  <option>研学营期标准策略</option>
+                  <option>研学团期标准策略</option>
                   <option>项目团报价锁价策略</option>
                 </select>
               </div>
@@ -1102,7 +1107,7 @@
                   <option>邮轮舱型阶梯策略</option>
                   <option>专列铺位阶梯策略</option>
                   <option>自由行套餐定价策略</option>
-                  <option>研学营期标准策略</option>
+                  <option>研学团期标准策略</option>
                   <option>项目团报价锁价策略</option>
                 </select>
                 <div id="batchPolicyModuleList" class="schedule-price-module-list"></div>
@@ -1490,7 +1495,7 @@
                 <option>邮轮舱型阶梯策略</option>
                 <option>专列铺位阶梯策略</option>
                 <option>自由行套餐定价策略</option>
-                <option>研学营期标准策略</option>
+                <option>研学团期标准策略</option>
                 <option>项目团报价锁价策略</option>
               </select>
               <button id="applySchedulePolicySuggestion" class="btn btn-secondary" type="button">重新计算建议价</button>
@@ -2035,6 +2040,14 @@
       var airSeatPrefill = null;
       var routeFilterProduct = pageParams.get('productName') || pageParams.get('product') || '';
       var routeFilterType = pageParams.get('type') || '';
+      var scheduleView = 'list', cruiseView = window.CaesarCruiseScheduleView;
+      var routeFilterVoyage = pageParams.get('voyage') || '';
+      function cruiseRelation(item) { return cruiseView.relation(item); }
+      function scheduleReturnUrl() {
+        var url = new URL(location.href);
+        [['view',scheduleView],['voyage',routeFilterVoyage],['productName',productNameFilter.value],['scheduleNos',scheduleCodeFilter.value],['batchType',batchTypeFilter.value],['departStart',departStartDate.value],['departEnd',departEndDate.value],['gap',scheduleGapFilter.value],['stage',activeTabValue]].forEach(function(pair){ if(pair[1]) url.searchParams.set(pair[0],pair[1]); else url.searchParams.delete(pair[0]); });
+        return url.href;
+      }
       var routeFilterScheduleNos = (pageParams.get('scheduleNos') || '').split(/[,，\s]+/).map(function (item) { return item.trim(); }).filter(Boolean);
       var routeFilterLeaderStatus = pageParams.get('leaderStatus') || '';
       if (['待线下确认', '已确认', '已安排'].indexOf(routeFilterLeaderStatus) >= 0) routeFilterLeaderStatus = '已配领队';
@@ -2185,11 +2198,11 @@
       function scheduleObjectName(batchType) {
         var normalized = normalizeBatchType(batchType);
         if (normalized === '项目团') return '项目团';
-        if (normalized === '邮轮航次') return '航次';
-        if (normalized === '专列班期') return '班期';
-        if (normalized === '研学营期') return '营期';
+        if (normalized === '邮轮航次') return '邮轮团期';
+        if (normalized === '专列班期') return '专列团期';
+        if (normalized === '研学营期') return '研学团期';
         if (normalized === '自由行出行日期') return '出行日期';
-        return '团期';
+        return '跟团游团期';
       }
 
       function productsByBatchType(batchType) {
@@ -2278,7 +2291,7 @@
           priceLabel: '成人价',
           secondaryLabels: ['港务税', '服务费', '升舱差价'],
           trafficLabel: '选择邮轮舱房资源',
-          trafficHint: '选择已采购邮轮包舱资源后，保存航次时占用可分配库存。',
+          trafficHint: '建立邮轮团期时选择已采购的船方舱位。',
           fields: [],
           matrixTitle: '舱型价格与舱房',
           matrixHeads: ['舱房售卖', '成人价', '儿童价', '单房差', '港务税/服务费', '升舱差价'],
@@ -2732,11 +2745,11 @@
       function batchTypeDisplay(batchType) {
         var normalized = normalizeBatchType(batchType);
         if (normalized === '项目团') return '项目团';
-        if (normalized === '邮轮航次') return '航次';
-        if (normalized === '专列班期') return '班期';
-        if (normalized === '研学营期') return '营期';
+        if (normalized === '邮轮航次') return '邮轮团期';
+        if (normalized === '专列班期') return '专列团期';
+        if (normalized === '研学营期') return '研学团期';
         if (normalized === '自由行出行日期') return '出行日期';
-        return '团期';
+        return '跟团游团期';
       }
 
       function updateCreateScheduleHref() {
@@ -3110,7 +3123,7 @@
         if (type === '邮轮航次') return '邮轮舱型阶梯策略';
         if (type === '专列班期') return '专列铺位阶梯策略';
         if (type === '自由行出行日期') return '自由行套餐定价策略';
-        if (type === '研学营期') return '研学营期标准策略';
+        if (type === '研学营期') return '研学团期标准策略';
         if (type === '项目团') return '项目团报价锁价策略';
         if (/欧洲|法德意|荷比德法|瑞意/.test(product || '')) return '欧洲线路标准定价策略 2026';
         return '跟团游标准定价策略';
@@ -4415,6 +4428,8 @@
         query.set('type', type);
         if (isProjectGroup(item)) query.set('source', 'customProject');
         if (item.code) query.set('scheduleNo', item.code);
+        var cruise = cruiseRelation(item);
+        if (cruise) { query.set('voyage', cruise.v.id); if(cruise.p) query.set('cruiseProduct', cruise.p.id); }
         if (item.product) query.set('product', item.product);
         if (item.route) query.set('package', item.route);
         if (item.depart) query.set('plannedDepart', item.depart);
@@ -4423,6 +4438,7 @@
         if (item.actualReturnDate) query.set('actualReturnDate', item.actualReturnDate);
         if (item.executionStatus) query.set('executionStatus', item.executionStatus);
         if (item.saleStatus) query.set('saleStatus', item.saleStatus);
+        if (item.settlementStatus) query.set('settlementStatus', item.settlementStatus);
         if (item.planner) query.set('planner', item.planner);
         if (item.groupMode === '项目团' || isProjectGroup(item)) {
           query.set('groupMode', 'project');
@@ -4482,9 +4498,10 @@
 
       function scheduleObjectCell(item, href) {
         var project = isProjectGroup(item);
+        var cruise = cruiseRelation(item);
         var routeLine = project
           ? ((item.privateCustomer || '客户专属') + (item.projectOrderNo ? ' · ' + item.projectOrderNo : ''))
-          : (item.route || '-');
+          : (cruise ? '船方航次 ' + cruise.v.id : item.batchType === '邮轮航次' ? '船方航次待关联 · ' + (item.route || '-') : item.route || '-');
         return '<span class="schedule-batch-cell">' +
           '<span class="schedule-order-line"><a class="link-primary table-main-link" href="' + href + '">' + escapeHtml(item.code) + '</a><span class="' + batchTypeClass(item.batchType) + '">' + escapeHtml(batchTypeDisplay(item.batchType)) + '</span></span>' +
           '<span class="schedule-product-name">' + escapeHtml(item.product || '-') + '</span>' +
@@ -4507,6 +4524,11 @@
       }
 
       function orderRowsForSchedule(item) {
+        var facts = cruiseView.facts(item);
+        if(facts) return facts.orders.map(function(no){
+          var groups=facts.groups.filter(function(g){return g.order===no;}), people=facts.people.filter(function(p){return groups.some(function(g){return g.members.includes(p.id);});});
+          return {no:no,customer:people.map(function(p){return p.name;}).join('、'),sales:'—',qty:groups.length+'间'+people.length+'人',amount:'以订单为准',pay:'以订单为准',payTag:'tag tag-gray',roster:people.some(function(p){return window.CaesarCruiseRooms.missing(p,cruiseRelation(item).v.back).length;})?'资料待补':'已齐',rosterTag:'tag tag-gray',resource:groups.map(function(g){return g.cabin+' '+(g.room||'待分房');}).join(' / '),status:'已接收',statusTag:'tag tag-blue'};
+        });
         var type = normalizeBatchType(item.batchType);
         var unit = item.unit || '人';
         var sold = Math.max(stockNumber(item.sold), 0);
@@ -4547,6 +4569,8 @@
       }
 
       function scheduleOrderSummary(item) {
+        var facts=cruiseView.facts(item);
+        if(facts) { var rows=orderRowsForSchedule(item); return {rows:rows,totalOrders:rows.length,pendingPay:0,rosterPending:rows.filter(function(row){return row.roster!=='已齐';}).length}; }
         var sold = stockNumber(item.sold);
         var rows = orderRowsForSchedule(item);
         var totalOrders = Math.max(rows.length, Math.ceil(sold / (item.unit === '间' ? 1.5 : 2)));
@@ -4569,6 +4593,8 @@
       }
 
       function trafficConfirmSummary(item) {
+        var facts = cruiseView.facts(item);
+        if(facts) return {total:facts.groups.length,confirmed:facts.assigned,missing:facts.groups.length-facts.assigned,label:trafficConfirmName(item)};
         var total = Math.max(stockNumber(item.sold), 0);
         var status = resourceStatusText(item);
         var missing = 0;
@@ -4652,6 +4678,13 @@
       }
 
       function salesQuotaCell(item) {
+        var cruise = cruiseRelation(item);
+        if (cruise) {
+          var supply = window.CaesarCruiseSalesSupply, c = supply.context({voyage:cruise.v.id, product:cruise.p ? cruise.p.id : item.cruiseProduct});
+          var remaining = c.stocks.reduce(function(n,stock){ return n + supply.allowance(c,stock.code).available; },0);
+          var facts = cruiseView.facts(item);
+          return '<span class="schedule-product-name">本团已接收 ' + facts.groups.length + '间 / ' + facts.people.length + '人</span>' + mutedLine(cruise.p ? '共用舱位 · 本团可申请上限 ' + remaining + '间' : '本团使用方额度待关联');
+        }
         if (isProjectGroup(item)) {
           var total = stockNumber(item.stock);
           var imported = stockNumber(item.sold);
@@ -4671,6 +4704,8 @@
       }
 
       function orderRosterCell(item) {
+        var facts = cruiseView.facts(item);
+        if(facts) return '<button class="table-link" type="button" data-open-schedule-orders>'+facts.orders.length+'单</button>' + mutedLine(facts.people.length+'人 · '+(facts.missing?'资料缺'+facts.missing+'人':'资料已齐'));
         var summary = scheduleOrderSummary(item);
         if (isProjectGroup(item)) {
           var order = summary.rows[0] || {};
@@ -4761,7 +4796,7 @@
         var saleText = item.saleStatus === '筹备中' ? '待发布' : (item.saleStatus || '待发布');
         if (isProjectGroup(item)) return item.customProjectNo ? '来源 ' + item.customProjectNo : '单团项目';
         if (stage === '待发布') return priceStatusText(item) + ' · 资源' + resourceStatusText(item);
-        if (stage === '销售中') return saleText + ' · 余 ' + stockNumber(item.left) + (item.unit || '人');
+        if (stage === '销售中') return saleText + (cruiseRelation(item) ? ' · 共用航次舱位' : ' · 余 ' + stockNumber(item.left) + (item.unit || '人'));
         if (stage === '出发准备') return '准备中 · ' + resourceStatusText(item);
         if (stage === '出团中') return '已出发 · ' + resourceStatusText(item);
         if (stage === '已回团') return '实际 ' + (item.actualReturnDate || item.back || '-') + ' · ' + (item.settlementStatus || '待成本整理');
@@ -4852,7 +4887,7 @@
           secondaryAction = '<button type="button" data-open-schedule-price>确认价格</button>';
         } else if (mainStage === '销售中') {
           primaryAction = '<button class="table-action-primary" type="button" data-open-schedule-orders>订单</button>';
-          secondaryAction = '<button type="button" data-open-stock-adjust>调库存</button>';
+          secondaryAction = '<button type="button" data-open-stock-adjust>' + (item.batchType === '邮轮航次' ? '航次库存' : '调库存') + '</button>';
         } else if (mainStage === '出发准备') {
           primaryAction = '<a class="table-action-primary" href="' + href + '">出团准备</a>';
           var leaderAction = leaderQuickAction(item);
@@ -4896,6 +4931,8 @@
 
       function rowMatches(item) {
         if (isProjectGroup(item)) return false;
+        if (scheduleView === 'voyage' && item.batchType !== '邮轮航次') return false;
+        if (routeFilterVoyage && cruiseRelation(item)?.v.id !== routeFilterVoyage) return false;
         var productQuery = productNameFilter.value.trim();
         var codeQueries = scheduleCodeFilter.value.trim().toUpperCase().split(/[,，\s]+/).filter(Boolean);
         var batchType = batchTypeFilter.value;
@@ -4923,9 +4960,16 @@
 
       function openScheduleBatchAction(action) {
         currentBatchAction = action;
-        var count = batchActionItems().length;
+        var allItems = batchActionItems(), cruiseItems = allItems.filter(function(item){return item.batchType === '邮轮航次';});
+        if(action === '批量改价' && cruiseItems.length === allItems.length && cruiseItems.length) {
+          var linked = cruiseRelation(cruiseItems[0]);
+          navigateTo('../cruise/voyages.html' + (linked ? '?voyage=' + encodeURIComponent(linked.v.id) : ''));
+          return;
+        }
+        var count = (action === '批量改价' ? allItems.filter(function(item){return item.batchType !== '邮轮航次';}) : allItems).length;
         scheduleBatchActionTitle.textContent = action;
         scheduleBatchActionScope.textContent = '当前筛选结果 ' + count + ' 个' + (count === 1 ? scheduleObjectName(batchActionItems()[0].batchType) : '团期');
+        if(action === '批量改价' && cruiseItems.length) scheduleBatchActionScope.innerHTML = '本次处理 ' + count + ' 个非邮轮团期；' + cruiseItems.length + ' 个邮轮团期的舱价在 <a class="table-link" href="../cruise/voyages.html">航次管理</a> 调整。';
         batchActionRemark.value = '';
         batchPriceValue.value = '';
         document.querySelectorAll('.batch-action-panel').forEach(function (panel) {
@@ -4949,7 +4993,7 @@
       }
 
       function confirmScheduleBatchActionApply() {
-        var items = batchActionItems();
+        var items = batchActionItems().filter(function(item){return currentBatchAction !== '批量改价' || item.batchType !== '邮轮航次';});
         if (!items.length) {
           if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('当前筛选结果没有可处理团期', { type: 'warning' });
           return;
@@ -4979,6 +5023,13 @@
       }
 
       function applyFilters() {
+        if(scheduleView === 'voyage' && batchTypeFilter.value && !['全部','邮轮航次'].includes(batchTypeFilter.value)) { setScheduleView('list'); return; }
+        if (scheduleView === 'voyage') {
+          var rows = schedules.map(function(item,index){return {item:item,index:index};}).filter(function(row){return rowMatches(row.item);});
+          scheduleRows.innerHTML = cruiseView.grouped(rows,rowHtml,scheduleReturnUrl(),routeFilterVoyage);
+          updateCurrentRouteFilter(rows.length);
+          return;
+        }
         var visibleCount = 0;
         Array.from(scheduleRows.querySelectorAll('tr')).forEach(function (row) {
           var item = schedules[Number(row.dataset.index)];
@@ -4991,6 +5042,8 @@
 
       function updateCurrentRouteFilter(visibleCount) {
         updateCreateScheduleHref();
+        var pagination=scheduleListPanel.querySelector('.pagination');
+        if(pagination){pagination.querySelector('span').textContent='共 '+visibleCount+' 个'+(scheduleView==='voyage'?'邮轮团期':'团期');pagination.querySelector('.pager').hidden=true;pagination.querySelector('.pager').style.display='none';}
       }
 
       function closeMenus() {
@@ -5005,13 +5058,15 @@
       }
 
       function setScheduleView(view) {
-        var nextView = view === 'calendar' ? 'calendar' : 'list';
-        scheduleListPanel.hidden = nextView !== 'list';
+        var nextView = ['calendar','voyage'].includes(view) ? view : 'list';
+        scheduleView = nextView;
+        if(nextView === 'voyage') batchTypeFilter.value = '邮轮航次';
+        scheduleListPanel.hidden = nextView === 'calendar';
         scheduleCalendarPanel.hidden = nextView !== 'calendar';
         document.querySelectorAll('[data-schedule-view]').forEach(function (button) {
           button.classList.toggle('active', button.dataset.scheduleView === nextView);
         });
-        if (nextView === 'list') applyFilters();
+        if (nextView !== 'calendar') renderRows();
       }
 
       function updateMonthTitle() {
@@ -5910,7 +5965,7 @@
           if (confirmed) {
             var selectedRouteDays = batchRouteDays(batchSelectedProduct, batchRoutePlan.value);
             document.getElementById('batchSelectedRouteName').textContent = batchRoutePlan.value;
-            document.getElementById('batchSelectedRouteMeta').textContent = batchSelectedProduct.dataset.name + ' / ' + scheduleObjectName(batchSelectedProduct.dataset.batchType || '普通团期') + ' / ' + selectedRouteDays + '天';
+            document.getElementById('batchSelectedRouteMeta').textContent = batchSelectedProduct.dataset.name + ' / ' + scheduleObjectNamebatchTypeDisplay(batchSelectedProduct.dataset.batchType || '普通团期') + ' / ' + selectedRouteDays + '天';
           }
           if (batchCurrentStep === 1) {
             document.getElementById('batchNextStep').disabled = batchCreated || !confirmed;
@@ -5925,7 +5980,7 @@
         searchWrap.classList.toggle('has-selected-product', picked);
         if (confirmed) {
           document.getElementById('batchSelectedRouteName').textContent = batchSelectedProduct.dataset.name;
-          document.getElementById('batchSelectedRouteMeta').textContent = batchRoutePlan.value + ' / ' + (batchSelectedProduct.dataset.batchType || '普通团期') + ' / ' + (batchSelectedProduct.dataset.days || '-') + '天';
+          document.getElementById('batchSelectedRouteMeta').textContent = batchRoutePlan.value + ' / ' + batchTypeDisplay(batchSelectedProduct.dataset.batchType || '普通团期') + ' / ' + (batchSelectedProduct.dataset.days || '-') + '天';
         }
         if (batchCurrentStep === 1) {
           document.getElementById('batchNextStep').disabled = batchCreated || !confirmed;
@@ -6682,7 +6737,7 @@
         if (!scheduleRoutePlan.value || !departDate.value || !returnDate.value || !totalStock.value) return;
         if (daysBetween(departDate.value, returnDate.value) <= 0) return;
         if (createAllocationOverLimit()) return;
-        if (currentSchedule && currentSchedule.cruiseSupply && (!createTrafficBound() || createTrafficResource.value !== currentSchedule.cruiseSupply.voyage.id)) { window.caesarUI.toast('当前航次已关联舱房，请保留原来源；换航次从原转团流程办理', {type:'warning'}); return; }
+        if (currentSchedule && currentSchedule.cruiseSupply && (!createTrafficBound() || createTrafficResource.value !== currentSchedule.cruiseSupply.voyage.id)) { window.caesarUI.toast('当前邮轮团期已关联舱房，请保留原来源；换航次从原转团流程办理', {type:'warning'}); return; }
         if (createTrafficInvalid()) {
           if (window.caesarUI && window.caesarUI.toast) window.caesarUI.toast('绑定交通库存不足，请调整计划收客或占用数量', { type: 'warning' });
           return;
@@ -6994,7 +7049,7 @@
           event.stopPropagation();
           currentSchedule = item;
           closeMenus();
-          if(item.batchType==='邮轮航次'){const v=item.cruiseSupply?.voyage?.id||window.CaesarCruiseInventory.read().voyages.find(v=>v.ship==='ideal'&&v.date===item.depart)?.id;if(v){navigateTo('../cruise/voyages.html?action=price&voyage='+encodeURIComponent(v));return;}}
+          if(item.batchType==='邮轮航次'){const v=cruiseRelation(item)?.v.id;navigateTo('../cruise/voyages.html'+(v?'?action=price&voyage='+encodeURIComponent(v):''));return;}
           fillSchedulePriceDrawer(item, actionTitleFromControl(priceButton, '团期定价'));
           window.caesarUI.openLayer(schedulePriceDrawer);
           return;
@@ -7003,7 +7058,7 @@
           event.stopPropagation();
           currentSchedule = item;
           closeMenus();
-          if(item.batchType==='邮轮航次'){const v=item.cruiseSupply?.voyage?.id||window.CaesarCruiseInventory.read().voyages.find(v=>v.ship==='ideal'&&v.date===item.depart)?.id;if(v){navigateTo('../cruise/inventory.html?voyage='+encodeURIComponent(v));return;}}
+          if(item.batchType==='邮轮航次'){const v=cruiseRelation(item)?.v.id;navigateTo('../cruise/inventory.html'+(v?'?voyage='+encodeURIComponent(v):''));return;}
           fillStockLineage(item, actionTitleFromControl(stockAdjustButton, '调整库存'));
           window.caesarUI.openLayer(stockLineageDrawer);
           return;
@@ -7496,6 +7551,7 @@
         routeFilterType = '';
         routeFilterScheduleNos = [];
         routeFilterLeaderStatus = '';
+        routeFilterVoyage = '';
         productNameFilter.value = '';
         scheduleCodeFilter.value = '';
         departStartDate.value = '';
@@ -7594,6 +7650,7 @@
       applyPendingScheduleResults();
       applyStoredBatchScheduleResults();
       applyLifecycleSampleSchedules();
+      cruiseView.examples().forEach(addScheduleIfUnique);
       applyInboundCustomProjectSchedule();
       schedules = schedules.filter(function (item) { return !isProjectGroup(item); });
       applyReturnConfirmationResults();
@@ -7637,9 +7694,11 @@
       } else if (pageParams.get('open') === 'batch') {
         openBatchWhenPageReady(prefill);
       }
-      if (pageParams.get('view') === 'calendar') {
-        setScheduleView('calendar');
-      }
+      if (pageParams.get('batchType')) batchTypeFilter.value = pageParams.get('batchType');
+      if (pageParams.get('departStart')) departStartDate.value = pageParams.get('departStart');
+      if (pageParams.get('departEnd')) departEndDate.value = pageParams.get('departEnd');
+      if (pageParams.get('gap')) scheduleGapFilter.value = pageParams.get('gap');
+      setScheduleView(pageParams.get('view') || (routeFilterVoyage ? 'voyage' : 'list'));
     })();
   </script>
   <link rel="stylesheet" href="../../shared/cruise-roster.css">

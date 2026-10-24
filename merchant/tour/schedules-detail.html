@@ -22,7 +22,7 @@
 </head>
 <body>
   <script src="../../shared/air-template-model.js?v=20261017-template1"></script><script src="../../shared/air-orders-model.js?v=20261024-base-step4"></script>
-  <script src="../../shared/nav-merchant.js?v=20261017-receipt1"></script>
+  <script src="../../shared/nav-merchant.js?v=mice-center-20261024"></script>
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
@@ -61,7 +61,7 @@
         <div class="schedule-hero-top">
           <div class="schedule-hero-code-row">
             <span class="route-code-pill"><span id="summaryCodeLabel">团期编号</span> <strong id="summaryCode">EU20240715001</strong></span>
-            <span id="summaryBatchType" class="tag tag-blue tag-lg">普通团期</span>
+            <span id="summaryBatchType" class="tag tag-blue tag-lg">跟团游团期</span>
             <span id="summaryOrderContext" class="tag tag-gray tag-lg" hidden></span>
           </div>
           <div class="schedule-hero-deadline">
@@ -165,7 +165,7 @@
               <div class="description-item"><div id="infoCodeLabel" class="description-label">团期编号</div><div id="infoCode" class="description-value">EU20240715001</div></div>
               <div class="description-item"><div class="description-label">产品名称</div><div class="description-value"><span id="infoProduct" class="link-primary">欧洲十国经典游·12天11晚</span></div></div>
               <div class="description-item"><div class="description-label">产品线路</div><div id="infoRoute" class="description-value">A线 法德意12天</div></div>
-              <div class="description-item"><div class="description-label">团期类型</div><div class="description-value"><span id="infoBatchType" class="tag tag-blue">普通团期</span></div></div>
+              <div class="description-item"><div class="description-label">团期类型</div><div class="description-value"><span id="infoBatchType" class="tag tag-blue">跟团游团期</span></div></div>
               <div class="description-item"><div class="description-label">成团方式</div><div id="infoGroupMode" class="description-value">散拼</div></div>
               <div class="description-item"><div id="infoPrivateCustomerLabel" class="description-label">指定客户</div><div id="infoPrivateCustomer" class="description-value">-</div></div>
               <div class="description-item"><div id="infoCustomProjectLabel" class="description-label">关联单团项目</div><div id="infoCustomProject" class="description-value">-</div></div>
@@ -845,12 +845,12 @@
         <div class="form-group">
           <label class="form-label" for="scheduleBatchType">团期类型</label>
           <select id="scheduleBatchType" class="form-control">
-            <option selected>普通团期</option>
+            <option value="普通团期" selected>跟团游团期</option>
             <option>项目团</option>
-            <option>邮轮航次</option>
-            <option>专列班期</option>
+            <option value="邮轮航次">邮轮团期</option>
+            <option value="专列班期">专列团期</option>
             <option>自由行出行日期</option>
-            <option>研学营期</option>
+            <option value="研学营期">研学团期</option>
           </select>
         </div>
         <div class="form-group">
@@ -2943,6 +2943,7 @@
         if (pageParams.get('actualReturnDate')) scheduleData.actualReturnDate = pageParams.get('actualReturnDate');
         if (pageParams.get('executionStatus')) scheduleData.executionStatus = pageParams.get('executionStatus');
         if (pageParams.get('saleStatus')) scheduleData.saleStatus = pageParams.get('saleStatus');
+        if (pageParams.get('settlementStatus')) scheduleData.settlementStatus = pageParams.get('settlementStatus');
         if (pageParams.get('planner')) scheduleData.planner = pageParams.get('planner');
         var record = currentReturnConfirmation();
         if (record) {
@@ -3271,21 +3272,26 @@
       function scheduleObjectName(batchType) {
         var normalized = normalizeBatchType(batchType);
         if (normalized === '项目团') return '项目团';
-        if (normalized === '邮轮航次') return '航次';
-        if (normalized === '专列班期') return '班期';
-        if (normalized === '研学营期') return '营期';
+        if (normalized === '邮轮航次') return '邮轮团期';
+        if (normalized === '专列班期') return '专列团期';
+        if (normalized === '研学营期') return '研学团期';
         if (normalized === '自由行出行日期') return '出行日期';
-        return '团期';
+        return '跟团游团期';
+      }
+
+      function batchTypeDisplay(batchType) {
+        var normalized = normalizeBatchType(batchType);
+        return {'普通团期':'跟团游团期','邮轮航次':'邮轮团期','专列班期':'专列团期','研学营期':'研学团期'}[normalized] || normalized;
       }
 
       function scheduleCodeLabel(batchType) {
         var normalized = normalizeBatchType(batchType);
         if (normalized === '项目团') return '项目团编号';
-        if (normalized === '邮轮航次') return '航次编号';
-        if (normalized === '专列班期') return '班期编号';
-        if (normalized === '研学营期') return '营期编号';
+        if (normalized === '邮轮航次') return '邮轮团期编号';
+        if (normalized === '专列班期') return '专列团期编号';
+        if (normalized === '研学营期') return '研学团期编号';
         if (normalized === '自由行出行日期') return '出行日期编号';
-        return '团期编号';
+        return '跟团游团期编号';
       }
 
       function typeFromBatchType(batchType) {
@@ -3607,7 +3613,7 @@
             adjustmentStatus: '岸上观光待确认',
             title: '航次行程',
             meta: '上海出发 / 地中海西线港口',
-            serviceTag: ['邮轮航次', 'tag tag-purple'],
+            serviceTag: ['邮轮团期', 'tag tag-purple'],
             standard: ['船票：按已选舱型确认', '岸上：按停靠港套餐执行', '登船：船票、护照和在线值机资料须齐全'],
             included: ['邮轮船票', '港务税及船上基础服务', '已选岸上观光', '登离船接送'],
             excluded: ['船上个人消费', '未选岸上观光', '签证及保险差异费用'],
@@ -3627,7 +3633,7 @@
             adjustmentStatus: '2项站点安排',
             title: '专列行程',
             meta: '西安上车 / 敦煌、乌鲁木齐方向',
-            serviceTag: ['专列班期', 'tag tag-blue'],
+            serviceTag: ['专列团期', 'tag tag-blue'],
             standard: ['铺位：按车厢/席别分配', '站点：按上下车站名单执行', '餐食：随车餐和目的地团队餐结合'],
             included: ['专列铺位', '沿途站点接驳', '行程所列门票', '随车服务'],
             excluded: ['个人消费', '铺位升级差价', '自费体验项目'],
@@ -3646,7 +3652,7 @@
             adjustmentStatus: '安全预案待确认',
             title: '研学行程',
             meta: '北京集合 / 航天主题课程',
-            serviceTag: ['研学营期', 'tag tag-green'],
+            serviceTag: ['研学团期', 'tag tag-green'],
             standard: ['课程：航天主题课程和基地参访', '管理：老师、导师和安全员共同带队', '住宿：按班级和性别分房'],
             included: ['课程与基地参访', '营地住宿和餐食', '营地交通', '未成年人保险'],
             excluded: ['个人消费', '家长陪同差价', '额外资料打印费'],
@@ -4977,8 +4983,8 @@
         if (page) page.classList.toggle('is-project-group', isProject);
         setText('summaryCodeLabel', isProject ? '项目团编号' : scheduleCodeLabel(scheduleData.batchType));
         setText('summaryDeadlineLabel', isProject ? '名单截止：' : '截止报名：');
-        setText('summaryProgressLabel', isProject ? '名单进度：' : '报名进度：');
-        setText('summaryAvailableLabel', isProject ? '销售范围：' : '余量：');
+        setText('summaryProgressLabel', isProject ? '名单进度：' : config.cruiseVoyage ? '航次已售／总舱位：' : '报名进度：');
+        setText('summaryAvailableLabel', isProject ? '销售范围：' : config.cruiseVoyage ? '航次共用余量：' : '余量：');
         setText('summaryPriceLabel', isProject ? '锁定报价' : '对客价格');
         setText('summaryCostLabel', isProject ? '成本状态' : '成本状态');
         setText('infoMainTitle', isProject ? '项目团信息' : '团期信息');
@@ -4986,15 +4992,15 @@
         setText('infoPrivateCustomerLabel', isProject ? '项目客户' : '指定客户');
         setText('infoCustomProjectLabel', isProject ? '来源单团项目' : '关联单团项目');
         setText('infoSaleStatusLabel', isProject ? '销售范围' : '销售状态');
-        setText('infoStockLabel', isProject ? '项目人数' : '名额');
-        setText('infoSoldLabel', isProject ? '名单已入' : '已售');
-        setText('infoAvailableLabel', isProject ? '名单缺口' : '余量');
-        setText('infoLockedLabel', isProject ? '锁定人数' : '锁定名额');
+        setText('infoStockLabel', isProject ? '项目人数' : config.cruiseVoyage ? '航次总舱位' : '名额');
+        setText('infoSoldLabel', isProject ? '名单已入' : config.cruiseVoyage ? '航次已售' : '已售');
+        setText('infoAvailableLabel', isProject ? '名单缺口' : config.cruiseVoyage ? '航次共用余量' : '余量');
+        setText('infoLockedLabel', isProject ? '锁定人数' : config.cruiseVoyage ? '航次锁定舱位' : '锁定名额');
         setText('infoDeadlineLabel', isProject ? '名单截止' : '截止报名');
-        setText('inventoryTotalLabel', isProject ? '项目人数' : '总');
-        setText('inventoryAvailableLabel', isProject ? '名单已入' : '可售');
-        setText('inventorySoldLabel', isProject ? '名单待补' : '已售');
-        setText('inventoryLockedLabel', isProject ? '锁定人数' : '锁定');
+        setText('inventoryTotalLabel', isProject ? '项目人数' : config.cruiseVoyage ? '航次总舱位' : '总');
+        setText('inventoryAvailableLabel', isProject ? '名单已入' : config.cruiseVoyage ? '航次可售' : '可售');
+        setText('inventorySoldLabel', isProject ? '名单待补' : config.cruiseVoyage ? '航次已售' : '已售');
+        setText('inventoryLockedLabel', isProject ? '锁定人数' : config.cruiseVoyage ? '航次锁定' : '锁定');
         setText('inventoryBlockTitle', isProject ? '项目人数与名单结构' : '价格与名额结构');
         setText('inventoryRecordTitle', isProject ? '名单导入记录' : '占位记录');
         setText('channelQuotaTitle', '渠道价格与名额');
@@ -5207,6 +5213,7 @@
       }
 
       function renderTypeSections(config) {
+        config.fulfillmentState = {executionStatus:scheduleData.executionStatus,settlementStatus:scheduleData.settlementStatus,saleStatus:scheduleData.saleStatus};
         renderItinerary(config);
         renderInventory(config);
         renderChannelSeats(config);
@@ -5587,6 +5594,8 @@
       function refreshScheduleSummary() {
         ensureScheduleStates(scheduleData);
         var config = activeDetailConfig || detailConfigs.group;
+        config.fulfillmentState = {executionStatus:scheduleData.executionStatus,settlementStatus:scheduleData.settlementStatus,saleStatus:scheduleData.saleStatus};
+        if(config.typeKey === 'cruise') window.CaesarCruiseFulfillmentUI.renderPreparation(config);
         var info = config.info || detailConfigs.group.info;
         var duration = daysBetween(scheduleData.depart, scheduleData.back);
         var nights = Math.max(duration - 1, 0);
@@ -5604,7 +5613,7 @@
         document.getElementById('summaryDepart').textContent = dateWithWeek(scheduleData.depart);
         document.getElementById('summaryReturn').textContent = scheduleData.back;
         setTag(document.getElementById('summarySaleStatus'), scheduleData.saleStatus, saleStatusClass(scheduleData.saleStatus) + ' tag-lg');
-        setTag(document.getElementById('summaryBatchType'), normalizeBatchType(scheduleData.batchType), batchTypeClass(scheduleData.batchType) + ' tag-lg');
+        setTag(document.getElementById('summaryBatchType'), batchTypeDisplay(scheduleData.batchType), batchTypeClass(scheduleData.batchType) + ' tag-lg');
         if (scheduleData.groupMode === '项目团') {
           var contextTag = document.getElementById('summaryOrderContext');
           if (contextTag) {
@@ -5635,7 +5644,7 @@
         setText('infoDestination', info.destination);
         setTag(document.getElementById('infoSaleStatus'), scheduleData.saleStatus, saleStatusClass(scheduleData.saleStatus));
         setTag(document.getElementById('infoExecutionStatus'), scheduleData.executionStatus, executionStatusClass(scheduleData.executionStatus));
-        setTag(document.getElementById('infoBatchType'), normalizedBatchType, batchTypeClass(scheduleData.batchType));
+        setTag(document.getElementById('infoBatchType'), batchTypeDisplay(normalizedBatchType), batchTypeClass(scheduleData.batchType));
         setText('infoGroupMode', scheduleData.groupMode || '散拼');
         setText('infoPrivateCustomer', scheduleData.groupMode === '项目团' ? (scheduleData.privateCustomer || '待选择客户') : '-');
         setText('infoCustomProject', scheduleData.groupMode === '项目团' ? (scheduleData.customProjectNo || '未关联') : '-');

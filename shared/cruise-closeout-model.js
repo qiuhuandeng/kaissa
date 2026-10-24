@@ -28,6 +28,48 @@
       shares:c.legacy?old.shares.map(x=>({id:x.id,label:x.city,amount:x.amount})):[],groupResults:{},history:[],confirmed:null};
   }
   function get(k,s=P.read()){const c=context(k,s),r=(s.closeouts||[]).find(r=>r.key===k);return clone(r||defaults(c));}
+  function candidates(c){
+    let orders={};try{orders=JSON.parse(root.localStorage?.getItem('caesarOrderFinanceEvents')||'{}').orders||{};}catch{}
+    const po=c.kind==='orders'?P.read().orders.find(o=>o.id===c.id):null,groups=new Map();
+    for(const o of Object.values(orders)){
+      if(o.cruiseBookingDetails?.supply?.voyage!==c.voyage||!o.sourceNo||['草稿','已取消','已退订'].includes(o.orderStatus))continue;
+      if(c.type==='散位代理'&&o.orderNo!==po?.salesOrder)continue;
+      const company=o.businessOwnership?.productCompany||'',id=o.sourceNo;
+      const row=groups.get(id)||{id,label:o.productName,route:o.productName,company,currency:c.currency,date:c.date,back:c.back,voyage:c.voyage,orders:[],people:0};
+      if(row.company!==company)row.conflict=true;
+      row.orders.push(o.orderNo);row.people+=Number(o.salesSnapshot?.peopleCount||0);groups.set(id,row);
+    }
+    return [...groups.values()].filter(g=>g.company&&!g.conflict);
+  }
+  function sourcesForGroup(id,s=P.read()){return all(s).filter(c=>get(c.key,s).shares.some(x=>x.id===id));}
+  function locked(c,r,id){const g=groupResult(c,r,id);return g.costConfirmed||['审批中','已结算','审批通过'].includes(g.settlement);}
+  function checkShares(c,r,old,s){
+    if(r.currency!==c.currency)throw Error('采购原币不一致，请核对费用币种');
+    const known=candidates(c);
+    for(const a of r.shares){
+      const previous=old.shares.find(x=>x.id===a.id);
+      if(c.legacy&&previous&&!previous.voyage)continue;
+      const g=known.find(x=>x.id===a.id);
+      if(!g||a.voyage!==c.voyage||a.company!==g.company||a.currency!==c.currency)throw Error('团期来源或币种已变化，请重新核对本航次邮轮团期');
+      if(r.company!==g.company)throw Error('费用承担公司与邮轮团期产品提供公司不一致');
+      for(const other of sourcesForGroup(a.id,s).filter(x=>x.key!==c.key)){
+        const record=get(other.key,s);
+        if(other.voyage!==c.voyage||record.company!==r.company||record.currency!==r.currency)throw Error('该团已有不同航次、公司或币种的采购承担，请先核对费用归属');
+        if(!previous&&locked(other,record,a.id))throw Error('本团成本已确认或结算，新增费用请走原二次结算');
+      }
+    }
+    for(const a of old.shares){const next=r.shares.find(x=>x.id===a.id);if(locked(c,old,a.id)&&(!next||+next.amount!==+a.amount||next.company!==a.company||next.currency!==a.currency))throw Error('已确认成本或已结算承担不能改写，请走原二次结算');}
+  }
+  function attach(k,record,id){
+    const c=context(k),g=candidates(c).find(x=>x.id===id);if(!g)throw Error('未找到本航次实际邮轮团期');
+    if(record.shares.some(x=>x.id===id))throw Error('该邮轮团期已关联');
+    const next=clone(record);next.shares.push({...g,amount:0});checkShares(c,next,record,P.read());return next;
+  }
+  function saveShares(k,shares){
+    const s=P.read(),c=context(k,s),old=get(k,s),r={...old,shares:clone(shares)};
+    validate(c,r,false);checkShares(c,r,old,s);r.version++;r.history.push({at:stamp(),text:'保存邮轮团期承担；船方已确认费用保持不变',amount:total(r)});
+    s.closeouts=s.closeouts||[];const i=s.closeouts.findIndex(x=>x.key===k);if(i<0)s.closeouts.push(r);else s.closeouts[i]=r;P.write(s);return clone(r);
+  }
   function total(r){return round(r.ticket+r.port+r.fuel+r.other-r.credit+(r.lossMode==='另计费用'?r.loss:0)+(r.guaranteeMode==='另计费用'?r.guaranteeAmount:0));}
   function facts(c,r){const amount=total(r),allocated=sum(r.shares,'amount'),shortfall=c.type==='保底切舱'&&r.guaranteeScope==='本航次／间'?Math.max(0,r.guaranteeCount-r.recognized):null;
     return {amount,allocated,unassigned:round(amount-allocated),difference:round(amount-c.estimate),unsold:Math.max(0,c.quantity-r.returned-r.recognized),shortfall,receivedGap:c.quantity-c.received};}
@@ -45,22 +87,30 @@
   function save(k,values,confirm=false){
     const s=P.read(),c=context(k,s),old=get(k,s);
     if(old.status==='已核对')throw Error('核对记录已确认，后补费用从原二次结算办理');
-    const r={...old,...clone(values),key:k};validate(c,r,confirm);r.version=old.version+1;r.status=confirm?'已核对':'待核对';
+    const r={...old,...clone(values),key:k};validate(c,r,confirm);checkShares(c,r,old,s);r.version=old.version+1;r.status=confirm?'已核对':'待核对';
     r.history=[...old.history,{at:stamp(),text:confirm?'确认船方费用及采购差额':'保存采购履约核对',amount:total(r)}];
     if(confirm)r.confirmed={at:stamp(),amount:total(r),reference:r.reference,estimate:c.estimate,shares:clone(r.shares)};
     s.closeouts=s.closeouts||[];const i=s.closeouts.findIndex(x=>x.key===k);if(i<0)s.closeouts.push(r);else s.closeouts[i]=r;P.write(s);return clone(r);
   }
-  function sourceForGroup(id,s=P.read()){return all(s).find(c=>get(c.key,s).shares.some(x=>x.id===id));}
+  function sourceForGroup(id,s=P.read()){return sourcesForGroup(id,s)[0];}
   function groupResult(c,r,id){const row=r.groupResults[id];if(row)return clone(row);if(c.legacy){const old=F.sharedSeed().shares.find(x=>x.id===id);if(old)return {id,company:'上海凯撒',currency:'CNY',income:old.locked?450000:700000,cost:old.amount,estimate:old.estimate,costConfirmed:old.status==='已确认',settlement:old.locked?'已结算':'成本复核中',reference:old.evidence,pendingAdjustment:old.locked?20000:0,adjustmentNo:old.locked?'ADJ-CRU-20261121-020':''};}return {id,company:r.company,currency:r.currency,income:null,cost:null,estimate:null,costConfirmed:false,settlement:'待接收',pendingAdjustment:0};}
-  function capture(schedule){const s=P.read(),c=sourceForGroup(schedule.id,s);if(!c)return;const record=(s.closeouts||[]).find(r=>r.key===c.key);if(!record)return;
-    // Only record the outcome of the original cost action; no derived income or payment.
-    record.groupResults[schedule.id]={...groupResult(c,record,schedule.id),cost:Number(schedule.actual),estimate:Number(schedule.estimated),costConfirmed:schedule.items.every(x=>x[5]==='已确认'),settlement:schedule.settlement.status,reference:schedule.items.map(x=>x.attachment||x[6]).join('；')};P.write(s);
+  function capture(schedule){
+    const s=P.read(),sources=sourcesForGroup(schedule.id,s);
+    for(const c of sources){const record=(s.closeouts||[]).find(r=>r.key===c.key);if(!record)continue;
+      const items=schedule.cruiseLinked?schedule.items.filter(x=>x.cruiseSource):schedule.items;
+      const amount=schedule.cruiseLinked?sum(items,'originalAmount'):Number(schedule.actual);
+      record.groupResults[schedule.id]={...groupResult(c,record,schedule.id),cost:amount,localCost:Number(schedule.actual),rate:schedule.cruiseRate,reason:schedule.cruiseShare?.reason,estimate:Number(schedule.estimated),costConfirmed:items.every(x=>x[5]==='已确认'),settlement:schedule.settlement.status,reference:[...new Set(items.map(x=>x.attachment||x[6]))].join('；')};
+    }P.write(s);
   }
-  function checkGroup(schedule,amount){const s=P.read(),c=sourceForGroup(schedule.id,s),r=c&&(s.closeouts||[]).find(r=>r.key===c.key);if(!r)return;const f=facts(c,r),a=r.shares.find(x=>x.id===schedule.id);
-    if(r.status!=='已核对'||f.unassigned!==0)throw Error('采购费用或各团承担尚未核齐，请回采购履约核对');
-    const g=groupResult(c,r,schedule.id),company=schedule.providingCompany||g.company,currency=schedule.items?.find(x=>x.cruiseShared)?.currency||g.currency;
-    if(r.company!==company||r.currency!==currency)throw Error('采购核对与本团承担公司或币种不一致，请先核对费用归属');
-    if(+amount!==+a.amount)throw Error('本团承担与采购核对不一致，请核对差额；已结算团另办二次结算');
+  function checkGroup(schedule,amount){
+    const s=P.read(),sources=sourcesForGroup(schedule.id,s);let allocated=0,checked=0;
+    for(const c of sources){const r=(s.closeouts||[]).find(r=>r.key===c.key);if(!r)continue;
+      const f=facts(c,r),a=r.shares.find(x=>x.id===schedule.id);allocated+=+a.amount;checked++;
+      if(r.status!=='已核对'||f.unassigned!==0)throw Error('采购费用或各团承担尚未核齐，请回采购履约核对');
+      const g=groupResult(c,r,schedule.id),company=schedule.providingCompany||g.company,currency=schedule.cruiseCurrency||schedule.items?.find(x=>x.cruiseShared)?.currency||g.currency;
+      if(r.company!==company||r.currency!==currency)throw Error('采购核对与本团承担公司或币种不一致，请先核对费用归属');
+    }
+    if(checked&&round(+amount)!==round(allocated))throw Error('本团承担与采购核对不一致，请核对差额；已结算团另办二次结算');
   }
   function mountPayments(groups,requests){const s=P.read(),saved=s.cruisePaymentHandoffs||{groups:[],requests:[]};
     for(const c of s.contracts.filter(c=>c.status==='已签订'))c.payments.forEach((p,i)=>{
@@ -84,5 +134,5 @@
       const ready=v.groups.length>0&&v.gaps.length===0;return {...v,income,cost,sourceCost,estimate:sum(v.sources.map(x=>({amount:x.c.estimate})),'amount'),pending:sum(v.sources.map(x=>({amount:x.r.pending})),'amount'),pendingAdjustment:sum(v.groups,'pendingAdjustment'),profit:ready?round(income-cost):null,status:ready?'已核齐':'待核齐'};
     });
   }
-  root.CruiseCloseout={contexts,all,context,defaults,get,facts,total,save,sourceForGroup,groupResult,capture,checkGroup,report,round,mountPayments,capturePayments,paymentRows};
+  root.CruiseCloseout={contexts,all,context,defaults,get,facts,total,save,saveShares,candidates,attach,locked,sourcesForGroup,sourceForGroup,groupResult,capture,checkGroup,report,round,mountPayments,capturePayments,paymentRows};
 })(typeof window==='undefined'?globalThis:window);

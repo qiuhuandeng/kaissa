@@ -109,18 +109,12 @@
       title: "产品中心",
       icon: "map",
       children: [
+        { title: "自营产品", href: "product/products.html" },
         {
           title: "外采产品",
           children: [
             { title: "产品市场", href: "product/product-market.html" },
             { title: "代理产品", href: "product/product-outsource-list.html" },
-          ],
-        },
-        {
-          title: "自营产品",
-          children: [
-            { title: "产品管理", href: "product/products.html" },
-            { title: "单团项目", href: "tour/product-custom-list.html" },
           ],
         },
         {
@@ -134,18 +128,20 @@
       ],
     },
     {
+      title: "单团会奖",
+      icon: "users",
+      children: [
+        { title: "单团项目", href: "tour/product-custom-list.html" },
+        { title: "项目团控", href: "tour/schedules.html?mice=1" },
+        { title: "项目采购", href: "tour/fulfillment-cost.html?mice=1" },
+      ],
+    },
+    {
       title: "履约中心",
       icon: "clipboard",
       children: [
-        {
-          title: "项目团",
-          children: [
-            { title: "项目团控", href: "tour/schedules.html?mice=1" },
-            { title: "项目采购", href: "tour/fulfillment-cost.html?mice=1" },
-          ],
-        },
-        { title: "团期管控", href: "tour/schedules.html" },
         { title: "团期订单", href: "tour/schedule-orders.html" },
+        { title: "团期管理", href: "tour/schedules.html" },
         { title: "团期结算", href: "tour/fulfillment-cost.html" },
         { title: "付款申请", href: "tour/fulfillment-payment-apply.html" },
         { title: "签证办理", href: "tour/visa-processing.html" },
@@ -154,6 +150,7 @@
     },
     {
       title: "邮轮中心",
+      hidden: true, // 暂时隐藏导航入口，保留菜单定义、原页面和全部业务功能。
       icon: "ship",
       children: [
         { title: "舱位采购", children: [
@@ -179,7 +176,7 @@
       ],
     },
     {
-      title: "航服",
+      title: "航服中心",
       icon: "plane",
       children: [
         { title: "机位管理", href: "tour/resource-procurement-inventory.html?kind=air" },
@@ -543,6 +540,7 @@
   };
 
   const primaryLabels = {
+    单团会奖: "单团",
     邮轮中心: "邮轮",
     工作: "工作",
     数据中心: "数据",
@@ -550,7 +548,7 @@
     产品中心: "产品",
     营销中心: "营销",
     会员中心: "会员",
-    航服: "航服",
+    航服中心: "航服",
     销售中心: "销售",
     门店中心: "门店",
     渠道中心: "渠道",
@@ -562,6 +560,7 @@
   };
 
   const primaryFullLabels = {
+    单团会奖: "单团会奖",
     邮轮中心: "邮轮中心",
     工作: "工作台",
     数据中心: "数据中心",
@@ -569,7 +568,7 @@
     产品中心: "产品中心",
     营销中心: "营销中心",
     会员中心: "会员中心",
-    航服: "航服",
+    航服中心: "航服中心",
     销售中心: "销售中心",
     门店中心: "门店中心",
     渠道中心: "渠道中心",
@@ -812,8 +811,8 @@
     "tour/resource-procurement-inventory.html": { href: "tour/resource-procurement-inventory.html?kind=air", title: "机位管理" },
     "tour/fulfillment-supplier-fees.html": { href: "tour/fulfillment-cost.html", title: "团期结算" },
     "tour/fulfillment-payment-apply.html": { href: "tour/fulfillment-payment-apply.html", title: "付款申请" },
-    "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管控" },
-    "tour/fulfillment-notice.html": { href: "tour/schedules.html", title: "团期管控" },
+    "tour/fulfillment-roster.html": { href: "tour/schedules.html", title: "团期管理" },
+    "tour/fulfillment-notice.html": { href: "tour/schedules.html", title: "团期管理" },
     "tour/schedule-orders.html": { href: "tour/schedule-orders.html", title: "团期订单" },
     "tour/schedule-orders-detail.html": { href: "tour/schedule-orders.html", title: "团期订单详情" },
     "tour/schedule-order-booking.html": { href: "tour/schedule-orders.html", title: "新建团期订单" },
@@ -1160,6 +1159,7 @@
   function createPrimaryItem(item, index, pageRootIndex) {
     const control = item.children ? document.createElement("button") : document.createElement("a");
     control.className = "nav-primary-item";
+    control.dataset.primaryIndex = String(index);
     control.dataset.title = primaryFullLabel(item);
     control.title = primaryFullLabel(item);
 
@@ -1207,6 +1207,7 @@
     const pageRootIndex = rootIndexFromActive(active);
     primaryScroll.replaceChildren();
     menu.forEach((item, index) => {
+      if (item.hidden) return;
       primaryScroll.appendChild(createPrimaryItem(item, index, pageRootIndex));
     });
   }
@@ -1215,7 +1216,8 @@
     if (!primaryScroll) return;
 
     const pageRootIndex = rootIndexFromActive(active);
-    Array.from(primaryScroll.querySelectorAll(".nav-primary-item")).forEach((item, index) => {
+    Array.from(primaryScroll.querySelectorAll(".nav-primary-item")).forEach((item) => {
+      const index = Number(item.dataset.primaryIndex);
       const isActive = index === currentPrimaryIndex;
       const isCurrent = index === pageRootIndex;
       item.classList.toggle("active", isActive);
@@ -1234,7 +1236,7 @@
 
     const rootIndex = typeof primaryIndex === "number" ? primaryIndex : currentPrimaryIndex;
     const root = menu[rootIndex] || menu[0];
-    const hasSecondaryMenu = Boolean(root.children && root.children.length > 0);
+    const hasSecondaryMenu = Boolean(!root.hidden && root.children && root.children.length > 0);
 
     document.body.classList.toggle("nav-primary-only", !hasSecondaryMenu);
     secondaryTitle.textContent = hasSecondaryMenu ? primaryFullLabel(root) : "";
@@ -1313,7 +1315,7 @@
         if (item.href) centerTitles[item.href] = item.title;
         if (item.children) collectCenterTitles(item.children);
       });
-      collectCenterTitles(menu.filter(item => ["会员中心", "营销中心"].includes(item.title)));
+      collectCenterTitles(menu.filter(item => ["会员中心", "营销中心", "产品中心", "履约中心"].includes(item.title)));
       if (!Array.isArray(tabs)) return [];
       const migrated = tabs.filter(tab => tab && typeof tab.href === 'string' && !archived.includes(tab.href.split('?')[0]) && !(tab.href.startsWith('tour/resource-procurement-inventory.html') && (new URLSearchParams(tab.href.split('?')[1] || '').get('kind') === 'train' || (new URLSearchParams(tab.href.split('?')[1] || '').get('contractNo') || '').startsWith('TRN')))).map(tab => {
         if (tab.href.split('?')[0] === 'marketing/coupon-rules.html') {
@@ -1342,6 +1344,12 @@
     localStorage.setItem(storageKey, JSON.stringify(tabs.slice(-10)));
   }
 
+  function isHiddenMenuRoute(href) {
+    const active = resolveActiveFromMenu(fullMenu, fileFromUrl(new URL(href, merchantBaseUrl)));
+    const root = active && (active.ancestors[0] || active.item);
+    return Boolean(root && root.hidden);
+  }
+
   function createPageTabs(active, file) {
     const storageKey = "caesar-merchant-tabs";
     const title = active ? active.currentTitle || active.item.title : file;
@@ -1361,6 +1369,8 @@
     tabsBar.className = "page-tabs";
 
     recentTabs.forEach((tab) => {
+      // Keep history for later restoration; only a directly opened hidden page shows its own tab.
+      if (tab.href !== currentHref && isHiddenMenuRoute(tab.href)) return;
       const item = document.createElement("a");
       item.className = "page-tab";
       if (tab.href === currentHref) item.classList.add("active");
@@ -1380,8 +1390,9 @@
         event.stopPropagation();
         const nextTabs = readTabs(storageKey).filter((itemTab) => itemTab.href !== tab.href);
         saveTabs(storageKey, nextTabs);
-        if (tab.href === currentHref && nextTabs.length > 0) {
-          navigateTo(nextTabs[nextTabs.length - 1].href);
+        const visibleTabs = nextTabs.filter((nextTab) => !isHiddenMenuRoute(nextTab.href));
+        if (tab.href === currentHref && visibleTabs.length > 0) {
+          navigateTo(visibleTabs[visibleTabs.length - 1].href);
           return;
         }
         item.remove();

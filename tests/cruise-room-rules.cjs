@@ -23,4 +23,7 @@ test('导出与提交版本冻结，后改资料不污染留档',()=>{const s=M.
 test('CSV兼容中文引号换行并对公式前缀转义',()=>{const r=L.parseCsv('房号,舱型代码\r\n"9234","BA"\r\n');assert.equal(r[1][0],'9234');assert.match(L.csv([['=CMD()']]),/'=CMD/);});
 test('接船与送机分车分别安排，不互相移除客人',()=>{const s=M.seed();M.saveTeam(s,{...s.teams.find(t=>t.id==='C1'),id:'',segment:'送机',name:'机场送机1号车'});assert.equal(s.teams.find(t=>t.id==='C1').members.length,3);assert(M.teamFor(s,M.V,'bus','CRP-01','送机'));assert(M.exportGrid(s,M.V,['CRP-01'],['bus'])[1][0].includes('送机'));});
 test('导入匹配当前船只舱型，允许资源自定义代码',()=>{const s=M.seed(),rows=[{no:'8001',cabin:'B1',capacity:2,deck:8}];assert.equal(M.importCheck(s,M.V,rows,['B1'])[0],'');assert.equal(M.importCheck(s,M.V,rows,['BA'])[0],'舱型待匹配');});
+test('分组保存前核对不改变成员或历史',()=>{const s=M.seed(),before=JSON.stringify(s);M.validateTeam(s,{...s.teams[1],members:['CRP-01']});assert.equal(JSON.stringify(s),before);});
+test('移回待分组保留姓名及结果，其他类别不受影响',()=>{const s=M.seed();M.saveTeam(s,{...s.teams[0],members:['CRP-02']});assert.equal(M.teamFor(s,M.V,'boat','CRP-01'),undefined);assert.equal(M.teamFor(s,M.V,'dining','CRP-01').id,'D1');assert(s.history.some(h=>h.text.includes('移回待分组：张建国')));});
+test('已有车辆不能修改接送路段造成原安排消失',()=>{const s=M.seed(),before=JSON.stringify(s);assert.throws(()=>M.saveTeam(s,{...s.teams.find(t=>t.id==='C1'),segment:'送机'}),/不能更换接送路段/);assert.equal(JSON.stringify(s),before);});
 console.log(JSON.stringify({passed:count}));
