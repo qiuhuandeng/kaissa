@@ -33,7 +33,7 @@
       {label:'项目成员',action:'project-members',data:{id}},
       {label:'合同资料',action:'project-contracts',data:{id}}
     );
-    if(p.status==='进行中')items.push({label:'收款认领',action:'project-collection',data:{id}},{label:'客户结算确认',action:'project-acceptance',data:{id}});
+    if(p.status==='进行中')items.push({label:'客户结算确认',action:'project-acceptance',data:{id}});
     if(state)items.push({label:'项目附件',action:'project-files',data:{id}},{label:'结算期限',action:'project-deadline',data:{id}});
     items.push({label:'复制项目',action:'project-copy',data:{id}});
     if(p.status==='进行中')items.push({label:'结项检查',action:'project-closeout',data:{id}});
@@ -46,14 +46,35 @@
     // 未分配人员额度时，子团直接使用项目预算；小项目无需增加中间层。
     const ended=(p.delegations||[]).filter(d=>d.status==='已结束'); let host;
     const read=()=>{host.querySelectorAll('[data-assignment-row]').forEach(n=>{const i=+n.dataset.assignmentRow;rows[i][n.dataset.key]=n.value;});return rows;};
-    const draw=()=>{host.innerHTML=U.table(['操作人员／期间','负责事项','费用额度','占用／可用','操作'],rows.map((d,i)=>{
-      const usage=(window.MiceBudget?MiceBudget.state(p).people:MiceProjectFlow.budgetRows(p)).find(r=>r.d.id===d.id), field=(key,label,value,opts={})=>F('assignment-'+i+'-'+key,label,value,opts).replace('data-field=', 'data-assignment-row="'+i+'" data-key="'+key+'" data-field=');
-      return [field('employee','操作人员',d.employee,{options:[...new Set([...MiceProjects.people(p.company,true),d.employee].filter(Boolean))].map(name=>({value:name,label:name+((p.members||[]).some(m=>!m.ended&&(m.name||m.employee)===name)?' · 项目成员':' · 添加为操作成员')})),disabled:!!d.id})+'<details class="mice-project-fold"><summary>负责期间</summary>'+field('start','开始日期',d.start,{type:'date'})+field('end','结束日期',d.end,{type:'date'})+'</details>',field('scope','负责事项',d.scope),field('currency','币种',d.currency||'CNY',{options:['CNY','EUR','USD'],disabled:!!d.id})+field('businessAmount','负责业务金额（参考）',d.businessAmount??'',{type:'number'})+field('costBudget','费用额度',d.costBudget??'',{type:'number'}),usage?U.lines('已占用 '+M.money(usage.occupied,d.currency),'可用 '+M.money(usage.remaining,d.currency)):'尚未承担项目团','<button type="button" class="mice-link" data-assignment-end="'+i+'">'+(d.id?'结束分工':'移除')+'</button>'];
-    }),'mice-assignment-table');};
-    U.drawer('项目分工与费用额度',U.summary([['项目',p.name],['项目负责人',p.owner]])+G(F('total','项目费用总预算（CNY）',p.originalBudget??500000,{type:'number'})+F('publicBudget','公共费用预算（CNY）',p.publicBudget??0,{type:'number'})+F('budgetControl','费用预算管理',p.budgetControl||'reference',{options:[{value:'reference',label:'预算参考'},{value:'enforced',label:'启用预算管控'}],blank:null})+F('manager','超期提醒部门经理',p.departmentManager||p.owner,{options:D.catalog.staff.map(s=>s.name)}))+SEC('操作人员分工','<div id="project-assignment-rows"></div><button type="button" class="btn btn-secondary" data-assignment-add>新增分工</button>')+'<p class="mice-muted">选已有项目成员，或选择其他操作人员并自动加入成员名册。业务金额用于核对负责的成交规模；费用额度控制成团及采购预算。公共费用单独保留，剩余额度作为项目预留。实际收付款不重复占用预算。</p>'+F('basis','本次调整依据','按项目执行安排调整分工及费用预算',{full:true})+'<span class="mice-error" data-error="assignments"></span>'+(ended.length?'<details class="mice-project-fold"><summary>已结束分工 '+ended.length+'人</summary>'+U.table(['人员','负责事项','原费用额度'],ended.map(d=>[E(d.employee),E(d.scope),M.money(d.costBudget,d.currency)]))+'</details>':''),{
+    const updateUsage=()=>{
+      const candidate={...p,delegations:rows},people=window.MiceBudget?MiceBudget.state(candidate).people:MiceProjectFlow.budgetRows(candidate);
+      rows.forEach((d,i)=>{
+        const usage=people.find(r=>r.d===d||r.d.employee===d.employee),el=host.querySelector('[data-assignment-usage="'+i+'"]');if(!el)return;
+        const remaining=usage?.remaining,over=remaining!=null&&remaining<0;
+        el.classList.toggle('is-over',over);
+        el.innerHTML='<span>已占用 <strong>'+E(M.money(usage?.unknown?null:usage?.occupied))+'</strong></span><span>'+(over?'超出额度':'可用额度')+' <strong>'+E(remaining==null?'待核对':M.money(over?-remaining:remaining))+'</strong></span>';
+      });
+    };
+    const draw=()=>{
+      host.innerHTML=U.layout(rows.map((d,i)=>{
+        const field=(key,label,value,opts={})=>F('assignment-'+i+'-'+key,label,value,opts).replace('data-field=', 'data-assignment-row="'+i+'" data-key="'+key+'" data-field=');
+        const members=(p.members||[]).filter(m=>!m.ended).map(m=>m.name||m.employee);
+        return '<div class="mice-assignment-item"><div class="mice-assignment-person">'+
+          field('employee','操作人员',d.employee,{options:[...new Set([...members,...MiceProjects.people(p.company,true),d.employee].filter(Boolean))].map(name=>({value:name,label:name+(members.includes(name)?' · 项目成员':' · 加入项目成员')})),disabled:!!d.id})+
+          field('start','负责开始日期',d.start,{type:'date'})+field('end','负责结束日期',d.end,{type:'date'})+
+          '<button type="button" class="mice-link mice-assignment-remove" data-assignment-end="'+i+'">'+(d.id?'结束分工':'移除')+'</button></div>'+
+          '<div class="mice-assignment-amounts">'+field('currency','币种',d.currency||'CNY',{options:['CNY','EUR','USD'],disabled:!!d.id,blank:null})+field('costBudget','费用额度',d.costBudget??'',{type:'number'})+field('businessAmount','负责业务金额（参考）',d.businessAmount??'',{type:'number'})+'</div>'+
+          '<div class="mice-assignment-bottom"><div class="mice-assignment-usage" data-assignment-usage="'+i+'" aria-live="polite"></div></div></div>';
+      }).join('')||'<div class="mice-assignment-empty">尚未分配人员额度，可直接使用项目预算。</div>',{drawer:true});
+      updateUsage();
+    };
+    const history=()=>'<summary>已结束分工 '+ended.length+' 人</summary>'+U.table(['人员','负责事项','原费用额度'],ended.map(d=>[E(d.employee),E(d.scope),M.money(d.costBudget,d.currency)]));
+    U.drawer('项目分工与费用额度','<div class="mice-assignment-editor"><div class="mice-assignment-context"><strong>'+E(p.name)+'</strong><span>项目负责人：'+E(p.owner||'待分配')+'</span></div>'+SEC('项目预算',G(F('total','项目费用总预算（CNY）',p.originalBudget??500000,{type:'number'})+F('publicBudget','公共费用预算（CNY）',p.publicBudget??0,{type:'number'})+F('budgetControl','费用预算管理',p.budgetControl||'reference',{options:[{value:'reference',label:'预算参考'},{value:'enforced',label:'启用预算管控'}],blank:null})+F('manager','超期提醒部门经理',p.departmentManager||p.owner,{options:D.catalog.staff.map(s=>s.name)})))+SEC('操作人员分工','<div id="project-assignment-rows"></div>','<button type="button" class="btn btn-secondary" data-assignment-add>新增分工</button>')+F('basis','本次调整依据','按项目执行安排调整分工及费用预算',{type:'textarea',full:true})+'<span class="mice-error" data-error="assignments"></span><details class="mice-project-fold mice-assignment-history"'+(ended.length?'':' hidden')+'>'+history()+'</details></div>',{
       wide:true,buttons:[['保存分工','save']],onOpen({form,setClean}){host=form.querySelector('#project-assignment-rows');draw();setClean();
-        form.querySelector('[data-assignment-add]').onclick=()=>{read();rows.push({employee:MiceProjects.people(p.company,true).find(n=>!rows.some(d=>d.employee===n))||'',scope:'负责子团执行及采购核对',currency:'CNY',start:p.start,end:p.end,costBudget:null,status:'有效'});draw();};
-        host.onclick=e=>{const b=e.target.closest('[data-assignment-end]');if(!b)return;read();const d=rows[+b.dataset.assignmentEnd];if(d.id&&window.MiceBudgetModel){const issues=MiceBudgetModel.endAssignmentIssues(D,p,d.employee);if(issues.length)return U.toast(issues.join('；'),'warning');}if(d.id){d.status='已结束';d.endReason='本次项目分工调整，原项目团负责人及历史资料保留';}else rows.splice(+b.dataset.assignmentEnd,1);const next=rows.filter(d=>d.status!=='已结束');const stopped=rows.filter(d=>d.status==='已结束');ended.push(...stopped);rows=next;draw();};
+        const changed=()=>form.dispatchEvent(new Event('input',{bubbles:true}));
+        form.querySelector('[data-assignment-add]').onclick=()=>{read();rows.push({employee:MiceProjects.people(p.company,true).find(n=>!rows.some(d=>d.employee===n))||'',currency:'CNY',start:p.start,end:p.end,costBudget:null,status:'有效'});draw();changed();host.lastElementChild?.querySelector('select')?.focus();};
+        host.addEventListener('input',e=>{if(!e.target.matches('[data-assignment-row]'))return;read();updateUsage();});
+        host.onclick=e=>{const b=e.target.closest('[data-assignment-end]');if(!b)return;read();const d=rows[+b.dataset.assignmentEnd];if(d.id&&window.MiceBudgetModel){const issues=MiceBudgetModel.endAssignmentIssues(D,p,d.employee);if(issues.length)return U.toast(issues.join('；'),'warning');}if(d.id){d.status='已结束';d.endReason='本次项目分工调整，原项目团负责人及历史资料保留';}else rows.splice(+b.dataset.assignmentEnd,1);const next=rows.filter(d=>d.status!=='已结束');const stopped=rows.filter(d=>d.status==='已结束');ended.push(...stopped);rows=next;draw();const historyHost=form.querySelector('.mice-assignment-history');historyHost.hidden=!ended.length;historyHost.innerHTML=history();changed();form.querySelector('[data-assignment-add]').focus();};
       },submit(v,i,x){read();if(!editable(p))return x.errors({assignments:'项目状态已变化，请重新查看'});
         const total=M.num(v.total), seen=new Set();for(const d of rows){d.costBudget=M.num(d.costBudget);d.businessAmount=M.num(d.businessAmount);if(!d.employee||seen.has(d.employee)||d.start>d.end||d.costBudget!=null&&d.costBudget<0||d.businessAmount!=null&&d.businessAmount<0)return x.errors({assignments:'请核对人员、负责期间和非负费用额度；同一人员保留一份有效分工'});seen.add(d.employee);}
         if(total==null||total<0||M.sum(rows.filter(d=>d.currency==='CNY').map(d=>({amount:d.costBudget||0})))>total)return x.errors({total:'人民币分配合计不得超过项目费用总预算'});
@@ -76,7 +97,6 @@
     'project-contracts':({id})=>contracts(id),
     'project-members':({id})=>members(id),
     'project-acceptance':({id})=>{const p=select(id);if(p?.status!=='进行中')return;MiceSettlement.customerForm();},
-    'project-collection':({id})=>{const p=select(id);if(p?.status==='进行中')location.href=U.url('merchant/sales/payment-claim.html',{mice:1,projectId:id,returnUrl:location.href});},
     'project-closeout-view':({id})=>closeoutView(id),
     'flow-budget':({project:id})=>assignments(id||project()?.id)
   });
