@@ -2385,6 +2385,7 @@
     const capturedFresh = drawerTitleCapture.title && Date.now() - drawerTitleCapture.time < 1400;
     return normalizeActionTitle(
       (options && options.title) ||
+      (dialog && dialog.getAttribute("data-drawer-title-fixed")) ||
       (capturedFresh ? drawerTitleCapture.title : "") ||
       (dialog && dialog.getAttribute("data-drawer-title")) ||
       (layer && layer.getAttribute && layer.getAttribute("data-drawer-title")) ||

@@ -143,7 +143,7 @@
   }
   function result(o, title = '订单已创建') {
     const p = S.find('projects', o.projectId), acts = o.activities.map(id => S.find('activities', id));
-    U.drawer(title, U.summary([['订单号', o.id], ['客户', o.customer], ['订单金额', M.money(o.amount, o.currency)], ['订单状态',o.status], ['已收款',M.money(o.received||0,o.currency)], ['待收款',M.money(o.amount==null?null:Math.max(0,o.amount-(o.received||0)),o.currency)], ['计价方式', o.pricing === 'actual' ? '按实际数量最终定价' : o.pricing === 'quantity' ? '确定数量 × 单价' : '固定总价']]) + '<div class="mice-toolbar">' + L('查看订单', orderUrl(o)) + L('收款计划', orderUrl(o, 'receivable')) + L('收款认领',collectionUrl(o)) + '</div>' + SEC('关联项目团', U.table(['项目团', '执行阶段', '操作'], acts.map(a => [E(a.name), E(a.status), executionAction(a)]))) + '<p class="mice-muted">成交已登记；资料齐全的项目团已进入进行中，可继续安排人员、资源和交付。缺项只需补齐执行资料。创建订单不代表已收款或服务已完成。</p>', { readonly: true, buttons: [] });
+    U.drawer(title, U.summary([['订单号', o.id], ['客户', o.customer], ['订单金额', M.money(o.amount, o.currency)], ['订单状态',o.amount==null&&o.status==='待结算确认'?'待最终定价':o.status], ['已收款',M.money(o.received||0,o.currency)], ['待收款',M.money(o.amount==null?null:Math.max(0,o.amount-(o.received||0)),o.currency)], ['计价方式', o.pricing === 'actual' ? '按实际数量最终定价' : o.pricing === 'quantity' ? '确定数量 × 单价' : '固定总价']]) + '<div class="mice-toolbar">' + L('查看订单', orderUrl(o)) + L('收款计划', orderUrl(o, 'receivable')) + L('收款认领',collectionUrl(o)) + '</div>' + SEC('关联项目团', U.table(['项目团', '执行阶段', '操作'], acts.map(a => [E(a.name), E(a.status), executionAction(a)]))) + '<p class="mice-muted">成交已登记；资料齐全的项目团已进入进行中，可继续安排人员、资源和交付。缺项只需补齐执行资料。创建订单不代表已收款或服务已完成。</p>', { readonly: true, buttons: [] });
   }
   // Only a quote covering exactly this order can supply its price and payment terms.
   function quotesFor(p, ids) {

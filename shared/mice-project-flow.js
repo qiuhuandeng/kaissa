@@ -19,17 +19,16 @@
   }
   function bindTeam(form, p) {
     let members = M.clone(p.members || []);
-    if (!members.length) members = [{ name: p.sales || '陈刚', role: '销售', note: '客户关系、合同、开票及收款' }, { name: p.owner || '张三', role: '项目负责', note: '项目统筹与执行交付' }];
+    if (!members.length) members = [{ name: p.sales || '陈刚', role: '销售' }, { name: p.owner || '张三', role: '项目负责' }];
     const host = form.querySelector('#mice-project-team');
     const read = () => { host.querySelectorAll('[data-team-row]').forEach(n => { members[+n.dataset.teamRow][n.dataset.teamKey] = n.value; }); return members; };
-    const draw = () => { host.innerHTML = U.table(['员工', '职责', '负责事项', '操作'], members.map((m, i) => [
+    const draw = () => { host.innerHTML = U.table(['员工', '职责', '操作'], members.map((m, i) => [
       '<select aria-label="成员' + (i + 1) + '员工" data-team-row="' + i + '" data-team-key="name">' + U.options(D.catalog.staff.map(s => s.name), m.name || m.employee) + '</select>',
       '<select aria-label="成员' + (i + 1) + '职责" data-team-row="' + i + '" data-team-key="role">' + U.options([...new Set([...roles, m.role].filter(Boolean))], m.role) + '</select>',
-      '<input aria-label="成员' + (i + 1) + '负责事项" data-team-row="' + i + '" data-team-key="note" value="' + E(m.note || '') + '">',
       '<button type="button" class="mice-link" data-team-remove="' + i + '">移除</button>'
     ])); };
     host.onclick = e => { const b = e.target.closest('[data-team-remove]'); if (b) { read(); members.splice(+b.dataset.teamRemove, 1); draw(); } };
-    form.querySelector('[data-mice-action="flow-team-add"]').onclick = e => { e.stopPropagation(); read(); members.push({ name: D.catalog.staff[0]?.name, role: '操作', note: '执行安排与供应商采购' }); draw(); };
+    form.querySelector('[data-mice-action="flow-team-add"]').onclick = e => { e.stopPropagation(); read(); members.push({ name: D.catalog.staff[0]?.name, role: '操作' }); draw(); };
     draw();
     return () => read().filter(m => m.name && m.role).map(m => ({ ...m, start: m.start || form.elements.start.value, end: m.end || form.elements.end.value, activities: m.activities || [] }));
   }

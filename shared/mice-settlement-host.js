@@ -18,7 +18,7 @@ function sync(){
   s.miceActivityId=a.id;
   const r=recordFor(a),orders=D.orders.filter(o=>o.projectId===p.id&&o.activities.includes(a.id)&&!['已取消','已作废'].includes(o.status));
   Object.assign(s,{route:a.name,plan:p.name,date:a.start+' / '+a.end,people:(a.confirmedPeople??a.people??'待确认')+'人',owner:a.planner||p.owner,projectNo:p.id,projectOrder:orders.map(o=>o.id).join('、'),customer:p.customer,providingCompany:p.company,status:a.status});
-  Object.assign(s.settlement,{status:r?.status==='已确认'?'已结算':r?.status==='审批中'?'审批中':r?.status==='已退回'?'已驳回':ended(a)?r?.status==='草稿'?'草稿':'待提交':'未开始',todo:ended(a)?r?.id||'尚未提交结算':'服务尚未完成',confirmedPeople:s.people,returnStatus:ended(a)?'已回团':'未回团',incomeRows:[]});
+  Object.assign(s.settlement,{status:r?.status==='已确认'?'已结算':r?.status==='审批中'?'审批中':r?.status==='已退回'?'已驳回':ended(a)?r?.status==='草稿'?'草稿':'待提交':'未开始',todo:ended(a)?r?.id||'尚未提交结算':'服务尚未完成',confirmedPeople:s.people,returnStatus:a.status==='已取消'?'已取消':ended(a)?'已回团':'未回团',incomeRows:[]});
  }
 }
 function metric(s,kind){
@@ -40,9 +40,10 @@ function action(s){
 }
 // Reuse the ordinary cost-maintenance drawer. Its original form is restored for other products.
 function detailReturnUrl(){
- const u=new URL(location.href);for(const [key,id]of [['Keyword','costKeyword'],['Type','costType'],['Status','costStatus'],['Progress','costProgress'],['Owner','costOwner']])u.searchParams.set('filter'+key,$(id).value);return u.href;
+ const u=new URL(location.href);for(const [key,id]of [['Keyword','costKeyword'],['Type','costType'],['Status','costStatus'],['Progress','costProgress'],['Owner','costOwner'],['DateStart','costDateStart'],['DateEnd','costDateEnd']])u.searchParams.set('filter'+key,$(id).value);return u.href;
 }
 function resetCosts(){
+ $('scheduleCostDrawer').querySelector('[role=dialog]').dataset.drawerTitleFixed='成本明细维护';
  $('projectCostWorkspace')?.remove();
  document.querySelectorAll('[data-project-cost-hidden]').forEach(n=>{n.hidden=n.dataset.projectCostHidden==='true';delete n.dataset.projectCostHidden;});
  costCurrent=null;
@@ -52,6 +53,7 @@ function costRoot(schedule,ledger=false){
  const drawer=$('scheduleCostDrawer'),body=drawer.querySelector('.modal-body');
  for(const n of [...body.children,$('saveScheduleCost'),$('submitScheduleCost')]){n.dataset.projectCostHidden=String(n.hidden);n.hidden=true;}
  const node=document.createElement('div');node.id='projectCostWorkspace';node.className='mice-workspace project-cost-workspace';body.append(node);
+ drawer.querySelector('[role=dialog]').dataset.drawerTitleFixed=ledger?'项目费用':'成本明细维护';
  $('scheduleCostDrawerTitle').textContent=ledger?'项目费用':'成本明细维护';
  H.showCostShell(schedule);return node;
 }
@@ -271,7 +273,7 @@ document.addEventListener('click',event=>{
 window.MiceSettlementHost={detailReturnUrl,metric,action,reset,paint,save,sync,openCosts,refreshCosts,resetCosts,costLedgerRoot};
 U.ready(()=>{
  sync();
- for(const [key,id]of [['Keyword','costKeyword'],['Type','costType'],['Status','costStatus'],['Progress','costProgress'],['Owner','costOwner']])if(U.q.has('filter'+key))$(id).value=U.q.get('filter'+key);
+ for(const [key,id]of [['Keyword','costKeyword'],['Type','costType'],['Status','costStatus'],['Progress','costProgress'],['Owner','costOwner'],['DateStart','costDateStart'],['DateEnd','costDateEnd']])if(U.q.has('filter'+key))$(id).value=U.q.get('filter'+key);
  H.refresh();
  $('openProjectCosts').onclick=()=>MiceCosts.page();
  const oldSchedule=U.q.get('scheduleNo')&&H.schedules.find(s=>s.miceActivityId===U.q.get('scheduleNo'));
