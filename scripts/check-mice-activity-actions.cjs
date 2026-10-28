@@ -6,7 +6,7 @@ const M=require('../shared/mice-prototype-model.js');
 const project={id:'P1',status:'进行中'},activity=status=>({id:'A1',name:'项目团一',projectId:'P1',status});
 const order={id:'O1',projectId:'P1',activities:['A1'],status:'已确认'};
 const checks=[];function check(name,fn){fn();checks.push(name);}
-check('已有订单的进行中团不重复报价建单，也不提前结算',()=>assert.deepEqual(actions.items(activity('进行中'),project,{orders:[order]}).map(x=>x.key),['complete','cost-new','roster-export','claim','invoice','order-change','change','files']));
+check('已有订单的进行中团不重复报价建单，也不提前结算',()=>assert.deepEqual(actions.items(activity('进行中'),project,{orders:[order]}).map(x=>x.key),['complete','cost-new','resource-new','execution-leader-new','roster-export','claim','invoice','order-change','change','files']));
 check('已有订单的草稿保留成团和编辑，不重复报价建单',()=>assert.deepEqual(actions.items(activity('草稿'),project,{orders:[order]}).map(x=>[x.key,x.label]),[['form','确认成团'],['edit','编辑'],['cost-new','新增费用']]));
 check('各主状态决定常驻办理入口，取消不再推进履约',()=>{
  for(const [status,key] of Object.entries({草稿:'order-new',进行中:'complete'}))

@@ -21,6 +21,7 @@
     const phase={进行中:['complete','确认完成']}[status];
     if(phase)add(...phase,'primary');
     if(['进行中','已完成'].includes(status)&&!readonly)add('cost-new','新增费用');
+    if(status==='进行中'){add('resource-new','新增资源');add('execution-leader-new','安排领队');}
     add('roster-export','导出名单');
     if(status==='已取消')return result;
     if(['进行中','已完成'].includes(status)){
